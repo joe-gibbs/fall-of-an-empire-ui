@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type {
   BrowseSteamWorkshopResponse,
@@ -41,6 +41,7 @@ export interface UseModsBridge {
   subscribedWorkshopError: string;
   workshopQueryInProgress: boolean;
   subscribedWorkshopQueryInProgress: boolean;
+  modChangesRequireRestart: boolean;
   workshopChangesRequireRestart: boolean;
   browseWorkshop: (searchText: string, page?: number, category?: string) => Promise<void>;
   refreshSubscribedWorkshop: () => Promise<void>;
@@ -94,6 +95,14 @@ function mergeWorkshopOperationItem(items: SteamWorkshopItem[], next: SteamWorks
   return copy;
 }
 
+function enabledModSetKey(mods: ModEntry[]): string {
+  return mods
+    .filter(mod => mod.enabled)
+    .map(mod => mod.id)
+    .sort()
+    .join('\n');
+}
+
 export function useModsBridge(enabled: boolean): UseModsBridge {
   const [mods, setMods] = useState<ModEntry[] | null>(null);
   const [uploadStatuses, setUploadStatuses] = useState<Record<string, ModUploadStatus>>({});
@@ -112,10 +121,15 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
   const [subscribedWorkshopQueryInProgress, setSubscribedWorkshopQueryInProgress] = useState(false);
   const [workshopChangesRequireRestart, setWorkshopChangesRequireRestart] = useState(false);
   const initialWorkshopFetchRef = useRef(false);
+  const initialEnabledModsKeyRef = useRef<string | null>(null);
 
   const refreshMods = useCallback(async () => {
     const res = await bridgeCall('game.list_mods');
-    setMods(res.mods ?? []);
+    const nextMods = res.mods ?? [];
+    if (initialEnabledModsKeyRef.current === null) {
+      initialEnabledModsKeyRef.current = enabledModSetKey(nextMods);
+    }
+    setMods(nextMods);
     setSteamWorkshopAvailable(Boolean(res.steamWorkshopAvailable));
     setWorkshopCategories(res.workshopCategories ?? []);
   }, []);
@@ -129,7 +143,11 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
       try {
         const res = await bridgeCall('game.list_mods');
         if (cancelled) return;
-        setMods(res.mods ?? []);
+        const nextMods = res.mods ?? [];
+        if (initialEnabledModsKeyRef.current === null) {
+          initialEnabledModsKeyRef.current = enabledModSetKey(nextMods);
+        }
+        setMods(nextMods);
         setSteamWorkshopAvailable(Boolean(res.steamWorkshopAvailable));
         setWorkshopCategories(res.workshopCategories ?? []);
       } catch (error) {
@@ -270,6 +288,11 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     void refreshSubscribedWorkshop();
   }, [browseWorkshop, enabled, refreshSubscribedWorkshop, steamWorkshopAvailable]);
 
+  const modChangesRequireRestart = useMemo(() => {
+    if (mods === null || initialEnabledModsKeyRef.current === null) return false;
+    return enabledModSetKey(mods) !== initialEnabledModsKeyRef.current;
+  }, [mods]);
+
   const setEnabled = useCallback(async (modId: string, nextEnabled: boolean) => {
     setMods(prev => prev
       ? prev.map(m => m.id === modId ? { ...m, enabled: nextEnabled } : m)
@@ -368,6 +391,7 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     subscribedWorkshopError,
     workshopQueryInProgress,
     subscribedWorkshopQueryInProgress,
+    modChangesRequireRestart,
     workshopChangesRequireRestart,
     browseWorkshop,
     refreshSubscribedWorkshop,
