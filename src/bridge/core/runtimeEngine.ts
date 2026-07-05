@@ -124,6 +124,7 @@ function isMenuSafeBridgeAction(action: string): boolean {
     || action === 'game.download_steam_workshop_item'
     || action === 'game.list_new_game_maps'
     || action === 'game.get_new_game_map_faction_selection'
+    || action === 'game.get_new_game_map_faction_geometry'
     || action === 'game.pick_new_game_map_faction'
     || action === 'game.start_scenario_map'
     || action === 'game.list_saves'
