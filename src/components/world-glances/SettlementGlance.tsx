@@ -391,11 +391,13 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
             {renderInfo(data)}
           </div>
 
-          {!besieged && data.building && (
-            <div className="gset-build-bar" aria-hidden="true">
-              <div className="gset-build-bar-fill" style={{ width: percentWidth(buildProgress) }} />
-            </div>
-          )}
+          <div
+            className="gset-build-bar"
+            aria-hidden="true"
+            style={{ display: !besieged && data.building ? undefined : 'none' }}
+          >
+            <div className="gset-build-bar-fill" style={{ width: percentWidth(buildProgress) }} />
+          </div>
         </div>
       </div>
     </div>

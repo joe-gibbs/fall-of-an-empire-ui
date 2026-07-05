@@ -9,11 +9,12 @@ function makeGlanceKey(kind: string, id: string): string {
 }
 
 const PACKED_WORLD_GLANCES_FRAME = 'worldGlancesFrame';
-const WORLD_GLANCE_FRAME_NUMBER_STRIDE = 7;
+const WORLD_GLANCE_FRAME_NUMBER_STRIDE = 8;
 const WORLD_GLANCE_FRAME_SELECTED_FLAG = 1 << 0;
 const WORLD_GLANCE_FRAME_TARGETED_FLAG = 1 << 1;
 const WORLD_GLANCE_FRAME_BESIEGED_FLAG = 1 << 2;
-const WORLD_GLANCE_FRAME_SOURCE_INDEX_SHIFT = 3;
+const WORLD_GLANCE_FRAME_HAS_BUILDING_FLAG = 1 << 3;
+const WORLD_GLANCE_FRAME_SOURCE_INDEX_SHIFT = 4;
 
 export type WorldGlanceFrameSection = 'settlement' | 'port' | 'convoy' | 'army' | 'navy' | 'battle';
 
@@ -327,6 +328,8 @@ export interface WorldGlanceFrameEntry {
   targeted?: boolean;
   besieged?: boolean;
   siegeProgress?: number;
+  hasBuilding?: boolean;
+  buildProgress?: number;
 }
 
 export interface ObjectWorldGlancesFrameResponse {
@@ -517,7 +520,9 @@ export function readWorldGlanceFrameEntry(
   out.selected = (flags & WORLD_GLANCE_FRAME_SELECTED_FLAG) !== 0;
   out.targeted = (flags & WORLD_GLANCE_FRAME_TARGETED_FLAG) !== 0;
   out.besieged = (flags & WORLD_GLANCE_FRAME_BESIEGED_FLAG) !== 0;
+  out.hasBuilding = (flags & WORLD_GLANCE_FRAME_HAS_BUILDING_FLAG) !== 0;
   out.siegeProgress = frame.entryNumbers[numberOffset + 6] ?? 0;
+  out.buildProgress = frame.entryNumbers[numberOffset + 7] ?? 0;
   return out;
 }
 

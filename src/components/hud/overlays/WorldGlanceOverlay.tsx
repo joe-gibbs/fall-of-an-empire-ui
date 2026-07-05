@@ -381,6 +381,12 @@ function formatScale(value: number): string {
   return value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
 }
 
+function formatFrameProgressWidth(value: number | undefined): string {
+  if (!Number.isFinite(value)) return '0%';
+  const clamped = Math.max(0, Math.min(1, value as number));
+  return `${(clamped * 100).toFixed(2)}%`;
+}
+
 function localGlanceZIndex(kind: string, zOrder: number): number {
   const zIndex = Math.round(zOrder / WORLD_GLANCE_Z_INDEX_DIVISOR);
   if (!Number.isFinite(zIndex)) {
@@ -616,6 +622,23 @@ function applyClassToggle(node: HTMLDivElement, className: string, current: bool
   return next;
 }
 
+function applySettlementProgressFrame(node: HTMLDivElement, entry: WorldGlanceFrameEntry) {
+  const siegeFill = node.querySelector<HTMLElement>('.gset-siege-progress-fill');
+  if (siegeFill) {
+    siegeFill.style.width = formatFrameProgressWidth(entry.siegeProgress);
+  }
+
+  const buildBar = node.querySelector<HTMLElement>('.gset-build-bar');
+  const buildFill = node.querySelector<HTMLElement>('.gset-build-bar-fill');
+  if (!buildBar || !buildFill || typeof entry.hasBuilding !== 'boolean') {
+    return;
+  }
+
+  const showBuildBar = entry.hasBuilding && entry.besieged !== true;
+  buildBar.style.display = showBuildBar ? '' : 'none';
+  buildFill.style.width = formatFrameProgressWidth(entry.buildProgress);
+}
+
 function applyNodeFrame(
   kind: string,
   state: WorldGlanceNodeState,
@@ -696,6 +719,9 @@ function applyNodeFrame(
   state.targeted = applyClassToggle(node, 'is-targeted', state.targeted, Boolean(entry.targeted));
   state.hasMilitarySelection = applyClassToggle(node, 'has-command-selection', state.hasMilitarySelection, hasMilitarySelection);
   state.canCommandTarget = applyClassToggle(node, 'can-command-target', state.canCommandTarget, canCommandTarget);
+  if (kind === 'settlement') {
+    applySettlementProgressFrame(node, entry);
+  }
   return true;
 }
 
