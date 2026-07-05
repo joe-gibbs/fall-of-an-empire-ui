@@ -91,6 +91,7 @@ const MainMenu: React.FC = () => {
   const [workshopSearchDraft, setWorkshopSearchDraft] = useState('');
   const [factionSelectionCache, setFactionSelectionCache] = useState<Record<string, GetNewGameMapFactionSelectionResponse>>({});
   const closeTimerRef = useRef<number | null>(null);
+  const lastIllustratedPointerActivationAtRef = useRef(0);
   const factionSelectionCacheRef = useRef(new Map<string, GetNewGameMapFactionSelectionResponse>());
   const factionSelectionRequestRef = useRef(new Map<string, Promise<GetNewGameMapFactionSelectionResponse>>());
   const SUB_VIEW_CLOSE_MS = 200;
@@ -801,11 +802,12 @@ const MainMenu: React.FC = () => {
           if (event.button !== 0) {
             return;
           }
+          lastIllustratedPointerActivationAtRef.current = Date.now();
           event.preventDefault();
           btn.onClick();
         }}
         onClick={(event) => {
-          if (event.detail !== 0) {
+          if (event.detail !== 0 && Date.now() - lastIllustratedPointerActivationAtRef.current < 500) {
             return;
           }
           btn.onClick();
