@@ -5,6 +5,7 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Portrait from '../../common/portraits/Portrait';
 import GameBar from '../../common/data-display/bars/GameBar';
 import GameButton from '../../common/buttons/GameButton';
+import GameCheckButton from '../../common/buttons/GameCheckButton';
 import FactionRoundel from '../../common/entities/FactionRoundel';
 import InteractionCard from '../../common/interactions/InteractionCard';
 import InfoRow from '../../common/data-display/stats/InfoRow';
@@ -12,6 +13,12 @@ import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { enterCourtAppointmentContest, type CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
 import { useCourtAppointmentContests, useCourtPositions, useFaction, useProvinceModeOverview } from '../../../data-source/index';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
+import {
+  refreshDiplomacyOverviewBridge,
+  setAutoAssignGovernorsBridge,
+  useDiplomacyOverviewBridge,
+  type DiplomacyOverviewState,
+} from '../../../bridge/diplomacy/useDiplomacyOverviewBridge';
 import { useGameActions } from '../../../context/GameContext';
 import { GOVERNOR_MISSION_ICON } from '../../../utils/iconMaps';
 import { sidebarTypeForEntity } from '../../common/entities/entityLinkUtils';
@@ -19,12 +26,14 @@ import { renderRichText } from '../../../utils/richText';
 import type { PortraitLayerData } from '../../../data/types';
 import type { AppointmentContestView } from '../../../bridge/characters/useCourtAppointmentContestsBridge';
 import { runCourtOfficeAction, runGovernorMissionAction, type ProvinceModeCourtOfficeAction, type ProvinceModeMissionStatus, type ProvinceModeOverview } from '../../../bridge/provinces/useProvinceModeOverviewBridge';
+import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
 import { registerScreen } from '../../../registry/index';
 import { useWebUIText } from '../../../localization/WebUITextContext';
 import { CourtPositionsPanel, FactionModifierCard, PolicyEntry } from './FactionOverviewShared';
 import './GovernorFactionOverviewScreen.css';
 
-type TabId = 'province' | 'missions' | 'empire' | 'court' | 'appointments';
+type TabId = 'province' | 'missions' | 'governors' | 'empire' | 'court' | 'appointments';
+type RegionalGovernor = DiplomacyOverviewState['regionalGovernors'][number];
 
 type WarningStageTone = 'favoured' | 'stable' | 'active' | 'danger' | 'critical';
 
@@ -206,9 +215,10 @@ function appointmentCandidateHome(candidate: AppointmentCandidate, t: ReturnType
 function governorOverviewTabFromScreenId(screenId: string | null): TabId {
   const normalised = (screenId ?? '').toLowerCase();
   if (normalised === '1' || normalised === 'missions') return 'missions';
-  if (normalised === '2' || normalised === 'empire' || normalised === 'imperial') return 'empire';
-  if (normalised === '3' || normalised === 'court' || normalised === 'imperialcourt') return 'court';
-  if (normalised === '4' || normalised === 'appointments') return 'appointments';
+  if (normalised === '2' || normalised === 'governors' || normalised === 'regionalgovernors' || normalised === 'regiongovernors') return 'governors';
+  if (normalised === '3' || normalised === 'empire' || normalised === 'imperial') return 'empire';
+  if (normalised === '4' || normalised === 'court' || normalised === 'imperialcourt') return 'court';
+  if (normalised === '5' || normalised === 'appointments') return 'appointments';
   return 'province';
 }
 
@@ -1192,6 +1202,127 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
   );
 }
 
+function GovernorMetric({ label, value, tone }: { label: string; value: string; tone?: 'good' | 'bad' | 'muted' }) {
+  return (
+    <div className={`gfov-reggov-metric${tone ? ` gfov-reggov-metric--${tone}` : ''}`}>
+      <span className="gfov-reggov-metric-label">{label}</span>
+      <span className="gfov-reggov-metric-value">{value}</span>
+    </div>
+  );
+}
+
+function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => void }) {
+  const t = useWebUIText();
+  const diplomacy = useDiplomacyOverviewBridge('governors');
+  const [editing, setEditing] = useState<RegionalGovernor | null>(null);
+  const governors = [...(diplomacy?.regionalGovernors ?? [])].sort((a, b) => a.regionName.localeCompare(b.regionName));
+  const autoAssignGovernorsEnabled = diplomacy?.autoAssignGovernorsEnabled ?? false;
+
+  const refreshGovernors = useCallback(() => {
+    void refreshDiplomacyOverviewBridge('governors').catch(error => acknowledgeBridgeFailure(error, 'game.get_diplomacy_overview'));
+  }, []);
+
+  const toggleAutoAssign = useCallback(() => {
+    void setAutoAssignGovernorsBridge(!autoAssignGovernorsEnabled).catch(error => acknowledgeBridgeFailure(error, 'game.set_auto_assign_governors'));
+  }, [autoAssignGovernorsEnabled]);
+
+  return (
+    <div className="gfov-governors-tab">
+      <div className="gfov-reggov-toolbar">
+        <GameCheckButton
+          checked={autoAssignGovernorsEnabled}
+          label={t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.824.8')}
+          onToggle={toggleAutoAssign}
+          tooltip={{
+            title: t('Auto.Prop.ComponentsScreensInternalPoliticsScreen.826.9'),
+            body: t('Auto.Prop.ComponentsScreensInternalPoliticsScreen.826.10'),
+          }}
+        />
+      </div>
+
+      <div className="gfov-reggov-list">
+        <div className="gfov-reggov-header" role="row">
+          <span>{t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.831.11')}</span>
+          <span>{t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.832.12')}</span>
+          <span>{t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.833.13')}</span>
+          <span>{t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.834.14')}</span>
+          <span>{t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.835.15')}</span>
+          <span>{t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.836.16')}</span>
+          <span>{t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.837.17')}</span>
+          <span>{t('Auto.ComponentsScreensInternalPoliticsScreen.875.10')}</span>
+        </div>
+
+        {governors.length === 0 ? (
+          <div className="gfov-reggov-empty">{diplomacy?.governorEmptyReason || t('Auto.Fix.ExprFallback.componentsscreensInternalPoliticsScreen.841.1')}</div>
+        ) : (
+          governors.map(row => {
+            const corruptionTone = row.corruptionPercent >= 25 ? 'bad' : row.corruptionPercent >= 12 ? 'muted' : 'good';
+            const actionLabel = t(row.governorId ? 'FactionOverview.ReplaceAppointment' : 'Settlement.AppointGovernor');
+            return (
+              <div
+                key={row.regionId || row.regionName}
+                className="gfov-reggov-row"
+                onMouseDown={() => row.governorId && onOpenCharacter(row.governorId)}
+              >
+                <div className="gfov-reggov-region">
+                  <span className="gfov-reggov-region-name">{row.regionName}</span>
+                  <span className="gfov-reggov-region-sub">{row.settlementName}</span>
+                </div>
+                <div className="gfov-reggov-governor">
+                  <span className={row.governorId ? 'gfov-reggov-governor-name' : 'gfov-reggov-governor-name gfov-reggov-governor-name--empty'}>
+                    {row.governorName || t('Settlement.NoGovernor')}
+                  </span>
+                  {row.isLocked ? <span className="gfov-reggov-locked">{t('Auto.ComponentsScreensInternalPoliticsScreen.578.6')}</span> : null}
+                </div>
+                <GovernorMetric label={t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.833.13')} value={formatNumber(row.settlementCount)} />
+                <GovernorMetric label={t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.834.14')} value={`${formatNumber(row.corruptionPercent)}%`} tone={corruptionTone} />
+                <GovernorMetric label={t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.835.15')} value={`${formatSignedNumber(row.taxBonusPercent)}%`} tone={row.taxBonusPercent >= 0 ? 'good' : 'bad'} />
+                <GovernorMetric label={t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.836.16')} value={`${formatSignedNumber(row.unrestReductionPercent)}%`} tone={row.unrestReductionPercent >= 0 ? 'good' : 'bad'} />
+                <GovernorMetric label={t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.837.17')} value={`${formatSignedNumber(row.militaryBonusPercent)}%`} tone={row.militaryBonusPercent >= 0 ? 'good' : 'bad'} />
+                <div
+                  className="gfov-reggov-actions"
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
+                >
+                  {row.governorId ? (
+                    <GameButton
+                      variant="outline"
+                      onClick={() => onOpenCharacter(row.governorId)}
+                    >
+                      {t('Common.View')}
+                    </GameButton>
+                  ) : null}
+                  <GameButton
+                    variant="burgundy"
+                    disabled={!row.canManageGovernor || !row.settlementId}
+                    onClick={() => setEditing(row)}
+                  >
+                    {actionLabel}
+                  </GameButton>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {editing ? (
+        <RegionGovernorAppointmentModal
+          open={!!editing}
+          settlementId={editing.settlementId}
+          settlementName={editing.settlementName}
+          regionName={editing.regionName}
+          currentGovernorId={editing.governorId || undefined}
+          onClose={() => setEditing(null)}
+          onAppointed={refreshGovernors}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 function MissionsTab({ overview }: { overview: ProvinceModeOverview | null }) {
   const t = useWebUIText();
   const { openSidebar } = useGameActions();
@@ -1364,6 +1495,7 @@ export default function GovernorFactionOverviewScreen({ screenId, onClose }: { s
   const tabs = [
     { id: 'province', label: t('ProvinceMode.Tab.Province') },
     { id: 'missions', label: t('ProvinceMode.Tab.Missions') },
+    { id: 'governors', label: t('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.49.3') },
     { id: 'empire', label: t('ProvinceMode.Tab.Empire') },
     { id: 'court', label: t('ProvinceMode.Tab.Court') },
     { id: 'appointments', label: t('ProvinceMode.Tab.Appointments') },
@@ -1380,6 +1512,7 @@ export default function GovernorFactionOverviewScreen({ screenId, onClose }: { s
       >
         {activeTab === 'province' && <ProvinceTab overview={overview} onOpenCharacter={openCharacter} />}
         {activeTab === 'missions' && <MissionsTab overview={overview} />}
+        {activeTab === 'governors' && <GovernorsTab onOpenCharacter={openCharacter} />}
         {activeTab === 'empire' && <EmpireTab overview={overview} onOpenCharacter={openCharacter} />}
         {activeTab === 'court' && <CourtTab overview={overview} onOpenCharacter={openCharacter} />}
         {activeTab === 'appointments' && <AppointmentsTab overview={overview} onOpenCharacter={openCharacter} />}
@@ -1395,6 +1528,6 @@ registerScreen({
   ),
   topbarId: 'faction',
   openedByTopbar: true,
-  bridgeNames: ['faction', 'province', 'missions', 'empire', 'imperial', 'court', 'imperialcourt', 'appointments', 'governorfactionoverview'],
+  bridgeNames: ['faction', 'factions', 'province', 'missions', 'governors', 'regionalgovernors', 'regiongovernors', 'empire', 'imperial', 'court', 'imperialcourt', 'appointments', 'governorfactionoverview'],
   factionMode: 'subject',
 });

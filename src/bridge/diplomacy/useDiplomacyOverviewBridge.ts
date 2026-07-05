@@ -36,18 +36,20 @@ export function createProvinceFromCandidateBridge(landId: string, leaderPersonId
   });
 }
 
+export async function refreshDiplomacyOverviewBridge(scope: DiplomacyOverviewScope = 'full'): Promise<void> {
+  clearBridgeQueryCache('game.get_diplomacy_overview');
+  const fresh = await bridgeCall('game.get_diplomacy_overview', { scope });
+  window.dispatchEvent(new CustomEvent('bridge:game.get_diplomacy_overview', { detail: fresh }));
+}
+
 export async function setAutoAssignGovernorsBridge(enabled: boolean): Promise<void> {
   await bridgeCall('game.set_auto_assign_governors', { enabled });
-  clearBridgeQueryCache('game.get_diplomacy_overview');
-  const fresh = await bridgeCall('game.get_diplomacy_overview', { scope: 'full' });
-  window.dispatchEvent(new CustomEvent('bridge:game.get_diplomacy_overview', { detail: fresh }));
+  await refreshDiplomacyOverviewBridge('full');
 }
 
 export async function breakTreatyBridge(treatyId: string): Promise<void> {
   const result = await bridgeCall('game.break_treaty', { treatyId });
-  clearBridgeQueryCache('game.get_diplomacy_overview');
-  const fresh = await bridgeCall('game.get_diplomacy_overview', { scope: 'full' });
-  window.dispatchEvent(new CustomEvent('bridge:game.get_diplomacy_overview', { detail: fresh }));
+  await refreshDiplomacyOverviewBridge('full');
 
   if (result.otherFactionId) {
     const factionData = await bridgeCall('game.get_faction_data', { factionId: result.otherFactionId, scope: 'full' });

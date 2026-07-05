@@ -6,6 +6,14 @@
 
 /* ── Province tab ─────────────────────────────────────────────────────────── */
 
+.screen--gov-faction-overview > .sidebar-tab-bar .sidebar-tab {
+  padding-right: 0.55rem;
+  padding-left: 0.55rem;
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
 .gfov-province-tab {
   display: flex;
   flex-direction: column;
@@ -54,6 +62,175 @@
   flex-grow: 0;
   flex-shrink: 0;
   margin-bottom: 0.7rem;
+}
+
+.gfov-governors-tab {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 0.7rem 0.9rem 0.9rem;
+}
+
+.gfov-reggov-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 0.65rem;
+}
+
+.gfov-reggov-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(154, 139, 111, 0.22);
+  background-image: url('/assets/baked/panel-charcoal.png');
+  background-color: rgba(9, 10, 12, 0.58);
+  background-size: 93.0909rem 93.0909rem;
+}
+
+.gfov-reggov-header,
+.gfov-reggov-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1.2fr) minmax(11rem, 1.25fr) 5.2rem 5.6rem 5rem 5rem 5rem minmax(10.5rem, 13rem);
+  column-gap: 0.65rem;
+  align-items: center;
+}
+
+.gfov-reggov-header {
+  min-height: 2.35rem;
+  padding: 0 0.75rem;
+  border-bottom: 0.077rem solid rgba(201, 168, 76, 0.22);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.gfov-reggov-row {
+  min-height: 4.2rem;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 0.077rem solid rgba(154, 139, 111, 0.12);
+  cursor: default;
+}
+
+.gfov-reggov-row:last-child {
+  border-bottom: 0;
+}
+
+.gfov-reggov-row:hover {
+  background-color: rgba(201, 168, 76, 0.05);
+}
+
+.gfov-reggov-region,
+.gfov-reggov-governor,
+.gfov-reggov-metric {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gfov-reggov-region-name,
+.gfov-reggov-governor-name {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gfov-reggov-region-sub,
+.gfov-reggov-locked {
+  overflow: hidden;
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gfov-reggov-governor-name--empty {
+  color: var(--red-light);
+}
+
+.gfov-reggov-metric-label {
+  display: none;
+}
+
+.gfov-reggov-metric-value {
+  color: var(--text);
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+.gfov-reggov-metric--good .gfov-reggov-metric-value {
+  color: var(--green);
+}
+
+.gfov-reggov-metric--bad .gfov-reggov-metric-value {
+  color: var(--red-light);
+}
+
+.gfov-reggov-metric--muted .gfov-reggov-metric-value {
+  color: var(--yellow);
+}
+
+.gfov-reggov-actions {
+  display: flex;
+  min-width: 0;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.gfov-reggov-actions .btn--outline,
+.gfov-reggov-actions .btn--burgundy {
+  min-width: 0;
+  min-height: 2rem;
+  flex: 1 1 0;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.gfov-reggov-actions .btn--outline {
+  flex-grow: 0;
+  flex-basis: 4.8rem;
+}
+
+.gfov-reggov-empty {
+  padding: 1.1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (max-width: 72rem) {
+  .gfov-reggov-header {
+    display: none;
+  }
+
+  .gfov-reggov-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    row-gap: 0.55rem;
+  }
+
+  .gfov-reggov-metric {
+    flex-direction: row;
+    justify-content: space-between;
+    padding-right: 0.4rem;
+  }
+
+  .gfov-reggov-metric-label {
+    display: inline;
+    color: var(--text-muted);
+    font-size: 0.74rem;
+  }
+
+  .gfov-reggov-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
 }
 
 /* ── Governor header ─────────────────────────────────────────────────────── */

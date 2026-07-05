@@ -3599,8 +3599,8 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
       { landId: 'NamarisShore', landName: 'Namaris Shore', settlementCount: 2, controlPercent: 75, cost: 180, bureaucraticCreateProvinceLoad: 0, canCreate: false, blockedReason: 'Requires full control.' },
     ],
     regionalGovernors: [
-      { regionId: 'Heartland', regionName: 'Heartland', governorId: MOCK_IDS.governor, governorName: 'Marcia Vennor', settlementCount: 5, corruptionPercent: 8, taxBonusPercent: 12, unrestReductionPercent: 6, militaryBonusPercent: 2, bureaucraticGovernorLoad: 0, isLocked: false },
-      { regionId: 'MeridianCoast', regionName: 'Meridian Coast', governorId: MOCK_IDS.heir, governorName: 'Cassian Arcastus', settlementCount: 4, corruptionPercent: 14, taxBonusPercent: 6, unrestReductionPercent: 3, militaryBonusPercent: 5, bureaucraticGovernorLoad: 0, isLocked: false },
+      { regionId: 'Heartland', regionName: 'Heartland', settlementId: 'mock-settlement-capital', settlementName: 'Rephsia', governorId: MOCK_IDS.governor, governorName: 'Marcia Vennor', settlementCount: 5, corruptionPercent: 8, taxBonusPercent: 12, unrestReductionPercent: 6, militaryBonusPercent: 2, bureaucraticGovernorLoad: 0, isLocked: false, canManageGovernor: true },
+      { regionId: 'MeridianCoast', regionName: 'Meridian Coast', settlementId: 'mock-settlement-port', settlementName: 'Namaris', governorId: MOCK_IDS.heir, governorName: 'Cassian Arcastus', settlementCount: 4, corruptionPercent: 14, taxBonusPercent: 6, unrestReductionPercent: 3, militaryBonusPercent: 5, bureaucraticGovernorLoad: 0, isLocked: false, canManageGovernor: true },
     ],
     activeWars: [
       {
@@ -3859,7 +3859,7 @@ function settingsResponse(): BridgeResponse<'game.get_settings'> {
     video: { resolutionX: 1920, resolutionY: 1080, windowMode: 'Windowed', vsync: true, frameRateLimit: 120, resolutionScale: 100, dlssMode: 'Off', antiAliasing: 'High', gamma: 1, brightness: 1 },
     audio: { master: 80, music: 65, effects: 75, ui: 75, ambience: 70 },
     gameplay: { cameraPanSpeed: 1, cameraZoomSpeed: 1, cameraRotationSpeed: 1, edgeScrolling: true, invertZoom: false, pauseOnNotifications: 'Important', autoResumeOnDismiss: false, advisorFrequency: 2, llmProvider: 'Scripted', localLlmModel: '', eventFrequency: 2, includeSaveInCrashReport: false, cursorScale: 1, uiScale: 1, uiScrollSpeed: 1, tooltipDelaySeconds: 0.45, notificationDurationMultiplier: 1, reduceMotion: false, consoleEnabled: true, saveFrequency: 'Monthly', autosaveSlotCount: 3, difficulty: 'Normal', mutedNotificationTypes: [] },
-    graphics: { textureQuality: 3, shadowQuality: 3, effectsQuality: 3, foliageQuality: 3, shadingQuality: 3, viewDistanceQuality: 3, showProvinceBorders: true, showFpsCounter: false, useHardwareAcceleratedUi: false, showSettlementGlances: true, showMilitaryGlances: true, showConvoyGlances: true, glanceDensity: 'Normal' },
+    graphics: { textureQuality: 3, shadowQuality: 3, effectsQuality: 3, foliageQuality: 3, shadingQuality: 3, viewDistanceQuality: 3, showProvinceBorders: true, showFpsCounter: false, showSettlementGlances: true, showMilitaryGlances: true, showConvoyGlances: true, glanceDensity: 'Normal' },
     notifications: [
       { id: 'settlement', label: 'Settlement', description: 'Settlement warnings and events.', category: 'Realm', muted: false },
       { id: 'military', label: 'Military', description: 'Army and battle updates.', category: 'Military', muted: false },
