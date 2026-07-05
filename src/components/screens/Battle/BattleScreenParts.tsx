@@ -154,6 +154,7 @@ export function colourDistance(a: string | undefined, b: string | undefined): nu
 
 const PLAYER_BATTLE_COLOUR = '#4f7f9f';
 const ENEMY_BATTLE_COLOUR = '#b84a3c';
+const BATTLE_COUNTER_MORALE_SEGMENTS = 10;
 
 export function readableCounterColour(formation: BattleFormationLive, playerReferenceColour: string | null): string {
   if (formation.isPlayerControlled) return PLAYER_BATTLE_COLOUR;
@@ -521,6 +522,16 @@ export function FormationCounter({
   const factionColour = readableCounterColour(formation, playerReferenceColour);
   const health = formation.maxStrength > 0 ? formation.strength / formation.maxStrength * 100 : formation.healthPercent * 100;
   const morale = clamp((Number.isFinite(formation.morale) ? formation.morale : 1) * 100, 0, 100);
+  const moraleClass = morale < 35
+    ? ' battle-counter-morale--critical'
+    : morale < 65
+      ? ' battle-counter-morale--shaken'
+      : ' battle-counter-morale--steady';
+  const moraleSegments = Array.from({ length: BATTLE_COUNTER_MORALE_SEGMENTS }, (_, index) => {
+    const segmentStart = index / BATTLE_COUNTER_MORALE_SEGMENTS * 100;
+    const segmentWidth = 100 / BATTLE_COUNTER_MORALE_SEGMENTS;
+    return clamp((morale - segmentStart) / segmentWidth * 100, 0, 100);
+  });
   const chargeReady = clamp((formation.attackChargePercent ?? 0) * 100, 0, 100);
   const agentCount = formation.agentCount || battleFrameAgentCount(formation);
   const active = formation.isRouting
@@ -603,8 +614,15 @@ export function FormationCounter({
             <span className={`battle-counter-hp ${health < 35 ? 'battle-counter-hp--critical' : health < 70 ? 'battle-counter-hp--wounded' : 'battle-counter-hp--healthy'}`}>
               {Math.round(health)}
             </span>
-            <span className="battle-counter-morale" aria-hidden="true">
-              <span style={{ width: `${morale.toFixed(0)}%` }} />
+            <span
+              className={`battle-counter-morale${moraleClass}`}
+              aria-hidden="true"
+            >
+              {moraleSegments.map((segmentFill, index) => (
+                <span key={index} className="battle-counter-morale-segment">
+                  <span style={{ width: `${segmentFill.toFixed(0)}%` }} />
+                </span>
+              ))}
             </span>
           </div>
           <span className="battle-counter-label">

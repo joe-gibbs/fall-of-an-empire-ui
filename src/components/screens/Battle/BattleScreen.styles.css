@@ -973,23 +973,49 @@
 
 .battle-counter-morale {
   position: absolute;
-  left: 0.25rem;
-  right: 0.25rem;
-  bottom: -0.22rem;
-  height: 0.13rem;
-  background-color: rgba(8, 10, 12, 0.92);
-  border-width: 0.077rem;
+  left: 0.14rem;
+  right: 0.14rem;
+  bottom: -0.34rem;
+  height: 0.32rem;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  column-gap: 0.055rem;
+  padding: 0.055rem;
+  overflow: hidden;
+  background-color: rgba(5, 6, 7, 0.96);
+  border-width: 0.055rem;
   border-style: solid;
-  border-top-color: rgba(236, 204, 112, 0.28);
-  border-right-color: rgba(236, 204, 112, 0.18);
-  border-bottom-color: rgba(236, 204, 112, 0.18);
-  border-left-color: rgba(236, 204, 112, 0.28);
+  border-top-color: rgba(236, 204, 112, 0.52);
+  border-right-color: rgba(236, 204, 112, 0.32);
+  border-bottom-color: rgba(18, 20, 22, 0.78);
+  border-left-color: rgba(236, 204, 112, 0.52);
 }
 
-.battle-counter-morale > span {
+.battle-counter-morale-segment {
+  display: block;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  background-color: rgba(236, 204, 112, 0.12);
+}
+
+.battle-counter-morale-segment > span {
   display: block;
   height: 100%;
-  background-color: var(--gold-light);
+  background-color: var(--battle-counter-morale-colour, var(--green-light));
+}
+
+.battle-counter-morale--steady {
+  --battle-counter-morale-colour: var(--green-light);
+}
+
+.battle-counter-morale--shaken {
+  --battle-counter-morale-colour: var(--yellow);
+}
+
+.battle-counter-morale--critical {
+  --battle-counter-morale-colour: var(--red-light);
 }
 
 .battle-counter-label {
