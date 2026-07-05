@@ -38,7 +38,6 @@ import {
   fmt,
   RangeIndicator,
   SelectionBoxOverlay,
-  sideCommander,
   SideBlock,
   terrainIcon,
   TargetAttackLine,
@@ -426,13 +425,17 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
     () => selectedFormations.filter(formation => formation.isCommandable),
     [selectedFormations],
   );
-  const selected = selectedFormations[0] ?? null;
   const selectedActionFormation = selectedCommandable.length === 1 ? selectedCommandable[0] : null;
   const selectedCommandableStrength = selectedCommandable.reduce((total, formation) => total + formation.strength, 0);
   const selectedCommandableMaxStrength = selectedCommandable.reduce((total, formation) => total + formation.maxStrength, 0);
-  const selectedParticipant = selected
-    ? sideCommander(selected.side === 'defender' ? battle?.defender ?? { participants: [], totalStrength: 0, totalMaxStrength: 0, currentManpower: 0, initialManpower: 0, losses: 0, morale: 0 } : battle?.attacker ?? { participants: [], totalStrength: 0, totalMaxStrength: 0, currentManpower: 0, initialManpower: 0, losses: 0, morale: 0 })
-    : null;
+  const retreatablePlayerParticipants = useMemo(() => {
+    if (!battle?.found) {
+      return [];
+    }
+
+    return [...battle.attacker.participants, ...battle.defender.participants]
+      .filter(participant => participant.isPlayerControlled && participant.canRetreat);
+  }, [battle]);
 
   const handleFormationSelect = useCallback((formationId: string, additive: boolean) => {
     setSelectionState(prev => {
@@ -529,6 +532,16 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
     }
   }, [activeBattleId, selectedCommandable]);
 
+  const surrenderBattle = useCallback(async () => {
+    if (!activeBattleId || retreatablePlayerParticipants.length === 0) {
+      return;
+    }
+
+    for (const participant of retreatablePlayerParticipants) {
+      await requestBattleRetreatBridge(activeBattleId, participant.id);
+    }
+  }, [activeBattleId, retreatablePlayerParticipants]);
+
   const battleHeader = battle && battle.found ? (
     <div ref={battleHeaderRef} className="battle-header-stack">
       <div className="battle-title-strip">
@@ -537,6 +550,18 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
           <span className="battle-title-location">{battle.location}</span>
         </div>
         <div className="battle-title-actions">
+          {retreatablePlayerParticipants.length > 0 && (
+            <Tooltip content={{ title: webUIText('Battle.SurrenderTitle'), body: webUIText('Battle.SurrenderBody') }} position="bottom">
+              <GameButton
+                variant="outline"
+                icon="/assets/icons/I_Retreat.png"
+                className="battle-surrender"
+                onClick={() => void surrenderBattle()}
+              >
+                <WebUIText textKey="Battle.Surrender" />
+              </GameButton>
+            </Tooltip>
+          )}
           <Tooltip content={{ title: expandLabel }} position="bottom">
             <button
               type="button"
@@ -637,7 +662,6 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
                         {selectedActionFormation ? (
                           <>
                             <span>{selectedActionFormation.unitTypeLabel}</span>
-                            <span>{selectedActionFormation.stanceLabel}</span>
                             <span>{fmt(selectedActionFormation.strength)} / {fmt(selectedActionFormation.maxStrength)}</span>
                           </>
                         ) : (
@@ -663,28 +687,32 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
                         ))}
                       </div>
                     </div>
-                    <Tooltip content={{ title: webUIText('Battle.FormationWithdrawTitle'), body: webUIText('Battle.FormationWithdrawBody') }} position="top">
-                      <GameButton
-                        variant="outline"
-                        className="battle-withdraw"
-                        onClick={withdrawSelectedFormations}
-                      >
-                        <img src="/assets/icons/BattleActions/I_Withdraw.png" alt="" className="battle-withdraw-icon" />
-                        <WebUIText textKey="Battle.FormationWithdraw" />
-                      </GameButton>
-                    </Tooltip>
-                    {selectedParticipant?.canRetreat && (
-                      <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.911.15'), body: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.911.16') }} position="top">
-                        <GameButton
-                          variant="outline"
-                          className="battle-retreat"
-                          onClick={() => void requestBattleRetreatBridge(activeBattleId, selectedParticipant.id)}
-                        >
-                          <img src="/assets/icons/I_Retreat.png" alt="" className="battle-retreat-icon" />
-                          <WebUIText textKey="Auto.ComponentsScreensBattleBattleScreen.917.5" />
-                        </GameButton>
-                      </Tooltip>
-                    )}
+                    <div className="battle-command-group">
+                      <div className="battle-command-label"><WebUIText textKey="Settlement.Siege.Commands" /></div>
+                      <div className="battle-command-row">
+                        <Tooltip content={{ title: webUIText('Battle.FormationWithdrawTitle'), body: webUIText('Battle.FormationWithdrawBody') }} position="top">
+                          <GameButton
+                            variant="outline"
+                            className="battle-withdraw"
+                            onClick={withdrawSelectedFormations}
+                          >
+                            <WebUIText textKey="Battle.FormationWithdraw" />
+                          </GameButton>
+                        </Tooltip>
+                        {retreatablePlayerParticipants.length > 0 && (
+                          <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.911.15'), body: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.911.16') }} position="top">
+                            <GameButton
+                              variant="outline"
+                              className="battle-retreat"
+                              onClick={() => void surrenderBattle()}
+                            >
+                              <img src="/assets/icons/I_Retreat.png" alt="" className="battle-retreat-icon" />
+                              <WebUIText textKey="Auto.ComponentsScreensBattleBattleScreen.917.5" />
+                            </GameButton>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </div>
                     {selectedActionFormation && (
                       <div className="battle-actions-buttons">
                         {selectedActionFormation.actions.map(action => (

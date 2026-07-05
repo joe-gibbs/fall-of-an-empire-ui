@@ -335,11 +335,16 @@
   margin-left: 0.16rem;
 }
 
+.siege-summary-row > .tooltip-wrapper {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .siege-summary-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 33%;
+  width: 100%;
   min-width: 0;
   padding: 0.16rem 0.24rem;
   box-sizing: border-box;

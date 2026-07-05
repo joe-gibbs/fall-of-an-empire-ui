@@ -74,6 +74,35 @@
   margin-left: 0.35rem;
 }
 
+.battle-surrender {
+  height: 1.8rem;
+  min-width: 6.2rem;
+  padding: 0.18rem 0.55rem !important;
+  color: var(--red-light) !important;
+  font-size: 0.66rem !important;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  border-top-color: rgba(178, 58, 48, 0.68) !important;
+  border-right-color: rgba(178, 58, 48, 0.68) !important;
+  border-bottom-color: rgba(178, 58, 48, 0.68) !important;
+  border-left-color: rgba(178, 58, 48, 0.68) !important;
+}
+
+.battle-surrender:hover {
+  color: var(--text-bright) !important;
+  background-color: rgba(140, 30, 30, 0.5) !important;
+  border-top-color: var(--red) !important;
+  border-right-color: var(--red) !important;
+  border-bottom-color: var(--red) !important;
+  border-left-color: var(--red) !important;
+}
+
+.battle-surrender .btn-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
 .battle-title-name {
   min-width: 0;
   color: var(--text-header);
@@ -89,7 +118,8 @@
 .battle-screen-side-faction,
 .battle-terrain-label,
 .battle-actions-info-meta,
-.battle-stance-label {
+.battle-stance-label,
+.battle-command-label {
   color: var(--text-muted);
   font-size: 0.72rem;
   font-weight: 700;
@@ -639,15 +669,13 @@
 
 .battle-obstacle--rocky {
   background-image:
-    radial-gradient(ellipse at 36% 42%, rgba(86, 75, 58, 0.62), transparent 34%),
-    radial-gradient(ellipse at 62% 54%, rgba(54, 48, 40, 0.7), transparent 42%),
-    radial-gradient(ellipse at 50% 50%, rgba(116, 98, 68, 0.42), transparent 70%);
+    radial-gradient(ellipse at 50% 58%, rgba(54, 48, 40, 0.32), transparent 62%);
   background-repeat: no-repeat;
-  background-color: rgba(68, 58, 45, 0.2);
-  border-top-color: rgba(42, 34, 25, 0.6);
-  border-right-color: rgba(42, 34, 25, 0.6);
-  border-bottom-color: rgba(42, 34, 25, 0.6);
-  border-left-color: rgba(42, 34, 25, 0.6);
+  background-color: rgba(68, 58, 45, 0.12);
+  border-top-color: rgba(42, 34, 25, 0.5);
+  border-right-color: rgba(42, 34, 25, 0.5);
+  border-bottom-color: rgba(42, 34, 25, 0.5);
+  border-left-color: rgba(42, 34, 25, 0.5);
 }
 
 .battle-obstacle--marsh {
@@ -674,7 +702,17 @@
   border-left-color: rgba(35, 70, 94, 0.68);
 }
 
-.battle-obstacle--ridge,
+.battle-obstacle--ridge {
+  background-image:
+    radial-gradient(ellipse at 50% 58%, rgba(82, 58, 34, 0.3), transparent 62%);
+  background-repeat: no-repeat;
+  background-color: rgba(102, 79, 48, 0.1);
+  border-top-color: rgba(83, 58, 34, 0.4);
+  border-right-color: rgba(83, 58, 34, 0.4);
+  border-bottom-color: rgba(83, 58, 34, 0.4);
+  border-left-color: rgba(83, 58, 34, 0.4);
+}
+
 .battle-obstacle--terrain {
   background-image:
     radial-gradient(ellipse at 50% 48%, rgba(112, 90, 50, 0.4), transparent 60%),
@@ -693,6 +731,13 @@
   height: auto;
   transform: translate(-50%, -90%);
   opacity: 0.86;
+}
+
+.battle-obstacle-rock {
+  position: absolute;
+  height: auto;
+  transform: translate(-50%, -58%);
+  opacity: 0.92;
 }
 
 .battle-zone-frame {
@@ -1680,26 +1725,6 @@
   text-shadow: 0 0.077rem 0.231rem rgba(8, 12, 17, 0.8);
 }
 
-.battle-retreat {
-  width: 5rem;
-  min-height: 4.3rem;
-  display: flex !important;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 0.25rem !important;
-  font-size: 0.66rem !important;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.battle-retreat-icon {
-  width: 1.3rem;
-  height: 1.3rem;
-  margin-bottom: 0.3rem;
-}
-
 .battle-actions-panel {
   position: absolute;
   left: 1.5rem;
@@ -1828,8 +1853,10 @@
   border-left-color: var(--gold);
 }
 
-.battle-actions-panel > .tooltip-wrapper {
+.battle-command-group {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
   padding-left: 0.9rem;
   padding-right: 0.9rem;
@@ -1838,11 +1865,24 @@
   border-right-color: var(--separator);
 }
 
-.battle-withdraw {
+.battle-command-label {
+  text-align: center;
+}
+
+.battle-command-row {
+  display: flex;
+  margin-top: 0.3rem;
+}
+
+.battle-command-row > .tooltip-wrapper + .tooltip-wrapper {
+  margin-left: 0.3rem;
+}
+
+.battle-withdraw,
+.battle-retreat {
   width: 5rem;
-  min-height: 4.3rem;
+  height: 2.4rem;
   display: flex !important;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 0.4rem 0.25rem !important;
@@ -1852,10 +1892,9 @@
   text-transform: uppercase;
 }
 
-.battle-withdraw-icon {
-  width: 1.35rem;
-  height: 1.35rem;
-  margin-bottom: 0.35rem;
+.battle-retreat-icon {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .battle-actions-buttons {
@@ -1942,13 +1981,15 @@
   }
 
   .battle-actions-info,
-  .battle-stance-group {
+  .battle-stance-group,
+  .battle-command-group {
     flex-basis: auto;
     border-right-width: 0;
     padding-right: 0;
   }
 
   .battle-stance-group,
+  .battle-command-group,
   .battle-actions-buttons {
     padding-left: 0;
     margin-top: 0.6rem;

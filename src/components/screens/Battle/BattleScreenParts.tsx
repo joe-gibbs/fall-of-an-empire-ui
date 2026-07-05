@@ -42,7 +42,7 @@ interface BattleAttackEffect {
   kind: 'melee' | 'ranged' | 'siege';
 }
 
-interface TerrainTree {
+interface TerrainProp {
   x: number;
   y: number;
   size: number;
@@ -72,6 +72,11 @@ const TREE_PINE = '/assets/terrain/tree-pine-flat.png';
 const TREE_SHRUB = '/assets/terrain/tree-shrub-flat.png';
 
 const TERRAIN_TREE_SOURCES = [TREE_OAK, TREE_PINE, TREE_SHRUB];
+
+const ROCK_BOULDER = '/assets/terrain/rock-boulder-flat.png';
+const ROCK_CLUSTER = '/assets/terrain/rock-cluster-flat.png';
+
+const TERRAIN_ROCK_SOURCES = [ROCK_BOULDER, ROCK_CLUSTER];
 
 export const BATTLE_ACTION_ICON_IDS: Record<string, string> = {
   AmbushTacticsAction: 'I_Ambush',
@@ -973,9 +978,9 @@ export function AttackEffect({
   );
 }
 
-export function buildObstacleTrees(obstacle: BattlefieldObstacleDetail): TerrainTree[] {
+export function buildObstacleTrees(obstacle: BattlefieldObstacleDetail): TerrainProp[] {
   const treeCount = clamp(Math.round((obstacle.width + obstacle.height) / 115), 3, 9);
-  const trees: TerrainTree[] = [];
+  const trees: TerrainProp[] = [];
 
   for (let index = 0; index < treeCount; index++) {
     const sourceIndex = Math.floor(stableObstacleNoise(obstacle.id, index, 19) * TERRAIN_TREE_SOURCES.length) % TERRAIN_TREE_SOURCES.length;
@@ -988,6 +993,23 @@ export function buildObstacleTrees(obstacle: BattlefieldObstacleDetail): Terrain
   }
 
   return trees;
+}
+
+export function buildObstacleRocks(obstacle: BattlefieldObstacleDetail): TerrainProp[] {
+  const rockCount = clamp(Math.round((obstacle.width + obstacle.height) / 130), 2, 6);
+  const rocks: TerrainProp[] = [];
+
+  for (let index = 0; index < rockCount; index++) {
+    const sourceIndex = Math.floor(stableObstacleNoise(obstacle.id, index, 23) * TERRAIN_ROCK_SOURCES.length) % TERRAIN_ROCK_SOURCES.length;
+    rocks.push({
+      x: clamp(16 + stableObstacleNoise(obstacle.id, index, 37) * 68, 10, 90),
+      y: clamp(22 + stableObstacleNoise(obstacle.id, index, 47) * 62, 14, 88),
+      size: 1.6 + stableObstacleNoise(obstacle.id, index, 61) * 1.3,
+      src: TERRAIN_ROCK_SOURCES[sourceIndex],
+    });
+  }
+
+  return rocks;
 }
 
 export function BattleHeightLayer({
@@ -1028,6 +1050,7 @@ export function BattleObstacleFeature({
     transform: `translate(-50%, -50%) rotate(${obstacle.rotation.toFixed(2)}deg)`,
   };
   const trees = obstacle.type === 'woods' ? buildObstacleTrees(obstacle) : [];
+  const rocks = obstacle.type === 'rocky' || obstacle.type === 'ridge' ? buildObstacleRocks(obstacle) : [];
 
   return (
     <span
@@ -1045,6 +1068,20 @@ export function BattleObstacleFeature({
             left: `${tree.x}%`,
             top: `${tree.y}%`,
             width: `${tree.size}rem`,
+          }}
+        />
+      ))}
+      {rocks.map((rock, index) => (
+        <img
+          key={`${obstacle.id}:${index}`}
+          className="battle-obstacle-rock"
+          src={rock.src}
+          alt=""
+          draggable={false}
+          style={{
+            left: `${rock.x}%`,
+            top: `${rock.y}%`,
+            width: `${rock.size}rem`,
           }}
         />
       ))}
