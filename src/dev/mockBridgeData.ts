@@ -5550,9 +5550,9 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         } satisfies BridgeResponse<'game.get_webui_text'>;
       case 'game.list_mods':
         return { mods: [
-          { id: 'mock-mod', name: 'Mock Dev Content', version: '1.0', author: 'Local', description: 'Fixture mod entry for browser UI testing.', loadOrder: 0, enabled: true, pakMounted: false, hasScripts: false },
-          { id: 'mock-balance-mod', name: 'Mock Balance Pack', version: '0.2', author: 'Local', description: 'Second fixture entry for mod list spacing.', loadOrder: 1, enabled: false, pakMounted: false, hasScripts: true },
-        ] } satisfies BridgeResponse<'game.list_mods'>;
+          { id: 'mock-mod', name: 'Mock Dev Content', version: '1.0', author: 'Local', description: 'Fixture mod entry for browser UI testing.', loadOrder: 0, enabled: true, pakMounted: false, hasScripts: false, canUploadToWorkshop: true },
+          { id: 'mock-balance-mod', name: 'Mock Balance Pack', version: '0.2', author: 'Local', description: 'Second fixture entry for mod list spacing.', loadOrder: 1, enabled: false, pakMounted: false, hasScripts: true, canUploadToWorkshop: true },
+        ], steamWorkshopAvailable: true, workshopCategories: ['Campaign', 'Map', 'Gameplay', 'Faction', 'Units', 'Buildings', 'UI', 'Total Conversion', 'Translation'] } satisfies BridgeResponse<'game.list_mods'>;
       case 'game.list_saves':
         return { saves: [
           { slotName: 'mock-autosave', displayName: 'Mock Autosave', playerCharacterName: 'Valen Arcastus', playerFactionName: 'Rephsian Empire', gameDateString: '17 Summer 742', timestamp: '2026-05-01T00:00:00Z', isAutosave: true, factionId: MOCK_IDS.playerFaction, factionColour: PLAYER_COLOUR, factionSecondaryColour: PLAYER_SECONDARY, factionEmblem: 'Rephsian_1', cultureGroup: 'Rephsian', characterGender: 'male', characterPortraitIndex: 1 },

@@ -6,6 +6,8 @@ import LoadGameModal from '../components/screens/system/LoadGameModal';
 import FactionSelection from './FactionSelection';
 import LanguageSelector from '../components/mainmenu/LanguageSelector';
 import Tooltip from '../components/common/tooltips/Tooltip';
+import GameButton from '../components/common/buttons/GameButton';
+import DropdownSelect, { type DropdownSelectOption } from '../components/common/forms/DropdownSelect';
 import ContinueHeroCard from './main-menu/ContinueHeroCard';
 import CreditsRoll from './main-menu/CreditsRoll';
 import './main-menu/MainMenu.css';
@@ -39,6 +41,17 @@ const MAIN_MENU_ROW_WIDTH_REM =
   MAIN_MENU_CONTINUE_CARD_WIDTH_REM
   + MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM
   + (MAIN_MENU_CAMPAIGN_CARD_SLOTS * MAIN_MENU_SCENARIO_SLOT_WIDTH_REM);
+const WORKSHOP_CATEGORY_LABEL_KEYS: Record<string, string> = {
+  Campaign: 'MainMenu.WorkshopCategoryCampaign',
+  Map: 'MainMenu.WorkshopCategoryMap',
+  Gameplay: 'MainMenu.WorkshopCategoryGameplay',
+  Faction: 'MainMenu.WorkshopCategoryFaction',
+  Units: 'MainMenu.WorkshopCategoryUnits',
+  Buildings: 'MainMenu.WorkshopCategoryBuildings',
+  UI: 'MainMenu.WorkshopCategoryUI',
+  'Total Conversion': 'MainMenu.WorkshopCategoryTotalConversion',
+  Translation: 'MainMenu.WorkshopCategoryTranslation',
+};
 
 interface MainMenuIllustratedButtonData {
   id: string;
@@ -90,6 +103,10 @@ const MainMenu: React.FC = () => {
     workshopItems,
     subscribedWorkshopItems,
     workshopOperations,
+    steamWorkshopAvailable,
+    workshopCategories,
+    workshopCategory,
+    setWorkshopCategory,
     workshopSearchText,
     workshopPage,
     workshopTotalResults,
@@ -106,6 +123,7 @@ const MainMenu: React.FC = () => {
   } = useModsBridge(view === 'mods');
 
   const modsNeedRestart = modsRequireRestart || workshopChangesRequireRestart;
+  const activeModsPanelView: ModsPanelView = steamWorkshopAvailable ? modsPanelView : 'installed';
 
   const preloadFactionSelection = useCallback((mapId: string) => {
     const cached = factionSelectionCacheRef.current.get(mapId);
@@ -277,7 +295,7 @@ const MainMenu: React.FC = () => {
   };
 
   const handleWorkshopSearch = async (page = 1) => {
-    await browseWorkshop(workshopSearchDraft.trim(), page);
+    await browseWorkshop(workshopSearchDraft.trim(), page, workshopCategory);
   };
 
   const handleOpenWorkshopItem = async (url: string) => {
@@ -288,6 +306,32 @@ const MainMenu: React.FC = () => {
       console.error('[MainMenu] open workshop item failed', err);
     }
   };
+
+  const renderModActionButton = (
+    key: string,
+    variant: 'burgundy' | 'outline' | 'ghost',
+    disabled: boolean,
+    onClick: () => void,
+    content: React.ReactNode,
+  ) => (
+    <span
+      key={key}
+      className="mm-mod-action-wrap"
+      onMouseDown={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
+      <GameButton
+        variant={variant}
+        disabled={disabled}
+        className="mm-mod-action-btn"
+        onClick={onClick}
+      >
+        {content}
+      </GameButton>
+    </span>
+  );
 
   const openExternalLink = async (linkId: string) => {
     try {
@@ -356,8 +400,21 @@ const MainMenu: React.FC = () => {
     </div>
   );
 
+  const workshopCategoryOptions: DropdownSelectOption[] = [
+    { value: '', label: webUIText('MainMenu.WorkshopCategoryAll') },
+    ...workshopCategories.map(category => ({
+      value: category,
+      label: WORKSHOP_CATEGORY_LABEL_KEYS[category]
+        ? webUIText(WORKSHOP_CATEGORY_LABEL_KEYS[category])
+        : category,
+    })),
+  ];
+
   const renderWorkshopItem = (item: SteamWorkshopItem) => {
     const operation = workshopOperations[item.publishedFileId];
+    const isUnsubscribed = operation?.state === 'unsubscribed';
+    const isSubscribed = !isUnsubscribed && item.subscribed;
+    const installedModId = isUnsubscribed ? '' : item.installedModId;
     const busy = operation?.state === 'subscribing'
       || operation?.state === 'unsubscribing'
       || operation?.state === 'downloading';
@@ -373,21 +430,26 @@ const MainMenu: React.FC = () => {
               ? 'MainMenu.WorkshopStatusUnsubscribed'
               : operation?.state === 'failed'
                 ? 'MainMenu.WorkshopStatusFailed'
-                : item.installedModId
+                : installedModId
                   ? 'MainMenu.WorkshopStatusInstalled'
-                  : item.subscribed
+                  : isSubscribed
                     ? 'MainMenu.WorkshopStatusSubscribed'
                     : '';
     const progress = item.downloadTotalBytes > 0
       ? Math.max(0, Math.min(100, Math.round((item.downloadBytes / item.downloadTotalBytes) * 100)))
       : 0;
     const itemUrl = `https://steamcommunity.com/sharedfiles/filedetails/?id=${item.publishedFileId}`;
-    const canDownload = item.subscribed && (item.needsUpdate || !item.installedModId);
+    const canDownload = isSubscribed && (item.needsUpdate || !installedModId);
+    const itemCategories = (item.categories ?? []).filter(Boolean);
 
     return (
-      <div key={item.publishedFileId} className={`mm-mod-entry mm-workshop-entry ${item.subscribed ? 'mm-mod-entry--enabled' : ''}`}>
+      <div key={item.publishedFileId} className={`mm-mod-entry mm-workshop-entry ${isSubscribed ? 'mm-mod-entry--enabled' : ''}`}>
         <div className="mm-workshop-thumb" aria-hidden="true">
-          <span />
+          {item.previewUrl ? (
+            <img src={item.previewUrl} alt="" draggable={false} />
+          ) : (
+            <span />
+          )}
         </div>
         <div className="mm-mod-info">
           <span className="mm-mod-name">
@@ -396,6 +458,13 @@ const MainMenu: React.FC = () => {
           <span className="mm-mod-author">
             {webUIText('MainMenu.WorkshopVotes', { Votes: item.votesUp })}
           </span>
+          {itemCategories.length > 0 && (
+            <span className="mm-workshop-categories">
+              {itemCategories.map(category => WORKSHOP_CATEGORY_LABEL_KEYS[category]
+                ? webUIText(WORKSHOP_CATEGORY_LABEL_KEYS[category])
+                : category).join(', ')}
+            </span>
+          )}
           {item.description && <span className="mm-mod-desc">{item.description}</span>}
           {statusKey && (
             <span className={`mm-mod-upload-status mm-workshop-status--${operation?.state ?? 'idle'}`}>
@@ -403,9 +472,9 @@ const MainMenu: React.FC = () => {
               {operation?.state === 'downloading' && progress > 0 ? ` ${progress}%` : ''}
             </span>
           )}
-          {item.installedModId && (
+          {installedModId && (
             <span className="mm-mod-upload-status">
-              {webUIText('MainMenu.WorkshopInstalledAs', { ModId: item.installedModId })}
+              {webUIText('MainMenu.WorkshopInstalledAs', { ModId: installedModId })}
             </span>
           )}
           {operation?.error && (
@@ -413,54 +482,23 @@ const MainMenu: React.FC = () => {
           )}
         </div>
         <div className="mm-mod-controls">
-          <button
-            className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
-            onMouseDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              void handleOpenWorkshopItem(itemUrl);
-            }}
-          >
-            <WebUIText textKey="MainMenu.WorkshopOpen" />
-          </button>
-          {!item.subscribed && (
-            <button
-              className="mm-mod-upload-btn"
-              disabled={busy}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                void subscribeWorkshopItem(item.publishedFileId);
-              }}
-            >
-              <WebUIText textKey="MainMenu.WorkshopSubscribe" />
-            </button>
+          {renderModActionButton('open', 'outline', false, () => {
+            void handleOpenWorkshopItem(itemUrl);
+          }, <WebUIText textKey="MainMenu.WorkshopOpen" />)}
+          {!isSubscribed && (
+            renderModActionButton('subscribe', 'burgundy', busy, () => {
+              void subscribeWorkshopItem(item.publishedFileId);
+            }, <WebUIText textKey="MainMenu.WorkshopSubscribe" />)
           )}
           {canDownload && (
-            <button
-              className="mm-mod-upload-btn"
-              disabled={busy}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                void downloadWorkshopItem(item.publishedFileId);
-              }}
-            >
-              <WebUIText textKey={item.needsUpdate ? 'MainMenu.WorkshopUpdate' : 'MainMenu.WorkshopInstall'} />
-            </button>
+            renderModActionButton('download', 'burgundy', busy, () => {
+              void downloadWorkshopItem(item.publishedFileId);
+            }, <WebUIText textKey={item.needsUpdate ? 'MainMenu.WorkshopUpdate' : 'MainMenu.WorkshopInstall'} />)
           )}
-          {item.subscribed && (
-            <button
-              className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
-              disabled={busy}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                void unsubscribeWorkshopItem(item.publishedFileId);
-              }}
-            >
-              <WebUIText textKey="MainMenu.WorkshopUnsubscribe" />
-            </button>
+          {isSubscribed && (
+            renderModActionButton('unsubscribe', 'outline', busy, () => {
+              void unsubscribeWorkshopItem(item.publishedFileId);
+            }, <WebUIText textKey="MainMenu.WorkshopUnsubscribe" />)
           )}
         </div>
       </div>
@@ -474,12 +512,16 @@ const MainMenu: React.FC = () => {
         <div className="mm-mod-tabs">
           {([
             ['installed', 'MainMenu.ModTabInstalled'],
-            ['workshop', 'MainMenu.ModTabWorkshop'],
-            ['subscribed', 'MainMenu.ModTabSubscribed'],
+            ...(steamWorkshopAvailable
+              ? [
+                ['workshop', 'MainMenu.ModTabWorkshop'],
+                ['subscribed', 'MainMenu.ModTabSubscribed'],
+              ] as const
+              : []),
           ] as const).map(([tab, labelKey]) => (
             <button
               key={tab}
-              className={`mm-mod-tab ${modsPanelView === tab ? 'mm-mod-tab--active' : ''}`}
+              className={`mm-mod-tab ${activeModsPanelView === tab ? 'mm-mod-tab--active' : ''}`}
               onMouseDown={(event) => {
                 event.preventDefault();
                 setModsPanelView(tab);
@@ -491,13 +533,13 @@ const MainMenu: React.FC = () => {
           ))}
         </div>
 
-        {modsPanelView === 'installed' && mods === null && (
+        {activeModsPanelView === 'installed' && mods === null && (
           <div className="mm-list-empty"><WebUIText textKey="Auto.PagesMainMenu.380.8" /></div>
         )}
-        {modsPanelView === 'installed' && mods !== null && mods.length === 0 && (
+        {activeModsPanelView === 'installed' && mods !== null && mods.length === 0 && (
           <div className="mm-list-empty"><WebUIText textKey="Auto.PagesMainMenu.383.9" /></div>
         )}
-        {modsPanelView === 'installed' && mods !== null && mods.length > 0 && (
+        {activeModsPanelView === 'installed' && mods !== null && mods.length > 0 && (
           <p className="mm-mod-notice">
             <WebUIText textKey="Auto.PagesMainMenu.387.10" />
           </p>
@@ -516,7 +558,7 @@ const MainMenu: React.FC = () => {
             </button>
           </div>
         )}
-        {modsPanelView === 'installed' && mods !== null && mods.map(mod => {
+        {activeModsPanelView === 'installed' && mods !== null && mods.map(mod => {
           const uploadStatus = uploadStatuses[mod.id];
           const uploadInProgress = uploadStatus?.state === 'preparing' || uploadStatus?.state === 'uploading';
           const uploadLabel = uploadInProgress
@@ -561,28 +603,15 @@ const MainMenu: React.FC = () => {
                 )}
               </div>
               <div className="mm-mod-controls">
-                <button
-                  className="mm-mod-upload-btn"
-                  disabled={uploadInProgress}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
+                {mod.canUploadToWorkshop && (
+                  renderModActionButton('upload', 'burgundy', uploadInProgress, () => {
                     void handleUploadMod(mod);
-                  }}
-                >
-                  {uploadLabel}
-                </button>
+                  }, uploadLabel)
+                )}
                 {uploadStatus?.url && (
-                  <button
-                    className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
-                    onMouseDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      void handleOpenWorkshopItem(uploadStatus.url);
-                    }}
-                  >
-                    {webUIText('MainMenu.ModWorkshopOpen')}
-                  </button>
+                  renderModActionButton('open-workshop', 'outline', false, () => {
+                    void handleOpenWorkshopItem(uploadStatus.url);
+                  }, webUIText('MainMenu.ModWorkshopOpen'))
                 )}
                 <div
                   className={`mm-toggle ${mod.enabled ? 'mm-toggle--on' : ''}`}
@@ -594,7 +623,7 @@ const MainMenu: React.FC = () => {
             </div>
           );
         })}
-        {modsPanelView === 'workshop' && (
+        {activeModsPanelView === 'workshop' && (
           <div className="mm-workshop-panel">
             <div className="mm-workshop-search">
               <input
@@ -609,39 +638,58 @@ const MainMenu: React.FC = () => {
                   }
                 }}
               />
-              <button
-                className="mm-mod-upload-btn"
-                onMouseDown={(event) => {
-                  event.preventDefault();
+              <DropdownSelect
+                id="main-menu-workshop-category"
+                className="mm-workshop-category-select"
+                triggerClassName="mm-workshop-category-trigger"
+                textClassName="mm-workshop-category-text"
+                chevronClassName="mm-workshop-category-chevron"
+                menuClassName="mm-workshop-category-menu"
+                optionClassName="mm-workshop-category-option"
+                optionActiveClassName="mm-workshop-category-option--active"
+                value={workshopCategory}
+                options={workshopCategoryOptions}
+                escapeId="main-menu.workshop.category"
+                isActive={false}
+                position="below-left"
+                onChange={(nextCategory) => {
+                  setWorkshopCategory(nextCategory);
+                  void browseWorkshop(workshopSearchDraft.trim(), 1, nextCategory);
+                }}
+              />
+              <GameButton
+                variant="burgundy"
+                className="mm-mod-action-btn"
+                onClick={() => {
                   void handleWorkshopSearch(1);
                 }}
               >
                 <WebUIText textKey="MainMenu.WorkshopSearch" />
-              </button>
+              </GameButton>
             </div>
             <div className="mm-workshop-toolbar">
               <span className="mm-workshop-page">{webUIText('MainMenu.WorkshopPage', { Page: workshopPage })}</span>
               <div className="mm-workshop-page-actions">
-                <button
-                  className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
+                <GameButton
+                  variant="outline"
+                  className="mm-mod-action-btn"
                   disabled={workshopQueryInProgress || workshopPage <= 1}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    void browseWorkshop(workshopSearchText, Math.max(1, workshopPage - 1));
+                  onClick={() => {
+                    void browseWorkshop(workshopSearchText, Math.max(1, workshopPage - 1), workshopCategory);
                   }}
                 >
                   <WebUIText textKey="MainMenu.WorkshopPrevious" />
-                </button>
-                <button
-                  className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
+                </GameButton>
+                <GameButton
+                  variant="outline"
+                  className="mm-mod-action-btn"
                   disabled={workshopQueryInProgress || workshopPage * 50 >= workshopTotalResults}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    void browseWorkshop(workshopSearchText, workshopPage + 1);
+                  onClick={() => {
+                    void browseWorkshop(workshopSearchText, workshopPage + 1, workshopCategory);
                   }}
                 >
                   <WebUIText textKey="MainMenu.WorkshopNext" />
-                </button>
+                </GameButton>
               </div>
             </div>
             {workshopError && <div className="mm-list-empty">{workshopError}</div>}
@@ -651,20 +699,20 @@ const MainMenu: React.FC = () => {
             {workshopItems.map(item => renderWorkshopItem(item))}
           </div>
         )}
-        {modsPanelView === 'subscribed' && (
+        {activeModsPanelView === 'subscribed' && (
           <div className="mm-workshop-panel">
             <div className="mm-workshop-toolbar">
               <span className="mm-workshop-page"><WebUIText textKey="MainMenu.ModTabSubscribed" /></span>
-              <button
-                className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
+              <GameButton
+                variant="outline"
+                className="mm-mod-action-btn"
                 disabled={subscribedWorkshopQueryInProgress}
-                onMouseDown={(event) => {
-                  event.preventDefault();
+                onClick={() => {
                   void refreshSubscribedWorkshop();
                 }}
               >
                 <WebUIText textKey="MainMenu.WorkshopRefresh" />
-              </button>
+              </GameButton>
             </div>
             {subscribedWorkshopError && <div className="mm-list-empty">{subscribedWorkshopError}</div>}
             {!subscribedWorkshopError && subscribedWorkshopItems.length === 0 && !subscribedWorkshopQueryInProgress && (

@@ -4406,10 +4406,13 @@ export interface ModEntryDto {
   enabled: boolean;
   pakMounted: boolean;
   hasScripts: boolean;
+  canUploadToWorkshop: boolean;
 }
 
 export interface ListModsResponse {
   mods: ModEntryDto[];
+  steamWorkshopAvailable: boolean;
+  workshopCategories: string[];
 }
 
 export interface NewGameMapDto {
@@ -5507,6 +5510,7 @@ export interface SteamWorkshopItemDto {
   title: string;
   description: string;
   previewUrl: string;
+  categories: string[];
   ownerSteamId: string;
   createdTimestamp: number;
   updatedTimestamp: number;
@@ -5535,6 +5539,7 @@ export interface SteamWorkshopItemOperationResponse {
 export interface BrowseSteamWorkshopRequest {
   searchText: string;
   page: number;
+  category: string;
   subscribedOnly: boolean;
 }
 
@@ -5544,6 +5549,8 @@ export interface BrowseSteamWorkshopResponse {
   subscribedOnly: boolean;
   error: string;
   searchText: string;
+  category: string;
+  categories: string[];
   page: number;
   totalResults: number;
   items: SteamWorkshopItemDto[];

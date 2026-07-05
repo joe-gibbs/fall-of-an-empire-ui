@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type {
   BrowseSteamWorkshopResponse,
@@ -30,6 +30,10 @@ export interface UseModsBridge {
   workshopItems: SteamWorkshopItem[];
   subscribedWorkshopItems: SteamWorkshopItem[];
   workshopOperations: Record<string, SteamWorkshopOperationStatus>;
+  steamWorkshopAvailable: boolean;
+  workshopCategories: string[];
+  workshopCategory: string;
+  setWorkshopCategory: (category: string) => void;
   workshopSearchText: string;
   workshopPage: number;
   workshopTotalResults: number;
@@ -38,7 +42,7 @@ export interface UseModsBridge {
   workshopQueryInProgress: boolean;
   subscribedWorkshopQueryInProgress: boolean;
   workshopChangesRequireRestart: boolean;
-  browseWorkshop: (searchText: string, page?: number) => Promise<void>;
+  browseWorkshop: (searchText: string, page?: number, category?: string) => Promise<void>;
   refreshSubscribedWorkshop: () => Promise<void>;
   subscribeWorkshopItem: (publishedFileId: string) => Promise<void>;
   unsubscribeWorkshopItem: (publishedFileId: string) => Promise<void>;
@@ -50,12 +54,43 @@ export interface SteamWorkshopOperationStatus {
   error: string;
 }
 
-function mergeWorkshopItem(items: SteamWorkshopItem[], next: SteamWorkshopItem): SteamWorkshopItem[] {
+function hasWorkshopDisplayMetadata(item: SteamWorkshopItem): boolean {
+  return Boolean(
+    item.title
+    || item.description
+    || item.previewUrl
+    || item.ownerSteamId
+    || item.installedModId
+    || (item.categories?.length ?? 0) > 0
+    || item.createdTimestamp
+    || item.updatedTimestamp
+    || item.votesUp
+    || item.votesDown
+    || item.score,
+  );
+}
+
+function mergeWorkshopOperationItem(items: SteamWorkshopItem[], next: SteamWorkshopItem): SteamWorkshopItem[] {
   if (!next?.publishedFileId) return items;
   const index = items.findIndex(item => item.publishedFileId === next.publishedFileId);
-  if (index < 0) return [next, ...items];
+  if (index < 0) return hasWorkshopDisplayMetadata(next) ? [next, ...items] : items;
+
+  const existing = items[index];
   const copy = items.slice();
-  copy[index] = { ...copy[index], ...next };
+  copy[index] = {
+    ...existing,
+    ...next,
+    title: next.title || existing.title,
+    description: next.description || existing.description,
+    previewUrl: next.previewUrl || existing.previewUrl,
+    categories: (next.categories?.length ?? 0) > 0 ? next.categories : existing.categories,
+    ownerSteamId: next.ownerSteamId || existing.ownerSteamId,
+    createdTimestamp: next.createdTimestamp || existing.createdTimestamp,
+    updatedTimestamp: next.updatedTimestamp || existing.updatedTimestamp,
+    votesUp: next.votesUp || existing.votesUp,
+    votesDown: next.votesDown || existing.votesDown,
+    score: next.score || existing.score,
+  };
   return copy;
 }
 
@@ -65,6 +100,9 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
   const [workshopItems, setWorkshopItems] = useState<SteamWorkshopItem[]>([]);
   const [subscribedWorkshopItems, setSubscribedWorkshopItems] = useState<SteamWorkshopItem[]>([]);
   const [workshopOperations, setWorkshopOperations] = useState<Record<string, SteamWorkshopOperationStatus>>({});
+  const [steamWorkshopAvailable, setSteamWorkshopAvailable] = useState(false);
+  const [workshopCategories, setWorkshopCategories] = useState<string[]>([]);
+  const [workshopCategory, setWorkshopCategory] = useState('');
   const [workshopSearchText, setWorkshopSearchText] = useState('');
   const [workshopPage, setWorkshopPage] = useState(1);
   const [workshopTotalResults, setWorkshopTotalResults] = useState(0);
@@ -73,6 +111,14 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
   const [workshopQueryInProgress, setWorkshopQueryInProgress] = useState(false);
   const [subscribedWorkshopQueryInProgress, setSubscribedWorkshopQueryInProgress] = useState(false);
   const [workshopChangesRequireRestart, setWorkshopChangesRequireRestart] = useState(false);
+  const initialWorkshopFetchRef = useRef(false);
+
+  const refreshMods = useCallback(async () => {
+    const res = await bridgeCall('game.list_mods');
+    setMods(res.mods ?? []);
+    setSteamWorkshopAvailable(Boolean(res.steamWorkshopAvailable));
+    setWorkshopCategories(res.workshopCategories ?? []);
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
@@ -82,10 +128,17 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     (async () => {
       try {
         const res = await bridgeCall('game.list_mods');
-        if (!cancelled) setMods(res.mods ?? []);
+        if (cancelled) return;
+        setMods(res.mods ?? []);
+        setSteamWorkshopAvailable(Boolean(res.steamWorkshopAvailable));
+        setWorkshopCategories(res.workshopCategories ?? []);
       } catch (error) {
         acknowledgeBridgeFailure(error);
-        if (!cancelled) setMods([]);
+        if (!cancelled) {
+          setMods([]);
+          setSteamWorkshopAvailable(false);
+          setWorkshopCategories([]);
+        }
       }
     })();
 
@@ -126,12 +179,14 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     setWorkshopItems(items);
     setWorkshopError(event.error ?? '');
     setWorkshopSearchText(event.searchText ?? '');
+    setWorkshopCategory(event.category ?? '');
+    setWorkshopCategories(event.categories ?? []);
     setWorkshopPage(event.page || 1);
     setWorkshopTotalResults(event.totalResults || 0);
     setWorkshopQueryInProgress(Boolean(event.queryInProgress));
   }, []);
 
-  const applyWorkshopOperation = useCallback((event: SteamWorkshopItemOperationResponse) => {
+  const applyWorkshopOperation = useCallback((event: SteamWorkshopItemOperationResponse, bRequireRestartOnInstall = false) => {
     const publishedFileId = event.publishedFileId || event.item?.publishedFileId;
     if (!publishedFileId) return;
 
@@ -144,26 +199,27 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     }));
 
     if (event.item?.publishedFileId) {
-      setWorkshopItems(prev => mergeWorkshopItem(prev, event.item));
+      setWorkshopItems(prev => mergeWorkshopOperationItem(prev, event.item));
       setSubscribedWorkshopItems(prev => {
         if (event.state === 'unsubscribed') {
           return prev.filter(item => item.publishedFileId !== event.item.publishedFileId);
         }
-        return mergeWorkshopItem(prev, event.item);
+        return mergeWorkshopOperationItem(prev, event.item);
       });
     }
 
-    if (event.state === 'installed' || event.state === 'unsubscribed') {
+    if (bRequireRestartOnInstall && event.state === 'installed') {
       setWorkshopChangesRequireRestart(true);
+      void refreshMods().catch(acknowledgeBridgeFailure);
     }
-  }, []);
+  }, [refreshMods]);
 
   useEffect(() => {
     if (!enabled) return;
     const unsubBrowse = onBridgeEvent('game.browse_steam_workshop', applyWorkshopQuery);
-    const unsubSubscribe = onBridgeEvent('game.subscribe_steam_workshop_item', applyWorkshopOperation);
-    const unsubUnsubscribe = onBridgeEvent('game.unsubscribe_steam_workshop_item', applyWorkshopOperation);
-    const unsubDownload = onBridgeEvent('game.download_steam_workshop_item', applyWorkshopOperation);
+    const unsubSubscribe = onBridgeEvent('game.subscribe_steam_workshop_item', event => applyWorkshopOperation(event, false));
+    const unsubUnsubscribe = onBridgeEvent('game.unsubscribe_steam_workshop_item', event => applyWorkshopOperation(event, false));
+    const unsubDownload = onBridgeEvent('game.download_steam_workshop_item', event => applyWorkshopOperation(event, true));
     return () => {
       unsubBrowse();
       unsubSubscribe();
@@ -172,39 +228,47 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     };
   }, [applyWorkshopOperation, applyWorkshopQuery, enabled]);
 
-  const browseWorkshop = useCallback(async (searchText: string, page = 1) => {
+  const browseWorkshop = useCallback(async (searchText: string, page = 1, category = workshopCategory) => {
+    if (!steamWorkshopAvailable) return;
     setWorkshopSearchText(searchText);
+    setWorkshopCategory(category);
     setWorkshopPage(page);
     setWorkshopQueryInProgress(true);
     setWorkshopError('');
     try {
-      const res = await bridgeCall('game.browse_steam_workshop', { searchText, page, subscribedOnly: false });
+      const res = await bridgeCall('game.browse_steam_workshop', { searchText, page, category, subscribedOnly: false });
       applyWorkshopQuery(res);
     } catch (error) {
       acknowledgeBridgeFailure(error);
       setWorkshopQueryInProgress(false);
       setWorkshopError(error instanceof Error ? error.message : '');
     }
-  }, [applyWorkshopQuery]);
+  }, [applyWorkshopQuery, steamWorkshopAvailable, workshopCategory]);
 
   const refreshSubscribedWorkshop = useCallback(async () => {
+    if (!steamWorkshopAvailable) return;
     setSubscribedWorkshopQueryInProgress(true);
     setSubscribedWorkshopError('');
     try {
-      const res = await bridgeCall('game.browse_steam_workshop', { searchText: '', page: 1, subscribedOnly: true });
+      const res = await bridgeCall('game.browse_steam_workshop', { searchText: '', page: 1, category: '', subscribedOnly: true });
       applyWorkshopQuery(res);
     } catch (error) {
       acknowledgeBridgeFailure(error);
       setSubscribedWorkshopQueryInProgress(false);
       setSubscribedWorkshopError(error instanceof Error ? error.message : '');
     }
-  }, [applyWorkshopQuery]);
+  }, [applyWorkshopQuery, steamWorkshopAvailable]);
 
   useEffect(() => {
-    if (!enabled) return;
-    void browseWorkshop('', 1);
+    if (!enabled) {
+      initialWorkshopFetchRef.current = false;
+      return;
+    }
+    if (!steamWorkshopAvailable || initialWorkshopFetchRef.current) return;
+    initialWorkshopFetchRef.current = true;
+    void browseWorkshop('', 1, '');
     void refreshSubscribedWorkshop();
-  }, [browseWorkshop, enabled, refreshSubscribedWorkshop]);
+  }, [browseWorkshop, enabled, refreshSubscribedWorkshop, steamWorkshopAvailable]);
 
   const setEnabled = useCallback(async (modId: string, nextEnabled: boolean) => {
     setMods(prev => prev
@@ -256,7 +320,7 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'subscribing', error: '' } }));
     try {
       const res = await bridgeCall('game.subscribe_steam_workshop_item', { publishedFileId });
-      applyWorkshopOperation(res);
+      applyWorkshopOperation(res, false);
     } catch (error) {
       acknowledgeBridgeFailure(error);
       setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'failed', error: error instanceof Error ? error.message : '' } }));
@@ -267,7 +331,7 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'unsubscribing', error: '' } }));
     try {
       const res = await bridgeCall('game.unsubscribe_steam_workshop_item', { publishedFileId });
-      applyWorkshopOperation(res);
+      applyWorkshopOperation(res, false);
     } catch (error) {
       acknowledgeBridgeFailure(error);
       setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'failed', error: error instanceof Error ? error.message : '' } }));
@@ -278,7 +342,7 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'downloading', error: '' } }));
     try {
       const res = await bridgeCall('game.download_steam_workshop_item', { publishedFileId });
-      applyWorkshopOperation(res);
+      applyWorkshopOperation(res, true);
     } catch (error) {
       acknowledgeBridgeFailure(error);
       setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'failed', error: error instanceof Error ? error.message : '' } }));
@@ -293,6 +357,10 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     workshopItems,
     subscribedWorkshopItems,
     workshopOperations,
+    steamWorkshopAvailable,
+    workshopCategories,
+    workshopCategory,
+    setWorkshopCategory,
     workshopSearchText,
     workshopPage,
     workshopTotalResults,

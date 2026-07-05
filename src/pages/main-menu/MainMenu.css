@@ -1054,44 +1054,15 @@
   flex-shrink: 0;
 }
 
-.mm-mod-upload-btn {
+.mm-mod-action-wrap {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.mm-mod-action-btn {
   min-width: 5.75rem;
   min-height: 2rem;
-  padding: 0.3636rem 0.6364rem;
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.42);
-  border-right-color: rgba(201, 168, 76, 0.42);
-  border-bottom-color: rgba(201, 168, 76, 0.42);
-  border-left-color: rgba(201, 168, 76, 0.42);
-  background-color: rgba(74, 21, 48, 0.78);
-  color: var(--text-header);
-  font-family: var(--font-body);
-  font-size: 0.9545rem;
-  line-height: 1;
-  letter-spacing: 0;
-  text-align: center;
-  cursor: pointer;
-}
-
-.mm-mod-upload-btn:hover,
-.mm-mod-upload-btn:focus {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  background-color: rgba(108, 31, 36, 0.9);
-  color: #fff2b3;
-}
-
-.mm-mod-upload-btn:disabled {
-  cursor: default;
-  opacity: 0.58;
-}
-
-.mm-mod-upload-btn--secondary {
-  background-color: rgba(12, 16, 20, 0.72);
-  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .mm-workshop-panel {
@@ -1123,6 +1094,54 @@
   border-color: rgba(224, 200, 114, 0.62);
 }
 
+.mm-workshop-category-select {
+  width: 10.9091rem;
+  min-width: 10.9091rem;
+}
+
+.mm-workshop-category-trigger {
+  width: 10.9091rem;
+  max-width: 10.9091rem;
+  min-width: 10.9091rem;
+  height: 2.1818rem;
+  padding: 0.3636rem 0.5455rem;
+  border-width: 0.0909rem;
+  border-color: rgba(201, 168, 76, 0.22);
+  background-color: rgba(8, 12, 16, 0.78);
+  color: var(--text-header);
+  font-size: 0.9091rem;
+}
+
+.mm-workshop-category-trigger:hover,
+.dropdown-select--open .mm-workshop-category-trigger {
+  border-color: rgba(224, 200, 114, 0.62);
+}
+
+.mm-workshop-category-text {
+  color: inherit;
+}
+
+.mm-workshop-category-chevron {
+  width: 0.6364rem;
+  height: 0.6364rem;
+  margin-left: 0.4545rem;
+}
+
+.mm-workshop-category-menu {
+  z-index: 80;
+  min-width: 10.9091rem;
+}
+
+.mm-workshop-category-option {
+  min-width: 10.9091rem;
+  padding: 0.3636rem 0.5455rem;
+  font-size: 0.9091rem;
+}
+
+.mm-workshop-category-option--active {
+  color: var(--text-header);
+}
+
 .mm-workshop-toolbar {
   display: flex;
   align-items: center;
@@ -1151,19 +1170,34 @@
 
 .mm-workshop-thumb {
   width: 3.6364rem;
+  height: 3.6364rem;
   min-width: 3.6364rem;
-  min-height: 3.6364rem;
   border: 0.0909rem solid rgba(201, 168, 76, 0.24);
   background-color: rgba(8, 12, 16, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .mm-workshop-thumb span {
   width: 1.3636rem;
   height: 1.3636rem;
   background-color: rgba(240, 236, 224, 0.86);
+}
+
+.mm-workshop-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mm-workshop-categories {
+  color: rgba(201, 168, 76, 0.86);
+  font-family: var(--font-body);
+  font-size: 0.8636rem;
+  line-height: 1.2;
 }
 
 .mm-workshop-status--installed {
