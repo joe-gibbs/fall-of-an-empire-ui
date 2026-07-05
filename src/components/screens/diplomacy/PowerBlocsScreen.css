@@ -243,6 +243,14 @@
   margin-bottom: 0.12rem;
 }
 
+.screen--power-blocs .bar-fill {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
+}
+
 .pbs-identity {
   display: flex;
   align-items: center;
@@ -522,10 +530,21 @@
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: #050608;
+  background-image: url('/assets/bar-track.png');
+  background-repeat: repeat-x;
+  background-size: auto 0.42rem;
   border-width: 0.077rem;
   border-style: solid;
   border-color: rgba(121, 103, 76, 0.42);
+}
+
+.pbs-escalation-dot--active {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.16) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
 }
 
 .pbs-escalation-dot + .pbs-escalation-dot {

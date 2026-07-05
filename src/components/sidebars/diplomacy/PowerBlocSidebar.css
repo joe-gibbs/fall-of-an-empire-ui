@@ -454,8 +454,11 @@
   border-width: 0.077rem;
   border-style: solid;
   border-color: rgba(201, 168, 76, 0.24);
-  background-color: rgba(5, 8, 11, 0.78);
-  transition-property: background-color;
+  background-color: #050608;
+  background-image: url('/assets/bar-track.png');
+  background-repeat: repeat-x;
+  background-size: auto 0.55rem;
+  transition-property: background-color, background-image;
   transition-duration: 0.18s;
   transition-timing-function: var(--ease-snap);
 }
@@ -465,20 +468,27 @@
 }
 
 .powerbloc-escalation-stage--active-0 {
-  background-color: var(--green);
+  background-image: url('/assets/bar-green.png');
 }
 
 .powerbloc-escalation-stage--active-1 {
-  background-color: var(--yellow);
+  background-image:
+    linear-gradient(180deg, rgba(255, 229, 143, 0.18) 0%, rgba(99, 69, 16, 0.18) 100%),
+    url('/assets/bar-gold.png');
 }
 
 .powerbloc-escalation-stage--active-2 {
   background-color: var(--orange);
+  background-image:
+    linear-gradient(180deg, rgba(255, 218, 141, 0.18) 0%, rgba(85, 35, 8, 0.24) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
 }
 
 .powerbloc-escalation-stage--active-3,
 .powerbloc-escalation-stage--active-4 {
-  background-color: var(--red);
+  background-image: url('/assets/bar-red.png');
 }
 
 .powerbloc-if-unmet {
