@@ -1021,11 +1021,14 @@ const SettingsPanel: React.FC = () => {
     const next = { ...working, audio: { ...working.audio, ...patch } };
     setWorking(next);
     setAppliedSnapshot(next);
+    pendingLivePreview.current = next;
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
     livePreviewTimer.current = setTimeout(() => {
       void apply(next).catch((error) => {
         acknowledgeBridgeFailure(error);
         setAppliedSnapshot(current => (current === next ? previousApplied : current));
+      }).finally(() => {
+        if (pendingLivePreview.current === next) pendingLivePreview.current = null;
       });
     }, 150);
   };
@@ -1034,11 +1037,14 @@ const SettingsPanel: React.FC = () => {
     const next = { ...working, video: { ...working.video, ...patch } };
     setWorking(next);
     setAppliedSnapshot(next);
+    pendingLivePreview.current = next;
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
     livePreviewTimer.current = setTimeout(() => {
       void apply(next).catch((error) => {
         acknowledgeBridgeFailure(error);
         setAppliedSnapshot(current => (current === next ? previousApplied : current));
+      }).finally(() => {
+        if (pendingLivePreview.current === next) pendingLivePreview.current = null;
       });
     }, 150);
   };
@@ -1048,12 +1054,15 @@ const SettingsPanel: React.FC = () => {
     applyGameplayCssVariables(next.gameplay);
     setWorking(next);
     setAppliedSnapshot(next);
+    pendingLivePreview.current = next;
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
     livePreviewTimer.current = setTimeout(() => {
       void apply(next).catch((error) => {
         acknowledgeBridgeFailure(error);
         applyGameplayCssVariables(previousApplied.gameplay);
         setAppliedSnapshot(current => (current === next ? previousApplied : current));
+      }).finally(() => {
+        if (pendingLivePreview.current === next) pendingLivePreview.current = null;
       });
     }, 150);
   };
@@ -1070,28 +1079,41 @@ const SettingsPanel: React.FC = () => {
       clearTimeout(livePreviewTimer.current);
       livePreviewTimer.current = null;
     }
+    pendingLivePreview.current = null;
     const prior = appliedSnapshot;
     const next = working;
     const displayChanged = prior.video.resolutionX !== working.video.resolutionX
       || prior.video.resolutionY !== working.video.resolutionY
       || prior.video.windowMode !== working.video.windowMode;
+    const pendingDisplayConfirm = displayChanged ? storeDisplayConfirm(prior) : null;
     void apply(next)
       .then(() => {
         setAppliedSnapshot(next);
-        if (displayChanged) {
+        if (pendingDisplayConfirm) {
           setDisplayConfirm(storeDisplayConfirm(prior));
         }
       })
-      .catch(acknowledgeBridgeFailure);
+      .catch((error) => {
+        if (pendingDisplayConfirm) {
+          clearStoredDisplayConfirm();
+        }
+        acknowledgeBridgeFailure(error);
+      });
   };
 
   const handleReset = async () => {
+    if (livePreviewTimer.current) {
+      clearTimeout(livePreviewTimer.current);
+      livePreviewTimer.current = null;
+    }
+    pendingLivePreview.current = null;
     const previousWorking = working;
     const previousHydratedFrom = hydratedFrom;
     const previousAppliedSnapshot = appliedSnapshot;
     setWorking(null);
     setHydratedFrom(null);
     setAppliedSnapshot(null);
+    const pendingDisplayConfirm = settingsTab === 'graphics' ? storeDisplayConfirm(previousAppliedSnapshot) : null;
     try {
       const resetSettings = await reset(settingsTab);
       const fresh = snapshotToPayload(resetSettings);
@@ -1104,8 +1126,13 @@ const SettingsPanel: React.FC = () => {
           || previousAppliedSnapshot.video.windowMode !== fresh.video.windowMode);
       if (displayChanged) {
         setDisplayConfirm(storeDisplayConfirm(previousAppliedSnapshot));
+      } else if (pendingDisplayConfirm) {
+        clearStoredDisplayConfirm();
       }
     } catch (error) {
+      if (pendingDisplayConfirm) {
+        clearStoredDisplayConfirm();
+      }
       acknowledgeBridgeFailure(error);
       setWorking(previousWorking);
       setHydratedFrom(previousHydratedFrom);
