@@ -249,6 +249,39 @@
   margin-top: 0.1818rem;
 }
 
+.province-tooltip-debug {
+  margin-top: 0.3182rem;
+  padding-top: 0.3182rem;
+  border-top: 0.077rem solid rgba(201, 168, 76, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.province-tooltip-debug-row {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.province-tooltip-debug-row + .province-tooltip-debug-row {
+  margin-top: 0.1364rem;
+}
+
+.province-tooltip-debug-label {
+  flex: 0 0 7.2rem;
+  color: var(--text-muted);
+  font-size: 0.7273rem;
+}
+
+.province-tooltip-debug-value {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: var(--text-bright);
+  font-size: 0.7273rem;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
 .province-tooltip-mode-rows {
   display: flex;
   flex-direction: column;
