@@ -18,8 +18,7 @@ type RegnalNameRefreshAction =
   | 'game.get_economy_overview'
   | 'game.get_military_overview'
   | 'game.get_pinned_items'
-  | 'game.get_power_blocs'
-  | 'game.get_world_glances';
+  | 'game.get_power_blocs';
 
 function refreshVoidAction(action: Exclude<RegnalNameRefreshAction, 'game.get_diplomacy_overview'>): Promise<void> {
   return bridgeCall(action).then(data => dispatchBridgeEvent(action, data));
@@ -71,7 +70,6 @@ async function refreshEventNameViews(input: EventRegnalNameInput | EventPersonNa
   tasks.push(refreshVoidAction('game.get_military_overview'));
   tasks.push(refreshVoidAction('game.get_pinned_items'));
   tasks.push(refreshVoidAction('game.get_power_blocs'));
-  tasks.push(refreshVoidAction('game.get_world_glances'));
 
   await Promise.all(tasks);
 }
