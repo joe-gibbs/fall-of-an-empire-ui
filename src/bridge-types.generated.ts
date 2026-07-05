@@ -3403,6 +3403,7 @@ export interface SettingsGraphicsDTO {
   viewDistanceQuality: number;
   showProvinceBorders: boolean;
   showFpsCounter: boolean;
+  useHardwareAcceleratedUi: boolean;
   showSettlementGlances: boolean;
   showMilitaryGlances: boolean;
   showConvoyGlances: boolean;

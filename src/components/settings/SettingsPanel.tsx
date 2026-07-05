@@ -130,6 +130,7 @@ type ApplyPayload = ApplySettingsRequest;
 const fpsNumberToOption = (n: number): string => (n <= 0 ? 'Unlimited' : n.toString());
 const fpsOptionToNumber = (s: string): number => (s === 'Unlimited' ? 0 : parseInt(s, 10) || 60);
 const fpsOptionLabel = (s: string): string => (s === 'Unlimited' ? webUIText('Settings.Unlimited') : s);
+const canUseHardwareAcceleratedUI = (video: ApplyPayload['video']): boolean => video.vsync || video.frameRateLimit > 0;
 const getOverallGraphicsQuality = (graphics: SettingsGraphicsDTO): string => {
   const firstQuality = graphics[GRAPHICS_QUALITY_KEYS[0]];
   return GRAPHICS_QUALITY_KEYS.every(key => graphics[key] === firstQuality)
@@ -192,13 +193,14 @@ const Toggle: React.FC<{
   label: string;
   desc?: string;
   tooltip?: TooltipContent;
-}> = ({ checked, onChange, label, desc, tooltip }) => (
-  <div className="settings-row" onClick={onChange}>
+  disabled?: boolean;
+}> = ({ checked, onChange, label, desc, tooltip, disabled = false }) => (
+  <div className={`settings-row${disabled ? ' settings-row--disabled' : ''}`} onClick={disabled ? undefined : onChange}>
     <div className="settings-row__text">
       <SettingsLabel label={label} tooltip={tooltip} />
       {desc && <span className="settings-row__desc">{desc}</span>}
     </div>
-    <div className={`settings-toggle ${checked ? 'settings-toggle--on' : ''}`}>
+    <div className={`settings-toggle ${checked ? 'settings-toggle--on' : ''}${disabled ? ' settings-toggle--disabled' : ''}`}>
       <div className="settings-toggle__knob" />
     </div>
   </div>
@@ -930,9 +932,20 @@ const SettingsPanel: React.FC = () => {
   const canSelectResolution = video.windowMode === 'Fullscreen';
   const dlssActive = settings.dlssSupported && video.dlssMode !== 'Off';
 
-  const setVideo = (patch: Partial<typeof video>) => setWorking(w => w && { ...w, video: { ...w.video, ...patch } });
+  const setVideo = (patch: Partial<typeof video>) => setWorking(w => {
+    if (!w) return w;
+    const nextVideo = { ...w.video, ...patch };
+    return {
+      ...w,
+      video: nextVideo,
+      graphics: canUseHardwareAcceleratedUI(nextVideo)
+        ? w.graphics
+        : { ...w.graphics, useHardwareAcceleratedUi: false },
+    };
+  });
   const setGameplay = (patch: Partial<typeof gameplay>) => setWorking(w => w && { ...w, gameplay: { ...w.gameplay, ...patch } });
   const setGraphics = (patch: Partial<typeof graphics>) => setWorking(w => w && { ...w, graphics: { ...w.graphics, ...patch } });
+  const hardwareAcceleratedUIAvailable = canUseHardwareAcceleratedUI(video);
 
   // Fields where the player expects to hear/see the change immediately.
   // Update working synchronously, then schedule a debounced apply so a drag
@@ -1178,6 +1191,14 @@ const SettingsPanel: React.FC = () => {
             ))}
             <Toggle label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.775.64')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.775.18')} tooltip={settingsTooltip(webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.775.64'), 'Settings.Tooltip.ProvinceBorders.Body')} checked={graphics.showProvinceBorders} onChange={() => setGraphics({ showProvinceBorders: !graphics.showProvinceBorders })} />
             <Toggle label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.776.65')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.776.19')} tooltip={settingsTooltip(webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.776.65'), 'Settings.Tooltip.FpsCounter.Body')} checked={graphics.showFpsCounter} onChange={() => setGraphics({ showFpsCounter: !graphics.showFpsCounter })} />
+            <Toggle
+              label={webUIText('Settings.HardwareAcceleratedUI.Label')}
+              desc={hardwareAcceleratedUIAvailable ? webUIText('Settings.HardwareAcceleratedUI.Description') : webUIText('Settings.HardwareAcceleratedUI.DisabledUncapped')}
+              tooltip={settingsTooltip(webUIText('Settings.HardwareAcceleratedUI.Label'), 'Settings.Tooltip.HardwareAcceleratedUI.Body')}
+              checked={hardwareAcceleratedUIAvailable && graphics.useHardwareAcceleratedUi}
+              disabled={!hardwareAcceleratedUIAvailable}
+              onChange={() => setGraphics({ useHardwareAcceleratedUi: !graphics.useHardwareAcceleratedUi })}
+            />
             <SectionHeading title={webUIText('Settings.Glances.Title')} variant="ornate" />
             <Dropdown label={webUIText('Settings.GlanceDensity.Label')} desc={webUIText('Settings.GlanceDensity.Description')} tooltip={settingsTooltip(webUIText('Settings.GlanceDensity.Label'), 'Settings.Tooltip.GlanceDensity.Body')} value={graphics.glanceDensity} options={GLANCE_DENSITY_OPTIONS} onChange={v => setGraphics({ glanceDensity: v })} />
             <Toggle label={webUIText('Settings.ShowSettlementGlances.Label')} desc={webUIText('Settings.ShowSettlementGlances.Description')} tooltip={settingsTooltip(webUIText('Settings.ShowSettlementGlances.Label'), 'Settings.Tooltip.SettlementGlances.Body')} checked={graphics.showSettlementGlances} onChange={() => setGraphics({ showSettlementGlances: !graphics.showSettlementGlances })} />
