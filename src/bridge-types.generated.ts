@@ -5502,6 +5502,57 @@ export interface StartSpyInteractionResponse {
   message: string;
 }
 
+export interface SteamWorkshopItemDto {
+  publishedFileId: string;
+  title: string;
+  description: string;
+  previewUrl: string;
+  ownerSteamId: string;
+  createdTimestamp: number;
+  updatedTimestamp: number;
+  votesUp: number;
+  votesDown: number;
+  score: number;
+  subscribed: boolean;
+  installed: boolean;
+  needsUpdate: boolean;
+  downloading: boolean;
+  downloadPending: boolean;
+  installedModId: string;
+  installedFolder: string;
+  downloadBytes: number;
+  downloadTotalBytes: number;
+}
+
+export interface SteamWorkshopItemOperationResponse {
+  started: boolean;
+  publishedFileId: string;
+  state: string;
+  error: string;
+  item: SteamWorkshopItemDto;
+}
+
+export interface BrowseSteamWorkshopRequest {
+  searchText: string;
+  page: number;
+  subscribedOnly: boolean;
+}
+
+export interface BrowseSteamWorkshopResponse {
+  started: boolean;
+  queryInProgress: boolean;
+  subscribedOnly: boolean;
+  error: string;
+  searchText: string;
+  page: number;
+  totalResults: number;
+  items: SteamWorkshopItemDto[];
+}
+
+export interface SteamWorkshopItemOperationRequest {
+  publishedFileId: string;
+}
+
 export interface TogglePauseResponse {
   isPaused: boolean;
 }
@@ -5646,6 +5697,7 @@ export interface BridgeActions {
   'game.appoint_region_governor': { request: AppointRegionGovernorRequest; response: AppointRegionGovernorResponse };
   'game.appoint_to_court_position': { request: AppointToCourtPositionRequest; response: AppointToCourtPositionResponse };
   'game.break_treaty': { request: BreakTreatyRequest; response: BreakTreatyResponse };
+  'game.browse_steam_workshop': { request: BrowseSteamWorkshopRequest; response: BrowseSteamWorkshopResponse };
   'game.building_placement': { request: BuildingPlacementRequest; response: BuildingPlacementResponse };
   'game.buy_resource': { request: TradeEconomyResourceRequest; response: void };
   'game.cancel_bloc_interaction': { request: CancelBlocInteractionRequest; response: CancelBlocInteractionResponse };
@@ -5663,6 +5715,7 @@ export interface BridgeActions {
   'game.diplomatic_notification_events': { request: DiplomaticNotificationEventsRequest; response: void };
   'game.disband_military': { request: DisbandMilitaryRequest; response: void };
   'game.dismiss_campaign_outcome': { request: void; response: void };
+  'game.download_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.duplicate_military_formation_template': { request: DuplicateMilitaryFormationTemplateRequest; response: DuplicateMilitaryFormationTemplateResponse };
   'game.end_peace_settlement_selection': { request: void; response: void };
   'game.enter_court_appointment_contest': { request: EnterCourtAppointmentContestRequest; response: EnterCourtAppointmentContestResponse };
@@ -5815,6 +5868,7 @@ export interface BridgeActions {
   'game.start_spy_interaction': { request: StartSpyInteractionRequest; response: StartSpyInteractionResponse };
   'game.submit_diplomatic_negotiation': { request: SubmitDiplomaticNegotiationRequest; response: SubmitDiplomaticNegotiationResponse };
   'game.submit_peace_negotiation': { request: SubmitPeaceNegotiationRequest; response: SubmitPeaceNegotiationResponse };
+  'game.subscribe_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.toggle_foederati_callup': { request: ToggleFoederatiCallupRequest; response: void };
   'game.toggle_pause': { request: void; response: TogglePauseResponse };
   'game.toggle_pin': { request: TogglePinRequest; response: TogglePinResponse };
@@ -5822,6 +5876,7 @@ export interface BridgeActions {
   'game.ungarrison_military': { request: UngarrisonMilitaryRequest; response: void };
   'game.unqueue_build_queue_item': { request: UnqueueBuildQueueItemRequest; response: void };
   'game.unqueue_settlement_building': { request: UnqueueSettlementBuildingRequest; response: void };
+  'game.unsubscribe_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.upload_mod_to_workshop': { request: UploadModToWorkshopRequest; response: UploadModToWorkshopResponse };
   'game.warning_events': { request: WarningEventsRequest; response: void };
   'game.withdraw_battle_formation': { request: WithdrawBattleFormationRequest; response: WithdrawBattleFormationResponse };

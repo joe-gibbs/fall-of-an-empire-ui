@@ -39,6 +39,8 @@ import './FactionSelection.css';
 import { WebUIText } from '../localization/WebUITextContext';
 interface FactionSelectionProps {
   mapId: string;
+  initialData?: GetNewGameMapFactionSelectionResponse | null;
+  loadFactionSelection?: (mapId: string) => Promise<GetNewGameMapFactionSelectionResponse>;
   scenario?: {
     displayName: string;
   };
@@ -195,6 +197,16 @@ function getLeader(faction: ScenarioMapFactionDto | null): ScenarioMapLeaderDto 
     return null;
   }
   return faction.leader;
+}
+
+function getDefaultSelectedFactionBaseName(response: GetNewGameMapFactionSelectionResponse): string {
+  const defaultPlayable = response.factions.find(
+    (faction) =>
+      faction.baseName === response.defaultPlayerFactionBaseName && faction.playable,
+  );
+  const firstPlayable = response.factions.find((faction) => faction.playable);
+  const firstFaction = response.factions[0] ?? null;
+  return defaultPlayable?.baseName ?? firstPlayable?.baseName ?? firstFaction?.baseName ?? '';
 }
 
 function factionSort(left: ScenarioMapFactionDto, right: ScenarioMapFactionDto): number {
@@ -742,6 +754,119 @@ function StateView({
   );
 }
 
+function FactionSelectionLoadingFrame({
+  title,
+  closing = false,
+  onClose,
+}: {
+  title: string;
+  closing?: boolean;
+  onClose: () => void;
+}) {
+  const t = useWebUIText();
+  const rootClassName = `fs-root fs-root--pending${closing ? ' fs-root--closing' : ''}`;
+
+  return (
+    <div className={rootClassName}>
+      <div className="fs-header">
+        <div className="fs-title-wrap">
+          <div className="fs-title">{title || t('MainMenu.ChooseYourFaction')}</div>
+          <div className="fs-subtitle">{t('MainMenu.ChooseYourFaction')}</div>
+        </div>
+        <button type="button" className="fs-back-btn" onClick={onClose}>
+          <span className="fs-back-icon" aria-hidden="true" />
+          <span>{t('MainMenu.BackToMainMenuUpper')}</span>
+        </button>
+      </div>
+
+      <div className="fs-body" aria-busy="true">
+        <aside className="fs-list-panel">
+          <div className="fs-list-head">
+            <input
+              type="text"
+              className="search-input fs-search"
+              placeholder={t('MainMenu.SearchFactions')}
+              value=""
+              disabled
+              readOnly
+            />
+            <button
+              type="button"
+              className="fs-list-toggle-row"
+              aria-pressed={false}
+              disabled
+            >
+              <span className="fs-toggle-box">
+                <span className="fs-toggle-mark" />
+              </span>
+              <span className="fs-toggle-label">{t('MainMenu.ShowForeignFactions')}</span>
+            </button>
+          </div>
+
+          <div className="fs-list-scroll fs-pending-list" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, index) => (
+              <div key={index} className="fs-faction-row fs-faction-row--sovereign fs-pending-row">
+                <span className="fs-pending-roundel" />
+                <span className="fs-faction-copy">
+                  <span className="fs-pending-line fs-pending-line--name" />
+                  <span className="fs-pending-line fs-pending-line--sub" />
+                </span>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <section className="fs-map-panel fs-map-panel--pending">
+          <div className="fs-map-frame">
+            <div className="fs-map-stage fs-map-stage--pending" aria-hidden="true">
+              <div className="fs-map-pending-continent fs-map-pending-continent--west" />
+              <div className="fs-map-pending-continent fs-map-pending-continent--east" />
+              <div className="fs-map-pending-route fs-map-pending-route--one" />
+              <div className="fs-map-pending-route fs-map-pending-route--two" />
+              <div className="fs-map-vignette" />
+            </div>
+          </div>
+        </section>
+
+        <aside className="fs-detail-panel">
+          <div className="fs-detail-hero fs-detail-hero--pending">
+            <div className="fs-detail-hero-vignette" />
+            <div className="fs-detail-hero-scrim">
+              <span className="fs-pending-roundel fs-pending-roundel--lg" />
+              <div className="fs-detail-hero-info">
+                <div className="fs-pending-line fs-pending-line--hero" />
+                <div className="fs-pending-line fs-pending-line--ruler" />
+              </div>
+            </div>
+          </div>
+
+          <div className="fs-detail-body fs-detail-body--pending" aria-hidden="true">
+            {Array.from({ length: 4 }, (_, sectionIndex) => (
+              <div key={sectionIndex} className="fs-detail-section">
+                <div className="fs-detail-section-title">
+                  <span className="fs-pending-icon" />
+                  <span className="fs-pending-line fs-pending-line--section" />
+                </div>
+                <div className="fs-pending-detail-grid">
+                  <span className="fs-pending-line" />
+                  <span className="fs-pending-line fs-pending-line--short" />
+                  <span className="fs-pending-line fs-pending-line--medium" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="fs-detail-footer">
+            <button type="button" className="fs-begin-btn fs-begin-btn--disabled" disabled>
+              <span className="fs-begin-btn-main">{t('MainMenu.BeginCampaign')}</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
 export interface FactionMapHoverHandle {
   setHovered: (baseName: string) => void;
   clearHovered: () => void;
@@ -1170,10 +1295,21 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
   },
 );
 
-const FactionSelection: React.FC<FactionSelectionProps> = ({ mapId, scenario, closing = false, onClose, onConfirm }) => {
+const FactionSelection: React.FC<FactionSelectionProps> = ({
+  mapId,
+  initialData = null,
+  loadFactionSelection,
+  scenario,
+  closing = false,
+  onClose,
+  onConfirm,
+}) => {
   const t = useWebUIText();
-  const [data, setData] = useState<GetNewGameMapFactionSelectionResponse | null>(null);
-  const [selectedBaseName, setSelectedBaseName] = useState('');
+  const initialSelectionData = initialData?.mapId === mapId ? initialData : null;
+  const [data, setData] = useState<GetNewGameMapFactionSelectionResponse | null>(initialSelectionData);
+  const [selectedBaseName, setSelectedBaseName] = useState(
+    initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '',
+  );
   const [search, setSearch] = useState('');
   const [showForeign, setShowForeign] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -1184,11 +1320,11 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({ mapId, scenario, cl
 
   if (resetForMapId !== mapId) {
     setResetForMapId(mapId);
-    setData(null);
+    setData(initialSelectionData);
     setLoadError(null);
     setSearch('');
     setShowForeign(false);
-    setSelectedBaseName('');
+    setSelectedBaseName(initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '');
   }
 
   useEffect(() => {
@@ -1196,27 +1332,33 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({ mapId, scenario, cl
   }, [mapId]);
 
   useEffect(() => {
+    if (!initialSelectionData || data?.mapId === initialSelectionData.mapId) {
+      return;
+    }
+
+    setData(initialSelectionData);
+    setLoadError(null);
+    setSelectedBaseName(getDefaultSelectedFactionBaseName(initialSelectionData));
+  }, [data?.mapId, initialSelectionData]);
+
+  useEffect(() => {
+    if (data?.mapId === mapId) {
+      return;
+    }
+
     let cancelled = false;
 
     (async () => {
       try {
-        const response = await bridgeCall('game.get_new_game_map_faction_selection', { mapId });
+        const response = loadFactionSelection
+          ? await loadFactionSelection(mapId)
+          : await bridgeCall('game.get_new_game_map_faction_selection', { mapId });
         if (cancelled) {
           return;
         }
 
         setData(response);
-
-        const defaultPlayable = response.factions.find(
-          (faction) =>
-            faction.baseName === response.defaultPlayerFactionBaseName && faction.playable,
-        );
-        const firstPlayable = response.factions.find((faction) => faction.playable);
-        const firstFaction = response.factions[0] ?? null;
-
-        setSelectedBaseName(
-          defaultPlayable?.baseName ?? firstPlayable?.baseName ?? firstFaction?.baseName ?? '',
-        );
+        setSelectedBaseName(getDefaultSelectedFactionBaseName(response));
       } catch (error) {
         if (!cancelled) {
           setLoadError(
@@ -1229,7 +1371,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({ mapId, scenario, cl
     return () => {
       cancelled = true;
     };
-  }, [mapId, t]);
+  }, [data?.mapId, loadFactionSelection, mapId, t]);
 
   useEffect(() => {
     if (!data || geometryRequestMapIdRef.current === data.mapId) {
@@ -1347,10 +1489,8 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({ mapId, scenario, cl
 
   if (!data) {
     return (
-      <StateView
-        title={t('MainMenu.ChooseYourFaction')}
-        subtitle={t('MainMenu.LoadingMap', { MapId: mapId })}
-        message={t('MainMenu.LoadingFactionSelectionData')}
+      <FactionSelectionLoadingFrame
+        title={scenarioTitle}
         closing={closing}
         onClose={onClose}
       />

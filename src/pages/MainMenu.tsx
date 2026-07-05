@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import LitLogo from '../components/common/layout/content/LitLogo';
 import SettingsPanel from '../components/settings/SettingsPanel';
 import EncyclopediaScreen from '../components/screens/encyclopedia/EncyclopediaScreen';
@@ -10,8 +10,7 @@ import ContinueHeroCard from './main-menu/ContinueHeroCard';
 import CreditsRoll from './main-menu/CreditsRoll';
 import './main-menu/MainMenu.css';
 import { bridgeCall, onBridgeEvent } from '../bridge-types.generated.ts';
-import type { LoadingScreenResponse } from '../bridge-types.generated.ts';
-import { cacheBridgeEvent } from '../bridge/core/bridgeEventCache';
+import type { GetNewGameMapFactionSelectionResponse } from '../bridge-types.generated.ts';
 import type { SaveEntry } from '../bridge/app/useSavesBridge';
 import { useModsBridge } from '../bridge/app/useModsBridge';
 import type { ModEntry, SteamWorkshopItem } from '../bridge/app/useModsBridge';
@@ -40,18 +39,6 @@ const MAIN_MENU_ROW_WIDTH_REM =
   MAIN_MENU_CONTINUE_CARD_WIDTH_REM
   + MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM
   + (MAIN_MENU_CAMPAIGN_CARD_SLOTS * MAIN_MENU_SCENARIO_SLOT_WIDTH_REM);
-const MAIN_MENU_OPTIMISTIC_LOADING_SCREEN: LoadingScreenResponse = {
-  visible: true,
-  progress: 0.01,
-  background: '/assets/loading-screens/general.png',
-  tip: '',
-};
-const MAIN_MENU_HIDDEN_LOADING_SCREEN: LoadingScreenResponse = {
-  visible: false,
-  progress: 0,
-  background: '',
-  tip: '',
-};
 
 interface MainMenuIllustratedButtonData {
   id: string;
@@ -67,11 +54,6 @@ type MainMenuSlotData =
   | { kind: 'button'; key: string; slotClass: string; button: MainMenuIllustratedButtonData }
   | { kind: 'scenarios'; key: string; buttons: MainMenuIllustratedButtonData[] }
   | { kind: 'continue'; key: string };
-
-function emitLoadingScreenState(data: LoadingScreenResponse): void {
-  cacheBridgeEvent('game.loading_screen', data);
-  window.dispatchEvent(new CustomEvent('bridge:game.loading_screen', { detail: data }));
-}
 
 function compareScenarioMaps(left: NewGameMapEntry, right: NewGameMapEntry): number {
   if (left.menuOrder !== right.menuOrder) return left.menuOrder - right.menuOrder;
@@ -94,7 +76,10 @@ const MainMenu: React.FC = () => {
   const [menuError, setMenuError] = useState<string | null>(null);
   const [modsPanelView, setModsPanelView] = useState<ModsPanelView>('installed');
   const [workshopSearchDraft, setWorkshopSearchDraft] = useState('');
+  const [factionSelectionCache, setFactionSelectionCache] = useState<Record<string, GetNewGameMapFactionSelectionResponse>>({});
   const closeTimerRef = useRef<number | null>(null);
+  const factionSelectionCacheRef = useRef(new Map<string, GetNewGameMapFactionSelectionResponse>());
+  const factionSelectionRequestRef = useRef(new Map<string, Promise<GetNewGameMapFactionSelectionResponse>>());
   const SUB_VIEW_CLOSE_MS = 200;
 
   const {
@@ -121,6 +106,36 @@ const MainMenu: React.FC = () => {
   } = useModsBridge(view === 'mods');
 
   const modsNeedRestart = modsRequireRestart || workshopChangesRequireRestart;
+
+  const preloadFactionSelection = useCallback((mapId: string) => {
+    const cached = factionSelectionCacheRef.current.get(mapId);
+    if (cached) {
+      return Promise.resolve(cached);
+    }
+
+    const existingRequest = factionSelectionRequestRef.current.get(mapId);
+    if (existingRequest) {
+      return existingRequest;
+    }
+
+    const request = bridgeCall('game.get_new_game_map_faction_selection', { mapId })
+      .then((response) => {
+        factionSelectionCacheRef.current.set(mapId, response);
+        setFactionSelectionCache((current) => ({
+          ...current,
+          [mapId]: response,
+        }));
+        factionSelectionRequestRef.current.delete(mapId);
+        return response;
+      })
+      .catch((error) => {
+        factionSelectionRequestRef.current.delete(mapId);
+        throw error;
+      });
+
+    factionSelectionRequestRef.current.set(mapId, request);
+    return request;
+  }, []);
 
   // Track latest save metadata so the Continue card can show character/faction/date.
   // Subscribes to list_saves pushes so deletions keep it in sync.
@@ -177,7 +192,15 @@ const MainMenu: React.FC = () => {
       try {
         const res = await bridgeCall('game.list_new_game_maps');
         if (!cancelled) {
-          setNewGameMaps(res.maps ?? []);
+          const maps = res.maps ?? [];
+          setNewGameMaps(maps);
+          maps
+            .filter((map) => map.requiresFactionSelection)
+            .forEach((map) => {
+              void preloadFactionSelection(map.id).catch((error) => {
+                console.error('[MainMenu] preloading faction selection failed', error);
+              });
+            });
         }
       } catch {
         if (!cancelled) {
@@ -188,7 +211,7 @@ const MainMenu: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [preloadFactionSelection]);
 
   const handleContinue = async () => {
     try {
@@ -207,10 +230,8 @@ const MainMenu: React.FC = () => {
     }
 
     try {
-      emitLoadingScreenState(MAIN_MENU_OPTIMISTIC_LOADING_SCREEN);
       await bridgeCall('game.start_scenario_map', { mapId, playerFactionBaseName });
     } catch (err) {
-      emitLoadingScreenState(MAIN_MENU_HIDDEN_LOADING_SCREEN);
       console.error('[MainMenu] start scenario map failed', err);
     }
   };
@@ -218,6 +239,9 @@ const MainMenu: React.FC = () => {
   const handleSelectScenarioMap = (map: NewGameMapEntry) => {
     if (map.requiresFactionSelection) {
       setSelectedNewGameMap(map);
+      void preloadFactionSelection(map.id).catch((error) => {
+        console.error('[MainMenu] preloading faction selection failed', error);
+      });
       openSubView('newgame');
       return;
     }
@@ -725,7 +749,19 @@ const MainMenu: React.FC = () => {
     const scenarioButton = (
       <button
         className={`mm-illust-btn mm-illust-btn--${btn.variant}`}
-        onClick={btn.onClick}
+        onPointerDown={(event) => {
+          if (event.button !== 0) {
+            return;
+          }
+          event.preventDefault();
+          btn.onClick();
+        }}
+        onClick={(event) => {
+          if (event.detail !== 0) {
+            return;
+          }
+          btn.onClick();
+        }}
         style={cardImage ? { ['--mm-card-image' as string]: `url(${cardImage})` } : undefined}
       >
         {cardImage && <img src={cardImage} alt="" className="mm-illust-img" />}
@@ -874,6 +910,8 @@ const MainMenu: React.FC = () => {
       {view === 'newgame' && selectedNewGameMap && (
         <FactionSelection
           mapId={selectedNewGameMap.id}
+          initialData={factionSelectionCache[selectedNewGameMap.id] ?? null}
+          loadFactionSelection={preloadFactionSelection}
           closing={closing}
           scenario={{
             displayName: selectedNewGameMap.displayName,

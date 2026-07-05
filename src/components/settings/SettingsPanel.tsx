@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import SidebarTabBar from '../sidebars/shared/SidebarTabBar';
 import SectionHeading from '../common/data-display/stats/SectionHeading';
 import GameButton from '../common/buttons/GameButton';
@@ -126,6 +127,11 @@ const GRAPHICS_QUALITY_TOOLTIP_KEYS: Record<string, string> = {
 };
 
 type ApplyPayload = ApplySettingsRequest;
+type DisplayConfirmState = {
+  priorSnapshot: ApplyPayload;
+  expiresAtMs: number;
+  secondsLeft: number;
+};
 
 const fpsNumberToOption = (n: number): string => (n <= 0 ? 'Unlimited' : n.toString());
 const fpsOptionToNumber = (s: string): number => (s === 'Unlimited' ? 0 : parseInt(s, 10) || 60);
@@ -157,11 +163,25 @@ const settingsTooltip = (title: string, bodyKey: string): TooltipContent => ({
   body: webUIText(bodyKey),
 });
 
+function applyGameplayCssVariables(gameplay: ApplyPayload['gameplay']) {
+  if (Number.isFinite(gameplay.uiScale) && gameplay.uiScale > 0) {
+    document.documentElement.style.setProperty('--ui-scale', String(gameplay.uiScale));
+  }
+  if (Number.isFinite(gameplay.uiScrollSpeed) && gameplay.uiScrollSpeed > 0) {
+    document.documentElement.style.setProperty('--ui-scroll-speed', String(gameplay.uiScrollSpeed));
+  }
+  if (Number.isFinite(gameplay.tooltipDelaySeconds) && gameplay.tooltipDelaySeconds >= 0) {
+    document.documentElement.style.setProperty('--tooltip-delay-ms', String(Math.round(gameplay.tooltipDelaySeconds * 1000)));
+  }
+}
+
 const toPercent = (value: number): number => Math.round(value * 100);
 const fromPercent = (value: number): number => value / 100;
 const formatMultiplier = (value: number): string => `${value.toFixed(value < 1 ? 2 : 1)}x`;
 const POPUP_EXIT_MS = 120;
 const SETTINGS_MODAL_EXIT_MS = 160;
+const DISPLAY_CONFIRM_SECONDS = 10;
+const DISPLAY_CONFIRM_STORAGE_KEY = 'foae.settings.displayConfirm';
 
 function snapshotToPayload(data: GetSettingsResponse): ApplyPayload {
   return {
@@ -170,6 +190,47 @@ function snapshotToPayload(data: GetSettingsResponse): ApplyPayload {
     gameplay: { ...data.gameplay, mutedNotificationTypes: [...data.gameplay.mutedNotificationTypes] },
     graphics: { ...data.graphics },
   };
+}
+
+function displayConfirmSecondsLeft(expiresAtMs: number): number {
+  return Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
+}
+
+function makeDisplayConfirmState(priorSnapshot: ApplyPayload): DisplayConfirmState {
+  return {
+    priorSnapshot,
+    expiresAtMs: Date.now() + DISPLAY_CONFIRM_SECONDS * 1000,
+    secondsLeft: DISPLAY_CONFIRM_SECONDS,
+  };
+}
+
+function readStoredDisplayConfirm(): DisplayConfirmState | null {
+  const raw = window.sessionStorage.getItem(DISPLAY_CONFIRM_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const stored = JSON.parse(raw) as Pick<DisplayConfirmState, 'priorSnapshot' | 'expiresAtMs'>;
+    return {
+      priorSnapshot: stored.priorSnapshot,
+      expiresAtMs: stored.expiresAtMs,
+      secondsLeft: displayConfirmSecondsLeft(stored.expiresAtMs),
+    };
+  } catch {
+    window.sessionStorage.removeItem(DISPLAY_CONFIRM_STORAGE_KEY);
+    return null;
+  }
+}
+
+function storeDisplayConfirm(priorSnapshot: ApplyPayload): DisplayConfirmState {
+  const state = makeDisplayConfirmState(priorSnapshot);
+  window.sessionStorage.setItem(DISPLAY_CONFIRM_STORAGE_KEY, JSON.stringify({
+    priorSnapshot: state.priorSnapshot,
+    expiresAtMs: state.expiresAtMs,
+  }));
+  return state;
+}
+
+function clearStoredDisplayConfirm(): void {
+  window.sessionStorage.removeItem(DISPLAY_CONFIRM_STORAGE_KEY);
 }
 
 /* ── Setting Row Helpers (module-scope to avoid remount on re-render) ── */
@@ -837,18 +898,27 @@ const EventsTab: React.FC<{
   );
 };
 
-const DISPLAY_CONFIRM_SECONDS = 10;
-
 const SettingsPanel: React.FC = () => {
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('gameplay');
   const { settings, apply, reset, setNotificationMuted, resetNotificationMutes, rebindActionKey } = useSettingsBridge();
   const [working, setWorking] = useState<ApplyPayload | null>(null);
   const [hydratedFrom, setHydratedFrom] = useState<GetSettingsResponse | null>(null);
   const [appliedSnapshot, setAppliedSnapshot] = useState<ApplyPayload | null>(null);
-  const [displayConfirm, setDisplayConfirm] = useState<{ priorSnapshot: ApplyPayload; secondsLeft: number } | null>(null);
-  const [renderedDisplayConfirm, setRenderedDisplayConfirm] = useState<typeof displayConfirm>(null);
+  const [displayConfirm, setDisplayConfirm] = useState<DisplayConfirmState | null>(() => readStoredDisplayConfirm());
+  const [renderedDisplayConfirm, setRenderedDisplayConfirm] = useState<DisplayConfirmState | null>(null);
   const livePreviewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingLivePreview = useRef<ApplyPayload | null>(null);
   const clearRenderedDisplayConfirm = useCallback(() => setRenderedDisplayConfirm(null), []);
+  const revertDisplaySettings = useCallback((priorSnapshot: ApplyPayload) => {
+    clearStoredDisplayConfirm();
+    void apply(priorSnapshot)
+      .then(() => {
+        setWorking(priorSnapshot);
+        setAppliedSnapshot(priorSnapshot);
+        setDisplayConfirm(null);
+      })
+      .catch(acknowledgeBridgeFailure);
+  }, [apply]);
   const displayConfirmPresence = useAnimatedPresence(displayConfirm !== null, {
     durationMs: SETTINGS_MODAL_EXIT_MS,
     onClosed: clearRenderedDisplayConfirm,
@@ -858,26 +928,28 @@ const SettingsPanel: React.FC = () => {
 
   useEffect(() => () => {
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
-  }, []);
+    if (pendingLivePreview.current) {
+      void apply(pendingLivePreview.current).catch(acknowledgeBridgeFailure);
+      pendingLivePreview.current = null;
+    }
+  }, [apply]);
 
   useEffect(() => {
     if (!displayConfirm) return;
+    if (displayConfirm.secondsLeft <= 0) {
+      revertDisplaySettings(displayConfirm.priorSnapshot);
+      return;
+    }
     const t = setTimeout(() => {
-      if (displayConfirm.secondsLeft <= 1) {
-        const priorSnapshot = displayConfirm.priorSnapshot;
-        void apply(priorSnapshot)
-          .then(() => {
-            setWorking(priorSnapshot);
-            setAppliedSnapshot(priorSnapshot);
-            setDisplayConfirm(null);
-          })
-          .catch(acknowledgeBridgeFailure);
+      const secondsLeft = displayConfirmSecondsLeft(displayConfirm.expiresAtMs);
+      if (secondsLeft <= 0) {
+        revertDisplaySettings(displayConfirm.priorSnapshot);
       } else {
-        setDisplayConfirm(c => c && { ...c, secondsLeft: c.secondsLeft - 1 });
+        setDisplayConfirm(c => (c && c.expiresAtMs === displayConfirm.expiresAtMs ? { ...c, secondsLeft } : c));
       }
     }, 1000);
     return () => clearTimeout(t);
-  }, [displayConfirm, apply]);
+  }, [displayConfirm, revertDisplaySettings]);
 
   if (settings && settings !== hydratedFrom) {
     setHydratedFrom(settings);
@@ -889,19 +961,13 @@ const SettingsPanel: React.FC = () => {
   }
 
   const handleConfirmDisplay = () => {
+    clearStoredDisplayConfirm();
     setDisplayConfirm(null);
   };
 
   const handleRevertDisplay = () => {
     if (!displayConfirm) return;
-    const priorSnapshot = displayConfirm.priorSnapshot;
-    void apply(priorSnapshot)
-      .then(() => {
-        setWorking(priorSnapshot);
-        setAppliedSnapshot(priorSnapshot);
-        setDisplayConfirm(null);
-      })
-      .catch(acknowledgeBridgeFailure);
+    revertDisplaySettings(displayConfirm.priorSnapshot);
   };
   useEscapeStackEntry({
     id: 'settings.display-confirm',
@@ -976,6 +1042,21 @@ const SettingsPanel: React.FC = () => {
       });
     }, 150);
   };
+  const applyLiveGameplay = (patch: Partial<typeof gameplay>) => {
+    const previousApplied = appliedSnapshot;
+    const next = { ...working, gameplay: { ...working.gameplay, ...patch } };
+    applyGameplayCssVariables(next.gameplay);
+    setWorking(next);
+    setAppliedSnapshot(next);
+    if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
+    livePreviewTimer.current = setTimeout(() => {
+      void apply(next).catch((error) => {
+        acknowledgeBridgeFailure(error);
+        applyGameplayCssVariables(previousApplied.gameplay);
+        setAppliedSnapshot(current => (current === next ? previousApplied : current));
+      });
+    }, 150);
+  };
 
   const resolution = `${video.resolutionX.toString()}x${video.resolutionY.toString()}`;
   const setResolution = (s: string) => {
@@ -998,7 +1079,7 @@ const SettingsPanel: React.FC = () => {
       .then(() => {
         setAppliedSnapshot(next);
         if (displayChanged) {
-          setDisplayConfirm({ priorSnapshot: prior, secondsLeft: DISPLAY_CONFIRM_SECONDS });
+          setDisplayConfirm(storeDisplayConfirm(prior));
         }
       })
       .catch(acknowledgeBridgeFailure);
@@ -1022,7 +1103,7 @@ const SettingsPanel: React.FC = () => {
           || previousAppliedSnapshot.video.resolutionY !== fresh.video.resolutionY
           || previousAppliedSnapshot.video.windowMode !== fresh.video.windowMode);
       if (displayChanged) {
-        setDisplayConfirm({ priorSnapshot: previousAppliedSnapshot, secondsLeft: DISPLAY_CONFIRM_SECONDS });
+        setDisplayConfirm(storeDisplayConfirm(previousAppliedSnapshot));
       }
     } catch (error) {
       acknowledgeBridgeFailure(error);
@@ -1049,22 +1130,24 @@ const SettingsPanel: React.FC = () => {
     void resetNotificationMutes().catch(acknowledgeBridgeFailure);
   };
 
+  const displayConfirmOverlay = displayConfirmPresence.mounted && renderedDisplayConfirm ? (
+    <div className={`settings-display-confirm-overlay${displayConfirmPresence.closing ? ' settings-display-confirm-overlay--closing' : ''}`}>
+      <div className={`settings-display-confirm-modal${displayConfirmPresence.closing ? ' settings-display-confirm-modal--closing' : ''}`}>
+        <div className="settings-display-confirm-title"><WebUIText textKey="Auto.ComponentsSettingsSettingsPanel.722.7" /></div>
+        <div className="settings-display-confirm-body">
+          {webUIText('Settings.RevertingInSeconds', { Seconds: renderedDisplayConfirm.secondsLeft })}
+        </div>
+        <div className="settings-display-confirm-actions">
+          <GameButton variant="burgundy" onClick={handleConfirmDisplay}><WebUIText textKey="Auto.ComponentsSettingsSettingsPanel.727.8" /></GameButton>
+          <GameButton variant="outline" onClick={handleRevertDisplay}><WebUIText textKey="Auto.ComponentsSettingsSettingsPanel.728.9" /></GameButton>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <>
-      {displayConfirmPresence.mounted && renderedDisplayConfirm && (
-        <div className={`settings-display-confirm-overlay${displayConfirmPresence.closing ? ' settings-display-confirm-overlay--closing' : ''}`}>
-          <div className={`settings-display-confirm-modal${displayConfirmPresence.closing ? ' settings-display-confirm-modal--closing' : ''}`}>
-            <div className="settings-display-confirm-title"><WebUIText textKey="Auto.ComponentsSettingsSettingsPanel.722.7" /></div>
-            <div className="settings-display-confirm-body">
-              {webUIText('Settings.RevertingInSeconds', { Seconds: renderedDisplayConfirm.secondsLeft })}
-            </div>
-            <div className="settings-display-confirm-actions">
-              <GameButton variant="burgundy" onClick={handleConfirmDisplay}><WebUIText textKey="Auto.ComponentsSettingsSettingsPanel.727.8" /></GameButton>
-              <GameButton variant="outline" onClick={handleRevertDisplay}><WebUIText textKey="Auto.ComponentsSettingsSettingsPanel.728.9" /></GameButton>
-            </div>
-          </div>
-        </div>
-      )}
+      {displayConfirmOverlay && createPortal(displayConfirmOverlay, document.body)}
       <div className="settings-tabs">
         <SidebarTabBar tabs={settingsTabs} activeTab={settingsTab} onTabChange={(id) => setSettingsTab(id as SettingsTab)} />
       </div>
@@ -1082,10 +1165,10 @@ const SettingsPanel: React.FC = () => {
             <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.747.30')} value={toPercent(gameplay.cameraZoomSpeed)} max={200} suffix="%" onChange={v => setGameplay({ cameraZoomSpeed: fromPercent(v) })} />
             <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.748.31')} value={toPercent(gameplay.cameraRotationSpeed)} max={200} suffix="%" onChange={v => setGameplay({ cameraRotationSpeed: fromPercent(v) })} />
             <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.749.32')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.749.10')} value={toPercent(gameplay.advisorFrequency)} max={200} suffix="%" onChange={v => setGameplay({ advisorFrequency: fromPercent(v) })} />
-            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.750.33')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.750.11')} value={toPercent(gameplay.cursorScale)} min={50} max={300} suffix="%" onChange={v => setGameplay({ cursorScale: fromPercent(v) })} />
-            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.751.34')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.751.12')} value={toPercent(gameplay.uiScale)} min={50} max={200} suffix="%" onChange={v => setGameplay({ uiScale: fromPercent(v) })} />
-            <SettingsSlider label={webUIText('Settings.UIScrollSpeed.Label')} desc={webUIText('Settings.UIScrollSpeed.Description')} value={toPercent(gameplay.uiScrollSpeed)} min={25} max={300} suffix="%" onChange={v => setGameplay({ uiScrollSpeed: fromPercent(v) })} />
-            <SettingsSlider label={webUIText('Settings.TooltipDelay.Label')} desc={webUIText('Settings.TooltipDelay.Description')} value={Math.round(gameplay.tooltipDelaySeconds * 1000)} min={0} max={2000} suffix="" display={webUIText('Settings.Milliseconds', { Value: Math.round(gameplay.tooltipDelaySeconds * 1000) })} onChange={v => setGameplay({ tooltipDelaySeconds: v / 1000 })} />
+            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.750.33')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.750.11')} value={toPercent(gameplay.cursorScale)} min={50} max={300} suffix="%" onChange={v => applyLiveGameplay({ cursorScale: fromPercent(v) })} />
+            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.751.34')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.751.12')} value={toPercent(gameplay.uiScale)} min={50} max={200} suffix="%" onChange={v => applyLiveGameplay({ uiScale: fromPercent(v) })} />
+            <SettingsSlider label={webUIText('Settings.UIScrollSpeed.Label')} desc={webUIText('Settings.UIScrollSpeed.Description')} value={toPercent(gameplay.uiScrollSpeed)} min={25} max={300} suffix="%" onChange={v => applyLiveGameplay({ uiScrollSpeed: fromPercent(v) })} />
+            <SettingsSlider label={webUIText('Settings.TooltipDelay.Label')} desc={webUIText('Settings.TooltipDelay.Description')} value={Math.round(gameplay.tooltipDelaySeconds * 1000)} min={0} max={2000} suffix="" display={webUIText('Settings.Milliseconds', { Value: Math.round(gameplay.tooltipDelaySeconds * 1000) })} onChange={v => applyLiveGameplay({ tooltipDelaySeconds: v / 1000 })} />
             <Toggle label={webUIText('Settings.ReduceMotion.Label')} desc={webUIText('Settings.ReduceMotion.Description')} checked={gameplay.reduceMotion} onChange={() => setGameplay({ reduceMotion: !gameplay.reduceMotion })} />
             <Toggle label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.752.35')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.752.13')} checked={gameplay.consoleEnabled} onChange={() => setGameplay({ consoleEnabled: !gameplay.consoleEnabled })} />
             <Toggle label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.753.36')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.753.14')} checked={gameplay.includeSaveInCrashReport} onChange={() => setGameplay({ includeSaveInCrashReport: !gameplay.includeSaveInCrashReport })} />

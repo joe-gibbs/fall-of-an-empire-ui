@@ -276,6 +276,209 @@
     color: var(--text);
   }
 
+  .fs-root--pending .fs-list-toggle-row,
+  .fs-root--pending .fs-search,
+  .fs-root--pending .fs-begin-btn {
+    cursor: default;
+  }
+
+  .fs-root--pending .fs-search {
+    opacity: 0.58;
+  }
+
+  .fs-root--pending .fs-list-toggle-row {
+    opacity: 0.54;
+  }
+
+  .fs-pending-list {
+    pointer-events: none;
+  }
+
+  .fs-pending-row {
+    cursor: default;
+  }
+
+  .fs-pending-roundel,
+  .fs-pending-icon,
+  .fs-pending-line {
+    display: block;
+    background-color: rgba(201, 168, 76, 0.12);
+    background-image:
+      linear-gradient(90deg, transparent 0%, rgba(241, 230, 197, 0.09) 44%, transparent 88%),
+      url('/assets/baked/texture-overlay-heavy.png');
+    background-position: -8rem 0, 0 0;
+    background-repeat: no-repeat, repeat;
+    background-size: 8rem 100%, 7.385rem 7.385rem;
+    animation-name: fs-pending-sheen;
+    animation-duration: 1.15s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+
+  .fs-pending-roundel {
+    width: 1.45rem;
+    height: 1.45rem;
+    flex-shrink: 0;
+    border: 0.12rem solid rgba(201, 168, 76, 0.18);
+    border-radius: 50%;
+    background-color: rgba(74, 21, 48, 0.24);
+  }
+
+  .fs-pending-roundel--lg {
+    width: 3.65rem;
+    height: 3.65rem;
+  }
+
+  .fs-pending-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex-shrink: 0;
+    border: 0.077rem solid rgba(201, 168, 76, 0.14);
+    background-color: rgba(8, 12, 17, 0.36);
+  }
+
+  .fs-pending-line {
+    width: 100%;
+    height: 0.62rem;
+    background-color: rgba(201, 168, 76, 0.1);
+  }
+
+  .fs-pending-line--name {
+    width: 72%;
+    height: 0.75rem;
+  }
+
+  .fs-pending-line--sub {
+    width: 52%;
+    height: 0.52rem;
+    margin-top: 0.38rem;
+    opacity: 0.68;
+  }
+
+  .fs-pending-line--hero {
+    width: 84%;
+    height: 0.86rem;
+  }
+
+  .fs-pending-line--ruler {
+    width: 58%;
+    height: 0.62rem;
+    margin-top: 0.42rem;
+    opacity: 0.72;
+  }
+
+  .fs-pending-line--section {
+    width: 46%;
+    height: 0.56rem;
+  }
+
+  .fs-pending-line--short {
+    width: 44%;
+  }
+
+  .fs-pending-line--medium {
+    width: 68%;
+  }
+
+  .fs-map-panel--pending {
+    pointer-events: none;
+  }
+
+  .fs-map-stage--pending {
+    overflow: hidden;
+    background-color: rgba(13, 18, 24, 0.34);
+    background-image:
+      radial-gradient(circle at 50% 50%, rgba(201, 168, 76, 0.07), transparent 58%),
+      linear-gradient(180deg, rgba(36, 42, 48, 0.26), rgba(13, 18, 24, 0.34));
+    background-position: 0 0, 0 0;
+    background-repeat: repeat, repeat;
+    background-size: auto, auto;
+    border: 0.0909rem solid rgba(201, 168, 76, 0.12);
+  }
+
+  .fs-map-pending-continent,
+  .fs-map-pending-route {
+    position: absolute;
+    border: 0.0909rem solid rgba(201, 168, 76, 0.16);
+    background-color: rgba(74, 21, 48, 0.14);
+    background-image:
+      linear-gradient(90deg, transparent 0%, rgba(241, 230, 197, 0.07) 44%, transparent 88%),
+      url('/assets/baked/texture-overlay-heavy.png');
+    background-position: -10rem 0, 0 0;
+    background-repeat: no-repeat, repeat;
+    background-size: 10rem 100%, 7.385rem 7.385rem;
+    animation-name: fs-pending-sheen;
+    animation-duration: 1.15s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+
+  .fs-map-pending-continent--west {
+    left: 7%;
+    top: 22%;
+    width: 48%;
+    height: 44%;
+    clip-path: polygon(4% 44%, 15% 21%, 38% 16%, 62% 4%, 91% 19%, 84% 46%, 96% 71%, 71% 92%, 42% 82%, 16% 93%, 0% 70%);
+  }
+
+  .fs-map-pending-continent--east {
+    right: 7%;
+    top: 31%;
+    width: 42%;
+    height: 38%;
+    clip-path: polygon(13% 16%, 48% 5%, 83% 18%, 95% 43%, 83% 71%, 55% 91%, 21% 82%, 3% 56%);
+  }
+
+  .fs-map-pending-route {
+    height: 0.16rem;
+    border-width: 0;
+    background-color: rgba(201, 168, 76, 0.16);
+  }
+
+  .fs-map-pending-route--one {
+    left: 18%;
+    top: 72%;
+    width: 54%;
+    transform: rotate(-8deg);
+  }
+
+  .fs-map-pending-route--two {
+    left: 42%;
+    top: 24%;
+    width: 36%;
+    transform: rotate(14deg);
+  }
+
+  .fs-detail-hero--pending {
+    background-color: rgba(18, 23, 29, 0.78);
+    background-image:
+      radial-gradient(circle at 68% 16%, rgba(201, 168, 76, 0.08), transparent 30%),
+      linear-gradient(180deg, rgba(74, 21, 48, 0.24), rgba(18, 23, 29, 0.78)),
+      url('/assets/baked/card-charcoal.png');
+    background-position: 0 0;
+    background-repeat: repeat;
+    background-size: auto, auto, 17.4545rem 8.7273rem;
+  }
+
+  .fs-detail-body--pending {
+    pointer-events: none;
+  }
+
+  .fs-pending-detail-grid {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fs-pending-detail-grid > * + * {
+    margin-top: 0.34rem;
+  }
+
+  @keyframes fs-pending-sheen {
+    0% { background-position: -10rem 0, 0 0; opacity: 0.58; }
+    50% { opacity: 0.92; }
+    100% { background-position: 26rem 0, 0 0; opacity: 0.58; }
+  }
+
   .fs-campaign-description {
     position: absolute;
     left: 30%;

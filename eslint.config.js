@@ -61,4 +61,17 @@ export default defineConfig([
       'local/no-expensive-runtime-selectors': 'error',
     },
   },
+  {
+    files: [
+      'src/components/screens/Battle/BattleScreenParts.tsx',
+      'src/components/screens/Military/ForceTreeParts.tsx',
+      'src/components/screens/Military/TemplateManagementPanel.tsx',
+      'src/components/sidebars/character/CharacterSidebarModel.tsx',
+      'src/components/sidebars/character/CharacterSidebarPanels.tsx',
+      'src/components/sidebars/military/MilitaryUnitsTab.tsx',
+    ],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])
