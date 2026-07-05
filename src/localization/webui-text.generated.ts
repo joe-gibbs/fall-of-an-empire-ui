@@ -3391,7 +3391,7 @@ export const WEBUI_TEXT_SOURCE = {
   "Auto.ExtraAttr.ComponentsSettingsSettingsPanel.750.11": "Size of the software cursor.",
   "Auto.ExtraAttr.ComponentsSettingsSettingsPanel.751.12": "Global scale multiplier for all UI elements.",
   "Settings.UIScrollSpeed.Description": "How fast lists and panels move when scrolling.",
-  "Auto.ExtraAttr.ComponentsSettingsSettingsPanel.752.13": "Allow access to the developer console via the tilde key.",
+  "Auto.ExtraAttr.ComponentsSettingsSettingsPanel.752.13": "Enable the developer console using the key set in Controls.",
   "Auto.ExtraAttr.ComponentsSettingsSettingsPanel.753.14": "Attach the latest save file when submitting crash reports to help diagnose issues.",
   "Auto.ExtraAttr.ComponentsSettingsSettingsPanel.762.15": "Synchronise frame output to your monitor refresh rate. Eliminates tearing but may add input latency.",
   "Auto.ExtraAttr.ComponentsSettingsSettingsPanel.764.16": "Render below native for performance or above native for sharper supersampling.",
