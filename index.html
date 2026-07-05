@@ -24,73 +24,48 @@
         };
       })();
     </script>
+    <script src="/devtools/react-devtools-backend.js"></script>
     <script>
       (function () {
-        if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) return;
+        var backend = window.FoaeReactDevToolsBackend;
+        if (!backend || window.__FOAE_REACT_DEVTOOLS__) return;
 
-        var nextRendererId = 1;
-        var renderers = new Map();
-        var roots = new Map();
-        var listeners = {};
+        backend.initialize(window);
 
-        function emit(event, payload) {
-          var handlers = listeners[event];
-          if (!handlers) return;
-          handlers.slice().forEach(function (handler) {
-            try {
-              handler(payload);
-            } catch (error) {
-              setTimeout(function () {
-                throw error;
-              });
-            }
-          });
-        }
+        var listeners = [];
+        var outbound = [];
+        var activated = false;
+        var bridge = null;
 
-        window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-          supportsFiber: true,
-          isDisabled: false,
-          renderers: renderers,
-          inject: function (renderer) {
-            var id = nextRendererId++;
-            renderers.set(id, renderer);
-            roots.set(id, new Set());
-            emit('renderer', { id: id, renderer: renderer });
-            return id;
-          },
-          onCommitFiberRoot: function (rendererId, root) {
-            var rendererRoots = roots.get(rendererId);
-            if (!rendererRoots) {
-              rendererRoots = new Set();
-              roots.set(rendererId, rendererRoots);
-            }
-            rendererRoots.add(root);
-            emit('commitFiberRoot', { rendererId: rendererId, root: root });
-          },
-          onCommitFiberUnmount: function (rendererId, fiber) {
-            emit('commitFiberUnmount', { rendererId: rendererId, fiber: fiber });
-          },
-          getFiberRoots: function (rendererId) {
-            return roots.get(rendererId) || new Set();
-          },
-          sub: function (event, handler) {
-            if (!listeners[event]) listeners[event] = [];
-            listeners[event].push(handler);
+        var wall = {
+          listen: function (listener) {
+            listeners.push(listener);
             return function () {
-              window.__REACT_DEVTOOLS_GLOBAL_HOOK__.off(event, handler);
+              var index = listeners.indexOf(listener);
+              if (index !== -1) listeners.splice(index, 1);
             };
           },
-          off: function (event, handler) {
-            var handlers = listeners[event];
-            if (!handlers) return;
-            var index = handlers.indexOf(handler);
-            if (index !== -1) handlers.splice(index, 1);
+          send: function (event, payload) {
+            outbound.push({ event: event, payload: payload });
           },
-          emit: emit,
-          checkDCE: function () {},
-          setStrictMode: function () {},
-          registerInternalModuleStart: function () {},
-          registerInternalModuleStop: function () {},
+        };
+
+        window.__FOAE_REACT_DEVTOOLS__ = {
+          sendToBackend: function (event, payload) {
+            listeners.slice().forEach(function (listener) {
+              listener({ event: event, payload: payload });
+            });
+          },
+          drain: function () {
+            return outbound.splice(0, outbound.length);
+          },
+        };
+
+        window.__FOAE_REACT_DEVTOOLS_ACTIVATE__ = function () {
+          if (activated) return;
+          activated = true;
+          bridge = backend.createBridge(window, wall);
+          backend.activate(window, { bridge: bridge });
         };
       })();
     </script>
