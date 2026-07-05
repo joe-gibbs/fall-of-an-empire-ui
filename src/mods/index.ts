@@ -1,4 +1,5 @@
 import { bridgeCall } from '../bridge-types.generated.ts';
+import { registerModPoCatalogues } from '../localization/modPoText';
 import { registerAssetOverride } from '../utils/assets';
 import { joinGameLocalResourceUrl } from '../utils/localResourceUrl';
 
@@ -45,6 +46,9 @@ interface ModManifestEntry {
   entry: string;
   /** Optional CSS files to inject via <link> before the entry runs. */
   styles?: string[];
+  /** Optional PO catalogue path or URL. Use `{locale}` as the locale placeholder. */
+  localization?: string;
+  localisation?: string;
 }
 
 interface ContentPackWebUIEntry {
@@ -58,6 +62,8 @@ interface ContentPackWebUIPack {
   resourceBaseUrl?: string;
   rootPath?: string;
   styles?: string[];
+  localization?: string;
+  localisation?: string;
   assetOverrides?: Record<string, string>;
   entries?: ContentPackWebUIEntry[];
 }
@@ -113,6 +119,8 @@ function isContentPackManifest(value: unknown): value is ContentPackWebUIManifes
 function contentPackManifestHasWebUISurface(value: ContentPackWebUIManifest): boolean {
   return (value.packs ?? []).some(pack => (
     (pack.styles?.length ?? 0) > 0
+    || !!pack.localization
+    || !!pack.localisation
     || Object.keys(pack.assetOverrides ?? {}).length > 0
     || (pack.entries?.length ?? 0) > 0
   ));
@@ -162,6 +170,13 @@ async function fetchContentPackManifest(): Promise<ModManifestEntry[]> {
     const styles = (pack.styles ?? [])
       .map(style => joinGameLocalResourceUrl(baseUrl, style))
       .filter(Boolean);
+    const localizationPath = pack.localization || pack.localisation;
+    if (localizationPath) {
+      registerModPoCatalogues([{
+        packId: pack.id ?? pack.name ?? baseUrl,
+        urlPattern: joinGameLocalResourceUrl(baseUrl, localizationPath),
+      }]);
+    }
 
     for (const [sourcePath, targetPath] of Object.entries(pack.assetOverrides ?? {})) {
       registerAssetOverride(sourcePath, joinGameLocalResourceUrl(baseUrl, targetPath));
@@ -212,6 +227,18 @@ async function loadMods(): Promise<void> {
   });
   const allMods = Array.from(byEntry.values());
   if (allMods.length === 0) return;
+
+  registerModPoCatalogues(allMods
+    .map((mod) => {
+      const localizationPath = mod.localization || mod.localisation;
+      if (!localizationPath) return null;
+      const base = mod.entry.slice(0, mod.entry.lastIndexOf('/') + 1);
+      const urlPattern = localizationPath.includes('://') || localizationPath.startsWith('/')
+        ? localizationPath
+        : `${base}${localizationPath}`;
+      return { packId: mod.name, urlPattern };
+    })
+    .filter((catalogue): catalogue is { packId: string; urlPattern: string } => catalogue !== null));
 
   const loaded: string[] = [];
   const failed: { name: string; error: unknown }[] = [];

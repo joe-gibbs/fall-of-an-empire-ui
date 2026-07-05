@@ -43,6 +43,12 @@ export const usePlayerFactionId = sdk.hooks.usePlayerFactionId;
 export const preloadImageAsset = sdk.assets.preloadImageAsset;
 export const preloadImageAssets = sdk.assets.preloadImageAssets;
 
+// Localisation
+export const webUIText = sdk.localization.t;
+export const formatWebUIText = sdk.localization.format;
+export const useWebUIText = sdk.localization.useText;
+export const useWebUILocale = sdk.localization.useLocale;
+
 // Bridge
 export const bridgeCall = sdk.bridge.call;
 export const onBridgeEvent = sdk.bridge.on;

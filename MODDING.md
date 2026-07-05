@@ -25,6 +25,7 @@ Write TypeScript, React, CSS, and source PNG/JPG files under `WebUI/`. Do not ed
 
 ```json
 "webui": {
+  "localization": "WebUI/Localization/{locale}.po",
   "entries": [
     {
       "id": "your_mod_screen",
@@ -33,6 +34,36 @@ Write TypeScript, React, CSS, and source PNG/JPG files under `WebUI/`. Do not ed
   ],
   "styles": ["WebUI/dist/style.css"]
 }
+```
+
+## Localisation
+
+Mod WebUI text uses PO catalogues declared by `webui.localization`. Use `{locale}` in the path; the runtime loads `en`, the base locale, and the current locale in that order. Missing translated entries fall back to the English PO entry.
+
+```text
+Mods/
+  YourModName/
+    WebUI/
+      Localization/
+        en.po
+        de.po
+```
+
+Use `msgctxt` as the stable WebUI key:
+
+```po
+msgctxt "YourMod.Screen.Title"
+msgid "Command"
+msgstr "Command"
+```
+
+Mod code can read text through the SDK:
+
+```ts
+const { localization: { t } } = globalThis.FOAE;
+
+t('YourMod.Screen.Title');
+t('YourMod.Screen.Count', { Count: 3 });
 ```
 
 Build one mod:

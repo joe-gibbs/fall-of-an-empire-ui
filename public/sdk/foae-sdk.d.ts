@@ -175,6 +175,12 @@ export interface FoaeModSDK {
     preloadImageAsset(path: string): void;
     preloadImageAssets(paths: string[]): void;
   };
+  localization: {
+    t(key: string, args?: Record<string, string | number | boolean | null | undefined>): string;
+    format(template: string, args?: Record<string, string | number | boolean | null | undefined>): string;
+    useText(): (key: string, args?: Record<string, string | number | boolean | null | undefined>) => string;
+    useLocale(): string;
+  };
   bridge: {
     call(action: string, payload?: unknown): Promise<unknown>;
     on(action: string, callback: (data: unknown) => void): () => void;
@@ -209,6 +215,11 @@ export const usePlayerFactionId: FoaeModSDK['hooks']['usePlayerFactionId'];
 
 export const preloadImageAsset: FoaeModSDK['assets']['preloadImageAsset'];
 export const preloadImageAssets: FoaeModSDK['assets']['preloadImageAssets'];
+
+export const webUIText: FoaeModSDK['localization']['t'];
+export const formatWebUIText: FoaeModSDK['localization']['format'];
+export const useWebUIText: FoaeModSDK['localization']['useText'];
+export const useWebUILocale: FoaeModSDK['localization']['useLocale'];
 
 export const bridgeCall: FoaeModSDK['bridge']['call'];
 export const onBridgeEvent: FoaeModSDK['bridge']['on'];

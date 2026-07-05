@@ -40,6 +40,12 @@ import {
 import { preloadImageAsset, preloadImageAssets } from '../preload/assets';
 import { FoaeCefUIAssetPath } from '../utils/assets';
 import {
+  formatWebUIText,
+  useWebUILocale,
+  useWebUIText,
+  webUIText,
+} from '../localization/WebUITextContext';
+import {
   bridgeCall as typedBridgeCall,
   onBridgeEvent as typedOnBridgeEvent,
   type BridgeActions,
@@ -106,6 +112,14 @@ interface FoaeSDK {
     preloadImageAssets: typeof preloadImageAssets;
   };
 
+  /** Localised text helpers backed by the base game and enabled mod PO catalogues. */
+  localization: {
+    t: typeof webUIText;
+    format: typeof formatWebUIText;
+    useText: typeof useWebUIText;
+    useLocale: typeof useWebUILocale;
+  };
+
   /** Bridge access for mod-owned actions and pushed updates. */
   bridge: {
     call: (action: string, payload?: unknown) => Promise<unknown>;
@@ -154,6 +168,12 @@ globalThis.FOAE = {
     FoaeCefUIAssetPath,
     preloadImageAsset,
     preloadImageAssets,
+  },
+  localization: {
+    t: webUIText,
+    format: formatWebUIText,
+    useText: useWebUIText,
+    useLocale: useWebUILocale,
   },
   bridge: {
     call: (action, payload) => {
