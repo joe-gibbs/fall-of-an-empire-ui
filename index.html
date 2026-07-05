@@ -24,6 +24,76 @@
         };
       })();
     </script>
+    <script>
+      (function () {
+        if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) return;
+
+        var nextRendererId = 1;
+        var renderers = new Map();
+        var roots = new Map();
+        var listeners = {};
+
+        function emit(event, payload) {
+          var handlers = listeners[event];
+          if (!handlers) return;
+          handlers.slice().forEach(function (handler) {
+            try {
+              handler(payload);
+            } catch (error) {
+              setTimeout(function () {
+                throw error;
+              });
+            }
+          });
+        }
+
+        window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+          supportsFiber: true,
+          isDisabled: false,
+          renderers: renderers,
+          inject: function (renderer) {
+            var id = nextRendererId++;
+            renderers.set(id, renderer);
+            roots.set(id, new Set());
+            emit('renderer', { id: id, renderer: renderer });
+            return id;
+          },
+          onCommitFiberRoot: function (rendererId, root) {
+            var rendererRoots = roots.get(rendererId);
+            if (!rendererRoots) {
+              rendererRoots = new Set();
+              roots.set(rendererId, rendererRoots);
+            }
+            rendererRoots.add(root);
+            emit('commitFiberRoot', { rendererId: rendererId, root: root });
+          },
+          onCommitFiberUnmount: function (rendererId, fiber) {
+            emit('commitFiberUnmount', { rendererId: rendererId, fiber: fiber });
+          },
+          getFiberRoots: function (rendererId) {
+            return roots.get(rendererId) || new Set();
+          },
+          sub: function (event, handler) {
+            if (!listeners[event]) listeners[event] = [];
+            listeners[event].push(handler);
+            return function () {
+              window.__REACT_DEVTOOLS_GLOBAL_HOOK__.off(event, handler);
+            };
+          },
+          off: function (event, handler) {
+            var handlers = listeners[event];
+            if (!handlers) return;
+            var index = handlers.indexOf(handler);
+            if (index !== -1) handlers.splice(index, 1);
+          },
+          emit: emit,
+          checkDCE: function () {},
+          setStrictMode: function () {},
+          registerInternalModuleStart: function () {},
+          registerInternalModuleStop: function () {},
+        };
+      })();
+    </script>
   </head>
   <body oncontextmenu="return false">
     <div id="root"></div>
