@@ -274,6 +274,7 @@ export default function TutorialSpotlightOverlay({
   onNavigate,
 }: TutorialSpotlightOverlayProps) {
   const [targetRect, setTargetRect] = useState<SpotlightRect | null>(null);
+  const [targetEventId, setTargetEventId] = useState('');
   const [cardSize, setCardSize] = useState<CardSize>(DEFAULT_CARD_SIZE);
   const targetElementRef = useRef<HTMLElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -285,7 +286,10 @@ export default function TutorialSpotlightOverlay({
   useEffect(() => {
     if (!spotlight.isVisible) {
       targetElementRef.current = null;
-      const frameId = window.requestAnimationFrame(() => setTargetRect(null));
+      const frameId = window.requestAnimationFrame(() => {
+        setTargetEventId('');
+        setTargetRect(null);
+      });
       return () => window.cancelAnimationFrame(frameId);
     }
 
@@ -295,12 +299,14 @@ export default function TutorialSpotlightOverlay({
       targetElementRef.current = element;
       const nextRect = rectForElement(element);
       setTargetRect(previous => (rectsEqual(previous, nextRect) ? previous : nextRect));
+      const nextTargetEventId = nextRect ? eventId : '';
+      setTargetEventId(previous => (previous === nextTargetEventId ? previous : nextTargetEventId));
       frameId = window.requestAnimationFrame(tick);
     };
 
     tick();
     return () => window.cancelAnimationFrame(frameId);
-  }, [spotlight]);
+  }, [eventId, spotlight]);
 
   useEffect(() => {
     if (!spotlight.isVisible) return undefined;
@@ -342,8 +348,11 @@ export default function TutorialSpotlightOverlay({
   }, [eventId, onResolve, spotlight]);
 
   const panels = useMemo<PanelSide[]>(() => (targetRect ? ['top', 'bottom', 'left', 'right'] : ['full']), [targetRect]);
+  const needsResolvedTarget = spotlight.isBuildingTarget;
+  const hasResolvedTarget = targetRect !== null && targetEventId === eventId;
 
   if (!spotlight.isVisible) return null;
+  if (needsResolvedTarget && !hasResolvedTarget) return null;
 
   const handleNavigateMouseDown = (event: ReactMouseEvent<HTMLButtonElement>, direction: -1 | 1) => {
     event.preventDefault();
