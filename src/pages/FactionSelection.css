@@ -514,36 +514,18 @@
 
   .fs-campaign-description-scroll {
     height: 100%;
-    overflow-y: scroll;
+  }
+
+  .fs-campaign-description-viewport {
     padding-right: 1.25rem;
   }
 
-  .fs-campaign-description-scroll p {
+  .fs-campaign-description-viewport p {
     margin: 0;
   }
 
-  .fs-campaign-description-scroll p + p {
+  .fs-campaign-description-viewport p + p {
     margin-top: 0.45rem;
-  }
-
-  .fs-campaign-description-scrollbar {
-    position: absolute;
-    top: 0.8rem;
-    right: 0.55rem;
-    bottom: 0.8rem;
-    width: 0.38rem;
-    border-width: 0.077rem;
-    border-style: solid;
-    border-color: rgba(201, 168, 76, 0.3);
-    background-color: rgba(8, 12, 17, 0.55);
-  }
-
-  .fs-campaign-description-thumb {
-    position: absolute;
-    left: 0.077rem;
-    right: 0.077rem;
-    min-height: 1rem;
-    background-color: rgba(201, 168, 76, 0.82);
   }
 
   .fs-list-head {

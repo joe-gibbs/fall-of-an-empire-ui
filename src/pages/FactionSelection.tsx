@@ -15,6 +15,7 @@ import { TraitIcon } from '../components/common/entities/TraitIcon';
 import CultureTooltip from '../components/common/tooltips/CultureTooltip';
 import GovernmentTooltip from '../components/common/tooltips/GovernmentTooltip';
 import ReligionTooltip from '../components/common/tooltips/ReligionTooltip';
+import StyledScrollArea from '../components/common/layout/scrolling/StyledScrollArea';
 import ZoomPanCanvas, { type ZoomPanCanvasApi, type ZoomPanPoint } from '../components/common/layout/scrolling/ZoomPanCanvas';
 import VirtualList from '../components/common/layout/scrolling/VirtualList';
 import { StatCellGrid, StatCell } from '../components/sidebars/shared/StatCellGrid';
@@ -972,10 +973,8 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
   ) {
     const t = useWebUIText();
     const [hoveredBaseName, setHoveredBaseName] = useState('');
-    const [descriptionScroll, setDescriptionScroll] = useState({ top: 0, height: 1, scrollHeight: 1 });
 
     const pickRequestIdRef = useRef(0);
-    const descriptionScrollRef = useRef<HTMLDivElement | null>(null);
 
     useImperativeHandle(ref, () => ({
       setHovered: (baseName: string) => setHoveredBaseName(baseName),
@@ -1014,31 +1013,6 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
       }),
       [mapLabelFaction, t],
     );
-
-    const descriptionCanScroll = descriptionScroll.scrollHeight > descriptionScroll.height + 1;
-    const descriptionThumbHeight = descriptionCanScroll
-      ? Math.max(16, (descriptionScroll.height / descriptionScroll.scrollHeight) * 100)
-      : 100;
-    const descriptionThumbTop = descriptionCanScroll
-      ? (descriptionScroll.top / (descriptionScroll.scrollHeight - descriptionScroll.height)) * (100 - descriptionThumbHeight)
-      : 0;
-
-    const updateDescriptionScroll = useCallback(() => {
-      const element = descriptionScrollRef.current;
-      if (!element) {
-        return;
-      }
-
-      setDescriptionScroll({
-        top: element.scrollTop,
-        height: element.clientHeight || 1,
-        scrollHeight: element.scrollHeight || 1,
-      });
-    }, []);
-
-    useEffect(() => {
-      updateDescriptionScroll();
-    }, [scenarioDescriptionParts, updateDescriptionScroll]);
 
     const handleMapPick = useCallback((point: ZoomPanPoint) => {
       const requestId = pickRequestIdRef.current + 1;
@@ -1269,24 +1243,14 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
 
           {scenarioDescriptionParts.length > 0 && (
             <div className="fs-campaign-description">
-              <div
-                ref={descriptionScrollRef}
+              <StyledScrollArea
                 className="fs-campaign-description-scroll"
-                onScroll={updateDescriptionScroll}
+                viewportClassName="fs-campaign-description-viewport"
               >
                 {scenarioDescriptionParts.map((part, index) => (
                   <p key={index}>{part}</p>
                 ))}
-              </div>
-              <div className="fs-campaign-description-scrollbar" aria-hidden="true">
-                <div
-                  className="fs-campaign-description-thumb"
-                  style={{
-                    height: `${descriptionThumbHeight}%`,
-                    top: `${descriptionThumbTop}%`,
-                  }}
-                />
-              </div>
+              </StyledScrollArea>
             </div>
           )}
         </section>
