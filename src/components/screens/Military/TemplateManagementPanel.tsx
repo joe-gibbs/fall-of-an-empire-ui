@@ -565,8 +565,24 @@ function TemplateUnitSelectorModal({
   };
 
   return createPortal(
-    <div className={`chart-unit-picker${closing ? ' chart-unit-picker--closing' : ''}`} onMouseDown={requestClose}>
-      <div className={`chart-unit-picker-dialog${closing ? ' chart-unit-picker-dialog--closing' : ''}`} onMouseDown={event => event.stopPropagation()}>
+    <div
+      className={`chart-unit-picker${closing ? ' chart-unit-picker--closing' : ''}`}
+      onMouseDown={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+        requestClose();
+      }}
+      onClick={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
+      <div
+        className={`chart-unit-picker-dialog${closing ? ' chart-unit-picker-dialog--closing' : ''}`}
+        onMouseDown={event => event.stopPropagation()}
+      >
         <div className="chart-unit-picker-head">
           <div className="chart-unit-picker-title-block">
             <span className="chart-unit-picker-title"><WebUIText textKey="FormationTemplate.UnitCatalogue" /></span>

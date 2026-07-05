@@ -194,6 +194,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
     onClose,
     escapeId: 'modal.agent-select',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   // Fetch live candidates + foreign factions from the bridge. Candidate

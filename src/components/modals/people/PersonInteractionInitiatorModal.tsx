@@ -87,6 +87,7 @@ export default function PersonInteractionInitiatorModal({
     onClose,
     escapeId: 'modal.person-interaction-initiator',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
   const activeInteraction = interaction;
   const activeInteractionId = activeInteraction?.id ?? null;

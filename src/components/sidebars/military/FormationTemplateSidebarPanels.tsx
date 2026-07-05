@@ -302,7 +302,20 @@ export function Picker({
   }, []);
 
   return createPortal(
-    <div className="tpl-picker" onMouseDown={onCancel}>
+    <div
+      className="tpl-picker"
+      onMouseDown={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onCancel();
+      }}
+      onClick={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
       <div className="tpl-picker-dialog" onMouseDown={event => event.stopPropagation()}>
         <div className="tpl-picker-head">
           <div className="tpl-picker-title-block">

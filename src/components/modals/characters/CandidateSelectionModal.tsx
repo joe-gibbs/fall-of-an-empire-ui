@@ -84,7 +84,18 @@ export function CandidateModalFrame({
   return (
     <div
       className={`${prefix}-overlay${closing ? ` ${prefix}-overlay--closing` : ''}`}
-      onClick={onClose}
+      onMouseDown={event => {
+        if (event.button !== 0) return;
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+      }}
+      onClick={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
     >
       <div
         className="candidate-modal-drag-frame"
@@ -92,6 +103,7 @@ export function CandidateModalFrame({
       >
         <div
           className={`modal ${prefix}-modal${modalClassName ? ` ${modalClassName}` : ''}${closing ? ` ${prefix}-modal--closing` : ''}`}
+          onMouseDown={event => event.stopPropagation()}
           onClick={event => event.stopPropagation()}
         >
           <div className={`${prefix}-drag-handle candidate-drag-handle`} onMouseDown={beginDrag} aria-hidden="true">

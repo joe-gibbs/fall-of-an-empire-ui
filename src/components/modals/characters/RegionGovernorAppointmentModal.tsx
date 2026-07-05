@@ -89,6 +89,7 @@ export default function RegionGovernorAppointmentModal({
     onClose,
     escapeId: 'modal.region-governor-appointment',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const candidatesResult = useRegionGovernorCandidates(open ? settlementId : null);

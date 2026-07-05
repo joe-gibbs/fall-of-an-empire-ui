@@ -56,6 +56,7 @@ export default function FactionInteractionPersonSelectionModal({
     onClose,
     escapeId: 'modal.faction-interaction-person-selection',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
   const [sort, setSort] = useState<SortKey>('governance');
   const [selectedId, setSelectedId] = useState<string | null>(null);

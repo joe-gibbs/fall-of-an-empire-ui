@@ -162,6 +162,7 @@ export default function CourtAppointmentModal({
     onClose,
     escapeId: 'modal.court-appointment',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const [renderedPosition, setRenderedPosition] = useState<CourtPositionView | null>(position);

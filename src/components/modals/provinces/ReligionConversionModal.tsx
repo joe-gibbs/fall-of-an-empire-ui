@@ -205,8 +205,25 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
   if (!open) return null;
 
   return (
-    <div className={`modal-overlay${closing ? ' modal-overlay--closing' : ''}`} onClick={close}>
-      <div className={`modal rcm-modal${closing ? ' modal--closing' : ''}`} onClick={event => event.stopPropagation()}>
+    <div
+      className={`modal-overlay${closing ? ' modal-overlay--closing' : ''}`}
+      onMouseDown={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      }}
+      onClick={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
+      <div
+        className={`modal rcm-modal${closing ? ' modal--closing' : ''}`}
+        onMouseDown={event => event.stopPropagation()}
+        onClick={event => event.stopPropagation()}
+      >
         <div className="rcm-header">
           <div className="rcm-header-main">
             <img src={targetIcon} alt="" className="rcm-header-icon" draggable={false} />

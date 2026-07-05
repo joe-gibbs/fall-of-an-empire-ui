@@ -78,6 +78,8 @@ export default function PersonInteractionGiftModal({
 
   const handleOverlayMouseDown = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0 || event.target !== event.currentTarget) return;
+    event.preventDefault();
+    event.stopPropagation();
     handleClose();
   }, [handleClose]);
 
@@ -120,7 +122,15 @@ export default function PersonInteractionGiftModal({
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className={`pig-overlay${closing ? ' pig-overlay--closing' : ''}`} onMouseDown={handleOverlayMouseDown}>
+    <div
+      className={`pig-overlay${closing ? ' pig-overlay--closing' : ''}`}
+      onMouseDown={handleOverlayMouseDown}
+      onClick={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
       <div className={`modal pig-modal${closing ? ' pig-modal--closing' : ''}`} onMouseDown={handleModalMouseDown}>
         <div className="pig-header">
           {interaction.backgroundUrl && (

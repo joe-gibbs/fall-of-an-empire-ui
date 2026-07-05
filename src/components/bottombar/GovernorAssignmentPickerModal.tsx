@@ -74,6 +74,7 @@ export default function GovernorAssignmentPickerModal({
     onClose,
     escapeId: 'modal.governor-assignment-picker',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const sorted = useMemo(() => {

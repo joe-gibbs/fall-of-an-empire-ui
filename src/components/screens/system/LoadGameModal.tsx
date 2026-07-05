@@ -240,8 +240,21 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
   return (
     <>
 
-      <div className={overlayCls} onClick={animatedClose}>
-        <div className={modalCls} onClick={stopPropagation}>
+      <div
+        className={overlayCls}
+        onMouseDown={event => {
+          if (event.target !== event.currentTarget) return;
+          event.preventDefault();
+          event.stopPropagation();
+          animatedClose();
+        }}
+        onClick={event => {
+          if (event.target !== event.currentTarget) return;
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+      >
+        <div className={modalCls} onMouseDown={stopPropagation} onClick={stopPropagation}>
           <div className="load-game__header">
             <span className="load-game__title"><WebUIText textKey="Auto.ComponentsScreensLoadGameModal.384.4" /></span>
             <div className="load-game__header-actions">

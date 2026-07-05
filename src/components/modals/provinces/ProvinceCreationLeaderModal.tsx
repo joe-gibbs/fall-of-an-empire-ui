@@ -71,6 +71,7 @@ export default function ProvinceCreationLeaderModal({
     onClose,
     escapeId: 'modal.province-creation-leader',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const sortedCandidates = useMemo(() => {

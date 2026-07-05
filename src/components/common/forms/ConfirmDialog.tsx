@@ -69,10 +69,24 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     : 'modal confirm-dialog';
 
   return (
-    <div className={overlayCls} onClick={() => animatedClose('cancel')}>
+    <div
+      className={overlayCls}
+      onMouseDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        e.preventDefault();
+        e.stopPropagation();
+        animatedClose('cancel');
+      }}
+      onClick={(e) => {
+        if (e.target !== e.currentTarget) return;
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
 
       <div
         className={modalCls}
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="confirm-dialog-header">

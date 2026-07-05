@@ -80,6 +80,7 @@ export default function CourtierPromotionModal({
     onClose,
     escapeId: 'modal.courtier-promotion',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const canAfford = playerGold >= promotionCost;
@@ -103,10 +104,21 @@ export default function CourtierPromotionModal({
   return (
     <div
       className={`cpm-overlay${closing ? ' cpm-overlay--closing' : ''}`}
-      onClick={close}
+      onMouseDown={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      }}
+      onClick={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
     >
       <div
         className={`modal cpm-modal${closing ? ' cpm-modal--closing' : ''}`}
+        onMouseDown={stopPropagation}
         onClick={stopPropagation}
       >
         <div className="cpm-header">

@@ -131,6 +131,7 @@ export default function AllyCallDialogModal({ state, onRespond }: Props) {
     onClose: () => onRespond(state.requestId, [], true),
     escapeId: 'modal.ally-call',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const defaultSelectedIds = useMemo(() => (
@@ -183,7 +184,17 @@ export default function AllyCallDialogModal({ state, onRespond }: Props) {
   return (
     <div
       className={`modal-overlay acd-overlay${closing ? ' acd-overlay--closing' : ''}`}
-      onMouseDown={close}
+      onMouseDown={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      }}
+      onClick={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
     >
       <div
         className={`modal acd-modal${closing ? ' acd-modal--closing' : ''}`}

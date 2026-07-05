@@ -53,11 +53,12 @@ export default function ProvinceEmperorTakeoverModal({ open, takeover, onClose }
   const [sort, setSort] = useState<SortKey>('support');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { mounted, closing } = useModalPresence({
+  const { mounted, closing, close } = useModalPresence({
     open,
     onClose,
     escapeId: 'modal.province-emperor-takeover',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const sorted = useMemo(() => {
@@ -100,7 +101,7 @@ export default function ProvinceEmperorTakeoverModal({ open, takeover, onClose }
     <CandidateModalFrame
       prefix="cam"
       closing={closing}
-      onClose={onClose}
+      onClose={close}
       headerIcon="/assets/icons/AssignGovernor.png"
       kicker={t('ProvinceMode.Transition.Kicker')}
       title={t('ProvinceMode.Transition.Title')}

@@ -75,6 +75,7 @@ export default function BishopAppointmentModal({
     onClose,
     escapeId: 'modal.bishop-appointment',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const [renderedAssignment, setRenderedAssignment] = useState<DioceseView | null>(assignment);

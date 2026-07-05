@@ -43,10 +43,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const handleOverlayMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     overlayPointerDown.current = e.target === e.currentTarget;
+    if (!overlayPointerDown.current) return;
+    e.preventDefault();
+    e.stopPropagation();
   }, []);
 
   const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target !== e.currentTarget || !overlayPointerDown.current) return;
+    if (e.target !== e.currentTarget) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (!overlayPointerDown.current) return;
     overlayPointerDown.current = false;
     animatedClose();
   }, [animatedClose]);

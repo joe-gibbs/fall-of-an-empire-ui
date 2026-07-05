@@ -292,7 +292,17 @@ export default function BattleAfterActionModal({
   return (
     <div
       className={`modal-overlay battle-aar-overlay${closing ? ' modal-overlay--closing battle-aar-overlay--closing' : ''}`}
-      onMouseDown={close}
+      onMouseDown={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      }}
+      onClick={event => {
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
     >
       <div
         className={`modal battle-aar-modal${closing ? ' modal--closing battle-aar-modal--closing' : ''}`}

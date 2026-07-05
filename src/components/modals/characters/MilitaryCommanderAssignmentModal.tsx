@@ -76,6 +76,7 @@ export default function MilitaryCommanderAssignmentModal({
     onClose,
     escapeId: 'modal.military-commander-assignment',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const candidatesResult = useMilitaryCommanderCandidatesBridge(open ? militaryId : null);

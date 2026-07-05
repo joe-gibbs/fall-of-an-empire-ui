@@ -79,8 +79,21 @@ const LanguageSelector: React.FC = () => {
   const overlayClass = closing ? 'mm-lang-overlay mm-lang-overlay--closing' : 'mm-lang-overlay';
   const modalClass = closing ? 'mm-lang-modal mm-lang-modal--closing' : 'mm-lang-modal';
   const overlay = mounted ? (
-    <div className={overlayClass} onClick={close}>
-      <div className={modalClass} onClick={e => e.stopPropagation()}>
+    <div
+      className={overlayClass}
+      onMouseDown={e => {
+        if (e.target !== e.currentTarget) return;
+        e.preventDefault();
+        e.stopPropagation();
+        close();
+      }}
+      onClick={e => {
+        if (e.target !== e.currentTarget) return;
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
+      <div className={modalClass} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
         <div className="mm-lang-modal__header">
           <span className="mm-lang-modal__title">{t('Common.Language')}</span>
           <button className="mm-lang-modal__close" onClick={close} aria-label={t('Common.Close')}>

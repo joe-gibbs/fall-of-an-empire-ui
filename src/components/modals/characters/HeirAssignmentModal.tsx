@@ -58,6 +58,7 @@ export default function HeirAssignmentModal({
     onClose,
     escapeId: 'modal.heir-assignment',
     allowFromInput: true,
+    closeStrategy: 'request',
   });
 
   const candidates = useTargetedHeirCandidates(mounted, factionId ?? '');
