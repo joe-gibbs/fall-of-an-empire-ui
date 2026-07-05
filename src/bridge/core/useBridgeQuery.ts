@@ -72,6 +72,8 @@ interface UseBridgeQueryOptions<A extends BridgeActionName, T> {
   cacheResponse?: boolean;
   /** Reuse a completed response for short-lived repeated mounts of expensive local bridge actions. */
   cacheResponseMs?: number;
+  /** Re-fetch while mounted for visible data that can change without a push event. */
+  refreshMs?: number;
   /**
    * Optional filter for push updates so an unrelated push (e.g. a different
    * settlement) doesn't overwrite our current data.
@@ -92,6 +94,7 @@ export function useBridgeQuery<A extends BridgeActionName, T>(
   const { action, payload, map, matchPush, fetch = true } = options;
   const cacheResponse = options.cacheResponse === true;
   const cacheResponseMs = options.cacheResponseMs ?? 0;
+  const refreshMs = options.refreshMs ?? 0;
   const shouldCacheResponse = cacheResponse || cacheResponseMs > 0;
   const completedTtlMs = cacheResponse ? null : cacheResponseMs;
   const [data, setData] = useState<{ requestKey: string; value: T | null } | null>(null);
@@ -135,10 +138,10 @@ export function useBridgeQuery<A extends BridgeActionName, T>(
       setData({ requestKey, value: mapRef.current(completed as ResponseOf<A>) });
     }
 
-    if (fetch && completed === undefined) {
-      // The variadic typing on bridgeCall can't be satisfied generically here;
-      // cast through a less precise signature.
-      const call = bridgeCall as unknown as (a: BridgeActionName, p?: unknown) => Promise<unknown>;
+    // The variadic typing on bridgeCall can't be satisfied generically here;
+    // cast through a less precise signature.
+    const call = bridgeCall as unknown as (a: BridgeActionName, p?: unknown) => Promise<unknown>;
+    const requestFresh = () => {
       let request = inFlightQueries.get(requestKey);
       if (!request) {
         request = call(action, payload === undefined ? undefined : payload)
@@ -162,14 +165,26 @@ export function useBridgeQuery<A extends BridgeActionName, T>(
           if (cancelled) return;
           acknowledgeBridgeFailure(error);
         });
+    };
+
+    if (fetch && completed === undefined) {
+      requestFresh();
+    }
+
+    let refreshTimer: number | undefined;
+    if (fetch && refreshMs > 0) {
+      refreshTimer = window.setInterval(requestFresh, refreshMs);
     }
 
     return () => {
       cancelled = true;
+      if (refreshTimer !== undefined) {
+        window.clearInterval(refreshTimer);
+      }
       unsub();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [action, cacheResponse, cacheResponseMs, completedTtlMs, fetch, payloadKey, requestKey, shouldCacheResponse]);
+  }, [action, cacheResponse, cacheResponseMs, completedTtlMs, fetch, payloadKey, refreshMs, requestKey, shouldCacheResponse]);
 
   return data?.requestKey === requestKey ? data.value : null;
 }
