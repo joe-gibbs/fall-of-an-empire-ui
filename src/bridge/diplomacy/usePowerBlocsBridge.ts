@@ -38,6 +38,7 @@ const POWER_BLOC_HEADER_IMAGES: Record<string, string> = {
   RegionalInterestBloc: 'interaction-dispatch-imperial-aid',
   ReligiousBloc: 'religious-ceremony',
   SenatorialAristocracyBloc: 'senate-debate',
+  TutorialPatronageBloc: 'conspiracy-meeting',
 };
 
 export function clearPowerBlocCache(blocId: string | undefined): void {
