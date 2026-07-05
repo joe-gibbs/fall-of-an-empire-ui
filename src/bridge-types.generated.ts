@@ -619,6 +619,8 @@ export interface DiplomacyProvinceCandidate {
 export interface DiplomacyRegionalGovernor {
   regionId: string;
   regionName: string;
+  settlementId: string;
+  settlementName: string;
   governorId: string;
   governorName: string;
   settlementCount: number;
@@ -628,6 +630,7 @@ export interface DiplomacyRegionalGovernor {
   militaryBonusPercent: number;
   bureaucraticGovernorLoad: number;
   isLocked: boolean;
+  canManageGovernor: boolean;
 }
 
 export interface DiplomacyWarEntry {
@@ -2326,6 +2329,8 @@ export interface GetLedgerOverviewRequest {
   activeTab: string;
   rowOffset: number;
   rowLimit: number;
+  sortKey: string;
+  sortDirection: string;
 }
 
 export interface LedgerSettlementRow {
@@ -3387,7 +3392,6 @@ export interface SettingsGraphicsDTO {
   viewDistanceQuality: number;
   showProvinceBorders: boolean;
   showFpsCounter: boolean;
-  useHardwareAcceleratedUi: boolean;
   showSettlementGlances: boolean;
   showMilitaryGlances: boolean;
   showConvoyGlances: boolean;
@@ -4268,6 +4272,8 @@ export interface WorldGlanceFrameEntry {
   targeted: boolean;
   besieged: boolean;
   siegeProgress: number;
+  hasBuilding: boolean;
+  buildProgress: number;
 }
 
 export interface GetWorldGlancesResponse {
