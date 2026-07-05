@@ -1,20 +1,25 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import LitLogo from '../components/common/layout/content/LitLogo';
 import SettingsPanel from '../components/settings/SettingsPanel';
 import EncyclopediaScreen from '../components/screens/encyclopedia/EncyclopediaScreen';
 import LoadGameModal from '../components/screens/system/LoadGameModal';
 import FactionSelection from './FactionSelection';
 import LanguageSelector from '../components/mainmenu/LanguageSelector';
-import FactionRoundel from '../components/common/entities/FactionRoundel';
 import Tooltip from '../components/common/tooltips/Tooltip';
+import ContinueHeroCard from './main-menu/ContinueHeroCard';
+import CreditsRoll from './main-menu/CreditsRoll';
+import './main-menu/MainMenu.css';
 import { bridgeCall, onBridgeEvent } from '../bridge-types.generated.ts';
+import type { LoadingScreenResponse } from '../bridge-types.generated.ts';
+import { cacheBridgeEvent } from '../bridge/core/bridgeEventCache';
 import type { SaveEntry } from '../bridge/app/useSavesBridge';
 import { useModsBridge } from '../bridge/app/useModsBridge';
-import type { ModEntry } from '../bridge/app/useModsBridge';
+import type { ModEntry, SteamWorkshopItem } from '../bridge/app/useModsBridge';
 import { useEscapeStackEntry } from '../context/EscapeStack';
 
 import { webUIText, WebUIText } from '../localization/WebUITextContext';
 type MenuView = 'menu' | 'settings' | 'mods' | 'encyclopedia' | 'credits' | 'newgame';
+type ModsPanelView = 'installed' | 'workshop' | 'subscribed';
 
 interface NewGameMapEntry {
   id: string;
@@ -35,7 +40,18 @@ const MAIN_MENU_ROW_WIDTH_REM =
   MAIN_MENU_CONTINUE_CARD_WIDTH_REM
   + MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM
   + (MAIN_MENU_CAMPAIGN_CARD_SLOTS * MAIN_MENU_SCENARIO_SLOT_WIDTH_REM);
-const CREDITS_ROLL_SPEED_PX_PER_SECOND = 55;
+const MAIN_MENU_OPTIMISTIC_LOADING_SCREEN: LoadingScreenResponse = {
+  visible: true,
+  progress: 0.01,
+  background: '/assets/loading-screens/general.png',
+  tip: '',
+};
+const MAIN_MENU_HIDDEN_LOADING_SCREEN: LoadingScreenResponse = {
+  visible: false,
+  progress: 0,
+  background: '',
+  tip: '',
+};
 
 interface MainMenuIllustratedButtonData {
   id: string;
@@ -52,70 +68,9 @@ type MainMenuSlotData =
   | { kind: 'scenarios'; key: string; buttons: MainMenuIllustratedButtonData[] }
   | { kind: 'continue'; key: string };
 
-interface ContinueHeroCardProps {
-  save: SaveEntry;
-  onResume: () => void;
-}
-
-const ContinueHeroCard: React.FC<ContinueHeroCardProps> = ({ save, onResume }) => {
-  const emblem = cleanName(save.factionEmblem);
-  const cultureGroup = cleanName(save.cultureGroup);
-  const hasHeraldry = Boolean(emblem || cultureGroup);
-  // Old saves (from before the heraldry metadata feature) land here with gray
-  // defaults — fall back to burgundy/gold so the card still looks intentional.
-  const primary = hasHeraldry && save.factionColour ? save.factionColour : '#4a1530';
-  const secondary = hasHeraldry && save.factionSecondaryColour ? save.factionSecondaryColour : '#c9a84c';
-  const realm = save.playerFactionName || '';
-  const character = save.playerCharacterName || displayNameFor(save);
-  const date = save.gameDateString;
-
-  return (
-    <button
-      className="mm-continue-hero"
-      onClick={onResume}
-      style={{
-        ['--continue-primary' as string]: primary,
-        ['--continue-secondary' as string]: secondary,
-      }}
-    >
-      <div className="mm-continue-hero-plate" />
-      <div className="mm-continue-hero-accent" />
-      <div className="mm-continue-hero-body">
-        <div className="mm-continue-hero-badge">
-          <FactionRoundel
-            colour={primary}
-            secondaryColour={secondary}
-            emblem={emblem}
-            cultureGroup={cultureGroup}
-            name={realm}
-            size="xl"
-            showRing
-          />
-        </div>
-        <div className="mm-continue-hero-copy">
-          <span className="mm-continue-hero-kicker"><WebUIText textKey="Auto.PagesMainMenu.71.1" /></span>
-          <span className="mm-continue-hero-name">{character}</span>
-          {realm && <span className="mm-continue-hero-realm">{realm}</span>}
-          {date && <span className="mm-continue-hero-date">{date}</span>}
-        </div>
-      </div>
-    </button>
-  );
-};
-
-function cleanName(value: string | undefined | null): string | undefined {
-  if (!value) return undefined;
-  if (value === 'None') return undefined;
-  return value;
-}
-
-function displayNameFor(save: SaveEntry): string {
-  if (save.displayName) return save.displayName;
-  if (save.isAutosave) return webUIText('MainMenu.Autosave');
-  if (save.playerCharacterName && save.playerFactionName) {
-    return webUIText('MainMenu.SaveNameOf', { Character: save.playerCharacterName, Faction: save.playerFactionName });
-  }
-  return save.slotName;
+function emitLoadingScreenState(data: LoadingScreenResponse): void {
+  cacheBridgeEvent('game.loading_screen', data);
+  window.dispatchEvent(new CustomEvent('bridge:game.loading_screen', { detail: data }));
 }
 
 function compareScenarioMaps(left: NewGameMapEntry, right: NewGameMapEntry): number {
@@ -124,99 +79,6 @@ function compareScenarioMaps(left: NewGameMapEntry, right: NewGameMapEntry): num
   if (nameCompare !== 0) return nameCompare;
   return left.id.localeCompare(right.id);
 }
-
-const credits: { roleKey: string; names: string[] }[] = [
-  { roleKey: 'MainMenu.Credits.MusicComposer', names: ['Martin de Lima', 'Artem Yegorov'] },
-  { roleKey: 'MainMenu.Credits.MusicDeptImplementation', names: ['Sander Tolner'] },
-  { roleKey: 'MainMenu.Credits.UIDesigner', names: ['Maria Camila Ortega', 'Bagus Bayhaqi'] },
-  { roleKey: 'MainMenu.Credits.Writing', names: ['Raben Macht'] },
-  { roleKey: 'MainMenu.Credits.ArtisticDirectorEvents', names: ['Thomas Gibbs'] },
-  { roleKey: 'MainMenu.Credits.CharacterArtist', names: ['Carlos Tellez'] },
-  { roleKey: 'MainMenu.Credits.EnvironmentArtist', names: ['Aytunç Yılmaz', 'HiMasters'] },
-  { roleKey: 'MainMenu.Credits.TechnicalArtist', names: ['Anna Moisieieva'] },
-  { roleKey: 'MainMenu.Credits.CapsuleArt', names: ['Aytunç Yılmaz'] },
-  { roleKey: 'MainMenu.Credits.Casting', names: ['Bridgette Roza'] },
-  { roleKey: 'MainMenu.Credits.Testing', names: ['Bridgette Roza', 'Thomas Gibbs'] },
-  { roleKey: 'MainMenu.Credits.Artists', names: ['Octavio Sebastian', 'Threy Cameron', 'Oksana Mykytiuk'] },
-  { roleKey: 'MainMenu.Credits.LogoDesigner', names: ['Marel Frederiek van Buren'] },
-  { roleKey: 'MainMenu.Credits.Concepts', names: ['Samuel Losada'] },
-  { roleKey: 'MainMenu.Credits.EmperorTrailer', names: ['Will Melhuish'] },
-  { roleKey: 'MainMenu.Credits.Marketing', names: ['Isabelle Bruce', 'Alexander Harding'] },
-  { roleKey: 'MainMenu.Credits.TrailerRecordingEngineer', names: ['Aturax Audio'] },
-  { roleKey: 'MainMenu.Credits.TrailerNarrator', names: ['Ghyll Cannell'] },
-  { roleKey: 'MainMenu.Credits.SpecialThanks', names: ['G. Gerhards', 'Bridgette Roza', '@Gabrielkouda'] },
-];
-
-const CreditsRoll: React.FC = () => {
-  const stageRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [rollStyle, setRollStyle] = useState<React.CSSProperties>({
-    animationDuration: '48s',
-    paddingBottom: '40rem',
-  });
-
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    const content = contentRef.current;
-    if (!stage || !content) return;
-
-    const syncRollMetrics = () => {
-      const stageH = stage.clientHeight;
-      const contentH = content.scrollHeight;
-      if (stageH <= 0 || contentH <= 0) return;
-
-      const durationMs = ((stageH + contentH) / CREDITS_ROLL_SPEED_PX_PER_SECOND) * 1000;
-      setRollStyle({
-        animationDuration: `${Math.round(durationMs)}ms`,
-        paddingBottom: `${Math.round(stageH)}px`,
-      });
-    };
-
-    syncRollMetrics();
-    window.addEventListener('resize', syncRollMetrics);
-    return () => {
-      window.removeEventListener('resize', syncRollMetrics);
-    };
-  }, []);
-
-  return (
-    <div
-      className="mm-credits-stage"
-      ref={stageRef}
-    >
-      <div
-        className="mm-credits-scroll"
-        style={rollStyle}
-      >
-        <div className="mm-credits-content" ref={contentRef}>
-          <div className="mm-credits-tagline">
-            <span className="mm-credits-tagline-small"><WebUIText textKey="Auto.PagesMainMenu.172.2" /> </span>
-            <span className="mm-credits-tagline-large"><WebUIText textKey="Auto.PagesMainMenu.173.3" /></span>
-            <span className="mm-credits-tagline-small"> <WebUIText textKey="Auto.PagesMainMenu.174.4" /></span>
-          </div>
-
-          {credits.map(c => (
-            <div key={c.roleKey} className="mm-credit-block">
-              <div className="mm-credit-role">{webUIText(c.roleKey)}</div>
-              {c.names.map(n => (
-                <div key={n} className="mm-credit-name">{n}</div>
-              ))}
-            </div>
-          ))}
-
-          <div className="mm-credits-rule-wide" />
-
-          <div className="mm-credits-footer">
-            <p className="mm-credits-ue-notice">
-              <WebUIText textKey="Auto.PagesMainMenu.190.5" />
-            </p>
-            <p className="mm-credits-copyright"><WebUIText textKey="Auto.PagesMainMenu.192.6" /></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const MainMenu: React.FC = () => {
   const [view, setView] = useState<MenuView>('menu');
@@ -230,6 +92,8 @@ const MainMenu: React.FC = () => {
   const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
   const [modsRequireRestart, setModsRequireRestart] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
+  const [modsPanelView, setModsPanelView] = useState<ModsPanelView>('installed');
+  const [workshopSearchDraft, setWorkshopSearchDraft] = useState('');
   const closeTimerRef = useRef<number | null>(null);
   const SUB_VIEW_CLOSE_MS = 200;
 
@@ -238,7 +102,25 @@ const MainMenu: React.FC = () => {
     setEnabled: setModEnabled,
     uploadMod,
     uploadStatuses,
+    workshopItems,
+    subscribedWorkshopItems,
+    workshopOperations,
+    workshopSearchText,
+    workshopPage,
+    workshopTotalResults,
+    workshopError,
+    subscribedWorkshopError,
+    workshopQueryInProgress,
+    subscribedWorkshopQueryInProgress,
+    workshopChangesRequireRestart,
+    browseWorkshop,
+    refreshSubscribedWorkshop,
+    subscribeWorkshopItem,
+    unsubscribeWorkshopItem,
+    downloadWorkshopItem,
   } = useModsBridge(view === 'mods');
+
+  const modsNeedRestart = modsRequireRestart || workshopChangesRequireRestart;
 
   // Track latest save metadata so the Continue card can show character/faction/date.
   // Subscribes to list_saves pushes so deletions keep it in sync.
@@ -319,14 +201,16 @@ const MainMenu: React.FC = () => {
   };
 
   const handleStartScenarioMap = async (mapId: string, playerFactionBaseName = '') => {
-    if (modsRequireRestart) {
+    if (modsNeedRestart) {
       openSubView('mods');
       return;
     }
 
     try {
+      emitLoadingScreenState(MAIN_MENU_OPTIMISTIC_LOADING_SCREEN);
       await bridgeCall('game.start_scenario_map', { mapId, playerFactionBaseName });
     } catch (err) {
+      emitLoadingScreenState(MAIN_MENU_HIDDEN_LOADING_SCREEN);
       console.error('[MainMenu] start scenario map failed', err);
     }
   };
@@ -366,6 +250,10 @@ const MainMenu: React.FC = () => {
 
   const handleUploadMod = async (mod: ModEntry) => {
     await uploadMod(mod.id);
+  };
+
+  const handleWorkshopSearch = async (page = 1) => {
+    await browseWorkshop(workshopSearchDraft.trim(), page);
   };
 
   const handleOpenWorkshopItem = async (url: string) => {
@@ -421,7 +309,7 @@ const MainMenu: React.FC = () => {
 
   const subViewClass = `mm-sub-view${closing ? ' mm-sub-view--closing' : ''}`;
 
-  /* ── Sub Views ── */
+  /* Sub views */
   const renderBackHeader = (title: string) => (
     <div className="mm-sub-header">
       <button
@@ -444,22 +332,153 @@ const MainMenu: React.FC = () => {
     </div>
   );
 
+  const renderWorkshopItem = (item: SteamWorkshopItem) => {
+    const operation = workshopOperations[item.publishedFileId];
+    const busy = operation?.state === 'subscribing'
+      || operation?.state === 'unsubscribing'
+      || operation?.state === 'downloading';
+    const statusKey = operation?.state === 'subscribing'
+      ? 'MainMenu.WorkshopStatusSubscribing'
+      : operation?.state === 'unsubscribing'
+        ? 'MainMenu.WorkshopStatusUnsubscribing'
+        : operation?.state === 'downloading'
+          ? 'MainMenu.WorkshopStatusDownloading'
+          : operation?.state === 'installed'
+            ? 'MainMenu.WorkshopStatusInstalled'
+            : operation?.state === 'unsubscribed'
+              ? 'MainMenu.WorkshopStatusUnsubscribed'
+              : operation?.state === 'failed'
+                ? 'MainMenu.WorkshopStatusFailed'
+                : item.installedModId
+                  ? 'MainMenu.WorkshopStatusInstalled'
+                  : item.subscribed
+                    ? 'MainMenu.WorkshopStatusSubscribed'
+                    : '';
+    const progress = item.downloadTotalBytes > 0
+      ? Math.max(0, Math.min(100, Math.round((item.downloadBytes / item.downloadTotalBytes) * 100)))
+      : 0;
+    const itemUrl = `https://steamcommunity.com/sharedfiles/filedetails/?id=${item.publishedFileId}`;
+    const canDownload = item.subscribed && (item.needsUpdate || !item.installedModId);
+
+    return (
+      <div key={item.publishedFileId} className={`mm-mod-entry mm-workshop-entry ${item.subscribed ? 'mm-mod-entry--enabled' : ''}`}>
+        <div className="mm-workshop-thumb" aria-hidden="true">
+          <span />
+        </div>
+        <div className="mm-mod-info">
+          <span className="mm-mod-name">
+            {item.title || webUIText('MainMenu.WorkshopUntitled')}
+          </span>
+          <span className="mm-mod-author">
+            {webUIText('MainMenu.WorkshopVotes', { Votes: item.votesUp })}
+          </span>
+          {item.description && <span className="mm-mod-desc">{item.description}</span>}
+          {statusKey && (
+            <span className={`mm-mod-upload-status mm-workshop-status--${operation?.state ?? 'idle'}`}>
+              <WebUIText textKey={statusKey} />
+              {operation?.state === 'downloading' && progress > 0 ? ` ${progress}%` : ''}
+            </span>
+          )}
+          {item.installedModId && (
+            <span className="mm-mod-upload-status">
+              {webUIText('MainMenu.WorkshopInstalledAs', { ModId: item.installedModId })}
+            </span>
+          )}
+          {operation?.error && (
+            <span className="mm-mod-upload-status mm-mod-upload-status--failed">{operation.error}</span>
+          )}
+        </div>
+        <div className="mm-mod-controls">
+          <button
+            className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void handleOpenWorkshopItem(itemUrl);
+            }}
+          >
+            <WebUIText textKey="MainMenu.WorkshopOpen" />
+          </button>
+          {!item.subscribed && (
+            <button
+              className="mm-mod-upload-btn"
+              disabled={busy}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                void subscribeWorkshopItem(item.publishedFileId);
+              }}
+            >
+              <WebUIText textKey="MainMenu.WorkshopSubscribe" />
+            </button>
+          )}
+          {canDownload && (
+            <button
+              className="mm-mod-upload-btn"
+              disabled={busy}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                void downloadWorkshopItem(item.publishedFileId);
+              }}
+            >
+              <WebUIText textKey={item.needsUpdate ? 'MainMenu.WorkshopUpdate' : 'MainMenu.WorkshopInstall'} />
+            </button>
+          )}
+          {item.subscribed && (
+            <button
+              className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
+              disabled={busy}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                void unsubscribeWorkshopItem(item.publishedFileId);
+              }}
+            >
+              <WebUIText textKey="MainMenu.WorkshopUnsubscribe" />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderMods = () => (
     <div className={subViewClass}>
       {renderBackHeader(webUIText('MainMenu.SubviewMods'))}
       <div className="mm-list-body">
-        {mods === null && (
+        <div className="mm-mod-tabs">
+          {([
+            ['installed', 'MainMenu.ModTabInstalled'],
+            ['workshop', 'MainMenu.ModTabWorkshop'],
+            ['subscribed', 'MainMenu.ModTabSubscribed'],
+          ] as const).map(([tab, labelKey]) => (
+            <button
+              key={tab}
+              className={`mm-mod-tab ${modsPanelView === tab ? 'mm-mod-tab--active' : ''}`}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                setModsPanelView(tab);
+                if (tab === 'subscribed') void refreshSubscribedWorkshop();
+              }}
+            >
+              <WebUIText textKey={labelKey} />
+            </button>
+          ))}
+        </div>
+
+        {modsPanelView === 'installed' && mods === null && (
           <div className="mm-list-empty"><WebUIText textKey="Auto.PagesMainMenu.380.8" /></div>
         )}
-        {mods !== null && mods.length === 0 && (
+        {modsPanelView === 'installed' && mods !== null && mods.length === 0 && (
           <div className="mm-list-empty"><WebUIText textKey="Auto.PagesMainMenu.383.9" /></div>
         )}
-        {mods !== null && mods.length > 0 && (
+        {modsPanelView === 'installed' && mods !== null && mods.length > 0 && (
           <p className="mm-mod-notice">
             <WebUIText textKey="Auto.PagesMainMenu.387.10" />
           </p>
         )}
-        {modsRequireRestart && (
+        {modsNeedRestart && (
           <div className="mm-mod-restart-panel">
             <span className="mm-mod-restart-copy"><WebUIText textKey="MainMenu.ModRestartRequired" /></span>
             <button
@@ -473,7 +492,7 @@ const MainMenu: React.FC = () => {
             </button>
           </div>
         )}
-        {mods !== null && mods.map(mod => {
+        {modsPanelView === 'installed' && mods !== null && mods.map(mod => {
           const uploadStatus = uploadStatuses[mod.id];
           const uploadInProgress = uploadStatus?.state === 'preparing' || uploadStatus?.state === 'uploading';
           const uploadLabel = uploadInProgress
@@ -551,6 +570,85 @@ const MainMenu: React.FC = () => {
             </div>
           );
         })}
+        {modsPanelView === 'workshop' && (
+          <div className="mm-workshop-panel">
+            <div className="mm-workshop-search">
+              <input
+                className="mm-workshop-search-input"
+                value={workshopSearchDraft}
+                placeholder={webUIText('MainMenu.WorkshopSearchPlaceholder')}
+                onChange={(event) => setWorkshopSearchDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    void handleWorkshopSearch(1);
+                  }
+                }}
+              />
+              <button
+                className="mm-mod-upload-btn"
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  void handleWorkshopSearch(1);
+                }}
+              >
+                <WebUIText textKey="MainMenu.WorkshopSearch" />
+              </button>
+            </div>
+            <div className="mm-workshop-toolbar">
+              <span className="mm-workshop-page">{webUIText('MainMenu.WorkshopPage', { Page: workshopPage })}</span>
+              <div className="mm-workshop-page-actions">
+                <button
+                  className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
+                  disabled={workshopQueryInProgress || workshopPage <= 1}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    void browseWorkshop(workshopSearchText, Math.max(1, workshopPage - 1));
+                  }}
+                >
+                  <WebUIText textKey="MainMenu.WorkshopPrevious" />
+                </button>
+                <button
+                  className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
+                  disabled={workshopQueryInProgress || workshopPage * 50 >= workshopTotalResults}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    void browseWorkshop(workshopSearchText, workshopPage + 1);
+                  }}
+                >
+                  <WebUIText textKey="MainMenu.WorkshopNext" />
+                </button>
+              </div>
+            </div>
+            {workshopError && <div className="mm-list-empty">{workshopError}</div>}
+            {!workshopError && workshopItems.length === 0 && !workshopQueryInProgress && (
+              <div className="mm-list-empty"><WebUIText textKey="MainMenu.WorkshopNoResults" /></div>
+            )}
+            {workshopItems.map(item => renderWorkshopItem(item))}
+          </div>
+        )}
+        {modsPanelView === 'subscribed' && (
+          <div className="mm-workshop-panel">
+            <div className="mm-workshop-toolbar">
+              <span className="mm-workshop-page"><WebUIText textKey="MainMenu.ModTabSubscribed" /></span>
+              <button
+                className="mm-mod-upload-btn mm-mod-upload-btn--secondary"
+                disabled={subscribedWorkshopQueryInProgress}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  void refreshSubscribedWorkshop();
+                }}
+              >
+                <WebUIText textKey="MainMenu.WorkshopRefresh" />
+              </button>
+            </div>
+            {subscribedWorkshopError && <div className="mm-list-empty">{subscribedWorkshopError}</div>}
+            {!subscribedWorkshopError && subscribedWorkshopItems.length === 0 && !subscribedWorkshopQueryInProgress && (
+              <div className="mm-list-empty"><WebUIText textKey="MainMenu.WorkshopSubscribedNone" /></div>
+            )}
+            {subscribedWorkshopItems.map(item => renderWorkshopItem(item))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -762,2144 +860,6 @@ const MainMenu: React.FC = () => {
 
   return (
     <>
-      <style>{`
-        /* ── Main Menu Container ── */
-        .mm-root {
-          --mm-scenario-strip-width: 47.75rem;
-          --mm-interaction-frame-width: 0.231rem;
-          position: fixed;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          z-index: 600;
-          overflow: hidden;
-          isolation: isolate;
-        }
-
-        .mm-menu-layer {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          z-index: 2;
-          opacity: 1;
-          transform: scale(1);
-          transform-origin: center center;
-          pointer-events: auto;
-          transition: opacity 0.2s ease, transform 0.24s ease;
-        }
-
-        .mm-menu-layer--background {
-          z-index: 0;
-          opacity: 0.24;
-          transform: scale(1.015);
-          pointer-events: none;
-        }
-
-        /* Background scene image (removed for transparent overlay use) */
-
-        /* Left-side gradient overlay - very subtle fade for readability */
-        .mm-root::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          background-color: transparent;
-          background-image:
-            linear-gradient(90deg,
-              rgba(13, 18, 24, 0.22) 0%,
-              rgba(13, 18, 24, 0.17) 20%,
-              rgba(13, 18, 24, 0.08) 42%,
-              rgba(13, 18, 24, 0) 66%
-            ),
-            linear-gradient(180deg, rgba(17, 23, 29, 0.08) 0%, rgba(17, 23, 29, 0) 28%, rgba(17, 23, 29, 0.2) 100%);
-          background-position: 0 0;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-          z-index: 1;
-          pointer-events: none;
-        }
-
-        .mm-root--subview::after {
-          background:
-            linear-gradient(180deg, rgba(13, 18, 24, 0.24) 0%, rgba(13, 18, 24, 0.38) 100%),
-            radial-gradient(circle at 78% 18%, rgba(255, 228, 173, 0.08) 0%, rgba(255, 228, 173, 0) 34%);
-        }
-
-        .mm-root--subview {
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-        }
-
-        /* ── Left Column ── */
-        .mm-left {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          align-items: flex-start;
-          padding: 0;
-          height: 100%;
-          width: 34.5455rem;
-        }
-
-        .mm-left-panel {
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          width: 100%;
-          height: 100%;
-          max-width: 100%;
-          padding: 2.4545rem 2.3636rem 2.5455rem;
-          box-sizing: border-box;
-          background-color: rgba(36, 42, 48, 0.92);
-          background-image:
-            linear-gradient(90deg, rgba(36, 42, 48, 0.96) 0%, rgba(24, 31, 38, 0.92) 68%, rgba(15, 21, 28, 0.86) 100%),
-            url('/assets/baked/panel-charcoal.png');
-          background-position: 0 0;
-          background-repeat: repeat;
-          background-size: 93.0909rem 93.0909rem;
-          border: none;
-          border-right: 0.0909rem solid rgba(201, 168, 76, 0.2);
-          overflow: hidden;
-          transform-origin: left center;
-          animation: mm-command-panel-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
-        }
-
-        .mm-left-panel::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          right: 0.3636rem;
-          bottom: 0;
-          width: 0.0909rem;
-          background-color: rgba(255, 228, 150, 0.08);
-          pointer-events: none;
-          transform-origin: top center;
-          z-index: 6;
-          animation: mm-command-brass-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
-        }
-
-        /* Greek wave meander pinned to the bottom of the panel. */
-        .mm-left-panel::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          z-index: 5;
-          display: block;
-          background-color: #080d12;
-          background-image:
-            linear-gradient(90deg, rgba(8, 13, 18, 0.98) 0%, rgba(22, 29, 36, 0.98) 58%, rgba(10, 15, 20, 0.96) 100%),
-            url('/assets/baked/main-menu-panel.png');
-          background-position: 0 0;
-          background-repeat: repeat;
-          background-size: 100% 100%, 46.5455rem 46.5455rem;
-          border-right: 0.0909rem solid rgba(201, 168, 76, 0.34);
-          pointer-events: none;
-          transform-origin: top center;
-          animation: mm-command-cover-lift 0.74s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
-        }
-
-        /* ── Logo / Title ── */
-        .mm-logo {
-          width: 24rem;
-          max-width: 100%;
-          margin-bottom: 2.1818rem;
-          position: relative;
-          z-index: 1;
-        }
-
-        .mm-logo-canvas {
-          display: block;
-          width: 100%;
-          max-width: 100%;
-          aspect-ratio: 2 / 1;
-          background: transparent;
-        }
-
-        /* ── Illustrated Buttons ── */
-        .mm-illustrated-btns {
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-        }
-
-        .mm-continue-hero + .mm-menu-slot--load-game,
-        .mm-menu-slot--load-game + .mm-scenario-strip {
-          margin-top: 0.4545rem;
-        }
-
-        .mm-load-error {
-          margin-top: 0.7273rem;
-          padding: 0.6364rem 0.8182rem;
-          border-width: 0.0909rem;
-          border-style: solid;
-          border-color: rgba(206, 80, 74, 0.5);
-          background-color: rgba(80, 24, 28, 0.55);
-          display: flex;
-          flex-direction: column;
-        }
-
-        .mm-load-error-title {
-          color: #f0b0a8;
-          font-family: var(--font-header);
-          font-size: 0.9091rem;
-        }
-
-        .mm-load-error-message {
-          color: rgba(240, 236, 224, 0.92);
-          font-size: 0.8182rem;
-          line-height: 1.35;
-          margin-top: 0.1818rem;
-        }
-
-        /* ── Continue Hero Card ── */
-        .mm-continue-hero {
-          position: relative;
-          width: 100%;
-          min-height: 5.8182rem;
-          padding: 0;
-          background: transparent;
-          border: 0;
-          text-align: left;
-          cursor: var(--cursor-pointer);
-          isolation: isolate;
-          transform-origin: left center;
-          animation-name: mm-command-row-in;
-          animation-duration: 0.36s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 0.78s;
-          animation-fill-mode: both;
-          overflow: hidden;
-        }
-
-        .mm-continue-hero-plate {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          background-color: #11171d;
-          background-image:
-            linear-gradient(180deg, rgba(255, 245, 202, 0.035) 0%, rgba(4, 6, 9, 0.09) 100%),
-            url('/assets/baked/texture-overlay-heavy.png'),
-            linear-gradient(90deg, rgba(61, 23, 38, 0.68) 0%, rgba(24, 31, 38, 0.9) 54%, rgba(15, 21, 28, 0.78) 100%);
-          background-position: 0 0, 0 0, 0 0;
-          background-repeat: no-repeat, repeat, no-repeat;
-          background-size: 100% 100%, 9.846rem 9.846rem, 100% 100%;
-          border: 0.0909rem solid rgba(224, 200, 114, 0.42);
-          z-index: 0;
-          transition: background-color 0.2s ease, border-color 0.2s ease;
-        }
-
-        .mm-continue-hero-plate::before {
-          content: '';
-          display: none;
-        }
-
-        .mm-continue-hero-accent {
-          display: none;
-        }
-
-        .mm-continue-hero:hover .mm-continue-hero-plate {
-          border-color: rgba(224, 200, 114, 0.7);
-          background-color: #20272d;
-        }
-
-        .mm-continue-hero-body {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          align-items: center;
-          padding: 0.7273rem 1rem 0.7273rem 1rem;
-          height: 100%;
-          min-width: 0;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-
-        .mm-continue-hero-badge {
-          position: relative;
-          width: 4.2727rem;
-          height: 4.2727rem;
-          flex-shrink: 0;
-        }
-
-        .mm-continue-hero-badge > .faction-roundel {
-          width: 100%;
-          height: 100%;
-        }
-
-        .mm-continue-hero-copy {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          min-width: 0;
-          flex: 1;
-          margin-left: 0.8182rem;
-          max-width: 100%;
-          overflow: hidden;
-        }
-
-        .mm-continue-hero-kicker {
-          font-family: var(--font-body);
-          font-size: 0.7273rem;
-          line-height: 1.1;
-          letter-spacing: 0;
-          text-transform: uppercase;
-          color: #dcc57d;
-          margin-bottom: 0.1818rem;
-          max-width: 100%;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
-        }
-
-        .mm-continue-hero-name {
-          font-family: var(--font-header);
-          font-size: 1.3636rem;
-          line-height: 1.08;
-          color: #fff;
-          letter-spacing: 0;
-          display: block;
-          max-height: 3rem;
-          max-width: 100%;
-          overflow: hidden;
-          overflow-wrap: break-word;
-        }
-
-        .mm-continue-hero-realm {
-          font-family: var(--font-body);
-          font-size: 0.8182rem;
-          line-height: 1.1;
-          letter-spacing: 0;
-          color: rgba(240, 236, 224, 0.78);
-          margin-top: 0.0909rem;
-          display: block;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
-        }
-
-        .mm-continue-hero-date {
-          align-self: flex-start;
-          margin-top: 0.2727rem;
-          padding: 0.1818rem 0 0.1818rem 0.6364rem;
-          font-family: var(--font-header);
-          font-size: 0.8182rem;
-          line-height: 1.1;
-          letter-spacing: 0;
-          text-transform: uppercase;
-          color: #ead27c;
-          max-width: 100%;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
-        }
-
-        .mm-illust-btn {
-          position: relative;
-          width: 100%;
-          height: 4.3636rem;
-          background-color: #11171d;
-          background-image: linear-gradient(90deg, rgba(24, 31, 38, 0.96) 0%, rgba(13, 18, 24, 0.9) 100%);
-          background-position: 0 0;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-          border: 0.0909rem solid rgba(201, 168, 76, 0.2);
-          padding: 0;
-          overflow: hidden;
-          cursor: var(--cursor-pointer);
-          text-align: left;
-          transform-origin: left center;
-          transition: background-color 0.18s ease, border-color 0.18s ease;
-        }
-
-        .mm-illust-btn::before {
-          content: '';
-          display: none;
-        }
-
-        .mm-illust-btn::after {
-          content: '';
-          position: absolute;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          height: 0.0909rem;
-          background-color: transparent;
-          background-image: linear-gradient(90deg, rgba(201, 168, 76, 0.18) 0%, rgba(201, 168, 76, 0.05) 74%, rgba(201, 168, 76, 0) 100%);
-          background-repeat: no-repeat;
-          opacity: 1;
-          z-index: 3;
-          transition: opacity 0.18s ease;
-        }
-
-        .mm-illust-btn:hover {
-          border-color: rgba(224, 200, 114, 0.64);
-          background-color: #20272d;
-        }
-
-        .mm-illust-img {
-          display: none;
-        }
-
-        .mm-illust-btn--continue .mm-illust-img {
-          top: -10%;
-        }
-
-        .mm-illust-btn--campaign .mm-illust-img {
-          top: -16%;
-        }
-
-        .mm-illust-btn--tutorial .mm-illust-img {
-          top: -10%;
-        }
-
-        .mm-illust-btn:hover .mm-illust-img {
-          display: none;
-        }
-
-        .mm-illust-scrim {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          background-color: transparent;
-          background-image: none;
-          z-index: 1;
-          transition: opacity 0.2s;
-        }
-
-        .mm-illust-btn:hover .mm-illust-scrim {
-          opacity: 0.85;
-        }
-
-        .mm-illust-copy {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          justify-content: flex-end;
-          width: 100%;
-          height: 100%;
-          max-width: 100%;
-          padding: 0 1.1818rem 0.7273rem;
-          text-align: left;
-        }
-
-        .mm-illust-copy > * + * {
-          margin-top: 0.1818rem;
-        }
-
-        .mm-illust-kicker {
-          font-family: var(--font-body);
-          font-size: 0.7273rem;
-          color: rgba(224, 200, 114, 0.78);
-          letter-spacing: 0;
-          text-transform: uppercase;
-        }
-
-        .mm-illust-label {
-          font-family: var(--font-header);
-          font-size: 1.3636rem;
-          color: #fff;
-          text-transform: none;
-          letter-spacing: 0;
-          line-height: 1;
-          white-space: nowrap;
-          text-align: left;
-          text-shadow:
-            0 0.1818rem 0.7273rem rgba(0, 0, 0, 0.95),
-            0 0 2.1818rem rgba(0, 0, 0, 0.7),
-            0 0 4.3636rem rgba(0, 0, 0, 0.4);
-        }
-
-        .mm-illust-desc {
-          display: none;
-        }
-
-        /* ── Gold Divider ── */
-        .mm-divider {
-          width: 100%;
-          max-width: 100%;
-          height: 0.0909rem;
-          background-color: transparent;
-          background-image: linear-gradient(90deg,
-            transparent 0%,
-            var(--gold-dark) 10%,
-            var(--gold) 40%,
-            var(--gold) 60%,
-            var(--gold-dark) 90%,
-            transparent 100%
-          );
-          background-repeat: no-repeat;
-          margin: 1.2727rem 0 0.8182rem;
-          transform-origin: left center;
-          animation-name: mm-command-divider-in;
-          animation-duration: 0.36s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 1.02s;
-          animation-fill-mode: both;
-        }
-
-        /* ── Text Menu Items ── */
-        .mm-text-items {
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-        }
-
-        .mm-text-btn + .mm-text-btn {
-          margin-top: 0.1818rem;
-        }
-
-        .mm-text-btn {
-          position: relative;
-          display: block;
-          width: 100%;
-          max-width: 100%;
-          background-color: #0d1218;
-          background-image: linear-gradient(90deg, rgba(24, 31, 38, 0.82) 0%, rgba(13, 18, 24, 0.88) 100%);
-          background-position: 0 0;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-          border: 0.0909rem solid rgba(201, 168, 76, 0.12);
-          min-width: 0;
-          padding: 0.5455rem 1rem 0.5455rem 0.9091rem;
-          font-family: var(--font-header);
-          font-size: 1.1818rem;
-          color: rgba(222, 216, 199, 0.76);
-          text-transform: none;
-          letter-spacing: 0;
-          text-align: left;
-          white-space: nowrap;
-          cursor: var(--cursor-pointer);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          transform-origin: left center;
-          transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
-        }
-
-        .mm-text-btn::after {
-          content: '';
-          display: none;
-        }
-
-        .mm-text-btn:hover {
-          color: var(--text-header);
-          border-color: rgba(201, 168, 76, 0.42);
-          background-color: #20272d;
-        }
-
-        .mm-text-btn:hover::after {
-          display: none;
-        }
-
-        /* ── Version ── */
-        .mm-version {
-          position: absolute;
-          bottom: 1.6364rem;
-          right: 1.6364rem;
-          z-index: 2;
-          font-family: var(--font-body);
-          font-size: 0.7727rem;
-          color: rgba(212, 207, 192, 0.56);
-          letter-spacing: 0;
-          text-transform: uppercase;
-          padding: 0.4545rem 0.7273rem;
-          background-color: rgba(13, 18, 24, 0.78);
-          background-image: none;
-          background-position: 0 0;
-          background-repeat: repeat;
-          background-size: 11.6364rem 5.8182rem;
-          border: 0.0909rem solid rgba(201, 168, 76, 0.12);
-          animation: mm-command-utility-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) 1.08s both;
-        }
-
-        /* ── Language selector slot (top-right, above socials) ── */
-        .mm-lang-slot {
-          position: absolute;
-          top: 2rem;
-          right: 2rem;
-          z-index: 3;
-          animation: mm-command-utility-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.86s both;
-        }
-
-        /* ── Social Icons (top-right, vertical) ── */
-        .mm-socials {
-          position: absolute;
-          top: 5.7273rem;
-          right: 2rem;
-          z-index: 2;
-          display: flex;
-          flex-direction: column;
-          padding: 0;
-          background-color: transparent;
-          background-image: none;
-          background-position: 0 0;
-          background-repeat: repeat;
-          background-size: 93.0909rem 93.0909rem;
-          border: none;
-          animation: mm-command-utility-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.92s both;
-        }
-
-        .mm-social-btn + .mm-social-btn {
-          margin-top: 0.5455rem;
-        }
-
-        .mm-social-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 2.6364rem;
-          height: 2.6364rem;
-          background-color: #0d1218;
-          background-image: linear-gradient(90deg, rgba(24, 31, 38, 0.82) 0%, rgba(13, 18, 24, 0.88) 100%);
-          background-position: 0 0;
-          background-repeat: repeat;
-          background-size: 8.7273rem 8.7273rem;
-          border: 0.0909rem solid rgba(201, 168, 76, 0.2);
-          cursor: var(--cursor-pointer);
-          transition: border-color 0.15s, background 0.15s;
-        }
-
-        .mm-social-btn:hover {
-          border-color: rgba(224, 200, 114, 0.5);
-          background-color: #20272d;
-        }
-
-        .mm-social-btn img {
-          width: 1.3636rem;
-          height: 1.3636rem;
-          opacity: 0.7;
-          transition: opacity 0.15s;
-        }
-
-        .mm-social-btn:hover img {
-          opacity: 1;
-        }
-
-        /* Logo */
-        .mm-logo {
-          transform-origin: left center;
-          animation-name: mm-command-title-in;
-          animation-duration: 0.46s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 0.58s;
-          animation-fill-mode: both;
-        }
-
-        /* Illustrated buttons - staggered */
-        .mm-illust-btn:nth-child(1) {
-          animation-name: mm-command-row-in;
-          animation-duration: 0.34s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 0.84s;
-          animation-fill-mode: both;
-        }
-        .mm-illust-btn:nth-child(2) {
-          animation-name: mm-command-row-in;
-          animation-duration: 0.34s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 0.9s;
-          animation-fill-mode: both;
-        }
-        .mm-illust-btn:nth-child(3) {
-          animation-name: mm-command-row-in;
-          animation-duration: 0.34s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 0.96s;
-          animation-fill-mode: both;
-        }
-
-        /* Text items - staggered */
-        .mm-text-btn:nth-child(1) {
-          animation-name: mm-command-row-in;
-          animation-duration: 0.28s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 1.08s;
-          animation-fill-mode: both;
-        }
-        .mm-text-btn:nth-child(2) {
-          animation-name: mm-command-row-in;
-          animation-duration: 0.28s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 1.12s;
-          animation-fill-mode: both;
-        }
-        .mm-text-btn:nth-child(3) {
-          animation-name: mm-command-row-in;
-          animation-duration: 0.28s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 1.16s;
-          animation-fill-mode: both;
-        }
-        .mm-text-btn:nth-child(4) {
-          animation-name: mm-command-row-in;
-          animation-duration: 0.28s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 1.2s;
-          animation-fill-mode: both;
-        }
-        .mm-text-btn:nth-child(5) {
-          animation-name: mm-command-row-in;
-          animation-duration: 0.28s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 1.24s;
-          animation-fill-mode: both;
-        }
-        .mm-text-btn:nth-child(6) {
-          animation-name: mm-command-row-in;
-          animation-duration: 0.28s;
-          animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-          animation-delay: 1.28s;
-          animation-fill-mode: both;
-        }
-
-        /* Social icons - staggered */
-        .mm-social-btn:nth-child(1) { animation: none; }
-        .mm-social-btn:nth-child(2) { animation: none; }
-        .mm-social-btn:nth-child(3) { animation: none; }
-        .mm-social-btn:nth-child(4) { animation: none; }
-        .mm-social-btn:nth-child(5) { animation: none; }
-
-        .mm-root--menu-return .mm-left-panel::before,
-        .mm-root--menu-return .mm-left-panel::after,
-        .mm-root--menu-return .mm-left-panel,
-        .mm-root--menu-return .mm-logo,
-        .mm-root--menu-return .mm-illustrated-btns,
-        .mm-root--menu-return .mm-text-items,
-        .mm-root--menu-return .mm-menu-slot,
-        .mm-root--menu-return .mm-scenario-strip,
-        .mm-root--menu-return .mm-illust-btn,
-        .mm-root--menu-return .mm-divider,
-        .mm-root--menu-return .mm-text-btn,
-        .mm-root--menu-return .mm-lang-slot,
-        .mm-root--menu-return .mm-socials,
-        .mm-root--menu-return .mm-social-btn,
-        .mm-root--menu-return .mm-version {
-          animation: none !important;
-        }
-
-        .mm-root--menu-return .mm-left-panel::before {
-          transform: none;
-        }
-
-        .mm-root--menu-return .mm-left-panel::after {
-          opacity: 0;
-          transform: translateY(-108%);
-        }
-
-        .mm-root--menu-return .mm-illustrated-btns,
-        .mm-root--menu-return .mm-text-items {
-          clip-path: inset(0% 0% 0% 0%);
-        }
-
-        .mm-root--menu-return .mm-left-panel,
-        .mm-root--menu-return .mm-logo,
-        .mm-root--menu-return .mm-illustrated-btns,
-        .mm-root--menu-return .mm-text-items,
-        .mm-root--menu-return .mm-menu-slot,
-        .mm-root--menu-return .mm-scenario-strip,
-        .mm-root--menu-return .mm-illust-btn,
-        .mm-root--menu-return .mm-divider,
-        .mm-root--menu-return .mm-text-btn,
-        .mm-root--menu-return .mm-lang-slot,
-        .mm-root--menu-return .mm-socials,
-        .mm-root--menu-return .mm-social-btn,
-        .mm-root--menu-return .mm-version {
-          opacity: 1;
-          transform: none;
-          visibility: visible;
-        }
-
-        .mm-root--mockup.mm-root--menu-return .mm-left-panel,
-        .mm-root--mockup.mm-root--menu-return .mm-logo,
-        .mm-root--mockup.mm-root--menu-return .mm-illustrated-btns,
-        .mm-root--mockup.mm-root--menu-return .mm-text-items,
-        .mm-root--mockup.mm-root--menu-return .mm-menu-slot,
-        .mm-root--mockup.mm-root--menu-return .mm-scenario-strip,
-        .mm-root--mockup.mm-root--menu-return .mm-illust-btn,
-        .mm-root--mockup.mm-root--menu-return .mm-divider,
-        .mm-root--mockup.mm-root--menu-return .mm-text-btn,
-        .mm-root--mockup.mm-root--menu-return .mm-lang-slot,
-        .mm-root--mockup.mm-root--menu-return .mm-socials,
-        .mm-root--mockup.mm-root--menu-return .mm-social-btn,
-        .mm-root--mockup.mm-root--menu-return .mm-version {
-          animation: none;
-          opacity: 1;
-          transform: none;
-          visibility: visible;
-        }
-
-        .mm-root--mockup.mm-root--menu-return .mm-illustrated-btns,
-        .mm-root--mockup.mm-root--menu-return .mm-text-items {
-          clip-path: inset(0% 0% 0% 0%);
-        }
-
-        /* ── Sub View Layout ── */
-        .mm-sub-view {
-          position: relative;
-          z-index: 3;
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-          height: 94%;
-          max-width: 70.9091rem;
-          margin: 2.1818rem 0;
-          padding: 3.0909rem 2.7273rem 4rem;
-          background-color: #242a30;
-          background-image:
-            linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
-            url('/assets/baked/texture-overlay-heavy.png'),
-            url('/assets/baked/screen-charcoal.png');
-          background-position: 0 0;
-          background-repeat: repeat, repeat, repeat;
-          background-size: auto, 9.846rem 9.846rem, 93.0909rem 93.0909rem;
-          border: 0.0909rem solid rgba(201, 168, 76, 0.22);
-          overflow: hidden;
-          animation-name: mm-panel-in;
-          animation-duration: 0.24s;
-          animation-timing-function: var(--ease-snap);
-          animation-fill-mode: both;
-        }
-
-        .mm-sub-view--closing {
-          animation: mm-panel-out 0.2s ease-in forwards;
-          pointer-events: none;
-        }
-
-        .mm-sub-view--full {
-          height: 100%;
-          max-width: 100%;
-          margin: 0;
-        }
-
-        /* Greek wave meander pinned to the bottom of the sub-view panel */
-        .mm-sub-view::after {
-          content: '';
-          position: absolute;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          height: 1.8182rem;
-          background: url('/assets/meander.png') left bottom / 3rem 1.8182rem repeat-x;
-          pointer-events: none;
-          z-index: 1;
-        }
-
-        .mm-sub-header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 2.1818rem;
-          padding-bottom: 1.0909rem;
-          border-bottom-width: 0.0909rem;
-          border-bottom-style: solid;
-          border-bottom-color: var(--border);
-        }
-
-        .mm-back-btn {
-          display: flex;
-          align-items: center;
-          font-family: var(--font-body);
-          font-size: 1.1818rem;
-          color: var(--text-muted);
-          background-color: #11171d;
-          background-image: url('/assets/baked/main-menu-button.png');
-          background-position: 0 0;
-          background-repeat: repeat;
-          background-size: 46.5455rem 11.6364rem;
-          border: 0.0909rem solid rgba(201, 168, 76, 0.18);
-          padding: 0.7273rem 1.2727rem;
-          cursor: var(--cursor-pointer);
-          transition: color 0.15s, border-color 0.15s, background 0.15s;
-        }
-
-        .mm-back-btn:hover {
-          color: var(--gold);
-          border-color: rgba(201, 168, 76, 0.36);
-          background-color: #20272d;
-          background-image: url('/assets/baked/main-menu-button-hover.png');
-        }
-
-        .mm-back-arrow {
-          position: relative;
-          display: block;
-          width: 1.2rem;
-          height: 0.8rem;
-          flex-shrink: 0;
-          margin-right: 0.5455rem;
-        }
-
-        .mm-back-arrow::before {
-          content: '';
-          position: absolute;
-          left: 0.1rem;
-          right: 0.05rem;
-          top: 0.35rem;
-          height: 0.1rem;
-          background-color: var(--text-muted);
-        }
-
-        .mm-back-arrow::after {
-          content: '';
-          position: absolute;
-          left: 0.1rem;
-          top: 0.2rem;
-          width: 0.42rem;
-          height: 0.42rem;
-          border-top-width: 0.1rem;
-          border-top-style: solid;
-          border-top-color: var(--text-muted);
-          border-left-width: 0.1rem;
-          border-left-style: solid;
-          border-left-color: var(--text-muted);
-          transform: rotate(-45deg);
-        }
-
-        .mm-back-btn:hover .mm-back-arrow::before {
-          background-color: var(--gold);
-        }
-
-        .mm-back-btn:hover .mm-back-arrow::after {
-          border-top-color: var(--gold);
-          border-left-color: var(--gold);
-        }
-
-        .mm-sub-title {
-          font-family: var(--font-header);
-          font-size: 2.1818rem;
-          color: var(--text-header);
-          letter-spacing: 0.04em;
-          margin: 0 0 0 1.4545rem;
-        }
-
-        /* ── Scrollable list body (mods) ── */
-        .mm-list-body {
-          flex: 1;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .mm-list-body > * + * {
-          margin-top: 0.7273rem;
-        }
-
-        .mm-list-empty {
-          padding: 2.5455rem 1.4545rem;
-          text-align: center;
-          font-family: var(--font-body);
-          font-size: 1.1818rem;
-          color: var(--text-muted);
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
-
-        /* ── Mod List ── */
-        .mm-mod-entry {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1.2727rem 1.4545rem;
-          background-color: var(--bg-card);
-          border-width: 0.0909rem;
-          border-style: solid;
-          border-top-color: var(--border-dim);
-          border-right-color: var(--border-dim);
-          border-bottom-color: var(--border-dim);
-          border-left-color: var(--border-dim);
-          transition: border-color 0.15s;
-          cursor: pointer;
-        }
-
-        .mm-mod-entry:hover {
-          border-top-color: var(--gold-muted);
-          border-right-color: var(--gold-muted);
-          border-bottom-color: var(--gold-muted);
-          border-left-color: var(--gold-muted);
-        }
-
-        .mm-mod-entry--enabled {
-          border-top-color: var(--gold-dark);
-          border-right-color: var(--gold-dark);
-          border-bottom-color: var(--gold-dark);
-          border-left-color: var(--gold-dark);
-        }
-
-        .mm-mod-info {
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-          flex: 1;
-          margin-right: 1.4545rem;
-        }
-
-        .mm-mod-info > * + * {
-          margin-top: 0.2727rem;
-        }
-
-        .mm-mod-name {
-          font-family: var(--font-header);
-          font-size: 1.2727rem;
-          color: var(--text-header);
-          letter-spacing: 0.02em;
-        }
-
-        .mm-mod-author {
-          font-size: 1rem;
-          color: var(--gold-dark);
-        }
-
-        .mm-mod-desc {
-          font-size: 1.0909rem;
-          color: var(--text-dark);
-        }
-
-        .mm-mod-upload-status {
-          font-size: 0.9545rem;
-          line-height: 1.2;
-          color: var(--text-muted);
-        }
-
-        .mm-mod-upload-status--succeeded {
-          color: #93c882;
-        }
-
-        .mm-mod-upload-status--failed {
-          color: #d56a59;
-        }
-
-        .mm-mod-controls {
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 0.5455rem;
-          min-width: 17.5rem;
-          flex-shrink: 0;
-        }
-
-        .mm-mod-upload-btn {
-          min-width: 5.75rem;
-          min-height: 2rem;
-          padding: 0.3636rem 0.6364rem;
-          border-width: 0.0909rem;
-          border-style: solid;
-          border-top-color: rgba(201, 168, 76, 0.42);
-          border-right-color: rgba(201, 168, 76, 0.42);
-          border-bottom-color: rgba(201, 168, 76, 0.42);
-          border-left-color: rgba(201, 168, 76, 0.42);
-          background-color: rgba(74, 21, 48, 0.78);
-          color: var(--text-header);
-          font-family: var(--font-body);
-          font-size: 0.9545rem;
-          line-height: 1;
-          letter-spacing: 0;
-          text-align: center;
-          cursor: pointer;
-        }
-
-        .mm-mod-upload-btn:hover,
-        .mm-mod-upload-btn:focus {
-          border-top-color: var(--gold);
-          border-right-color: var(--gold);
-          border-bottom-color: var(--gold);
-          border-left-color: var(--gold);
-          background-color: rgba(108, 31, 36, 0.9);
-          color: #fff2b3;
-        }
-
-        .mm-mod-upload-btn:disabled {
-          cursor: default;
-          opacity: 0.58;
-        }
-
-        .mm-mod-upload-btn--secondary {
-          background-color: rgba(12, 16, 20, 0.72);
-          color: var(--text-muted);
-        }
-
-        .mm-toggle {
-          width: 3.4545rem;
-          height: 1.7273rem;
-          min-width: 3.4545rem;
-          position: relative;
-          border-width: 0.0909rem;
-          border-style: solid;
-          border-top-color: var(--border-dim);
-          border-right-color: var(--border-dim);
-          border-bottom-color: var(--border-dim);
-          border-left-color: var(--border-dim);
-          background-color: rgba(12, 16, 20, 0.72);
-        }
-
-        .mm-toggle--on {
-          border-top-color: var(--gold);
-          border-right-color: var(--gold);
-          border-bottom-color: var(--gold);
-          border-left-color: var(--gold);
-          background-color: rgba(108, 31, 36, 0.82);
-        }
-
-        .mm-toggle-knob {
-          position: absolute;
-          top: 0.2727rem;
-          left: 0.2727rem;
-          width: 1rem;
-          height: 1rem;
-          background-color: var(--text-muted);
-          transition: transform 0.12s, background-color 0.12s;
-        }
-
-        .mm-toggle--on .mm-toggle-knob {
-          transform: translateX(1.7273rem);
-          background-color: var(--gold);
-        }
-
-        /* ── Credits ── */
-        .mm-credits-stage {
-          flex: 1;
-          position: relative;
-          overflow: hidden;
-          width: 100%;
-          animation-name: mm-fade-in;
-          animation-duration: 0.22s;
-          animation-timing-function: var(--ease-snap);
-          animation-fill-mode: both;
-        }
-
-        .mm-credits-stage::before,
-        .mm-credits-stage::after {
-          content: '';
-          position: absolute;
-          left: 0;
-          right: 0;
-          height: 12%;
-          z-index: 2;
-          pointer-events: none;
-        }
-
-        .mm-credits-stage::before {
-          top: 0;
-          background: linear-gradient(180deg, rgba(36, 42, 48, 0.98), rgba(36, 42, 48, 0));
-        }
-
-        .mm-credits-stage::after {
-          bottom: 0;
-          background: linear-gradient(0deg, rgba(36, 42, 48, 0.98), rgba(36, 42, 48, 0));
-        }
-
-        .mm-credits-scroll {
-          position: absolute;
-          top: 56%;
-          left: 0;
-          right: 0;
-          margin: 0 auto;
-          width: 100%;
-          max-width: 36rem;
-          padding: 0 2.1818rem;
-          box-sizing: border-box;
-          animation-name: mm-credits-roll;
-          animation-duration: 48s;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-          animation-fill-mode: both;
-        }
-
-        .mm-credits-content {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          width: 100%;
-        }
-
-        .mm-credits-content > * + * {
-          margin-top: 3.2727rem;
-        }
-
-        .mm-credits-tagline {
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-          padding: 1.4545rem 0 2.1818rem;
-          font-family: var(--font-header);
-          color: var(--text-header);
-        }
-
-        .mm-credits-tagline > * + * {
-          margin-left: 0.5455rem;
-        }
-
-        .mm-credits-tagline-small {
-          font-size: 2rem;
-          font-style: italic;
-          color: var(--text-muted);
-        }
-
-        .mm-credits-tagline-large {
-          font-size: 3.2727rem;
-          line-height: 1.2;
-        }
-
-        .mm-credit-block {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          line-height: 1.4;
-        }
-
-        .mm-credit-block > * + * {
-          margin-top: 0.5455rem;
-        }
-
-        .mm-credit-role {
-          font-size: 1.1818rem;
-          color: var(--text-muted);
-          text-transform: uppercase;
-          letter-spacing: 0.18em;
-          margin-bottom: 0.3636rem;
-        }
-
-        .mm-credit-name {
-          font-family: var(--font-header);
-          font-size: 2rem;
-          color: var(--text-header);
-          line-height: 1.3;
-          padding: 0.1818rem 0;
-        }
-
-        .mm-credits-rule-wide {
-          width: 10.9091rem;
-          height: 0.1818rem;
-          background-color: var(--gold-dark);
-          margin: 2.1818rem 0 0.7273rem;
-        }
-
-        .mm-credits-footer {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          color: var(--text-muted);
-          padding-bottom: 4.3636rem;
-        }
-
-        .mm-credits-footer > * + * {
-          margin-top: 2.1818rem;
-        }
-
-        .mm-credits-ue-notice {
-          font-size: 1.0909rem;
-          line-height: 1.6;
-          margin: 0;
-          max-width: 32rem;
-        }
-
-        .mm-credits-copyright {
-          font-size: 1.2727rem;
-          margin: 0;
-          color: var(--text-header);
-          font-family: var(--font-header);
-          letter-spacing: 0.08em;
-        }
-
-        /* ── Mod Notice ── */
-        .mm-mod-notice {
-          font-family: var(--font-body);
-          font-size: 1.0909rem;
-          color: var(--gold-dark);
-          letter-spacing: 0.02em;
-          padding: 0.7273rem 0.3636rem 0.3636rem;
-          margin: 0;
-        }
-
-        .mm-mod-restart-panel {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1rem 1.2727rem;
-          background-color: rgba(108, 31, 36, 0.45);
-          border-width: 0.0909rem;
-          border-style: solid;
-          border-top-color: var(--gold-dark);
-          border-right-color: var(--gold-dark);
-          border-bottom-color: var(--gold-dark);
-          border-left-color: var(--gold-dark);
-        }
-
-        .mm-mod-restart-copy {
-          font-family: var(--font-body);
-          font-size: 1.0909rem;
-          color: var(--text-header);
-          letter-spacing: 0.02em;
-        }
-
-        .mm-mod-restart-btn {
-          min-width: 8.7273rem;
-          margin-left: 1.0909rem;
-          padding: 0.6364rem 1rem;
-          background-color: var(--burgundy);
-          border-width: 0.0909rem;
-          border-style: solid;
-          border-top-color: var(--gold-dark);
-          border-right-color: var(--gold-dark);
-          border-bottom-color: var(--gold-dark);
-          border-left-color: var(--gold-dark);
-          color: var(--text-header);
-          font-family: var(--font-body);
-          font-size: 1rem;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          cursor: pointer;
-        }
-
-        .mm-mod-restart-btn:hover {
-          border-top-color: var(--gold);
-          border-right-color: var(--gold);
-          border-bottom-color: var(--gold);
-          border-left-color: var(--gold);
-          color: var(--gold);
-        }
-
-        .mm-mod-version {
-          font-family: var(--font-body);
-          font-size: 1.0909rem;
-          color: var(--text-muted);
-          letter-spacing: 0;
-          margin-left: 0.5455rem;
-        }
-
-        /* ── Encyclopedia full-screen overlay ── */
-        .mm-encyclopedia-overlay {
-          position: fixed;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          z-index: 620;
-          background: rgba(13, 18, 24, 0.78);
-          display: flex;
-          justify-content: center;
-          align-items: stretch;
-          animation-name: mm-fade-in;
-          animation-duration: 0.18s;
-          animation-timing-function: var(--ease-snap);
-          animation-fill-mode: both;
-          padding-top: 2.9091rem;
-        }
-
-        .mm-encyclopedia-overlay--closing {
-          animation-name: mm-fade-in;
-          animation-duration: 0.18s;
-          animation-timing-function: var(--ease-snap);
-          animation-direction: reverse;
-          animation-fill-mode: both;
-          pointer-events: none;
-        }
-
-        .mm-encyclopedia-overlay > * {
-          width: 100%;
-          height: 100%;
-        }
-
-        @media (max-width: 100rem) {
-          .mm-left {
-            width: 31.5rem;
-            padding: 0;
-          }
-
-          .mm-left-panel {
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            padding: 2rem 1.8182rem 2.2727rem;
-          }
-
-          .mm-socials {
-            top: auto;
-            bottom: 2.1818rem;
-            right: 2.1818rem;
-            flex-direction: row;
-          }
-
-          .mm-social-btn + .mm-social-btn {
-            margin-top: 0;
-            margin-left: 0.5455rem;
-          }
-
-          .mm-version {
-            bottom: 6.3636rem;
-          }
-        }
-
-        @media (max-width: 65.4545rem) {
-          .mm-left {
-            width: 100%;
-            padding: 0;
-          }
-
-          .mm-left-panel {
-            width: 100%;
-            padding: 1.3636rem 1.2727rem 2.3636rem;
-          }
-
-          .mm-logo {
-            width: 22rem;
-            max-width: 100%;
-          }
-
-          .mm-illust-btn {
-            height: 4.3636rem;
-          }
-
-          .mm-illust-copy {
-            max-width: 100%;
-            padding: 0 1.1818rem 0.7273rem;
-          }
-
-          .mm-illust-label {
-            font-size: 1.2727rem;
-          }
-
-          .mm-illust-desc {
-            max-width: 100%;
-            font-size: 0.8182rem;
-          }
-
-          .mm-sub-view {
-            width: 96%;
-            height: 97%;
-            margin: 1.0909rem 0;
-            padding: 2.1818rem 1.6364rem 3.4545rem;
-          }
-
-          .mm-credit-name {
-            text-align: left;
-          }
-
-          .mm-socials {
-            left: 1.2727rem;
-            right: 1.2727rem;
-            bottom: 1.2727rem;
-            justify-content: center;
-          }
-
-          .mm-version {
-            left: 1.2727rem;
-            right: 1.2727rem;
-            bottom: 6.5455rem;
-            text-align: center;
-          }
-        }
-
-        .mm-root--mockup {
-          background-color: #121820;
-          background-image:
-            linear-gradient(180deg, rgba(7, 10, 14, 0.06) 0%, rgba(7, 10, 14, 0.18) 100%),
-            url('/assets/main-menu-background.png');
-          background-position: 0 0, center center;
-          background-repeat: no-repeat, no-repeat;
-          background-size: 100% 100%, cover;
-        }
-
-        .mm-root--no-bg.mm-root--mockup {
-          background-color: transparent;
-          background-image: none;
-        }
-
-        .mm-root--mockup::after {
-          background-color: transparent;
-          background-image:
-            linear-gradient(180deg, rgba(7, 10, 14, 0.2) 0%, rgba(7, 10, 14, 0) 36%, rgba(7, 10, 14, 0.62) 100%),
-            linear-gradient(90deg, rgba(7, 10, 14, 0.18) 0%, rgba(7, 10, 14, 0.06) 50%, rgba(7, 10, 14, 0.18) 100%);
-          background-position: 0 0;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-        }
-
-        .mm-root--subview.mm-root--mockup::after {
-          background-color: transparent;
-          background-image:
-            linear-gradient(180deg, rgba(9, 12, 16, 0.54) 0%, rgba(9, 12, 16, 0.72) 100%),
-            linear-gradient(90deg, rgba(7, 10, 14, 0.34) 0%, rgba(7, 10, 14, 0.12) 48%, rgba(7, 10, 14, 0.36) 100%);
-          background-position: 0 0;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-        }
-
-        .mm-root--mockup .mm-left-panel {
-          animation: mm-menu-tray-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
-        }
-
-        .mm-root--mockup .mm-logo {
-          animation: mm-menu-logo-in 0.46s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
-        }
-
-        .mm-root--mockup .mm-illustrated-btns {
-          transform-origin: center bottom;
-          clip-path: inset(0% 100% 0% 0%);
-          animation: mm-menu-wipe-reveal 0.46s cubic-bezier(0.16, 0.84, 0.22, 1) 0.44s forwards;
-        }
-
-        .mm-root--mockup .mm-text-items {
-          clip-path: inset(0% 100% 0% 0%);
-          animation: mm-menu-wipe-reveal 0.34s cubic-bezier(0.16, 0.84, 0.22, 1) 0.74s forwards;
-        }
-
-        .mm-root--mockup .mm-continue-hero,
-        .mm-root--mockup .mm-illustrated-btns > .tooltip-wrapper,
-        .mm-root--mockup .mm-scenario-strip > .tooltip-wrapper,
-        .mm-root--mockup .mm-illust-btn,
-        .mm-root--mockup .mm-text-btn {
-          animation: none;
-        }
-
-        .mm-root--mockup .mm-divider {
-          animation: mm-divider-grow 0.34s cubic-bezier(0.16, 1, 0.3, 1) 0.68s both;
-        }
-
-        .mm-root--mockup .mm-lang-slot {
-          animation: mm-command-utility-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) 0.76s both;
-        }
-
-        .mm-root--mockup .mm-socials {
-          animation: mm-command-utility-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) 0.82s both;
-        }
-
-        .mm-root--mockup .mm-version {
-          animation: mm-command-utility-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) 0.88s both;
-        }
-
-        .mm-root--mockup .mm-logo,
-        .mm-root--mockup .mm-illustrated-btns,
-        .mm-root--mockup .mm-divider,
-        .mm-root--mockup .mm-text-items {
-          position: relative;
-          z-index: 1;
-        }
-
-        .mm-root--mockup .mm-logo {
-          background-image: none;
-          border-bottom-width: 0;
-          padding: 0;
-        }
-
-        .mm-root--mockup .mm-logo::after {
-          content: '';
-          position: absolute;
-          right: 0;
-          bottom: -0.5455rem;
-          left: 0;
-          height: 0.2727rem;
-          background-image: url('/assets/gold-line.png');
-          background-position: center center;
-          background-repeat: repeat-x;
-          background-size: auto 0.2727rem;
-          opacity: 0.62;
-          pointer-events: none;
-        }
-
-        .mm-root--mockup .mm-illust-kicker {
-          color: rgba(201, 168, 76, 0.86);
-        }
-
-        .mm-root--mockup-2 .mm-left {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          padding: 2rem 4rem 2.1818rem;
-          align-items: flex-end;
-          justify-content: center;
-        }
-
-        .mm-root--mockup-2 .mm-left-panel {
-          width: 76rem;
-          height: auto;
-          max-width: 100%;
-          padding: 0;
-          align-items: stretch;
-          box-sizing: border-box;
-          background-color: transparent;
-          background-image: none;
-          border-width: 0;
-          overflow: visible;
-        }
-
-        .mm-root--mockup-2 .mm-left-panel::before,
-        .mm-root--mockup-2 .mm-left-panel::after {
-          display: none;
-        }
-
-        .mm-root--mockup-2 .mm-logo {
-          width: 29rem;
-          margin-bottom: 0.9091rem;
-          align-self: center;
-        }
-
-        .mm-root--mockup-2 .mm-logo::after {
-          bottom: -0.7273rem;
-        }
-
-        .mm-root--mockup-2 .mm-illustrated-btns {
-          position: relative;
-          display: flex;
-          flex-direction: row;
-          flex-wrap: nowrap;
-          align-items: stretch;
-          justify-content: flex-start;
-          align-self: stretch;
-          width: 100%;
-          min-height: 6.4545rem;
-          height: 6.4545rem;
-          padding: 0;
-          background-color: rgba(8, 11, 14, 0.22);
-          background-image: linear-gradient(180deg, rgba(255, 245, 202, 0.03), rgba(4, 6, 9, 0.08));
-          background-position: 0 0;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-          border: 0;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-
-        .mm-root--mockup-2 .mm-menu-slot--load-game,
-        .mm-root--mockup-2 .mm-scenario-strip {
-          margin-top: 0;
-          margin-left: 0;
-          border-left: 0;
-        }
-
-        .mm-root--mockup-2 .mm-illustrated-btns > .tooltip-wrapper {
-          height: 100%;
-          width: 23.875rem;
-          min-width: 0;
-          box-sizing: border-box;
-          flex-grow: 0;
-          flex-shrink: 0;
-          flex-basis: 23.875rem;
-        }
-
-        .mm-root--mockup-2 .mm-scenario-strip {
-          display: flex;
-          flex-direction: row;
-          flex-wrap: nowrap;
-          align-items: stretch;
-          width: var(--mm-scenario-strip-width);
-          height: 100%;
-          min-width: 0;
-          box-sizing: border-box;
-          flex-grow: 0;
-          flex-shrink: 0;
-          flex-basis: var(--mm-scenario-strip-width);
-        }
-
-        .mm-root--mockup-2 .mm-menu-slot--scenario-after-first {
-          margin-top: 0;
-          margin-left: 0;
-          border-left: 0;
-        }
-
-        .mm-root--mockup-2 .mm-scenario-strip > .tooltip-wrapper {
-          height: 100%;
-          width: auto;
-          min-width: 0;
-          box-sizing: border-box;
-          flex-grow: 1;
-          flex-shrink: 1;
-          flex-basis: 0;
-        }
-
-        .mm-root--mockup-2 .mm-illustrated-btns > .mm-menu-slot--load-game {
-          width: 6.75rem;
-          flex-basis: 6.75rem;
-        }
-
-        .mm-root--mockup-2 .mm-illustrated-btns > .tooltip-wrapper > .mm-illust-btn,
-        .mm-root--mockup-2 .mm-scenario-strip > .tooltip-wrapper > .mm-illust-btn {
-          width: 100%;
-          height: 100%;
-          flex-grow: 0;
-          flex-shrink: 0;
-          flex-basis: auto;
-        }
-
-        .mm-root--mockup-2 .mm-illustrated-btns::before,
-        .mm-root--mockup-2 .mm-illustrated-btns::after {
-          display: none;
-        }
-
-        .mm-root--mockup-2 .mm-illustrated-btns::before {
-          top: 0.1818rem;
-        }
-
-        .mm-root--mockup-2 .mm-illustrated-btns::after {
-          bottom: 0.1818rem;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero {
-          width: 21.5rem;
-          min-height: 100%;
-          padding: 0;
-          box-sizing: border-box;
-          flex-grow: 0;
-          flex-shrink: 0;
-          flex-basis: 21.5rem;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero {
-          background-color: transparent;
-          border-width: 0;
-          transition: transform 0.14s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero-plate {
-          background-color: rgba(82, 23, 44, 0.82);
-          background-image:
-            linear-gradient(180deg, rgba(255, 245, 202, 0.04), rgba(4, 6, 9, 0.1)),
-            url('/assets/baked/texture-overlay-heavy.png'),
-            linear-gradient(90deg, rgba(122, 34, 64, 0.82), rgba(54, 22, 35, 0.66));
-          border-width: var(--mm-interaction-frame-width);
-          border-style: solid;
-          border-color: transparent;
-          border-image-source: url('/assets/gold-frame.png');
-          border-image-slice: 6;
-          border-image-width: var(--mm-interaction-frame-width);
-          border-image-outset: 0;
-          border-image-repeat: round;
-          box-sizing: border-box;
-          transform: translateX(0rem) scale(1);
-          transform-origin: left center;
-          transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero-plate::before {
-          display: none;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero-body {
-          padding: 0.5455rem 0.9091rem;
-          transform: translateX(0rem);
-          transition: transform 0.14s ease;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero-badge {
-          width: 3.3636rem;
-          height: 3.3636rem;
-          transform: translateX(0rem);
-          transition: transform 0.14s ease;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero-copy {
-          margin-left: 0.6364rem;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero-kicker {
-          font-size: 0.6364rem;
-          line-height: 1;
-          margin-bottom: 0.0909rem;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero-name {
-          font-size: 1.1364rem;
-          line-height: 1.05;
-          max-height: 2.3864rem;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero-realm {
-          font-size: 0.7273rem;
-          line-height: 1.05;
-          margin-top: 0.0455rem;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero-date {
-          margin-top: 0.1364rem;
-          padding: 0.0909rem 0 0.0909rem 0.5455rem;
-          font-size: 0.7273rem;
-          line-height: 1;
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero:hover .mm-continue-hero-plate,
-        .mm-root--mockup-2 .mm-continue-hero:focus .mm-continue-hero-plate {
-          background-color: rgba(108, 30, 58, 0.92);
-          background-image:
-            linear-gradient(180deg, rgba(255, 245, 202, 0.055), rgba(4, 6, 9, 0.08)),
-            url('/assets/baked/texture-overlay-heavy.png'),
-            linear-gradient(90deg, rgba(146, 43, 73, 0.92) 0%, rgba(88, 28, 50, 0.7) 100%);
-          border-image-source: url('/assets/gold-frame.png');
-          transform: translateX(0.1364rem) scale(1.01);
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero:hover .mm-continue-hero-body,
-        .mm-root--mockup-2 .mm-continue-hero:focus .mm-continue-hero-body {
-          transform: translateX(0.1818rem);
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero:hover .mm-continue-hero-badge,
-        .mm-root--mockup-2 .mm-continue-hero:focus .mm-continue-hero-badge {
-          transform: translateX(0.0909rem);
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero:active .mm-continue-hero-body {
-          transform: translateX(0.0909rem);
-        }
-
-        .mm-root--mockup-2 .mm-continue-hero:hover .mm-continue-hero-name,
-        .mm-root--mockup-2 .mm-continue-hero:focus .mm-continue-hero-name {
-          color: #fff2b3;
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn {
-          width: auto;
-          height: 100%;
-          flex-grow: 1;
-          flex-shrink: 1;
-          flex-basis: 17rem;
-          background-color: rgba(8, 11, 14, 0.08);
-          background-image: linear-gradient(90deg, rgba(7, 9, 12, 0.36) 0%, rgba(7, 9, 12, 0.12) 54%, rgba(7, 9, 12, 0) 100%);
-          background-position: 0 0;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-          border-width: var(--mm-interaction-frame-width);
-          border-style: solid;
-          border-color: transparent;
-          border-image-source: url('/assets/gold-frame.png');
-          border-image-slice: 6;
-          border-image-width: var(--mm-interaction-frame-width);
-          border-image-outset: 0;
-          border-image-repeat: round;
-          box-sizing: border-box;
-          transition: transform 0.14s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease;
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn::before {
-          display: none;
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn::after {
-          display: none;
-        }
-
-        .mm-root--mockup-2 .mm-illust-img {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          display: block;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center center;
-          opacity: 0.92;
-          pointer-events: none;
-          z-index: 0;
-          transform: scale(1);
-          transform-origin: center center;
-          transition: transform 0.22s ease, opacity 0.18s ease;
-        }
-
-        .mm-root--mockup-2 .mm-illust-scrim {
-          background-color: transparent;
-          background-image:
-            linear-gradient(90deg, rgba(7, 9, 12, 0.76) 0%, rgba(7, 9, 12, 0.36) 38%, rgba(7, 9, 12, 0.08) 72%, rgba(7, 9, 12, 0) 100%),
-            linear-gradient(180deg, rgba(255, 240, 174, 0.03) 0%, rgba(255, 240, 174, 0) 32%, rgba(0, 0, 0, 0.08) 100%);
-          background-position: 0 0;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-          opacity: 1;
-          transition: opacity 0.18s ease;
-        }
-
-        .mm-root--mockup-2 .mm-illust-copy {
-          width: 74%;
-          padding: 0.5455rem 0.9091rem;
-          background-color: transparent;
-          background-image: none;
-          justify-content: center;
-          transform: translateX(0rem);
-          transition: transform 0.14s ease;
-        }
-
-        .mm-root--mockup-2 .mm-illust-kicker {
-          display: none;
-        }
-
-        .mm-root--mockup-2 .mm-illust-label {
-          font-size: 1.1364rem;
-          line-height: 1.05;
-          color: var(--text-header);
-          white-space: normal;
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn:hover,
-        .mm-root--mockup-2 .mm-illust-btn:focus {
-          background-color: rgba(18, 20, 22, 0.2);
-          background-image:
-            linear-gradient(90deg, rgba(10, 10, 11, 0.42) 0%, rgba(10, 10, 11, 0.16) 48%, rgba(10, 10, 11, 0) 100%),
-            linear-gradient(180deg, rgba(255, 232, 150, 0.04) 0%, rgba(255, 232, 150, 0) 34%, rgba(0, 0, 0, 0.05) 100%);
-          background-position: 0 0;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-          border-image-source: url('/assets/gold-frame.png');
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn:hover .mm-illust-img,
-        .mm-root--mockup-2 .mm-illust-btn:focus .mm-illust-img {
-          display: block;
-          opacity: 1;
-          transform: scale(1.04);
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn:hover .mm-illust-scrim,
-        .mm-root--mockup-2 .mm-illust-btn:focus .mm-illust-scrim {
-          opacity: 0.82;
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn:hover::after,
-        .mm-root--mockup-2 .mm-illust-btn:focus::after {
-          opacity: 0.92;
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn:hover .mm-illust-copy,
-        .mm-root--mockup-2 .mm-illust-btn:focus .mm-illust-copy {
-          transform: translateX(0.2727rem);
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn:active .mm-illust-copy {
-          transform: translateX(0.1364rem);
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn:active .mm-illust-img {
-          transform: scale(1.02);
-        }
-
-        .mm-root--mockup-2 .mm-illust-btn:hover .mm-illust-label,
-        .mm-root--mockup-2 .mm-illust-btn:focus .mm-illust-label {
-          color: #fff2b3;
-        }
-
-        .mm-root--mockup-2 .mm-divider {
-          width: 72%;
-          height: 0;
-          margin: 0.4545rem auto 0;
-          opacity: 0;
-        }
-
-        .mm-root--mockup-2 .mm-text-items {
-          flex-direction: row;
-          flex-wrap: nowrap;
-          justify-content: center;
-          width: 64rem;
-          max-width: 100%;
-          margin-top: 0.2727rem;
-          padding: 0;
-          background-color: rgba(7, 10, 13, 0.34);
-          background-image: none;
-          border-top: 0.0909rem solid rgba(201, 168, 76, 0.14);
-          border-bottom: 0.0909rem solid rgba(201, 168, 76, 0.1);
-        }
-
-        .mm-root--mockup-2 .mm-text-btn {
-          width: 8.8rem;
-          padding: 0.3636rem 0.4545rem;
-          background-color: rgba(8, 11, 14, 0.12);
-          background-image: none;
-          border-width: var(--mm-interaction-frame-width);
-          border-style: solid;
-          border-color: transparent;
-          border-image-source: url('/assets/gold-frame.png');
-          border-image-slice: 6;
-          border-image-width: var(--mm-interaction-frame-width);
-          border-image-outset: 0;
-          border-image-repeat: round;
-          box-sizing: border-box;
-          color: var(--text-muted);
-          font-size: 0.9091rem;
-          text-align: center;
-          transform: translateY(0rem);
-          transition: transform 0.14s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease;
-        }
-
-        .mm-root--mockup-2 .mm-text-btn + .mm-text-btn {
-          margin-top: 0;
-          margin-left: 0.1818rem;
-        }
-
-        .mm-root--mockup-2 .mm-text-btn::after {
-          content: '';
-          position: absolute;
-          right: 0.4545rem;
-          bottom: 0;
-          left: 0.4545rem;
-          display: block;
-          height: 0.0909rem;
-          background-color: rgba(255, 230, 143, 0.64);
-          background-image: none;
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.16s ease;
-        }
-
-        .mm-root--mockup-2 .mm-text-btn:hover,
-        .mm-root--mockup-2 .mm-text-btn:focus {
-          transform: translateY(-0.0909rem);
-          background-color: rgba(74, 21, 48, 0.78);
-          background-image: none;
-          border-image-source: url('/assets/gold-frame.png');
-          color: #fff2b3;
-        }
-
-        .mm-root--mockup-2 .mm-text-btn:hover::after,
-        .mm-root--mockup-2 .mm-text-btn:focus::after {
-          opacity: 1;
-        }
-
-        .mm-root--mockup-2 .mm-text-btn:active {
-          transform: translateY(0rem);
-          background-color: rgba(48, 14, 30, 0.88);
-        }
-
-        .tt-bubble--main-menu-scenario {
-          width: 22rem;
-          min-width: 22rem;
-          max-width: 22rem;
-          border-color: rgba(201, 168, 76, 0.42);
-        }
-
-        @media (max-width: 65.4545rem) {
-          .mm-root--mockup .mm-left {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            align-items: stretch;
-            justify-content: flex-start;
-          }
-
-          .mm-root--mockup .mm-left-panel {
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            padding: 1.2727rem;
-            border: none;
-            overflow: hidden;
-          }
-
-          .mm-root--mockup .mm-logo {
-            width: 20rem;
-            margin-bottom: 0.8182rem;
-          }
-
-          .mm-root--mockup .mm-illustrated-btns {
-            flex-direction: column;
-            height: auto;
-          }
-
-          .mm-root--mockup .mm-menu-slot--load-game,
-          .mm-root--mockup .mm-scenario-strip {
-            margin-top: 0.4545rem;
-            margin-left: 0;
-          }
-
-          .mm-root--mockup .mm-illustrated-btns > .tooltip-wrapper {
-            height: 5.6364rem;
-            flex-basis: auto;
-          }
-
-          .mm-root--mockup .mm-scenario-strip {
-            flex-direction: column;
-            width: 100%;
-            height: auto;
-            flex-basis: auto;
-          }
-
-          .mm-root--mockup .mm-menu-slot--scenario-after-first {
-            margin-top: 0.4545rem;
-            margin-left: 0;
-            border-left: 0;
-          }
-
-          .mm-root--mockup .mm-scenario-strip > .tooltip-wrapper {
-            width: 100%;
-            height: 5.6364rem;
-            flex-basis: auto;
-          }
-
-          .mm-root--mockup .mm-continue-hero {
-            width: 100%;
-            min-height: 5.8182rem;
-            flex-basis: auto;
-          }
-
-          .mm-root--mockup .mm-illust-btn {
-            width: 100%;
-            height: 5.6364rem;
-          }
-
-          .mm-root--mockup .mm-illust-copy {
-            width: 70%;
-          }
-
-          .mm-root--mockup .mm-text-items {
-            flex-direction: column;
-            width: 100%;
-          }
-
-          .mm-root--mockup .mm-text-btn {
-            width: 100%;
-            text-align: left;
-          }
-
-          .mm-root--mockup .mm-text-btn + .mm-text-btn {
-            margin-top: 0.1818rem;
-            margin-left: 0;
-          }
-
-          .mm-root--mockup .mm-lang-slot {
-            top: 1rem;
-            right: 1rem;
-            left: auto;
-          }
-
-          .mm-root--mockup .mm-socials {
-            top: auto;
-            right: 1rem;
-            bottom: 1rem;
-            left: 1rem;
-            flex-direction: row;
-            justify-content: center;
-          }
-
-          .mm-root--mockup .mm-social-btn + .mm-social-btn {
-            margin-top: 0;
-            margin-left: 0.5455rem;
-          }
-
-          .mm-root--mockup .mm-version {
-            right: 1rem;
-            bottom: 5.8182rem;
-            left: 1rem;
-            text-align: center;
-          }
-        }
-
-      `}</style>
 
       <div className={rootClassName}>
         <div className={menuLayerClassName} aria-hidden={view !== 'menu'}>

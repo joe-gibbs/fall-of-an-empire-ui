@@ -1,0 +1,41 @@
+// Runtime viewport helpers are shared by the FoaeCefUI host and mock browser mode.
+
+export interface RuntimeViewportState {
+  scale?: number;
+  scaleX?: number;
+  scaleY?: number;
+  width?: number;
+  height?: number;
+  renderWidth?: number;
+  renderHeight?: number;
+}
+
+const ROOT_FONT_SIZE = 13.2;
+
+declare global {
+  interface Window {
+    __foaeRuntimeViewport?: RuntimeViewportState;
+  }
+}
+
+export function applyRuntimeViewportScale(detail: RuntimeViewportState | undefined) {
+  const scale = detail?.scale ?? detail?.scaleX ?? 1;
+  const safeScale = scale > 0 ? scale : 1;
+
+  document.documentElement.style.setProperty('--runtime-root-font-size', `${ROOT_FONT_SIZE * safeScale}px`);
+  document.documentElement.style.setProperty('--runtime-viewport-scale', String(safeScale));
+}
+
+export function setRuntimeClass(isFoaeCefUI: boolean) {
+  const root = document.documentElement;
+  if (isFoaeCefUI) {
+    root.classList.add('webui-runtime');
+    root.classList.remove('webui-standalone');
+    applyRuntimeViewportScale(window.__foaeRuntimeViewport);
+  } else {
+    root.classList.add('webui-standalone');
+    root.classList.remove('webui-runtime');
+    applyRuntimeViewportScale({ scale: 1 });
+  }
+}
+

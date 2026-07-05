@@ -2,6 +2,8 @@
 
 The WebUI is the React/TypeScript source for the FoaeCefUI interface. In game it talks to Unreal through generated bridge actions. For browser-only UI work, run the mock bridge instead.
 
+For WebUI modding, see [MODDING.md](MODDING.md). It covers the `mod.json` `webui` block, the `@foae/sdk` surface, generated files, and the Sicily sample mod.
+
 ## Browser Mock Mode
 
 ```powershell
