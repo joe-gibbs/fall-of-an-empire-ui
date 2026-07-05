@@ -305,7 +305,7 @@ export function usePersonInteractionsBridge(personId: string | null): PersonInte
   const refreshPersonData = useCallback(async () => {
     if (!personId) return;
     try {
-      const fresh = await bridgeCall('game.get_person_data', { personId });
+      const fresh = await bridgeCall('game.get_person_data', { personId, scope: 'full' });
       dispatchBridgeEvent('game.get_person_data', fresh);
     } catch (error) {
       acknowledgeBridgeFailure(error);

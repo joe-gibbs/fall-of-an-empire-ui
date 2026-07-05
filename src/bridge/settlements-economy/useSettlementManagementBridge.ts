@@ -1,7 +1,7 @@
 import { useBridgeQuery } from '../core/useBridgeQuery';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
-import { mapPortraitLayers, mapPortraitPath } from '../characters/portraitMapping';
+import { mapPortraitPath } from '../characters/portraitMapping';
 import type {
   GetRegionGovernorCandidatesResponse,
   RegionGovernorCandidate,
@@ -40,7 +40,7 @@ function mapGovernorCandidate(c: RegionGovernorCandidate): RegionGovernorCandida
     shortTitle: c.title,
     age: c.age,
     portrait: mapPortraitPath(c.portrait),
-    portraitLayers: mapPortraitLayers(c.portraitLayers),
+    portraitLayers: undefined,
     faction: '',
     culture: '',
     religion: '',
@@ -52,13 +52,7 @@ function mapGovernorCandidate(c: RegionGovernorCandidate): RegionGovernorCandida
       loyalty: c.loyalty,
       constitution: c.constitution,
     },
-    traits: c.traits.map(t => ({
-      id: t.id,
-      name: t.name,
-      icon: t.id,
-      description: t.description,
-      isPositive: t.isPositive,
-    })),
+    traits: [],
     honourDread: 0,
     fame: c.fame,
     activity: c.activity as PersonActivity,

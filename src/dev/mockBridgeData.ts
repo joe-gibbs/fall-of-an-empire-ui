@@ -2972,11 +2972,20 @@ function characterListEntry(
       loyalty: person.stats.loyalty,
       constitution: person.stats.constitution,
     },
-    traits: person.traits.map(trait => ({
-      id: trait.id,
-      name: trait.name,
-    })),
+    traitIds: person.traits.map(trait => trait.id),
   };
+}
+
+function characterListTraits(personIds: string[]): BridgeResponse<'game.get_character_list'>['traits'] {
+  const traits = new Map<string, { id: string; name: string }>();
+  personIds.forEach(id => {
+    personById(id).traits.forEach(trait => {
+      if (!traits.has(trait.id)) {
+        traits.set(trait.id, { id: trait.id, name: trait.name });
+      }
+    });
+  });
+  return Array.from(traits.values());
 }
 
 const MOCK_FAMILY_PERSON_IDS = [
@@ -3004,41 +3013,41 @@ const MOCK_CHARACTER_LIST_PERSON_IDS = [
 function characterListForFaction(factionId: string): BridgeResponse<'game.get_character_list'> {
   if (factionId === MOCK_IDS.rivalFaction) {
     const rulerId = 'mock-person-rival';
+    const personIds = [
+      rulerId,
+      'mock-person-salt-leader',
+    ].filter(id => personById(id).isAlive);
     return {
       factionId: MOCK_IDS.rivalFaction,
       factionName: 'Aurestian League',
       rulerId,
       heirId: '',
-      characters: [
-        rulerId,
-        'mock-person-salt-leader',
-      ]
-        .filter(id => personById(id).isAlive)
-        .map(id => characterListEntry(id, MOCK_IDS.rivalFaction, 'Aurestian League', '')),
+      characters: personIds.map(id => characterListEntry(id, MOCK_IDS.rivalFaction, 'Aurestian League', '')),
+      traits: characterListTraits(personIds),
     };
   }
 
   if (factionId === MOCK_IDS.subjectFaction) {
     const rulerId = 'mock-person-subject';
+    const personIds = [rulerId].filter(id => personById(id).isAlive);
     return {
       factionId: MOCK_IDS.subjectFaction,
       factionName: 'Meridian Prefecture',
       rulerId,
       heirId: '',
-      characters: [rulerId]
-        .filter(id => personById(id).isAlive)
-        .map(id => characterListEntry(id, MOCK_IDS.subjectFaction, 'Meridian Prefecture', '')),
+      characters: personIds.map(id => characterListEntry(id, MOCK_IDS.subjectFaction, 'Meridian Prefecture', '')),
+      traits: characterListTraits(personIds),
     };
   }
 
+  const personIds = MOCK_CHARACTER_LIST_PERSON_IDS.filter(id => personById(id).isAlive);
   return {
     factionId: MOCK_IDS.playerFaction,
     factionName: 'Rephsian Empire',
     rulerId: MOCK_IDS.character,
     heirId: MOCK_IDS.heir,
-    characters: MOCK_CHARACTER_LIST_PERSON_IDS
-      .filter(id => personById(id).isAlive)
-      .map(id => characterListEntry(id)),
+    characters: personIds.map(id => characterListEntry(id)),
+    traits: characterListTraits(personIds),
   };
 }
 

@@ -49,7 +49,7 @@ async function refreshEventNameViews(input: EventRegnalNameInput | EventPersonNa
 
   if (input.targetPersonId) {
     tasks.push(
-      bridgeCall('game.get_person_data', { personId: input.targetPersonId })
+      bridgeCall('game.get_person_data', { personId: input.targetPersonId, scope: 'full' })
         .then(dispatchPersonData),
     );
   }

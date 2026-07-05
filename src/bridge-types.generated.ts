@@ -1300,7 +1300,7 @@ export interface CharacterListEntry {
   complianceTowardPlayer: number;
   fame: number;
   stats: CharacterListStatsData;
-  traits: CharacterListTraitEntry[];
+  traitIds: string[];
 }
 
 export interface GetCharacterListRequest {
@@ -1313,6 +1313,7 @@ export interface GetCharacterListResponse {
   rulerId: string;
   heirId: string;
   characters: CharacterListEntry[];
+  traits: CharacterListTraitEntry[];
 }
 
 export interface GetContentPackWebUIManifestResponse {
@@ -2245,20 +2246,12 @@ export interface GetHeirCandidatesRequest {
   factionId: string;
 }
 
-export interface HeirCandidateTrait {
-  id: string;
-  name: string;
-  description: string;
-  isPositive: boolean;
-}
-
 export interface HeirCandidateEntry {
   id: string;
   name: string;
   title: string;
   shortTitle: string;
   portrait: string;
-  portraitLayers: PortraitLayerData;
   age: number;
   factionId: string;
   factionName: string;
@@ -2270,7 +2263,6 @@ export interface HeirCandidateEntry {
   governance: number;
   loyalty: number;
   constitution: number;
-  traits: HeirCandidateTrait[];
 }
 
 export interface GetHeirCandidatesResponse {
@@ -2647,6 +2639,7 @@ export interface GetNewGameMapFactionSelectionResponse {
 
 export interface GetPersonDataRequest {
   personId: string;
+  scope: string;
 }
 
 export interface PersonStatModifierEntry {
@@ -3304,19 +3297,11 @@ export interface GetRegionGovernorCandidatesRequest {
   settlementId: string;
 }
 
-export interface RegionGovernorCandidateTrait {
-  id: string;
-  name: string;
-  description: string;
-  isPositive: boolean;
-}
-
 export interface RegionGovernorCandidate {
   id: string;
   name: string;
   title: string;
   portrait: string;
-  portraitLayers: PortraitLayerData;
   age: number;
   activity: string;
   tactics: number;
@@ -3329,7 +3314,6 @@ export interface RegionGovernorCandidate {
   currentRegionCount: number;
   maxRegionCount: number;
   isCurrentGovernor: boolean;
-  traits: RegionGovernorCandidateTrait[];
 }
 
 export interface GetRegionGovernorCandidatesResponse {

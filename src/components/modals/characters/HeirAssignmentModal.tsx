@@ -108,15 +108,7 @@ export default function HeirAssignmentModal({
   if (!mounted) return null;
 
   const selectedStat = selected ? selected[primaryStat] ?? 0 : 0;
-  const selectedTraits: CharacterTrait[] = selected
-    ? selected.traits.map(trait => ({
-      id: trait.id,
-      name: trait.name,
-      icon: trait.id,
-      description: trait.description,
-      isPositive: trait.isPositive,
-    }))
-    : [];
+  const selectedTraits: CharacterTrait[] = [];
 
   return createPortal(
     <CandidateModalFrame
@@ -156,7 +148,7 @@ export default function HeirAssignmentModal({
               onViewCharacter={() => handleView(candidate)}
               personId={candidate.id}
               portraitSrc={candidate.portrait}
-              portraitLayers={candidate.portraitLayers}
+              portraitLayers={undefined}
               portraitName={candidate.name}
               name={candidate.name}
               isHeir={candidate.id === currentHeirId}
@@ -179,7 +171,7 @@ export default function HeirAssignmentModal({
                 prefix="cam"
                 personId={selected.id}
                 portraitSrc={selected.portrait}
-                portraitLayers={selected.portraitLayers}
+                portraitLayers={undefined}
                 name={selected.name}
                 title={selected.title || selected.shortTitle || selected.relationToRuler || t('Common.Court')}
               />

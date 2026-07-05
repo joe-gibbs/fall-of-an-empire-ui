@@ -132,7 +132,17 @@ export function clearCharacterCaches(): void {
 }
 
 function mapCharacterList(value: GetCharacterListResponse): CharacterListData {
-  return value;
+  const traitMap = new Map(value.traits.map(trait => [trait.id, trait]));
+  return {
+    factionId: value.factionId,
+    factionName: value.factionName,
+    rulerId: value.rulerId,
+    heirId: value.heirId,
+    characters: value.characters.map(character => ({
+      ...character,
+      traits: character.traitIds.map(id => traitMap.get(id) ?? { id, name: id }),
+    })),
+  };
 }
 
 function familyTreeCacheKey(personId: string | null | undefined, scope: FamilyTreeScope): string {

@@ -125,7 +125,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
 
     if (!previous || previous.personId !== character.id || previous.gameDay === gameDay) return;
 
-    bridgeCall('game.get_person_data', { personId: character.id })
+    bridgeCall('game.get_person_data', { personId: character.id, scope: 'full' })
       .then(dispatchPersonData)
       .catch(acknowledgeBridgeFailure);
   }, [character.id, gameDay]);

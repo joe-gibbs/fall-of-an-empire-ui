@@ -5,7 +5,7 @@ import ReligionTooltip from './ReligionTooltip';
 import { TraitIcon } from '../entities/TraitIcon';
 import type { Character, CharacterStatModifier, StatKey } from '../../../data/types';
 import { useGameActions, useGameState } from '../../../context/GameContext';
-import { usePerson } from '../../../data-source/index';
+import { usePersonTooltipBridge } from '../../../bridge/characters/usePersonBridge';
 import glossary from '../../../data/glossary';
 import { getStatColor, getComplianceState } from '../../../utils/colorFormatters';
 import { STAT_ICONS } from '../../../utils/iconMaps';
@@ -462,7 +462,7 @@ const PersonTooltip: React.FC<PersonTooltipProps> = ({
   const { openSidebar } = useGameActions();
   const lookupId = characterId ?? character?.id ?? null;
   const [resolveRequested, setResolveRequested] = useState(false);
-  const fetched = usePerson(!character && resolveRequested ? lookupId : null);
+  const fetched = usePersonTooltipBridge(!character && resolveRequested ? lookupId : null);
   const resolved = character ?? fetched ?? null;
   const [pointerAltHeld, setPointerAltHeld] = useState(false);
 
