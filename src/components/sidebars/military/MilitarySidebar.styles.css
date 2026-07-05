@@ -4690,3 +4690,27 @@
   padding-left: 1.3rem;
 }
 
+.mil-header-text > .tooltip-wrapper.mil-header-status-tooltip {
+  width: calc(100% + 4.6rem);
+}
+
+.mil-header .mil-strength-bar-wrap,
+.mil-header .mil-header-morale-wrap {
+  width: 100%;
+  max-width: none;
+}
+
+.mil-header .mil-strength-bar-wrap > .painted-bar-track,
+.mil-header .mil-header-morale-wrap > .painted-bar-track {
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  background-size: auto, auto 0.5rem;
+}
+
+.mil-header .mil-strength-bar-wrap > .painted-bar-track .painted-bar-fill,
+.mil-header .mil-header-morale-wrap > .painted-bar-track .painted-bar-fill {
+  border-radius: 0.25rem;
+  background-size: auto 0.38rem;
+  background-position: 0 0.077rem;
+}
+

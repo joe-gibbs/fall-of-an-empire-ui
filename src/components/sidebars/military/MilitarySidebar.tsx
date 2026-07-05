@@ -861,7 +861,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                   ))}
                 </div>
               )}
-              <Tooltip content={{ get title() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.723.1", { Value1: formatLargeNumber(army.strength), Value2: formatLargeNumber(army.maxStrength) }); }, body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.723.27') }} position="bottom" delay={200}>
+              <Tooltip content={{ get title() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.723.1", { Value1: formatLargeNumber(army.strength), Value2: formatLargeNumber(army.maxStrength) }); }, body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.723.27') }} position="bottom" delay={200} wrapperClassName="mil-header-status-tooltip">
                 <div className="mil-strength-bar-wrap">
                   <span className="mil-strength-label" style={{ color: getStrengthColor(strengthRatio) }}>
                     <img src="/assets/icons/I_Swords.png" alt="" className="mil-strength-icon" />
@@ -875,7 +875,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                   {renderUnitTypeStrengths(compositionSummary)}
                 </div>
               )}
-              <Tooltip content={moraleReadiness.tooltip} position="bottom" delay={200}>
+              <Tooltip content={moraleReadiness.tooltip} position="bottom" delay={200} wrapperClassName="mil-header-status-tooltip">
                 <div className="mil-header-morale-wrap">
                   <span className="mil-header-morale-label" style={{ color: moraleReadiness.valueColor }}>
                     <img src={moraleReadiness.icon} alt="" className="mil-header-morale-icon" />
@@ -885,7 +885,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                   <PaintedBar percent={moraleReadiness.percent} color={moraleReadiness.color} />
                 </div>
               </Tooltip>
-              <Tooltip content={supplyReadiness.tooltip} position="bottom" delay={200}>
+              <Tooltip content={supplyReadiness.tooltip} position="bottom" delay={200} wrapperClassName="mil-header-status-tooltip">
                 <div className="mil-header-morale-wrap mil-header-supply-wrap">
                   <span className="mil-header-morale-label" style={{ color: supplyReadiness.valueColor }}>
                     <img src={supplyReadiness.icon} alt="" className="mil-header-morale-icon" />
