@@ -1,0 +1,93 @@
+.stat-bar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.stat-bar > * + * {
+  margin-top: 0.077rem;
+}
+
+.stat-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.stat-bar-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.023rem;
+}
+
+.stat-bar-value {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.stat-bar-track {
+  width: 100%;
+  background: rgba(40, 36, 30, 0.6);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.stat-bar--md .stat-bar-track {
+  height: 0.385rem;
+}
+
+.stat-bar--sm .stat-bar-track {
+  height: 0.231rem;
+}
+
+.stat-bar--sm .stat-bar-label {
+  font-size: 0.9rem;
+}
+
+.stat-bar--sm .stat-bar-value {
+  font-size: 0.9rem;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 0;
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+  transform-origin: left;
+}
+
+/* Inline layout variant */
+.stat-bar--inline {
+  flex-direction: row;
+  align-items: center;
+}
+
+.stat-bar--inline > * + * {
+  margin-top: 0;
+  margin-left: 0.308rem;
+}
+
+.stat-bar--inline .stat-bar-header {
+  display: none;
+}
+
+.stat-bar--inline .stat-bar-label {
+  width: 4.231rem;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  text-align: right;
+  display: block;
+}
+
+.stat-bar--inline .stat-bar-track {
+  flex: 1;
+  height: 0.308rem;
+}
+
+.stat-bar--inline .stat-bar-value {
+  width: 2.462rem;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  text-align: left;
+  display: block;
+}

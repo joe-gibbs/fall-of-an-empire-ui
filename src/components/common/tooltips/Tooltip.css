@@ -1,0 +1,381 @@
+.tooltip-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.tt-positioner {
+  z-index: 99999;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: auto;
+}
+
+/* ---- Main tooltip bubble - portal rendered at document root ---- */
+.tt-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  z-index: 99999;
+  width: max-content;
+  min-width: 10.769rem;
+  max-width: 38rem;
+  min-height: 0;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/modal-charcoal.png');
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  border: 0.154rem solid rgba(80, 85, 100, 0.35);
+  padding: 0;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  color: var(--text);
+  pointer-events: auto;
+  animation: tt-pop-in 0.12s cubic-bezier(0.2, 0, 0, 1) both;
+  white-space: normal;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
+}
+
+.tt-content {
+  display: block;
+  max-width: 100%;
+  min-height: 0;
+  overflow-wrap: break-word;
+}
+
+/* ---- Sidebar variant - matches character sidebar visual language ---- */
+.tt-bubble--sidebar {
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.7) 0%, rgba(18, 23, 29, 0.92) 100%);
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+}
+
+.tt-bubble--map-mode {
+  width: 22rem;
+  min-width: 22rem;
+  max-width: 22rem;
+}
+
+.tt-bubble--map-mode .tt-simple {
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.tt-bubble--passive {
+  pointer-events: none;
+}
+
+/* Sidebar variant: remove default borders, gold rule handles separation */
+.tt-lines--sidebar {
+  border-top: none;
+}
+
+.tt-bubble--sidebar .tt-line--header {
+  border-top: none;
+  margin-top: 0;
+}
+
+.tt-line--header-sidebar {
+  display: flex;
+  align-items: center;
+}
+
+.tt-line--header-sidebar > * + * {
+  margin-left: 0.3rem;
+}
+
+.tt-header-lozenge {
+  width: 0.6rem;
+  height: 0.6rem;
+  flex-shrink: 0;
+}
+
+.tt-header-rule {
+  flex: 1;
+  height: 0.5455rem;
+  background: url('/assets/gold-line.png') repeat-x center;
+  background-size: auto 0.5455rem;
+  opacity: 0.6;
+}
+
+.tt-footer--sidebar {
+  border-top: none;
+}
+
+/* Lozenge + gold line separator (matches character sidebar section headings) */
+.tt-gold-rule {
+  display: flex;
+  align-items: center;
+  margin: 0.231rem 0.615rem;
+}
+
+.tt-gold-rule > span:first-child {
+  display: block;
+  width: 0.6rem;
+  height: 0.6rem;
+  background: url('/assets/lozenge.png') no-repeat center;
+  background-size: contain;
+  flex-shrink: 0;
+}
+
+.tt-gold-rule > span:last-child {
+  flex: 1;
+  height: 0.5455rem;
+  background: url('/assets/gold-line.png') repeat-x center;
+  background-size: auto 0.5455rem;
+  opacity: 0.6;
+  margin-left: 0.3rem;
+}
+
+.tt-simple {
+  padding: 0.231rem 0.462rem;
+  line-height: 1.25;
+}
+
+.tt-custom {
+  display: block;
+  min-height: 0;
+  overflow-wrap: break-word;
+}
+
+@keyframes tt-pop-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Direction-aware transform origins set via inline style in Tooltip.tsx */
+@keyframes tt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---- Tooltip internal structure ---- */
+
+.tt-title {
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  line-height: 1.15;
+  font-weight: 600;
+  color: var(--text-bright);
+  padding: 0.308rem 0.615rem 0.154rem;
+  letter-spacing: 0.023rem;
+}
+
+.tt-body {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.28;
+  padding: 0.077rem 0.615rem 0.308rem;
+  overflow-wrap: break-word;
+}
+
+.tt-body strong {
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+.tt-body .rich-header {
+  color: var(--text-header);
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+}
+
+.tt-body .rich-bullet {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  white-space: normal;
+}
+
+.tt-body .rich-bullet-mark {
+  width: 0.36rem;
+  height: 0.36rem;
+  flex-shrink: 0;
+  margin-top: 0.38rem;
+  margin-right: 0.36rem;
+  border-radius: 50%;
+  background-color: rgba(201, 168, 76, 0.72);
+}
+
+.tt-body .rich-bullet-body {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.tt-body .rich-hr {
+  display: block;
+  width: 100%;
+  height: 0.5455rem;
+  margin-top: 0.154rem;
+  margin-bottom: 0.154rem;
+  background: url('/assets/gold-line.png') repeat-x center;
+  background-size: auto 0.5455rem;
+  opacity: 0.5;
+}
+
+.tt-lines {
+  border-top: 0.077rem solid rgba(80, 85, 100, 0.2);
+  padding: 0.308rem 0;
+}
+
+.tt-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.154rem 0.615rem;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  position: relative;
+}
+
+.tt-line > * + * {
+  margin-left: 0.923rem;
+}
+
+.tt-line--has-sub {
+  cursor: auto;
+}
+
+.tt-line--has-sub:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tt-line--label-only {
+  display: block;
+}
+
+.tt-line--label-only > * + * {
+  margin-left: 0;
+}
+
+.tt-line--label-only .tt-line-label {
+  display: block;
+  width: 100%;
+}
+
+.tt-line--header {
+  padding: 0.308rem 0.615rem 0.077rem;
+  border-top: 0.077rem solid rgba(80, 85, 100, 0.2);
+  margin-top: 0.154rem;
+}
+
+.tt-line-header-label {
+  font-family: var(--font-header);
+  font-size: 0.8rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.062rem;
+}
+
+.tt-line-header-label .tt-line-label-icon {
+  margin-right: 0.231rem;
+  vertical-align: middle;
+}
+
+.tt-line-label {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.tt-line-label > * + * {
+  margin-left: 0.231rem;
+}
+
+.tt-line-label > span {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.tt-line-label-icon {
+  width: 0.923rem;
+  height: 0.923rem;
+  flex-shrink: 0;
+}
+
+.tt-line--has-sub .tt-line-label {
+  color: var(--gold-light);
+  text-decoration: underline;
+  text-underline-offset: 0.154rem;
+}
+
+.tt-line-value {
+  color: var(--text-bright);
+  font-weight: 500;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.tt-line-value > * + * {
+  margin-left: 0.231rem;
+}
+
+.tt-line-icon {
+  width: 0.923rem;
+  height: 0.923rem;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.tt-footer {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  padding: 0.154rem 0.615rem 0.308rem;
+  border-top: 0.077rem solid rgba(80, 85, 100, 0.15);
+  font-style: italic;
+}
+
+/* ---- Sub-tooltip (nested) - same style ---- */
+.tt-sub {
+  position: absolute;
+  right: 100%;
+  top: -0.615rem;
+  margin-right: 0.5455rem;
+  min-width: 10.769rem;
+  max-width: 21.538rem;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/modal-charcoal.png');
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  border: 0.154rem solid rgba(80, 85, 100, 0.3);
+  z-index: 10000;
+  pointer-events: auto;
+  animation: tt-pop-in 0.1s cubic-bezier(0.2, 0, 0, 1) both;
+  transform-origin: right center;
+  white-space: normal;
+}
+
+.tt-sub--portal {
+  position: fixed;
+  right: auto;
+  margin-right: 0;
+  z-index: 100000;
+}

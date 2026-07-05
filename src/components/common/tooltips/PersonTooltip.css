@@ -1,0 +1,386 @@
+/* ---- PersonTooltip - strip-layout character tooltip ---- */
+
+/* Transparent to layout: the wrapper shouldn't constrain the portrait's
+ * width (callers like FamilyTreeScreen rely on `width: 100%` reaching
+ * `.ft-portrait-frame` directly). Clicks still bubble up from children. */
+.ptt-portrait-btn {
+  display: block;
+  cursor: pointer;
+}
+
+/* Strip layout overrides the bubble's default max-width so the wider
+ * two-column body has room when expanded. Compact mode shrinks naturally. */
+.tt-bubble--person {
+  max-width: 30rem;
+}
+
+.ptt-strip {
+  display: flex;
+  flex-direction: column;
+  min-width: 14rem;
+  max-width: 30rem;
+  font-family: var(--font-body);
+  color: var(--text);
+}
+
+.ptt-strip.is-expanded {
+  width: 30rem;
+  max-width: 100%;
+}
+
+/* ── Header (always shown) ────────────────────────────────── */
+.ptt-strip-head {
+  padding: 0.4rem 0.6rem 0.35rem;
+  border-bottom-width: 0.0909rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--gold-muted);
+  background: linear-gradient(180deg, rgba(201, 168, 76, 0.08), transparent);
+}
+
+.ptt-strip-name-row {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.ptt-strip-name-row > * + * {
+  margin-left: 0.4rem;
+}
+
+.ptt-strip-title {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-right: 0.4rem;
+  border-right: 0.0909rem solid rgba(201, 168, 76, 0.45);
+}
+
+.ptt-strip-name {
+  font-family: var(--font-header);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.ptt-strip-age {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  align-self: center;
+  padding-left: 0.55rem;
+  padding-right: 0.25rem;
+  padding-top: 0.08rem;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+
+.ptt-strip-relation {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+.ptt-strip-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.ptt-strip-meta > * {
+  margin-right: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+
+.ptt-strip-meta .tooltip-wrapper { display: flex; }
+
+.ptt-meta-chip {
+  display: flex;
+  align-items: center;
+  cursor: auto;
+}
+
+.ptt-meta-chip > * + * {
+  margin-left: 0.2rem;
+}
+
+.ptt-meta-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  opacity: 0.85;
+}
+
+.ptt-dot {
+  width: 0.24rem;
+  height: 0.24rem;
+  background-image: url('/assets/icons/I_Dot.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ── Activity / imprisonment ──────────────────────────────── */
+.ptt-strip-activity {
+  font-size: 0.82rem;
+  color: var(--text);
+  padding: 0.35rem 0.6rem;
+  border-bottom: 0.0909rem solid rgba(201, 168, 76, 0.18);
+  background: rgba(8, 12, 17, 0.12);
+}
+
+.ptt-strip-activity.is-bad { color: var(--red); }
+
+.ptt-debug {
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem 0.6rem;
+  border-bottom: 0.0909rem solid rgba(201, 168, 76, 0.18);
+  background-color: rgba(5, 7, 9, 0.48);
+}
+
+.ptt-debug-title {
+  font-size: 0.68rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ptt-debug-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.ptt-debug-row > * + * {
+  margin-left: 0.5455rem;
+}
+
+.ptt-debug-row span:last-child {
+  color: var(--text-bright);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* ── Compact-mode hint ────────────────────────────────────── */
+.ptt-strip-hint {
+  font-size: 0.68rem;
+  color: var(--text-dark);
+  text-align: center;
+  padding: 0.25rem 0.6rem 0.3rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── Expanded body: stats | divider | standing ─────────────── */
+.ptt-strip-body {
+  display: flex;
+  align-items: flex-start;
+  padding: 0.5rem 0.6rem;
+}
+
+.ptt-strip-body > * + * {
+  margin-left: 0.6rem;
+}
+
+.ptt-strip-divider {
+  align-self: stretch;
+  width: 0.0909rem;
+  flex-shrink: 0;
+  background-image: linear-gradient(180deg, transparent, var(--gold-muted) 20%, var(--gold-muted) 80%, transparent);
+}
+
+.ptt-strip-stats {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ptt-strip-stats > * + * {
+  margin-top: 0.18rem;
+}
+
+.ptt-strip-stat {
+  display: flex;
+  align-items: center;
+  cursor: auto;
+}
+
+.ptt-strip-stat > * + * {
+  margin-left: 0.35rem;
+}
+
+.ptt-strip-stat-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+}
+
+.ptt-strip-stat-label {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.ptt-strip-stat-val {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  font-weight: 600;
+  min-width: 1.4rem;
+  text-align: right;
+}
+
+.ptt-strip-stat-temp {
+  font-size: 0.72rem;
+  font-weight: 600;
+  min-width: 1.5rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ptt-strip-standing {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ptt-strip-standing > * + * {
+  margin-top: 0.4rem;
+}
+
+/* ── Traits ───────────────────────────────────────────────── */
+.ptt-strip-traits {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.4rem 0.6rem 0.5rem;
+  border-top: 0.0909rem solid rgba(201, 168, 76, 0.18);
+  background: rgba(8, 12, 17, 0.12);
+}
+
+.ptt-strip-traits > * {
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.ptt-trait-icon {
+  width: 2rem;
+  height: 2rem;
+  cursor: auto;
+  transition: transform 0.12s;
+}
+
+.ptt-trait-icon:hover {
+  transform: scale(1.18);
+  z-index: 1;
+}
+
+/* ── Shared meter bar (compliance / opinion / reputation) ───── */
+.ptt-meter-row {
+  display: flex;
+  align-items: center;
+}
+
+.ptt-meter-row > * + * {
+  margin-left: 0.3rem;
+}
+
+.ptt-meter-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  flex-shrink: 0;
+}
+
+.ptt-meter-track {
+  position: relative;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 6.5rem;
+  min-width: 4rem;
+  height: 1.0909rem;
+  background: url('/assets/bar-track.png') repeat-x;
+  background-size: auto 1.0909rem;
+  border-radius: 0.2727rem;
+  border: 0.0909rem solid rgba(8, 12, 17, 0.7);
+  overflow: hidden;
+}
+
+/* Compliance: 5 painted segments, partial fill within each pip */
+.ptt-comp-segments {
+  position: absolute;
+  top: 0.0909rem;
+  right: 0.0909rem;
+  bottom: 0.0909rem;
+  left: 0.0909rem;
+  display: flex;
+}
+
+.ptt-comp-seg {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.0909rem;
+  background-color: rgba(8, 12, 17, 0.55);
+  border: 0.0909rem solid rgba(8, 12, 17, 0.6);
+}
+
+.ptt-comp-seg + .ptt-comp-seg {
+  margin-left: 0.1818rem;
+}
+
+.ptt-comp-seg-fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+  /* bar-gold supplies the painted brushstroke luminance; the colour comes from
+     background-color, blended via luminosity so every segment looks hand-painted. */
+  background-image: url('/assets/bar-gold.png');
+  background-size: auto 1.2727rem;
+  background-repeat: repeat-x;
+}
+
+/* Painted-feel colours that match the icon palette - darker, painted heraldry */
+.ptt-comp-seg--red    .ptt-comp-seg-fill { background-color: #8e3a3a; }
+.ptt-comp-seg--orange .ptt-comp-seg-fill { background-color: #8e5630; }
+.ptt-comp-seg--gold   .ptt-comp-seg-fill { background-color: #8e7438; }
+.ptt-comp-seg--blue   .ptt-comp-seg-fill { background-color: #3d6088; }
+.ptt-comp-seg--green  .ptt-comp-seg-fill { background-color: #5e7c3a; }
+
+/* Opinion / reputation: painted pivot fill - uses real painted PNGs */
+.ptt-painted-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+  background-size: auto 1.2727rem;
+  background-repeat: repeat-x;
+}
+
+.ptt-painted-fill--green { background-image: url('/assets/bar-green.png'); }
+.ptt-painted-fill--red   { background-image: url('/assets/bar-red.png'); }
+
+.ptt-painted-center {
+  position: absolute;
+  top: -0.0909rem;
+  bottom: -0.0909rem;
+  left: 50%;
+  width: 0.1818rem;
+  background: rgba(8, 12, 17, 0.6);
+  transform: translateX(-50%);
+}

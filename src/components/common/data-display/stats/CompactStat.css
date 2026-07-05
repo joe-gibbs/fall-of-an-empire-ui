@@ -1,0 +1,29 @@
+.compact-stat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.compact-stat__icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+  opacity: 0.86;
+}
+
+.compact-stat__value {
+  display: block;
+  min-width: 0;
+  font-family: var(--font-header);
+  font-size: 0.94rem;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.compact-stat--full .compact-stat__icon {
+  margin-right: 0.25rem;
+}

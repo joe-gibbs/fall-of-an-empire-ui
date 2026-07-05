@@ -1,0 +1,34 @@
+.painted-bar-track {
+  width: 100%;
+  height: 0.7273rem;
+  background: url('/assets/bar-track.png') repeat-x;
+  background-size: auto 0.7273rem;
+  border-radius: 0.3636rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.painted-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 0.3636rem;
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+  transform-origin: left;
+}
+
+.painted-bar-fill--green {
+  background: url('/assets/bar-green.png') repeat-x;
+  background-size: auto 0.7273rem;
+}
+
+.painted-bar-fill--red {
+  background: url('/assets/bar-red.png') repeat-x;
+  background-size: auto 0.7273rem;
+}
+
+.painted-bar-fill--gold {
+  background: url('/assets/bar-gold.png') repeat-x;
+  background-size: auto 0.7273rem;
+}

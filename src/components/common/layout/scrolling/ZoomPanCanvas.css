@@ -1,0 +1,26 @@
+.zoom-pan-canvas {
+  position: relative;
+  overflow: hidden;
+  cursor: var(--cursor-grab);
+  user-select: none;
+}
+
+.zoom-pan-canvas--panning {
+  cursor: var(--cursor-grabbing);
+}
+
+.zoom-pan-canvas__content {
+  transform-origin: 0 0;
+}
+
+.zoom-pan-canvas--panning .zoom-pan-canvas__content,
+.zoom-pan-canvas--right-dragging .zoom-pan-canvas__content,
+.zoom-pan-canvas--left-selecting .zoom-pan-canvas__content,
+.zoom-pan-canvas--wheel-zooming .zoom-pan-canvas__content {
+  transition-property: none;
+}
+
+.zoom-pan-canvas--wheel-zooming .zoom-pan-canvas__content {
+  pointer-events: none;
+  game-ui-rendering-option: aa-off snap-off;
+}

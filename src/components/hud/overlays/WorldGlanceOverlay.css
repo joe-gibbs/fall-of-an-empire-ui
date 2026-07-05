@@ -1,0 +1,534 @@
+.world-glance-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  isolation: isolate;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.world-glance-node {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: auto;
+  overflow: visible;
+  transform-origin: center center;
+  game-ui-simple-opacity: on;
+}
+
+.port-settlement-hover-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  display: none;
+  visibility: hidden;
+  width: 0;
+  height: 0.1364rem;
+  background-color: #e0c872;
+  border-width: 0;
+  border-style: none;
+  opacity: 0.86;
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+.world-glance-overlay .glance,
+.world-glance-overlay .battle-side,
+.world-glance-overlay .glance-expanded,
+.world-glance-overlay .battle-expanded,
+.world-glance-overlay .gset-main,
+.world-glance-overlay .glance--military,
+.world-glance-overlay .glance--settlement,
+.world-glance-overlay .glance--battle,
+.world-glance-overlay .glance--port,
+.world-glance-overlay .battle-side-flat-roundel,
+.world-glance-overlay .gport-ring {
+  background-image: none;
+  transition: none;
+  animation: none;
+}
+
+.world-glance-overlay .glance-expanded,
+.world-glance-overlay .battle-expanded {
+  display: none;
+}
+
+.world-glance-overlay .glance::before,
+.world-glance-overlay .glance::after,
+.world-glance-overlay .battle-side::before,
+.world-glance-overlay .battle-side::after,
+.world-glance-overlay .glance-expanded::before,
+.world-glance-overlay .glance-expanded::after {
+  display: none;
+}
+
+.world-glance-tip {
+  position: relative;
+  cursor: inherit;
+}
+
+.glance-placeholder {
+  width: 1.2rem;
+  height: 1.2rem;
+  box-sizing: border-box;
+  border-width: 0.091rem;
+  border-style: solid;
+  border-color: rgba(224, 200, 114, 0.72);
+  background-color: rgba(20, 20, 21, 0.82);
+}
+
+.glance-placeholder--settlement {
+  width: 1.5rem;
+  height: 1.5rem;
+  transform: rotate(45deg);
+}
+
+.glance-placeholder--port,
+.glance-placeholder--convoy {
+  width: 1rem;
+  height: 1rem;
+  transform: rotate(45deg);
+}
+
+.glance-placeholder--army,
+.glance-placeholder--navy,
+.glance-placeholder--battle {
+  border-radius: 50%;
+}
+
+.world-glance-node--army {
+  cursor: pointer;
+}
+
+.world-glance-node--settlement {
+  cursor: pointer;
+  transform-origin: 0 0;
+}
+
+.settlement-attached-military-cluster {
+  position: absolute;
+  top: 2.45rem;
+  left: 2.5rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  width: 6.3rem;
+  pointer-events: none;
+}
+
+.world-glance-node--settlement.detail-name .settlement-attached-military-cluster,
+.world-glance-node--settlement.detail-detailed .settlement-attached-military-cluster {
+  top: 2.5rem;
+  left: 3rem;
+}
+
+.settlement-attached-military-cluster > * {
+  margin-right: 0.1818rem;
+  margin-bottom: 0.1818rem;
+}
+
+.world-glance-node--attached {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 2.35rem;
+  height: 2.35rem;
+  pointer-events: auto;
+  overflow: visible;
+  transform: none;
+}
+
+.world-glance-node--attached .world-glance-tip {
+  transform: none;
+}
+
+.world-glance-node.world-glance-node--attached.detail-flag .glance--military,
+.world-glance-node.world-glance-node--attached.detail-name .glance--military {
+  width: 2.35rem;
+  height: 2.35rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+.world-glance-node.world-glance-node--attached.detail-flag .glance--military::before,
+.world-glance-node.world-glance-node--attached.detail-name .glance--military::before {
+  top: 0.4796rem;
+  right: 0.4796rem;
+  bottom: 0.4796rem;
+  left: 0.4796rem;
+}
+
+.world-glance-node.world-glance-node--attached.detail-flag .glance--military::after,
+.world-glance-node.world-glance-node--attached.detail-name .glance--military::after {
+  top: 0.1136rem;
+  right: 0.1136rem;
+  bottom: 0.1136rem;
+  left: 0.1136rem;
+  border-width: 0.0682rem;
+}
+
+.world-glance-node.world-glance-node--attached.detail-flag .glance-military-rings,
+.world-glance-node.world-glance-node--attached.detail-name .glance-military-rings {
+  top: 0.09rem;
+  left: 0.09rem;
+  width: 2.17rem;
+  height: 2.17rem;
+}
+
+.world-glance-node.world-glance-node--attached.detail-flag .glance-military-core,
+.world-glance-node.world-glance-node--attached.detail-name .glance-military-core {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.world-glance-node.world-glance-node--attached.detail-flag .glance-military-faction-roundel,
+.world-glance-node.world-glance-node--attached.detail-name .glance-military-faction-roundel {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.world-glance-node.world-glance-node--attached.detail-flag .glance-military-type-mark,
+.world-glance-node.world-glance-node--attached.detail-name .glance-military-type-mark {
+  width: 0.5455rem;
+  height: 0.5455rem;
+}
+
+.world-glance-node.world-glance-node--attached.detail-flag .glance-military-type-mark--navy,
+.world-glance-node.world-glance-node--attached.detail-name .glance-military-type-mark--navy {
+  width: 0.5909rem;
+  height: 0.5909rem;
+}
+
+.world-glance-node.world-glance-node--attached.detail-flag .glance-military-kind,
+.world-glance-node.world-glance-node--attached.detail-name .glance-military-kind {
+  top: -0.7727rem;
+  left: 0.5614rem;
+}
+
+.world-glance-node--navy {
+  cursor: pointer;
+}
+
+.world-glance-node--battle {
+  cursor: pointer;
+}
+
+.world-glance-node--convoy {
+  cursor: pointer;
+}
+
+.world-glance-node.detail-flag .glance-expanded {
+  display: none;
+}
+
+.world-glance-node.detail-flag .glance--military {
+  width: 4.1364rem;
+  height: 4.1364rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  display: block;
+}
+
+.world-glance-node.detail-flag .glance--battle {
+  width: 10.2rem;
+  min-width: 0;
+  height: 3.55rem;
+}
+
+.world-glance-node.detail-flag .battle-side-strength,
+.world-glance-node.detail-flag .battle-morale {
+  display: none;
+}
+
+.world-glance-node.detail-name .glance-expanded {
+  display: none;
+}
+
+.world-glance-node.detail-name .glance--settlement {
+  min-width: 0;
+}
+
+.world-glance-node.detail-name .gset-body {
+  min-height: 1.45rem;
+  padding: 0.1818rem 0.4545rem 0.2273rem 0.5909rem;
+}
+
+.world-glance-node.detail-name .gset-type-icon,
+.world-glance-node.detail-name .gset-info-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.world-glance-node.detail-name .gset-marker {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.world-glance-node.detail-name .gset-name {
+  font-size: 0.78rem;
+}
+
+.world-glance-node.detail-name .gset-info-value {
+  font-size: 0.74rem;
+}
+
+.world-glance-node.detail-name .gset-info-value--numeric {
+  width: 3.6rem;
+}
+
+.world-glance-node.detail-name .gset-bar {
+  display: none;
+}
+
+.world-glance-node.detail-name .glance--military {
+  width: 4.1364rem;
+  height: 4.1364rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  display: block;
+}
+
+.world-glance-node.detail-detailed .glance--military {
+  width: 4.1364rem;
+  height: 4.1364rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  display: block;
+}
+
+.world-glance-overlay .world-glance-node--army .glance-military-rings,
+.world-glance-overlay .world-glance-node--navy .glance-military-rings {
+  top: 50%;
+  left: 50%;
+  width: 3.7727rem;
+  height: 3.7727rem;
+  transform: translate(-50%, -50%);
+}
+
+.world-glance-overlay .world-glance-node--army .glance-military-core,
+.world-glance-overlay .world-glance-node--navy .glance-military-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.45rem;
+  height: 2.45rem;
+  transform: translate(-50%, -50%);
+}
+
+.world-glance-overlay .world-glance-node--army .glance-military-faction-roundel,
+.world-glance-overlay .world-glance-node--navy .glance-military-faction-roundel {
+  width: 2.45rem;
+  height: 2.45rem;
+}
+
+.world-glance-node.detail-name .battle-morale {
+  display: none;
+}
+
+.world-glance-node.detail-name .battle-side {
+  min-height: 1.8rem;
+  padding-top: 0.1818rem;
+  padding-bottom: 0.1818rem;
+}
+
+.world-glance-node.detail-name .battle-side-strength {
+  font-size: 0.86rem;
+}
+
+.world-glance-node.detail-flag .glance--settlement {
+  width: 4.2727rem;
+  height: 4.2727rem;
+}
+
+.world-glance-node.detail-flag .gset-body {
+  width: 4.2727rem;
+  height: 4.2727rem;
+  min-height: 0;
+  padding: 0;
+}
+
+.world-glance-node.detail-flag .gset-main {
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-1.6364rem) scaleX(0.76);
+}
+
+.world-glance-node.detail-name .glance--settlement,
+.world-glance-node.detail-detailed .glance--settlement {
+  width: 12rem;
+  height: 4.2727rem;
+  min-width: 0;
+  min-height: 0;
+}
+
+.world-glance-node.detail-name .gset-body,
+.world-glance-node.detail-detailed .gset-body {
+  width: 12rem;
+  height: 4.2727rem;
+  min-height: 0;
+  padding: 0;
+}
+
+.world-glance-node.detail-name .gset-body .gset-emblem,
+.world-glance-node.detail-name .gset-body .gset-main,
+.world-glance-node.detail-detailed .gset-body .gset-emblem,
+.world-glance-node.detail-detailed .gset-body .gset-main,
+.world-glance-node.detail-name .gset-head .gset-name,
+.world-glance-node.detail-detailed .gset-head .gset-name {
+  margin-left: 0;
+  margin-top: 0;
+}
+
+.world-glance-node.detail-name .gset-emblem,
+.world-glance-node.detail-detailed .gset-emblem {
+  width: 3.8182rem;
+  height: 3.8182rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 3.8182rem;
+}
+
+.world-glance-node.detail-name .gset-roundel.faction-roundel,
+.world-glance-node.detail-detailed .gset-roundel.faction-roundel {
+  width: 2.7273rem;
+  height: 2.7273rem;
+}
+
+.world-glance-node.detail-name .gset-name,
+.world-glance-node.detail-detailed .gset-name {
+  max-width: 6.3636rem;
+  font-size: 0.8182rem;
+  text-align: left;
+}
+
+.world-glance-node.detail-name .gset-info-icon,
+.world-glance-node.detail-detailed .gset-info-icon {
+  width: 0.9091rem;
+  height: 0.9091rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 0.9091rem;
+}
+
+.world-glance-node.detail-name .gset-info-value,
+.world-glance-node.detail-detailed .gset-info-value {
+  max-width: 5.9091rem;
+  font-size: 0.7273rem;
+}
+
+.world-glance-node.detail-name .gset-info-value--numeric,
+.world-glance-node.detail-detailed .gset-info-value--numeric {
+  width: auto;
+  text-align: left;
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: auto;
+}
+
+.world-glance-node.detail-name .gset-bar,
+.world-glance-node.detail-detailed .gset-bar {
+  display: none;
+}
+
+.world-glance-overlay .glance--convoy::before,
+.world-glance-overlay .gport-ring::after {
+  display: none;
+}
+
+.world-glance-overlay .battle-side-casualty,
+.world-glance-overlay .battle-side-damage-flash,
+.world-glance-overlay .battle-morale-fill,
+.world-glance-overlay .glance-military-rings,
+.world-glance-overlay .world-glance-node.is-targeted .glance-military-faction-roundel,
+.world-glance-overlay .world-glance-node.is-targeted .battle-side-flat-roundel,
+.world-glance-overlay .world-glance-node.is-targeted .glance--battle .battle-token-frame,
+.world-glance-overlay .world-glance-node.is-targeted .glance--port .gport-ring {
+  animation: none;
+  transition: none;
+}
+
+.world-glance-overlay .world-glance-node--settlement.is-visible-pop .glance--settlement,
+.world-glance-overlay .world-glance-node--port.is-visible-pop .glance--port {
+  animation-name: settlement-glance-pop-in;
+  animation-duration: 180ms;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+  transition: none;
+}
+
+.world-glance-overlay .world-glance-node.detail-flag .gset-main,
+.world-glance-overlay .world-glance-node.detail-flag .glance-military-crown,
+.world-glance-overlay .world-glance-node.detail-name .glance-military-crown,
+.world-glance-overlay .world-glance-node.detail-detailed .glance-military-crown,
+.world-glance-overlay .world-glance-node.detail-flag .glance-military-strength,
+.world-glance-overlay .world-glance-node.detail-name .glance-military-strength,
+.world-glance-overlay .world-glance-node.detail-detailed .glance-military-strength,
+.world-glance-overlay .world-glance-node.detail-flag .glance-military-icon-socket,
+.world-glance-overlay .world-glance-node.detail-name .glance-military-icon-socket,
+.world-glance-overlay .world-glance-node.detail-detailed .glance-military-icon-socket {
+  display: none;
+}
+
+.world-glance-overlay .world-glance-node.detail-flag .glance-military-kind-socket,
+.world-glance-overlay .world-glance-node.detail-name .glance-military-kind-socket,
+.world-glance-overlay .world-glance-node.detail-detailed .glance-military-kind-socket {
+  display: flex;
+}
+
+.world-glance-overlay .world-glance-node.detail-flag .glance-military-kind-socket,
+.world-glance-overlay .world-glance-node.detail-name .glance-military-kind-socket,
+.world-glance-overlay .world-glance-node.detail-detailed .glance-military-kind-socket {
+  display: none;
+}
+
+.world-glance-overlay .world-glance-node--army:hover .glance--military,
+.world-glance-overlay .world-glance-node--navy:hover .glance--military {
+  animation-name: world-glance-military-hover-lift;
+  animation-duration: 700ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+.world-glance-overlay .world-glance-node--army:hover .glance-military-rings,
+.world-glance-overlay .world-glance-node--navy:hover .glance-military-rings {
+  animation-name: world-glance-military-hover-ring;
+  animation-duration: 700ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes world-glance-military-hover-lift {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.055);
+  }
+}
+
+@keyframes world-glance-military-hover-ring {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}

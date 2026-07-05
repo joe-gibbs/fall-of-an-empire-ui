@@ -1,0 +1,2183 @@
+/* ===== Faction Overview Screen ===== */
+
+.fov-wrap {
+  max-width: 72rem;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.fov-overview-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 0.15rem 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.18);
+  border-right-color: rgba(201, 168, 76, 0.12);
+  border-bottom-color: rgba(8, 12, 17, 0.45);
+  border-left-color: rgba(201, 168, 76, 0.12);
+  background-color: rgba(9, 10, 12, 0.55);
+  background-image: url('/assets/baked/panel-charcoal.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+}
+
+.fov-overview-identity-row {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.fov-overview-primary {
+  width: 31rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 31rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fov-overview-heir {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  margin-left: 0.9rem;
+  padding-left: 0.9rem;
+  border-left-width: 0.077rem;
+  border-left-style: solid;
+  border-left-color: rgba(201, 168, 76, 0.18);
+}
+
+.fov-overview-metrics-row {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  margin-top: 0.65rem;
+  padding-top: 0.6rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.18);
+}
+
+/* ─── Policies Tab ─────────────────────────────────────────────────────── */
+
+/* Header row: player faction + optional overlord side by side */
+.fov-header-row {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  margin-bottom: 0.45rem;
+}
+
+.fov-faction-header {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── Overlord Panel ───────────────────────────────────────────────────── */
+
+.fov-overlord {
+  display: flex;
+  flex-direction: column;  padding: 0.5rem 0.6rem;
+  background: rgba(8, 12, 17, 0.25);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: #3f382f;
+  min-width: 14rem;
+  max-width: 20rem;
+}
+
+.fov-overlord-label {
+  display: flex;
+  align-items: center;  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dark);
+}
+
+.fov-overlord-body {
+  display: flex;
+  align-items: flex-start;}
+
+.fov-overlord-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;}
+
+.fov-overlord-name {
+  font-family: var(--font-header);
+  font-size: 0.98rem;
+  color: var(--text-header);
+  cursor: pointer;
+}
+
+.fov-overlord-name:hover {
+  color: var(--gold-light);
+}
+
+.fov-overlord-ruler {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.fov-overlord-opinion {
+  display: flex;
+  align-items: center;  font-family: var(--font-header);
+  font-size: 0.95rem;  margin-top: 0.1rem;
+}
+
+.fov-overlord-details {
+  display: flex;  margin-top: 0.15rem;
+}
+
+.fov-overlord-detail {
+  display: flex;
+  align-items: center;  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.fov-faction-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fov-faction-kicker {
+  font-size: 0.72rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  margin-bottom: 0.18rem;
+}
+
+.fov-ruler-row {
+  display: flex;
+  align-items: center;
+}
+
+.fov-current-ruler-name {
+  font-family: var(--font-header);
+  font-size: 1.08rem;
+  color: var(--text);
+  background-color: transparent;
+  border-width: 0;
+  border-style: none;
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.fov-current-ruler-name:hover {
+  color: var(--gold-light);
+}
+
+.fov-identity-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.fov-identity-item {
+  display: flex;
+  align-items: center;
+}
+
+.fov-identity-icon {
+  width: 1rem;
+  height: 1rem;  opacity: 0.7;
+}
+
+/* Empire stats bar */
+.fov-stats-bar {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  border-top-width: 0;
+  position: relative;
+  min-width: 0;
+  flex-grow: 2.2;
+  flex-shrink: 1;
+  flex-basis: 0;
+  margin-right: 0;
+}
+
+.fov-stats-bar > .tooltip-wrapper {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  margin-right: 0.45rem;
+}
+
+.fov-stats-bar > .tooltip-wrapper:last-child {
+  margin-right: 0;
+}
+
+.fov-stat {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 2.45rem;
+  box-sizing: border-box;
+  padding: 0.38rem 0.45rem;
+  background-color: rgba(8, 12, 17, 0.28);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.16);
+}
+
+.fov-stat-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  opacity: 0.82;
+  flex-shrink: 0;
+  margin-right: 0.38rem;
+}
+
+.fov-stat-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fov-stat-label {
+  font-size: 0.62rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fov-stat-val {
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  color: var(--text);}
+
+.fov-stat-val {
+  font-family: var(--font-header);
+  font-size: 0.98rem;
+  color: var(--text);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.fov-stat-val--gold {
+  color: var(--gold);
+}
+
+.fov-stat-val--positive {
+  color: var(--green);
+}
+
+.fov-stat-val--negative {
+  color: var(--red);
+}
+
+.fov-stats-modifiers {
+  display: flex;
+  align-items: center;  min-width: 0;
+  flex: 1;
+}
+
+.fov-stats-modifiers-label {
+  flex-shrink: 0;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* Culture + Religion distribution side by side */
+.fov-distributions {
+  display: flex;
+  flex-wrap: wrap;  margin-bottom: 0.6rem;
+}
+
+.fov-distribution-col {
+  min-width: 0;
+}
+
+.fov-distribution-label {
+  display: flex;
+  align-items: center;  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.fov-culture-row {
+  display: flex;
+  align-items: center;}
+
+.fov-culture-legend {
+  display: flex;
+  flex-wrap: wrap;}
+
+.fov-culture-item {
+  display: flex;
+  align-items: center;  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.fov-culture-swatch {
+  width: 0.6rem;
+  height: 0.6rem;
+  display: block;
+}
+
+.fov-culture-pct {
+  color: var(--text);}
+
+.fov-legend-icon {
+  width: 0.85rem;
+  height: 0.85rem;}
+
+/* Faction modifier badges - gritty hand-painted style */
+.fov-modifiers-row {
+  display: flex;
+  flex-wrap: wrap;  padding: 0;
+}
+
+.fov-modifiers-row--inline {
+  min-width: 0;
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.fov-modifier-badge {
+  display: flex;
+  align-items: center;  padding: 0.16rem 0.32rem;
+  background:
+    url('/assets/chart-noise.png') repeat,
+    linear-gradient(180deg, rgba(20, 18, 14, 0.85) 0%, rgba(12, 10, 8, 0.9) 100%);
+  background-size: 5.8182rem 5.8182rem, auto;
+  border: 0.2727rem solid transparent;
+  border-image-source: url('/assets/modifier-frame.png');
+  border-image-slice: 3;
+  border-image-width: 0.2727rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  flex-shrink: 0;
+}
+
+.fov-modifier-badge--positive {
+  border-image-source: url('/assets/modifier-frame-positive.png');
+}
+
+.fov-modifier-badge--negative {
+  border-image-source: url('/assets/modifier-frame-negative.png');
+}
+
+.fov-modifier-badge:hover {
+  background:
+    url('/assets/chart-noise.png') repeat,
+    linear-gradient(180deg, rgba(30, 28, 22, 0.9) 0%, rgba(18, 16, 12, 0.95) 100%);
+  background-size: 5.8182rem 5.8182rem, auto;}
+
+.fov-modifier-icon {
+  width: 0.82rem;
+  height: 0.82rem;  opacity: 0.85;
+}
+
+.fov-modifier-value {
+  font-family: var(--font-header);
+  font-size: 0.74rem;
+  letter-spacing: 0.03em;}
+
+.fov-modifier-badge--positive .fov-modifier-value {
+  color: var(--green);
+}
+
+.fov-modifier-badge--negative .fov-modifier-value {
+  color: var(--red);
+}
+
+.fov-modifier-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  margin-bottom: 0.65rem;
+}
+
+.fov-modifier-grid > .tooltip-wrapper {
+  width: 23.4%;
+  height: 2.65rem;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+  margin-bottom: 0.42rem;
+}
+
+.fov-modifier-card {
+  width: 100%;
+  height: 2.65rem;
+  min-height: 2.65rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0.34rem 0.42rem;
+  background-color: #111317;
+  background-image: url('/assets/chart-noise.png'), url('/assets/baked/panel-charcoal.png');
+  background-repeat: repeat, repeat;
+  background-size: 5.8182rem 5.8182rem, 93.0909rem 93.0909rem;
+  border-width: 0.1818rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/modifier-frame.png');
+  border-image-slice: 3;
+  border-image-width: 0.1818rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+}
+
+.fov-modifier-card--positive {
+  border-image-source: url('/assets/modifier-frame-positive.png');
+}
+
+.fov-modifier-card--negative {
+  border-image-source: url('/assets/modifier-frame-negative.png');
+}
+
+.fov-modifier-card-icon {
+  display: block;
+  width: 1.08rem;
+  height: 1.08rem;
+  flex-shrink: 0;
+  opacity: 0.88;
+  margin-right: 0.38rem;
+}
+
+.fov-modifier-card-copy {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.fov-modifier-card-label {
+  font-family: var(--font-header);
+  font-size: 0.78rem;
+  color: var(--text-header);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fov-modifier-card-desc {
+  display: none;
+}
+
+.fov-modifier-card-value {
+  flex-shrink: 0;
+  min-width: 2.65rem;
+  margin-left: 0.35rem;
+  font-family: var(--font-header);
+  font-size: 0.78rem;
+  color: var(--text);
+  text-align: right;
+}
+
+.fov-modifier-card--positive .fov-modifier-card-value {
+  color: var(--green);
+}
+
+.fov-modifier-card--negative .fov-modifier-card-value {
+  color: var(--red);
+}
+
+/* ─── Policy Entry ─────────────────────────────────────────────────────── */
+
+.fov-policies-list {
+  display: flex;
+  flex-direction: column;  margin-bottom: 0.8rem;
+}
+
+.fov-policy {
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 0.62rem 0.55rem 0.72rem;
+  background-color: #111317;
+  background-image: url('/assets/chart-noise.png'), url('/assets/baked/panel-charcoal.png');
+  background-repeat: repeat, repeat;
+  background-size: 5.8182rem 5.8182rem, 93.0909rem 93.0909rem;
+  border-width: 0.1818rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/modifier-frame.png');
+  border-image-slice: 3;
+  border-image-width: 0.1818rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  overflow: hidden;
+  transition: background-color 0.15s;
+}
+
+.fov-policy:hover {
+  background-color: #17181d;
+}
+
+.fov-policy-icon {
+  width: 2rem;
+  height: 2rem;
+  opacity: 0.88;
+  flex-shrink: 0;
+}
+
+.fov-policy-info {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.fov-policy-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.fov-policy-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  color: var(--text-header);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fov-policy-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+  margin-top: 0.1rem;
+  margin-bottom: 0.35rem;
+}
+
+.fov-policy-bar-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.fov-policy-bar-wrap {
+  width: 100%;
+  position: relative;
+  height: 0.6rem;
+}
+
+.fov-policy-bar-track {
+  width: 100%;
+  height: 100%;
+  background: rgba(8, 12, 17, 0.4);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: #3f382f;
+  overflow: hidden;
+  display: flex;
+}
+
+.fov-policy-bar-segment {
+  height: 100%;
+  transition: transform 0.3s ease-out;
+  transform-origin: left;
+}
+
+.fov-policy-bar-filled {
+  background: linear-gradient(180deg, #e5c96b, #8f6f24);
+}
+
+.fov-policy-bar-empty {
+  background: transparent;
+}
+
+/* Segment separators */
+.fov-policy-bar-segments {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.fov-policy-bar-sep {
+  flex: 1;
+  border-right: 0.0909rem solid rgba(8, 12, 17, 0.5);
+}
+
+.fov-policy-bar-sep:last-child {
+  border-right: none;
+}
+
+.fov-policy-val {
+  display: block;
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  color: var(--gold);
+  flex-shrink: 0;
+  min-width: 2.4rem;
+  white-space: nowrap;
+  text-align: right;}
+
+.fov-policy-effects {
+  display: flex;
+  flex-wrap: wrap;  margin-top: 0.2rem;
+}
+
+.fov-policy-effect {
+  font-size: 0.8rem;
+  display: flex;}
+
+.fov-policy-effect-label {
+  color: var(--text-muted);
+}
+
+.fov-effect-positive {
+  color: var(--green);
+}
+
+.fov-effect-negative {
+  color: var(--red);
+}
+
+/* +/- buttons */
+.fov-policy-controls {
+  display: flex;
+  flex-direction: column;  flex-shrink: 0;
+  margin-left: 0.55rem;
+  position: relative;
+  z-index: 2;
+}
+
+.fov-policy-btn {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #3a1828, #2a0c18);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: #5a5145;
+  color: var(--gold);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+
+.fov-policy-btn:hover {
+  background: linear-gradient(180deg, #4a1832, #3a1028);
+  border-top-color: var(--gold-light);
+  border-right-color: var(--gold-light);
+  border-bottom-color: var(--gold-light);
+  border-left-color: var(--gold-light);
+}
+
+.fov-policy-btn--disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.fov-policy-btn--cancel {
+  background-image: url('/assets/baked/button-close-dark.png');
+  background-repeat: repeat;
+  background-size: 5.8182rem 5.8182rem;
+  background-color: #0a0b0e;
+}
+
+.fov-policy-btn--cancel:hover {
+  background-image: url('/assets/baked/button-close-red.png');
+  background-repeat: repeat;
+  background-size: 5.8182rem 5.8182rem;
+  background-color: #5a1515;
+  border-top-color: var(--red);
+  border-right-color: var(--red);
+  border-bottom-color: var(--red);
+  border-left-color: var(--red);
+}
+
+.fov-policy-btn-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  opacity: 0.88;
+}
+
+/* ─── Edicts (InteractionCard list) ────────────────────────────────────── */
+
+.fov-edicts-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.fov-edicts-list .interaction-card {
+  min-height: 4.7rem;
+  border-width: 0.154rem;
+  border-top-color: rgba(201, 168, 76, 0.34);
+  border-right-color: rgba(201, 168, 76, 0.34);
+  border-bottom-color: rgba(201, 168, 76, 0.34);
+  border-left-color: rgba(201, 168, 76, 0.34);
+}
+
+.fov-edicts-list .interaction-card-image {
+  width: 3.45rem;
+}
+
+.fov-edicts-list .interaction-card-body {
+  padding: 0.42rem 0.55rem;
+}
+
+.fov-edicts-list .interaction-card-desc {
+  max-height: 3.05rem;
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.fov-edicts-list .interaction-card--disabled {
+  opacity: 0.62;
+}
+
+.fov-edicts-list .interaction-card--disabled .interaction-card-bg {
+  opacity: 0.18;
+}
+
+/* Court Tab */
+
+/* Summary bar */
+.fov-court-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.fov-court-summary-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.fov-court-summary-left > * + * {
+  margin-left: 0.5rem;
+}
+
+.fov-court-summary > .tooltip-wrapper {
+  flex-shrink: 0;
+  margin-left: 0.7rem;
+}
+
+/* Single-column list that fills available space */
+.fov-court-grid {
+  display: flex;
+  flex-direction: column;  flex: 1;
+}
+
+.fov-court-grid > .tooltip-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Court Slot - full-width horizontal row ──────────────────────────── */
+
+.fov-court-slot {
+  display: flex;
+  align-items: stretch;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-charcoal.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+  border: 0.154rem solid rgba(120, 105, 65, 0.25);
+  position: relative;
+  transition: border-color 0.15s;
+  flex: 1;
+}
+
+/* Painted gold strip on the left edge */
+.fov-court-slot::before {
+  content: '';
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: 0;
+  width: 0.2727rem;
+  background-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--gold-dark) 18%,
+    var(--gold) 50%,
+    var(--gold-dark) 82%,
+    transparent 100%
+  );
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.fov-court-slot:hover {
+  border-color: rgba(160, 140, 80, 0.4);
+}
+
+.fov-court-slot--vacant {
+  border-color: rgba(120, 105, 65, 0.15);
+  opacity: 0.78;
+  filter: saturate(0.6);
+}
+
+.fov-court-slot--vacant:hover {
+  opacity: 1;
+  filter: saturate(0.9);
+  border-color: rgba(160, 140, 80, 0.3);
+}
+
+.fov-court-slot--player {
+  border-top-color: rgba(201, 168, 76, 0.58);
+  border-right-color: rgba(201, 168, 76, 0.38);
+  border-bottom-color: rgba(201, 168, 76, 0.32);
+  border-left-color: rgba(201, 168, 76, 0.38);
+  background-color: rgba(34, 26, 16, 0.58);
+}
+
+/* ─── Portrait column (left) ──────────────────────────────────────────── */
+
+.fov-court-portrait-col {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 0.7rem;
+  position: relative;
+  background: rgba(8, 12, 17, 0.18);
+}
+
+.fov-court-portrait-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fov-court-portrait-action--clickable,
+.fov-court-sub--clickable {
+  cursor: pointer;
+}
+
+.fov-court-portrait-col .fov-court-replace-btn {
+  align-self: center;
+  margin-top: 0.45rem;
+  width: 5.9rem;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.fov-court-portrait-col::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  bottom: 18%;
+  right: 0;
+  width: 0.0909rem;
+  background-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--gold-dark) 40%,
+    var(--gold-dark) 60%,
+    transparent 100%
+  );
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.fov-court-vacant-portrait {
+  width: 5.5rem;
+  height: 5.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 12, 17, 0.3);
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: #3f382f;
+  border-radius: 50%;
+  transition: border-color 0.15s;
+}
+
+.fov-court-slot--vacant:hover .fov-court-vacant-portrait {
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+}
+
+.fov-court-vacant-icon {
+  width: 2.5rem;
+  height: 2.5rem;  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+
+.fov-court-slot--vacant:hover .fov-court-vacant-icon {
+  opacity: 0.5;
+}
+
+/* ─── Center column (position info + bonus) ───────────────────────────── */
+
+.fov-court-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;  padding: 0.7rem 0.9rem;
+  position: relative;
+  z-index: 1;
+}
+
+.fov-court-center > * + * {
+  margin-top: 0.22rem;
+}
+
+.fov-court-center::after {
+  content: '';
+  position: absolute;
+  top: 15%;
+  bottom: 15%;
+  right: 0;
+  width: 0.0909rem;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(138, 114, 53, 0.3) 40%,
+    rgba(138, 114, 53, 0.3) 60%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.fov-court-pos-row {
+  display: flex;
+  align-items: center;
+}
+
+.fov-court-pos-row > * + * {
+  margin-left: 0.35rem;
+}
+
+.fov-court-pos-icon {
+  width: 1.3rem;
+  height: 1.3rem;  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.fov-court-pos-name {
+  font-family: var(--font-header);
+  font-size: 0.85rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.fov-court-appointee-name {
+  font-family: var(--font-header);
+  font-size: 1.05rem;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+.fov-court-appointee-name--player {
+  color: var(--gold);
+}
+
+.fov-court-term-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.fov-court-term-row > * + * {
+  margin-left: 0.35rem;
+}
+
+.fov-court-term-row span {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+}
+
+.fov-court-term-row strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fov-court-bonus-row {
+  display: flex;
+  align-items: center;
+}
+
+.fov-court-bonus-row > * + * {
+  margin-left: 0.35rem;
+}
+
+.fov-court-bonus-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.fov-court-bonus-val {
+  font-family: var(--font-header);
+  font-size: 1.3rem;
+  color: var(--green);}
+
+.fov-court-replace-btn {
+  align-self: flex-start;
+  margin-top: 0.35rem;
+  padding: 0.28rem 0.62rem;
+  max-width: 100%;
+  background-color: rgba(88, 22, 30, 0.72);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.36);
+  color: var(--text-header);
+  cursor: var(--cursor-pointer);
+  font-family: var(--font-header);
+  font-size: 0.74rem;
+  line-height: 1.1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.fov-court-replace-btn:hover {
+  background-color: rgba(112, 28, 38, 0.86);
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+}
+
+/* Vacant state */
+.fov-court-vacant-label {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.fov-court-vacant-cta {
+  font-size: 0.85rem;
+  color: var(--gold-muted);
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.fov-court-slot--vacant:hover .fov-court-vacant-cta {
+  opacity: 1;
+  color: var(--gold);
+}
+
+/* ─── Right column (stat + subordinates) ──────────────────────────────── */
+
+.fov-court-right {
+  flex-shrink: 0;
+  width: 13rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;  padding: 0.6rem 0.8rem;
+  position: relative;
+  background: rgba(8, 12, 17, 0.12);
+}
+
+/* Stat badge */
+.fov-court-stat-badge {
+  display: flex;
+  align-items: center;
+}
+
+.fov-court-stat-badge > * + * {
+  margin-left: 0.3rem;
+}
+
+.fov-court-stat-icon {
+  width: 1.2rem;
+  height: 1.2rem;  opacity: 0.8;
+}
+
+.fov-court-stat-val {
+  font-family: var(--font-header);
+  font-size: 1.15rem;
+  color: var(--gold);}
+
+.fov-court-stat-name {
+  font-size: 0.75rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Subordinates */
+.fov-court-subs-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.fov-court-subs-col > * + * {
+  margin-top: 0.22rem;
+}
+
+.fov-court-subs-label {
+  font-size: 0.7rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fov-court-subs-row {
+  display: flex;
+  align-items: center;
+  align-content: center;
+  flex-wrap: wrap;
+}
+
+.fov-court-subs-row > * + * {
+  margin-left: 0;
+}
+
+.fov-court-subs-row > * {
+  margin-right: 0.22rem;
+  margin-bottom: 0.18rem;
+}
+
+/* Filled subordinate - portrait only */
+.fov-court-sub {
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.fov-court-sub--player {
+  transform: scale(1.08);
+}
+
+.fov-court-subs-row > .tooltip-wrapper {
+  flex-shrink: 0;
+}
+
+.fov-court-sub:hover {
+  opacity: 0.8;
+}
+
+.fov-court-sub--player .portrait {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+/* Empty subordinate dot */
+.fov-court-sub--empty {
+  padding: 0;
+}
+
+.fov-court-sub-empty-circle {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: rgba(8, 12, 17, 0.25);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: #3f382f;
+  transition: border-color 0.15s;
+}
+
+.fov-court-sub--empty:hover .fov-court-sub-empty-circle {
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+}
+
+/* ─── Previous Rulers Tab ──────────────────────────────────────────────── */
+
+.fov-rulers-timeline {
+  position: relative;
+  padding-left: 1rem;
+}
+
+/* Vertical connector line */
+.fov-rulers-timeline::before {
+  content: '';
+  position: absolute;
+  left: 2.35rem;
+  top: 0;
+  bottom: 0;
+  width: 0.1818rem;
+  background-color: var(--border-dim);
+}
+
+.fov-ruler-entry {
+  display: flex;  padding: 0.6rem 0;
+  position: relative;
+}
+
+.fov-ruler-entry + .fov-ruler-entry {
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--separator);
+}
+
+.fov-ruler-portrait-col {
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.fov-ruler-info {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  margin-left: 0.9rem;
+}
+
+.fov-ruler-name {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-header);
+}
+
+.fov-ruler-name .badge {
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.fov-ruler-reign {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+.fov-ruler-death {
+  font-size: 0.8rem;
+  color: var(--red);
+  margin-top: 0.1rem;
+  opacity: 0.8;
+}
+
+.fov-ruler-achievements {
+  margin-top: 0.3rem;
+  display: flex;
+  flex-direction: column;}
+
+.fov-ruler-achievement {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding-left: 0.8rem;
+  position: relative;
+}
+
+.fov-ruler-achievement::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 0.3rem;
+  height: 0.3rem;
+  background-color: var(--gold-muted);
+  transform: rotate(45deg);
+}
+
+/* ─── Auto-assign checkbox ─────────────────────────────────────────────── */
+
+.fov-auto-assign {
+  display: flex;
+  align-items: center;  padding: 0.3rem 0;
+  margin-bottom: 0.4rem;
+}
+
+.fov-auto-assign input[type="checkbox"] {  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.fov-auto-assign-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* ─── Two-column layout for policies tab ───────────────────────────────── */
+
+.fov-policies-layout {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+
+.fov-policies-col {
+  min-width: 0;
+}
+
+/* ─── Info strip: succession + stability + distributions in one row ──── */
+
+.fov-info-strip {
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0;
+  margin-bottom: 0.3rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.fov-info-strip-sep {
+  width: 0.0909rem;
+  align-self: stretch;
+  background-color: var(--separator);
+  flex-shrink: 0;
+  margin-left: 0.65rem;
+  margin-right: 0.65rem;
+}
+
+.fov-overview-detail-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.fov-finance-summary {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin-right: 0.5rem;
+}
+
+.fov-metric-panel {
+  min-height: 2.45rem;
+  box-sizing: border-box;
+  padding: 0.38rem 0.55rem;
+  background-color: rgba(8, 12, 17, 0.28);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.16);
+}
+
+/* Treasury delta in stats bar */
+.fov-stat-delta {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  margin-left: 0.15rem;}
+
+/* ─── Roster inline ────────────────────────────────────────────────────── */
+
+.fov-finance-top-row {
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 0.28rem;
+}
+
+.fov-finance-primary {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fov-finance-primary + .fov-finance-primary {
+  margin-left: 0.55rem;
+}
+
+.fov-detail-label {
+  font-size: 0.68rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.fov-finance-treasury-value {
+  font-family: var(--font-header);
+  font-size: 1.1rem;
+  line-height: 1.1;
+  color: var(--gold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fov-finance-net-value {
+  font-family: var(--font-header);
+  font-size: 1.1rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.fov-finance-breakdown .info-row {
+  padding: 0.05rem 0;
+}
+
+.fov-capital-summary {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-right: 0;
+}
+
+.fov-capital-value {
+  font-family: var(--font-header);
+  font-size: 0.98rem;
+  color: var(--text);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fov-roster-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;  padding: 0.15rem 0 0.3rem;
+}
+
+.fov-roster-group-inline {
+  display: flex;
+  align-items: center;}
+
+.fov-roster-sep {
+  width: 0.0909rem;
+  height: 1.5rem;
+  background-color: var(--separator);
+  margin: 0 0.3rem;
+}
+
+/* ─── Succession ───────────────────────────────────────────────────────── */
+
+.fov-succession-heir {
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+  background: rgba(8, 12, 17, 0.2);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: #3f382f;
+  margin-bottom: 0.4rem;
+}
+
+.fov-succession-heir > .tooltip-wrapper {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.fov-succession-main {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.fov-succession-main > .portrait {
+  margin-right: 0.85rem;
+  flex-shrink: 0;
+}
+
+.fov-succession-assign {
+  flex-shrink: 0;
+  min-width: 4.4rem;
+  height: 1.9rem;
+  margin-left: 0.6rem;
+  padding: 0 0.65rem;
+  background-color: var(--burgundy);
+  background-image: url('/assets/baked/button-burgundy.png');
+  background-repeat: repeat;
+  background-size: 11.6364rem 5.8182rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: rgba(8, 12, 17, 0.55);
+  border-left-color: var(--gold-muted);
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.fov-succession-assign:hover {
+  background-color: var(--burgundy-light);
+  background-image: url('/assets/baked/button-burgundy-hover.png');
+  color: var(--text-bright);
+}
+
+.fov-overview-heir .fov-succession-heir {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0;
+  background: rgba(8, 12, 17, 0.28);
+}
+
+.fov-succession-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fov-succession-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dark);
+}
+
+.fov-succession-name {
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  color: var(--text-header);
+}
+
+.fov-succession-law {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+.fov-succession-line {
+  display: flex;  padding-left: 0.2rem;
+}
+
+.fov-succession-candidate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;}
+
+.fov-succession-rank {
+  font-size: 0.7rem;
+  color: var(--text-dark);}
+
+/* ─── Realm Stability ──────────────────────────────────────────────────── */
+
+.fov-stability {
+  padding: 0.2rem 0 0.3rem;
+}
+
+.fov-stability .info-row {
+  padding: 0.15rem 0;
+}
+
+.fov-roster-group-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.fov-roster-char {
+  cursor: pointer;
+}
+
+.fov-diplomacy-board {
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 0.8rem;
+}
+
+.fov-diplomacy-panel {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  padding: 0.55rem;
+  background-color: rgba(9, 10, 12, 0.55);
+  background-image: url('/assets/baked/panel-charcoal.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.18);
+  border-right-color: rgba(201, 168, 76, 0.12);
+  border-bottom-color: rgba(8, 12, 17, 0.45);
+  border-left-color: rgba(201, 168, 76, 0.12);
+}
+
+.fov-diplomacy-panel + .fov-diplomacy-panel {
+  margin-left: 0.65rem;
+}
+
+.fov-diplomacy-panel--war {
+  border-color: rgba(196, 64, 64, 0.38);
+}
+
+.fov-diplomacy-panel-title {
+  font-family: var(--font-header);
+  font-size: 0.88rem;
+  color: var(--text-header);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.fov-diplomacy-roundel-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 0.04rem;
+}
+
+.fov-diplomacy-roundel-list > * {
+  margin-right: 0.28rem;
+  margin-bottom: 0.28rem;
+}
+
+.fov-diplomacy-roundel-btn {
+  width: 2.1rem;
+  height: 2.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background-color: rgba(21, 27, 32, 0.42);
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.16);
+  border-right-color: rgba(201, 168, 76, 0.1);
+  border-bottom-color: rgba(13, 18, 24, 0.55);
+  border-left-color: rgba(201, 168, 76, 0.1);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.fov-diplomacy-roundel-btn:hover {
+  background-color: rgba(74, 21, 48, 0.28);
+  border-top-color: rgba(201, 168, 76, 0.45);
+  border-right-color: rgba(201, 168, 76, 0.36);
+  border-bottom-color: rgba(201, 168, 76, 0.26);
+  border-left-color: rgba(201, 168, 76, 0.36);
+}
+
+.fov-diplomacy-roundel-btn .faction-roundel--sm {
+  width: 1.62rem;
+  height: 1.62rem;
+}
+
+.fov-diplomacy-treaty-groups {
+  display: flex;
+  flex-direction: column;
+}
+
+.fov-diplomacy-treaty-group {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.fov-diplomacy-treaty-group + .fov-diplomacy-treaty-group {
+  margin-top: 0.38rem;
+}
+
+.fov-diplomacy-treaty-label {
+  width: 9.2rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fov-diplomacy-treaty-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+  margin-right: 0.25rem;
+  opacity: 0.86;
+}
+
+.fov-diplomacy-treaty-label span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fov-diplomacy-treaty-group > .fov-diplomacy-roundel-list {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+/* ─── Vassal Table ─────────────────────────────────────────────────────── */
+
+.fov-vassal-table {
+  width: 100%;}
+
+.fov-vassal-table th {
+  font-family: var(--font-header);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border-dim);
+}
+
+.fov-vassal-table th.fov-th--right {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fov-vassal-table td {
+  padding: 0.4rem 0.5rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  font-size: 0.85rem;
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.fov-vassal-table td.fov-td--right {
+  text-align: right;}
+
+.fov-vassal-table tr:hover td {
+  background: rgba(201, 168, 76, 0.04);
+}
+
+.fov-vassal-row--troubled td {
+  background: rgba(196, 64, 64, 0.04);
+}
+
+.fov-vassal-cell-name {
+  display: flex;
+  align-items: center;}
+
+.fov-vassal-name {
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  color: var(--text-header);
+}
+
+.fov-vassal-ruler {
+  font-size: 0.75rem;
+  color: var(--text-dark);
+}
+
+.fov-vassal-treaty-type {
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+}
+
+.fov-vassal-gold {
+  display: flex;
+  align-items: center;  color: var(--gold);
+}
+
+.fov-vassal-gold-icon {
+  width: 0.8rem;
+  height: 0.8rem;}
+
+.fov-vassal-focus {
+  display: flex;
+  align-items: center;  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Empty state */
+.fov-empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-dark);
+  font-style: italic;
+}
+
+/* Live bridge-backed overview additions */
+.fov-stat {
+  min-width: 4.2rem;
+}
+
+.fov-policies-col {
+  flex: 1 1 0;
+  margin-right: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.fov-policies-col + .fov-policies-col {
+  margin-right: 0;
+}
+
+.fov-policy {
+  position: relative;
+  align-items: flex-start;
+}
+
+.fov-policy--active {
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+  border-image-source: url('/assets/modifier-frame-positive.png');
+}
+
+.fov-policy-progress {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(8, 12, 17, 0.12);
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fov-policy-progress-fill {
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(90deg, rgba(104, 80, 31, 0.55), rgba(177, 133, 43, 0.46), rgba(229, 194, 92, 0.36));
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.fov-policy-progress--decrease .fov-policy-progress-fill {
+  background-image: linear-gradient(90deg, rgba(87, 38, 38, 0.54), rgba(132, 57, 44, 0.46), rgba(188, 101, 67, 0.34));
+}
+
+.fov-policy-icon-wrap {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  margin-right: 0.55rem;
+  position: relative;
+  z-index: 2;
+}
+
+.fov-policy-icon-wrap .tooltip-wrapper-inline {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fov-policy-copy {
+  min-width: 0;
+}
+
+.fov-policy-bar-levels {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+}
+
+.fov-policy-bar-levels .tooltip-wrapper-inline {
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  height: 100%;
+}
+
+.fov-policy-bar-level {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-right-width: 0.0909rem;
+  border-right-style: solid;
+  border-right-color: rgba(8, 12, 17, 0.5);
+  cursor: pointer;
+}
+
+.fov-policy-bar-level--current {
+  background: rgba(229, 201, 107, 0.16);
+}
+
+.fov-policy-bar-level--last {
+  border-right-width: 0;
+}
+
+.fov-policy-effects {
+  display: block;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.fov-policy-effect {
+  display: block;
+}
+
+.fov-policy-adjustment {
+  display: flex;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.fov-policy-adjustment .btm-inline {
+  flex-shrink: 0;
+  margin-left: 0.35rem;
+}
+
+.fov-policy-adjustment-label {
+  font-size: 0.75rem;
+  color: var(--gold-light);
+  flex-grow: 1;
+  min-width: 7rem;
+}
+
+.fov-policy-btn--disabled:hover {
+  background: linear-gradient(180deg, #3a1828, #2a0c18);
+  border-top-color: #5a5145;
+  border-right-color: #5a5145;
+  border-bottom-color: #5a5145;
+  border-left-color: #5a5145;
+}
+
+.fov-tooltip-bubble {
+  max-width: 22rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(95, 100, 108, 0.72);
+  background-color: #171a1f;
+}
+
+.fov-tooltip-bubble::before {
+  height: 0.154rem;
+}
+
+.fov-tooltip-effects {
+  margin-top: 0.45rem;
+  padding: 0.35rem 0.615rem 0.45rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--separator);
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.fov-tooltip-effect-line {
+  font-size: 0.86rem;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.fov-tooltip-effect-line + .fov-tooltip-effect-line {
+  margin-top: 0.18rem;
+}
+
+.fov-treaty-chip {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.45rem;
+  background: rgba(8, 12, 17, 0.22);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: #3f382f;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.fov-treaty-chip:hover {
+  background: rgba(8, 12, 17, 0.34);
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+}
+
+.fov-treaty-type {
+  color: var(--text-dark);
+  font-size: 0.75rem;
+}
+
+.fov-court-slot {
+  cursor: pointer;
+}
+
+.fov-court-summary-left > .btm-inline,
+.fov-court-center > .btm-inline {
+  margin-top: 0.22rem;
+}
+
+.fov-faction-header > .tooltip-wrapper,
+.fov-faction-header > .portrait {
+  margin-right: 0.7rem;
+}
+
+.fov-identity-item,
+.fov-modifier-badge,
+.fov-roster-group-label,
+.fov-roster-char,
+.fov-vassal-cell-name .faction-roundel {
+  margin-right: 0.45rem;
+}
+
+.fov-modifier-badge {
+  margin-bottom: 0.35rem;
+}
+
+.fov-policy-icon,
+.fov-court-portrait-col {
+  margin-right: 0.55rem;
+}
+
+.fov-policy-controls,
+.fov-policy-val,
+.fov-court-right {
+  margin-left: 0.45rem;
+}
+
+.fov-treaty-type {
+  margin-left: 0.35rem;
+}
+
+.fov-edicts-list > .tooltip-wrapper,
+.fov-court-slot,
+.fov-ruler-entry {
+  margin-bottom: 0.45rem;
+}
+
+/* ─── Responsive adjustments ───────────────────────────────────────────── */
+
+@media (max-width: 60rem) {
+  .fov-overview-summary {
+    flex-direction: column;
+  }
+  .fov-overview-identity-row {
+    flex-direction: column;
+  }
+  .fov-overview-primary {
+    width: 100%;
+    flex-basis: auto;
+  }
+  .fov-overview-heir {
+    width: 100%;
+    flex-basis: auto;
+    margin-left: 0;
+    margin-top: 0.65rem;
+    padding-left: 0;
+    padding-top: 0.65rem;
+    border-left-width: 0;
+    border-top-width: 0.077rem;
+    border-top-style: solid;
+    border-top-color: rgba(201, 168, 76, 0.18);
+  }
+  .fov-overview-metrics-row {
+    flex-wrap: wrap;
+  }
+  .fov-stats-bar {
+    flex-wrap: wrap;
+    width: 100%;
+    flex-basis: 100%;
+    margin-right: 0;
+    margin-bottom: 0.45rem;
+  }
+  .fov-stats-bar > .tooltip-wrapper {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 48%;
+    width: 48%;
+    margin-bottom: 0.4rem;
+  }
+  .fov-stats-bar > .tooltip-wrapper:nth-child(2),
+  .fov-stats-bar > .tooltip-wrapper:nth-child(4) {
+    margin-right: 0;
+  }
+  .fov-policies-layout {
+    flex-wrap: wrap;
+  }
+  .fov-policies-col {
+    flex-basis: 100%;
+    margin-right: 0;
+  }
+  .fov-stats-modifiers {
+    width: 100%;
+    flex-wrap: wrap;  }
+  .fov-modifiers-row--inline {
+    width: 100%;
+  }
+  .fov-modifier-grid > .tooltip-wrapper {
+    width: 100%;
+    margin-right: 0;
+  }
+  .fov-finance-summary {
+    flex-basis: 100%;
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 0.45rem;
+  }
+  .fov-capital-summary {
+    flex-basis: 100%;
+    width: 100%;
+  }
+  .fov-diplomacy-board {
+    flex-direction: column;
+  }
+  .fov-diplomacy-panel + .fov-diplomacy-panel {
+    margin-left: 0;
+    margin-top: 0.65rem;
+  }
+  .fov-court-right {
+    width: 10rem;
+  }
+}

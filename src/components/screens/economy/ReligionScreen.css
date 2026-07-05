@@ -1,0 +1,510 @@
+/* ===== Religion Screen ===== */
+
+.rel-wrap {
+  max-width: 72rem;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+}
+
+.screen--religion .rel-screen-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 2.05rem;
+}
+
+.rel-selector-row {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.3rem 0;
+  margin-bottom: 0.6rem;
+  flex-shrink: 0;
+}
+
+.rel-selector-row > .tooltip-wrapper {
+  margin-right: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.rel-religion-button {
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem 0.3rem 0.3rem;
+  background: rgba(8, 12, 17, 0.25);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: #3f382f;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.rel-religion-button > * + * {
+  margin-left: 0.45rem;
+}
+
+.rel-religion-button:hover {
+  background: rgba(8, 12, 17, 0.35);
+  border-top-color: var(--border);
+  border-right-color: var(--border);
+  border-bottom-color: var(--border);
+  border-left-color: var(--border);
+  color: var(--text);
+}
+
+.rel-religion-button--active {
+  background: linear-gradient(180deg, #7c3035, #5a1f24);
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  color: var(--text-header);
+}
+
+.rel-religion-button--active:hover {
+  background: linear-gradient(180deg, #6b2548, #7c3035);
+  border-top-color: var(--gold-light);
+  border-right-color: var(--gold-light);
+  border-bottom-color: var(--gold-light);
+  border-left-color: var(--gold-light);
+}
+
+.rel-religion-icon-frame {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 12, 17, 0.4);
+  border-radius: 50%;
+  border: 0.154rem solid transparent;
+  flex-shrink: 0;
+}
+
+.rel-religion-button--state .rel-religion-icon-frame {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  background: radial-gradient(circle at center, rgba(201, 168, 76, 0.25) 0%, rgba(8, 12, 17, 0.5) 70%);
+}
+
+.rel-religion-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.rel-religion-name {
+  font-family: var(--font-header);
+  letter-spacing: 0;
+}
+
+.rel-summary {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.7rem;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-charcoal.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+  border: 0.154rem solid rgba(120, 105, 65, 0.25);
+}
+
+.rel-summary-pie {
+  flex-shrink: 0;
+  margin-right: 1rem;
+}
+
+.rel-summary-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rel-summary-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rel-summary-title-main {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.rel-summary-title-main > * + * {
+  margin-left: 0.4rem;
+}
+
+.rel-summary-title-row > .tooltip-wrapper {
+  margin-left: 0.7rem;
+  flex-shrink: 0;
+}
+
+.rel-summary-title {
+  font-family: var(--font-header);
+  font-size: 1.15rem;
+  color: var(--text-header);
+  letter-spacing: 0;
+  min-width: 0;
+}
+
+.rel-summary-description {
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.3;
+  max-width: 48rem;
+}
+
+.rel-summary-lower {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.45rem;
+}
+
+.rel-summary-lower > * {
+  margin-right: 0.65rem;
+  margin-bottom: 0.35rem;
+}
+
+.rel-summary-state-mark {
+  font-family: var(--font-header);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: var(--gold);
+}
+
+.rel-summary-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 28rem;
+  min-width: 0;
+}
+
+.rel-summary-office {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 21rem;
+  min-width: 18rem;
+}
+
+.rel-conversion-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.6rem;
+  padding-top: 0.55rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--separator);
+}
+
+.rel-conversion-row > * + * {
+  margin-left: 0.75rem;
+}
+
+.rel-conversion-status {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.rel-conversion-label {
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: var(--gold);
+}
+
+.rel-conversion-value {
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.rel-conversion-progress {
+  margin-top: 0.35rem;
+  max-width: 20rem;
+}
+
+.rel-summary-stat {
+  display: flex;
+  align-items: center;
+  margin-right: 0.65rem;
+}
+
+.rel-summary-stat > * + * {
+  margin-left: 0.25rem;
+}
+
+.rel-summary-stat-value {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--gold);
+}
+
+.rel-summary-stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.rel-summary-separator {
+  width: 0.0909rem;
+  height: 0.9rem;
+  background-color: var(--border-dim);
+  margin-right: 0.65rem;
+}
+
+.rel-cell-diocese,
+.rel-cell-character,
+.rel-bar-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.rel-cell-character-button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rel-cell-character-button:hover {
+  color: var(--gold-light);
+}
+
+.rel-cell-character-button:focus-visible {
+  outline: 0.077rem solid var(--gold);
+  outline-offset: 0.154rem;
+}
+
+.rel-cell-diocese > * + *,
+.rel-cell-character > * + *,
+.rel-bar-cell > * + * {
+  margin-left: 0.45rem;
+}
+
+.rel-cell-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.rel-table-block {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+}
+
+.rel-table-wrap {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.rel-table {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  font-size: 0.9rem;
+}
+
+.rel-header-row {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  padding-right: 1.15rem;
+  background-color: rgba(13, 18, 24, 0.92);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.64), rgba(13, 18, 24, 0.94));
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border);
+}
+
+.rel-header-cell {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 0.231rem 0.462rem;
+  text-align: left;
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.038rem;
+  color: var(--gold);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.rel-header-cell:hover,
+.rel-header-cell--active {
+  color: var(--gold-light);
+}
+
+.rel-header-label {
+  display: flex;
+  align-items: center;
+}
+
+.rel-header-label > * + * {
+  margin-left: 0.308rem;
+}
+
+.rel-body-scroll {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+}
+
+.rel-body-scroll > .styled-scroll-area__viewport {
+  padding-right: 1.15rem;
+}
+
+.rel-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rel-row {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 3.75rem;
+  align-items: stretch;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.rel-body.data-table-body--virtualized .rel-row {
+  height: 100%;
+  min-height: 100%;
+}
+
+.rel-row--even {
+  background-color: rgba(201, 168, 76, 0.02);
+}
+
+.rel-row--odd {
+  background-color: rgba(8, 12, 17, 0.08);
+}
+
+.rel-row.data-table-row--clickable:hover {
+  background-color: var(--bg-hover);
+}
+
+.rel-body-cell {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 0.231rem 0.462rem;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+}
+
+.rel-cell-character > span,
+.rel-cell-diocese > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rel-vacant-text {
+  color: var(--text-dark);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.rel-authority-value {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--gold);
+}
+
+.rel-followers-value {
+  color: var(--text);
+}
+
+.rel-bar-track {
+  flex: 1;
+  min-width: 4rem;
+}
+
+.rel-percent-value {
+  font-size: 0.85rem;
+  color: var(--gold);
+  font-family: var(--font-header);
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+.rel-empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-dark);
+  font-style: italic;
+}

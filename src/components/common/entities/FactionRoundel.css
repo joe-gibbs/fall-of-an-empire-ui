@@ -1,0 +1,219 @@
+.faction-roundel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top-left-radius: var(--roundel-radius);
+  border-top-right-radius: var(--roundel-radius);
+  border-bottom-right-radius: var(--roundel-radius);
+  border-bottom-left-radius: var(--roundel-radius);
+  flex-shrink: 0;
+  overflow: hidden;
+  --roundel-ring-color: rgba(201, 168, 76, 0.6);
+  --roundel-ring-hover-color: rgba(224, 200, 114, 0.8);
+  --roundel-radius: 50%;
+  --roundel-transform: none;
+  --roundel-symbol-transform: none;
+  transform: var(--roundel-transform);
+  transform-origin: center;
+}
+
+/* Colour fill behind the symbol */
+.faction-roundel-fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-top-left-radius: var(--roundel-radius);
+  border-top-right-radius: var(--roundel-radius);
+  border-bottom-right-radius: var(--roundel-radius);
+  border-bottom-left-radius: var(--roundel-radius);
+}
+
+/* Inner dark vignette for depth */
+.faction-roundel-vignette {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-top-left-radius: var(--roundel-radius);
+  border-top-right-radius: var(--roundel-radius);
+  border-bottom-right-radius: var(--roundel-radius);
+  border-bottom-left-radius: var(--roundel-radius);
+  background: radial-gradient(
+    circle at 40% 35%,
+    transparent 30%,
+    rgba(8, 12, 17, 0.45) 100%
+  );
+  pointer-events: none;
+}
+
+/* Grunge texture + mouse-follow metallic sheen overlay */
+.faction-roundel::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-top-left-radius: var(--roundel-radius);
+  border-top-right-radius: var(--roundel-radius);
+  border-bottom-right-radius: var(--roundel-radius);
+  border-bottom-left-radius: var(--roundel-radius);
+  background-image:
+    radial-gradient(
+      circle at 38% 32%,
+      rgba(255, 255, 255, 0.15),
+      transparent 60%
+    ),
+    url('/assets/baked/texture-overlay-dark.png');
+  background-repeat: no-repeat, repeat;
+  background-size: auto, 11.6364rem 11.6364rem;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Symbol stencil — the emblem PNG acts as an alpha mask and the div's
+   background supplies the (secondary-colour) tint. */
+.faction-roundel-symbol {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  transform: var(--roundel-symbol-transform);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+/* Gold ring border */
+.faction-roundel-ring {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-top-left-radius: var(--roundel-radius);
+  border-top-right-radius: var(--roundel-radius);
+  border-bottom-right-radius: var(--roundel-radius);
+  border-bottom-left-radius: var(--roundel-radius);
+  border-width: 0;
+  border-style: solid;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  background-image: url('/assets/factions/borders/faction-border-default.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  opacity: 0.96;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.faction-roundel--border-province {
+  --roundel-ring-color: rgba(92, 138, 194, 0.84);
+  --roundel-ring-hover-color: rgba(146, 189, 240, 0.96);
+}
+
+.faction-roundel--border-province .faction-roundel-ring {
+  background-image: url('/assets/factions/borders/faction-border-province.png');
+}
+
+.faction-roundel--border-foederati {
+  --roundel-radius: 26%;
+  --roundel-transform: rotate(22.5deg) scale(0.94);
+  --roundel-symbol-transform: rotate(-22.5deg);
+  --roundel-ring-color: rgba(213, 142, 63, 0.94);
+  --roundel-ring-hover-color: rgba(238, 181, 110, 1);
+}
+
+.faction-roundel--border-foederati .faction-roundel-ring {
+  background-image: url('/assets/factions/borders/faction-border-foederati.png');
+}
+
+.faction-roundel--border-external {
+  --roundel-radius: 18%;
+  --roundel-transform: rotate(45deg) scale(0.88);
+  --roundel-symbol-transform: rotate(-45deg);
+  --roundel-ring-color: rgba(184, 194, 209, 0.84);
+  --roundel-ring-hover-color: rgba(231, 236, 243, 0.98);
+}
+
+.faction-roundel--border-external .faction-roundel-ring {
+  background-image: url('/assets/factions/borders/faction-border-external.png');
+}
+
+/* Sizes */
+.faction-roundel--xs {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+.faction-roundel--xs .faction-roundel-symbol {
+  width: 0.96rem;
+  height: 0.96rem;
+}
+.faction-roundel--xs .faction-roundel-ring {
+  border-width: 0;
+}
+
+.faction-roundel--sm {
+  width: 2.2rem;
+  height: 2.2rem;
+}
+.faction-roundel--sm .faction-roundel-symbol {
+  width: 1.364rem;
+  height: 1.364rem;
+}
+.faction-roundel--sm .faction-roundel-ring {
+  border-width: 0;
+}
+
+.faction-roundel--md {
+  width: 3rem;
+  height: 3rem;
+}
+.faction-roundel--md .faction-roundel-symbol {
+  width: 1.92rem;
+  height: 1.92rem;
+}
+
+.faction-roundel--lg {
+  width: 4rem;
+  height: 4rem;
+}
+.faction-roundel--lg .faction-roundel-symbol {
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.faction-roundel--xl {
+  width: 5.5rem;
+  height: 5.5rem;
+}
+.faction-roundel--xl .faction-roundel-symbol {
+  width: 3.63rem;
+  height: 3.63rem;
+}
+.faction-roundel--xl .faction-roundel-ring {
+  border-width: 0;
+}
+
+/* Clickable state */
+.faction-roundel--clickable {
+  cursor: pointer;
+  transition: transform 0.12s ease-out;
+}
+
+.faction-roundel--clickable:hover .faction-roundel-ring {
+  opacity: 1;
+}
+
+.faction-roundel--clickable:active {
+  transform: scale(0.93);
+  transition: transform 0s;
+}

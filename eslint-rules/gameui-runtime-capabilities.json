@@ -1,0 +1,75 @@
+{
+  "generatedBy": "Automation/generate_gameui_runtime_capabilities.py",
+  "policy": {
+    "unsupportedDomConstructors": {},
+    "unsupportedEventNames": [],
+    "unsupportedPointerCaptureMethods": [],
+    "unsupportedPseudoClasses": [],
+    "unsupportedPseudoElements": [],
+    "unsupportedStyleProperties": {},
+    "unsupportedTags": {}
+  },
+  "runtime": {
+    "browserApis": {
+      "document": [
+        "activeElement",
+        "createElement",
+        "querySelector",
+        "querySelectorAll"
+      ],
+      "element": [
+        "addEventListener",
+        "classList",
+        "closest",
+        "getBoundingClientRect",
+        "matches",
+        "querySelector"
+      ],
+      "globals": [
+        "CustomEvent",
+        "Event",
+        "MouseEvent",
+        "PointerEvent",
+        "requestAnimationFrame"
+      ],
+      "window": [
+        "addEventListener",
+        "dispatchEvent",
+        "getComputedStyle",
+        "matchMedia",
+        "requestAnimationFrame"
+      ]
+    },
+    "css": {
+      "source": "Chromium",
+      "unsupportedProperties": [],
+      "unsupportedPseudoClasses": [],
+      "unsupportedPseudoElements": []
+    },
+    "engine": "Chromium Embedded Framework",
+    "events": {
+      "keyboard": true,
+      "pointer": true,
+      "wheel": true
+    },
+    "name": "FoaeCefUI",
+    "supportedInputTypes": [
+      "button",
+      "checkbox",
+      "email",
+      "number",
+      "password",
+      "radio",
+      "range",
+      "search",
+      "text",
+      "textarea"
+    ]
+  },
+  "runtimeProbe": {
+    "requiredForRefresh": false,
+    "unrealAutomationFilter": "",
+    "unrealAutomationTests": ""
+  },
+  "schemaVersion": 2
+}

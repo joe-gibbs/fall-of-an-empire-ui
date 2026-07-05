@@ -1,0 +1,390 @@
+.portrait {
+  border-radius: 50%;
+  overflow: visible;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 0;
+  border-style: solid;
+  border-color: transparent;
+  flex-shrink: 0;
+}
+
+/* ── Bordered portrait: grungy tiered ring ── */
+.portrait--bordered {
+  --ring-base: #8a7235;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  border-width: 0.168rem;
+}
+
+/* Silver tier - commanders, generals, governors */
+.portrait--tier-silver {
+  --ring-base: #6a7888;
+}
+
+/* Bronze tier - courtiers, minor roles */
+.portrait--tier-bronze {
+  --ring-base: #7a5535;
+}
+
+/* Allow grunge pseudo-elements to extend over the border ring */
+.portrait--bordered {
+  overflow: visible;
+}
+
+/* Placeholder must self-clip when parent overflow is visible */
+.portrait--bordered .portrait-placeholder {
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+/* Generated ring overlay */
+.portrait--bordered::after {
+  content: '';
+  position: absolute;
+  top: -0.168rem;
+  right: -0.168rem;
+  bottom: -0.168rem;
+  left: -0.168rem;
+  border-radius: 50%;
+  background-image: url('/assets/portraits/borders/portrait-border-gold.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.portrait--tier-silver::after {
+  background-image: url('/assets/portraits/borders/portrait-border-silver.png');
+}
+
+.portrait--tier-bronze::after {
+  background-image: url('/assets/portraits/borders/portrait-border-bronze.png');
+}
+
+.portrait--rect.portrait--bordered {
+  overflow: visible;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+}
+
+.portrait--clickable {
+  cursor: pointer;
+}
+
+
+.portrait--hero,
+.portrait--rect {
+  overflow: hidden;
+}
+
+.portrait--hero .portrait-placeholder,
+.portrait--rect .portrait-placeholder {
+  border-radius: 0;
+}
+
+.portrait--hero::before,
+.portrait--hero::after,
+.portrait--rect::before,
+.portrait--rect::after {
+  display: none;
+}
+
+.portrait--rect.portrait--bordered::after {
+  display: block;
+  border-radius: 0;
+  background-image: url('/assets/portraits/borders/portrait-border-square-gold.png');
+}
+
+.portrait--rect.portrait--tier-silver::after {
+  background-image: url('/assets/portraits/borders/portrait-border-square-silver.png');
+}
+
+.portrait--rect.portrait--tier-bronze::after {
+  background-image: url('/assets/portraits/borders/portrait-border-square-bronze.png');
+}
+
+.portrait--hero.portrait--bordered {
+  overflow: hidden;
+}
+
+.portrait--hero.portrait--bordered::after {
+  display: none;
+}
+/* Inner clip wrapper - clips transformed content to the circle while the
+   generated ring extends beyond the portrait edge. */
+.portrait-clip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #191611;
+  background-image:
+    radial-gradient(circle at 50% 34%, rgba(96, 78, 48, 0.5), transparent 56%),
+    linear-gradient(180deg, #26211a 0%, #12100d 100%);
+  background-repeat: no-repeat, no-repeat;
+}
+.portrait--rect .portrait-clip {
+  border-radius: 0;
+}
+
+.portrait--dead .portrait-clip {
+  filter: grayscale(0.9) brightness(0.72);
+}
+
+/* Background scene layer */
+.portrait-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: auto;
+  min-height: 100%;
+  transform: translate(-50%, -50%) scale(1.04);
+  border-radius: 50%;
+  opacity: 0.76;
+  filter: blur(0.08rem) brightness(0.58) saturate(0.82);
+}
+
+.portrait-layer,
+.portrait-layer-stack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.portrait-layer {
+  user-select: none;
+}
+
+.portrait-layer--background {
+  z-index: 0;
+  opacity: 0.76;
+  filter: blur(0.08rem) brightness(0.58) saturate(0.82);
+  transform: scale(1.04);
+  transform-origin: center center;
+}
+
+.portrait-layer-stack {
+  z-index: 2;
+  transform-origin: center top;
+  transition: transform 0.22s ease;
+}
+
+.portrait-layer--headgear-back {
+  z-index: 1;
+}
+
+.portrait-layer--face {
+  z-index: 2;
+}
+
+.portrait-layer--headgear-front {
+  z-index: 3;
+}
+
+.portrait-imprisoned-overlay {
+  position: absolute;
+  top: 0;
+  right: auto;
+  bottom: 0;
+  left: -50%;
+  z-index: 5;
+  width: 200%;
+  height: 100%;
+  opacity: 0.58;
+  pointer-events: none;
+  user-select: none;
+}
+
+.portrait-imprisoned-overlay--hero {
+  right: 0;
+  left: 0;
+  width: 100%;
+}
+
+.portrait-badge {
+  position: absolute;
+  bottom: 0.12rem;
+  left: 0.12rem;
+  z-index: 12;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  background-color: rgba(8, 12, 17, 0.68);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-radius: 50%;
+  border-top-color: rgba(201, 168, 76, 0.5);
+  border-right-color: rgba(201, 168, 76, 0.5);
+  border-bottom-color: rgba(201, 168, 76, 0.5);
+  border-left-color: rgba(201, 168, 76, 0.5);
+  pointer-events: none;
+}
+
+.portrait-badge--heir {
+  border-top-color: var(--green);
+  border-right-color: var(--green);
+  border-bottom-color: var(--green);
+  border-left-color: var(--green);
+}
+
+.portrait-badge--family {
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+}
+
+.portrait-badge img {
+  width: 0.84rem;
+  height: 0.84rem;
+  opacity: 0.95;
+}
+
+.portrait--sm .portrait-badge {
+  bottom: 0;
+  left: 0;
+  width: 0.86rem;
+  height: 0.86rem;
+}
+
+.portrait--sm .portrait-badge img {
+  width: 0.62rem;
+  height: 0.62rem;
+}
+
+.portrait--md .portrait-badge {
+  width: 0.98rem;
+  height: 0.98rem;
+}
+
+.portrait--md .portrait-badge img {
+  width: 0.74rem;
+  height: 0.74rem;
+}
+
+/* Character face layer - composited on top */
+.portrait-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  min-width: 100%;
+  min-height: 100%;
+  border-radius: 50%;
+  transform: translateY(-15%) scale(1.2);
+  transform-origin: center top;
+}
+
+/* Silhouette placeholder */
+.portrait-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #2a2420, #1a1612);
+  user-select: none;
+}
+
+.portrait-placeholder-icon {
+  width: 2.035rem;
+  height: 2.035rem;
+  opacity: 0.35;
+}
+
+.portrait--sm .portrait-placeholder-icon {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.portrait--row .portrait-placeholder-icon {
+  width: 1.551rem;
+  height: 1.551rem;
+}
+
+.portrait--lg .portrait-placeholder-icon {
+  width: 3.025rem;
+  height: 3.025rem;
+}
+
+.portrait--xl .portrait-placeholder-icon {
+  width: 4.07rem;
+  height: 4.07rem;
+}
+
+.portrait--hero .portrait-placeholder-icon {
+  width: 55%;
+  height: 55%;
+}
+
+/* Rectangular portrait variant */
+.portrait--rect {
+  border-radius: 0;
+}
+
+.portrait--rect .portrait-bg,
+.portrait--rect .portrait-layer,
+.portrait--rect .portrait-img {
+  border-radius: 0;
+}
+
+/* Hero-size portrait */
+.portrait--hero {
+  border-radius: 0;
+  width: 100% !important;
+  height: 8rem !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.portrait--hero .portrait-img {
+  height: 112%;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  position: absolute;
+  top: auto;
+  right: 0.8rem;
+  bottom: -0.2rem;
+  left: auto;
+  transform: none;
+}
+
+.portrait--hero .portrait-layer--background {
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: auto;
+  min-height: 100%;
+  transform: translate(-50%, -50%) scale(1.04);
+}
+
+.portrait--hero .portrait-layer-stack {
+  top: auto;
+  right: 0.8rem;
+  bottom: -0.2rem;
+  left: auto;
+  width: auto;
+  height: 112%;
+  aspect-ratio: 1 / 1;
+  transform: none;
+}

@@ -1,0 +1,1502 @@
+/* ==========================================================================
+   Fall of an Empire — Reusable Game UI Classes
+   Dark medieval grand strategy aesthetic.
+   Sharp corners, noise textures, beveled depth, burgundy/gold accents.
+   ========================================================================== */
+
+
+/* --------------------------------------------------------------------------
+   1. Screen Shell
+   Full-screen overlay panels (character sheet, diplomacy, economy, etc.)
+   -------------------------------------------------------------------------- */
+
+/* Matches game's screen overlay style - cool dark charcoal */
+/* Centered panel with gutters so sidebars can show alongside */
+.screen {
+  position: relative;
+  max-width: 72rem;
+  margin: 0;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.34) 0%, rgba(18, 23, 29, 0.48) 100%),
+    url('/assets/baked/screen-charcoal.png');
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem, auto, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+  border-left: 0.154rem solid rgba(80, 92, 104, 0.32);
+  border-right: 0.154rem solid rgba(80, 92, 104, 0.32);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Greek wave meander at bottom - matches sidebar decoration */
+.screen::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1.538rem;
+  background: url('/assets/meander.png') repeat-x left bottom;
+  background-size: 2.538rem 1.538rem;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.screen-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.615rem 0.923rem 0.462rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(31, 37, 44, 0.66) 0%, transparent 100%);
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+  background-color: transparent;
+}
+
+.screen-title {
+  font-family: var(--font-header);
+  font-size: 1.385rem;
+  color: var(--text-header);
+  letter-spacing: 0.04em;
+  text-shadow: 0 0.077rem 0.231rem rgba(8, 12, 17, 0.6);
+}
+
+.screen-title-area {
+  min-width: 0;
+}
+
+.screen-header-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.screen-header-actions > * + * {
+  margin-left: 0.35rem;
+}
+
+.screen-help-button {
+  width: 2.462rem;
+  height: 2.462rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem;
+  background-color: rgba(13, 18, 24, 0.52);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  cursor: pointer;
+}
+
+.screen-help-button:hover {
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+  background-color: rgba(201, 168, 76, 0.08);
+}
+
+.screen-help-button-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  opacity: 0.82;
+}
+
+.screen-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.462rem 0.923rem 1.8rem;
+}
+
+.screen-content.styled-scroll-area {
+  overflow: hidden;
+  padding: 0;
+}
+
+.screen-content.styled-scroll-area > .styled-scroll-area__viewport {
+  padding: 0.462rem 1.231rem 1.8rem 0.923rem;
+}
+
+/* FoaeCefUI does not reliably stretch ARIA table wrappers from intrinsic width. */
+[role="table"],
+[role="rowgroup"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+[role="row"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.screen-stats-row {
+  display: flex;
+  align-items: center;
+  padding: 0.615rem 0.923rem;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  background-color: #11171d;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.screen-stats-row > * + * {
+  margin-left: 1.231rem;
+}
+
+
+/* --------------------------------------------------------------------------
+   2. Close Button
+   -------------------------------------------------------------------------- */
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.462rem;
+  height: 2.462rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  background-image: url('/assets/baked/button-close-dark.png');
+  background-repeat: repeat;
+  background-size: 5.8182rem 5.8182rem;
+  background-color: #0a0b0e;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s ease-out;
+}
+
+.close-btn-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  opacity: 0.82;
+  transition: opacity 0.15s;
+}
+
+.close-btn:hover {
+  background-image: url('/assets/baked/button-close-red.png');
+  background-repeat: repeat;
+  background-size: 5.8182rem 5.8182rem;
+  background-color: #5a1515;
+  border-top-color: var(--red);
+  border-right-color: var(--red);
+  border-bottom-color: var(--red);
+  border-left-color: var(--red);
+  transform: translateY(-0.0909rem);
+}
+
+.close-btn:hover .close-btn-icon {
+  opacity: 1;
+}
+
+.close-btn:active {
+  background-image: url('/assets/baked/button-close-red.png');
+  background-repeat: repeat;
+  background-size: 5.8182rem 5.8182rem;
+  background-color: #3e1010;
+  transform: translateY(0.0909rem) scale(0.93);
+  transition: transform 0s;
+}
+
+.close-btn--sm {
+  width: 1.846rem;
+  height: 1.846rem;
+}
+
+.close-btn--sm .close-btn-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+}
+
+.close-btn--md {
+  width: 2.154rem;
+  height: 2.154rem;
+}
+
+.close-btn--md .close-btn-icon {
+  width: 1.08rem;
+  height: 1.08rem;
+}
+
+
+/* --------------------------------------------------------------------------
+   3. Cards
+   -------------------------------------------------------------------------- */
+
+/* Matches T_Settlements_Card_Default - dark with thin gold inset border */
+.card {
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  background-color: #151b20;
+  border: 0.154rem solid rgba(80, 92, 104, 0.32);
+  position: relative;
+  padding: 0.308rem 0.462rem;
+}
+
+.card--hoverable:hover {
+  border-color: rgba(160, 140, 80, 0.4);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  background-color: #20272d;
+}
+
+.card--clickable {
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s ease-out;
+}
+
+.card--clickable:hover {
+  border-top-color: var(--border);
+  border-right-color: var(--border);
+  border-bottom-color: var(--border);
+  border-left-color: var(--border);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  background-color: #20272d;
+  transform: translateY(-0.0909rem);
+}
+
+.card--clickable:active {
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-active.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  background-color: #11171d;
+  transform: translateY(0.0909rem) scale(0.98);
+  transition: transform 0s;
+}
+
+.card-header {
+  padding: 0.769rem 1.077rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.card-title {
+  font-family: var(--font-header);
+  font-size: 0.923rem;
+  color: var(--text-header);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0.077rem 0.154rem rgba(8, 12, 17, 0.5);
+}
+
+.card-body {
+  padding: 0.923rem 1.077rem;
+  position: relative;
+  z-index: 1;
+}
+
+
+/* --------------------------------------------------------------------------
+   4. Buttons
+   -------------------------------------------------------------------------- */
+
+/* -- Burgundy (primary CTA) -- */
+.btn--burgundy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.308rem 0.769rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  background-image: url('/assets/baked/button-burgundy.png');
+  background-repeat: repeat;
+  background-size: 11.6364rem 5.8182rem;
+  background-color: var(--burgundy);
+  border: 0.154rem solid rgba(120, 50, 70, 0.5);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn--burgundy::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: none;
+  z-index: -1;
+}
+
+.btn--burgundy:hover {
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+  color: var(--text-bright);
+  background-image: url('/assets/baked/button-burgundy-hover.png');
+  transform: translateY(-0.0909rem);
+}
+
+.btn--burgundy:active {
+  background-image: url('/assets/baked/button-burgundy-active.png');
+  transform: translateY(0.0909rem) scale(0.97);
+  transition: transform 0s;
+}
+
+.btn--burgundy[disabled],
+.btn--outline[disabled],
+.btn--ghost[disabled] {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+
+.btn--burgundy[disabled]:hover,
+.btn--outline[disabled]:hover,
+.btn--ghost[disabled]:hover,
+.btn--burgundy[disabled]:active,
+.btn--outline[disabled]:active,
+.btn--ghost[disabled]:active {
+  transform: none;
+}
+
+.btn-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.btn-icon--with-content {
+  margin-right: 0.35rem;
+}
+
+.btn-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.btn-content > * + * {
+  margin-left: 0.35rem;
+}
+
+/* -- Outline -- */
+.btn--outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.231rem 0.769rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  background: transparent;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border);
+  border-right-color: var(--border);
+  border-bottom-color: var(--border);
+  border-left-color: var(--border);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s ease-out;
+}
+
+.btn--outline:hover {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  color: var(--gold-light);
+  background: rgba(201, 168, 76, 0.06);
+  transform: translateY(-0.0909rem);
+}
+
+.btn--outline:active {
+  background: rgba(201, 168, 76, 0.1);
+  transform: translateY(0.0909rem) scale(0.97);
+  transition: transform 0s;
+}
+
+/* -- Ghost (minimal) -- */
+.btn--ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.154rem 0.615rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0.077rem solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.12s ease-out;
+}
+
+.btn--ghost:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  transform: translateY(-0.0909rem);
+}
+
+.btn--ghost:active {
+  color: var(--text-bright);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(0.0909rem) scale(0.97);
+  transition: transform 0s;
+}
+
+/* -- Round (circular icon button) -- */
+.btn--round {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.077rem;
+  height: 3.077rem;
+  border-radius: 50%;
+  background-image: url('/assets/baked/icon-button.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-color: var(--burgundy);
+  border: 0.077rem solid rgba(120, 50, 70, 0.5);
+  color: var(--text);
+  font-size: 1.231rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.15s, color 0.15s, transform 0.12s ease-out;
+}
+
+.btn--round::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 50%;
+  background-image: none;
+  pointer-events: none;
+}
+
+.btn--round:hover {
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+  color: var(--text-bright);
+  background-image: url('/assets/baked/icon-button-hover.png');
+}
+
+.btn--round:active {
+  background-color: var(--burgundy-dark);
+}
+
+.btn--round--sm {
+  width: 2.615rem;
+  height: 2.615rem;
+  font-size: 1.077rem;
+}
+
+.btn--round--lg {
+  width: 3.538rem;
+  height: 3.538rem;
+  font-size: 1.538rem;
+}
+
+
+/* --------------------------------------------------------------------------
+   Search Inputs
+   -------------------------------------------------------------------------- */
+
+.search-input {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 0.42rem 0.55rem 0.42rem 1.85rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text);
+  background-image:
+    url('/assets/icons/I_Search.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-position: 0.55rem center, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, repeat, repeat, repeat;
+  background-size: 0.92rem 0.92rem, auto, 5.538rem 5.538rem, 93.0909rem 93.0909rem;
+  background-color: rgba(13, 18, 24, 0.58);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  border-radius: 0;
+}
+
+.search-input:focus {
+  border-top-color: rgba(224, 200, 114, 0.52);
+  border-right-color: var(--border);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border);
+}
+
+.search-field {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.15rem 0.3rem;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 93.0909rem 93.0909rem;
+  background-color: rgba(13, 18, 24, 0.58);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+}
+
+.search-field.is-focused {
+  border-top-color: rgba(224, 200, 114, 0.52);
+  border-right-color: var(--border);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border);
+}
+
+.search-field > * + * {
+  margin-left: 0.2rem;
+}
+
+.search-field__icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  opacity: 0.72;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.search-field__input {
+  box-sizing: border-box;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+  min-width: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text);
+  background-color: transparent;
+  background-image: none;
+  border: none;
+}
+
+
+/* --------------------------------------------------------------------------
+   5. Badges
+   Tint via --badge-color custom property.
+   Usage: <span class="badge" style="--badge-color: var(--green)">Loyal</span>
+   -------------------------------------------------------------------------- */
+
+.badge {
+  --badge-color: var(--text);
+  display: flex;
+  align-items: center;
+  padding: 0.077rem 0.308rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  color: var(--badge-color);
+  background-image: url('/assets/baked/badge-gold.png');
+  background-repeat: repeat;
+  background-size: 11.6364rem 4.3636rem;
+  background-color: #24231d;
+  border: 0.154rem solid rgba(201, 168, 76, 0.3);
+  position: relative;
+}
+
+.badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: none;
+  pointer-events: none;
+}
+
+
+/* --------------------------------------------------------------------------
+   6. Progress / Stat Bars
+   -------------------------------------------------------------------------- */
+
+.bar-track {
+  position: relative;
+  width: 100%;
+  height: 0.769rem;
+  background-image: url('/assets/baked/bar-track.png');
+  background-repeat: repeat;
+  background-size: 11.6364rem 2.9091rem;
+  background-color: #050608;
+  border-width: 0.154rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  overflow: hidden;
+}
+
+.bar-track--sm {
+  height: 0.462rem;
+  border-width: 0.077rem;
+}
+
+.bar-track--md {
+  height: 0.462rem;
+}
+
+.bar-track--lg {
+  height: 0.769rem;
+}
+
+.bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: var(--bar-color);
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+  transform-origin: left;
+  min-width: 0;
+}
+
+.bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.bar-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.077rem;
+}
+
+.bar-label {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.bar-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+
+/* --------------------------------------------------------------------------
+   7. Info Rows
+   -------------------------------------------------------------------------- */
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.077rem 0;
+}
+
+.info-row > * + * {
+  margin-left: 0.615rem;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.info-value {
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 600;
+  text-align: right;
+}
+
+.info-value--positive {
+  color: var(--green);
+}
+
+.info-value--negative {
+  color: var(--red);
+}
+
+.info-value--warning {
+  color: var(--orange);
+}
+
+
+/* --------------------------------------------------------------------------
+   8. Section Headings
+   -------------------------------------------------------------------------- */
+
+.section-heading {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  padding: 0;
+  line-height: 1.1;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.231rem;
+  margin-top: 0.462rem;
+}
+
+.section-heading-row > * + * {
+  margin-left: 0.462rem;
+}
+
+.section-heading-rule {
+  flex: 1;
+  height: 0.077rem;
+  background-image: linear-gradient(90deg, var(--border), transparent);
+  border: none;
+}
+
+.section-heading-count {
+  display: block;
+  width: 3rem;
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.1;
+  font-weight: 700;
+  color: var(--gold);
+  text-align: right;
+}
+
+/* Ornate variant - lozenge diamond + painted gold rule line */
+.section-heading-row--ornate {
+  padding: 0.15rem 0.462rem 0;
+}
+
+.section-heading-row--ornate .section-heading {
+  font-size: 0.95rem;
+  padding-bottom: 0;
+}
+
+.section-heading-row--ornate .section-heading-rule {
+  display: flex;
+  align-items: center;
+  height: auto;
+  background: none;
+}
+
+.section-heading-row--ornate .section-heading-rule::before {
+  content: '';
+  display: block;
+  width: 0.6rem;
+  height: 0.6rem;
+  background: url('/assets/lozenge.png') no-repeat center;
+  background-size: contain;
+  flex-shrink: 0;
+}
+
+.section-heading-row--ornate .section-heading-rule::after {
+  content: '';
+  flex: 1;
+  margin-left: 0.3rem;
+  height: 0.5455rem;
+  background: url('/assets/gold-line.png') repeat-x center;
+  background-size: auto 0.5455rem;
+  opacity: 0.6;
+}
+
+
+/* --------------------------------------------------------------------------
+   9. Tables
+   -------------------------------------------------------------------------- */
+
+.game-table {
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.game-table th {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  text-align: left;
+  padding: 0.231rem 0.462rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  background-color: #11171d;
+}
+
+.game-table td {
+  padding: 0.231rem 0.462rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.game-table tbody tr:nth-child(even) {
+  background: rgba(8, 12, 17, 0.08);
+}
+
+.game-table tbody tr:hover {
+  background-color: var(--bg-hover);
+}
+
+.game-table tbody tr:hover td {
+  color: var(--text-bright);
+}
+
+
+/* --------------------------------------------------------------------------
+   10. Separators
+   -------------------------------------------------------------------------- */
+
+.separator {
+  width: 100%;
+  height: 0.077rem;
+  background-color: var(--separator);
+  border: none;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.separator--vertical {
+  width: 0.077rem;
+  height: 100%;
+  background-color: var(--separator);
+  border: none;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+
+/* --------------------------------------------------------------------------
+   11. Segmented Control
+   -------------------------------------------------------------------------- */
+
+.segmented-control {
+  display: flex;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  background-color: #11171d;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  overflow: hidden;
+}
+
+.segmented-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.231rem 0.769rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-right-width: 0.077rem;
+  border-right-style: solid;
+  border-right-color: var(--border-dim);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s, background 0.15s, transform 0.12s ease-out;
+}
+
+.segmented-btn:last-child {
+  border-right: none;
+}
+
+.segmented-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(-0.0909rem);
+}
+
+.segmented-btn:active {
+  transform: translateY(0.0909rem) scale(0.97);
+  transition: transform 0s;
+}
+
+.segmented-btn--active {
+  color: var(--text-header);
+  background-image: url('/assets/baked/button-burgundy.png');
+  background-repeat: repeat;
+  background-size: 11.6364rem 5.8182rem;
+  background-color: var(--burgundy);
+}
+
+.segmented-btn--active:hover {
+  color: var(--text-bright);
+  background-image: url('/assets/baked/button-burgundy-hover.png');
+  background-repeat: repeat;
+  background-size: 11.6364rem 5.8182rem;
+  background-color: var(--burgundy-light);
+}
+
+
+/* --------------------------------------------------------------------------
+   12. Panels
+   -------------------------------------------------------------------------- */
+
+.panel {
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.24) 0%, rgba(18, 23, 29, 0.38) 100%),
+    url('/assets/baked/panel-charcoal.png');
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+  border-width: 0.154rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  position: relative;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: none;
+  pointer-events: none;
+}
+
+.panel-header {
+  padding: 0.308rem 0.615rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--gold-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.panel-header .card-title,
+.panel-header .text-header {
+  font-family: var(--font-header);
+  font-size: 1.077rem;
+  color: var(--text-header);
+  letter-spacing: 0.03em;
+}
+
+
+/* --------------------------------------------------------------------------
+   13. Typography
+   -------------------------------------------------------------------------- */
+
+.text-label {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.text-header {
+  font-family: var(--font-header);
+  color: var(--text-header);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0.077rem 0.154rem rgba(8, 12, 17, 0.5);
+}
+
+.comparison-strength-value {
+  font-family: var(--font-header);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  text-shadow:
+    0 0.077rem 0.154rem rgba(8, 12, 17, 0.85),
+    0 0 0.231rem rgba(201, 168, 76, 0.16);
+}
+
+.comparison-strength-value--bright {
+  color: var(--text-bright);
+}
+
+.comparison-strength-value--gold {
+  color: var(--gold-light);
+}
+
+.comparison-strength-value--red {
+  color: var(--red-light);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-bright {
+  color: var(--text-bright);
+}
+
+.text-gold {
+  color: var(--gold);
+}
+
+.text-tabular {
+  font-family: var(--font-body);
+}
+
+
+/* --------------------------------------------------------------------------
+   14. Flex Utilities
+   -------------------------------------------------------------------------- */
+
+.flex-row {
+  display: flex;
+  align-items: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.gap-xs > * + * { margin-left: 0.154rem; }
+.gap-sm > * + * { margin-left: 0.308rem; }
+.gap-md > * + * { margin-left: 0.462rem; }
+.gap-lg > * + * { margin-left: 0.615rem; }
+.gap-xl > * + * { margin-left: 0.923rem; }
+
+.flex-col.gap-xs > * + * { margin-left: 0; margin-top: 0.154rem; }
+.flex-col.gap-sm > * + * { margin-left: 0; margin-top: 0.308rem; }
+.flex-col.gap-md > * + * { margin-left: 0; margin-top: 0.462rem; }
+.flex-col.gap-lg > * + * { margin-left: 0; margin-top: 0.615rem; }
+.flex-col.gap-xl > * + * { margin-left: 0; margin-top: 0.923rem; }
+
+
+/* --------------------------------------------------------------------------
+   15. Modal / Overlay
+   -------------------------------------------------------------------------- */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 500;
+  background: rgba(8, 12, 17, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation-name: modal-overlay-in;
+  animation-duration: 0.2s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+}
+
+.modal-overlay--closing {
+  animation: modal-overlay-out 0.18s ease-in both;
+  pointer-events: none;
+}
+
+@keyframes modal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Matches T_Fast_Action_Modals - dark navy-charcoal with subtle marble texture */
+.modal {
+  position: relative;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.24) 0%, rgba(18, 23, 29, 0.38) 100%),
+    url('/assets/baked/modal-charcoal.png');
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+  border: 0.154rem solid rgba(80, 85, 100, 0.3);
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modal-panel-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.modal--closing {
+  animation: modal-panel-out 0.18s ease-in both;
+}
+
+@keyframes modal-panel-in {
+  from { opacity: 0; transform: scale(0.95) translateY(0.6rem); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes modal-panel-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.97) translateY(0.4rem); }
+}
+
+/* Gold accent bars — top and bottom */
+.modal::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.154rem;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold-dark) 15%,
+    var(--gold) 50%,
+    var(--gold-dark) 85%,
+    transparent 100%
+  );
+  z-index: 1;
+}
+
+.modal {
+  border-top-width: 0.154rem;
+  border-top-style: solid;
+  border-top-color: var(--gold-dark);
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--gold-dark);
+  border-left-width: 0.077rem;
+  border-left-style: solid;
+  border-left-color: var(--gold-dark);
+  border-right-width: 0.077rem;
+  border-right-style: solid;
+  border-right-color: var(--gold-dark);
+}
+
+/* ---------------------------------------------------------------------------
+ * Panel-wide blocked banner: shown above a panel (buildings, recruitment, etc.)
+ * when the player can't act there - settlement under siege, occupied, not
+ * owned, etc. Single visual treatment so all panels gate the same way.
+ * --------------------------------------------------------------------------- */
+.panel-blocked-banner {
+  display: flex;
+  align-items: center;
+  margin: 0 0 0.6rem 0;
+  padding: 0.5rem 0.7rem;
+  background: rgba(170, 32, 32, 0.18);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(170, 32, 32, 0.5);
+  color: #f2dede;
+  font-size: 0.85rem;
+  line-height: 1.25;
+}
+
+.panel-blocked-banner > * + * {
+  margin-left: 0.5rem;
+}
+
+.panel-blocked-banner-icon {
+  width: 1.1rem;
+  height: auto;
+  max-height: 1.1rem;
+  display: block;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.panel-blocked-banner-text {
+  flex: 1;
+}
+
+.structured-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.structured-text-line + .structured-text-line {
+  margin-top: 0.18rem;
+}
+
+.structured-text-line {
+  display: flex;
+  align-items: flex-start;
+  color: var(--text);
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.structured-text-line--header {
+  color: var(--gold);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+}
+
+.structured-text-bullet {
+  flex-shrink: 0;
+  width: 0.75rem;
+  color: var(--gold);
+}
+
+.structured-text-line-copy {
+  min-width: 0;
+}
+
+.structured-text-segment--strong,
+.structured-text-line--header .structured-text-segment {
+  font-weight: 700;
+}
+
+.structured-text-tone--positive {
+  color: var(--green);
+}
+
+.structured-text-tone--negative {
+  color: var(--red);
+}
+
+.structured-text-tone--muted {
+  color: var(--text-muted);
+}
+
+.structured-text-tone--yellow,
+.structured-text-tone--gold {
+  color: var(--gold);
+}
+
+.structured-text-tone--blue {
+  color: #8eb6d9;
+}
+
+.structured-text-tone--orange {
+  color: var(--orange);
+}
+
+.structured-text-link {
+  all: initial;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--gold);
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-thickness: 0.077rem;
+  text-underline-offset: 0.1rem;
+  cursor: pointer;
+}
+
+.structured-text-rule {
+  height: 0.077rem;
+  background-color: rgba(194, 163, 93, 0.45);
+  margin: 0.25rem 0;
+}
+
+.building-effect-line {
+  display: block;
+  position: relative;
+  color: var(--text);
+  font-size: 0.78rem;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.building-effect-line + .building-effect-line {
+  margin-top: 0.18rem;
+}
+
+.building-effect-line.bullet::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.43rem;
+  display: block;
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 50%;
+  background-color: rgba(201, 168, 76, 0.72);
+}
+
+.building-effect-line.bullet {
+  padding-left: 0.72rem;
+}
+
+.building-effect-concept {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+  margin-right: 0.18rem;
+  vertical-align: middle;
+}
+
+.building-effect-line.tone-positive,
+.building-effect-segment.tone-positive {
+  color: var(--green);
+}
+
+.building-effect-line.tone-negative,
+.building-effect-segment.tone-negative {
+  color: var(--red);
+}
+
+.building-effect-line.tone-muted,
+.building-effect-segment.tone-muted {
+  color: var(--text-muted);
+}
+
+.building-effect-line.tone-yellow,
+.building-effect-segment.tone-yellow,
+.building-effect-line.tone-gold,
+.building-effect-segment.tone-gold {
+  color: var(--gold);
+}
+
+.building-effect-line.tone-blue,
+.building-effect-segment.tone-blue {
+  color: #8eb6d9;
+}
+
+.building-effect-line.tone-orange,
+.building-effect-segment.tone-orange {
+  color: var(--orange);
+}

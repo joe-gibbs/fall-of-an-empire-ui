@@ -1,0 +1,360 @@
+.game-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.game-cursor-surface {
+  width: 100%;
+  height: 100%;
+}
+
+.game-main {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+.sidebar-left {
+  position: absolute;
+  top: calc(var(--topbar-height) + 1rem);
+  left: 0;
+  bottom: 0;
+  z-index: 60;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.sidebar-left > * {
+  pointer-events: auto;
+}
+
+.sidebar-right {
+  position: absolute;
+  top: calc(var(--topbar-height) + 1rem);
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  pointer-events: auto;
+}
+
+.sidebar-right > * {
+  pointer-events: auto;
+}
+
+.map-area {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+/* --- Sidebar exit animations --- */
+.sidebar-left.slot--exiting > * {
+  animation: sidebar-flyout-left 0.18s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.sidebar-right.slot--exiting > * {
+  animation: sidebar-flyout-right 0.18s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes sidebar-flyout-left {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-100%); }
+}
+
+@keyframes sidebar-flyout-right {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(100%); }
+}
+
+/* --- Screen overlay --- */
+.screen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  pointer-events: none;
+}
+
+.screen-overlay > * {
+  box-sizing: border-box;
+  width: 72rem;
+  max-width: 100%;
+  height: 100vh;
+  padding-top: var(--topbar-height);
+  pointer-events: auto;
+}
+
+.screen-overlay.slot--exiting {
+  pointer-events: none;
+}
+
+.screen-overlay.slot--exiting > * {
+  pointer-events: none;
+  animation: screen-panel-close 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.screen-overlay--battle {
+  top: var(--topbar-height);
+  right: var(--sidebar-width);
+  left: var(--sidebar-width);
+  align-items: flex-end;
+  background-color: transparent;
+  pointer-events: none;
+}
+
+.screen-overlay--battle > * {
+  box-sizing: border-box;
+  padding-top: 0;
+  pointer-events: auto;
+}
+
+.screen-overlay--battle.slot--exiting > * {
+  animation-name: screen-panel-close-bottom;
+}
+
+.screen-overlay--diplomacy {
+  overflow: hidden;
+  background: none;
+  pointer-events: none;
+}
+
+.screen-overlay--diplomacy > * {
+  pointer-events: none;
+  padding-top: 0;
+  animation: none;
+}
+
+.screen-overlay--diplomacy > .pns-stage {
+  animation: none;
+}
+
+.screen-overlay--diplomacy > .pns-stage > .screen--negotiation {
+  animation: none;
+}
+
+.screen-overlay--diplomacy.slot--exiting > .pns-stage {
+  animation: screen-panel-close-bottom 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.screen-overlay--diplomacy.slot--exiting > .pns-stage > .screen--negotiation {
+  animation: none;
+}
+
+@keyframes screen-panel-close {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(0.7rem) scale(0.982); }
+}
+
+@keyframes screen-panel-close-bottom {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(1.2rem); }
+}
+
+/* Main menu keyframes stay in static CSS so React never detaches their rules. */
+@keyframes mm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes mm-command-panel-in {
+  0% { opacity: 1; transform: translateX(-3.2727rem) scaleX(0.985); }
+  74% { opacity: 1; transform: translateX(0.1818rem) scaleX(1); }
+  100% { opacity: 1; transform: translateX(0rem) scaleX(1); }
+}
+
+@keyframes mm-command-cover-lift {
+  0% { opacity: 1; transform: translateY(0%); }
+  58% { opacity: 1; transform: translateY(-82%); }
+  100% { opacity: 0; transform: translateY(-108%); }
+}
+
+@keyframes mm-command-brass-in {
+  0% { opacity: 0; transform: scaleY(0); }
+  100% { opacity: 1; transform: scaleY(1); }
+}
+
+@keyframes mm-command-title-in {
+  0% { opacity: 0; transform: translateX(-1.2727rem) scale(0.96); }
+  68% { opacity: 1; transform: translateX(0.0909rem) scale(1.01); }
+  100% { opacity: 1; transform: translateX(0rem) scale(1); }
+}
+
+@keyframes mm-command-row-in {
+  0% { opacity: 0; transform: translateX(-1rem) scaleX(0.94); }
+  70% { opacity: 1; transform: translateX(0.0909rem) scaleX(1); }
+  100% { opacity: 1; transform: translateX(0rem) scaleX(1); }
+}
+
+@keyframes mm-command-divider-in {
+  0% { opacity: 0; transform: scaleX(0); }
+  100% { opacity: 0.62; transform: scaleX(1); }
+}
+
+@keyframes mm-command-utility-in {
+  0% { opacity: 0; transform: translateX(1rem); }
+  100% { opacity: 1; transform: translateX(0rem); }
+}
+
+@keyframes mm-divider-grow {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 0.5; transform: scaleX(1); }
+}
+
+@keyframes mm-panel-in {
+  from { opacity: 0; transform: translateY(1.2727rem) scale(0.985); }
+  to { opacity: 1; transform: translateY(0rem) scale(1); }
+}
+
+@keyframes mm-panel-out {
+  from { opacity: 1; transform: translateY(0rem) scale(1); }
+  to { opacity: 0; transform: translateY(0.9091rem) scale(0.99); }
+}
+
+@keyframes mm-credits-roll {
+  from { transform: translateY(0%); }
+  to { transform: translateY(-100%); }
+}
+
+@keyframes mm-menu-tray-in {
+  from { opacity: 0; transform: translateY(1.8182rem) scale(0.985); }
+  to { opacity: 1; transform: translateY(0rem) scale(1); }
+}
+
+@keyframes mm-menu-logo-in {
+  from { opacity: 0; transform: translateY(0.9091rem) scale(0.97); }
+  to { opacity: 1; transform: translateY(0rem) scale(1); }
+}
+
+@keyframes mm-menu-wipe-reveal {
+  from {
+    opacity: 1;
+    clip-path: inset(0% 100% 0% 0%);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0% 0% 0% 0%);
+  }
+}
+
+/* --- Visual restoration overrides --- */
+:root {
+  --text-dark: #5a574f;
+}
+
+html,
+body,
+#root,
+.game-container {
+  cursor: var(--cursor-default);
+}
+
+button,
+a,
+[role="button"],
+label,
+select,
+summary,
+.clickable,
+[onclick],
+[tabindex] {
+  cursor: var(--cursor-pointer);
+}
+
+button {
+  cursor: var(--cursor-pointer);
+}
+
+.modal {
+  border-top-width: 0.154rem;
+  border-top-style: solid;
+  border-top-color: transparent;
+  border-right-width: 0.077rem;
+  border-right-style: solid;
+  border-right-color: var(--gold-dark);
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: transparent;
+  border-left-width: 0.077rem;
+  border-left-style: solid;
+  border-left-color: var(--gold-dark);
+}
+
+.event-hero-img {
+  mask-image: url('/assets/event-mask.png');
+}
+
+.topbar-center {
+  width: auto;
+}
+
+.topbar-center-content {
+  justify-content: flex-start;
+  padding: 0 1.2rem;
+}
+
+.topbar-center-content > * + * {
+  margin-left: 0.615rem;
+}
+
+.date-display-text {
+  font-size: 1.08rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  width: 6.1rem;
+}
+
+.speed-btn-img {
+  width: 1.538rem;
+  height: 1.538rem;
+}
+
+.speed-btn-img--wide {
+  width: 2.154rem;
+  height: 1.462rem;
+}
+
+.icon-button {
+  cursor: var(--cursor-pointer);
+}
+
+.icon-button::before,
+.faction-roundel::after,
+.notification-banner::before,
+.notification-banner::after {
+  mix-blend-mode: overlay;
+}
+
+.icon-button-icon,
+.screen-button-faction-fallback-icon,
+.faction-roundel-symbol,
+.interaction-card-image img,
+.speed-btn-img {
+  display: block;
+}
+
+.screen-button-faction,
+.speed-btn,
+.event-toolbar,
+.event-option,
+.event-body .event-link--clickable,
+.interaction-card--clickable {
+  cursor: var(--cursor-pointer);
+}

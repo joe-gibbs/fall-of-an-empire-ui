@@ -1,0 +1,506 @@
+html,
+body,
+#root,
+div,
+span,
+button,
+input,
+textarea,
+select,
+option,
+label,
+a,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+ul,
+ol,
+li,
+dl,
+dt,
+dd,
+img,
+svg,
+canvas,
+table,
+thead,
+tbody,
+tfoot,
+tr,
+th,
+td,
+form,
+fieldset,
+legend,
+figure,
+figcaption,
+main,
+section,
+article,
+aside,
+header,
+footer,
+nav,
+hr,
+summary {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  cursor: auto;
+  user-select: none;
+}
+
+html::before,
+html::after,
+body::before,
+body::after,
+#root::before,
+#root::after,
+div::before,
+div::after,
+span::before,
+span::after,
+button::before,
+button::after,
+input::before,
+input::after,
+textarea::before,
+textarea::after,
+select::before,
+select::after,
+option::before,
+option::after,
+label::before,
+label::after,
+a::before,
+a::after,
+p::before,
+p::after,
+h1::before,
+h1::after,
+h2::before,
+h2::after,
+h3::before,
+h3::after,
+h4::before,
+h4::after,
+h5::before,
+h5::after,
+h6::before,
+h6::after,
+ul::before,
+ul::after,
+ol::before,
+ol::after,
+li::before,
+li::after,
+dl::before,
+dl::after,
+dt::before,
+dt::after,
+dd::before,
+dd::after,
+img::before,
+img::after,
+svg::before,
+svg::after,
+canvas::before,
+canvas::after,
+table::before,
+table::after,
+thead::before,
+thead::after,
+tbody::before,
+tbody::after,
+tfoot::before,
+tfoot::after,
+tr::before,
+tr::after,
+th::before,
+th::after,
+td::before,
+td::after,
+form::before,
+form::after,
+fieldset::before,
+fieldset::after,
+legend::before,
+legend::after,
+figure::before,
+figure::after,
+figcaption::before,
+figcaption::after,
+main::before,
+main::after,
+section::before,
+section::after,
+article::before,
+article::after,
+aside::before,
+aside::after,
+header::before,
+header::after,
+footer::before,
+footer::after,
+nav::before,
+nav::after,
+hr::before,
+hr::after,
+summary::before,
+summary::after {
+  box-sizing: border-box;
+}
+
+html.ui-reduce-motion body,
+html.ui-reduce-motion #root,
+html.ui-reduce-motion div,
+html.ui-reduce-motion span,
+html.ui-reduce-motion button,
+html.ui-reduce-motion input,
+html.ui-reduce-motion textarea,
+html.ui-reduce-motion select,
+html.ui-reduce-motion option,
+html.ui-reduce-motion label,
+html.ui-reduce-motion a,
+html.ui-reduce-motion p,
+html.ui-reduce-motion h1,
+html.ui-reduce-motion h2,
+html.ui-reduce-motion h3,
+html.ui-reduce-motion h4,
+html.ui-reduce-motion h5,
+html.ui-reduce-motion h6,
+html.ui-reduce-motion ul,
+html.ui-reduce-motion ol,
+html.ui-reduce-motion li,
+html.ui-reduce-motion img,
+html.ui-reduce-motion svg,
+html.ui-reduce-motion canvas,
+html.ui-reduce-motion table,
+html.ui-reduce-motion thead,
+html.ui-reduce-motion tbody,
+html.ui-reduce-motion tfoot,
+html.ui-reduce-motion tr,
+html.ui-reduce-motion th,
+html.ui-reduce-motion td,
+html.ui-reduce-motion form,
+html.ui-reduce-motion fieldset,
+html.ui-reduce-motion main,
+html.ui-reduce-motion section,
+html.ui-reduce-motion article,
+html.ui-reduce-motion aside,
+html.ui-reduce-motion header,
+html.ui-reduce-motion footer,
+html.ui-reduce-motion nav,
+html.ui-reduce-motion hr {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('/assets/fonts/Lato-Light.ttf');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('/assets/fonts/Lato-LightItalic.ttf');
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('/assets/fonts/Lato-Regular.ttf');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('/assets/fonts/Lato-Italic.ttf');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('/assets/fonts/Lato-Bold.ttf');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('/assets/fonts/Lato-BoldItalic.ttf');
+  font-weight: 700;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Lato Numeric';
+  src: url('/assets/fonts/LatoNumeric-Light.ttf');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lato Numeric';
+  src: url('/assets/fonts/LatoNumeric-LightItalic.ttf');
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Lato Numeric';
+  src: url('/assets/fonts/LatoNumeric-Regular.ttf');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lato Numeric';
+  src: url('/assets/fonts/LatoNumeric-Italic.ttf');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Lato Numeric';
+  src: url('/assets/fonts/LatoNumeric-Bold.ttf');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lato Numeric';
+  src: url('/assets/fonts/LatoNumeric-BoldItalic.ttf');
+  font-weight: 700;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Volkhov';
+  src: url('/assets/fonts/Volkhov-Regular.ttf');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Volkhov';
+  src: url('/assets/fonts/Volkhov-Italic.ttf');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Volkhov';
+  src: url('/assets/fonts/Volkhov-Bold.ttf');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Volkhov';
+  src: url('/assets/fonts/Volkhov-BoldItalic.ttf');
+  font-weight: 700;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Volkhov Numeric';
+  src: url('/assets/fonts/VolkhovNumeric-Regular.ttf');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Volkhov Numeric';
+  src: url('/assets/fonts/VolkhovNumeric-Italic.ttf');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Volkhov Numeric';
+  src: url('/assets/fonts/VolkhovNumeric-Bold.ttf');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Volkhov Numeric';
+  src: url('/assets/fonts/VolkhovNumeric-BoldItalic.ttf');
+  font-weight: 700;
+  font-style: italic;
+}
+
+:root {
+  --bg: #0e0d0b;
+  --bg-panel: rgba(18, 16, 14, 0.97);
+  --bg-panel-light: rgba(28, 26, 22, 0.98);
+  --bg-panel-dark: rgba(10, 9, 8, 0.96);
+  --bg-hover: rgba(201, 168, 76, 0.10);
+  --bg-active: rgba(201, 168, 76, 0.16);
+  --bg-overlay: rgba(8, 12, 17, 0.6);
+  --bg-input: rgba(20, 18, 14, 0.9);
+  --bg-tab: rgba(24, 22, 18, 0.95);
+  --bg-tab-active: rgba(100, 50, 30, 0.85);
+  --bg-card: rgba(22, 20, 16, 0.95);
+  --bg-tooltip: rgba(12, 11, 9, 0.99);
+  --bg-selected: rgba(40, 65, 50, 0.5);
+  --meander-color: rgba(201, 168, 76, 0.2);
+
+  --gold: #c9a84c;
+  --gold-light: #e0c872;
+  --gold-dark: #8a7235;
+  --gold-muted: rgba(201, 168, 76, 0.4);
+
+  --burgundy: #4a1530;
+  --burgundy-light: #6b2548;
+  --burgundy-dark: #2d0c1e;
+
+  --text: #d4cfc0;
+  --text-bright: #f0ece0;
+  --text-muted: #a29b8e;
+  --text-dark: #8a8376;
+  --text-header: #e8d9a0;
+
+  --red: #c44040;
+  --red-light: #e05555;
+  --red-dark: #8b2020;
+  --green: #5ca040;
+  --green-light: #78c058;
+  --blue: #4080c4;
+  --yellow: #c4a840;
+  --orange: #c47840;
+  --purple: #8060a0;
+
+  --border: rgba(201, 168, 76, 0.25);
+  --border-light: rgba(201, 168, 76, 0.4);
+  --border-dim: rgba(100, 95, 80, 0.2);
+  --separator: rgba(201, 168, 76, 0.12);
+
+  --sidebar-width: 29rem;
+  --topbar-height: 3.4rem;
+  --bottombar-height: 4.6rem;
+
+  --font-header: 'Volkhov Numeric', 'Volkhov', 'Times New Roman', serif;
+  --font-body: 'Lato Numeric', 'Lato', 'Segoe UI', sans-serif;
+  --ui-scale: 1;
+  --runtime-root-font-size: 13.2px;
+  --runtime-viewport-scale: 1;
+
+  --cursor-default: auto;
+  --cursor-pointer: pointer;
+  --cursor-grab: grab;
+  --cursor-grabbing: grabbing;
+
+  /* Pre-rendered tileable noise PNGs - much faster than SVG filter */
+  --texture-noise: url('/assets/baked/texture-overlay-dark.png');
+  --texture-noise-heavy: url('/assets/baked/texture-overlay-heavy.png');
+
+  /* Game-feel easing curves */
+  --ease-snap: cubic-bezier(0.2, 0, 0, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  /* Simplified shadows for performance - single layer each */
+  --shadow-panel: 0 0.308rem 1.231rem rgba(8, 12, 17, 0.6);
+  --shadow-glow: 0 0 0.615rem rgba(201, 168, 76, 0.15);
+  --shadow-bevel: inset 0 0.077rem 0 rgba(255, 220, 140, 0.06);
+}
+
+html {
+  /* Keep the root rem base in px. FoaeCefUI does not match Chromium's
+     rem behaviour when rem is used inside the root font-size expression.
+     13.2px is the previous 11px design base zoomed in by 20%.
+     --ui-scale mirrors the gameplay UI Scale setting (see useUIScale). */
+  font-size: calc(var(--runtime-root-font-size) * var(--ui-scale));
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+button, a, [role="button"], label, select, summary,
+.clickable, [onclick], [tabindex] {
+  cursor: pointer;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+button:focus,
+a:focus,
+[role="button"]:focus,
+input:focus,
+textarea:focus,
+select:focus,
+summary:focus,
+[tabindex]:focus {
+  outline: none;
+}
+
+input, select {
+  font-family: var(--font-body);
+  color: var(--text);
+  border: 0.077rem solid rgba(80, 70, 50, 0.25);
+  border-radius: 0;
+  padding: 0.308rem 0.615rem;
+  font-size: 0.923rem;
+}
+
+input:focus,
+select:focus {
+  border-top-color: rgba(224, 200, 114, 0.52);
+  border-right-color: var(--border);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border);
+}
+
+/* Theme the text selection if anything is selectable */
+::selection {
+  background: rgba(201, 168, 76, 0.35);
+  color: var(--text-bright);
+}
+
+/* Prevent image dragging (ghost image on drag) */
+img, svg {
+  pointer-events: none;
+}
+img.interactive, svg.interactive {
+  pointer-events: auto;
+}
+
+/* Hide broken image alt text; broken-image icon hidden by color:transparent */
+img {
+  color: transparent;
+  font-size: 0;
+}
+/* Caret color in inputs */
+input, textarea {
+  caret-color: var(--gold);
+}
+

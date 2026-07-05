@@ -1,0 +1,21 @@
+.virtual-list {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.virtual-list__viewport {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.virtual-list__item,
+.virtual-list__spacer,
+.virtual-list__empty {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+}

@@ -1,0 +1,122 @@
+.sidebar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2rem 0.3rem;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
+  background-color: rgba(10, 14, 19, 0.48);
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  flex-shrink: 0;
+  z-index: 4;
+  position: relative;
+}
+
+.sidebar-toolbar-nav,
+.sidebar-toolbar-actions,
+.sidebar-toolbar-close {
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(80, 85, 100, 0.25);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem;
+  background-color: rgba(13, 18, 24, 0.52);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  padding: 0;
+}
+
+.sidebar-toolbar-btn:hover {
+  background-color: rgba(201, 168, 76, 0.1);
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+  color: var(--text-bright);
+}
+
+.sidebar-toolbar-btn:active {
+  background-color: rgba(201, 168, 76, 0.18);
+}
+
+.sidebar-toolbar-btn--active {
+  background-color: rgba(201, 168, 76, 0.12);
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+  color: var(--gold);
+}
+
+.sidebar-toolbar-btn--danger {
+  border-top-color: rgba(199, 91, 58, 0.34);
+  border-right-color: rgba(199, 91, 58, 0.34);
+  border-bottom-color: rgba(199, 91, 58, 0.34);
+  border-left-color: rgba(199, 91, 58, 0.34);
+  background-color: rgba(48, 18, 16, 0.38);
+}
+
+.sidebar-toolbar-btn--danger:hover {
+  border-top-color: rgba(199, 91, 58, 0.62);
+  border-right-color: rgba(199, 91, 58, 0.62);
+  border-bottom-color: rgba(199, 91, 58, 0.62);
+  border-left-color: rgba(199, 91, 58, 0.62);
+  background-color: rgba(199, 91, 58, 0.12);
+}
+
+.sidebar-toolbar-btn-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  opacity: 0.78;
+  transition: opacity 0.12s;
+}
+
+.sidebar-toolbar-btn:hover .sidebar-toolbar-btn-icon,
+.sidebar-toolbar-btn--active .sidebar-toolbar-btn-icon {
+  opacity: 1;
+}
+
+.sidebar-toolbar-btn[disabled],
+.sidebar-toolbar-btn[disabled]:hover,
+.sidebar-toolbar-btn[disabled]:active {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Right sidebar toolbar: left-align all buttons to clear the topbar portrait */
+.sidebar--right .sidebar-toolbar {
+  justify-content: flex-start;
+}
+
+.sidebar-toolbar-close {
+  margin-right: 0.15rem;
+}
+
+.sidebar-toolbar-nav > *, .sidebar-toolbar-actions > * {
+  margin-left: 0.15rem;
+}
+
+
+
+.sidebar-toolbar-nav > :first-child, .sidebar-toolbar-actions > :first-child {
+  margin-left: 0;
+}

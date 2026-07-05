@@ -1,0 +1,34 @@
+.faction-flag {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.faction-flag-frame {
+  position: relative;
+  flex-shrink: 0;
+  background: rgba(201, 168, 76, 0.35);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+}
+
+.faction-flag-shape {
+  position: absolute;
+  top: 0.0909rem;
+  right: 0.0909rem;
+  bottom: 0.0909rem;
+  left: 0.0909rem;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+}
+
+.faction-flag--clickable {
+  cursor: pointer;
+  transition: transform 0.12s ease-out;
+}
+
+.faction-flag--clickable:hover {
+  transform: translateY(-0.077rem);
+}
+
+.faction-flag--clickable:active {
+  transform: translateY(0.0909rem) scale(0.95);
+  transition: transform 0s;
+}

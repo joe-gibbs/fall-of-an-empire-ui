@@ -1,0 +1,155 @@
+.fii-modal {
+  width: 54rem;
+  height: 38rem;
+}
+
+.fii-impact-pair {
+  display: flex;
+  flex-direction: column;
+}
+
+.fii-selected-faction {
+  display: flex;
+  flex-direction: column;
+}
+
+.fii-selected-faction > * + * {
+  margin-top: 0.55rem;
+}
+
+.fii-selected-faction__main {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.16);
+  background-color: rgba(8, 12, 17, 0.22);
+}
+
+.fii-selected-faction__main > * + * {
+  margin-left: 0.55rem;
+}
+
+.fii-selected-faction__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fii-requirement {
+  display: flex;
+  flex-direction: column;
+}
+
+.fii-requirement > * + * {
+  margin-top: 0.65rem;
+}
+
+.fii-option {
+  min-height: 6.25rem;
+}
+
+.fii-faction-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.fii-faction-list > * + * {
+  margin-top: 0.45rem;
+}
+
+.fii-faction-option {
+  width: 100%;
+  min-height: 4.4rem;
+  display: flex;
+  align-items: center;
+  padding: 0.52rem 0.62rem;
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.12);
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition-property: transform, border-color, background-color;
+  transition-duration: 0.14s;
+  transition-timing-function: ease;
+}
+
+.fii-faction-option:hover {
+  transform: translateY(-0.08rem);
+  background-color: #242a30;
+  border-top-color: rgba(201, 168, 76, 0.3);
+  border-right-color: rgba(201, 168, 76, 0.3);
+  border-bottom-color: rgba(201, 168, 76, 0.3);
+  border-left-color: rgba(201, 168, 76, 0.3);
+}
+
+.fii-faction-option--selected {
+  background-color: #242a30;
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+}
+
+.fii-faction-option > * + * {
+  margin-left: 0.65rem;
+}
+
+.fii-faction-option__copy {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fii-faction-option__copy > * + * {
+  margin-top: 0.12rem;
+}
+
+.fii-faction-option__name {
+  font-family: var(--font-header);
+  font-size: 0.96rem;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fii-faction-option__meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fii-faction-option__opinion {
+  min-width: 3.2rem;
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  color: var(--green-light);
+  text-align: right;
+}
+
+.fii-faction-option__opinion--bad {
+  color: var(--red);
+}
+
+@media (max-width: 62rem) {
+  .fii-modal {
+    width: 96vw;
+    height: 88vh;
+  }
+}

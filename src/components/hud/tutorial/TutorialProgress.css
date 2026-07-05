@@ -1,0 +1,146 @@
+.tutorial-progress-shell {
+  position: fixed;
+  top: calc(var(--topbar-height) + 1rem);
+  left: 1rem;
+  z-index: 48;
+  width: 28rem;
+  max-width: calc(100vw - 2rem);
+  pointer-events: none;
+}
+
+.tutorial-progress-shell--shifted {
+  left: calc(var(--sidebar-width) + 1rem);
+}
+
+.tutorial-progress-panel {
+  position: relative;
+  pointer-events: auto;
+  overflow: hidden;
+  background-color: rgba(36, 42, 48, 0.58);
+  background-image:
+    linear-gradient(180deg, rgba(48, 56, 64, 0.34) 0%, rgba(36, 42, 48, 0.48) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem;
+  border: 0.154rem solid rgba(201, 168, 76, 0.26);
+  animation-name: tutorial-progress-enter;
+  animation-duration: 180ms;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+}
+
+.tutorial-progress-shell--closing {
+  pointer-events: none;
+}
+
+.tutorial-progress-shell--closing .tutorial-progress-panel {
+  animation: tutorial-progress-exit 160ms ease-in both;
+}
+
+.tutorial-progress-panel::before {
+  content: '';
+  position: absolute;
+  top: 0.35rem;
+  left: 0.55rem;
+  right: 0.55rem;
+  height: 0.154rem;
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.55), transparent);
+  pointer-events: none;
+}
+
+.tutorial-progress-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0.85rem 0.82rem;
+}
+
+.tutorial-progress-list > * + * {
+  margin-top: 0.42rem;
+}
+
+.tutorial-progress-step {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.tutorial-progress-icon-wrap {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.tutorial-progress-icon {
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.tutorial-progress-text {
+  display: block;
+  min-width: 0;
+  margin-left: 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  line-height: 1.32;
+  color: var(--text);
+  overflow-wrap: break-word;
+}
+
+.tutorial-progress-step--complete .tutorial-progress-text {
+  color: var(--text-muted);
+}
+
+.tutorial-progress-step--complete .tutorial-progress-link {
+  color: rgba(201, 168, 76, 0.62);
+}
+
+.tutorial-progress-link {
+  color: var(--gold-light);
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-thickness: 0.077rem;
+  text-underline-offset: 0.12rem;
+}
+
+.tutorial-progress-link--clickable {
+  cursor: var(--cursor-pointer);
+}
+
+.tutorial-progress-link--clickable:hover {
+  color: var(--text-header);
+}
+
+@keyframes tutorial-progress-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tutorial-progress-exit {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .tutorial-progress-shell,
+  .tutorial-progress-shell--shifted {
+    left: 0.6rem;
+    width: calc(100vw - 1.2rem);
+  }
+
+  .tutorial-progress-text {
+    font-size: 0.8rem;
+  }
+}

@@ -1,0 +1,58 @@
+.stat-cell-grid {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0.462rem;
+  background: rgba(8, 12, 17, 0.2);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  border-top: none;
+  margin: 0.2rem 0 0;
+  position: relative;
+}
+
+/* Gold filigree top edge */
+.stat-cell-grid::before {
+  content: '';
+  position: absolute;
+  top: -0.2727rem;
+  left: 0;
+  right: 0;
+  height: 0.5455rem;
+  background: url('/assets/gold-line.png') repeat-x center;
+  background-size: auto 0.5455rem;
+  opacity: 0.5;
+}
+
+.stat-cell-grid > .tooltip-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: auto;
+}
+
+.stat-cell-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.stat-cell-val {
+  font-family: var(--font-header);
+  font-size: 1.25rem;
+  color: var(--text-bright);
+  line-height: 1;
+  margin-top: 0.05rem;
+}
+
+.stat-cell-delta {
+  font-size: 0.8rem;
+  font-weight: 600;
+}

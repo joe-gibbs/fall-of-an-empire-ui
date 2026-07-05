@@ -1,0 +1,196 @@
+/* ===== Selected Military Sidebar ===== */
+
+.military-selection-sidebar {
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.34) 0%, rgba(18, 23, 29, 0.48) 100%),
+    url('/assets/baked/screen-charcoal.png');
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem, auto, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+}
+
+.mil-selection-hero {
+  flex-shrink: 0;
+  padding: 0.6rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  background-image:
+    linear-gradient(180deg, rgba(13, 18, 24, 0.72) 0%, rgba(13, 18, 24, 0.9) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 8rem 8rem;
+  background-color: #11171d;
+}
+
+.mil-selection-hero-title {
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 1.25rem;
+  line-height: 1.1;
+}
+
+.mil-selection-total {
+  margin-top: 0.55rem;
+}
+
+.mil-selection-total-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.mil-selection-total-row img {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+}
+
+.mil-selection-total-row span {
+  min-width: 0;
+  font-size: 0.86rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mil-selection-content {
+  padding: 0;
+}
+
+.mil-selection-content.styled-scroll-area > .styled-scroll-area__viewport {
+  padding-right: 0.615rem;
+}
+
+.mil-selection-list {
+  padding: 0.462rem;
+}
+
+.mil-selection-list > .tooltip-wrapper {
+  width: 100%;
+}
+
+.mil-selection-row {
+  width: 100%;
+  min-height: 4.15rem;
+  display: flex;
+  align-items: center;
+  padding: 0.42rem 0.48rem;
+  margin-bottom: 0.3rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.2);
+  border-right-color: rgba(201, 168, 76, 0.12);
+  border-bottom-color: rgba(80, 92, 104, 0.34);
+  border-left-color: rgba(201, 168, 76, 0.12);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  background-color: #11171d;
+  cursor: pointer;
+}
+
+.mil-selection-row:hover {
+  background-color: rgba(36, 42, 48, 0.6);
+  border-top-color: rgba(201, 168, 76, 0.38);
+  border-right-color: rgba(201, 168, 76, 0.28);
+  border-bottom-color: rgba(201, 168, 76, 0.24);
+  border-left-color: rgba(201, 168, 76, 0.28);
+}
+
+.mil-selection-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  flex-shrink: 0;
+}
+
+.mil-selection-main {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.mil-selection-title-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.mil-selection-name {
+  display: block;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  color: var(--text-bright);
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mil-selection-meta {
+  display: block;
+  margin-top: 0.08rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mil-selection-strength {
+  display: block;
+  width: 5.7rem;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: right;
+}
+
+.mil-selection-bar {
+  margin-top: 0.28rem;
+}
+
+.mil-selection-zoom {
+  width: 1.8rem;
+  height: 1.8rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.2);
+  background-color: rgba(13, 18, 24, 0.58);
+  cursor: pointer;
+}
+
+.mil-selection-zoom:hover {
+  border-color: rgba(201, 168, 76, 0.42);
+  background-color: rgba(201, 168, 76, 0.08);
+}
+
+.mil-selection-zoom img {
+  width: 1rem;
+  height: 1rem;
+}
+
+.mil-selection-total-row > * + *,
+.mil-selection-row > * + * {
+  margin-left: 0.42rem;
+}
+
+.mil-selection-title-row > * + * {
+  margin-left: 0.4rem;
+}

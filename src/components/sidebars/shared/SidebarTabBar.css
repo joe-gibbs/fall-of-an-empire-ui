@@ -1,0 +1,130 @@
+.sidebar-tab-bar {
+  display: flex;
+  align-items: flex-end;
+  flex-shrink: 0;
+
+  padding: 0.308rem 0.615rem 0.154rem;
+  background-image:
+    linear-gradient(180deg, rgba(58, 45, 28, 0.18) 0%, rgba(19, 18, 15, 0.36) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
+  background-color: rgba(16, 14, 11, 0.58);
+  position: relative;
+}
+
+/* Hand-painted gold shelf line under tabs */
+.sidebar-tab-bar::after {
+  content: '';
+  position: absolute;
+  left: 0.615rem;
+  right: 0.615rem;
+  bottom: 0;
+  height: 0.3636rem;
+  background: url('/assets/gold-line.png') repeat-x center;
+  background-size: auto 0.3636rem;
+  opacity: 0.45;
+  z-index: 0;
+}
+
+.sidebar-tab {
+  flex: 1;
+  text-align: center;
+  padding: 0.385rem 0.923rem 0.462rem;
+  font-family: var(--font-header);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.045em;
+  color: var(--text-muted);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(161, 125, 57, 0.3);
+  border-right-color: rgba(101, 79, 38, 0.38);
+  border-bottom-color: rgba(101, 79, 38, 0.42);
+  border-left-color: rgba(101, 79, 38, 0.38);
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(42, 34, 23, 0.92) 0%, rgba(21, 19, 15, 0.96) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #201b13;
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s, border-color 0.12s, transform 0.12s ease-out;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-tab:active {
+  transform: translateY(0.0909rem) scale(0.97);
+  transition: transform 0s;
+}
+
+.sidebar-tab:hover {
+  color: var(--text);
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(55, 43, 27, 0.96) 0%, rgba(27, 23, 17, 0.98) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #2f2518;
+  border-top-color: rgba(201, 168, 76, 0.42);
+  border-right-color: rgba(201, 168, 76, 0.3);
+  border-bottom-color: rgba(201, 168, 76, 0.3);
+  border-left-color: rgba(201, 168, 76, 0.3);
+  transform: translateY(-0.0455rem);
+}
+
+.sidebar-tab--active {
+  color: var(--text-header);
+  border-top-color: var(--gold);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(93, 49, 32, 0.94) 0%, rgba(72, 31, 27, 0.98) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #4f241f;
+}
+
+.sidebar-tab--active:hover {
+  color: var(--text-bright);
+  border-top-color: var(--gold-light);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(109, 58, 37, 0.96) 0%, rgba(82, 35, 30, 0.98) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #613026;
+}
+
+.sidebar-tab-count {
+  font-family: var(--font-header);
+  font-size: 0.75rem;
+  background-color: rgba(18, 15, 11, 0.58);
+  color: var(--text-muted);
+  padding: 0.077rem 0.35rem;
+  margin-left: 0.35rem;
+  min-width: 1.2rem;
+  text-align: center;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.22);
+  border-right-color: rgba(201, 168, 76, 0.22);
+  border-bottom-color: rgba(201, 168, 76, 0.22);
+  border-left-color: rgba(201, 168, 76, 0.22);
+}
+
+.sidebar-tab--active .sidebar-tab-count {
+  background-color: rgba(22, 18, 11, 0.42);
+  color: var(--gold-light);
+}
+
+.sidebar-tab-bar > * + * {
+  margin-left: 0.154rem;
+}

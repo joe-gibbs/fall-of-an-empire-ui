@@ -1,0 +1,534 @@
+.screen--ledger.screen {
+  max-width: 86rem;
+  padding-top: calc(var(--topbar-height) + 1rem);
+}
+
+.ledger-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ledger-wrap {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  width: 100%;
+  max-width: 86rem;
+  margin: 0 auto;
+  min-height: 0;
+}
+
+.ledger-section {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+}
+
+.ledger-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  padding: 0.45rem 0.25rem 0.4rem;
+}
+
+.ledger-search-wrap {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 10rem;
+  min-width: 10rem;
+  max-width: 18rem;
+}
+
+.ledger-search {
+  display: block;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+  width: 100%;
+  height: 1.8rem;
+  padding: 0 0.55rem 0 1.85rem;
+}
+
+.ledger-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  margin-left: 0.5rem;
+}
+
+.ledger-filter {
+  margin-left: 0.35rem;
+}
+
+.ledger-filter:first-child {
+  margin-left: 0;
+}
+
+.ledger-page-controls {
+  display: flex;
+  align-items: center;
+  margin-left: 0.45rem;
+}
+
+.ledger-page-button {
+  width: 2rem;
+  height: 1.8rem;
+  padding-left: 0.35rem;
+  padding-right: 0.35rem;
+}
+
+.ledger-page-button .btn-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.ledger-page-label {
+  display: block;
+  min-width: 8rem;
+  margin-left: 0.35rem;
+  margin-right: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ledger-filter .dropdown-select__trigger {
+  min-width: 7.5rem;
+  max-width: 12rem;
+  height: 1.8rem;
+}
+
+.ledger-table-wrap {
+  box-sizing: border-box;
+  position: relative;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--separator);
+}
+
+.ledger-table {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  font-size: 0.8rem;
+}
+
+.ledger-header-row {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  padding-right: 1.15rem;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(31, 37, 44, 0.82) 0%, rgba(13, 18, 24, 0.95) 100%);
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+  background-color: #11171d;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border);
+}
+
+.ledger-body-scroll {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+}
+
+.ledger-body-scroll > .styled-scroll-area__viewport {
+  padding-right: 1.15rem;
+}
+
+.ledger-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.ledger-row {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-height: 3.75rem;
+  min-width: 0;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.ledger-row.data-table-row--odd {
+  background: rgba(8, 12, 17, 0.06);
+}
+
+.ledger-row:hover {
+  background: rgba(201, 168, 76, 0.06);
+}
+
+.ledger-cell {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 5.4rem;
+  min-width: 0;
+  padding-left: 0.35rem;
+  padding-right: 0.35rem;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ledger-header-cell {
+  height: 1.95rem;
+  padding: 0.3rem 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--gold);
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ledger-header-cell:hover,
+.ledger-header-cell.is-active {
+  color: var(--gold-light);
+}
+
+.ledger-body-cell {
+  min-height: 3.75rem;
+  padding: 0.45rem 0.35rem;
+  color: var(--text);
+  font-size: 0.86rem;
+  line-height: 1.2;
+}
+
+.ledger-header-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-cell--right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.ledger-cell--centre {
+  justify-content: center;
+  text-align: center;
+}
+
+.ledger-cell--name {
+  flex-basis: 7.5rem;
+  flex-grow: 1;
+}
+
+.ledger-cell--faction,
+.ledger-cell--settlement,
+.ledger-cell--commander,
+.ledger-cell--location,
+.ledger-cell--ruler,
+.ledger-cell--region {
+  flex-basis: 6.5rem;
+}
+
+.ledger-cell--event {
+  flex-basis: 26rem;
+  flex-grow: 2;
+}
+
+.ledger-cell--type,
+.ledger-cell--kind,
+.ledger-cell--category,
+.ledger-cell--status {
+  flex-basis: 5.5rem;
+  flex-grow: 0;
+}
+
+.ledger-cell--status {
+  flex-basis: 4rem;
+}
+
+.ledger-cell--population,
+.ledger-cell--income,
+.ledger-cell--food,
+.ledger-cell--unrest,
+.ledger-cell--buildings,
+.ledger-cell--date,
+.ledger-cell--decision,
+.ledger-cell--strength,
+.ledger-cell--morale,
+.ledger-cell--upkeep,
+.ledger-cell--supply,
+.ledger-cell--settlements,
+.ledger-cell--forces,
+.ledger-cell--gold,
+.ledger-cell--stockpile,
+.ledger-cell--production,
+.ledger-cell--consumption,
+.ledger-cell--net,
+.ledger-cell--level,
+.ledger-cell--condition {
+  flex-basis: 5.25rem;
+  flex-grow: 0;
+}
+
+.ledger-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 8rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.ledger-link {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  color: var(--text);
+  background-color: transparent;
+  border: 0;
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: rgba(201, 168, 76, 0.35);
+  text-underline-offset: 0.15rem;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-link:hover {
+  color: var(--gold-light);
+  text-decoration-color: var(--gold);
+}
+
+.ledger-value {
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+.ledger-value--good {
+  color: var(--green);
+}
+
+.ledger-value--bad {
+  color: var(--red);
+}
+
+.ledger-resource {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.ledger-resource img {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.35rem;
+}
+
+.ledger-status-tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ledger-status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border: 0.077rem solid #3f382f;
+  background: rgba(8, 12, 17, 0.22);
+}
+
+.ledger-status-icon img {
+  display: block;
+  width: 1.05rem;
+  height: 1.05rem;
+  object-fit: contain;
+}
+
+.ledger-status-icon--player,
+.ledger-status-icon--ally,
+.ledger-status-icon--subject {
+  border-color: rgba(96, 152, 90, 0.62);
+  background: rgba(38, 86, 48, 0.18);
+}
+
+.ledger-status-icon--war,
+.ledger-status-icon--rebel {
+  border-color: rgba(168, 61, 57, 0.65);
+  background: rgba(97, 32, 34, 0.2);
+}
+
+.ledger-status-icon--rival {
+  border-color: rgba(201, 168, 76, 0.62);
+  background: rgba(126, 92, 28, 0.18);
+}
+
+.ledger-notification-category {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--text);
+}
+
+.ledger-notification-category img {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-right: 0.35rem;
+}
+
+.ledger-notification-category span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-notification-category--military {
+  color: var(--red-light);
+}
+
+.ledger-notification-category--diplomatic {
+  color: var(--blue);
+}
+
+.ledger-notification-category--character {
+  color: var(--gold-light);
+}
+
+.ledger-notification-category--political {
+  color: var(--orange);
+}
+
+.ledger-notification-category--settlement {
+  color: var(--green);
+}
+
+.ledger-notification-event {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ledger-notification-title,
+.ledger-notification-body {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-notification-title {
+  color: var(--text-bright);
+  font-weight: 700;
+}
+
+.ledger-notification-body {
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.ledger-rich-link {
+  color: var(--gold-light);
+  text-decoration: underline;
+  text-decoration-color: rgba(201, 168, 76, 0.38);
+  text-underline-offset: 0.15rem;
+}
+
+.ledger-rich-link--clickable:hover {
+  color: var(--gold);
+  text-decoration-color: var(--gold);
+}
+
+.ledger-notification-decision {
+  display: block;
+  width: 4.75rem;
+  padding: 0.08rem 0.25rem;
+  border: 0.077rem solid #3f382f;
+  background: rgba(8, 12, 17, 0.22);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ledger-notification-decision--accepted {
+  color: var(--green);
+}
+
+.ledger-notification-decision--declined {
+  color: var(--red);
+}
+
+@media (max-width: 81.8182rem) {
+  .ledger-tools {
+    align-items: flex-start;
+  }
+
+  .ledger-filters {
+    width: 100%;
+    margin-top: 0.35rem;
+    margin-left: 0;
+  }
+
+  .ledger-filter {
+    margin-top: 0.2rem;
+  }
+
+  .ledger-page-controls {
+    margin-top: 0.2rem;
+    margin-left: 0.35rem;
+  }
+
+  .ledger-table-wrap {
+    max-height: calc(100vh - 18rem);
+  }
+}

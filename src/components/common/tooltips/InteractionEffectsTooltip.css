@@ -1,0 +1,35 @@
+.interaction-effects-tooltip {
+  margin-top: 0.462rem;
+  padding: 0.385rem 0.615rem 0;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: rgba(199, 169, 100, 0.28);
+}
+
+.interaction-effects-tooltip__title {
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  line-height: 1;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+}
+
+.interaction-effects-tooltip__lines {
+  margin-top: 0.308rem;
+  font-size: 0.86rem;
+  line-height: 1.2;
+  color: var(--text-muted);
+}
+
+.interaction-effects-tooltip__line + .interaction-effects-tooltip__line {
+  margin-top: 0.154rem;
+}
+
+.interaction-effects-tooltip .structured-text-concept {
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-right: 0.154rem;
+  margin-left: 0.154rem;
+  vertical-align: middle;
+}

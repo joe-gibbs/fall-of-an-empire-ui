@@ -1,0 +1,255 @@
+/* ===== Pinned Items Dropdown ===== */
+
+/* --- Dropdown Panel - anchored below the ruler portrait on the right --- */
+.pinned-dropdown {
+  position: fixed;
+  /* top/right set dynamically via JS to anchor below the pin button */
+  width: 22rem;
+  max-height: calc(100vh - var(--topbar-height) - 4rem);
+  z-index: 99;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-image: url('/assets/baked/screen-charcoal.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+  background-color: #1a1d22;
+  border: 0.154rem solid rgba(80, 85, 100, 0.2);
+  animation: pinned-dropdown-enter 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes pinned-dropdown-enter {
+  from { opacity: 0; transform: translateY(-0.7273rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pinned-dropdown--exiting {
+  animation: pinned-dropdown-exit 0.12s ease-in both;
+  pointer-events: none;
+}
+
+@keyframes pinned-dropdown-exit {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-0.7273rem); }
+}
+
+/* Gold top edge accent */
+.pinned-dropdown::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.1818rem;
+  background: url('/assets/gold-line.png') repeat-x;
+  background-size: auto 100%;
+  z-index: 1;
+}
+
+/* Greek wave meander at bottom */
+.pinned-dropdown::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1.2rem;
+  background: url('/assets/meander.png') repeat-x left bottom;
+  background-size: 2.538rem 1.538rem;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* --- Header --- */
+.pinned-dropdown-header {
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0.5rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  flex-shrink: 0;
+}
+
+.pinned-dropdown-header > * + * {
+  margin-left: 0.4rem;
+}
+
+.pinned-dropdown-header-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  opacity: 0.7;
+}
+
+.pinned-dropdown-title {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--gold);
+  letter-spacing: 0.03rem;
+  flex: 1;
+}
+
+.pinned-dropdown-count {
+  width: 2.6rem;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* --- Scrollable body --- */
+.pinned-dropdown-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 1.4rem;
+}
+
+/* --- Section header row (heading + unpin all) --- */
+.pinned-section-header {
+  display: flex;
+  align-items: center;
+  padding-right: 0.5rem;
+}
+
+.pinned-section-header .section-heading-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.pinned-unpin-all {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: none;
+  border: none;
+  padding: 0.15rem 0.35rem;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pinned-unpin-all:hover {
+  color: var(--red-light);
+  background: rgba(196, 64, 64, 0.08);
+}
+
+/* --- Item rows --- */
+.pinned-item-row {
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.12s;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.pinned-item-row > * + * {
+  margin-left: 0.4rem;
+}
+
+.pinned-item-row:hover {
+  background: rgba(201, 168, 76, 0.06);
+}
+
+.pinned-item-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex-shrink: 0;
+}
+
+.pinned-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pinned-item-info > * + * {
+  margin-top: 0.05rem;
+}
+
+.pinned-item-name {
+  font-size: 0.9rem;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pinned-item-detail {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pinned-item-unpin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+  background: none;
+  border: 0.077rem solid transparent;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  opacity: 0;
+  padding: 0;
+}
+
+.pinned-item-row:hover .pinned-item-unpin {
+  opacity: 1;
+}
+
+.pinned-item-unpin:hover {
+  border-top-color: var(--red);
+  border-right-color: var(--red);
+  border-bottom-color: var(--red);
+  border-left-color: var(--red);
+  background: rgba(196, 64, 64, 0.12);
+}
+
+.pinned-item-unpin-icon {
+  width: 0.8rem;
+  height: 0.8rem;
+  opacity: 0.5;
+  transition: opacity 0.12s;
+}
+
+.pinned-item-unpin:hover .pinned-item-unpin-icon {
+  opacity: 1;
+}
+
+/* --- Empty state --- */
+.pinned-dropdown-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+.pinned-dropdown-empty > * + * {
+  margin-top: 0.4rem;
+}
+
+.pinned-dropdown-empty-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  opacity: 0.25;
+}
+
+.pinned-dropdown-empty-text {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}

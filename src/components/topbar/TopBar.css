@@ -1,0 +1,821 @@
+/* =============================================
+   TopBar - Uses actual game texture assets
+   T_TopNavbar_Left/Right as shaped panel backgrounds,
+   T_CentreBorder for center speed/date section,
+   portrait in the circular frame on the right
+   ============================================= */
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-height);
+  z-index: 100;
+  pointer-events: auto;
+  overflow: visible;
+}
+
+.topbar > * {
+  pointer-events: auto;
+}
+
+/* =============================================
+   Shaped texture backgrounds
+   The Left asset (which has the portrait circle) is now
+   placed on the RIGHT and mirrored. The Right asset is
+   placed on the LEFT and mirrored. Portrait sits BEHIND
+   the bg so the meander frame overlaps the portrait edge.
+   ============================================= */
+
+.topbar-bg-left {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40vw;
+  height: auto;
+  pointer-events: none;
+  z-index: 1;
+  user-select: none;
+  transform: scaleX(-1);
+}
+
+.topbar-bg-right {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40vw;
+  height: auto;
+  pointer-events: none;
+  z-index: 1;
+  user-select: none;
+  transform: scaleX(-1);
+}
+
+/* =============================================
+   Player portrait in the circular frame
+   Positioned behind the mirrored T_TopNavbar_Left
+   (now on the right) so the meander circle frame
+   overlaps the portrait edge.
+   ============================================= */
+
+/* Circle in T_TopNavbar_Left.png (744x149):
+   Center: ~(74, 75), inner radius: ~5rem
+   At 40vw width, image height = 40vw * 149/744 = 8.01vw
+   Mirrored to right side: same offsets but from right edge */
+
+.topbar-portrait-slot {
+  position: absolute;
+  /* Same offsets as before, but from the right edge (mirrored) */
+  top: 0.76vw;
+  right: 0.87vw;
+  width: 4.5vw;
+  height: 4.5vw;
+  z-index: 4;
+}
+
+.topbar-portrait-slot > .tooltip-wrapper,
+.topbar-portrait-slot > .topbar-portrait {
+  width: 100%;
+  height: 100%;
+}
+
+.topbar-portrait-slot > .ptt-portrait-btn,
+.topbar-portrait-slot > .tooltip-wrapper > .ptt-portrait-btn,
+.topbar-portrait-slot > .tooltip-wrapper > .ptt-portrait-btn > .topbar-portrait,
+.topbar-portrait-slot > .ptt-portrait-btn > .topbar-portrait {
+  width: 100%;
+  height: 100%;
+}
+
+.topbar-portrait {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  overflow: visible;
+  cursor: pointer;
+  isolation: isolate;
+}
+
+.topbar-portrait::before {
+  content: '';
+  position: absolute;
+  top: -0.55vw;
+  right: -0.55vw;
+  bottom: -0.55vw;
+  left: -0.55vw;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle,
+      rgba(245, 223, 154, 0.52) 0%,
+      rgba(214, 170, 74, 0.28) 42%,
+      rgba(214, 170, 74, 0) 74%);
+  opacity: 0;
+  transform: scale(0.82);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.topbar-portrait:hover::before {
+  opacity: 0;
+  transform: scale(0.82);
+}
+
+.topbar-portrait-surface {
+  position: absolute;
+  top: -0.12vw;
+  right: -0.12vw;
+  bottom: -0.12vw;
+  left: -0.12vw;
+  display: block;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #2d1a3d, #1a0e24);
+  box-shadow:
+    0 0 0 0.08vw rgba(255, 229, 156, 0.14),
+    inset 0 0.18vw 0.5vw rgba(8, 4, 14, 0.45);
+  transition: opacity 0.12s ease;
+  z-index: 1;
+}
+
+.topbar-portrait:hover .topbar-portrait-surface {
+  opacity: 0.94;
+}
+
+.topbar-portrait:active .topbar-portrait-surface {
+  opacity: 0.88;
+  transition-duration: 0s;
+}
+
+.topbar-portrait-composite {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.topbar-portrait-composite .portrait-layer-stack,
+.topbar-portrait-composite .portrait-img {
+  transform: translateY(-6%) scale(1.08);
+  transform-origin: center top;
+  transition: none;
+}
+
+/* =============================================
+   Left: Screen buttons (on the bar portion)
+   ============================================= */
+
+.topbar-left {
+  position: absolute;
+  top: 0.5rem;
+  left: 0;
+  width: 40vw;
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4rem;
+  z-index: 2;
+}
+
+.screen-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.screen-buttons > * + * {
+  margin-left: 1rem;
+}
+
+/* Screen buttons 10% larger than default */
+.screen-buttons .icon-button {
+  width: 3.215rem;
+  height: 3.215rem;
+}
+
+.screen-buttons .icon-button-icon {
+  width: 2.42rem;
+  height: 2.42rem;
+}
+
+.screen-buttons .screen-button-faction.icon-button {
+  width: 3.85rem;
+  height: 3.85rem;
+  padding: 0;
+  border-width: 0.1rem;
+  border-style: solid;
+  border-color: transparent;
+  background-color: transparent;
+  background-image: none;
+  cursor: pointer;
+}
+
+.screen-buttons .screen-button-faction.icon-button.icon-button--active {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.screen-buttons .screen-button-faction.icon-button:hover {
+  background-color: transparent;
+  background-image: none;
+}
+
+.screen-button-faction:hover {
+  opacity: 0.96;
+}
+
+.screen-button-faction:active {
+  opacity: 0.88;
+}
+
+.screen-button-faction:hover .faction-roundel-fill {
+  opacity: 0.9;
+}
+
+.screen-button-faction:hover .faction-roundel-ring {
+  border-color: rgba(224, 200, 114, 0.8);
+}
+
+.screen-button-faction-roundel.faction-roundel {
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+}
+
+.screen-button-faction--active .screen-button-faction-roundel {
+  opacity: 1;
+}
+
+.screen-button-faction--active .faction-roundel-ring {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.screen-button-faction-fallback-icon {
+  width: 2.65rem;
+  height: 2.65rem;
+  position: relative;
+  z-index: 3;
+}
+
+/* =============================================
+   Center: Speed + Date with CentreBorder bg
+   ============================================= */
+
+.topbar-center {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 34rem;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.topbar-center-bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+
+.topbar-center-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--topbar-height);
+  padding: 0 1.2rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.topbar-center-content > * + * {
+  margin-left: 0.75rem;
+}
+
+.topbar-center-content > .speed-controls,
+.topbar-center-content > .tooltip-wrapper {
+  pointer-events: auto;
+}
+
+.topbar-center-content > .tooltip-wrapper {
+  flex-shrink: 0;
+}
+
+.topbar-center-divider {
+  width: 0.077rem;
+  height: 1.846rem;
+  background: rgba(80, 85, 100, 0.25);
+  align-self: center;
+}
+
+.topbar-saving-indicator {
+  position: absolute;
+  top: 3.1rem;
+  left: 50%;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  padding: 0.34rem 0.68rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.72);
+  border-right-color: rgba(201, 168, 76, 0.46);
+  border-bottom-color: rgba(64, 45, 22, 0.9);
+  border-left-color: rgba(201, 168, 76, 0.46);
+  border-radius: 0.23rem;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.36) 0%, rgba(18, 23, 29, 0.84) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-position: 0 0, 0 0;
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  white-space: nowrap;
+  visibility: hidden;
+  pointer-events: none;
+  animation-name: topbar-saving-indicator;
+  animation-duration: 2.4s;
+  animation-timing-function: ease;
+  animation-fill-mode: both;
+}
+
+.topbar-saving-indicator > * + * {
+  margin-left: 0.38rem;
+}
+
+.topbar-saving-indicator-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+@keyframes topbar-saving-indicator {
+  0% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(0);
+  }
+  1% {
+    opacity: 0;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+  12% {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0.18rem);
+  }
+  82% {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0.18rem);
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* =============================================
+   Right: Action buttons (opposite screen buttons)
+   ============================================= */
+
+.topbar-actions {
+  position: absolute;
+  top: 0.5rem;
+  right: 0;
+  width: 40vw;
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  z-index: 2;
+  padding-left: 4rem;
+}
+
+.topbar-actions > * + * {
+  margin-left: 1rem;
+}
+
+/* =============================================
+   Far right: Resources
+   ============================================= */
+
+.topbar-right {
+  position: absolute;
+  top: 0;
+  right: 6.5vw;
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  z-index: 3;
+}
+
+.topbar-right > * + * {
+  margin-left: 0.75rem;
+}
+
+.topbar-right > .tooltip-wrapper {
+  flex-shrink: 0;
+}
+
+.topbar-right > .imperial-standing-wrapper {
+  align-self: flex-start;
+  margin-top: 0.26rem;
+}
+
+/* =============================================
+   Imperial standing passive gauge
+   ============================================= */
+
+.imperial-standing-gauge {
+  position: relative;
+  width: 5.85rem;
+  height: 5.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 50%;
+  border-width: 0;
+  border-style: solid;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  background-color: transparent;
+  background-image: none;
+  box-sizing: border-box;
+  cursor: default;
+  overflow: visible;
+  pointer-events: auto;
+  user-select: none;
+  color: var(--gold);
+}
+
+.imperial-standing-gauge--interactive {
+  cursor: var(--cursor-pointer);
+}
+
+.imperial-standing-gauge--favoured {
+  color: var(--green);
+}
+
+.imperial-standing-gauge--stable {
+  color: var(--gold);
+}
+
+.imperial-standing-gauge--warning {
+  color: var(--yellow);
+}
+
+.imperial-standing-gauge--danger {
+  color: var(--orange);
+}
+
+.imperial-standing-gauge--critical {
+  color: var(--red);
+}
+
+.imperial-standing-gauge-core {
+  position: absolute;
+  top: 0.38rem;
+  left: 0.38rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.09rem;
+  height: 5.09rem;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border-width: 0;
+  border-style: solid;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  background-color: transparent;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.imperial-standing-gauge-core::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 50%;
+  background-image:
+    radial-gradient(circle at 48% 24%, rgba(250, 222, 144, 0.12), rgba(250, 222, 144, 0) 36%),
+    linear-gradient(180deg, rgba(8, 12, 17, 0) 46%, rgba(8, 12, 17, 0.48) 100%);
+  background-repeat: no-repeat, no-repeat;
+  pointer-events: none;
+}
+
+.imperial-standing-gauge-portrait {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.imperial-standing-gauge-portrait .portrait-layer-stack,
+.imperial-standing-gauge-portrait .portrait-img {
+  transform: translateY(4%) scale(0.9);
+  transform-origin: center top;
+}
+
+.imperial-standing-gauge-ring {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 5.85rem;
+  height: 5.85rem;
+  background-color: transparent;
+  background-image: none;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  pointer-events: none;
+  user-select: none;
+  z-index: 5;
+}
+
+.imperial-standing-warning-slot {
+  position: absolute;
+  right: -0.17rem;
+  bottom: -0.11rem;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.47rem;
+  height: 1.47rem;
+  border-radius: 50%;
+  background-color: rgba(12, 15, 18, 0.86);
+  pointer-events: none;
+}
+
+.imperial-standing-warning-icon {
+  width: 1.29rem;
+  height: 1.29rem;
+  flex-shrink: 0;
+}
+
+/* =============================================
+   DateDisplay
+   ============================================= */
+
+.date-display {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.date-display > * + * {
+  margin-left: 0.45rem;
+}
+
+.date-display-season-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+}
+
+.date-display-climate-icon {
+  width: 1.28rem;
+  height: 1.28rem;
+  flex-shrink: 0;
+}
+
+.date-display-climate-icon--warming {
+  opacity: 0.96;
+}
+
+.date-display-climate-icon--cooling {
+  opacity: 0.96;
+}
+
+.date-display-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-header);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  letter-spacing: 0;
+  white-space: nowrap;
+  min-width: 9.8rem;
+  flex-shrink: 0;
+}
+
+.date-display-date-part {
+  display: block;
+  flex-shrink: 0;
+}
+
+.date-display-date-part--day,
+.date-display-date-part--month {
+  width: 1.45rem;
+  text-align: right;
+}
+
+.date-display-date-part--year {
+  width: 2.55rem;
+  text-align: left;
+}
+
+.date-display-date-separator {
+  display: block;
+  width: 0.33rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.date-display-status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+  white-space: nowrap;
+  min-width: 4.8rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.date-display-status--paused {
+  color: var(--gold);
+}
+
+/* =============================================
+   SpeedControls
+   ============================================= */
+
+.speed-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.speed-controls > * + * {
+  margin-left: 0.4rem;
+}
+
+.speed-btn {
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.12s ease-out;
+  position: relative;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.speed-btn--pause {
+  width: 2rem;
+  height: 2rem;
+}
+
+.speed-btn--cycle {
+  width: 2.8rem;
+  height: 2rem;
+}
+
+.speed-btn:hover {
+  opacity: 0.96;
+}
+
+.speed-btn:active {
+  opacity: 0.84;
+  transition: opacity 0s;
+}
+
+.speed-btn-img {
+  width: 1.85rem;
+  height: 1.85rem;
+}
+
+/* Speed cycle icon is wider than tall (56x38 in game) */
+.speed-btn-img--wide {
+  width: 2.6rem;
+  height: 1.76rem;
+}
+
+/* =============================================
+   ResourceDisplay
+   ============================================= */
+
+.resource-display {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.resource-display > * + * {
+  margin-left: 0.462rem;
+}
+
+.resource-fps {
+  display: block;
+  width: 4.4rem;
+  flex-shrink: 0;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.resource-separator {
+  width: 0.077rem;
+  height: 1.231rem;
+  background: rgba(80, 85, 100, 0.12);
+}
+
+.resource-main {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 2rem;
+  white-space: nowrap;
+}
+
+.resource-display > .tooltip-wrapper {
+  flex-shrink: 0;
+}
+
+.resource-main > * + * {
+  margin-left: 0.22rem;
+}
+
+.resource-pop-value + .resource-delta {
+  margin-left: 0.62rem;
+}
+
+.resource-coin-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  flex-shrink: 0;
+}
+
+.resource-pop-value {
+  display: block;
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1rem;
+  color: var(--text-bright);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.resource-delta {
+  display: block;
+  flex-shrink: 0;
+  font-size: 0.98rem;
+  font-weight: 500;
+  line-height: 1rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.resource-delta--positive {
+  color: var(--green);
+}
+
+.resource-delta--negative {
+  color: var(--red);
+}

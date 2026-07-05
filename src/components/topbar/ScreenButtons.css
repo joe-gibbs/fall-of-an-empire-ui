@@ -1,0 +1,54 @@
+.tt-bubble.tt-bubble--screen-button {
+  min-width: 19rem;
+  max-width: 26rem;
+}
+
+.screen-button-tooltip-flow {
+  display: block;
+  min-height: 0;
+}
+
+.screen-button-tooltip-body-text {
+  display: block;
+}
+
+.screen-button-tooltip-rule {
+  display: flex;
+  align-items: center;
+  margin-top: 0.692rem;
+  margin-bottom: 0.462rem;
+}
+
+.screen-button-tooltip-rule > span:first-child {
+  display: block;
+  width: 0.6rem;
+  height: 0.6rem;
+  background: url('/assets/lozenge.png') no-repeat center;
+  background-size: contain;
+  flex-shrink: 0;
+}
+
+.screen-button-tooltip-rule > span:last-child {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  height: 0.5455rem;
+  background: url('/assets/gold-line.png') repeat-x center;
+  background-size: auto 0.5455rem;
+  opacity: 0.6;
+  margin-left: 0.3rem;
+}
+
+.screen-button-tooltip-lines {
+  display: block;
+}
+
+.screen-button-tooltip-line {
+  display: block;
+  line-height: 1.28;
+  color: var(--text-muted);
+}
+
+.screen-button-tooltip-line + .screen-button-tooltip-line {
+  margin-top: 0.308rem;
+}

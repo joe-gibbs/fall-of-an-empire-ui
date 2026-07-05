@@ -1,0 +1,203 @@
+/* ── Language trigger (sits top-right above socials) ── */
+.mm-lang-trigger {
+  display: flex;
+  align-items: center;
+  padding: 0.4545rem 0.7273rem;
+  background-color: #0d1218;
+  background-image: linear-gradient(90deg, rgba(24, 31, 38, 0.82) 0%, rgba(13, 18, 24, 0.88) 100%);
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 8.7273rem 8.7273rem;
+  border: 0.0909rem solid rgba(201, 168, 76, 0.2);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+  font-family: var(--font-body);
+  font-size: 0.9091rem;
+  letter-spacing: 0;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.mm-lang-trigger > * + * {
+  margin-left: 0.5455rem;
+}
+
+.mm-lang-trigger:hover {
+  border-color: rgba(224, 200, 114, 0.5);
+  background-color: #20272d;
+}
+
+.mm-lang-trigger__flag {
+  width: 1.5455rem;
+  height: auto;
+  max-height: 1.4545rem;
+  border: 0.0909rem solid rgba(201, 168, 76, 0.25);
+  display: block;
+}
+
+.mm-lang-trigger__code {
+  font-weight: 600;
+}
+
+/* ── Overlay + modal ── */
+.mm-lang-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 700;
+  background: rgba(13, 18, 24, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: mm-lang-overlay-in 0.18s ease-out both;
+}
+
+.mm-lang-overlay--closing {
+  animation: mm-lang-overlay-out 0.2s ease-in forwards;
+  pointer-events: none;
+}
+
+.mm-lang-modal {
+  width: 38.1818rem;
+  max-width: calc(100vw - 2rem);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #16181d;
+  background-image: url('/assets/baked/modal-charcoal.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+  animation-name: mm-lang-modal-in;
+  animation-duration: 0.22s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+  transform-origin: top right;
+}
+
+.mm-lang-modal--closing {
+  animation: mm-lang-modal-out 0.2s ease-in forwards;
+}
+
+@keyframes mm-lang-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes mm-lang-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes mm-lang-modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-0.7273rem); }
+  to { opacity: 1; transform: scale(1) translateY(0rem); }
+}
+
+@keyframes mm-lang-modal-out {
+  from { opacity: 1; transform: scale(1) translateY(0rem); }
+  to { opacity: 0; transform: scale(0.97) translateY(-0.5455rem); }
+}
+
+.mm-lang-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2727rem 1.6364rem 0.9091rem;
+  border-bottom: 0.0909rem solid rgba(201, 168, 76, 0.18);
+}
+
+.mm-lang-modal__title {
+  font-family: var(--font-header);
+  font-size: 1.5455rem;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+}
+
+.mm-lang-modal__close {
+  width: 2.1818rem;
+  height: 2.1818rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mm-lang-modal__close-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  opacity: 0.76;
+}
+
+.mm-lang-modal__close:hover .mm-lang-modal__close-icon { opacity: 1; }
+
+.mm-lang-modal__list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.5455rem 0;
+}
+
+.mm-lang-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.7273rem 1.6364rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.mm-lang-row > * + * {
+  margin-left: 1.0909rem;
+}
+
+.mm-lang-row:hover {
+  background: rgba(201, 168, 76, 0.06);
+}
+
+.mm-lang-row--active {
+  background: rgba(201, 168, 76, 0.1);
+}
+
+.mm-lang-row__flag {
+  width: 2.5455rem;
+  height: auto;
+  max-height: 1.8182rem;
+  border: 0.0909rem solid rgba(201, 168, 76, 0.25);
+  flex-shrink: 0;
+  display: block;
+}
+
+.mm-lang-row__name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  font-size: 1.1818rem;
+  line-height: 1.18;
+}
+
+.mm-lang-row--active .mm-lang-row__name {
+  color: var(--gold);
+}
+
+.mm-lang-row__code {
+  flex-shrink: 0;
+  color: var(--text-dark);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

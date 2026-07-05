@@ -1,0 +1,316 @@
+/* =============================================
+   NotificationStack - top scroll stack.
+   ============================================= */
+
+.notification-stack {
+  position: fixed;
+  top: calc(var(--topbar-height) + 1.25rem);
+  left: 50%;
+  z-index: 44;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  width: 42rem;
+  max-width: 72vw;
+  max-height: calc(100vh - var(--topbar-height) - 5rem);
+  overflow-y: visible;
+  overflow-x: visible;
+  transform: translateX(-50%);
+}
+
+.notification-stack > * + * {
+  margin-top: 0.25rem;
+}
+
+/* --- Slot wrapper (handles enter/exit) --- */
+
+.notification-slot {
+  pointer-events: auto;
+  width: 100%;
+  animation: notification-banner-in 0.28s cubic-bezier(0.16, 0.84, 0.22, 1) both;
+  transform-origin: top center;
+}
+
+.notification-slot--regular {
+  width: 34rem;
+  max-width: 64vw;
+}
+
+.notification-slot--cinematic {
+  width: 42rem;
+  max-width: 72vw;
+}
+
+.notification-slot--exiting {
+  animation: notification-scroll-close 0.24s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.notification-slot--cinematic {
+  animation: notification-scroll-slot-in 0.24s ease-out both;
+}
+
+.notification-slot--cinematic .notification-scroll-sheet {
+  animation: notification-scroll-sheet-open 0.72s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.notification-slot--cinematic .notification-scroll-roller--left {
+  animation: notification-scroll-left-open 0.72s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.notification-slot--cinematic .notification-scroll-roller--right {
+  animation: notification-scroll-right-open 0.72s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.notification-slot--cinematic .notification-scroll-content {
+  animation: notification-scroll-content-in 0.36s ease-out 0.72s both;
+}
+
+.notification-slot--cinematic .notification-close {
+  animation: notification-scroll-content-in 0.36s ease-out 0.72s both;
+}
+
+.notification-slot--cinematic.notification-slot--exiting .notification-scroll-sheet {
+  animation: notification-scroll-sheet-close 0.24s ease-in forwards;
+}
+
+.notification-slot--cinematic.notification-slot--exiting {
+  animation: notification-scroll-slot-out 0.28s ease-in forwards;
+}
+
+.notification-slot--cinematic.notification-slot--exiting .notification-scroll-roller--left {
+  animation: notification-scroll-left-close 0.24s ease-in forwards;
+}
+
+.notification-slot--cinematic.notification-slot--exiting .notification-scroll-roller--right {
+  animation: notification-scroll-right-close 0.24s ease-in forwards;
+}
+
+.notification-slot--cinematic.notification-slot--exiting .notification-scroll-content {
+  animation: notification-scroll-content-out 0.14s ease-in forwards;
+}
+
+.notification-slot--cinematic.notification-slot--exiting .notification-close {
+  animation: notification-scroll-content-out 0.14s ease-in forwards;
+}
+
+@keyframes notification-banner-in {
+  0% {
+    transform: translateY(-0.44rem) scale(0.992);
+  }
+  74% {
+    transform: translateY(0.045rem) scale(1.004);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes notification-scroll-close {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-0.32rem) scale(0.992);
+  }
+}
+
+@keyframes notification-scroll-slot-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes notification-scroll-sheet-open {
+  from {
+    transform: scaleX(0.06);
+    opacity: 0.85;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes notification-scroll-sheet-close {
+  from {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  to {
+    transform: scaleX(0.06);
+    opacity: 0;
+  }
+}
+
+@keyframes notification-scroll-left-open {
+  from {
+    transform: translateX(20rem);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes notification-scroll-left-close {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(20rem);
+  }
+}
+
+@keyframes notification-scroll-right-open {
+  from {
+    transform: translateX(-20rem);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes notification-scroll-right-close {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-20rem);
+  }
+}
+
+@keyframes notification-scroll-content-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes notification-scroll-content-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes notification-scroll-slot-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* --- Settlement anchored notifications --- */
+
+.settlement-notification-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 44;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.settlement-notification-node {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: visible;
+  transform-origin: bottom center;
+}
+
+.settlement-notification-slot {
+  width: 18rem;
+  max-width: 18rem;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: bottom center;
+}
+
+.settlement-notification-slot.notification-slot--regular {
+  width: 18rem;
+  max-width: 18rem;
+}
+
+.settlement-notification-slot .notification-banner {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.settlement-notification-slot .notification-description {
+  max-height: 0;
+  opacity: 0;
+}
+
+.settlement-notification-slot .notification-banner:hover .notification-description {
+  max-height: 5.5rem;
+  opacity: 1;
+}
+
+.settlement-notification-slot .notification-close {
+  opacity: 1;
+}
+
+.settlement-notification-stalk {
+  width: 0.1818rem;
+  height: 1.0909rem;
+  background-image: linear-gradient(180deg, rgba(224, 200, 114, 0.85), rgba(224, 200, 114, 0));
+  pointer-events: none;
+}
+
+.settlement-notification-pin {
+  width: 0.5455rem;
+  height: 0.5455rem;
+  margin-top: -0.0455rem;
+  background-color: var(--gold);
+  border: 0.0909rem solid rgba(8, 12, 17, 0.8);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.settlement-notification-slot.notification-slot--exiting {
+  animation: settlement-notification-out 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.settlement-notification-slot.notification-slot--exiting .settlement-notification-stalk {
+  animation: settlement-notification-stalk-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.settlement-notification-slot.notification-slot--exiting .settlement-notification-pin {
+  animation: settlement-notification-pin-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes settlement-notification-out {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(0.34rem) scale(0.992);
+  }
+}
+
+@keyframes settlement-notification-stalk-out {
+  0% {
+    transform: scaleY(1);
+  }
+  100% {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes settlement-notification-pin-out {
+  0% {
+    transform: rotate(45deg) scale(1);
+  }
+  100% {
+    transform: rotate(45deg) scale(0.35);
+  }
+}

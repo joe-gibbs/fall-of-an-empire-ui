@@ -1,0 +1,118 @@
+.icon-button {
+  width: 2.923rem;
+  height: 2.923rem;
+  border-radius: 50%;
+  border: 0.1rem solid rgba(160, 160, 170, 0.4);
+  background-image: url('/assets/baked/icon-button.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-color: #5a2040;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.12s cubic-bezier(0.2, 0, 0, 1);
+  padding: 0;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+/* Grunge + metallic sheen overlay (same technique as FactionRoundel) */
+.icon-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 50%;
+  background-image: none;
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Noise grain layer */
+.icon-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 50%;
+  background-image: none;
+  background-repeat: repeat;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.icon-button:hover {
+  background-image: url('/assets/baked/icon-button-hover.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-color: #6b2548;
+  border-color: rgba(224, 200, 114, 0.8);
+}
+
+.icon-button:active {
+  background-color: #4c1934;
+}
+
+.icon-button--active {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.icon-button-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  pointer-events: none;
+  position: relative;
+  z-index: 3;
+}
+
+.icon-button-marker {
+  width: 0.82rem;
+  height: 0.82rem;
+  border: 0.08rem solid rgba(255, 255, 255, 0.82);
+  background-color: rgba(255, 255, 255, 0.36);
+  pointer-events: none;
+  position: relative;
+  z-index: 3;
+}
+
+.icon-button--active .icon-button-icon {
+  opacity: 1;
+}
+
+.icon-button-badge {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.15rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.28rem;
+  border-radius: 50%;
+  border-width: 0.08rem;
+  border-style: solid;
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  background: #1a0b14;
+  color: var(--gold);
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  pointer-events: none;
+}

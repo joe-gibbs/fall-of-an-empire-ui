@@ -1,0 +1,66 @@
+.mmtt {
+  box-sizing: border-box;
+  width: 22rem;
+  max-width: 22rem;
+  padding: 0.462rem 0.615rem 0.538rem;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.mmtt-header {
+  margin: 0 0 0.35rem 0;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.mmtt p {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 0.4rem 0;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.mmtt p:last-child {
+  margin-bottom: 0;
+}
+
+.mmtt-muted {
+  color: var(--text-muted);
+}
+
+.mmtt-bullets {
+  padding: 0;
+  margin: 0 0 0.4rem 0;
+}
+
+.mmtt-bullets li {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding-left: 0.8rem;
+  margin: 0.08rem 0;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.mmtt-bullets li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45rem;
+  width: 0.28rem;
+  height: 0.28rem;
+  background-image: url('/assets/icons/I_Dot.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+

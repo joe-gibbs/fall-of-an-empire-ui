@@ -1,0 +1,840 @@
+.screen-overlay.screen-overlay--glance-mocks {
+  z-index: 70;
+}
+
+.mock-glance-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--text);
+}
+
+.mock-map,
+.mock-map-wash {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.mock-map {
+  width: 100%;
+  height: 100%;
+}
+
+.mock-map-wash {
+  background-image:
+    linear-gradient(180deg, rgba(5, 6, 8, 0.58), rgba(5, 6, 8, 0.18) 34%, rgba(5, 6, 8, 0.32)),
+    linear-gradient(90deg, rgba(8, 12, 18, 0.54), rgba(8, 12, 18, 0.16) 46%, rgba(8, 12, 18, 0.42));
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.mock-glance-toolbar {
+  position: absolute;
+  top: calc(var(--topbar-height) + 0.769rem);
+  left: 1rem;
+  right: 1rem;
+  z-index: 8;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  pointer-events: auto;
+}
+
+.mock-glance-heading {
+  display: flex;
+  flex-direction: column;
+  padding: 0.462rem 0.846rem;
+  background-color: rgba(8, 10, 13, 0.42);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.24);
+}
+
+.mock-glance-heading h1 {
+  font-family: var(--font-header);
+  font-size: 1.231rem;
+  letter-spacing: 0;
+  color: var(--text-header);
+}
+
+.mock-glance-heading span {
+  margin-top: 0.077rem;
+  font-size: 0.769rem;
+  color: var(--text-muted);
+}
+
+.mock-glance-field {
+  position: absolute;
+  top: calc(var(--topbar-height) + 4.154rem);
+  right: 1.154rem;
+  bottom: 0.462rem;
+  left: 1.154rem;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  pointer-events: none;
+}
+
+.mock-band {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 7.231rem;
+}
+
+.mock-band-title {
+  width: 5.846rem;
+  flex-shrink: 0;
+  padding: 0.154rem 0.462rem;
+  font-family: var(--font-header);
+  font-size: 0.923rem;
+  color: var(--gold-light);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(224, 200, 114, 0.28);
+}
+
+.mock-band-samples {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.mock-anchor {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 12.5rem;
+  height: 6.462rem;
+}
+
+.mock-anchor-label {
+  display: none;
+}
+
+.mock-anchor-line {
+  position: absolute;
+  left: 50%;
+  bottom: 0.231rem;
+  width: 0.077rem;
+  height: 1rem;
+  background-color: rgba(224, 200, 114, 0.3);
+}
+
+.mock-anchor-pin {
+  position: absolute;
+  left: 50%;
+  bottom: 0.077rem;
+  width: 0.308rem;
+  height: 0.308rem;
+  background-color: rgba(224, 200, 114, 0.62);
+  transform: rotate(45deg);
+}
+
+.mock-round-glance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.4545rem;
+  height: 5.1818rem;
+  pointer-events: auto;
+}
+
+.mock-round-glance > .tooltip-wrapper {
+  align-items: center;
+}
+
+.mg-glance {
+  --mg-faction: var(--gold);
+  --mg-secondary: var(--gold-light);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  box-sizing: border-box;
+  color: var(--text);
+  pointer-events: auto;
+}
+
+.mg-glance::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  background-image: url('/assets/glance/glance-brush-plate.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-color: transparent;
+}
+
+.mg-glance::after {
+  content: '';
+  position: absolute;
+  top: 0.154rem;
+  right: 0.231rem;
+  bottom: 0.154rem;
+  left: 0.231rem;
+  z-index: -1;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: rgba(224, 200, 114, 0.16);
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(18, 20, 22, 0.36);
+  pointer-events: none;
+}
+
+.mg-roundel-hang {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 4;
+  transform: translate(-52%, -50%);
+}
+
+.mg-roundel-hang--right {
+  left: auto;
+  right: 0;
+  transform: translate(52%, -50%);
+}
+
+.mg-title-line,
+.mg-info-line,
+.mg-stat-line,
+.mg-meter-pair,
+.mg-ward-head,
+.mg-army-standard-stack,
+.mg-battle-side,
+.mg-battle-centre,
+.mg-battle-clash-head,
+.mg-loss-row,
+.mg-loss-title {
+  display: flex;
+  align-items: center;
+}
+
+.mg-title-line,
+.mg-info-line,
+.mg-ward-head {
+  min-width: 0;
+  justify-content: space-between;
+}
+
+.mg-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-header);
+  font-size: 0.923rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--text-bright);
+}
+
+.mg-title--long {
+  font-size: 0.846rem;
+}
+
+.mg-title--very-long {
+  font-size: 0.769rem;
+}
+
+.mg-info-line {
+  margin-top: 0.077rem;
+  font-size: 0.692rem;
+  color: var(--text-muted);
+}
+
+.mg-info-line > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mg-info-line > * + * {
+  margin-left: 0.462rem;
+}
+
+.mg-title-line > * + *,
+.mg-ward-head > * + *,
+.mg-battle-clash-head > * + *,
+.mg-loss-title > * + * {
+  margin-left: 0.385rem;
+}
+
+.mg-strong,
+.mg-signal-value {
+  flex-shrink: 0;
+  font-size: 0.846rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  white-space: nowrap;
+}
+
+.mg-muted-line {
+  min-width: 0;
+  margin-top: 0.077rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.692rem;
+  color: var(--text-muted);
+}
+
+.mg-kind-icon,
+.mg-status-icon {
+  width: 1.231rem;
+  height: 1.231rem;
+  flex-shrink: 0;
+}
+
+.mg-meter {
+  position: relative;
+  width: 100%;
+  height: 0.462rem;
+  margin-top: 0.308rem;
+  background-color: rgba(18, 20, 22, 0.56);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(18, 20, 22, 0.64);
+  border-right-color: rgba(18, 20, 22, 0.64);
+  border-bottom-color: rgba(224, 200, 114, 0.12);
+  border-left-color: rgba(18, 20, 22, 0.64);
+  overflow: hidden;
+}
+
+.mg-meter--slim {
+  height: 0.308rem;
+}
+
+.mg-meter-fill {
+  height: 100%;
+  background-color: var(--gold);
+}
+
+.mg-tone--good {
+  color: var(--green-light);
+}
+
+.mg-tone--warning {
+  color: var(--gold);
+}
+
+.mg-tone--bad {
+  color: var(--red);
+}
+
+.mg-tone--neutral {
+  color: var(--text);
+}
+
+.mg-stat-line {
+  margin-top: 0.308rem;
+}
+
+.mg-stat {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.077rem 0.154rem;
+  background-color: rgba(18, 20, 22, 0.24);
+}
+
+.mg-stat + .mg-stat {
+  margin-left: 0.308rem;
+}
+
+.mg-stat img {
+  width: 0.769rem;
+  height: 0.769rem;
+  margin-right: 0.115rem;
+  flex-shrink: 0;
+}
+
+.mg-stat span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.692rem;
+  font-weight: 700;
+}
+
+.mg-settlement-civic {
+  flex-direction: column;
+  width: 13.077rem;
+  min-height: 3.846rem;
+  padding: 0.462rem 0.615rem 0.462rem 1.461rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--mg-faction);
+  border-right-color: var(--mg-faction);
+  border-bottom-color: var(--mg-faction);
+  border-left-color: var(--mg-faction);
+}
+
+.mg-settlement-civic .mg-title {
+  max-width: 6.923rem;
+}
+
+.mg-settlement-ward {
+  flex-direction: column;
+  width: 11.923rem;
+  min-height: 3.308rem;
+  padding: 0.385rem 0.692rem 0.385rem 1.385rem;
+  border-top-width: 0.154rem;
+  border-top-style: solid;
+  border-top-color: var(--mg-faction);
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(224, 200, 114, 0.28);
+}
+
+.mg-settlement-ward::before,
+.mg-settlement-ward::after {
+  clip-path: polygon(0% 0%, 95% 0%, 100% 35%, 95% 100%, 0% 100%);
+}
+
+.mg-settlement-ward .mg-title {
+  max-width: 6.538rem;
+}
+
+.mg-settlement-harbour {
+  align-items: center;
+  width: 10.923rem;
+  min-height: 2.769rem;
+  padding: 0.385rem 0.615rem 0.615rem 1.308rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: #4e90b8;
+}
+
+.mg-settlement-harbour::before,
+.mg-settlement-harbour::after {
+  clip-path: polygon(0% 0%, 95% 0%, 100% 22%, 96% 100%, 0% 100%);
+}
+
+.mg-settlement-harbour::before,
+.mg-navy-ensign::before,
+.mg-navy-wake::before,
+.mg-battle-clash::before {
+  background-image: url('/assets/glance/glance-brush-signal.png');
+}
+
+.mg-settlement-harbour .mg-title {
+  flex-shrink: 1;
+  max-width: 5.077rem;
+}
+
+.mg-settlement-harbour .mg-signal-value {
+  margin-left: 0.385rem;
+}
+
+.mg-harbour-waterline,
+.mg-wake-line {
+  position: absolute;
+  left: 1.308rem;
+  right: 0.615rem;
+  bottom: 0.231rem;
+  height: 0.231rem;
+  background-color: rgba(18, 20, 22, 0.54);
+  overflow: hidden;
+}
+
+.mg-harbour-waterline-fill,
+.mg-wake-line-fill {
+  display: block;
+  height: 100%;
+  background-color: #74a9c8;
+}
+
+.mg-army-command {
+  flex-direction: column;
+  width: 13.846rem;
+  min-height: 4.308rem;
+  padding: 0.462rem 0.615rem 0.462rem 1.538rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--mg-faction);
+  border-right-color: var(--mg-faction);
+  border-bottom-color: var(--mg-faction);
+  border-left-color: var(--mg-faction);
+}
+
+.mg-force-rank {
+  position: absolute;
+  top: 0.231rem;
+  left: 1.308rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.mg-force-rank img {
+  width: 100%;
+  height: 100%;
+}
+
+.mg-army-command .mg-title-line {
+  padding-left: 1.231rem;
+}
+
+.mg-army-command .mg-title {
+  max-width: 7.231rem;
+}
+
+.mg-meter-pair {
+  margin-top: 0.308rem;
+}
+
+.mg-meter-pair .mg-meter {
+  margin-top: 0;
+}
+
+.mg-meter-pair .mg-meter + .mg-meter {
+  margin-left: 0.308rem;
+}
+
+.mg-army-standard {
+  align-items: center;
+  width: 12.769rem;
+  min-height: 3rem;
+  padding: 0.385rem 0.846rem 0.385rem 1.462rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--mg-faction);
+  border-right-color: var(--mg-faction);
+  border-bottom-color: var(--mg-faction);
+  border-left-color: var(--mg-faction);
+}
+
+.mg-army-standard::before,
+.mg-army-standard::after {
+  clip-path: polygon(0% 0%, 100% 0%, 92% 50%, 100% 100%, 0% 100%);
+}
+
+.mg-army-standard-rank {
+  width: 1.077rem;
+  height: 1.077rem;
+  flex-shrink: 0;
+  margin-right: 0.385rem;
+}
+
+.mg-army-standard-stack {
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.mg-army-standard .mg-title {
+  max-width: 6.615rem;
+}
+
+.mg-army-standard .mg-signal-value {
+  margin-left: 0.462rem;
+}
+
+.mg-army-column {
+  flex-direction: column;
+  width: 12.308rem;
+  min-height: 3rem;
+  padding: 0.385rem 0.615rem 0.385rem 1.308rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--mg-faction);
+}
+
+.mg-army-column::before,
+.mg-army-column::after {
+  clip-path: polygon(0% 0%, 96% 0%, 100% 50%, 96% 100%, 0% 100%);
+}
+
+.mg-army-column .mg-title {
+  max-width: 5.923rem;
+}
+
+.mg-navy-manifest {
+  flex-direction: column;
+  width: 13.462rem;
+  min-height: 3.846rem;
+  padding: 0.462rem 0.692rem 0.462rem 1.462rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: #4e90b8;
+}
+
+.mg-navy-manifest .mg-title {
+  max-width: 6.923rem;
+}
+
+.mg-navy-ensign {
+  align-items: center;
+  width: 13.077rem;
+  min-height: 2.769rem;
+  padding: 0.385rem 0.846rem 0.385rem 1.385rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: #4e90b8;
+}
+
+.mg-navy-ensign::before,
+.mg-navy-ensign::after {
+  clip-path: polygon(0% 0%, 92% 0%, 100% 28%, 95% 100%, 0% 100%);
+}
+
+.mg-navy-ensign .mg-title {
+  flex-shrink: 1;
+  max-width: 8.154rem;
+}
+
+.mg-navy-ensign .mg-stat {
+  margin-left: 0.385rem;
+}
+
+.mg-navy-wake {
+  flex-direction: column;
+  width: 13.077rem;
+  min-height: 3.077rem;
+  padding: 0.385rem 0.615rem 0.692rem 1.308rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: #4e90b8;
+}
+
+.mg-navy-wake::before,
+.mg-navy-wake::after {
+  clip-path: polygon(0% 0%, 95% 0%, 100% 40%, 95% 100%, 0% 100%);
+}
+
+.mg-navy-wake .mg-title {
+  max-width: 6.615rem;
+}
+
+.mg-navy-wake .mg-meter {
+  margin-top: 0.462rem;
+}
+
+.mg-battle-front {
+  flex-wrap: wrap;
+  align-items: center;
+  width: 17.077rem;
+  min-height: 4.308rem;
+  padding: 0.462rem 1.077rem;
+}
+
+.mg-battle-front::before,
+.mg-battle-front::after {
+  clip-path: polygon(4% 0%, 96% 0%, 100% 50%, 96% 100%, 4% 100%, 0% 50%);
+}
+
+.mg-battle-side {
+  flex-direction: column;
+  align-items: flex-start;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.mg-battle-side--defender {
+  align-items: flex-end;
+}
+
+.mg-battle-faction {
+  max-width: 4.769rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.615rem;
+  color: var(--text-muted);
+}
+
+.mg-battle-centre {
+  flex-direction: column;
+  justify-content: center;
+  width: 5.077rem;
+  min-width: 0;
+  text-align: center;
+}
+
+.mg-battle-centre img {
+  width: 1.231rem;
+  height: 1.231rem;
+}
+
+.mg-battle-centre span {
+  max-width: 5.077rem;
+  margin-top: 0.154rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-header);
+  font-size: 0.692rem;
+  color: var(--text-bright);
+}
+
+.mg-battle-balance,
+.mg-battle-mini-balance {
+  display: flex;
+  width: 100%;
+  height: 0.385rem;
+  margin-top: 0.385rem;
+  background-color: rgba(18, 20, 22, 0.54);
+  overflow: hidden;
+}
+
+.mg-battle-fill {
+  height: 100%;
+  background-color: var(--gold);
+}
+
+.mg-battle-clash {
+  flex-direction: column;
+  align-items: center;
+  width: 12.231rem;
+  min-height: 3.538rem;
+  padding: 0.385rem 1.462rem;
+}
+
+.mg-battle-clash::before,
+.mg-battle-clash::after {
+  clip-path: polygon(6% 0%, 94% 0%, 100% 50%, 94% 100%, 6% 100%, 0% 50%);
+}
+
+.mg-battle-clash-head {
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.mg-battle-clash .mg-title {
+  max-width: 7.462rem;
+  margin-top: 0.077rem;
+  text-align: center;
+}
+
+.mg-battle-clash .mg-battle-mini-balance {
+  height: 0.231rem;
+  margin-top: 0.308rem;
+}
+
+.mg-battle-losses {
+  flex-direction: column;
+  width: 14.462rem;
+  min-height: 3.538rem;
+  padding: 0.385rem 1.385rem;
+  border-top-width: 0.154rem;
+  border-top-style: solid;
+  border-top-color: rgba(196, 64, 64, 0.64);
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(120, 192, 88, 0.52);
+}
+
+.mg-battle-losses::before,
+.mg-battle-losses::after {
+  clip-path: polygon(4% 0%, 96% 0%, 100% 50%, 96% 100%, 4% 100%, 0% 50%);
+}
+
+.mg-loss-row {
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  font-size: 0.692rem;
+}
+
+.mg-loss-row--right {
+  margin-top: 0.077rem;
+}
+
+.mg-loss-side {
+  min-width: 0;
+  max-width: 7.692rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.mg-loss-value {
+  flex-shrink: 0;
+  margin-left: 0.462rem;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+.mg-loss-title {
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0.077rem;
+}
+
+.mg-loss-title img {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.mg-loss-title .mg-title {
+  max-width: 7.846rem;
+}
+
+.mock-anchor--settlement-2 {
+  transform: translateY(0.308rem);
+}
+
+.mock-anchor--settlement-3 {
+  transform: translateY(-0.231rem);
+}
+
+.mock-anchor--port-1 {
+  transform: translateY(0.154rem);
+}
+
+.mock-anchor--port-2 {
+  transform: translateY(-0.308rem);
+}
+
+.mock-anchor--port-3 {
+  transform: translateY(0.231rem);
+}
+
+.mock-anchor--army-1 {
+  transform: translateY(-0.154rem);
+}
+
+.mock-anchor--army-2 {
+  transform: translateY(0.231rem);
+}
+
+.mock-anchor--navy-2 {
+  transform: translateY(-0.385rem);
+}
+
+.mock-anchor--battle-1 {
+  transform: translateY(0.308rem);
+}
+
+.mock-anchor--battle-3 {
+  transform: translateY(-0.308rem);
+}

@@ -1,0 +1,69 @@
+/* Gritty hand-painted pie chart with texture overlays */
+
+.gritty-pie-tooltip-frame {
+  flex-shrink: 0;
+}
+
+.gritty-pie {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.gritty-pie-svg {
+  display: block;
+}
+
+.gritty-pie-segment {
+  transition: filter 0.12s ease-out;
+}
+
+.gritty-pie-segment:hover {
+  filter: brightness(1.18);
+}
+
+.gritty-pie-segment--active {
+  filter: brightness(1.18);
+}
+
+/* Noise texture overlay - gives painted grain feel */
+.gritty-pie-noise {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 50%;
+  background: url('/assets/chart-noise.png') repeat;
+  background-size: 5.8182rem 5.8182rem;
+  mix-blend-mode: overlay;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Vignette ring - darkens edges for depth */
+.gritty-pie-ring {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 50%;
+  background-image: url('/assets/chart-ring-overlay.png');
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+
+/* Gold bevel border ring */
+.gritty-pie-bevel {
+  position: absolute;
+  top: -0.0909rem;
+  right: -0.0909rem;
+  bottom: -0.0909rem;
+  left: -0.0909rem;
+  border-radius: 50%;
+  background-image: url('/assets/chart-bevel.png');
+  background-size: 100% 100%;
+  pointer-events: none;
+}

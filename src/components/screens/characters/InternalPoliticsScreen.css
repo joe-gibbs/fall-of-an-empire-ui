@@ -1,0 +1,1133 @@
+.screen--internal-politics.screen {
+  box-sizing: border-box;
+  align-self: flex-end;
+  width: calc(100% - 3.2rem);
+  max-width: 82rem;
+  height: 34rem;
+  max-height: calc(100vh - var(--topbar-height) - var(--bottombar-height) - 1.55rem);
+  margin: 0;
+  padding-top: 0;
+  border-top: 0.154rem solid rgba(80, 85, 100, 0.35);
+  pointer-events: auto;
+}
+
+.screen--internal-politics .screen-content--internal-politics {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.462rem 0.923rem 1.8rem;
+}
+
+.ips-wrap {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-width: 82rem;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+}
+
+.ips-tab-section {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: #3f382f;
+  background-color: rgba(13, 14, 16, 0.54);
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+}
+
+.ips-tab-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  padding: 0.35rem 0.55rem 0.25rem;
+}
+
+.ips-tab-toolbar > .tooltip-wrapper {
+  flex-shrink: 0;
+}
+
+.ips-tab-list,
+.ips-faction-table-body,
+.ips-table-body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.ips-row-scroll-frame {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+}
+
+.ips-row-viewport {
+  padding-right: 1.05rem;
+}
+
+.ips-tab-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0.15rem 0.55rem 0.6rem;
+}
+
+.ips-faction-list,
+.ips-table {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.ips-faction-header,
+.ips-faction-row,
+.ips-governor-header,
+.ips-governor-row,
+.ips-foederati-header,
+.ips-foederati-row,
+.ips-command-header,
+.ips-command-row {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ips-faction-header,
+.ips-governor-header,
+.ips-foederati-header,
+.ips-command-header {
+  min-height: 1.85rem;
+  flex-shrink: 0;
+  padding: 0 0.55rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(31, 37, 44, 0.82) 0%, rgba(13, 18, 24, 0.95) 100%);
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+  background-color: #11171d;
+}
+
+.ips-faction-header-cell,
+.ips-governor-header-cell,
+.ips-foederati-header-cell,
+.ips-command-header-cell {
+  box-sizing: border-box;
+  min-width: 0;
+  color: var(--gold);
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.ips-faction-table-body,
+.ips-table-body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.ips-row-viewport.virtual-list__viewport--virtualized .ips-row-frame > .ips-faction-row,
+.ips-row-viewport.virtual-list__viewport--virtualized .ips-row-frame > .ips-governor-row,
+.ips-row-viewport.virtual-list__viewport--virtualized .ips-row-frame > .ips-foederati-row,
+.ips-row-viewport.virtual-list__viewport--virtualized .ips-row-frame > .ips-command-row {
+  height: 100%;
+  min-height: 100%;
+}
+
+.ips-faction-row {
+  min-height: 4.35rem;
+  padding: 0.42rem 0.55rem;
+  border-width: 0;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(121, 103, 76, 0.24);
+  background-color: rgba(17, 17, 18, 0.44);
+  color: var(--text);
+  text-align: left;
+  cursor: var(--cursor-pointer);
+}
+
+.ips-foederati-row,
+.ips-governor-row,
+.ips-command-row {
+  min-height: 3.45rem;
+  padding: 0.38rem 0.55rem;
+  border-width: 0;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(121, 103, 76, 0.24);
+  background-color: rgba(17, 17, 18, 0.44);
+  color: var(--text);
+  text-align: left;
+  cursor: var(--cursor-pointer);
+}
+
+.ips-faction-row--foederati {
+  border-color: rgba(196, 120, 64, 0.36);
+}
+
+.ips-faction-row:hover,
+.ips-governor-row:hover,
+.ips-foederati-row:hover,
+.ips-command-row:hover,
+.ips-governor-card:hover,
+.ips-command-card:hover,
+.ips-foederati-card:hover {
+  background-color: rgba(201, 168, 76, 0.06);
+}
+
+.ips-faction-cell,
+.ips-faction-header-cell,
+.ips-governor-cell,
+.ips-governor-header-cell,
+.ips-foederati-cell,
+.ips-foederati-header-cell,
+.ips-command-cell,
+.ips-command-header-cell {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.ips-faction-header-cell--focus,
+.ips-faction-header-cell--tax,
+.ips-faction-header-cell--tribute,
+.ips-faction-header-cell--scale,
+.ips-governor-header-cell--settlements,
+.ips-governor-header-cell--corruption,
+.ips-governor-header-cell--tax,
+.ips-governor-header-cell--unrest,
+.ips-governor-header-cell--military,
+.ips-foederati-header-cell--ready,
+.ips-foederati-header-cell--active,
+.ips-foederati-header-cell--strength,
+.ips-foederati-header-cell--action,
+.ips-command-header-cell--strength,
+.ips-command-header-cell--relation {
+  justify-content: flex-end;
+}
+
+.ips-faction-cell--name,
+.ips-faction-header-cell--name {
+  flex-grow: 1.25;
+  flex-shrink: 1;
+  flex-basis: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ips-faction-cell--ruler,
+.ips-faction-header-cell--ruler {
+  flex-grow: 1.2;
+  flex-shrink: 1;
+  flex-basis: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 0.45rem;
+}
+
+.ips-faction-cell--compliance,
+.ips-faction-header-cell--compliance {
+  width: 9.4rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+}
+
+.ips-faction-cell--focus,
+.ips-faction-header-cell--focus {
+  width: 14.2rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-faction-cell--tax,
+.ips-faction-header-cell--tax {
+  width: 5.9rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-faction-cell--tribute,
+.ips-faction-header-cell--tribute {
+  width: 6.2rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-faction-cell--scale,
+.ips-faction-header-cell--scale {
+  width: 6.8rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-governor-cell--region,
+.ips-governor-header-cell--region {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.ips-governor-cell--region {
+  display: flex;
+  flex-direction: column;
+}
+
+.ips-governor-cell--governor,
+.ips-governor-header-cell--governor {
+  flex-grow: 1.25;
+  flex-shrink: 1;
+  flex-basis: 0;
+  padding-left: 0.45rem;
+}
+
+.ips-governor-cell--governor {
+  display: flex;
+  align-items: center;
+}
+
+.ips-governor-cell--settlements,
+.ips-governor-header-cell--settlements {
+  width: 7.1rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-governor-cell--corruption,
+.ips-governor-header-cell--corruption,
+.ips-governor-cell--tax,
+.ips-governor-header-cell--tax,
+.ips-governor-cell--unrest,
+.ips-governor-header-cell--unrest,
+.ips-governor-cell--military,
+.ips-governor-header-cell--military {
+  width: 6.4rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-foederati-cell--name,
+.ips-foederati-header-cell--name {
+  flex-grow: 1.15;
+  flex-shrink: 1;
+  flex-basis: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ips-foederati-cell--ruler,
+.ips-foederati-header-cell--ruler {
+  flex-grow: 1.2;
+  flex-shrink: 1;
+  flex-basis: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 0.45rem;
+}
+
+.ips-foederati-cell--compliance,
+.ips-foederati-header-cell--compliance {
+  width: 8.6rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+}
+
+.ips-foederati-cell--ready,
+.ips-foederati-header-cell--ready,
+.ips-foederati-cell--active,
+.ips-foederati-header-cell--active,
+.ips-foederati-cell--strength,
+.ips-foederati-header-cell--strength {
+  width: 5.8rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-foederati-cell--action,
+.ips-foederati-header-cell--action {
+  width: 7rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-command-cell--commander,
+.ips-command-header-cell--commander {
+  flex-grow: 1.25;
+  flex-shrink: 1;
+  flex-basis: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ips-command-cell--force,
+.ips-command-header-cell--force {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  padding-left: 0.45rem;
+}
+
+.ips-command-cell--type,
+.ips-command-header-cell--type {
+  width: 5.4rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+}
+
+.ips-command-cell--strength,
+.ips-command-header-cell--strength {
+  width: 8rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-command-cell--relation,
+.ips-command-header-cell--relation {
+  width: 7.6rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-faction-row-title,
+.ips-faction-ruler-copy,
+.ips-governor-copy,
+.ips-command-copy,
+.ips-foederati-copy,
+.ips-foederati-ruler-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ips-faction-row-title,
+.ips-faction-ruler-copy,
+.ips-governor-copy,
+.ips-foederati-ruler-copy {
+  margin-left: 0.5rem;
+}
+
+.ips-faction-row-name,
+.ips-ruler-name,
+.ips-governor-region,
+.ips-province-name,
+.ips-command-name,
+.ips-foederati-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ips-faction-row-sub,
+.ips-ruler-detail,
+.ips-governor-name,
+.ips-governor-bloc,
+.ips-governor-sub,
+.ips-command-force,
+.ips-command-detail,
+.ips-foederati-sub,
+.ips-bloc-line {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ips-faction-cell--focus,
+.ips-faction-cell--tax,
+.ips-faction-cell--tribute,
+.ips-faction-cell--scale,
+.ips-governor-cell--settlements,
+.ips-governor-cell--corruption,
+.ips-governor-cell--tax,
+.ips-governor-cell--unrest,
+.ips-governor-cell--military,
+.ips-foederati-cell--ready,
+.ips-foederati-cell--active,
+.ips-foederati-cell--strength,
+.ips-command-cell--type,
+.ips-command-cell--strength,
+.ips-command-cell--relation,
+.ips-opinion {
+  font-family: var(--font-header);
+  font-size: 0.86rem;
+}
+
+.ips-faction-cell--tax,
+.ips-faction-cell--tribute,
+.ips-faction-cell--scale,
+.ips-governor-cell--settlements,
+.ips-governor-cell--corruption,
+.ips-governor-cell--tax,
+.ips-governor-cell--unrest,
+.ips-governor-cell--military,
+.ips-foederati-cell--ready,
+.ips-foederati-cell--active,
+.ips-foederati-cell--strength,
+.ips-command-cell--strength,
+.ips-command-cell--relation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.ips-command-cell--type {
+  display: flex;
+  align-items: center;
+}
+
+.ips-foederati-cell--action {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.ips-command-cell--strength .bar-track {
+  width: 6.5rem;
+  margin-top: 0.18rem;
+}
+
+.ips-faction-cell--focus > .btm-inline,
+.ips-governor-cell--corruption > .btm-inline,
+.ips-province-actions > .btm-inline {
+  margin-top: 0.22rem;
+}
+
+.ips-province-actions > .btm-inline {
+  align-self: flex-end;
+}
+
+.ips-faction-cell--tax small,
+.ips-faction-cell--scale small {
+  margin-top: 0.08rem;
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.ips-bloc-line {
+  display: flex;
+  align-items: center;
+}
+
+.ips-entity-link.entity-link,
+.ips-bloc-link.entity-link {
+  color: var(--gold-light);
+}
+
+.ips-entity-link.entity-link:hover,
+.ips-bloc-link.entity-link:hover {
+  color: var(--gold);
+}
+
+.ips-bloc-icon {
+  width: 0.82rem;
+  height: 0.82rem;
+  flex-shrink: 0;
+  margin-right: 0.24rem;
+}
+
+.ips-gold-value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.ips-gold-icon {
+  width: 0.86rem;
+  height: 0.86rem;
+  flex-shrink: 0;
+  margin-right: 0.24rem;
+}
+
+.ips-focus-options {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.ips-focus-button {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  margin-left: 0.18rem;
+  padding: 0.11rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(121, 103, 76, 0.32);
+  background-color: rgba(17, 17, 18, 0.72);
+  cursor: var(--cursor-pointer);
+}
+
+.ips-focus-button:hover,
+.ips-focus-button--active {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  background-color: rgba(82, 20, 28, 0.72);
+}
+
+.ips-focus-button--disabled,
+.ips-focus-button--disabled:hover {
+  border-top-color: rgba(121, 103, 76, 0.18);
+  border-right-color: rgba(121, 103, 76, 0.18);
+  border-bottom-color: rgba(121, 103, 76, 0.18);
+  border-left-color: rgba(121, 103, 76, 0.18);
+  background-color: rgba(17, 17, 18, 0.72);
+  cursor: default;
+  opacity: 0.46;
+}
+
+.ips-focus-button--disabled.ips-focus-button--active {
+  border-top-color: rgba(201, 168, 76, 0.46);
+  border-right-color: rgba(201, 168, 76, 0.46);
+  border-bottom-color: rgba(201, 168, 76, 0.46);
+  border-left-color: rgba(201, 168, 76, 0.46);
+  background-color: rgba(82, 20, 28, 0.36);
+}
+
+.ips-focus-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.ips-focus-unavailable {
+  color: var(--text-dark);
+  font-family: var(--font-header);
+  font-size: 0.86rem;
+}
+
+.ips-tax-stepper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.12rem;
+}
+
+.ips-tax-button {
+  width: 1.24rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+  margin-left: 0.14rem;
+  padding: 0;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.36);
+  background-color: rgba(82, 20, 28, 0.72);
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.78rem;
+  line-height: 0.9rem;
+  text-align: center;
+  cursor: var(--cursor-pointer);
+}
+
+.ips-tax-button:hover {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.ips-tax-button--disabled {
+  border-top-color: rgba(121, 103, 76, 0.18);
+  border-right-color: rgba(121, 103, 76, 0.18);
+  border-bottom-color: rgba(121, 103, 76, 0.18);
+  border-left-color: rgba(121, 103, 76, 0.18);
+  background-color: rgba(17, 17, 18, 0.72);
+  color: var(--text-dark);
+  cursor: default;
+}
+
+.ips-faction-cell-label {
+  display: none;
+}
+
+.ips-compliance-state {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.ips-compliance-state--empty {
+  color: var(--text-dark);
+}
+
+.ips-compliance-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+  margin-right: 0.22rem;
+}
+
+.ips-compliance-state strong {
+  margin-left: 0.3rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.ips-faction-cell--compliance .bar-track {
+  margin-top: 0.18rem;
+}
+
+.ips-compliance-opinion {
+  display: block;
+  margin-top: 0.12rem;
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.ips-meter-block {
+  margin-top: 0.42rem;
+}
+
+.ips-meter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.18rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.ips-governor-card,
+.ips-command-card,
+.ips-foederati-card,
+.ips-province-card {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 0.42rem;
+  padding: 0.45rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(121, 103, 76, 0.26);
+  background-color: rgba(17, 17, 18, 0.52);
+  color: var(--text);
+  text-align: left;
+}
+
+.ips-governor-card,
+.ips-command-card,
+.ips-foederati-card,
+.ips-province-facts {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.ips-governor-card,
+.ips-command-card {
+  cursor: var(--cursor-pointer);
+}
+
+.ips-governor-copy,
+.ips-command-copy,
+.ips-foederati-copy {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  margin-left: 0.5rem;
+}
+
+.ips-province-card {
+  min-height: 5.85rem;
+  display: flex;
+  align-items: stretch;
+  padding: 0.5rem 0.55rem;
+  background-image:
+    linear-gradient(180deg, rgba(31, 37, 44, 0.28) 0%, rgba(17, 17, 18, 0.38) 100%),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 39rem 39rem;
+  background-color: rgba(17, 17, 18, 0.66);
+}
+
+.ips-province-card:hover {
+  background-color: rgba(201, 168, 76, 0.06);
+}
+
+.ips-province-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.ips-province-emblem {
+  width: 2.7rem;
+  height: 2.7rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.32);
+  background-color: rgba(11, 13, 15, 0.62);
+  background-image: url('/assets/baked/icon-button.png');
+  background-repeat: repeat;
+  background-size: 10rem 10rem;
+}
+
+.ips-province-emblem-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  opacity: 0.92;
+}
+
+.ips-province-copy {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  margin-left: 0.65rem;
+}
+
+.ips-province-head {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ips-province-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  min-width: 5.6rem;
+  margin-left: 0.65rem;
+  color: var(--text-dark);
+  font-family: var(--font-header);
+  font-size: 0.75rem;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.ips-province-status--ready {
+  color: var(--green);
+}
+
+.ips-province-status--blocked {
+  color: var(--red-light);
+}
+
+.ips-province-status-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+  margin-right: 0.24rem;
+}
+
+.ips-province-control {
+  margin-top: 0.32rem;
+}
+
+.ips-province-reason {
+  min-width: 0;
+  margin-top: 0.22rem;
+  overflow: hidden;
+  color: var(--red-light);
+  font-size: 0.69rem;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ips-province-metrics {
+  width: 23.6rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  margin-left: 0.75rem;
+}
+
+.ips-province-metric {
+  box-sizing: border-box;
+  width: 11.35rem;
+  min-width: 0;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  margin-right: 0.42rem;
+  margin-bottom: 0.32rem;
+  padding: 0.28rem 0.36rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(121, 103, 76, 0.24);
+  background-color: rgba(6, 7, 8, 0.32);
+}
+
+.ips-province-metric-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-right: 0.32rem;
+  opacity: 0.9;
+}
+
+.ips-province-metric-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ips-province-metric-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-dark);
+  font-size: 0.58rem;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ips-province-metric-value {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-header);
+  font-size: 0.79rem;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ips-province-metric-value .ips-gold-value {
+  justify-content: flex-start;
+}
+
+.ips-province-actions {
+  width: 9.8rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  margin-left: 0.45rem;
+}
+
+.ips-create-province-button {
+  width: 9.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.28rem 0.44rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.38);
+  background-color: rgba(82, 20, 28, 0.72);
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.76rem;
+  text-align: center;
+  white-space: nowrap;
+  cursor: var(--cursor-pointer);
+}
+
+.ips-create-province-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  flex-shrink: 0;
+  margin-right: 0.28rem;
+}
+
+.ips-create-province-button:hover {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.ips-create-province-button--disabled {
+  border-top-color: rgba(121, 103, 76, 0.18);
+  border-right-color: rgba(121, 103, 76, 0.18);
+  border-bottom-color: rgba(121, 103, 76, 0.18);
+  border-left-color: rgba(121, 103, 76, 0.18);
+  background-color: rgba(17, 17, 18, 0.72);
+  color: var(--text-dark);
+  cursor: default;
+}
+
+.ips-command-card {
+  position: relative;
+  padding-bottom: 0.9rem;
+}
+
+.ips-command-values {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 0.45rem;
+}
+
+.ips-command-strength,
+.ips-command-compliance,
+.ips-foederati-compliance {
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+}
+
+.ips-command-strength {
+  color: var(--text-header);
+}
+
+.ips-command-relation-label {
+  margin-top: 0.1rem;
+  color: var(--text-dark);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.ips-command-relation-value {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.ips-command-relation-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+  margin-right: 0.22rem;
+}
+
+.ips-command-bar {
+  position: absolute;
+  left: 4rem;
+  right: 0.45rem;
+  bottom: 0.35rem;
+}
+
+.ips-foederati-card {
+  align-items: stretch;
+  padding: 0.38rem;
+}
+
+.ips-foederati-main {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border-width: 0;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  cursor: var(--cursor-pointer);
+}
+
+.ips-foederati-action {
+  flex-shrink: 0;
+  width: 6.4rem;
+  margin-left: 0.45rem;
+  padding: 0.22rem 0.35rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.38);
+  background-color: rgba(82, 20, 28, 0.72);
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  text-align: center;
+  white-space: nowrap;
+  cursor: var(--cursor-pointer);
+}
+
+.ips-foederati-action:hover {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.ips-foederati-action--disabled {
+  border-top-color: rgba(121, 103, 76, 0.18);
+  border-right-color: rgba(121, 103, 76, 0.18);
+  border-bottom-color: rgba(121, 103, 76, 0.18);
+  border-left-color: rgba(121, 103, 76, 0.18);
+  background-color: rgba(17, 17, 18, 0.72);
+  color: var(--text-dark);
+  cursor: default;
+}
+
+.ips-foederati-compliance {
+  flex-shrink: 0;
+  margin-left: 0.45rem;
+}
+
+.ips-foederati-compliance .ips-compliance-state {
+  justify-content: flex-end;
+}
+
+.ips-empty {
+  padding: 0.7rem 0.55rem;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+@media (max-width: 74rem) {
+  .screen--internal-politics .screen-content--internal-politics {
+    overflow-x: auto;
+  }
+
+  .ips-wrap {
+    min-width: 74rem;
+  }
+}

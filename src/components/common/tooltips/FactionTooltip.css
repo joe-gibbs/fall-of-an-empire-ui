@@ -1,0 +1,269 @@
+.ftt-trigger {
+  display: flex;
+}
+
+.ftt {
+  display: block;
+  min-width: 15rem;
+  max-width: 20rem;
+  padding: 0.3rem 0;
+}
+
+.ftt-name-row {
+  display: flex;
+  flex-direction: column;
+  padding: 0.1rem 0.6rem 0;
+}
+
+.ftt-name-row > * + * {
+  margin-top: 0.1rem;
+}
+
+.ftt-name {
+  font-family: var(--font-header);
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  letter-spacing: 0.02rem;
+}
+
+.ftt-status {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+}
+
+.ftt-ruler {
+  padding: 0.08rem 0.6rem 0;
+  font-size: 0.84rem;
+  color: var(--gold);
+}
+
+.ftt-description {
+  padding: 0.16rem 0.6rem 0;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.ftt-identity {
+  display: flex;
+  flex-direction: column;
+  padding: 0.28rem 0.6rem 0.1rem;
+}
+
+.ftt-identity > * + * {
+  margin-top: 0.18rem;
+}
+
+.ftt-identity-row {
+  display: flex;
+  align-items: center;
+  font-size: 0.84rem;
+  color: var(--text);
+}
+
+.ftt-identity-row > * + * {
+  margin-left: 0.35rem;
+}
+
+.ftt-identity-icon,
+.ftt-meta-icon,
+.ftt-stat-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
+.ftt-rule {
+  display: flex;
+  align-items: center;
+  margin: 0.24rem 0.6rem;
+}
+
+.ftt-rule > span:first-child {
+  display: block;
+  width: 0.6rem;
+  height: 0.6rem;
+  background: url('/assets/lozenge.png') no-repeat center;
+  background-size: contain;
+  flex-shrink: 0;
+}
+
+.ftt-rule > span:last-child {
+  flex: 1;
+  height: 0.5455rem;
+  background: url('/assets/gold-line.png') repeat-x center;
+  background-size: auto 0.5455rem;
+  opacity: 0.6;
+  margin-left: 0.3rem;
+}
+
+.ftt-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.08rem 0.6rem;
+  font-size: 0.84rem;
+}
+
+.ftt-meta-value {
+  margin-left: 0.8rem;
+}
+
+.ftt-meta-label {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.ftt-meta-label > * + * {
+  margin-left: 0.3rem;
+}
+
+.ftt-meta-value {
+  color: var(--text-bright);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.ftt-stats {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.2rem 0.6rem 0.12rem;
+}
+
+.ftt-stat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  flex: 1 0 42%;
+  margin: 0.14rem;
+  padding: 0.16rem 0.24rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ftt-stat-icon {
+  margin-right: 0.32rem;
+}
+
+.ftt-stat-value {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.ftt-stat-label {
+  width: 100%;
+  margin-left: 1.27rem;
+  margin-top: 0.02rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.04rem;
+  text-transform: uppercase;
+  color: var(--text-dark);
+}
+
+.ftt-tags {
+  display: flex;
+  flex-direction: column;
+  padding: 0.1rem 0.6rem 0.24rem;
+}
+
+.ftt-tags > * + * {
+  margin-top: 0.18rem;
+}
+
+.ftt-tag {
+  display: flex;
+  align-items: center;
+  min-height: 1.35rem;
+  padding: 0 0.45rem;
+  font-size: 0.76rem;
+  color: var(--text-bright);
+  background: rgba(201, 168, 76, 0.11);
+  border: 0.0909rem solid rgba(201, 168, 76, 0.22);
+}
+
+.ftt-treaties {
+  display: flex;
+  flex-direction: column;
+}
+
+.ftt-treaties > * + * {
+  margin-top: 0.18rem;
+}
+
+.ftt-treaty-row {
+  display: flex;
+  align-items: center;
+  min-height: 1.9rem;
+  padding: 0.16rem 0.35rem;
+  font-size: 0.76rem;
+  background: rgba(201, 168, 76, 0.11);
+  border: 0.0909rem solid rgba(201, 168, 76, 0.22);
+}
+
+.ftt-treaty-row > * + * {
+  margin-left: 0.46rem;
+}
+
+.ftt-treaty-kind {
+  display: flex;
+  align-items: center;
+  flex-shrink: 1;
+}
+
+.ftt-treaty-kind > * + * {
+  margin-left: 0.36rem;
+}
+
+.ftt-treaty-icon-wrap {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+}
+
+.ftt-treaty-icon-wrap > .tooltip-wrapper-inline {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ftt-treaty-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ftt-treaty-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ftt-treaty-factions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.ftt-treaty-factions > .tooltip-wrapper {
+  flex-shrink: 0;
+  margin-right: 0.22rem;
+  margin-bottom: 0.18rem;
+}
+
+.ftt-treaty-count {
+  flex-shrink: 0;
+  margin-bottom: 0.18rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

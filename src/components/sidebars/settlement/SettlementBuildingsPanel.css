@@ -1,0 +1,1238 @@
+/* Settlement Buildings Panel
+ * Follows the existing sidebar aesthetic: InteractionCard-style 0.2727rem gold-frame
+ * nodes, ornate SectionHeadings per chain, painted bars, no web-app patterns. */
+
+.bld-panel {
+  display: flex;
+  flex-direction: column;
+
+  padding: 0 0.462rem;
+}
+
+/* ============ Construction queue ============
+ * Sticks to the top of the sidebar scroll area so the player always has
+ * feedback on what's being built even when scrolled deep into the tree. */
+
+.bld-construction {
+  position: relative;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+
+  padding: 0.35rem 0 0.4rem;
+  margin: 0 -0.462rem;
+  padding-left: 0.462rem;
+  padding-right: 0.462rem;
+  background-color: rgba(13, 18, 24, 0.96);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(13, 18, 24, 0.98) 0%, rgba(13, 18, 24, 0.98) 82%, rgba(13, 18, 24, 0) 100%);
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+}
+
+/* Hairline gold separator under the pinned queue - only shown when there's
+ * content scrolled under it (handled by the ::after, which sits at the
+ * bottom of the padding). Keeps the seam readable against the tree below. */
+.bld-construction::after {
+  content: '';
+  position: absolute;
+  left: 0.462rem;
+  right: 0.462rem;
+  bottom: 0.1rem;
+  height: 0.0909rem;
+  background-color: var(--gold-muted);
+  pointer-events: none;
+}
+
+.bld-construction-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 0.15rem;
+}
+
+.bld-construction-title {
+  font-family: var(--font-header);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-header);
+}
+
+.bld-construction-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.28rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+  background-color: rgba(13, 18, 24, 0.56);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 4.923rem 4.923rem;
+  color: var(--gold-light);
+  font-size: 0.72rem;
+}
+
+.bld-queue-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.bld-queue-card {
+  display: flex;
+  align-items: stretch;
+
+  position: relative;
+  min-height: 5.05rem;
+  padding: 0.34rem;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.68), rgba(13, 18, 24, 0.92));
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+  border-width: 0.231rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  overflow: hidden;
+}
+
+.bld-queue-card--awaiting_resources {
+  background:
+    linear-gradient(180deg, rgba(44, 20, 20, 0.95), rgba(24, 11, 11, 0.98));
+}
+
+.bld-queue-card--building,
+.bld-queue-card--starting {
+  background:
+    linear-gradient(180deg, rgba(22, 34, 24, 0.95), rgba(14, 22, 15, 0.98));
+}
+
+.bld-queue-card--pending {
+  opacity: 0.6;
+}
+
+.bld-queue-card-art {
+  position: relative;
+  width: 4.4rem;
+  height: 4.4rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  background-color: rgba(13, 18, 24, 0.58);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 4.923rem 4.923rem;
+}
+
+.bld-queue-card-icon {
+  width: 4.4rem;
+  height: 4.4rem;
+  display: block;
+}
+
+.bld-queue-card-order,
+.bld-queue-card-level {
+  position: absolute;
+  min-width: 1rem;
+  padding: 0.05rem 0.22rem;
+  background-color: rgba(13, 18, 24, 0.88);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 4.923rem 4.923rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+  color: var(--text-bright);
+  font-size: 0.64rem;
+  text-align: center;
+}
+
+.bld-queue-card-order {
+  top: 0.2rem;
+  left: 0.2rem;
+}
+
+.bld-queue-card-level {
+  right: 0.2rem;
+  bottom: 0.2rem;
+  color: var(--gold-light);
+}
+
+.bld-queue-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bld-queue-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.bld-queue-card-title-wrap {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.bld-queue-card-title {
+  font-family: var(--font-header);
+  font-size: 0.94rem;
+  color: var(--text-header);
+  letter-spacing: 0.018rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.bld-queue-card-status {
+  display: flex;
+  align-items: center;
+  padding: 0.07rem 0.28rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+  background: rgba(8, 12, 17, 0.28);
+  color: var(--gold-light);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.bld-queue-card--awaiting_resources .bld-queue-card-status {
+  border-top-color: var(--red-dark);
+  border-right-color: var(--red-dark);
+  border-bottom-color: var(--red-dark);
+  border-left-color: var(--red-dark);
+  color: var(--red-light);
+}
+
+.bld-queue-card--building .bld-queue-card-status,
+.bld-queue-card--starting .bld-queue-card-status {
+  border-color: rgba(90, 166, 114, 0.45);
+  color: var(--green);
+}
+
+.bld-queue-card-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-top-color: var(--red-dark);
+  border-right-color: var(--red-dark);
+  border-bottom-color: var(--red-dark);
+  border-left-color: var(--red-dark);
+  background: rgba(63, 18, 18, 0.72);
+  color: var(--red-light);
+  font-family: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.bld-queue-card-action:hover {
+  background: rgba(88, 26, 26, 0.82);
+  color: var(--text-bright);
+}
+
+.bld-queue-card-action--pending {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.bld-queue-card-action-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  opacity: 0.9;
+}
+
+.bld-queue-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.bld-queue-card-reason {
+  font-size: 0.78rem;
+  line-height: 1.28;
+  color: var(--text-muted);
+}
+
+.bld-queue-card-progress-block {
+  display: flex;
+  flex-direction: column;
+
+  margin-top: 0.06rem;
+  padding: 0.24rem 0.34rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.24);
+  background: rgba(8, 12, 17, 0.22);
+}
+
+.bld-queue-card--building .bld-queue-card-progress-block,
+.bld-queue-card--starting .bld-queue-card-progress-block {
+  border-color: rgba(98, 169, 108, 0.45);
+  background: rgba(36, 92, 49, 0.16);
+}
+
+.bld-queue-card-progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  font-size: 0.74rem;
+}
+
+.bld-queue-card-progress-title {
+  display: flex;
+  align-items: center;
+
+  color: var(--text);
+}
+
+.bld-queue-card-progress-value {
+  color: var(--gold-light);
+}
+
+.bld-queue-card--building .bld-queue-card-progress-value,
+.bld-queue-card--starting .bld-queue-card-progress-value {
+  color: var(--green);
+}
+
+.bld-queue-card-resources {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  margin-top: 0.06rem;
+  min-height: 1.35rem;
+}
+
+/* ============ Category tabs ============ */
+
+.bld-cat-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.1818rem;
+  margin: 0.1rem 0 0.45rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(129, 101, 45, 0.42);
+  border-right-color: rgba(79, 65, 36, 0.55);
+  border-bottom-color: rgba(79, 65, 36, 0.55);
+  border-left-color: rgba(79, 65, 36, 0.55);
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(39, 31, 19, 0.82) 0%, rgba(20, 18, 13, 0.92) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #1d1911;
+}
+
+.bld-cat-tab {
+  flex: 0 0 24%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.32rem 0.2rem;
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(37, 31, 20, 0.95) 0%, rgba(22, 19, 14, 0.98) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #211b13;
+  color: var(--text-muted);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(160, 124, 58, 0.22);
+  border-right-color: rgba(103, 82, 42, 0.34);
+  border-bottom-color: rgba(103, 82, 42, 0.34);
+  border-left-color: rgba(103, 82, 42, 0.34);
+  cursor: pointer;
+  font-family: var(--font-header);
+  min-height: 2.45rem;
+  margin-right: 0.154rem;
+  margin-bottom: 0.154rem;
+}
+
+.bld-cat-tab + .bld-cat-tab {
+  margin-left: 0;
+}
+
+.bld-cat-tab:hover {
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(49, 39, 23, 0.96) 0%, rgba(29, 24, 16, 0.98) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #302719;
+  color: var(--text);
+  border-top-color: rgba(201, 168, 76, 0.42);
+  border-right-color: rgba(201, 168, 76, 0.3);
+  border-bottom-color: rgba(201, 168, 76, 0.3);
+  border-left-color: rgba(201, 168, 76, 0.3);
+}
+
+.bld-cat-tab--active {
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(122, 66, 39, 0.92) 0%, rgba(87, 42, 31, 0.98) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #653a24;
+  color: var(--text-header);
+  border-top-color: var(--gold);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+}
+
+.bld-cat-tab--active:hover {
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(136, 75, 43, 0.94) 0%, rgba(96, 48, 34, 0.98) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #714127;
+}
+
+.bld-cat-tab--disabled {
+  color: var(--text-dark);
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(24, 22, 18, 0.84) 0%, rgba(17, 16, 13, 0.92) 100%);
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, auto;
+  background-color: #171511;
+  border-top-color: rgba(97, 80, 46, 0.16);
+  border-right-color: rgba(97, 80, 46, 0.16);
+  border-bottom-color: rgba(97, 80, 46, 0.16);
+  border-left-color: rgba(97, 80, 46, 0.16);
+  cursor: default;
+}
+
+.bld-cat-tab-label {
+  display: block;
+  width: 100%;
+  font-size: 0.6rem;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  overflow-wrap: normal;
+  line-height: 1.05;
+  text-align: center;
+  max-width: 100%;
+  game-ui-font-fit-mode: shrink;
+  game-ui-font-fit-min-size: 0.45rem;
+  game-ui-font-fit-max-size: 0.6rem;
+}
+
+.bld-cat-tab-count {
+  min-width: 1.05rem;
+  padding: 0.02rem 0.18rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.18);
+  border-right-color: rgba(201, 168, 76, 0.18);
+  border-bottom-color: rgba(201, 168, 76, 0.18);
+  border-left-color: rgba(201, 168, 76, 0.18);
+  background-color: rgba(12, 11, 9, 0.34);
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  opacity: 0.82;
+}
+
+.bld-cat-tab--active .bld-cat-tab-count {
+  color: var(--gold-light);
+  background-color: rgba(16, 13, 9, 0.38);
+  opacity: 1;
+}
+
+/* ============ Chain block ============ */
+
+.bld-chain {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chain branch tree - depth-based indentation with connector lines */
+
+.bld-branch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.bld-branch--continues::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  transform: translateX(-0.0455rem);
+  top: 2.2rem;
+  bottom: 0;
+  width: 0.0909rem;
+  background-color: var(--gold-muted);
+  pointer-events: none;
+}
+
+.bld-branch-row {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+}
+
+.bld-branch-node {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Elbow connector: L-shape linking a child to its parent's vertical line */
+.bld-branch-elbow {
+  position: relative;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 0.9rem;
+  margin-right: 0.25rem;
+}
+
+.bld-branch-elbow::before {
+  /* Vertical line from top to middle of node */
+  content: '';
+  position: absolute;
+  left: 0;
+  transform: translateX(-0.0455rem);
+  top: 0;
+  bottom: 50%;
+  width: 0.0909rem;
+  background-color: var(--gold-muted);
+}
+
+.bld-branch-elbow::after {
+  /* Horizontal line from parent's vertical to this node's edge */
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 0.0909rem;
+  background-color: var(--gold-muted);
+}
+
+/* Nested children are indented and drop a vertical line down for siblings */
+.bld-branch-children {
+  margin-left: 0.65rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============ Building node card ============ */
+
+.bld-node {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.68), rgba(13, 18, 24, 0.92));
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+  border-width: 0.231rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  overflow: hidden;
+  transition-property: opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: var(--ease-snap);
+  min-height: 4.4rem;
+}
+
+.bld-node--actionable {
+  cursor: pointer;
+}
+
+.bld-node--queueing::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(201, 168, 76, 0.16);
+  pointer-events: none;
+  animation-name: bld-node-queue-confirm;
+  animation-duration: 0.48s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes bld-node-queue-confirm {
+  0% {
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.bld-node--built.bld-node--actionable:hover {
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(44, 51, 58, 0.72), rgba(18, 23, 29, 0.98));
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+}
+
+.bld-node--maxed {
+  background:
+    linear-gradient(180deg, rgba(34, 30, 18, 0.95), rgba(22, 20, 12, 0.98));
+}
+
+.bld-node--avail {
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(18, 23, 29, 0.95), rgba(13, 18, 24, 0.98));
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+}
+
+.bld-node--avail.bld-node--actionable:hover {
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.72), rgba(18, 23, 29, 0.98));
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+}
+
+.bld-node--locked {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.bld-node--locked:hover {
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(18, 23, 29, 0.95), rgba(13, 18, 24, 0.98));
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+}
+
+/* Portrait - the rendered painting that stands in for each building.
+ * Wider than a tile icon (5rem), no padding, cover-fit so the art
+ * reads as imagery rather than an icon. A subtle right-edge gradient
+ * keeps the border between portrait and body text crisp. */
+
+.bld-node-icon-wrap {
+  position: relative;
+  width: 5rem;
+  height: 5rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.bld-node-icon-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1.25rem;
+  background: linear-gradient(
+    to right,
+    rgba(16, 18, 21, 0) 0%,
+    rgba(16, 18, 21, 0.85) 100%
+  );
+  pointer-events: none;
+}
+
+.bld-node-icon {
+  width: 5rem;
+  height: 5rem;
+  display: block;
+}
+
+.bld-node--locked .bld-node-icon {
+  filter: saturate(0.35) brightness(0.7);
+}
+
+.bld-node--maxed .bld-node-icon-wrap::after {
+  background: linear-gradient(
+    to right,
+    rgba(22, 20, 12, 0) 0%,
+    rgba(22, 20, 12, 0.85) 100%
+  );
+}
+
+.bld-node-lock {
+  position: absolute;
+  right: 0.15rem;
+  bottom: 0.15rem;
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+/* Body */
+
+.bld-node-body {
+  flex: 1;
+  min-width: 0;
+  padding: 0.28rem 0.45rem 0.3rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.bld-node-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  min-width: 0;
+}
+
+.bld-node-header-right {
+  display: flex;
+  align-items: center;
+
+  flex-shrink: 0;
+}
+
+.bld-node-name {
+  font-family: var(--font-header);
+  font-size: 0.92rem;
+  color: var(--text-header);
+  letter-spacing: 0.018rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.bld-node--maxed .bld-node-name {
+  color: var(--gold-light);
+}
+
+.bld-node-level {
+  display: flex;
+  align-items: center;
+
+  flex-shrink: 0;
+}
+
+.bld-node-subheader {
+  display: flex;
+  align-items: center;
+  margin-top: -0.05rem;
+}
+
+.bld-pips {
+  display: flex;
+}
+
+.bld-pip {
+  width: 0.6364rem;
+  height: 0.6364rem;
+  border-radius: 50%;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+  background: transparent;
+}
+
+.bld-pip--on {
+  background-color: var(--gold);
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.bld-pip--queued {
+  background: rgba(106, 26, 26, 0.88);
+  border-top-color: var(--gold-light);
+  border-right-color: var(--gold-light);
+  border-bottom-color: var(--gold-light);
+  border-left-color: var(--gold-light);
+  box-shadow: inset 0 0 0 0.0909rem rgba(255, 232, 176, 0.18);
+}
+
+.bld-node-level-text {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.bld-node--maxed .bld-node-level-text {
+  color: var(--gold-light);
+}
+
+.bld-node-cost {
+  display: flex;
+  align-items: center;
+
+  font-size: 0.82rem;
+  color: var(--gold-light);
+  flex-shrink: 0;
+}
+
+.bld-map-place-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  padding: 0;
+  flex-shrink: 0;
+  border: 1px solid rgba(191, 160, 96, 0.34);
+  border-radius: 2px;
+  background-color: rgba(8, 12, 17, 0.48);
+  cursor: pointer;
+}
+
+.bld-map-place-btn:hover {
+  border-top-color: rgba(224, 190, 116, 0.68);
+  border-right-color: rgba(224, 190, 116, 0.68);
+  border-bottom-color: rgba(224, 190, 116, 0.68);
+  border-left-color: rgba(224, 190, 116, 0.68);
+  background-color: rgba(52, 45, 38, 0.92);
+}
+
+.bld-map-place-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+/* Effects */
+
+.bld-effects {
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.bld-node--locked .bld-effects {
+  color: var(--text-muted);
+}
+
+.bld-tooltip-description {
+  color: var(--text-muted);
+}
+
+.bld-tooltip-effects {
+  margin-top: 0.35rem;
+  color: var(--text);
+}
+
+/* Meta row (upkeep, time, resources) */
+
+.bld-node-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  margin-top: 0.1rem;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.bld-node-meta-item {
+  display: flex;
+  align-items: center;
+
+  white-space: nowrap;
+}
+
+.bld-node-meta-item--muted {
+  color: var(--text-dark);
+}
+
+.bld-meta-icon {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+/* Condition bar inline in the meta row */
+
+.bld-node-condition {
+  display: flex;
+  align-items: center;
+
+  flex: 1 1 auto;
+  min-width: 4rem;
+}
+
+.bld-node-condition-bar {
+  flex: 1;
+  display: block;
+  min-width: 2.5rem;
+}
+
+.bld-node-condition-val {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+/* Resource row */
+
+.bld-res-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.bld-res {
+  display: flex;
+  align-items: center;
+
+  padding: 0 0.2rem;
+  background-color: rgba(13, 18, 24, 0.56);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 4.923rem 4.923rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+  color: var(--text);
+  font-size: 0.7rem;
+}
+
+.bld-res-icon {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.bld-res-amt {
+}
+
+/* Cross-chain prerequisite row */
+
+.bld-requires-row {
+  display: flex;
+  align-items: center;
+
+  margin-top: 0.1rem;
+  padding: 0.15rem 0;
+  border-top-width: 0.0909rem;
+  border-top-style: solid;
+  border-top-color: var(--gold-muted);
+}
+
+.bld-requires-label {
+  font-family: var(--font-header);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.bld-requires-list {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+}
+
+.bld-requires-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  background-color: rgba(13, 18, 24, 0.56);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 4.923rem 4.923rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+}
+
+.bld-requires-item--met {
+  border-top-color: var(--green);
+  border-right-color: var(--green);
+  border-bottom-color: var(--green);
+  border-left-color: var(--green);
+}
+
+.bld-requires-item--missing {
+  border-top-color: var(--red-dark);
+  border-right-color: var(--red-dark);
+  border-bottom-color: var(--red-dark);
+  border-left-color: var(--red-dark);
+  opacity: 0.7;
+}
+
+.bld-requires-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.bld-requires-item--missing .bld-requires-icon {
+  filter: saturate(0.2) brightness(0.7);
+}
+
+.bld-requires-mark {
+  position: absolute;
+  right: -0.2727rem;
+  bottom: -0.3636rem;
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 0.0909rem 0.1818rem;
+  background-color: var(--bg-panel-dark);
+  border: 0.0909rem solid currentColor;
+  font-weight: 700;
+}
+
+.bld-requires-item--met .bld-requires-mark {
+  color: var(--green);
+}
+
+.bld-requires-item--missing .bld-requires-mark {
+  color: var(--red);
+}
+
+/* Locked reason text */
+
+.bld-node-reason {
+  margin-top: 0.15rem;
+  padding: 0.15rem 0.3rem;
+  font-size: 0.72rem;
+  color: var(--red-light);
+  background: rgba(139, 32, 32, 0.16);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(139, 32, 32, 0.45);
+  line-height: 1.3;
+}
+
+/* Settlement Buildings Panel
+ * Follows the existing sidebar aesthetic: InteractionCard-style 0.2727rem gold-frame
+ * nodes > * + *, ornate SectionHeadings per chain > * + *, painted bars > * + *, no web-app patterns. */
+
+.bld-panel > * + * {
+  margin-top: 0.6rem;
+}
+
+/* ============ Construction queue ============
+ * Sticks to the top of the sidebar scroll area so the player always has
+ * feedback on what's being built even when scrolled deep into the tree. */
+
+.bld-construction > * + * {
+  margin-top: 0.3rem;
+}
+
+.bld-construction-heading > * + * {
+  margin-left: 0.5rem;
+}
+
+.bld-queue-list > * + * {
+  margin-top: 0.32rem;
+}
+
+.bld-queue-card > * + * {
+  margin-left: 0.42rem;
+}
+
+.bld-queue-card-body > * + * {
+  margin-top: 0.2rem;
+}
+
+.bld-queue-card-header > * + * {
+  margin-left: 0.5rem;
+}
+
+.bld-queue-card-title-wrap > * {
+  margin-right: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.bld-queue-card-meta > * {
+  margin-right: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.bld-queue-card-progress-block > * + * {
+  margin-top: 0.14rem;
+}
+
+.bld-queue-card-progress-label > * + * {
+  margin-left: 0.5rem;
+}
+
+.bld-queue-card-progress-title > * + * {
+  margin-left: 0.28rem;
+}
+
+.bld-cat-tab > * + * {
+  margin-top: 0.1rem;
+}
+
+/* ============ Chain block ============ */
+
+.bld-chain > * + * {
+  margin-top: 0.35rem;
+}
+
+/* Chain branch tree - depth-based indentation with connector lines */
+
+.bld-branch > * + * {
+  margin-top: 0.3rem;
+}
+
+/* Nested children are indented and drop a vertical line down for siblings */
+.bld-branch-children > * + * {
+  margin-top: 0.3rem;
+}
+
+/* Body */
+
+.bld-node-body > * + * {
+  margin-top: 0.18rem;
+}
+
+.bld-node-header > * + * {
+  margin-left: 0.5rem;
+}
+
+.bld-node-header-right > * + * {
+  margin-left: 0.35rem;
+}
+
+.bld-node-level > * + * {
+  margin-left: 0.3rem;
+}
+
+.bld-pips > * + * {
+  margin-left: 0.1818rem;
+}
+
+.bld-node-cost > * + * {
+  margin-left: 0.2rem;
+}
+
+/* Meta row (upkeep > *, time > *, resources) */
+
+.bld-node-meta > * {
+  margin-right: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.bld-node-meta-item > * + * {
+  margin-left: 0.18rem;
+}
+
+/* Condition bar inline in the meta row */
+
+.bld-node-condition > * + * {
+  margin-left: 0.25rem;
+}
+
+/* Resource row */
+
+.bld-res-row > * {
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.bld-res > * + * {
+  margin-left: 0.1rem;
+}
+
+/* Cross-chain prerequisite row */
+
+.bld-requires-row > * + * {
+  margin-left: 0.35rem;
+}
+
+.bld-requires-list > * {
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+}

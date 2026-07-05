@@ -1,0 +1,169 @@
+@keyframes pause-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pause-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes pause-slide-in {
+  from { opacity: 0; transform: translateX(2.7273rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pause-slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(2.7273rem); }
+}
+
+@keyframes pause-status-in {
+  0% { opacity: 0; transform: translateY(0.5455rem); letter-spacing: 0.02em; }
+  40% { opacity: 1; transform: translateY(0); letter-spacing: 0.22em; }
+  80% { opacity: 1; transform: translateY(0); letter-spacing: 0.22em; }
+  100% { opacity: 0; transform: translateY(0); letter-spacing: 0.22em; }
+}
+
+@keyframes pause-status-rule {
+  0% { opacity: 0; transform: scaleX(0.2); }
+  40% { opacity: 0.75; transform: scaleX(1); }
+  80% { opacity: 0.75; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1); }
+}
+
+.pause-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, rgba(8, 12, 17, 0.3) 0%, rgba(8, 12, 17, 0.75) 40%, rgba(8, 12, 17, 0.9) 100%);
+  padding-left: 55vw;
+  animation-name: pause-in;
+  animation-duration: 0.35s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: forwards;
+}
+
+.pause-overlay--closing {
+  animation: pause-out 280ms ease-in forwards;
+}
+
+.pause-overlay__title {
+  font-family: var(--font-header);
+  font-size: 5rem;
+  font-style: italic;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+  margin-bottom: 2.8rem;
+  user-select: none;
+  text-align: center;
+  animation-name: pause-slide-in;
+  animation-duration: 0.3s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+}
+
+.pause-overlay--closing .pause-overlay__title {
+  animation: pause-slide-out 280ms ease-in both;
+}
+
+.pause-overlay__items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pause-overlay__items > * + * {
+  margin-top: 0.2rem;
+}
+
+.pause-overlay__separator {
+  height: 2rem;
+}
+
+.pause-overlay__item {
+  background: none;
+  border: none;
+  padding: 0.45rem 0;
+  font-family: var(--font-header);
+  font-size: 2rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: color 0.15s;
+  letter-spacing: 0.01em;
+  animation-name: pause-slide-in;
+  animation-duration: 0.25s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+}
+
+.pause-overlay__item:nth-child(1) { animation-delay: 0.04s; }
+.pause-overlay__item:nth-child(2) { animation-delay: 0.07s; }
+.pause-overlay__item:nth-child(3) { animation-delay: 0.10s; }
+.pause-overlay__item:nth-child(4) { animation-delay: 0.13s; }
+.pause-overlay__item:nth-child(5) { animation-delay: 0.16s; }
+.pause-overlay__item:nth-child(7) { animation-delay: 0.22s; }
+.pause-overlay__item:nth-child(8) { animation-delay: 0.25s; }
+
+.pause-overlay--closing .pause-overlay__item {
+  animation: pause-slide-out 280ms ease-in both;
+}
+
+.pause-overlay--closing .pause-overlay__item:nth-child(1) { animation-delay: 0s; }
+.pause-overlay--closing .pause-overlay__item:nth-child(2) { animation-delay: 0.02s; }
+.pause-overlay--closing .pause-overlay__item:nth-child(3) { animation-delay: 0.04s; }
+.pause-overlay--closing .pause-overlay__item:nth-child(4) { animation-delay: 0.06s; }
+.pause-overlay--closing .pause-overlay__item:nth-child(5) { animation-delay: 0.08s; }
+.pause-overlay--closing .pause-overlay__item:nth-child(7) { animation-delay: 0.10s; }
+.pause-overlay--closing .pause-overlay__item:nth-child(8) { animation-delay: 0.12s; }
+
+.pause-overlay__item:hover {
+  color: var(--gold-light);
+}
+
+.pause-overlay__item:active {
+  color: var(--gold);
+}
+
+.pause-overlay__status {
+  position: absolute;
+  left: 55vw;
+  right: 0;
+  bottom: 12vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: var(--font-header);
+  font-style: italic;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--gold-light);
+  animation-name: pause-status-in;
+  animation-duration: 2.8s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: forwards;
+  pointer-events: none;
+}
+
+.pause-overlay__status > * + * {
+  margin-left: 1.1rem;
+}
+
+.pause-overlay__status-rule {
+  width: 3.2rem;
+  height: 0.5455rem;
+  background: url('/assets/gold-line.png') repeat-x center / auto 0.5455rem;
+  transform-origin: center;
+  animation-name: pause-status-rule;
+  animation-duration: 2.8s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: forwards;
+}

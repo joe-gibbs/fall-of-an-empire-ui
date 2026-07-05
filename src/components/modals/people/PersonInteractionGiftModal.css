@@ -1,0 +1,737 @@
+.pig-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 520;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(8, 12, 17, 0.78);
+  animation-name: pig-overlay-in;
+  animation-duration: 0.2s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+}
+
+@keyframes pig-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.pig-overlay--closing {
+  animation: pig-overlay-out 0.18s ease-in both;
+  pointer-events: none;
+}
+
+@keyframes pig-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.pig-modal {
+  width: 56rem;
+  max-width: 94vw;
+  height: 40rem;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/modal-charcoal.png');
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem, 93.0909rem 93.0909rem;
+  animation-name: pig-modal-in;
+  animation-duration: 0.24s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+@keyframes pig-modal-in {
+  from { opacity: 0; transform: scale(0.95) translateY(0.7rem); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.pig-modal--closing {
+  animation: pig-modal-out 0.18s ease-in both;
+}
+
+@keyframes pig-modal-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.97) translateY(0.4rem); }
+}
+
+.pig-header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 1rem 1rem 0.85rem;
+  border-bottom-width: 0.0909rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(201, 168, 76, 0.18);
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.72) 0%, rgba(13, 18, 24, 0.72) 100%),
+    url('/assets/baked/panel-dark.png');
+  background-position: 0 0, 0 0, 0 0, 0 0;
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto, 93.0909rem 93.0909rem;
+}
+
+.pig-header__event-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.pig-header__event-backdrop::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(8, 12, 17, 0.42);
+  background-image: linear-gradient(90deg, rgba(8, 12, 17, 0.28) 0%, rgba(8, 12, 17, 0.52) 100%);
+}
+
+.pig-header > * + * {
+  margin-left: 1rem;
+}
+
+.pig-header__copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pig-header .close-btn {
+  position: relative;
+  z-index: 1;
+}
+
+.pig-header__copy > * + * {
+  margin-top: 0.18rem;
+}
+
+.pig-header__kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+}
+
+.pig-title {
+  margin: 0;
+  font-family: var(--font-header);
+  font-size: 1.3rem;
+  color: var(--text-header);
+}
+
+.pig-subtitle {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+.pig-body {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.24) 0%, rgba(18, 23, 29, 0.38) 100%),
+    url('/assets/baked/screen-content-charcoal.png');
+  background-position: 0 0, 0 0, 0 0, 0 0;
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem, auto, 93.0909rem 93.0909rem;
+}
+
+.pig-event-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.pig-event-backdrop::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(8, 12, 17, 0.34);
+  background-image: linear-gradient(90deg, rgba(8, 12, 17, 0.58) 0%, rgba(8, 12, 17, 0.2) 48%, rgba(8, 12, 17, 0.52) 100%);
+}
+
+.pig-summary {
+  position: relative;
+  z-index: 1;
+  width: 20rem;
+  min-width: 20rem;
+  display: flex;
+  flex-direction: column;
+  border-right-width: 0.0909rem;
+  border-right-style: solid;
+  border-right-color: rgba(201, 168, 76, 0.11);
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-charcoal.png');
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+}
+
+.pig-recipient {
+  position: relative;
+  min-height: 7rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0.85rem;
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 93.0909rem 93.0909rem;
+  border-bottom-width: 0.0909rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(201, 168, 76, 0.12);
+}
+
+.pig-recipient > * + * {
+  margin-left: 0.75rem;
+}
+
+.pig-recipient__portrait {
+  position: relative;
+  width: 5.5rem;
+  min-width: 5.5rem;
+  height: 5.5rem;
+}
+
+.pig-recipient__copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pig-recipient__copy > * + * {
+  margin-top: 0.12rem;
+}
+
+.pig-recipient__label,
+.pig-result__label,
+.pig-ledger__label,
+.pig-impact__label,
+.pig-options__header,
+.pig-option__stat-label {
+  font-size: 0.7rem;
+  line-height: 1.18;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pig-recipient__label,
+.pig-result__label,
+.pig-impact__label {
+  color: var(--gold-dark);
+}
+
+.pig-recipient__name {
+  font-family: var(--font-header);
+  font-size: 1.18rem;
+  color: var(--text-bright);
+  line-height: 1.16;
+  overflow-wrap: break-word;
+}
+
+.pig-recipient__title {
+  font-size: 0.82rem;
+  line-height: 1.2;
+  color: var(--text-muted);
+  overflow-wrap: break-word;
+}
+
+.pig-result {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 0.85rem;
+  background-color: rgba(8, 12, 17, 0.14);
+}
+
+.pig-result > * + * {
+  margin-top: 0.48rem;
+}
+
+.pig-result__name {
+  font-family: var(--font-header);
+  font-size: 1.04rem;
+  color: var(--text-bright);
+  overflow-wrap: break-word;
+}
+
+.pig-result__desc {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+  overflow-wrap: break-word;
+}
+
+.pig-ledger {
+  display: flex;
+  flex-direction: column;
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.14);
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 93.0909rem 93.0909rem;
+}
+
+.pig-ledger__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.48rem 0.55rem;
+  border-bottom-width: 0.0909rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(201, 168, 76, 0.07);
+}
+
+.pig-ledger__row--total {
+  border-bottom-style: none;
+  background-color: rgba(201, 168, 76, 0.07);
+}
+
+.pig-ledger__label {
+  color: var(--text-dark);
+}
+
+.pig-ledger__value {
+  font-family: var(--font-header);
+  font-size: 0.96rem;
+  color: var(--text);
+}
+
+.pig-ledger__value--cost,
+.pig-ledger__value--broke {
+  color: var(--red);
+}
+
+.pig-impact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.65rem;
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: rgba(99, 162, 93, 0.26);
+  background-color: #132019;
+  background-image: url('/assets/baked/card-green.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+}
+
+.pig-impact__value {
+  font-family: var(--font-header);
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--green-light);
+}
+
+.pig-options {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pig-options__header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.62rem 0.95rem;
+  color: var(--gold-dark);
+  border-bottom-width: 0.0909rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(201, 168, 76, 0.14);
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 93.0909rem 93.0909rem;
+}
+
+.pig-options__header > * + * {
+  margin-left: 0.75rem;
+}
+
+.pig-list {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.8rem;
+}
+
+.pig-list > * + * {
+  margin-top: 0.65rem;
+}
+
+.pig-option {
+  position: relative;
+  width: 100%;
+  min-height: 7.25rem;
+  display: flex;
+  align-items: stretch;
+  padding: 0.68rem;
+  border-width: 0.231rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition-property: transform, border-color, background-color;
+  transition-duration: 0.16s;
+  transition-timing-function: ease;
+}
+
+.pig-option > * + * {
+  margin-left: 0.75rem;
+}
+
+.pig-option:hover {
+  transform: translateY(-0.11rem);
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+}
+
+.pig-option--selected {
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(201, 168, 76, 0.08) 0%, rgba(201, 168, 76, 0.01) 52%),
+    url('/assets/baked/card-charcoal-active.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, auto, 17.4545rem 8.7273rem;
+}
+
+.pig-option--locked {
+  opacity: 0.72;
+}
+
+.pig-option__icon-wrap {
+  position: relative;
+  z-index: 1;
+  width: 5.2rem;
+  min-width: 5.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pig-option__icon {
+  width: 4.25rem;
+  height: 4.25rem;
+}
+
+.pig-option__copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pig-option__copy > * + * {
+  margin-top: 0.22rem;
+}
+
+.pig-option__name {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-bright);
+  overflow-wrap: break-word;
+}
+
+.pig-option__desc {
+  font-size: 0.82rem;
+  line-height: 1.3;
+  color: var(--text-muted);
+  overflow-wrap: break-word;
+}
+
+.pig-option__shortfall {
+  font-size: 0.78rem;
+  color: var(--red);
+}
+
+.pig-option__mark {
+  position: absolute;
+  right: 8.8rem;
+  bottom: 0.3rem;
+  width: 8rem;
+  height: 8rem;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.pig-option--selected .pig-option__mark {
+  opacity: 0.13;
+}
+
+.pig-option__stats {
+  position: relative;
+  z-index: 1;
+  width: 8.4rem;
+  min-width: 8.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pig-option__stats > * + * {
+  margin-top: 0.45rem;
+}
+
+.pig-option__stat {
+  display: flex;
+  flex-direction: column;
+  padding: 0.45rem 0.5rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.13);
+  background-color: rgba(8, 12, 17, 0.28);
+}
+
+.pig-option__stat > * + * {
+  margin-top: 0.12rem;
+}
+
+.pig-option__stat-label {
+  color: var(--text-dark);
+}
+
+.pig-option__stat-value {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-header);
+  font-size: 0.98rem;
+  color: var(--gold);
+}
+
+.pig-option__stat-value > * + * {
+  margin-left: 0.28rem;
+}
+
+.pig-option__stat-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  margin-right: 0.28rem;
+}
+
+.pig-option__stat-value--bonus {
+  color: var(--green-light);
+}
+
+.pig-option__stat-value--broke {
+  color: var(--red);
+}
+
+.pig-list__empty,
+.pig-error {
+  padding: 0.65rem 0.8rem;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  border-width: 0.0909rem;
+  border-style: solid;
+  background-color: rgba(8, 12, 17, 0.18);
+}
+
+.pig-list__empty {
+  color: var(--text-muted);
+  border-color: rgba(201, 168, 76, 0.1);
+}
+
+.pig-error {
+  margin: 0 0.85rem 0.85rem;
+  color: var(--red);
+  border-color: rgba(199, 91, 58, 0.35);
+}
+
+.pig-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem;
+  border-top-width: 0.0909rem;
+  border-top-style: solid;
+  border-top-color: var(--separator);
+  background-color: rgba(13, 18, 24, 0.52);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
+}
+
+.pig-footer > * + * {
+  margin-left: 0.55rem;
+}
+
+.pig-footer__button {
+  min-width: 8.5rem;
+}
+
+.pig-footer__button--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 62rem) {
+  .pig-modal {
+    width: 96vw;
+    height: 88vh;
+  }
+
+  .pig-body {
+    flex-direction: column;
+  }
+
+  .pig-summary {
+    width: 100%;
+    min-width: 0;
+    max-height: 22rem;
+    flex-direction: row;
+    border-right-style: none;
+    border-bottom-width: 0.0909rem;
+    border-bottom-style: solid;
+    border-bottom-color: rgba(201, 168, 76, 0.11);
+  }
+
+  .pig-recipient {
+    width: 40%;
+    min-height: 7rem;
+    flex-shrink: 0;
+    border-bottom-style: none;
+    border-right-width: 0.0909rem;
+    border-right-style: solid;
+    border-right-color: rgba(201, 168, 76, 0.12);
+  }
+
+  .pig-result {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 54rem) {
+  .pig-summary {
+    max-height: 32rem;
+    flex-direction: column;
+  }
+
+  .pig-recipient {
+    width: 100%;
+    min-height: 7rem;
+    border-right-style: none;
+    border-bottom-width: 0.0909rem;
+    border-bottom-style: solid;
+    border-bottom-color: rgba(201, 168, 76, 0.12);
+  }
+
+  .pig-option {
+    flex-wrap: wrap;
+  }
+
+  .pig-option__stats {
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    margin-left: 0;
+    margin-top: 0.65rem;
+  }
+
+  .pig-option__stats > * {
+    flex: 1;
+  }
+
+  .pig-option__stats > * + * {
+    margin-top: 0;
+    margin-left: 0.45rem;
+  }
+}

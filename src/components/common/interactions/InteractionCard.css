@@ -1,0 +1,368 @@
+.interaction-card {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  border-width: 0.231rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  overflow: hidden;
+  transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1), transform 0.15s ease-out;
+}
+
+.interaction-card--has-bg {
+  min-height: 3.5rem;
+}
+
+.interaction-card-bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25;
+  z-index: 0;
+  transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.interaction-card--clickable:hover .interaction-card-bg {
+  opacity: 0.35;
+}
+
+.interaction-card--clickable {
+  cursor: pointer;
+}
+
+.interaction-card--clickable:hover {
+  opacity: 1;
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  border-image-source: url('/assets/gold-frame.png');
+  transform: translateY(-0.0909rem);
+}
+
+.interaction-card--clickable:active {
+  transform: translateY(0.0909rem) scale(0.98);
+  transition: transform 0s;
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-active.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+}
+
+.interaction-card-image {
+  width: 3rem;
+  min-height: 2.5rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.308rem;
+  position: relative;
+  z-index: 2;
+}
+
+.interaction-card-image img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.interaction-card-body {
+  flex: 1;
+  padding: 0.231rem 0.462rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.interaction-card-body > * + * {
+  margin-top: 0.077rem;
+}
+
+.interaction-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.interaction-card-header > * + * {
+  margin-left: 0.462rem;
+}
+
+.interaction-card-title {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  color: var(--text-header);
+  letter-spacing: 0.023rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.interaction-card-cooldown {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.interaction-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-height: 1.95rem;
+}
+
+.interaction-card-desc strong,
+.interaction-card-desc .rich-header {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.interaction-card-desc .rich-concept {
+  width: 0.9rem;
+  height: 0.9rem;
+  vertical-align: middle;
+  margin-right: 0.12rem;
+}
+
+.interaction-card-meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-top: 0.18rem;
+}
+
+
+/* --- Active / progress states --- */
+.interaction-card--active {
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+}
+
+.interaction-card-progress {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  background-color: rgba(8, 12, 17, 0.12);
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.interaction-card-progress-fill {
+  height: 100%;
+  width: 100%;
+  background-image: linear-gradient(90deg, rgba(104, 80, 31, 0.55), rgba(177, 133, 43, 0.46), rgba(229, 194, 92, 0.36));
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.interaction-card-status {
+  font-size: 0.8rem;
+  color: var(--gold);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-style: italic;
+}
+
+.interaction-card-cancel {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(10, 14, 18, 0.72);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(199, 169, 100, 0.62);
+  border-radius: 0.154rem;
+  cursor: pointer;
+  opacity: 0.86;
+  transition: opacity 0.12s ease-out, transform 0.12s ease-out, border-color 0.12s ease-out;
+}
+
+.interaction-card-cancel:hover {
+  opacity: 1;
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  transform: scale(1.06);
+}
+
+.interaction-card-cancel:active {
+  transform: scale(0.94);
+  transition: transform 0s;
+}
+
+.interaction-card-cancel img {
+  width: 100%;
+  height: 100%;
+}
+
+.interaction-card-desc--progress {
+  color: var(--gold);
+  font-style: italic;
+}
+
+/* --- Disabled state (availability greyed) --- */
+.interaction-card--disabled {
+  opacity: 0.45;
+  filter: saturate(0.35);
+  cursor: default;
+}
+
+.interaction-card--disabled .interaction-card-bg {
+  opacity: 0.12;
+}
+
+/* --- Cooldown state --- */
+.interaction-card--cooldown {
+  opacity: 0.7;
+  filter: saturate(0.55);
+  cursor: default;
+}
+
+.interaction-card--cooldown .interaction-card-bg {
+  opacity: 0.15;
+}
+
+.interaction-card-progress--cooldown {
+  background-color: rgba(8, 12, 17, 0.18);
+}
+
+.interaction-card-progress-fill--cooldown {
+  background-image: linear-gradient(90deg, rgba(96, 40, 40, 0.58), rgba(151, 73, 57, 0.5), rgba(202, 121, 76, 0.38));
+}
+
+.interaction-card-cooldown-status {
+  font-size: 0.8rem;
+  color: var(--red);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-style: italic;
+}
+
+/* --- Success completion --- */
+.interaction-card--success {
+  background-image: url('/assets/baked/card-green.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+  background-color: #162018;
+  animation: interaction-success-pulse 1.6s ease-out forwards;
+}
+
+.interaction-card-success-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(90, 170, 90, 0.28);
+  z-index: 1;
+  pointer-events: none;
+  animation: interaction-success-flash 1.6s ease-out forwards;
+}
+
+@keyframes interaction-success-flash {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes interaction-success-pulse {
+  0%   { transform: scale(1); }
+  8%   { transform: scale(1.025); }
+  22%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+.interaction-card-desc--success {
+  color: var(--green-light);
+  font-weight: 600;
+}
+
+/* --- Failure completion --- */
+.interaction-card--failure {
+  background-image: url('/assets/baked/card-red.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+  background-color: #201414;
+  animation: interaction-failure-shake 0.55s cubic-bezier(.36,.07,.19,.97);
+}
+
+.interaction-card-failure-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(180, 50, 50, 0.3);
+  z-index: 1;
+  pointer-events: none;
+  animation: interaction-failure-flash 1.4s ease-out forwards;
+}
+
+@keyframes interaction-failure-flash {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes interaction-failure-shake {
+  0%, 100%   { transform: translateX(0); }
+  15%, 45%   { transform: translateX(-0.3636rem); }
+  30%, 60%   { transform: translateX(0.3636rem); }
+  75%        { transform: translateX(-0.1818rem); }
+  90%        { transform: translateX(0.0909rem); }
+}
+
+.interaction-card-desc--failure {
+  color: var(--red);
+  font-weight: 600;
+}

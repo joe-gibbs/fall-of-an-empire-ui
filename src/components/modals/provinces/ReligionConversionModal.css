@@ -1,0 +1,550 @@
+.rcm-modal {
+  width: 55.2rem;
+  max-width: 94vw;
+  height: 52.8rem;
+  max-height: 96vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.rcm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.1rem 1.3rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  flex-shrink: 0;
+}
+
+.rcm-header-main,
+.rcm-current,
+.rcm-current-faith,
+.rcm-footer {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.rcm-header-main > * + *,
+.rcm-current-faith > * + *,
+.rcm-footer > * + * {
+  margin-left: 0.7rem;
+}
+
+.rcm-header-icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  flex-shrink: 0;
+}
+
+.rcm-header-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rcm-title {
+  margin: 0;
+  font-family: var(--font-header);
+  font-size: 1.45rem;
+  color: var(--text-header);
+  letter-spacing: 0;
+}
+
+.rcm-scroll {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+}
+
+.rcm-body {
+  padding: 1.1rem 2.35rem 1.1rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.rcm-current {
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: rgba(8, 12, 17, 0.28);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--separator);
+  border-right-color: var(--separator);
+  border-bottom-color: var(--separator);
+  border-left-color: var(--separator);
+}
+
+.rcm-current-faith {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.rcm-current-arrow {
+  width: 2.2rem;
+  height: 0.077rem;
+  background-color: var(--gold-dark);
+  margin-left: 0.8rem;
+  margin-right: 0.8rem;
+  flex-shrink: 0;
+}
+
+.rcm-religion-icon {
+  width: 2.45rem;
+  height: 2.45rem;
+  flex-shrink: 0;
+}
+
+.rcm-current-name {
+  display: block;
+  font-family: var(--font-header);
+  font-size: 1.05rem;
+  color: var(--text-header);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rcm-section {
+  margin-top: 1rem;
+}
+
+.rcm-options-title {
+  margin-bottom: 0.6rem;
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.rcm-options,
+.rcm-stages {
+  display: flex;
+  flex-direction: column;
+}
+
+.rcm-options > * + *,
+.rcm-stages > * + * {
+  margin-top: 0.6rem;
+}
+
+.rcm-options .tooltip-wrapper {
+  width: 100%;
+}
+
+.rcm-stage-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rcm-stage-section--expanded {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.rcm-stage-track {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.rcm-stage-track > * + * {
+  margin-left: 0.45rem;
+}
+
+.rcm-stage-track .tooltip-wrapper {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.rcm-stage-step {
+  width: 100%;
+  height: 4.15rem;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.45rem;
+  background-color: #20272d;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(120, 105, 65, 0.22);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.rcm-stage-step:hover,
+.rcm-stage-step--selected {
+  background-color: #252d34;
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.rcm-stage-step--active {
+  border-top-color: var(--green);
+  border-right-color: var(--green);
+  border-bottom-color: var(--green);
+  border-left-color: var(--green);
+}
+
+.rcm-stage-step--complete {
+  opacity: 0.82;
+}
+
+.rcm-stage-step--locked {
+  opacity: 0.58;
+}
+
+.rcm-stage-step > * + * {
+  margin-left: 0.45rem;
+}
+
+.rcm-stage-step-index {
+  width: 1.45rem;
+  height: 1.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(8, 12, 17, 0.4);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--separator);
+  border-right-color: var(--separator);
+  border-bottom-color: var(--separator);
+  border-left-color: var(--separator);
+  font-family: var(--font-header);
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.rcm-stage-step-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.rcm-stage-step-name,
+.rcm-stage-step-state {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rcm-stage-step-name {
+  font-family: var(--font-header);
+  font-size: 0.88rem;
+  color: var(--text-header);
+}
+
+.rcm-stage-step-state {
+  margin-top: 0.1rem;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.rcm-active-stage {
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+  margin-top: 0.85rem;
+  padding: 0.9rem;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  background-color: rgba(8, 12, 17, 0.32);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.38);
+  border-right-color: rgba(201, 168, 76, 0.24);
+  border-bottom-color: rgba(201, 168, 76, 0.18);
+  border-left-color: rgba(201, 168, 76, 0.24);
+}
+
+.rcm-active-stage > * + * {
+  margin-left: 1rem;
+}
+
+.rcm-active-stage-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.rcm-active-stage-heading {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.rcm-active-stage-heading > * + * {
+  margin-left: 0.65rem;
+}
+
+.rcm-active-stage-index {
+  width: 2.1rem;
+  height: 2.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(8, 12, 17, 0.44);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--separator);
+  border-right-color: var(--separator);
+  border-bottom-color: var(--separator);
+  border-left-color: var(--separator);
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.rcm-active-stage-title-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rcm-active-stage-state {
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: var(--green);
+}
+
+.rcm-active-stage-title {
+  font-family: var(--font-header);
+  font-size: 1.18rem;
+  color: var(--text-header);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rcm-active-stage-description {
+  margin-top: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+
+.rcm-active-stage-progress-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  font-family: var(--font-header);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.rcm-active-stage-progress {
+  display: block;
+  height: 0.55rem;
+  margin-top: 0.35rem;
+  overflow: hidden;
+  background-color: rgba(8, 12, 17, 0.72);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.25);
+  border-right-color: rgba(201, 168, 76, 0.25);
+  border-bottom-color: rgba(201, 168, 76, 0.25);
+  border-left-color: rgba(201, 168, 76, 0.25);
+  flex-shrink: 0;
+}
+
+.rcm-active-stage-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--gold);
+  transform-origin: left center;
+}
+
+.rcm-active-stage-remaining {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.55rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.rcm-active-stage-remaining > * + * {
+  margin-left: 0.75rem;
+  color: var(--gold);
+  font-family: var(--font-header);
+}
+
+.rcm-active-stage-stats {
+  display: flex;
+  flex-direction: column;
+  min-width: 14rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 17rem;
+}
+
+.rcm-active-stage-stats-title {
+  font-family: var(--font-header);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.rcm-active-stage-stats > * + * {
+  margin-top: 0.5rem;
+}
+
+.rcm-active-stage-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+  padding-bottom: 0.35rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(201, 168, 76, 0.14);
+}
+
+.rcm-active-stage-stat > * + * {
+  margin-left: 0.75rem;
+}
+
+.rcm-active-stage-stat-label {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rcm-active-stage-stat-value {
+  font-family: var(--font-header);
+  color: var(--text-header);
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.rcm-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.7rem;
+  background-color: #20272d;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(120, 105, 65, 0.22);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.rcm-option:hover,
+.rcm-option--selected {
+  background-color: #252d34;
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.rcm-option > * + * {
+  margin-left: 0.65rem;
+}
+
+.rcm-option-icon {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+}
+
+.rcm-option-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.rcm-option-name {
+  display: block;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-header);
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rcm-option-desc {
+  display: block;
+  margin-top: 0.18rem;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rcm-option-followers {
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.rcm-empty {
+  padding: 1.1rem;
+  color: var(--text-dark);
+  text-align: center;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--separator);
+  border-right-color: var(--separator);
+  border-bottom-color: var(--separator);
+  border-left-color: var(--separator);
+}
+
+.rcm-footer {
+  justify-content: flex-end;
+  padding: 0.9rem 1.3rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--separator);
+  flex-shrink: 0;
+}
+
+.rcm-cancel-button {
+  min-width: 9rem;
+}

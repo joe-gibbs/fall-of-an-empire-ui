@@ -1,0 +1,1237 @@
+/* ===== Diplomacy Sidebar ===== */
+
+.diplomacy-sidebar {
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.34) 0%, rgba(18, 23, 29, 0.48) 100%),
+    url('/assets/baked/screen-charcoal.png');
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem, auto, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+}
+
+/* --- Faction header with event image + dark scrim --- */
+.diplo-header {
+  position: relative;
+  flex-shrink: 0;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  overflow: hidden;
+  background-color: #0d1218;
+}
+
+.diplo-header-bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.diplo-header-scrim {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: transparent;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.16) 0%, rgba(36, 42, 48, 0.16) 100%),
+    linear-gradient(180deg, rgba(8, 12, 17, 0.58) 0%, rgba(8, 12, 17, 0.82) 100%),
+    linear-gradient(135deg, var(--faction-tint) 0%, transparent 60%);
+  background-repeat: repeat, no-repeat, no-repeat;
+  background-size: auto, auto, auto;
+}
+
+.diplo-header-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  padding: 0.5rem 0.6rem;
+  z-index: 1;
+}
+
+.diplo-header-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.diplo-header-name {
+  font-family: var(--font-header);
+  font-size: 1.2rem;
+  color: var(--text-bright);
+  letter-spacing: 0.03rem;
+  text-shadow: 0 0.077rem 0.3rem rgba(8, 12, 17, 0.9);
+}
+
+.diplo-header-status-row {
+  display: flex;
+  align-items: center;
+}
+
+.diplo-header-status-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.diplo-header-capital {
+  display: flex;
+  align-items: center;
+
+  margin-top: 0.1rem;
+}
+
+.diplo-header-capital-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  opacity: 0.7;
+}
+
+.diplo-header-capital-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Strength bar in header */
+.diplo-header-strength {
+  position: relative;
+  z-index: 1;
+  padding: 0.15rem 0.6rem 0.4rem;
+  cursor: auto;
+}
+
+.diplo-header-strength-labels {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.1rem;
+}
+
+.diplo-header-strength-value {
+  display: block;
+  width: 3.2rem;
+  font-size: 0.95rem;
+  game-ui-font-fit-mode: shrink;
+  game-ui-font-fit-min-size: 0.68rem;
+  game-ui-font-fit-max-size: 0.95rem;
+}
+
+.diplo-header-strength-value--theirs {
+  text-align: right;
+}
+
+.diplo-header-strength-value--ours {
+  text-align: left;
+}
+
+.diplo-header-strength-swords {
+  width: 0.85rem;
+  height: 0.85rem;
+  opacity: 0.6;
+}
+
+.diplomacy-sidebar .sidebar-comparison-track {
+  height: 0.55rem;
+  border-radius: 0;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(8, 12, 17, 0.72);
+  background-image:
+    linear-gradient(180deg, rgba(8, 12, 17, 0.28) 0%, rgba(8, 12, 17, 0.54) 100%),
+    url('/assets/bar-track.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 14rem 0.75rem;
+}
+
+.diplomacy-sidebar .sidebar-comparison-fill-left,
+.diplomacy-sidebar .sidebar-comparison-fill-right {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(8, 12, 17, 0.2) 100%),
+    url('/assets/bar-gold.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 14rem 0.75rem;
+}
+
+.diplo-identity-pair {
+  flex-wrap: wrap;
+}
+
+.diplo-identity-pair > .tooltip-wrapper {
+  width: 50%;
+  flex: 0 0 50%;
+  box-sizing: border-box;
+}
+
+.diplo-identity-pair > .tooltip-wrapper:nth-child(2) {
+  border-right-width: 0;
+}
+
+.diplo-identity-pair > .tooltip-wrapper:nth-child(3) {
+  width: 100%;
+  flex-basis: 100%;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--separator);
+  border-right-width: 0;
+}
+
+/* --- Opinion row with bar --- */
+.diplo-opinion-row {
+  display: flex;
+  align-items: center;
+
+  padding: 0.25rem 0.462rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
+  background-color: rgba(16, 22, 28, 0.38);
+  cursor: auto;
+}
+
+.diplo-opinion-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+}
+
+.diplo-opinion-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.diplo-opinion-bar {
+  flex: 1;
+  min-width: 0;
+}
+
+.diplo-opinion-center {
+  position: absolute;
+  top: -0.0909rem;
+  bottom: -0.0909rem;
+  left: 50%;
+  width: 0.1818rem;
+  background-color: var(--text-muted);
+  transform: translateX(-50%);
+}
+
+.diplo-opinion-val {
+  font-family: var(--font-header);
+  font-size: 1.05rem;
+  font-weight: 700;
+  min-width: 1.5rem;
+  text-align: right;
+}
+
+/* --- Compliance row (subject factions) --- */
+.diplo-compliance-row {
+  display: flex;
+  align-items: center;
+
+  padding: 0.25rem 0.462rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  cursor: auto;
+}
+
+.diplo-compliance-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  flex-shrink: 0;
+}
+
+.diplo-compliance-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.diplo-compliance-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-left: auto;
+}
+
+.diplo-build-focus-options {
+  display: flex;
+  align-items: center;
+  padding: 0.2rem 0.462rem 0.35rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.diplo-build-focus-button {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.35);
+  background-color: rgba(13, 18, 24, 0.62);
+  cursor: pointer;
+}
+
+.diplo-build-focus-button:hover {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.diplo-build-focus-button--active {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  background-color: rgba(74, 24, 28, 0.78);
+}
+
+.diplo-build-focus-button--disabled {
+  opacity: 0.45;
+  cursor: auto;
+}
+
+.diplo-build-focus-button--disabled:hover {
+  border-color: rgba(201, 168, 76, 0.35);
+}
+
+.diplo-build-focus-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+/* --- Faction overview stats layout --- */
+.diplo-overview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.1rem 0.462rem 0.2rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.diplo-overview-grid > .tooltip-wrapper {
+  width: 25%;
+  flex-shrink: 0;
+}
+
+.diplo-overview-stat {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 0.25rem 0.15rem;
+  cursor: auto;
+  transition: background 0.12s;
+}
+
+.diplo-overview-stat:hover {
+  background-color: rgba(36, 42, 48, 0.42);
+}
+
+.diplo-overview-stat-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.diplo-overview-stat-val {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-bright);
+}
+
+.diplo-overview-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* --- Ruler section --- */
+.diplo-section-heading-with-action {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.diplo-section-heading-with-action > .section-heading-row {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.diplo-view-characters-button {
+  flex-shrink: 0;
+  height: 1.65rem;
+  padding: 0 0.5rem;
+  margin-right: 0.462rem;
+  font-size: 0.72rem;
+}
+
+.diplo-view-characters-button .btn-icon {
+  width: 0.88rem;
+  height: 0.88rem;
+}
+
+.diplo-ruler-section {
+  display: flex;
+  align-items: flex-start;
+
+  padding: 0.3rem 0.462rem 0.35rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.diplo-ruler-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.diplo-ruler-name {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-bright);
+  line-height: 1.3;
+}
+
+.diplo-ruler-title {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.1rem;
+}
+
+.diplo-ruler-stats {
+  display: flex;
+  flex-wrap: wrap;
+
+  margin-top: 0.1rem;
+}
+
+.diplo-ruler-stat {
+  display: flex;
+  align-items: center;
+
+  cursor: auto;
+}
+
+.diplo-ruler-stat-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.diplo-ruler-stat-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.diplo-ruler-traits {
+  display: flex;
+
+  margin-top: 0.2rem;
+}
+
+.diplo-ruler-trait-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  cursor: auto;
+  transition: transform 0.12s;
+}
+
+.diplo-ruler-trait-icon:hover {
+  transform: scale(1.2);
+}
+
+/* --- Character search --- */
+.diplo-char-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.2rem 0.462rem 0.1rem;
+}
+
+.diplo-char-search-input {
+  width: 6.5rem;
+}
+
+
+/* --- Characters grid --- */
+.diplo-characters-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+
+  padding: 0.15rem 0.462rem 0.25rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.diplo-character-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  box-sizing: border-box;
+  width: 20%;
+  flex-shrink: 0;
+  padding: 0 0.2rem;
+  cursor: auto;
+}
+
+.diplo-character-item:hover .diplo-character-name {
+  color: var(--text-bright);
+}
+
+.diplo-character-name {
+  width: 100%;
+  font-size: 0.85rem;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.15;
+  transition: color 0.15s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  game-ui-font-fit-mode: shrink;
+  game-ui-font-fit-min-size: 0.62rem;
+  game-ui-font-fit-max-size: 0.85rem;
+}
+
+.diplo-character-role-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.diplo-character-role-icon {
+  width: 0.7rem;
+  height: 0.7rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.diplo-character-role-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Relations (wars + treaties with other factions) --- */
+.diplo-relations-list {
+  padding: 0.1rem 0.462rem 0.2rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.diplo-relation-row {
+  display: flex;
+  align-items: center;
+
+  padding: 0.2rem 0;
+  flex-wrap: wrap;
+}
+
+.diplo-relation-row--war {
+  color: var(--red);
+}
+
+.diplo-relation-type-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+.diplo-relation-type-label {
+  font-size: 0.85rem;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+.diplo-relation-row--war .diplo-relation-type-label {
+  color: var(--red);
+}
+
+.diplo-relation-duration {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.diplo-relation-factions {
+  display: flex;
+
+  flex-wrap: wrap;
+}
+
+.diplo-relations-empty {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  padding: 0.2rem 0;
+}
+
+.diplo-player-treaties {
+  padding: 0.1rem 0.462rem 0.25rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.diplo-player-treaty-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.28rem 0;
+}
+
+.diplo-player-treaty-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.diplo-player-treaty-name {
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diplo-player-treaty-detail {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.diplo-treaty-break {
+  flex-shrink: 0;
+  padding: 0.22rem 0.42rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(176, 72, 72, 0.5);
+  background-color: rgba(44, 18, 20, 0.62);
+  color: var(--red-light);
+  font-family: var(--font-header);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.diplo-treaty-break:hover {
+  border-top-color: var(--red-light);
+  border-right-color: var(--red-light);
+  border-bottom-color: var(--red-light);
+  border-left-color: var(--red-light);
+  color: var(--text-bright);
+}
+
+/* --- Agent (Diplomat/Spy) sections --- */
+.diplo-agent-section {
+  display: flex;
+  align-items: flex-start;
+
+  padding: 0.3rem 0.462rem 0.35rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  transition: background 0.12s;
+}
+
+.diplo-agent-section--clickable {
+  cursor: pointer;
+}
+
+.diplo-agent-section--clickable:hover {
+  background-color: rgba(36, 42, 48, 0.5);
+}
+
+.diplo-agent-section--clickable:hover .diplo-agent-portrait-slot {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.diplo-agent-section--clickable:hover .diplo-agent-slot-icon {
+  opacity: 0.95;
+}
+
+.diplo-agent-portrait-slot {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(13, 18, 24, 0.58);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.55);
+  flex-shrink: 0;
+  transition: border-color 0.12s;
+}
+
+.diplo-agent-slot-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  opacity: 0.75;
+  transition: opacity 0.12s;
+}
+
+.diplo-agent-info {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  flex: 1;
+}
+
+.diplo-agent-empty {
+  font-size: 0.85rem;
+  color: var(--gold);
+}
+
+.diplo-agent-name {
+  font-size: 0.95rem;
+  color: var(--gold);
+  font-weight: 500;
+  letter-spacing: 0.02rem;
+}
+
+.diplo-agent-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.diplo-agent-section--filled {
+  align-items: center;
+}
+
+.diplo-agent-warning {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  opacity: 0.6;
+}
+
+.diplo-agent-recall {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 0.24rem 0.45rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.5);
+  background-color: rgba(28, 19, 18, 0.55);
+  color: var(--gold);
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.diplo-agent-recall:hover {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  color: var(--text-bright);
+}
+
+/* --- Province successor --- */
+.diplo-successor-section {
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.462rem 0.4rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.diplo-successor-slot {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(13, 18, 24, 0.58);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.55);
+  flex-shrink: 0;
+}
+
+.diplo-successor-slot-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  opacity: 0.75;
+}
+
+.diplo-successor-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.diplo-successor-title {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.diplo-successor-name {
+  font-size: 0.95rem;
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.diplo-successor-action {
+  flex-shrink: 0;
+  padding: 0.28rem 0.55rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.65);
+  background-color: rgba(74, 24, 28, 0.78);
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.diplo-successor-action:hover {
+  background-color: rgba(103, 34, 39, 0.9);
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+/* Spy network progress */
+.diplo-agent-network {
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.462rem 0.35rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  cursor: help;
+}
+
+.diplo-agent-network-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.diplo-agent-network-main {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.diplo-agent-network-main > * + * {
+  margin-left: 0.35rem;
+}
+
+.diplo-agent-network-label {
+  font-size: 0.75rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.diplo-agent-network-bar {
+  flex: 1;
+  min-width: 0;
+}
+
+.diplo-agent-network-val {
+  font-size: 0.75rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  min-width: 2rem;
+  text-align: right;
+}
+
+.diplo-agent-network-exposure {
+  display: flex;
+  align-items: baseline;
+  flex-shrink: 0;
+}
+
+.diplo-agent-network-exposure > * + * {
+  margin-left: 0.18rem;
+}
+
+.diplo-agent-network-exposure-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.diplo-agent-network-exposure-val {
+  font-size: 0.75rem;
+  color: var(--orange);
+  font-weight: 600;
+}
+
+.diplo-agent-network-growth {
+  font-size: 0.75rem;
+  color: var(--green);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* --- Negotiate / Make Peace button --- */
+.diplo-negotiate-section {
+  padding: 0.35rem 0.462rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.diplo-negotiate-section .btn--burgundy {
+  width: 100%;
+  padding: 0.38rem 0.55rem;
+  justify-content: center;
+  background-color: #151b20;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  border-top-color: rgba(201, 168, 76, 0.22);
+  border-right-color: rgba(80, 92, 104, 0.3);
+  border-bottom-color: rgba(80, 92, 104, 0.34);
+  border-left-color: rgba(80, 92, 104, 0.3);
+  color: var(--text-bright);
+  font-size: 0.82rem;
+  font-family: var(--font-header);
+  letter-spacing: 0;
+  transform: none;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.diplo-negotiate-section .btn--burgundy:hover {
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  border-top-color: rgba(201, 168, 76, 0.4);
+  border-right-color: rgba(201, 168, 76, 0.3);
+  border-bottom-color: rgba(201, 168, 76, 0.3);
+  border-left-color: rgba(201, 168, 76, 0.3);
+  transform: none;
+}
+
+.diplo-negotiate-section .btn--burgundy:active {
+  background-color: #14191f;
+  background-image:
+    linear-gradient(180deg, rgba(26, 31, 37, 0.22) 0%, rgba(26, 31, 37, 0.22) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-active.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  border-top-color: rgba(201, 168, 76, 0.32);
+  border-right-color: rgba(201, 168, 76, 0.24);
+  border-bottom-color: rgba(201, 168, 76, 0.24);
+  border-left-color: rgba(201, 168, 76, 0.24);
+  transform: none;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.diplo-negotiate-section .btn-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-right: 0.35rem;
+}
+
+/* --- Interactions --- */
+.diplo-actions-block {
+  padding: 0.1rem 0.462rem 0.15rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.diplo-action-reason {
+  min-width: 0;
+  color: var(--red-light);
+  font-size: 0.74rem;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diplo-selection-panel {
+  margin: 0.2rem 0.462rem 0.45rem;
+  padding: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border);
+  border-right-color: var(--border);
+  border-bottom-color: var(--border);
+  border-left-color: var(--border);
+  border-radius: 0.2rem;
+  background-color: rgba(22, 24, 27, 0.92);
+}
+
+.diplo-selection-panel__header {
+  font-family: var(--font-header);
+  font-size: 0.88rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.diplo-selection-panel__message {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.diplo-selection-panel__count {
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.diplo-selection-panel__chance {
+  margin-top: 0.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.76rem;
+}
+
+.diplo-selection-panel__chance-label {
+  color: var(--text-muted);
+}
+
+.diplo-selection-panel__chance-value {
+  font-weight: 600;
+}
+
+.diplo-selection-panel__effects {
+  margin-top: 0.45rem;
+  padding-top: 0.4rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--border);
+}
+
+.diplo-selection-panel__effects > * + * {
+  margin-top: 0.35rem;
+}
+
+.diplo-selection-panel__effect-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.diplo-selection-panel__effect-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.diplo-selection-panel__effect-label--danger {
+  color: var(--orange);
+}
+
+.diplo-selection-panel__effect-text {
+  margin-top: 0.08rem;
+  font-size: 0.76rem;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.diplo-selection-panel__risk {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--text-muted);
+}
+
+.diplo-selection-panel__actions {
+  margin-top: 0.5rem;
+  display: flex;
+}
+
+.diplo-selection-panel__actions > * + * {
+  margin-left: 0.35rem;
+}
+
+.diplo-header-content > * + * {
+  margin-left: 0.6rem;
+}
+
+.diplo-header-info > * + * {
+  margin-top: 0.15rem;
+}
+
+.diplo-header-status-row > * + * {
+  margin-left: 0.25rem;
+}
+
+.diplo-header-capital > * + * {
+  margin-left: 0.25rem;
+}
+
+.diplo-header-strength-labels > * + * {
+  margin-left: 0.3rem;
+}
+
+/* --- Opinion row with bar --- */
+.diplo-opinion-row > * + * {
+  margin-left: 0.3rem;
+}
+
+/* --- Compliance row (subject factions) --- */
+.diplo-compliance-row > * + * {
+  margin-left: 0.35rem;
+}
+
+.diplo-build-focus-options > * + * {
+  margin-left: 0.3rem;
+}
+
+.diplo-overview-stat > * + * {
+  margin-top: 0.08rem;
+}
+
+/* --- Ruler section --- */
+.diplo-ruler-section > * + * {
+  margin-left: 0.5rem;
+}
+
+.diplo-ruler-stats > * {
+  margin-right: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.diplo-ruler-stat > * + * {
+  margin-left: 0.12rem;
+}
+
+.diplo-ruler-traits > * + * {
+  margin-left: 0.15rem;
+}
+
+/* --- Characters grid --- */
+.diplo-characters-grid > * {
+  margin-bottom: 0.5rem;
+}
+
+.diplo-character-item > * + * {
+  margin-top: 0.15rem;
+}
+
+.diplo-character-role-row > * + * {
+  margin-left: 0.15rem;
+}
+
+.diplo-relation-row > * {
+  margin-right: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+
+.diplo-relation-factions > * {
+  margin-right: 0.15rem;
+  margin-bottom: 0.15rem;
+}
+
+.diplo-player-treaty-row > * + * {
+  margin-left: 0.35rem;
+}
+
+/* --- Agent (Diplomat/Spy) sections --- */
+.diplo-agent-section > * + * {
+  margin-left: 0.4rem;
+}
+
+.diplo-agent-info > * + * {
+  margin-top: 0.1rem;
+}
+
+.diplo-agent-section--filled > * + * {
+  margin-left: 0.5rem;
+}
+
+.diplo-successor-section > * + * {
+  margin-left: 0.5rem;
+}
+
+.diplo-successor-info > * + * {
+  margin-top: 0.1rem;
+}
+
+/* Spy network progress */
+.diplo-agent-network > * + * {
+  margin-left: 0.35rem;
+}
+
+/* --- Interactions --- */
+.diplo-actions-block > * + * {
+  margin-top: 0.2rem;
+}

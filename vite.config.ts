@@ -1,0 +1,387 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+import fs from 'fs'
+import type { Plugin } from 'vite'
+
+// The optimiser owns public files in UIResources/foae.
+// Keep those trees between builds so cached assets do not have to be copied
+// back out after every Vite run.
+function cleanBuildOutputButKeepPublicFiles(): Plugin {
+  let outDir: string
+  const preservedDirs = new Set(['assets', 'mods', 'sdk'])
+
+  return {
+    name: 'clean-build-output-but-keep-public-files',
+    apply: 'build',
+    configResolved(config) {
+      outDir = config.build.outDir
+    },
+    buildStart() {
+      if (!fs.existsSync(outDir)) return
+
+      for (const entry of fs.readdirSync(outDir, { withFileTypes: true })) {
+        const full = path.join(outDir, entry.name)
+        if (entry.isDirectory() && preservedDirs.has(entry.name)) continue
+        fs.rmSync(full, { recursive: true, force: true })
+      }
+
+      const assetsDir = path.join(outDir, 'assets')
+      if (!fs.existsSync(assetsDir)) return
+
+      for (const entry of fs.readdirSync(assetsDir, { withFileTypes: true })) {
+        if (!entry.isFile()) continue
+        if (/\.(css|js|map)$/i.test(entry.name)) {
+          fs.rmSync(path.join(assetsDir, entry.name), { force: true })
+        }
+      }
+    },
+  }
+}
+
+// With preserveModules, CSS imports create internal virtual modules that claim
+// the clean filename (e.g. Badge.js), pushing the actual component to Badge2.js.
+// The virtual module isn't emitted as a file, but it reserves the name. This
+// plugin renames the suffixed files back and fixes all import paths.
+function fixCssNameCollisions(): Plugin {
+  let outDir: string
+
+  return {
+    name: 'fix-css-name-collisions',
+    configResolved(config) {
+      outDir = config.build.outDir
+    },
+    closeBundle() {
+      const jsFiles: string[] = []
+      const walk = (dir: string) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, entry.name)
+          if (entry.isDirectory()) walk(full)
+          else if (entry.name.endsWith('.js')) jsFiles.push(full)
+        }
+      }
+      walk(outDir)
+
+      // Find files ending in 2.js where the unsuffixed name doesn't exist
+      const renames = new Map<string, string>() // old path -> new path
+      for (const file of jsFiles) {
+        const basename = path.basename(file, '.js')
+        if (!basename.endsWith('2')) continue
+        const cleanName = basename.slice(0, -1) // strip trailing "2"
+        const cleanPath = path.join(path.dirname(file), `${cleanName}.js`)
+        if (!fs.existsSync(cleanPath)) {
+          renames.set(file, cleanPath)
+        }
+      }
+
+      if (renames.size === 0) return
+
+      // Rename files
+      for (const [oldPath, newPath] of renames) {
+        fs.renameSync(oldPath, newPath)
+      }
+
+      // Rebuild file list after renames
+      const updatedFiles: string[] = []
+      const walk2 = (dir: string) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, entry.name)
+          if (entry.isDirectory()) walk2(full)
+          else if (entry.name.endsWith('.js')) updatedFiles.push(full)
+        }
+      }
+      walk2(outDir)
+
+      // Build import path replacements
+      const importFixes: Array<{ pattern: RegExp; replacement: string }> = []
+      for (const [oldPath] of renames) {
+        const oldBase = path.basename(oldPath, '.js')
+        const newBase = oldBase.slice(0, -1)
+        importFixes.push({
+          pattern: new RegExp(
+            `((?:from|import)\\s+["'][^"']*/)${escapeRegex(oldBase)}(\\.js["'])`,
+            'g',
+          ),
+          replacement: `$1${newBase}$2`,
+        })
+      }
+
+      // Fix import paths in all JS files
+      for (const file of updatedFiles) {
+        let code = fs.readFileSync(file, 'utf-8')
+        let changed = false
+        for (const { pattern, replacement } of importFixes) {
+          const updated = code.replace(pattern, replacement)
+          if (updated !== code) {
+            code = updated
+            changed = true
+          }
+        }
+        if (changed) {
+          fs.writeFileSync(file, code, 'utf-8')
+        }
+      }
+
+      // Fix HTML references in index.html
+      const htmlPath = path.join(outDir, 'index.html')
+      if (fs.existsSync(htmlPath)) {
+        let html = fs.readFileSync(htmlPath, 'utf-8')
+        let htmlChanged = false
+        for (const [oldPath] of renames) {
+          const oldBase = path.basename(oldPath, '.js')
+          const newBase = oldBase.slice(0, -1)
+          const htmlPattern = new RegExp(
+            `((?:href|src)="[^"]*/)${escapeRegex(oldBase)}(\\.js")`,
+            'g',
+          )
+          const updated = html.replace(htmlPattern, `$1${newBase}$2`)
+          if (updated !== html) {
+            html = updated
+            htmlChanged = true
+          }
+        }
+        if (htmlChanged) {
+          fs.writeFileSync(htmlPath, html, 'utf-8')
+        }
+      }
+    },
+  }
+}
+
+function escapeRegex(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Serves generated prefiltered image variants during `vite dev`.
+ *
+ * The optimiser publishes these files to UIResources/foae/assets so
+ * the source public tree stays clean. Runtime code still needs to exercise the
+ * same sized asset paths while developing against Vite.
+ */
+function serveOptimisedAssetVariants(): Plugin {
+  const ASSET_URL_PREFIX = '/assets/'
+  const GENERATED_SEGMENT = '/__sizes/'
+  const MIME: Record<string, string> = {
+    '.webp': 'image/webp',
+  }
+
+  return {
+    name: 'serve-optimised-asset-variants',
+    apply: 'serve',
+    configureServer(server) {
+      const publishedAssetsDir = path.resolve(server.config.root, '../UIResources/foae/assets')
+
+      server.middlewares.use((req, res, next) => {
+        if (!req.url) return next()
+
+        const url = req.url.split('?')[0]
+        if (!url.startsWith(ASSET_URL_PREFIX) || !url.includes(GENERATED_SEGMENT)) {
+          return next()
+        }
+
+        let rel: string
+        try {
+          rel = decodeURIComponent(url.slice(ASSET_URL_PREFIX.length))
+        } catch {
+          res.statusCode = 400
+          res.end('Bad request')
+          return
+        }
+
+        const filePath = path.resolve(publishedAssetsDir, rel)
+        const relative = path.relative(publishedAssetsDir, filePath)
+        if (relative.startsWith('..') || path.isAbsolute(relative)) {
+          res.statusCode = 400
+          res.end('Bad request')
+          return
+        }
+
+        if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+          return next()
+        }
+
+        const ext = path.extname(filePath).toLowerCase()
+        res.setHeader('Content-Type', MIME[ext] ?? 'application/octet-stream')
+        res.setHeader('Cache-Control', 'no-store')
+        fs.createReadStream(filePath).pipe(res)
+      })
+    },
+  }
+}
+
+/**
+ * Serves the game's external Mods directory during `vite dev`.
+ *
+ * Layout expected on disk (relative to the project root, sibling of WebUI/):
+ *
+ *   Mods/
+ *     <ModId>/
+ *       mod.json          # required - has the optional `webui` block below
+ *       dist/index.js     # the built mod entry (for WebUI mods)
+ *       dist/style.css    # optional
+ *
+ * mod.json extension for WebUI mods:
+ *   {
+ *     "id": "my_mod",
+ *     "name": "My Mod",
+ *     ...
+ *     "webui": {
+ *       "entry": "dist/index.js",
+ *       "styles": ["dist/style.css"]
+ *     }
+ *   }
+ *
+ * The plugin intercepts /mods/manifest.json (returns a synthesized manifest
+ * containing every mod.json that declares a `webui` block) and /mods/<id>/*
+ * (serves the file from the mod directory). In production, the shipped web UI
+ * subsystem has to replicate this contract on the C++ side, reading from
+ * the installed game's Mods/ folder. The JS-side loader in src/mods/index.ts
+ * doesn't change.
+ */
+function serveExternalMods(): Plugin {
+  const MODS_URL_PREFIX = '/mods/'
+  const MANIFEST_URL = '/mods/manifest.json'
+
+  function modsDirCandidates(projectRoot: string): string[] {
+    return [
+      path.resolve(projectRoot, '../Mods'),
+      path.resolve(projectRoot, '../../Mods'),
+    ]
+  }
+
+  function resolveModsDir(projectRoot: string): string | null {
+    for (const candidate of modsDirCandidates(projectRoot)) {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+        return candidate
+      }
+    }
+    return null
+  }
+
+  interface ModWebUIBlock {
+    entry: string
+    styles?: string[]
+  }
+  interface ModJson {
+    id?: string
+    name?: string
+    webui?: ModWebUIBlock
+  }
+
+  function readManifest(modsDir: string): Array<{ name: string; entry: string; styles?: string[] }> {
+    const out: Array<{ name: string; entry: string; styles?: string[] }> = []
+    for (const entry of fs.readdirSync(modsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue
+      const modJsonPath = path.join(modsDir, entry.name, 'mod.json')
+      if (!fs.existsSync(modJsonPath)) continue
+      let mod: ModJson
+      try {
+        mod = JSON.parse(fs.readFileSync(modJsonPath, 'utf-8'))
+      } catch (e) {
+        console.warn(`[mods] ${entry.name}/mod.json is invalid JSON:`, (e as Error).message)
+        continue
+      }
+      if (!mod.webui?.entry) continue
+      const id = mod.id ?? entry.name
+      out.push({
+        name: mod.name ?? id,
+        entry: `${MODS_URL_PREFIX}${entry.name}/${mod.webui.entry}`,
+        styles: mod.webui.styles?.map(s => `${MODS_URL_PREFIX}${entry.name}/${s}`),
+      })
+    }
+    return out
+  }
+
+  const MIME: Record<string, string> = {
+    '.js': 'application/javascript; charset=utf-8',
+    '.mjs': 'application/javascript; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.html': 'text/html; charset=utf-8',
+    '.svg': 'image/svg+xml',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.webp': 'image/webp',
+  }
+
+  return {
+    name: 'serve-external-mods',
+    configureServer(server) {
+      const projectRoot = server.config.root
+      server.middlewares.use((req, res, next) => {
+        if (!req.url) return next()
+        const url = req.url.split('?')[0]
+        if (!url.startsWith(MODS_URL_PREFIX)) return next()
+
+        const modsDir = resolveModsDir(projectRoot)
+        if (!modsDir) {
+          // No Mods/ directory on disk yet - return an empty manifest or 404.
+          if (url === MANIFEST_URL) {
+            res.setHeader('Content-Type', MIME['.json'])
+            res.end('[]')
+            return
+          }
+          res.statusCode = 404
+          res.end('No Mods directory')
+          return
+        }
+
+        if (url === MANIFEST_URL) {
+          const manifest = readManifest(modsDir)
+          res.setHeader('Content-Type', MIME['.json'])
+          res.setHeader('Cache-Control', 'no-store')
+          res.end(JSON.stringify(manifest, null, 2))
+          return
+        }
+
+        // /mods/<id>/<path> -> <modsDir>/<id>/<path>
+        const rel = url.slice(MODS_URL_PREFIX.length)
+        // Reject any traversal attempts before joining with the mods dir.
+        if (rel.includes('..')) {
+          res.statusCode = 400
+          res.end('Bad request')
+          return
+        }
+        const filePath = path.join(modsDir, rel)
+        if (!filePath.startsWith(modsDir)) {
+          res.statusCode = 400
+          res.end('Bad request')
+          return
+        }
+        if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+          res.statusCode = 404
+          res.end('Not found')
+          return
+        }
+        const ext = path.extname(filePath).toLowerCase()
+        res.setHeader('Content-Type', MIME[ext] ?? 'application/octet-stream')
+        res.setHeader('Cache-Control', 'no-store')
+        fs.createReadStream(filePath).pipe(res)
+      })
+    },
+  }
+}
+
+// https://vite.dev/config/
+export default defineConfig(() => ({
+  plugins: [cleanBuildOutputButKeepPublicFiles(), serveOptimisedAssetVariants(), react(), fixCssNameCollisions(), serveExternalMods()],
+  build: {
+    modulePreload: { polyfill: false },
+    outDir: path.resolve(__dirname, '../UIResources/foae'),
+    emptyOutDir: false,
+    copyPublicDir: false,
+    minify: false,
+    sourcemap: 'hidden' as const,
+    cssCodeSplit: false,
+    rollupOptions: {
+      output: {
+        preserveModules: true,
+        preserveModulesRoot: 'src',
+        entryFileNames: '[name].js',
+        assetFileNames: 'assets/[name].[ext]',
+      },
+    },
+  },
+}))

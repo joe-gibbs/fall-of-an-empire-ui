@@ -1,0 +1,22 @@
+.number-stepper {
+  display: flex;
+  align-items: center;
+}
+
+.number-stepper > * + * {
+  margin-left: 0.12rem;
+}
+
+.number-stepper__button,
+.number-stepper__input {
+  box-sizing: border-box;
+}
+
+.number-stepper__button {
+  cursor: var(--cursor-pointer);
+}
+
+.number-stepper__button--disabled {
+  cursor: default;
+  opacity: 0.55;
+}

@@ -1,0 +1,855 @@
+/* =============================================
+   NotificationBanner - charcoal game banner
+   Uses baked UI textures, gold seal icon frame, rough edge.
+   ============================================= */
+
+.notification-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.4rem;
+  overflow: hidden;
+  background-image:
+    linear-gradient(180deg, rgba(48, 57, 66, 0.9) 0%, rgba(28, 39, 50, 0.92) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/screen-charcoal.png');
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  background-color: #303840;
+  border-width: 0.1818rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.45);
+  cursor: pointer;
+  transition: transform 0.12s ease-out;
+}
+
+.notification-slot--regular .notification-banner {
+  mask-image: url('/assets/event-wipe-mask.png');
+  mask-position: 0% 0%;
+  mask-repeat: no-repeat;
+  mask-size: 300% 100%;
+  animation: notification-banner-wipe-reveal 0.34s cubic-bezier(0.16, 0.84, 0.22, 1) both;
+}
+
+.notification-slot--regular.notification-slot--exiting .notification-banner {
+  mask-image: url('/assets/event-wipe-mask-close.png');
+  animation: notification-banner-wipe-cover 0.24s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.settlement-notification-slot.notification-slot--regular .notification-banner {
+  animation-duration: 0.28s;
+}
+
+.settlement-notification-slot.notification-slot--regular.notification-slot--exiting .notification-banner {
+  animation-duration: 0.22s;
+}
+
+.notification-slot--regular .notification-icon,
+.notification-slot--regular .notification-portrait {
+  animation: notification-banner-mark-in 0.26s cubic-bezier(0.16, 0.84, 0.22, 1) 0.08s both;
+}
+
+.notification-slot--regular .notification-content {
+  animation: notification-banner-content-in 0.28s cubic-bezier(0.16, 0.84, 0.22, 1) 0.1s both;
+}
+
+.notification-slot--regular .notification-decision-actions {
+  animation: notification-banner-action-in 0.24s cubic-bezier(0.16, 0.84, 0.22, 1) 0.14s both;
+}
+
+.notification-slot--regular.notification-slot--exiting .notification-icon,
+.notification-slot--regular.notification-slot--exiting .notification-portrait {
+  animation: notification-banner-mark-out 0.16s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.notification-slot--regular.notification-slot--exiting .notification-content {
+  animation: notification-banner-content-out 0.16s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.notification-slot--regular.notification-slot--exiting .notification-decision-actions {
+  animation: notification-banner-action-out 0.14s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+html.webui-runtime .notification-slot--regular .notification-banner {
+  animation: none;
+  game-ui-simple-opacity: off;
+  mask-position: 0% 0%;
+}
+
+html.webui-runtime .notification-slot--regular.notification-slot--exiting .notification-banner {
+  animation: none;
+  mask-position: 0% 0%;
+}
+
+.notification-icon + .notification-content,
+.notification-portrait + .notification-content,
+.notification-content + .notification-close,
+.notification-content + .notification-decision-actions {
+  margin-left: 0.3rem;
+}
+
+.notification-banner:active {
+  transform: translateY(0.0909rem) scale(0.98);
+  transition: transform 0s;
+}
+
+/* Heavy noise grain overlay */
+.notification-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: var(--texture-noise-heavy);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Grunge wear layer */
+.notification-banner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: transparent;
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 11.6364rem 11.6364rem;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.notification-banner:hover {
+  border-color: rgba(224, 200, 114, 0.58);
+  background-image:
+    linear-gradient(180deg, rgba(58, 68, 78, 0.92) 0%, rgba(34, 47, 60, 0.94) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/screen-charcoal.png');
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  background-color: #3a444e;
+}
+
+@keyframes notification-banner-wipe-reveal {
+  0% {
+    mask-position: 100% 0%;
+  }
+  100% {
+    mask-position: 0% 0%;
+  }
+}
+
+@keyframes notification-banner-wipe-cover {
+  0% {
+    mask-position: 100% 0%;
+  }
+  100% {
+    mask-position: 0% 0%;
+  }
+}
+
+@keyframes notification-banner-mark-in {
+  0% {
+    transform: translateX(-0.28rem) scale(0.92);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes notification-banner-mark-out {
+  0% {
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    transform: translateX(-0.18rem) scale(0.94);
+  }
+}
+
+@keyframes notification-banner-content-in {
+  0% {
+    transform: translateX(-0.34rem);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes notification-banner-content-out {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-0.24rem);
+  }
+}
+
+@keyframes notification-banner-action-in {
+  0% {
+    transform: translateX(0.22rem);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes notification-banner-action-out {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0.16rem);
+  }
+}
+
+/* --- Painted right-edge decoration (attaches to sidebar) --- */
+
+.notification-edge {
+  position: absolute;
+  right: -0.0909rem;
+  top: 0;
+  bottom: 0;
+  width: 0.6rem;
+  background: url('/assets/notification-edge.png') repeat-y right / contain;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* --- Cinematic scroll --- */
+
+.notification-banner.notification-banner--style-cinematic {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 0;
+  overflow: visible;
+  min-height: 5.1rem;
+  background: none;
+  border: none;
+}
+
+.notification-banner.notification-banner--style-cinematic:hover {
+  background: none;
+  border-color: transparent;
+}
+
+.notification-banner--style-cinematic::before,
+.notification-banner--style-cinematic::after,
+.notification-banner--style-cinematic .notification-edge {
+  opacity: 0;
+}
+
+.notification-scroll-roller {
+  position: relative;
+  width: 1.45rem;
+  min-width: 1.45rem;
+  margin-top: 0.12rem;
+  margin-bottom: 0.12rem;
+  background-color: transparent;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border: none;
+  z-index: 3;
+}
+
+.notification-scroll-roller--left {
+  margin-right: -0.55rem;
+  background-image: url('/assets/notification-scroll-edge-left.png');
+}
+
+.notification-scroll-roller--right {
+  margin-left: -0.55rem;
+  background-image: url('/assets/notification-scroll-edge-right.png');
+}
+
+.notification-scroll-sheet {
+  position: relative;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  margin-top: 0.74rem;
+  margin-bottom: 0.74rem;
+  padding: 0.85rem 4.25rem 0.85rem 1rem;
+  min-width: 0;
+  background-color: #c99a52;
+  background-image: url('/assets/textures/parchment-tile.png');
+  background-position: center;
+  background-repeat: repeat;
+  background-size: 18rem auto;
+  border-left-width: 0;
+  border-right-width: 0;
+  border-top-width: 0.136rem;
+  border-bottom-width: 0.136rem;
+  border-style: solid;
+  border-color: rgba(98, 54, 24, 0.75);
+  transform-origin: center center;
+  overflow: hidden;
+}
+
+.notification-scroll-sheet::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background:
+    linear-gradient(to right, rgba(70, 31, 12, 0.26), rgba(255, 241, 184, 0.18) 18%, rgba(255, 241, 184, 0.12) 82%, rgba(70, 31, 12, 0.3)),
+    rgba(255, 255, 255, 0);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.notification-scroll-sheet::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0.22rem;
+  background: rgba(90, 48, 22, 0.24);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.notification-scroll-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 3.1rem;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-content {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-portrait {
+  margin-right: 0.65rem;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-icon {
+  margin-right: 0.65rem;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-close {
+  position: absolute;
+  top: 0.62rem;
+  right: 1.15rem;
+  z-index: 4;
+}
+
+/* --- Icon with painted seal behind it --- */
+
+.notification-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  min-width: 1.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  /* Painted seal medallion as background */
+  background: url('/assets/notification-seal.png') no-repeat center / contain;
+  border: none;
+}
+
+.notification-icon img {
+  width: 1rem;
+  height: 1rem;
+  filter: brightness(1.3);
+}
+
+.notification-portrait {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Content (title + description) --- */
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
+
+.notification-content > * + * {
+  margin-top: 0.05rem;
+}
+
+.notification-title {
+  display: block;
+  font-family: var(--font-header);
+  font-size: 0.85rem;
+  color: var(--text-header);
+  letter-spacing: 0.02rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-title {
+  font-size: 1.08rem;
+  color: #3a2116;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+}
+
+.notification-title-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+}
+
+.notification-title-flow .event-token {
+  max-width: 100%;
+  line-height: 1.1;
+  overflow-wrap: break-word;
+}
+
+.notification-title-flow .event-space {
+  width: 0.24em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+.notification-title-flow .event-link {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--text-header);
+  font-weight: 600;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-color: rgba(201, 168, 76, 0.35);
+  text-underline-offset: 0.1818rem;
+  overflow-wrap: break-word;
+}
+
+.notification-title-flow .event-link--clickable {
+  cursor: pointer;
+}
+
+.notification-title-flow .event-link--clickable:hover {
+  color: var(--text-bright);
+  text-decoration-color: var(--text-header);
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-title-flow .event-link {
+  color: #3a2116;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-title-flow .event-link--clickable:hover {
+  color: #5c3a22;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-rich-flow .event-link {
+  color: #371c12;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-rich-flow .event-link--clickable {
+  text-decoration-color: rgba(93, 49, 22, 0.45);
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-rich-flow .event-link--clickable:hover {
+  color: #5c3a22;
+  text-decoration-color: rgba(93, 49, 22, 0.72);
+}
+
+.notification-description {
+  display: block;
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition-property: max-height, opacity;
+  transition-duration: 0.2s, 0.15s;
+  transition-timing-function: var(--ease-snap), var(--ease-snap);
+}
+
+.notification-description > span {
+  display: block;
+  width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.notification-description > .notification-rich-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.notification-rich-flow strong,
+.notification-rich-flow .rich-header,
+.notification-rich-flow .rich-def {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.notification-rich-flow br {
+  display: block;
+  content: '';
+  flex-basis: 100%;
+  width: 100%;
+  height: 0;
+}
+
+.notification-rich-flow .event-link {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--text-header);
+  font-weight: 500;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-color: rgba(201, 168, 76, 0.35);
+  text-underline-offset: 0.1818rem;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+
+.notification-rich-flow .event-link--clickable {
+  cursor: pointer;
+}
+
+.notification-rich-flow .event-link--clickable:hover {
+  color: var(--text-bright);
+  text-decoration-color: var(--text-header);
+}
+
+.notification-rich-flow .event-token {
+  line-height: 1.25;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.notification-rich-flow .event-space {
+  width: 0.24em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+.notification-banner:hover .notification-description {
+  max-height: 4rem;
+  opacity: 1;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-description {
+  max-height: 7rem;
+  opacity: 1;
+  color: #5c3a22;
+  font-size: 0.82rem;
+  line-height: 1.28;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-close {
+  opacity: 1;
+  border-color: rgba(93, 49, 22, 0.3);
+}
+
+.notification-banner.notification-banner--style-cinematic .rich-link {
+  color: #371c12;
+}
+
+.notification-banner.notification-banner--style-cinematic .rich-link--clickable {
+  text-decoration-color: rgba(93, 49, 22, 0.45);
+}
+
+/* --- Close button --- */
+
+.notification-close {
+  width: 1.15rem;
+  height: 1.15rem;
+  background: transparent;
+  border: 0.077rem solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition-property: background, border-color;
+  transition-duration: 0.12s, 0.12s;
+  transition-timing-function: var(--ease-snap), var(--ease-snap);
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  padding: 0;
+  opacity: 0;
+}
+
+.notification-close-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  opacity: 0.75;
+}
+
+.notification-banner:hover .notification-close {
+  opacity: 1;
+}
+
+.notification-close:hover {
+  background: rgba(196, 64, 64, 0.2);
+  border-color: rgba(196, 64, 64, 0.3);
+}
+
+.notification-close:hover .notification-close-icon {
+  opacity: 1;
+}
+
+/* --- Diplomatic decisions --- */
+
+.notification-decision-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-width: 4.9rem;
+}
+
+.notification-decision-btn {
+  display: block;
+  width: 100%;
+  min-height: 1.05rem;
+  padding: 0.12rem 0.35rem;
+  background-color: rgba(28, 36, 43, 0.72);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.42);
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 0.58rem;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  game-ui-font-fit-mode: shrink;
+  game-ui-font-fit-min-size: 0.45rem;
+  game-ui-font-fit-max-size: 0.58rem;
+}
+
+.notification-decision-btn:hover {
+  background-color: rgba(54, 67, 77, 0.84);
+  border-color: rgba(224, 200, 114, 0.72);
+  color: var(--text-bright);
+}
+
+.notification-decision-btn + .notification-decision-btn {
+  margin-top: 0.18rem;
+}
+
+.notification-decision-btn--accept {
+  background-color: rgba(73, 86, 48, 0.74);
+  border-color: rgba(171, 190, 104, 0.55);
+}
+
+.notification-decision-btn--accept:hover {
+  background-color: rgba(88, 104, 57, 0.86);
+  border-color: rgba(199, 215, 127, 0.72);
+}
+
+.notification-decision-btn--decline:hover {
+  background-color: rgba(86, 45, 45, 0.8);
+  border-color: rgba(196, 64, 64, 0.58);
+}
+
+/* --- Right-click options popover --- */
+
+.notification-options-popover-positioner {
+  position: fixed;
+  z-index: 720;
+  width: 15.25rem;
+  max-width: 15.25rem;
+}
+
+.notification-options-popover {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.615rem;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/modal-charcoal.png');
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+  cursor: default;
+  transform-origin: top left;
+  animation: notification-options-in 0.16s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.notification-options-popover--closing {
+  animation: notification-options-out 0.12s ease-in both;
+  pointer-events: none;
+}
+
+.notification-options-popover__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.462rem;
+  padding-bottom: 0.462rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(201, 168, 76, 0.18);
+}
+
+.notification-options-popover__title {
+  min-width: 0;
+  font-family: var(--font-header);
+  font-size: 0.86rem;
+  color: var(--text-header);
+  line-height: 1.15;
+  overflow-wrap: break-word;
+}
+
+.notification-options-popover__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-options-popover__body > * + * {
+  margin-top: 0.462rem;
+}
+
+.notification-options-popover__button {
+  width: 100%;
+  min-height: 2.154rem;
+  padding: 0.308rem 0.462rem;
+  font-size: 0.72rem;
+  line-height: 1.12;
+  text-align: center;
+  white-space: normal;
+  game-ui-font-fit-mode: shrink;
+  game-ui-font-fit-min-size: 0.58rem;
+  game-ui-font-fit-max-size: 0.72rem;
+}
+
+.notification-options-popover__desc {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.32;
+  overflow-wrap: break-word;
+}
+
+@keyframes notification-options-in {
+  from { opacity: 0; transform: translateY(0.231rem) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes notification-options-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(0.154rem) scale(0.98); }
+}
+
+/* --- Game-day countdown --- */
+
+.notification-countdown {
+  position: absolute;
+  left: 0.1818rem;
+  right: 0.1818rem;
+  bottom: 0.0909rem;
+  height: 0.1364rem;
+  overflow: hidden;
+  background-color: rgba(8, 12, 17, 0.42);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.notification-countdown-fill {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(224, 200, 114, 0.82);
+  transform-origin: left center;
+  transition-property: transform;
+  transition-duration: 0.18s;
+  transition-timing-function: var(--ease-snap);
+}
+
+/* --- Event text tokens --- */
+
+.rich-link {
+  color: var(--text-header);
+  font-weight: 500;
+}
+
+.rich-link--clickable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(201, 168, 76, 0.35);
+  text-underline-offset: 0.1818rem;
+}
+
+.rich-link--clickable:hover {
+  color: var(--text-bright);
+  text-decoration-color: var(--text-header);
+}
+
+.rich-concept {
+  width: 1em;
+  height: 1em;
+  vertical-align: baseline;
+  margin: 0 0.1em;
+}
+
+.rich-header {
+  color: var(--text-header);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rich-def {
+  border-bottom-width: 0.0909rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border-light);
+}

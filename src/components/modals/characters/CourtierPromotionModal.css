@@ -1,0 +1,388 @@
+/* ==========================================================================
+   Courtier Promotion Modal - mirrors CourtierPromotion.as: a horizontal row
+   of parallax cards, a gold cost line, and Promote / Close. No border-radius
+   (cards and frames stay sharp), no box-shadow, transform-only animation.
+   ========================================================================== */
+
+.cpm-overlay {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 500;
+  background: rgba(8, 12, 17, 0.7);
+  display: flex; align-items: center; justify-content: center;
+  animation-name: cpm-overlay-in;
+  animation-duration: 0.2s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+}
+@keyframes cpm-overlay-in { from { opacity: 0 } to { opacity: 1 } }
+.cpm-overlay--closing { animation: cpm-overlay-out 0.18s ease-in both; pointer-events: none; }
+@keyframes cpm-overlay-out { from { opacity: 1 } to { opacity: 0 } }
+
+.cpm-modal {
+  width: 70rem; max-width: 94vw;
+  display: flex; flex-direction: column;
+  animation: cpm-modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes cpm-modal-in {
+  from { opacity: 0; transform: scale(0.94) translateY(0.6rem); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.cpm-modal--closing { animation: cpm-modal-out 0.18s ease-in both; }
+@keyframes cpm-modal-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.96) translateY(0.4rem); }
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.cpm-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.7rem 1rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.72) 0%, rgba(13, 18, 24, 0.42) 100%);
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, auto;
+  flex-shrink: 0;
+}
+.cpm-header-left { display: flex; align-items: center; }
+.cpm-header-left > * { margin-left: 0.7rem; }
+
+
+.cpm-header-left > :first-child {
+  margin-left: 0;
+}
+.cpm-header-icon {
+  width: 2.1rem; height: 2.1rem;
+  opacity: 0.9;
+}
+.cpm-header-text { display: flex; flex-direction: column; }
+.cpm-header-text > * { margin-top: 0.1rem; }
+
+
+.cpm-header-text > :first-child {
+  margin-top: 0;
+}
+.cpm-title {
+  font-family: var(--font-header); font-size: 1.2rem;
+  color: var(--text-header); letter-spacing: 0.03em;
+  line-height: 1;
+}
+.cpm-subtitle {
+  font-size: 0.75rem; color: var(--gold-dark);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+/* ── Body ───────────────────────────────────────────────────────────── */
+
+.cpm-body {
+  padding: 1rem 1rem 1.2rem;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/modal-charcoal.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem, 93.0909rem 93.0909rem;
+  position: relative;
+}
+.cpm-body::before {
+  content: ''; position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background-image: var(--texture-noise);
+  pointer-events: none; opacity: 0.6;
+}
+
+.cpm-blurb {
+  font-size: 0.85rem; color: var(--text-muted);
+  text-align: center;
+  max-width: 46rem; margin: 0 auto 0.9rem;
+  line-height: 1.4;
+  position: relative;
+}
+
+.cpm-card-row {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+.cpm-card-row > * { margin-left: 0.6rem; }
+
+
+.cpm-card-row > :first-child {
+  margin-left: 0;
+}
+
+.cpm-card-row > .tooltip-wrapper {
+  flex: 0 0 11.2rem;
+  min-width: 0;
+  display: flex;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────── */
+
+.cpm-card {
+  position: relative;
+  width: 100%;
+  height: 20.4rem;
+  overflow: hidden;
+  border: 0.077rem solid rgba(201, 168, 76, 0.2);
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.cpm-card:hover {
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+  transform: translateY(-0.15rem);
+}
+.cpm-card--selected {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+.cpm-card--selected:hover { transform: translateY(-0.15rem); }
+
+.cpm-card-bg {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background-size: cover; background-position: center 20%;
+  transform: scale(1.02);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cpm-card:hover .cpm-card-bg { transform: scale(1.06); }
+.cpm-card--selected .cpm-card-bg { transform: scale(1.04); }
+
+.cpm-card-fg {
+  position: absolute;
+  left: 50%; bottom: 0;
+  height: 108%;
+  width: auto;
+  transform: translateX(-50%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.cpm-card-vignette {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(8, 12, 17, 0.1) 0%,
+      rgba(0, 0, 0, 0.0) 28%,
+      rgba(8, 12, 17, 0.35) 58%,
+      rgba(8, 12, 17, 0.92) 100%),
+    linear-gradient(90deg,
+      rgba(8, 12, 17, 0.35) 0%,
+      transparent 18%,
+      transparent 82%,
+      rgba(8, 12, 17, 0.35) 100%);
+  pointer-events: none;
+}
+
+/* Corner brackets on selection - stands in for the gold selection indicator
+   image the AngelScript widget swaps in. */
+.cpm-card-corner {
+  position: absolute;
+  width: 0.9rem; height: 0.9rem;
+  border-width: 0.138rem;
+  border-style: solid;
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  pointer-events: none;
+  animation: cpm-corner-in 0.18s ease-out both;
+}
+@keyframes cpm-corner-in {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.cpm-card-corner--tl { top: 0.3rem; left: 0.3rem; border-right: 0; border-bottom: 0; }
+.cpm-card-corner--tr { top: 0.3rem; right: 0.3rem; border-left: 0; border-bottom: 0; }
+.cpm-card-corner--bl { bottom: 0.3rem; left: 0.3rem; border-right: 0; border-top: 0; }
+.cpm-card-corner--br { bottom: 0.3rem; right: 0.3rem; border-left: 0; border-top: 0; }
+
+.cpm-card-content {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 0.4rem 0.5rem 0.55rem;
+  display: flex; flex-direction: column;
+  z-index: 2;
+  background: linear-gradient(180deg, transparent 0%, rgba(8, 12, 17, 0.75) 38%, rgba(8, 12, 17, 0.92) 100%);
+}
+.cpm-card-content > * { margin-top: 0.3rem; }
+
+
+.cpm-card-content > :first-child {
+  margin-top: 0;
+}
+
+.cpm-card-title {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-bright);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-align: center;
+  padding-bottom: 0.3rem;
+  border-bottom: 0.077rem solid rgba(201, 168, 76, 0.3);
+}
+.cpm-card--selected .cpm-card-title { color: var(--gold); }
+
+.cpm-card-stats {
+  display: flex; flex-direction: column;
+}
+.cpm-card-stats > * { margin-top: 0.12rem; }
+
+
+.cpm-card-stats > :first-child {
+  margin-top: 0;
+}
+
+.cpm-stat-row {
+  display: flex;
+  align-items: center;
+}
+.cpm-stat-row > * { margin-left: 0.3rem; }
+
+
+.cpm-stat-row > :first-child {
+  margin-left: 0;
+}
+.cpm-stat-icon {
+  width: 0.85rem; height: 0.85rem;
+  opacity: 0.88;
+  flex-shrink: 0;
+}
+.cpm-stat-track {
+  position: relative;
+  flex: 1;
+  height: 0.32rem;
+  background:
+    linear-gradient(90deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.04) 100%),
+    rgba(8, 12, 17, 0.55);
+  border: 0.077rem solid rgba(201, 168, 76, 0.15);
+  overflow: hidden;
+}
+.cpm-stat-track::before {
+  /* Faint 1/4, 1/2, 3/4 tick marks to read the 0-20 scale. */
+  content: '';
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background-image:
+    linear-gradient(90deg, transparent 0%, transparent 24.5%, rgba(201, 168, 76, 0.18) 24.5%, rgba(201, 168, 76, 0.18) 25.5%, transparent 25.5%, transparent 100%),
+    linear-gradient(90deg, transparent 0%, transparent 49.5%, rgba(201, 168, 76, 0.22) 49.5%, rgba(201, 168, 76, 0.22) 50.5%, transparent 50.5%, transparent 100%),
+    linear-gradient(90deg, transparent 0%, transparent 74.5%, rgba(201, 168, 76, 0.18) 74.5%, rgba(201, 168, 76, 0.18) 75.5%, transparent 75.5%, transparent 100%);
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  pointer-events: none;
+}
+.cpm-stat-fill {
+  position: absolute; top: 0; bottom: 0;
+}
+.cpm-stat-range {
+  font-family: var(--font-header);
+  font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.01em;
+  text-align: right;
+  line-height: 1;
+  width: 3.35rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.cpm-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.6rem 1rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--separator);
+  background-color: rgba(13, 18, 24, 0.52);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
+  position: relative;
+  flex-shrink: 0;
+}
+.cpm-footer > * { margin-left: 1rem; }
+
+
+.cpm-footer > :first-child {
+  margin-left: 0;
+}
+.cpm-footer::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 0.2727rem;
+  background: url('/assets/gold-line.png') repeat-x;
+  background-size: auto 100%;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.cpm-cost {
+  display: flex; align-items: center;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.cpm-cost > * { margin-left: 0.45rem; }
+
+
+.cpm-cost > :first-child {
+  margin-left: 0;
+}
+.cpm-cost-icon { width: 1.1rem; height: 1.1rem; }
+.cpm-cost-label {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+}
+.cpm-cost-value {
+  font-family: var(--font-header);
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--gold);
+}
+.cpm-cost--broke .cpm-cost-value { color: var(--red); }
+.cpm-cost-sep {
+  width: 0.077rem; height: 1.1rem;
+  background: rgba(201, 168, 76, 0.2);
+  margin: 0 0.15rem;
+}
+.cpm-cost-wallet {
+  font-size: 0.78rem; color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+.cpm-footer-actions {
+  display: flex;
+}
+.cpm-footer-actions > * { margin-left: 0.5rem; }
+
+
+.cpm-footer-actions > :first-child {
+  margin-left: 0;
+}
+.cpm-footer-actions > * { min-width: 7rem; }
+
+.cpm-promote-btn {
+  padding: 0.42rem 1rem;
+}
+.cpm-promote-btn--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

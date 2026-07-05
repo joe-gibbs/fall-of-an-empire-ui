@@ -1,0 +1,615 @@
+.battle-aar-overlay {
+  z-index: 620;
+}
+
+.battle-aar-modal {
+  width: 54rem;
+  max-width: 86vw;
+  height: 82vh;
+  max-height: 82vh;
+}
+
+.battle-aar-hero {
+  position: relative;
+  flex-shrink: 0;
+  height: 9.5rem;
+  overflow: hidden;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--gold-muted);
+}
+
+.battle-aar-hero-image {
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.78;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.battle-aar-hero-shade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.battle-aar-hero--victory .battle-aar-hero-shade {
+  background-color: rgba(18, 12, 4, 0.28);
+}
+
+.battle-aar-hero--defeat .battle-aar-hero-shade {
+  background-color: rgba(6, 8, 11, 0.54);
+}
+
+.battle-aar-hero-close {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.7rem;
+  z-index: 2;
+}
+
+.battle-aar-hero-content {
+  position: absolute;
+  right: 1.1rem;
+  bottom: 0.95rem;
+  left: 1.1rem;
+  z-index: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-aar-kicker,
+.battle-aar-meta-label,
+.battle-aar-stat-label,
+.battle-aar-unit-label {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.battle-aar-title {
+  margin: 0;
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 1.65rem;
+  line-height: 1.1;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-body {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+  min-height: 0;
+  background-color: rgba(36, 42, 48, 0.18);
+  background-image: linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(24, 32, 40, 0.28) 100%);
+  background-repeat: repeat;
+}
+
+.battle-aar-body-viewport {
+  padding: 1rem 2.05rem 1rem 1rem;
+}
+
+.battle-aar-body > .styled-scroll-area__track {
+  top: 0.7rem;
+  right: 0.42rem;
+  bottom: 0.7rem;
+}
+
+.battle-aar-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.35;
+  padding: 0.85rem 0.95rem;
+  background-color: #242f38;
+  background-image:
+    linear-gradient(180deg, rgba(48, 57, 66, 0.52) 0%, rgba(28, 39, 50, 0.66) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--separator);
+  border-right-color: var(--separator);
+  border-bottom-color: var(--separator);
+  border-left-color: var(--separator);
+}
+
+.battle-aar-summary .rich-link,
+.battle-aar-meta-value .rich-link,
+.battle-aar-side-names .rich-link {
+  color: var(--text-header);
+  font-weight: 500;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-meta-value .rich-link--clickable,
+.battle-aar-side-names .rich-link--clickable {
+  cursor: pointer;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-color: rgba(201, 168, 76, 0.35);
+  text-underline-offset: 0.1818rem;
+}
+
+.battle-aar-meta-value .rich-link--clickable:hover,
+.battle-aar-side-names .rich-link--clickable:hover {
+  color: var(--text-bright);
+  text-decoration-color: var(--text-header);
+}
+
+.battle-aar-summary .event-link {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  color: var(--text-header);
+  font-weight: 500;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-color: rgba(201, 168, 76, 0.35);
+  text-underline-offset: 0.1818rem;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-summary .event-link--clickable {
+  cursor: pointer;
+}
+
+.battle-aar-summary .event-link--clickable:hover {
+  color: var(--text-bright);
+  text-decoration-color: var(--text-header);
+}
+
+.battle-aar-summary .event-token {
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-summary .event-space {
+  width: 0.24em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+.battle-aar-meta-row {
+  display: flex;
+  margin-top: 0.75rem;
+}
+
+.battle-aar-meta-row > * + * {
+  margin-left: 0.75rem;
+}
+
+.battle-aar-meta,
+.battle-aar-spoils {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.65rem 0.75rem;
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(48, 57, 66, 0.44) 0%, rgba(26, 37, 47, 0.7) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.3);
+  border-right-color: rgba(201, 168, 76, 0.18);
+  border-bottom-color: rgba(201, 168, 76, 0.18);
+  border-left-color: rgba(201, 168, 76, 0.3);
+}
+
+.battle-aar-meta-value {
+  min-width: 0;
+  margin-top: 0.2rem;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.96rem;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-sides {
+  display: flex;
+  margin-top: 0.75rem;
+}
+
+.battle-aar-sides > * + * {
+  margin-left: 0.75rem;
+}
+
+.battle-aar-side {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.85rem;
+  background-color: #202a33;
+  background-image:
+    linear-gradient(180deg, rgba(48, 57, 66, 0.4) 0%, rgba(25, 35, 45, 0.72) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(170, 68, 58, 0.44);
+  border-right-color: rgba(170, 68, 58, 0.28);
+  border-bottom-color: rgba(170, 68, 58, 0.28);
+  border-left-color: rgba(170, 68, 58, 0.44);
+}
+
+.battle-aar-side--won {
+  border-top-color: rgba(201, 168, 76, 0.58);
+  border-right-color: rgba(201, 168, 76, 0.32);
+  border-bottom-color: rgba(201, 168, 76, 0.32);
+  border-left-color: rgba(201, 168, 76, 0.58);
+}
+
+.battle-aar-side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.battle-aar-side-heading {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.battle-aar-side-roundel.faction-roundel {
+  flex-shrink: 0;
+  margin-right: 0.55rem;
+}
+
+.battle-aar-side-label {
+  min-width: 0;
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 1rem;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-faction-link {
+  background-color: transparent;
+  background-image: none;
+  border-width: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.battle-aar-faction-link:hover {
+  color: var(--gold-light);
+}
+
+.battle-aar-side-result {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.battle-aar-side--won .battle-aar-side-result {
+  color: var(--gold-light);
+}
+
+.battle-aar-side-names {
+  min-height: 2.4rem;
+  margin-top: 0.45rem;
+  color: var(--text);
+  font-size: 0.86rem;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-strength-bar.painted-bar-track {
+  height: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.battle-aar-stats {
+  display: flex;
+  margin-top: 0.65rem;
+}
+
+.battle-aar-stat {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-aar-stat + .battle-aar-stat {
+  margin-left: 0.55rem;
+}
+
+.battle-aar-stat-value {
+  margin-top: 0.16rem;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  line-height: 1.15;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-stat-value--loss {
+  color: var(--red-light);
+}
+
+.battle-aar-unit-label {
+  margin-top: 0.55rem;
+}
+
+.battle-aar-spoils {
+  margin-top: 0.75rem;
+}
+
+.battle-aar-spoils-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.battle-aar-spoil-item {
+  display: flex;
+  align-items: center;
+  min-width: 9rem;
+  margin-right: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.battle-aar-spoil-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  flex-shrink: 0;
+  margin-right: 0.45rem;
+}
+
+.battle-aar-spoil-amount {
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  margin-right: 0.35rem;
+}
+
+.battle-aar-spoil-name {
+  min-width: 0;
+  color: var(--text-bright);
+  font-size: 0.86rem;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-damage-section {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(48, 57, 66, 0.44) 0%, rgba(26, 37, 47, 0.7) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.3);
+  border-right-color: rgba(201, 168, 76, 0.18);
+  border-bottom-color: rgba(201, 168, 76, 0.18);
+  border-left-color: rgba(201, 168, 76, 0.3);
+}
+
+.battle-aar-damage-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.45rem;
+}
+
+.battle-aar-damage-columns {
+  display: flex;
+  margin-top: 0.45rem;
+}
+
+.battle-aar-damage-columns > * + * {
+  margin-left: 0.75rem;
+}
+
+.battle-aar-damage-group {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.battle-aar-damage-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 1.45rem;
+}
+
+.battle-aar-damage-group-title {
+  min-width: 0;
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 0.98rem;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-damage-row {
+  display: flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0.45rem 0;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.14);
+}
+
+.battle-aar-damage-row:first-child {
+  border-top-width: 0;
+}
+
+.battle-aar-damage-roundel.faction-roundel {
+  flex-shrink: 0;
+  margin-right: 0.6rem;
+}
+
+.battle-aar-damage-main {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-aar-damage-title-row {
+  display: flex;
+  align-items: center;
+}
+
+.battle-aar-damage-name {
+  min-width: 0;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-damage-unit-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  opacity: 0.76;
+}
+
+.battle-aar-damage-side {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.battle-aar-damage-side--our {
+  color: var(--gold-light);
+}
+
+.battle-aar-damage-side--enemy {
+  color: var(--red-light);
+}
+
+.battle-aar-damage-source {
+  margin-top: 0.1rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-damage-stats {
+  width: 9.2rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 0.75rem;
+}
+
+.battle-aar-damage-loss {
+  color: var(--red-light);
+  font-family: var(--font-header);
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.battle-aar-damage-remaining,
+.battle-aar-damage-percent {
+  margin-top: 0.12rem;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.1;
+  text-align: right;
+}
+
+.battle-aar-footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.8rem 1rem;
+  background-color: rgba(36, 42, 48, 0.48);
+  background-image: url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--separator);
+}
+
+.battle-aar-footer > * + * {
+  margin-left: 0.55rem;
+}
+
+.battle-aar-location-button > * + * {
+  margin-left: 0.52rem;
+}
+
+@media (max-width: 62rem) {
+  .battle-aar-meta-row,
+  .battle-aar-sides {
+    flex-direction: column;
+  }
+
+  .battle-aar-meta-row > * + *,
+  .battle-aar-sides > * + * {
+    margin-left: 0;
+    margin-top: 0.75rem;
+  }
+
+  .battle-aar-damage-row {
+    align-items: flex-start;
+  }
+
+  .battle-aar-damage-columns {
+    flex-direction: column;
+  }
+
+  .battle-aar-damage-columns > * + * {
+    margin-left: 0;
+    margin-top: 0.75rem;
+  }
+
+  .battle-aar-damage-stats {
+    width: 6.8rem;
+  }
+}

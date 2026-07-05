@@ -1,0 +1,51 @@
+/* =============================================
+   MapPlaceholder - Game Map Area
+   ============================================= */
+
+.map-placeholder {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Map background layer (no image - transparent for overlay use) */
+.map-bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* Subtle grid lines */
+.map-grid {
+  display: none;
+}
+
+/* Political region hints - not needed with real map */
+.map-regions {
+  display: none;
+}
+
+.map-region {
+  display: none;
+}
+
+/* Centre label */
+.map-label {
+  display: none;
+}
+
+/* Settlement markers */
+.map-settlement {
+  display: none;
+}
+
+/* Large faction name labels - not needed with real map */
+.map-faction-label {
+  display: none;
+}

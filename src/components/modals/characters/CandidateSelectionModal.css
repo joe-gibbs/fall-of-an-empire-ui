@@ -1,0 +1,108 @@
+.candidate-modal-drag-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.candidate-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 0.6rem;
+  flex-shrink: 0;
+  background-color: rgba(8, 12, 17, 0.36);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.16) 0%, rgba(36, 42, 48, 0.16) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  cursor: pointer;
+  user-select: none;
+}
+
+.candidate-drag-handle__mark {
+  display: block;
+  width: 3.4rem;
+  height: 0.14rem;
+  background-color: rgba(201, 168, 76, 0.34);
+  border-radius: 0.08rem;
+  opacity: 0.9;
+}
+
+.candidate-drag-handle:hover .candidate-drag-handle__mark {
+  background-color: rgba(201, 168, 76, 0.74);
+  opacity: 1;
+}
+
+.candidate-list-scroll-frame {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+  width: 100%;
+}
+
+.candidate-list-spacer {
+  box-sizing: border-box;
+  width: 100%;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.candidate-list-scroll--virtualized .cam-row,
+.candidate-list-scroll--virtualized .bam-row,
+.candidate-list-scroll--virtualized .asm-row {
+  box-sizing: border-box;
+  height: 4rem;
+  min-height: 4rem;
+  overflow: hidden;
+}
+
+.candidate-list-action.btn--outline {
+  flex-shrink: 0;
+  padding: 0.18rem 0.5rem;
+  font-size: 0.72rem;
+}
+
+.candidate-row-view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  background-color: rgba(8, 12, 17, 0.36);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/icon-button.png');
+  background-repeat: repeat, no-repeat;
+  background-size: auto, 100% 100%;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.22);
+  border-right-color: rgba(201, 168, 76, 0.22);
+  border-bottom-color: rgba(201, 168, 76, 0.22);
+  border-left-color: rgba(201, 168, 76, 0.22);
+  cursor: pointer;
+}
+
+.candidate-row-view-btn:hover {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/icon-button-hover.png');
+}
+
+.candidate-row-view-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  opacity: 0.86;
+}

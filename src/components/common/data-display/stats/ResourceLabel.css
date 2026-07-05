@@ -1,0 +1,31 @@
+.resource-label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.resource-label__icon {
+  width: 1rem;
+  height: 1rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+  margin-right: 0.25rem;
+}
+
+.resource-label__name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-label__amount {
+  display: block;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+  margin-left: auto;
+  white-space: nowrap;
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" spellcheck="false" translate="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fall of an Empire - Web UI</title>
+    <script>
+      (function () {
+        var nativeAddEventListener = window.addEventListener;
+        var nativeRemoveEventListener = window.removeEventListener;
+
+        window.addEventListener = function (type, listener, options) {
+          if (type === 'test' && listener === options && listener && typeof listener === 'object') {
+            return;
+          }
+          return nativeAddEventListener.call(this, type, listener, options);
+        };
+
+        window.removeEventListener = function (type, listener, options) {
+          if (type === 'test' && listener === options && listener && typeof listener === 'object') {
+            return;
+          }
+          return nativeRemoveEventListener.call(this, type, listener, options);
+        };
+      })();
+    </script>
+  </head>
+  <body oncontextmenu="return false">
+    <div id="root"></div>
+    <!--
+      Import map for runtime-loaded mods. Lets a mod write
+        import React from 'react';
+        import { registerScreen, ScreenShell } from '@foae/sdk';
+      and have those specifiers resolve to the host's single React instance
+      and the SDK published on globalThis.FOAE. Must appear BEFORE the main
+      bundle script so it is active when mod modules are dynamically
+      imported later. The main bundle itself does NOT use the import map -
+      its own imports were resolved at build time.
+    -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "/sdk/react.js",
+        "react/jsx-runtime": "/sdk/react-jsx-runtime.js",
+        "@foae/sdk": "/sdk/foae-sdk.js"
+      }
+    }
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

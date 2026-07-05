@@ -1,0 +1,88 @@
+.styled-scroll-area {
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.styled-scroll-area__viewport {
+  position: absolute;
+  top: 0;
+  right: -1.385rem;
+  bottom: 0;
+  left: 0;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.styled-scroll-area--inline > .styled-scroll-area__viewport {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  max-height: inherit;
+  margin-right: -1.385rem;
+}
+
+.styled-scroll-area__track {
+  position: absolute;
+  top: 0.308rem;
+  right: 0.154rem;
+  bottom: 0.308rem;
+  width: 0.846rem;
+  z-index: 12;
+  background-color: rgba(6, 7, 9, 0.62);
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+  border-left-width: 0.077rem;
+  border-left-style: solid;
+  border-left-color: rgba(201, 168, 76, 0.18);
+  border-right-width: 0.077rem;
+  border-right-style: solid;
+  border-right-color: rgba(8, 12, 17, 0.65);
+  opacity: 0.82;
+  cursor: pointer;
+}
+
+.styled-scroll-area__track--hidden {
+  display: none;
+}
+
+.styled-scroll-area__thumb {
+  position: absolute;
+  top: 0;
+  right: 0.154rem;
+  left: 0.154rem;
+  min-height: 1.692rem;
+  background-color: #7d622d;
+  background-image:
+    linear-gradient(90deg, rgba(50, 35, 12, 0.75), rgba(201, 168, 76, 0.9), rgba(84, 58, 20, 0.82)),
+    url('/assets/baked/button-gold-subtle.png');
+  background-repeat: repeat, repeat;
+  background-size: 100% 100%, 11.6364rem 5.8182rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: rgba(235, 206, 112, 0.72);
+  border-right-width: 0.077rem;
+  border-right-style: solid;
+  border-right-color: rgba(70, 46, 18, 0.88);
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(52, 34, 14, 0.9);
+  border-left-width: 0.077rem;
+  border-left-style: solid;
+  border-left-color: rgba(235, 206, 112, 0.5);
+  cursor: pointer;
+}
+
+.styled-scroll-area__thumb:hover {
+  background-color: #a8843f;
+}

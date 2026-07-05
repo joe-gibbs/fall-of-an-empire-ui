@@ -1,0 +1,23 @@
+.drag-selection-marquee-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 49;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.drag-selection-marquee-box {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  background-color: rgba(16, 18, 20, 0.22);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(244, 239, 226, 0.95);
+  border-right-color: rgba(214, 168, 58, 0.95);
+  border-bottom-color: rgba(201, 168, 76, 0.95);
+  border-left-color: rgba(214, 168, 58, 0.95);
+}

@@ -1,0 +1,481 @@
+/* ===== Shared Sidebar Container ===== */
+.sidebar {
+  position: relative;
+  width: var(--sidebar-width);
+  height: 100%;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.34) 0%, rgba(18, 23, 29, 0.48) 100%),
+    url('/assets/baked/screen-charcoal.png');
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem, auto, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: rgba(80, 92, 104, 0.28);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Character sidebar gets a grungy worn texture - tiled at low opacity */
+.character-sidebar {
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.34) 0%, rgba(18, 23, 29, 0.48) 100%),
+    url('/assets/baked/screen-charcoal.png');
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem, auto, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+}
+
+
+
+/* Greek wave meander at bottom - extracted from game's T_TopNavbar asset */
+.sidebar::after {
+  content: '';
+  display: block;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1.538rem;
+  background: url('/assets/meander.png') repeat-x left bottom;
+  background-size: 2.538rem 1.538rem;
+  pointer-events: none;
+}
+
+.sidebar--left {
+  border-right-width: 0.077rem;
+  border-right-style: solid;
+  border-right-color: rgba(201, 168, 76, 0.14);
+}
+
+.sidebar--right {
+  border-left-width: 0;
+}
+
+/* --- Swoop-in entrance animations --- */
+.sidebar--left.sidebar--visible {
+  animation: sidebar-swoop-left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sidebar--right.sidebar--visible {
+  animation: sidebar-swoop-right 0.22s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+/* AnimatedSlot applies `slot--exiting` on the wrapping div during close.
+   The exit rule in App.css uses `> *`, which has equal specificity to the
+   entrance rule above. Sidebar.css loads after App.css via per-component
+   imports, so without this override the entrance animation keeps winning and
+   the exit never plays. Explicitly let the exit animation take over here. */
+.slot--exiting > .sidebar--left.sidebar--visible {
+  animation: sidebar-flyout-left 0.18s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.slot--exiting > .sidebar--right.sidebar--visible {
+  animation: sidebar-flyout-right 0.18s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes sidebar-swoop-left {
+  from { opacity: 0; transform: translateX(-100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sidebar-swoop-right {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== Close Button Position ===== */
+.sidebar-close-pos {
+  position: absolute;
+  top: 0.308rem;
+  right: 0.308rem;
+  z-index: 10;
+}
+
+.sidebar--right .sidebar-close-pos {
+  left: 0.308rem;
+  right: auto;
+}
+
+.sidebar-help-pos {
+  position: absolute;
+  top: 0.308rem;
+  right: 2.462rem;
+  z-index: 10;
+  width: 1.846rem;
+  height: 1.846rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/button-close-dark.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 5.8182rem 5.8182rem;
+  background-color: #0d1218;
+  color: var(--text-muted);
+  transition: background 0.12s, color 0.12s, border-color 0.12s, transform 0.12s ease-out;
+}
+
+.sidebar-help-pos:hover {
+  background-image: url('/assets/baked/button-help-blue.png');
+  background-repeat: repeat;
+  background-size: 5.8182rem 5.8182rem;
+  background-color: #1c344a;
+  border-color: rgba(146, 184, 223, 0.45);
+  color: #b7d1ea;
+  transform: translateY(-0.0909rem);
+}
+
+.sidebar-help-pos:active {
+  background-image: url('/assets/baked/button-help-blue.png');
+  background-repeat: repeat;
+  background-size: 5.8182rem 5.8182rem;
+  background-color: #142638;
+  transform: translateY(0.0909rem) scale(0.9);
+  transition: transform 0s;
+}
+
+.sidebar-help-pos-icon {
+  width: 0.923rem;
+  height: 0.923rem;
+}
+
+.sidebar--right .sidebar-help-pos {
+  left: 2.462rem;
+  right: auto;
+}
+
+/* ===== Header Area ===== */
+.sidebar-header {
+  padding: 0.308rem 0.462rem 0.231rem;
+  border-bottom-width: 0.154rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  background-image: linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%);
+  background-repeat: repeat;
+  background-size: auto;
+  background-color: rgba(10, 14, 19, 0.32);
+  flex-shrink: 0;
+}
+
+.sidebar--right .sidebar-header {
+  padding-left: 2.7rem;
+}
+
+.sidebar-header-row {
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-title {
+  font-family: var(--font-header);
+  font-size: 1.077rem;
+  color: var(--gold);
+  letter-spacing: 0.038rem;
+  text-shadow: 0 0.077rem 0.231rem rgba(8, 12, 17, 0.8);
+  line-height: 1.2;
+}
+
+.sidebar-title--small {
+  font-size: 1.077rem;
+}
+
+.sidebar-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.154rem;
+}
+
+/* ===== Scrollable Content ===== */
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.308rem 0.462rem 1.8rem;
+}
+
+.sidebar-content.styled-scroll-area {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  margin-bottom: 1.538rem;
+}
+
+.sidebar-content.styled-scroll-area > .styled-scroll-area__viewport {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+  padding: 0.308rem 1.231rem 1.8rem 0.462rem;
+}
+
+/* Textured sidebar body - grunge overlay for painted feel */
+.sidebar-content--textured {
+  padding: 0 0 1.8rem;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-dark.png'),
+    linear-gradient(180deg, rgba(36, 42, 48, 0.36) 0%, rgba(15, 20, 26, 0.46) 100%),
+    url('/assets/baked/screen-content-charcoal.png');
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: auto, 9.846rem 9.846rem, auto, 93.0909rem 93.0909rem;
+  background-color: #242a30;
+}
+
+.sidebar-content--textured.styled-scroll-area > .styled-scroll-area__viewport {
+  padding: 0 1.231rem 1.8rem 0;
+}
+
+/* --- Shared sidebar header patterns --- */
+.sidebar-header-name {
+  font-family: var(--font-header);
+  font-size: 1.25rem;
+  color: var(--text-bright);
+  letter-spacing: 0.03rem;
+  text-shadow: 0 0.077rem 0.3rem rgba(8, 12, 17, 0.9);
+}
+
+.sidebar-header-subtitle {
+  font-size: 0.85rem;
+  color: var(--gold);
+  margin-top: 0.05rem;
+}
+
+/* Section headings: now handled by SectionHeading component */
+/* Info rows: now handled by InfoRow component */
+
+/* ===== Separator ===== */
+.sidebar-separator {
+  height: 0.077rem;
+  background-color: var(--separator);
+  margin: 0.231rem 0;
+}
+
+/* ===== Portrait + Name Row ===== */
+.sidebar-portrait-row {
+  display: flex;
+  align-items: center;
+
+  padding: 0.154rem 0;
+}
+
+.sidebar-portrait-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-portrait-name {
+  font-size: 0.9rem;
+  color: var(--text-bright);
+  line-height: 1.3;
+}
+
+.sidebar-portrait-detail {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ===== Small Portrait Grid ===== */
+.sidebar-portrait-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* ===== Card List ===== */
+.sidebar-card-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Inline Stat ===== */
+.sidebar-inline-stat {
+  display: flex;
+  align-items: center;
+
+  font-size: 0.9rem;
+}
+
+/* Buttons: now handled by GameButton component */
+
+/* ===== Comparison Bar ===== */
+.sidebar-comparison-bar {
+  display: flex;
+  align-items: center;
+
+  font-size: 0.9rem;
+}
+
+.sidebar-comparison-track {
+  flex: 1;
+  height: 0.385rem;
+  background-color: rgba(36, 42, 48, 0.42);
+  border-radius: 0;
+  overflow: hidden;
+  display: flex;
+}
+
+.sidebar-comparison-fill-left {
+  height: 100%;
+  border-radius: 0.154rem 0 0 0.154rem;
+  transition-property: transform;
+  transition-duration: 0.4s;
+  transition-timing-function: var(--ease-snap);
+  transform-origin: left;
+}
+
+.sidebar-comparison-fill-right {
+  height: 100%;
+  border-radius: 0 0.154rem 0.154rem 0;
+  transition-property: transform;
+  transition-duration: 0.4s;
+  transition-timing-function: var(--ease-snap);
+  transform-origin: right;
+}
+
+/* ===== Checkbox Row ===== */
+.sidebar-checkbox-row {
+  display: flex;
+  align-items: center;
+
+  font-size: 0.9rem;
+  color: var(--text);
+  padding: 0.154rem 0;
+  cursor: pointer;
+}
+
+.sidebar-checkbox {
+  width: 1.077rem;
+  height: 1.077rem;
+  border-width: 0.154rem;
+  border-style: solid;
+  border-top-color: var(--border);
+  border-right-color: var(--border);
+  border-bottom-color: var(--border);
+  border-left-color: var(--border);
+  border-radius: 0;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem;
+  background-color: rgba(13, 18, 24, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.sidebar-checkbox--checked {
+  background: rgba(201, 168, 76, 0.15);
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
+}
+
+/* ===== Flag Wrap ===== */
+.sidebar-flag-wrap {
+  display: flex;
+  flex-wrap: wrap;
+
+  padding: 0.154rem 0;
+}
+
+/* ===== Placeholder State ===== */
+.sidebar-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.231rem 0.615rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.sidebar-placeholder-icon {
+  font-size: 1.692rem;
+  color: var(--text-dark);
+}
+
+.sidebar-header-row > * + * {
+  margin-left: 0.308rem;
+}
+
+/* ===== Portrait + Name Row ===== */
+.sidebar-portrait-row > * + * {
+  margin-left: 0.308rem;
+}
+
+/* ===== Small Portrait Grid ===== */
+.sidebar-portrait-grid > * {
+  margin-right: 0.231rem;
+  margin-bottom: 0.231rem;
+}
+
+/* ===== Card List ===== */
+.sidebar-card-list > * + * {
+  margin-top: 0.231rem;
+}
+
+/* ===== Inline Stat ===== */
+.sidebar-inline-stat > * + * {
+  margin-left: 0.154rem;
+}
+
+/* Buttons: now handled by GameButton component */
+
+/* ===== Comparison Bar ===== */
+.sidebar-comparison-bar > * + * {
+  margin-left: 0.308rem;
+}
+
+/* ===== Checkbox Row ===== */
+.sidebar-checkbox-row > * + * {
+  margin-left: 0.308rem;
+}
+
+/* ===== Flag Wrap ===== */
+.sidebar-flag-wrap > * {
+  margin-right: 0.231rem;
+  margin-bottom: 0.231rem;
+}
+
+/* ===== Placeholder State ===== */
+.sidebar-placeholder > * + * {
+  margin-top: 0.308rem;
+}
+
+.sidebar-debug-rows {
+  display: flex;
+  flex-direction: column;
+  padding: 0.308rem;
+  background-color: rgba(5, 7, 9, 0.42);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.24);
+  border-right-color: rgba(201, 168, 76, 0.16);
+  border-bottom-color: rgba(8, 12, 17, 0.62);
+  border-left-color: rgba(201, 168, 76, 0.16);
+}
+
+.sidebar-debug-rows > * + * {
+  margin-top: 0.154rem;
+}
