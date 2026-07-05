@@ -1026,9 +1026,13 @@
 
 .mm-mod-desc {
   font-size: 1.0909rem;
+  line-height: 1.2;
   color: var(--text-dark);
-  max-height: 3.9em;
+  max-height: 3.6em;
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .mm-mod-upload-status {
@@ -1128,7 +1132,7 @@
 }
 
 .mm-workshop-category-menu {
-  z-index: 80;
+  z-index: 720;
   min-width: 10.9091rem;
 }
 

@@ -33,14 +33,9 @@ interface NewGameMapEntry {
 }
 
 const LOAD_GAME_CARD_IMAGE = '/assets/events/library-archive.png';
-const MAIN_MENU_SCENARIO_SLOT_WIDTH_REM = 23.875;
-const MAIN_MENU_CAMPAIGN_CARD_SLOTS = 2;
+const MAIN_MENU_ROW_WIDTH_REM = 76;
 const MAIN_MENU_CONTINUE_CARD_WIDTH_REM = 21.5;
 const MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM = 6.75;
-const MAIN_MENU_ROW_WIDTH_REM =
-  MAIN_MENU_CONTINUE_CARD_WIDTH_REM
-  + MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM
-  + (MAIN_MENU_CAMPAIGN_CARD_SLOTS * MAIN_MENU_SCENARIO_SLOT_WIDTH_REM);
 const WORKSHOP_CATEGORY_LABEL_KEYS: Record<string, string> = {
   Campaign: 'MainMenu.WorkshopCategoryCampaign',
   Map: 'MainMenu.WorkshopCategoryMap',
@@ -85,7 +80,6 @@ const MainMenu: React.FC = () => {
   const [showLoad, setShowLoad] = useState(false);
   const [newGameMaps, setNewGameMaps] = useState<NewGameMapEntry[]>([]);
   const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
-  const [modsRequireRestart, setModsRequireRestart] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [modsPanelView, setModsPanelView] = useState<ModsPanelView>('installed');
   const [workshopSearchDraft, setWorkshopSearchDraft] = useState('');
@@ -115,6 +109,7 @@ const MainMenu: React.FC = () => {
     subscribedWorkshopError,
     workshopQueryInProgress,
     subscribedWorkshopQueryInProgress,
+    modChangesRequireRestart,
     workshopChangesRequireRestart,
     browseWorkshop,
     refreshSubscribedWorkshop,
@@ -123,7 +118,7 @@ const MainMenu: React.FC = () => {
     downloadWorkshopItem,
   } = useModsBridge(view === 'mods');
 
-  const modsNeedRestart = modsRequireRestart || workshopChangesRequireRestart;
+  const modsNeedRestart = modChangesRequireRestart || workshopChangesRequireRestart;
   const activeModsPanelView: ModsPanelView = steamWorkshopAvailable ? modsPanelView : 'installed';
 
   const preloadFactionSelection = useCallback((mapId: string) => {
@@ -230,7 +225,7 @@ const MainMenu: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [preloadFactionSelection]);
+  }, [modsNeedRestart, preloadFactionSelection]);
 
   const handleContinue = async () => {
     try {
@@ -285,10 +280,7 @@ const MainMenu: React.FC = () => {
   };
 
   const handleToggleMod = async (mod: ModEntry) => {
-    const changed = await setModEnabled(mod.id, !mod.enabled);
-    if (changed) {
-      setModsRequireRestart(true);
-    }
+    await setModEnabled(mod.id, !mod.enabled);
   };
 
   const handleUploadMod = async (mod: ModEntry) => {
@@ -653,6 +645,8 @@ const MainMenu: React.FC = () => {
                 escapeId="main-menu.workshop.category"
                 isActive={false}
                 position="below-left"
+                portal
+                closeOnScroll
                 onChange={(nextCategory) => {
                   setWorkshopCategory(nextCategory);
                   void browseWorkshop(workshopSearchDraft.trim(), 1, nextCategory);
@@ -763,7 +757,7 @@ const MainMenu: React.FC = () => {
     }));
   const scenarioStripWidth = `${
     latestSave
-      ? MAIN_MENU_CAMPAIGN_CARD_SLOTS * MAIN_MENU_SCENARIO_SLOT_WIDTH_REM
+      ? MAIN_MENU_ROW_WIDTH_REM - MAIN_MENU_CONTINUE_CARD_WIDTH_REM - MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM
       : MAIN_MENU_ROW_WIDTH_REM - MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM
   }rem`;
   const menuSlots: MainMenuSlotData[] = [];
