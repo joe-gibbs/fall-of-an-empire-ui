@@ -8,7 +8,7 @@ import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
 import Tooltip from '../../common/tooltips/Tooltip';
 import { sidebarTypeForEntity } from '../../common/entities/entityLinkUtils';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
-import { compareSortValues, normaliseSortText, type SortDirection } from '../../common/layout/tables/sortUtils';
+import { compareSortValues, normaliseSortText, type SortDirection, type SortState } from '../../common/layout/tables/sortUtils';
 import { useLedgerOverviewBridge } from '../../../bridge/settlements-economy/useLedgerOverviewBridge';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import { useGameActions } from '../../../context/GameContext';
@@ -69,6 +69,16 @@ const DEFAULT_FILTERS: LedgerFilters = {
 };
 
 type Column<T> = DataTableColumn<T>;
+type LedgerSortState = SortState<string>;
+
+const DEFAULT_LEDGER_SORTS: Record<LedgerTab, LedgerSortState> = {
+  settlements: { key: 'name', direction: 'asc' },
+  militaries: { key: 'name', direction: 'asc' },
+  factions: { key: 'name', direction: 'asc' },
+  resources: { key: 'name', direction: 'asc' },
+  buildings: { key: 'name', direction: 'asc' },
+  notifications: { key: 'date', direction: 'desc' },
+};
 
 function fmt(value: number | undefined): string {
   return formatNumber(value);
@@ -254,6 +264,8 @@ function BulkTable<T>({
   toolsExtra,
   virtualRowHeight,
   defaultSortDirection,
+  sortState,
+  onSortChange,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -265,6 +277,8 @@ function BulkTable<T>({
   toolsExtra?: ReactNode;
   virtualRowHeight: number;
   defaultSortDirection?: SortDirection;
+  sortState?: LedgerSortState;
+  onSortChange?: (sort: LedgerSortState) => void;
 }) {
   return (
     <DataTable
@@ -295,6 +309,8 @@ function BulkTable<T>({
       emptyClassName="ledger-empty"
       defaultSortKey={columns[0]?.id}
       defaultSortDirection={defaultSortDirection}
+      sortState={sortState}
+      onSortChange={onSortChange}
       virtualized
       virtualizeThreshold={50}
       virtualRowHeight={virtualRowHeight}
@@ -309,9 +325,11 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   const { openSidebar } = useGameActions();
   const [activeTab, setActiveTab] = useState<LedgerTab>('settlements');
   const [rowOffset, setRowOffset] = useState(0);
+  const [sortByTab, setSortByTab] = useState<Record<LedgerTab, LedgerSortState>>(DEFAULT_LEDGER_SORTS);
   const isPagedTab = activeTab === 'settlements' || activeTab === 'buildings';
   const rowLimit = isPagedTab ? LEDGER_PAGE_SIZE : 0;
-  const data = useLedgerOverviewBridge(activeTab, rowOffset, rowLimit);
+  const activeSort = sortByTab[activeTab] ?? DEFAULT_LEDGER_SORTS[activeTab];
+  const data = useLedgerOverviewBridge(activeTab, rowOffset, rowLimit, isPagedTab ? activeSort : undefined);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<LedgerFilters>(DEFAULT_FILTERS);
   const [virtualRowHeight, setVirtualRowHeight] = useState(60);
@@ -342,6 +360,13 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
     }
     setSearch(value);
   };
+
+  const setLedgerSort = useCallback((sort: LedgerSortState) => {
+    if (isPagedTab) {
+      setRowOffset(0);
+    }
+    setSortByTab(current => ({ ...current, [activeTab]: sort }));
+  }, [activeTab, isPagedTab]);
 
   const handleRichLinkClick = useCallback((type: string, id: string) => {
     const sidebarType = sidebarTypeForEntity(type);
@@ -584,7 +609,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
 
   const table = (() => {
     if (activeTab === 'settlements') {
-      return <BulkTable rows={settlements} columns={settlementColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.266.1')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.266.2')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} filterPredicate={row => matchFilter(filters.settlementFaction, row.factionId) && matchFilter(filters.settlementType, normaliseToken(row.type)) && matchFilter(filters.settlementRegion, row.region)} />;
+      return <BulkTable rows={settlements} columns={settlementColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.266.1')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.266.2')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} sortState={activeSort} onSortChange={setLedgerSort} filterPredicate={row => matchFilter(filters.settlementFaction, row.factionId) && matchFilter(filters.settlementType, normaliseToken(row.type)) && matchFilter(filters.settlementRegion, row.region)} />;
     }
     if (activeTab === 'militaries') {
       return <BulkTable rows={militaries} columns={militaryColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.269.3')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.269.4')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} filterPredicate={row => matchFilter(filters.militaryFaction, row.factionId) && matchFilter(filters.militaryKind, militaryKindFilterValue(row.kind))} />;
@@ -596,7 +621,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
       return <BulkTable rows={resources} columns={resourceColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.275.7')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.275.8')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} filterPredicate={row => matchFilter(filters.resourceCategory, normaliseToken(row.category))} />;
     }
     if (activeTab === 'buildings') {
-      return <BulkTable rows={buildings} columns={buildingColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.9')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.10')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} filterPredicate={row => matchFilter(filters.buildingCategory, normaliseToken(row.category)) && matchFilter(filters.buildingFaction, row.factionId)} />;
+      return <BulkTable rows={buildings} columns={buildingColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.9')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.10')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} sortState={activeSort} onSortChange={setLedgerSort} filterPredicate={row => matchFilter(filters.buildingCategory, normaliseToken(row.category)) && matchFilter(filters.buildingFaction, row.factionId)} />;
     }
     if (activeTab === 'notifications') {
       return <BulkTable rows={notifications} columns={notificationColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Ledger.Empty.Notifications')} searchLabel={webUIText('Ledger.Search.Notifications')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} defaultSortDirection="desc" filterPredicate={row => matchFilter(filters.notificationCategory, notificationCategoryFilterValue(row))} />;
@@ -609,7 +634,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
       title={webUIText('Auto.Attr.ComponentsScreensLedgerScreen.285.47')}
       onClose={onClose}
       advisorTopic="ledgerScreen"
-      tabs={<SidebarTabBar tabs={tabs} activeTab={activeTab} onTabChange={(id) => { setActiveTab(id as LedgerTab); setSearch(''); setRowOffset(0); }} />}
+      tabs={<SidebarTabBar tabs={tabs} activeTab={activeTab} onTabChange={(id) => { const nextTab = id as LedgerTab; setActiveTab(nextTab); setSearch(''); setRowOffset(0); }} />}
       className="screen--ledger"
       contentClassName="ledger-content"
     >
