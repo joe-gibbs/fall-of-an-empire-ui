@@ -10,6 +10,7 @@ import React, {
   useState,
 } from 'react';
 import Tooltip, { type TooltipLine } from '../components/common/tooltips/Tooltip';
+import IconButton from '../components/common/buttons/IconButton';
 import Portrait from '../components/common/portraits/Portrait';
 import { TraitIcon } from '../components/common/entities/TraitIcon';
 import CultureTooltip from '../components/common/tooltips/CultureTooltip';
@@ -23,6 +24,8 @@ import { FoaeCefUIAssetPath } from '../utils/assets';
 import { resolveFactionBorderVariant } from '../utils/factionBorder';
 import { formatNumber, formatSignedNumber } from '../utils/numberFormat';
 import { useWebUIText, type WebUITextFormatter } from '../localization/WebUITextContext';
+import { MAP_MODE_ICONS } from '../components/bottombar/mapModeIcons';
+import { MAP_MODE_TOOLTIPS } from '../components/bottombar/mapModeTooltipContent';
 import {
   bridgeCall,
   type GetNewGameMapFactionGeometryResponse,
@@ -64,11 +67,34 @@ interface FactionListRow {
   hasMembers: boolean;
 }
 
+type FactionSelectionMapMode = 'political' | 'diplomaticRelation' | 'culture' | 'religion';
+type DiplomaticRelationStatus =
+  | 'identical'
+  | 'peace'
+  | 'vassal'
+  | 'liege'
+  | 'war'
+  | 'sharedLiege'
+  | 'militaryAlliance'
+  | 'defensiveAlliance';
+
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 2.4;
 const ZOOM_STEP = 1.15;
 const MAP_BORDER_CANVAS_SCALE = 2;
 const FACTION_GEOMETRY_DEFER_MS = 150;
+const FACTION_SELECTION_MAP_MODES: FactionSelectionMapMode[] = [
+  'political',
+  'diplomaticRelation',
+  'culture',
+  'religion',
+];
+const MAP_MODE_LABEL_KEYS: Record<FactionSelectionMapMode, string> = {
+  political: 'MapModeTooltip.Political.Title',
+  diplomaticRelation: 'MapModeTooltip.DiplomaticRelation.Title',
+  culture: 'MapModeTooltip.Culture.Title',
+  religion: 'MapModeTooltip.Religion.Title',
+};
 
 const STAT_META: Record<string, { labelKey: string; icon: string; descriptionKey: string }> = {
   tactics: {
@@ -132,6 +158,30 @@ const FACTION_STAT_ICONS: Record<string, string> = {
 
 const SUBJECT_TREATY_TYPES = new Set(['Subject', 'Vassalage']);
 const MILITARY_TREATY_TYPES = new Set(['MilitaryAlliance', 'DefensiveAlliance']);
+const ALLIANCE_TREATY_TYPES = new Set(['MilitaryAlliance', 'DefensiveAlliance']);
+
+function linearChannelToSrgbHex(linear: number): string {
+  const srgb = linear <= 0.0031308
+    ? 12.92 * linear
+    : 1.055 * Math.pow(linear, 1 / 2.4) - 0.055;
+  const value = Math.max(0, Math.min(255, Math.round(srgb * 255)));
+  return value.toString(16).padStart(2, '0');
+}
+
+function linearRgb(red: number, green: number, blue: number): string {
+  return `#${linearChannelToSrgbHex(red)}${linearChannelToSrgbHex(green)}${linearChannelToSrgbHex(blue)}`;
+}
+
+const DIPLOMATIC_RELATION_COLOURS: Record<DiplomaticRelationStatus, string> = {
+  identical: linearRgb(0.07, 0.07, 0.25),
+  peace: linearRgb(0.13, 0.25, 0.13),
+  vassal: linearRgb(0.07, 0.2, 0.25),
+  liege: linearRgb(0.25, 0.2, 0.07),
+  war: linearRgb(0.25, 0.07, 0.07),
+  sharedLiege: linearRgb(0.25, 0.25, 0.13),
+  militaryAlliance: linearRgb(0.07, 0.3, 0.3),
+  defensiveAlliance: linearRgb(0.13, 0.3, 0.25),
+};
 
 function normaliseRgb(values: number[]): [number, number, number] {
   return [
@@ -441,6 +491,106 @@ function modifierColor(value: number): string {
 
 function isSubjectTreaty(type: string): boolean {
   return SUBJECT_TREATY_TYPES.has(type);
+}
+
+function treatyWith(faction: ScenarioMapFactionDto, otherBaseName: string, types?: Set<string>): ScenarioMapTreatyDto | null {
+  return faction.treaties.find((treaty) => (
+    treaty.withFactionBaseName === otherBaseName &&
+    (!types || types.has(treaty.type))
+  )) ?? null;
+}
+
+function warSideIncludes(side: ScenarioMapWarDto['attacker'], baseName: string): boolean {
+  return side.leaderFactionBaseName === baseName || side.memberFactionBaseNames.includes(baseName);
+}
+
+function factionsAreAtWar(
+  data: GetNewGameMapFactionSelectionResponse,
+  leftBaseName: string,
+  rightBaseName: string,
+): boolean {
+  return data.wars.some((war) => (
+    (warSideIncludes(war.attacker, leftBaseName) && warSideIncludes(war.defender, rightBaseName)) ||
+    (warSideIncludes(war.defender, leftBaseName) && warSideIncludes(war.attacker, rightBaseName))
+  ));
+}
+
+function getVassalRelationColour(faction: ScenarioMapFactionDto): string {
+  switch (faction.subjectSubtype) {
+    case 'province':
+      return linearRgb(0.13, 0.2, 0.25);
+    case 'foederati':
+      return linearRgb(0.13, 0.25, 0.2);
+    case 'protectorate':
+      return linearRgb(0.2, 0.13, 0.25);
+    case 'hereditary':
+      return linearRgb(0.22, 0.16, 0.12);
+    default:
+      return DIPLOMATIC_RELATION_COLOURS.vassal;
+  }
+}
+
+function getDiplomaticRelationColour(
+  data: GetNewGameMapFactionSelectionResponse,
+  comparisonFaction: ScenarioMapFactionDto,
+  faction: ScenarioMapFactionDto,
+): string {
+  if (comparisonFaction.baseName === faction.baseName) {
+    return DIPLOMATIC_RELATION_COLOURS.identical;
+  }
+
+  const selectedSubjectTreaty = treatyWith(comparisonFaction, faction.baseName, SUBJECT_TREATY_TYPES);
+  if (selectedSubjectTreaty) {
+    return getVassalRelationColour(faction);
+  }
+
+  const targetSubjectTreaty = treatyWith(faction, comparisonFaction.baseName, SUBJECT_TREATY_TYPES);
+  if (targetSubjectTreaty) {
+    return DIPLOMATIC_RELATION_COLOURS.liege;
+  }
+
+  const selectedAllianceTreaty = treatyWith(comparisonFaction, faction.baseName, ALLIANCE_TREATY_TYPES);
+  const targetAllianceTreaty = treatyWith(faction, comparisonFaction.baseName, ALLIANCE_TREATY_TYPES);
+  const allianceType = selectedAllianceTreaty?.type ?? targetAllianceTreaty?.type ?? '';
+  if (allianceType === 'MilitaryAlliance') {
+    return DIPLOMATIC_RELATION_COLOURS.militaryAlliance;
+  }
+  if (allianceType === 'DefensiveAlliance') {
+    return DIPLOMATIC_RELATION_COLOURS.defensiveAlliance;
+  }
+
+  if (factionsAreAtWar(data, comparisonFaction.baseName, faction.baseName)) {
+    return DIPLOMATIC_RELATION_COLOURS.war;
+  }
+
+  if (
+    comparisonFaction.overlordBaseName &&
+    comparisonFaction.overlordBaseName === faction.overlordBaseName
+  ) {
+    return DIPLOMATIC_RELATION_COLOURS.sharedLiege;
+  }
+
+  return DIPLOMATIC_RELATION_COLOURS.peace;
+}
+
+function getMapModeFillColour(
+  mode: FactionSelectionMapMode,
+  data: GetNewGameMapFactionSelectionResponse,
+  selected: ScenarioMapFactionDto,
+  faction: ScenarioMapFactionDto,
+  factionsByBase: Map<string, ScenarioMapFactionDto>,
+): string {
+  switch (mode) {
+    case 'diplomaticRelation':
+      return getDiplomaticRelationColour(data, selected, faction);
+    case 'culture':
+      return faction.cultureInfo.colour || '#555555';
+    case 'religion':
+      return faction.religionInfo.colour || '#555555';
+    case 'political':
+    default:
+      return rgb(getPoliticalColour(faction, factionsByBase), 0.72);
+  }
 }
 
 function treatyBlockLabel(type: string, t: WebUITextFormatter): string {
@@ -876,11 +1026,15 @@ export interface FactionMapHoverHandle {
 interface MapControlsOverlayState {
   mapLabelFaction: ScenarioMapFactionDto | null;
   lockedLabel: string;
+  activeMapMode: FactionSelectionMapMode;
+  setActiveMapMode: (mode: FactionSelectionMapMode) => void;
 }
 
 const MapControlsOverlayContext = createContext<MapControlsOverlayState>({
   mapLabelFaction: null,
   lockedLabel: '',
+  activeMapMode: 'political',
+  setActiveMapMode: () => {},
 });
 
 function FactionSelectionMapControls({
@@ -889,7 +1043,8 @@ function FactionSelectionMapControls({
   zoomOut,
   resetView,
 }: ZoomPanCanvasApi) {
-  const { mapLabelFaction, lockedLabel } = useContext(MapControlsOverlayContext);
+  const { mapLabelFaction, lockedLabel, activeMapMode, setActiveMapMode } = useContext(MapControlsOverlayContext);
+  const t = useWebUIText();
 
   return (
     <>
@@ -904,6 +1059,36 @@ function FactionSelectionMapControls({
           )}
         </div>
       )}
+
+      <div className="fs-map-mode-controls">
+        {FACTION_SELECTION_MAP_MODES.map((mode) => {
+          const label = t(MAP_MODE_LABEL_KEYS[mode]);
+          return (
+            <Tooltip
+              key={mode}
+              content={MAP_MODE_TOOLTIPS[mode] ?? { title: label }}
+              position="left"
+              delay={150}
+              bubbleClassName="tt-bubble--map-mode"
+            >
+              <div
+                className="fs-map-mode-btn-wrap"
+                onMouseDown={(event) => {
+                  event.stopPropagation();
+                }}
+              >
+                <IconButton
+                  icon={MAP_MODE_ICONS[mode]}
+                  label={label}
+                  active={activeMapMode === mode}
+                  className="fs-map-mode-btn"
+                  onClick={() => setActiveMapMode(mode)}
+                />
+              </div>
+            </Tooltip>
+          );
+        })}
+      </div>
 
       <div className="fs-zoom-controls">
         <button
@@ -973,6 +1158,7 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
   ) {
     const t = useWebUIText();
     const [hoveredBaseName, setHoveredBaseName] = useState('');
+    const [activeMapMode, setActiveMapMode] = useState<FactionSelectionMapMode>('political');
 
     const pickRequestIdRef = useRef(0);
 
@@ -1010,8 +1196,10 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
       () => ({
         mapLabelFaction,
         lockedLabel: t('MainMenu.Locked'),
+        activeMapMode,
+        setActiveMapMode,
       }),
-      [mapLabelFaction, t],
+      [activeMapMode, mapLabelFaction, t],
     );
 
     const handleMapPick = useCallback((point: ZoomPanPoint) => {
@@ -1124,30 +1312,33 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
               {data.paperMapUrl && (
                 <img src={data.paperMapUrl} alt="" className="fs-map-painted" draggable={false} />
               )}
-              {data.politicalMapUrl && (
+              {activeMapMode === 'political' && data.politicalMapUrl && (
                 <img src={data.politicalMapUrl} alt="" className="fs-map-political-img" draggable={false} />
               )}
 
-              {!data.politicalMapUrl && (
+              {(activeMapMode !== 'political' || !data.politicalMapUrl) && (
                 <svg
                   viewBox={`0 0 ${data.mapWidth} ${data.mapHeight}`}
-                  className="fs-map-political"
+                  className={`fs-map-political fs-map-political--${activeMapMode}`}
                   preserveAspectRatio="none"
                 >
                   {factions.map((faction) => {
-                    const colour = getPoliticalColour(faction, factionsByBase);
-                    const borderColour = darken(colour, 0.72);
+                    const fillColour = getMapModeFillColour(activeMapMode, data, selected, faction, factionsByBase);
 
                     return (
                       <g key={faction.baseName}>
                         {faction.geometry.fillPath && (
-                          <path d={faction.geometry.fillPath} fill={rgb(colour, 0.56)} />
+                          <path
+                            d={faction.geometry.fillPath}
+                            fill={fillColour}
+                            fillOpacity={activeMapMode === 'political' ? undefined : 0.78}
+                          />
                         )}
                         {faction.geometry.borderPath && (
                           <path
                             d={faction.geometry.borderPath}
                             fill="none"
-                            stroke={rgb(borderColour, 0.96)}
+                            stroke="rgba(8, 12, 17, 0.82)"
                             strokeWidth={2}
                             strokeLinejoin="round"
                             strokeLinecap="round"

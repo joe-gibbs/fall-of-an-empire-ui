@@ -955,6 +955,7 @@
   }
 
   .fs-map-hover-label,
+  .fs-map-mode-controls,
   .fs-zoom-controls {
     position: absolute;
     z-index: 4;
@@ -1006,6 +1007,67 @@
     border-bottom-color: var(--border-dim);
     border-left-color: var(--border-dim);
     color: var(--text-muted);
+  }
+
+  .fs-map-mode-controls {
+    top: 0.7rem;
+    right: 0.7rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.28rem;
+    border-width: 0.0909rem;
+    border-style: solid;
+    border-top-color: var(--border);
+    border-right-color: var(--border);
+    border-bottom-color: var(--border);
+    border-left-color: var(--border);
+    background-color: rgba(28, 34, 40, 0.84);
+    background-image: url('/assets/baked/texture-overlay-heavy.png');
+    background-position: 0 0;
+    background-repeat: repeat;
+    background-size: 7.385rem 7.385rem;
+  }
+
+  .fs-map-mode-controls > * + * {
+    margin-left: 0.24rem;
+  }
+
+  .fs-map-mode-btn-wrap {
+    flex-shrink: 0;
+  }
+
+  .fs-map-mode-controls .icon-button {
+    width: 2.6rem;
+    height: 2.6rem;
+    overflow: hidden;
+  }
+
+  .fs-map-mode-controls .icon-button-icon {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  .fs-map-mode-controls .icon-button--active {
+    border-top-color: var(--gold);
+    border-right-color: var(--gold);
+    border-bottom-color: var(--gold);
+    border-left-color: var(--gold);
+    background-image: url('/assets/baked/icon-button-gold.png');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-color: #a07a2c;
+  }
+
+  .fs-map-mode-controls .icon-button--active:hover {
+    border-top-color: var(--gold-light);
+    border-right-color: var(--gold-light);
+    border-bottom-color: var(--gold-light);
+    border-left-color: var(--gold-light);
+    background-image: url('/assets/baked/icon-button-gold-hover.png');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-color: #b48a36;
   }
 
   .fs-zoom-controls {
