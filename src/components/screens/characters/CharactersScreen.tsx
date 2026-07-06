@@ -13,6 +13,7 @@ import { usePlayerFactionId } from '../../../data-source/index';
 import {
   useCharacterListBridge,
   type CharacterListEntry,
+  type CharacterListScope,
   type CharacterListStats,
 } from '../../../bridge/characters/useCharactersBridge';
 import {
@@ -74,6 +75,7 @@ const ALL_FILTER = '__all__';
 type FilterOption = DropdownSelectOption;
 
 interface CharacterFilters {
+  faction: string;
   role: string;
   culture: string;
   religion: string;
@@ -81,6 +83,7 @@ interface CharacterFilters {
 }
 
 const DEFAULT_CHARACTER_FILTERS: CharacterFilters = {
+  faction: ALL_FILTER,
   role: ALL_FILTER,
   culture: ALL_FILTER,
   religion: ALL_FILTER,
@@ -101,6 +104,7 @@ function matchFilter(filterValue: string, rowValue: string): boolean {
 
 function characterFilterValue(character: CharacterListEntry, key: keyof CharacterFilters): string {
   switch (key) {
+    case 'faction': return character.factionId || character.factionName;
     case 'role': return character.role;
     case 'culture': return character.cultureId || character.culture;
     case 'religion': return character.religionId || character.religion;
@@ -370,8 +374,9 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
   const t = useWebUIText();
   const playerFactionId = usePlayerFactionId();
   const requestedFactionId = screenId || playerFactionId;
-  const data = useCharacterListBridge(requestedFactionId);
   const { openSidebar } = useGameActions();
+  const [characterScope, setCharacterScope] = useState<CharacterListScope>('faction');
+  const data = useCharacterListBridge(requestedFactionId, true, characterScope);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [characterFilters, setCharacterFilters] = useState<CharacterFilters>(DEFAULT_CHARACTER_FILTERS);
@@ -396,6 +401,7 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
   const filterOptions = useMemo(() => {
     const allLabel = webUIText('Common.All');
     return {
+      faction: uniqueFilterOptions(filteredCharacters, allLabel, character => characterFilterValue(character, 'faction'), character => character.factionName),
       role: uniqueFilterOptions(filteredCharacters, allLabel, character => characterFilterValue(character, 'role'), character => character.role),
       culture: uniqueFilterOptions(filteredCharacters, allLabel, character => characterFilterValue(character, 'culture'), character => character.culture, cultureIcon),
       religion: uniqueFilterOptions(filteredCharacters, allLabel, character => characterFilterValue(character, 'religion'), character => character.religion, religionIcon),
@@ -404,6 +410,7 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
   }, [filteredCharacters]);
 
   const activeCharacterFilters = useMemo(() => ({
+    faction: resolvedFilterValue(characterFilters.faction, filterOptions.faction),
     role: resolvedFilterValue(characterFilters.role, filterOptions.role),
     culture: resolvedFilterValue(characterFilters.culture, filterOptions.culture),
     religion: resolvedFilterValue(characterFilters.religion, filterOptions.religion),
@@ -413,6 +420,11 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
   const setCharacterFilter = useCallback((key: keyof CharacterFilters, value: string) => {
     setCharacterFilters(current => ({ ...current, [key]: value }));
   }, []);
+
+  const scopeOptions = useMemo<FilterOption[]>(() => [
+    { value: 'faction', label: t('Economy.Faction'), icon: '/assets/icons/I_IndependentFactions.png' },
+    { value: 'realm', label: t('MainMenu.Realm'), icon: '/assets/icons/I_DependentFactions.png' },
+  ], [t]);
 
   const handleOpenCharacter = useCallback((id: string) => openSidebar('character', id), [openSidebar]);
 
@@ -493,6 +505,7 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
   }, []);
 
   const filterPredicate = useCallback((character: CharacterListEntry) => (
+    matchFilter(activeCharacterFilters.faction, characterFilterValue(character, 'faction')) &&
     matchFilter(activeCharacterFilters.role, characterFilterValue(character, 'role')) &&
     matchFilter(activeCharacterFilters.culture, characterFilterValue(character, 'culture')) &&
     matchFilter(activeCharacterFilters.religion, characterFilterValue(character, 'religion')) &&
@@ -501,12 +514,14 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
 
   const toolsExtra = useMemo(() => (
     <div className="chs-filter-row">
+      <DropdownSelect className="chs-filter chs-filter--scope" id="scope" label={t('MainMenu.Realm')} value={characterScope} options={scopeOptions} icon="/assets/icons/I_DependentFactions.png" escapeId="characters.filter.scope" isActive={characterScope !== 'faction'} onChange={value => setCharacterScope(value === 'realm' ? 'realm' : 'faction')} />
+      {characterScope === 'realm' && <DropdownSelect className="chs-filter" id="faction" label={t('Economy.Faction')} value={activeCharacterFilters.faction} options={filterOptions.faction} icon="/assets/icons/I_DependentFactions.png" escapeId="characters.filter.faction" isActive={activeCharacterFilters.faction !== ALL_FILTER} onChange={value => setCharacterFilter('faction', value)} />}
       <DropdownSelect className="chs-filter" id="role" label={t('Auto.Prop.ComponentsScreensCharactersScreen.234.4')} value={activeCharacterFilters.role} options={filterOptions.role} icon="/assets/icons/I_Characters.png" escapeId="characters.filter.role" isActive={activeCharacterFilters.role !== ALL_FILTER} onChange={value => setCharacterFilter('role', value)} />
       <DropdownSelect className="chs-filter" id="culture" label={t('Auto.ComponentsSidebarsCharacterSidebar.1155.1')} value={activeCharacterFilters.culture} options={filterOptions.culture} icon="/assets/icons/I_Cultures.png" escapeId="characters.filter.culture" isActive={activeCharacterFilters.culture !== ALL_FILTER} onChange={value => setCharacterFilter('culture', value)} />
       <DropdownSelect className="chs-filter" id="religion" label={t('Auto.ComponentsSidebarsCharacterSidebar.1162.2')} value={activeCharacterFilters.religion} options={filterOptions.religion} icon="/assets/icons/I_Religions.png" escapeId="characters.filter.religion" isActive={activeCharacterFilters.religion !== ALL_FILTER} onChange={value => setCharacterFilter('religion', value)} />
       <DropdownSelect className="chs-filter" id="trait" label={t('Auto.Prop.ComponentsModalsCourtierPromotionModal.184.3')} value={activeCharacterFilters.trait} options={filterOptions.trait} icon="/assets/traits/UnknownTrait.png" escapeId="characters.filter.trait" isActive={activeCharacterFilters.trait !== ALL_FILTER} onChange={value => setCharacterFilter('trait', value)} />
     </div>
-  ), [activeCharacterFilters, filterOptions, setCharacterFilter, t]);
+  ), [activeCharacterFilters, characterScope, filterOptions, scopeOptions, setCharacterFilter, t]);
 
   return (
     <ScreenShell

@@ -41,7 +41,7 @@ function refreshHeirCandidatesAction(factionId: string): Promise<void> {
 }
 
 function refreshCharacterListAction(factionId: string): Promise<void> {
-  return bridgeCall('game.get_character_list', { factionId }).then(data => dispatchBridgeEvent('game.get_character_list', data));
+  return bridgeCall('game.get_character_list', { factionId, scope: 'faction' }).then(data => dispatchBridgeEvent('game.get_character_list', data));
 }
 
 async function refreshEventNameViews(input: EventRegnalNameInput | EventPersonNameInput): Promise<void> {

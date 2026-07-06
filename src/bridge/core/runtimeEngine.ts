@@ -142,6 +142,10 @@ function isWorldGameplayBridgeAction(action: string): boolean {
 }
 
 function shouldBatchBridgeAction(action: string): boolean {
+  if (action === 'game.get_character_list') {
+    return false;
+  }
+
   return action.startsWith('game.get_')
     || action.startsWith('game.list_')
     || action === 'game.loading_screen'
