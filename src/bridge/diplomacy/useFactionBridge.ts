@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
+import { clearBridgeQueryCache, useBridgeQueryState } from '../core/useBridgeQuery';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import type { GetFactionDailyDataResponse, GetFactionDataResponse } from '../../bridge-types.generated.ts';
@@ -286,10 +286,15 @@ export function dispatchFactionData(data: GetFactionDataResponse): void {
  */
 export type FactionBridgeScope = 'full' | 'overview' | 'summary';
 
-export function useFactionBridge(factionId: string | null | undefined, scope: FactionBridgeScope = 'full', fetch = true): Faction | null {
+export interface FactionBridgeState {
+  faction: Faction | null;
+  pending: boolean;
+}
+
+export function useFactionBridgeState(factionId: string | null | undefined, scope: FactionBridgeScope = 'full', fetch = true): FactionBridgeState {
   const cached = factionId ? factionCache.get(factionId) ?? null : null;
   const [dailyPatch, setDailyPatch] = useState<GetFactionDailyDataResponse | null>(null);
-  const live = useBridgeQuery({
+  const liveQuery = useBridgeQueryState({
     action: 'game.get_faction_data',
     payload: fetch && factionId ? { factionId, scope } : null,
     cacheResponseMs: 1500,
@@ -320,10 +325,19 @@ export function useFactionBridge(factionId: string | null | undefined, scope: Fa
     });
   }, [factionId]);
 
-  return useMemo(() => {
-    const base = live ?? cached;
+  const faction = useMemo(() => {
+    const base = liveQuery.value ?? cached;
     return applyFactionDailyPatch(base, dailyPatch);
-  }, [cached, dailyPatch, live]);
+  }, [cached, dailyPatch, liveQuery.value]);
+
+  return {
+    faction,
+    pending: Boolean(fetch && factionId) && !cached && liveQuery.pending,
+  };
+}
+
+export function useFactionBridge(factionId: string | null | undefined, scope: FactionBridgeScope = 'full', fetch = true): Faction | null {
+  return useFactionBridgeState(factionId, scope, fetch).faction;
 }
 
 async function refreshFactionData(factionId: string): Promise<void> {

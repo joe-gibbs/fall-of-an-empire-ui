@@ -996,6 +996,7 @@ function PeaceNegotiationScreenContent({
   const submitTargetFactionId = sourceOfferUnmodified ? sourceOfferSelector : targetFactionId;
   const bridge = usePeaceNegotiationBridge(bridgeTargetFactionId, terms, submitTargetFactionId);
   const state = bridge.state ?? submitState;
+  const statePending = bridge.statePending && !submitState;
   const draftPreview = bridge.draftPreview?.found ? bridge.draftPreview : null;
   const preview = draftPreview?.preview ?? state?.preview;
   const liveTerms = draftPreview?.terms ?? state?.terms ?? [];
@@ -1312,7 +1313,7 @@ function PeaceNegotiationScreenContent({
         onAdd={addTerm}
       />
     </div>
-  ) : (
+  ) : statePending ? null : (
     <Panel title={webUIText('Auto.Attr.ComponentsScreensPeaceNegotiationScreen.971.22')} className="pns-panel pns-panel--empty">
       <div className="pns-empty-state"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.971.16" /></div>
     </Panel>

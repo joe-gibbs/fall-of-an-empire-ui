@@ -8,8 +8,7 @@ import CourtAppointmentModal from '../../modals/characters/CourtAppointmentModal
 import { BureaucraticInlineValue, BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
 import { bureaucraticTooltipLine } from '../../bureaucracy/BureaucraticThroughputModel';
 import { cancelFactionCurrentInteraction, startFactionPolicyAdjustment } from '../../../bridge/diplomacy/useFactionBridge';
-import { setAutoAssignCourt, type CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
-import { useCourtPositions } from '../../../data-source/index';
+import { setAutoAssignCourt, useCourtPositionsBridgeState, type CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
 import type { FactionModifier, FactionPolicy, FactionPolicyLevel } from '../../../data/types';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
@@ -270,7 +269,8 @@ export function CourtPositionsPanel({
   onOpenCharacter?: (id: string) => void;
 }) {
   const t = useWebUIText();
-  const court = useCourtPositions(enabled);
+  const courtState = useCourtPositionsBridgeState(enabled);
+  const court = courtState.result;
   const [position, setPosition] = useState<CourtPositionView | null>(null);
   const maxSubordinates = court?.maxSubordinates ?? 5;
   const positions = court?.positions ?? [];
@@ -294,7 +294,7 @@ export function CourtPositionsPanel({
         )}
       </div>
       <div className="fov-court-grid">
-        {positions.length === 0 ? (
+        {courtState.pending ? null : positions.length === 0 ? (
           <div className="fov-empty-state">{t('FactionOverview.NoCourtPositions')}</div>
         ) : positions.map(pos => (
           <CourtSlot

@@ -81,6 +81,11 @@ interface UseBridgeQueryOptions<A extends BridgeActionName, T> {
   matchPush?: (data: ResponseOf<A>) => boolean;
 }
 
+export interface BridgeQueryState<T> {
+  value: T | null;
+  pending: boolean;
+}
+
 /**
  * Generic bridge query hook: fetches once on mount / payload change, subscribes
  * to push updates from the game side, and cleans up on unmount.
@@ -88,9 +93,9 @@ interface UseBridgeQueryOptions<A extends BridgeActionName, T> {
  * Replaces the per-action boilerplate of fetch + onBridgeEvent + cancellation
  * tracking that each useXxxBridge hook used to repeat.
  */
-export function useBridgeQuery<A extends BridgeActionName, T>(
+export function useBridgeQueryState<A extends BridgeActionName, T>(
   options: UseBridgeQueryOptions<A, T>,
-): T | null {
+): BridgeQueryState<T> {
   const { action, payload, map, matchPush, fetch = true } = options;
   const cacheResponse = options.cacheResponse === true;
   const cacheResponseMs = options.cacheResponseMs ?? 0;
@@ -108,6 +113,8 @@ export function useBridgeQuery<A extends BridgeActionName, T>(
   // Serialise payload so a fresh-but-equal object doesn't refire the effect.
   const payloadKey = payload === undefined ? '__void__' : JSON.stringify(payload);
   const requestKey = `${action}:${payloadKey}`;
+  const currentValue = data?.requestKey === requestKey ? data.value : null;
+  const pending = payload !== null && data?.requestKey !== requestKey;
 
   useEffect(() => {
     if (payload === null) {
@@ -186,5 +193,14 @@ export function useBridgeQuery<A extends BridgeActionName, T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action, cacheResponse, cacheResponseMs, completedTtlMs, fetch, payloadKey, refreshMs, requestKey, shouldCacheResponse]);
 
-  return data?.requestKey === requestKey ? data.value : null;
+  return {
+    value: currentValue,
+    pending,
+  };
+}
+
+export function useBridgeQuery<A extends BridgeActionName, T>(
+  options: UseBridgeQueryOptions<A, T>,
+): T | null {
+  return useBridgeQueryState(options).value;
 }

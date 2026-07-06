@@ -1,4 +1,4 @@
-import { useBridgeQuery } from '../core/useBridgeQuery';
+import { useBridgeQuery, useBridgeQueryState } from '../core/useBridgeQuery';
 import { mapPortraitLayers, mapPortraitPath } from '../characters/portraitMapping';
 import type { GetPlayerFactionResponse } from '../../bridge-types.generated.ts';
 import type { Faction, PortraitLayerData } from '../../data/types';
@@ -19,6 +19,11 @@ export interface PlayerFactionSummary {
   rulerPortraitLayers?: PortraitLayerData;
   rulerIsAlive: boolean;
   rulerIsImprisoned: boolean;
+}
+
+export interface PlayerFactionSummaryBridgeState {
+  summary: PlayerFactionSummary | null;
+  pending: boolean;
 }
 
 function mapStatus(raw: string): Faction['diplomaticStatus'] {
@@ -50,6 +55,18 @@ export function usePlayerFactionSummaryBridge(): PlayerFactionSummary | null {
     action: 'game.get_player_faction',
     map: mapPlayerFaction,
   });
+}
+
+export function usePlayerFactionSummaryBridgeState(): PlayerFactionSummaryBridgeState {
+  const query = useBridgeQueryState({
+    action: 'game.get_player_faction',
+    map: mapPlayerFaction,
+  });
+
+  return {
+    summary: query.value,
+    pending: query.pending,
+  };
 }
 
 /** Resolves the local player's FactionID via the bridge. */

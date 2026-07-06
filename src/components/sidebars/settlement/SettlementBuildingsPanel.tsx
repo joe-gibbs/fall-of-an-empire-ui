@@ -12,7 +12,7 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
-import { queueSettlementBuilding, unqueueSettlementBuilding, useSettlementBuildingsBridge } from '../../../bridge/settlements-economy/useSettlementBuildingsBridge';
+import { queueSettlementBuilding, unqueueSettlementBuilding, useSettlementBuildingsBridgeState } from '../../../bridge/settlements-economy/useSettlementBuildingsBridge';
 import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBottomBarOperationsBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import HtmlContent from '../../common/layout/content/HtmlContent';
@@ -954,7 +954,8 @@ function hasRichBuildingsData(settlement: Settlement): boolean {
 }
 
 const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
-  const liveData = useSettlementBuildingsBridge(settlement.id);
+  const liveDataState = useSettlementBuildingsBridgeState(settlement.id);
+  const liveData = liveDataState.data;
   const inlineData = React.useMemo<PanelBuildingsData | null>(() => {
     if (!hasRichBuildingsData(settlement)) return null;
     return {
@@ -1192,7 +1193,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
           </div>
         )}
 
-        {!data ? (
+        {liveDataState.pending && !inlineData ? null : !data ? (
           <div className="sidebar-placeholder"><WebUIText textKey="Auto.ComponentsSidebarsSettlementBuildingsPanel.946.8" /></div>
         ) : (
           <>

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { bridgeCall } from '../../bridge-types.generated.ts';
-import { useBridgeQuery } from '../core/useBridgeQuery';
+import { useBridgeQueryState } from '../core/useBridgeQuery';
 import type {
   DiplomaticNegotiationProposalDraft,
   GetDiplomaticNegotiationStateResponse,
@@ -13,6 +13,7 @@ export type DiplomaticNegotiationSubmitResult = SubmitDiplomaticNegotiationRespo
 
 export interface DiplomaticNegotiationBridge {
   state: DiplomaticNegotiationState | null;
+  statePending: boolean;
   submit: (proposals: DiplomaticProposalDraft[]) => Promise<DiplomaticNegotiationSubmitResult | null>;
 }
 
@@ -20,7 +21,7 @@ export function useDiplomaticNegotiationBridge(
   targetFactionId: string | null | undefined,
   proposals: DiplomaticProposalDraft[],
 ): DiplomaticNegotiationBridge {
-  const state = useBridgeQuery({
+  const stateQuery = useBridgeQueryState({
     action: 'game.get_diplomatic_negotiation_state',
     payload: targetFactionId ? { targetFactionId, proposals } : null,
     map: data => data,
@@ -35,5 +36,5 @@ export function useDiplomaticNegotiationBridge(
     });
   }, [targetFactionId]);
 
-  return { state, submit };
+  return { state: stateQuery.value, statePending: stateQuery.pending, submit };
 }

@@ -9,7 +9,7 @@ import {
   requestBattleRetreatBridge,
   setBattleFormationOrderBridge,
   setBattleFormationStanceBridge,
-  useBattleBridge,
+  useBattleBridgeState,
   withdrawBattleFormationBridge,
   type BattleFormationLive,
 } from '../../../bridge/military-map/useBattleBridge';
@@ -111,7 +111,7 @@ interface BattleAttackState {
 
 
 export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
-  const battle = useBattleBridge(battleId);
+  const { battle, pending: battlePending } = useBattleBridgeState(battleId);
   const [expanded, setExpanded] = useState(false);
   const [selectionState, setSelectionState] = useState<BattleSelectionState>({
     battleId: '',
@@ -612,7 +612,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
       className={`battle-screen${expanded ? ' battle-screen--expanded' : ''}`}
       contentClassName="battle-screen-content"
     >
-      {!battle || !battle.found ? (
+      {battlePending ? null : !battle || !battle.found ? (
         <div className="battle-empty"><WebUIText textKey="Auto.ComponentsScreensBattleBattleScreen.873.2" /></div>
       ) : (
         <>

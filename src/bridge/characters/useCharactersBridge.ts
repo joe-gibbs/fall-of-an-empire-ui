@@ -1,4 +1,4 @@
-import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
+import { clearBridgeQueryCache, useBridgeQuery, useBridgeQueryState } from '../core/useBridgeQuery';
 import type { GetCharacterListResponse } from '../../bridge-types.generated.ts';
 import type { PortraitLayerData } from '../../data/types';
 
@@ -52,6 +52,7 @@ export interface CharacterListData {
   factionName: string;
   rulerId: string;
   heirId: string;
+  scope: CharacterListScope;
   characters: CharacterListEntry[];
 }
 
@@ -124,6 +125,7 @@ export interface FamilyTreeData {
 const familyTreeCache = new Map<string, FamilyTreeData>();
 const DEFAULT_FAMILY_TREE_KEY = '';
 export type FamilyTreeScope = 'lineage' | 'patronage';
+export type CharacterListScope = 'faction' | 'realm';
 
 export function clearCharacterCaches(): void {
   familyTreeCache.clear();
@@ -138,6 +140,7 @@ function mapCharacterList(value: GetCharacterListResponse): CharacterListData {
     factionName: value.factionName,
     rulerId: value.rulerId,
     heirId: value.heirId,
+    scope: value.scope === 'realm' ? 'realm' : 'faction',
     characters: value.characters.map(character => ({
       ...character,
       traits: character.traitIds.map(id => traitMap.get(id) ?? { id, name: id }),
@@ -169,13 +172,14 @@ function cacheFamilyTree(value: Omit<FamilyTreeData, 'scope'> & { scope: string 
   return mapped;
 }
 
-export function useCharacterListBridge(factionId: string | null | undefined, fetch = true): CharacterListData | null {
+export function useCharacterListBridge(factionId: string | null | undefined, fetch = true, scope: CharacterListScope = 'faction'): CharacterListData | null {
   const requestedFactionId = factionId ?? '';
   const live = useBridgeQuery({
     action: 'game.get_character_list',
-    payload: fetch && requestedFactionId ? { factionId: requestedFactionId } : null,
+    payload: fetch && requestedFactionId ? { factionId: requestedFactionId, scope } : null,
     map: mapCharacterList,
-    matchPush: data => data.factionId === requestedFactionId || data.factionName === requestedFactionId,
+    matchPush: data => (data.factionId === requestedFactionId || data.factionName === requestedFactionId)
+      && (data.scope === scope || (!data.scope && scope === 'faction')),
   });
 
   if (live) return live;
@@ -201,4 +205,33 @@ export function useFamilyTreeBridge(personId?: string | null, scope: FamilyTreeS
 
   if (live) return live;
   return familyTreeCache.get(requestedKey) ?? null;
+}
+
+export interface FamilyTreeBridgeState {
+  familyTree: FamilyTreeData | null;
+  pending: boolean;
+}
+
+export function useFamilyTreeBridgeState(personId?: string | null, scope: FamilyTreeScope = 'lineage', fetch = true): FamilyTreeBridgeState {
+  const requestedPersonId = personId ?? DEFAULT_FAMILY_TREE_KEY;
+  const requestedKey = familyTreeCacheKey(requestedPersonId, scope);
+  const cached = familyTreeCache.get(requestedKey) ?? null;
+  const query = useBridgeQueryState({
+    action: 'game.get_family_tree',
+    payload: fetch ? { personId: requestedPersonId, scope } : null,
+    cacheResponseMs: 1500,
+    map: data => cacheFamilyTree(data, requestedPersonId, scope),
+    matchPush: data => {
+      if (data.scope !== scope) return false;
+      const focusId = data.focusPersonId || data.rulerId || DEFAULT_FAMILY_TREE_KEY;
+      return requestedPersonId
+        ? focusId === requestedPersonId
+        : focusId === data.rulerId || focusId === DEFAULT_FAMILY_TREE_KEY;
+    },
+  });
+
+  return {
+    familyTree: query.value ?? cached,
+    pending: fetch && !cached && query.pending,
+  };
 }

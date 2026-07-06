@@ -9,7 +9,7 @@ import type {
   SettlementConstructionData as RawConstruction,
   SettlementConstructionQueueItem as RawQueueItem,
 } from '../../bridge-types.generated.ts';
-import { useBridgeQuery } from '../core/useBridgeQuery';
+import { useBridgeQuery, useBridgeQueryState } from '../core/useBridgeQuery';
 import type {
   AvailableBuilding,
   Building,
@@ -31,6 +31,11 @@ export interface SettlementBuildingsState {
   construction: SettlementConstruction;
   canBuild: boolean;
   cannotBuildReason?: string;
+}
+
+export interface SettlementBuildingsBridgeState {
+  data: SettlementBuildingsState | null;
+  pending: boolean;
 }
 
 function toKebabCase(value: string): string {
@@ -206,6 +211,20 @@ export function useSettlementBuildingsBridge(settlementId: string | null): Settl
     map: mapResponse,
     matchPush: (data) => data.settlementId === settlementId,
   });
+}
+
+export function useSettlementBuildingsBridgeState(settlementId: string | null): SettlementBuildingsBridgeState {
+  const query = useBridgeQueryState({
+    action: 'game.get_settlement_buildings',
+    payload: settlementId ? { settlementId } : null,
+    map: mapResponse,
+    matchPush: (data) => data.settlementId === settlementId,
+  });
+
+  return {
+    data: query.value,
+    pending: query.pending,
+  };
 }
 
 export function queueSettlementBuilding(settlementId: string, buildingId: string): Promise<void> {

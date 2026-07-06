@@ -10,7 +10,7 @@ import type {
   WithdrawBattleFormationResponse,
 } from '../../bridge-types.generated.ts';
 import { getruntimeEngine } from '../core/runtimeEngine';
-import { useBridgeQuery } from '../core/useBridgeQuery';
+import { useBridgeQueryState } from '../core/useBridgeQuery';
 
 const PACKED_BATTLE_FRAME = 'battleFrame';
 const BATTLE_FRAME_FORMATION_NUMBER_STRIDE = 10;
@@ -48,6 +48,11 @@ export type BattleFormationLive = GetBattleDataResponse['formations'][number] & 
 export type BattleDataLive = Omit<GetBattleDataResponse, 'formations'> & {
   formations: BattleFormationLive[];
 };
+
+export interface BattleBridgeState {
+  battle: BattleDataLive | null;
+  pending: boolean;
+}
 
 const battleCache = new Map<string, BattleDataLive>();
 
@@ -342,8 +347,8 @@ function mergeBattleSideSummaries(
   };
 }
 
-export function useBattleBridge(battleId?: string | null): BattleDataLive | null {
-  const live = useBridgeQuery({
+export function useBattleBridgeState(battleId?: string | null): BattleBridgeState {
+  const liveQuery = useBridgeQueryState({
     action: 'game.get_battle_data',
     payload: { battleId: battleId ?? '' },
     map: (data) => {
@@ -356,7 +361,7 @@ export function useBattleBridge(battleId?: string | null): BattleDataLive | null
     matchPush: (data) => !battleId || data.id === battleId,
   });
 
-  const frame = useBridgeQuery({
+  const frameQuery = useBridgeQueryState({
     action: 'game.get_battle_frame',
     payload: { battleId: battleId ?? '' },
     map: data => normaliseBattleFrame(data),
@@ -364,11 +369,25 @@ export function useBattleBridge(battleId?: string | null): BattleDataLive | null
     matchPush: (data) => !battleId || data.id === battleId,
   });
 
-  if (live && !live.found) return live;
+  const live = liveQuery.value;
+  const frame = frameQuery.value;
+  if (live && !live.found) {
+    return {
+      battle: live,
+      pending: false,
+    };
+  }
 
   const cached = battleId ? battleCache.get(battleId) ?? null : null;
   const base = live ?? cached;
-  return base ? applyBattleFrame(base, frame) : null;
+  return {
+    battle: base ? applyBattleFrame(base, frame) : null,
+    pending: Boolean(battleId) && !cached && liveQuery.pending,
+  };
+}
+
+export function useBattleBridge(battleId?: string | null): BattleDataLive | null {
+  return useBattleBridgeState(battleId).battle;
 }
 
 export function startBattleActionBridge(

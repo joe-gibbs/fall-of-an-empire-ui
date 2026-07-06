@@ -1,4 +1,4 @@
-import { useBridgeQuery } from '../core/useBridgeQuery';
+import { useBridgeQuery, useBridgeQueryState } from '../core/useBridgeQuery';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import { mapPortraitLayers, mapPortraitPath } from './portraitMapping';
@@ -86,6 +86,11 @@ export interface CourtPositionsResult {
   courtFactionName: string;
 }
 
+export interface CourtPositionsBridgeState {
+  result: CourtPositionsResult | null;
+  pending: boolean;
+}
+
 function mapResponse(data: GetCourtPositionsResponse): CourtPositionsResult {
   return {
     autoAssignCourtEnabled: data.autoAssignCourtEnabled,
@@ -161,6 +166,19 @@ export function useCourtPositionsBridge(enabled: boolean): CourtPositionsResult 
     payload: enabled ? undefined : null,
     map: mapResponse,
   });
+}
+
+export function useCourtPositionsBridgeState(enabled: boolean): CourtPositionsBridgeState {
+  const query = useBridgeQueryState({
+    action: 'game.get_court_positions',
+    payload: enabled ? undefined : null,
+    map: mapResponse,
+  });
+
+  return {
+    result: query.value,
+    pending: query.pending,
+  };
 }
 
 function mapCandidate(c: CourtCandidate): Character {

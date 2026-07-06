@@ -15,13 +15,14 @@ import HeirAssignmentModal from '../../modals/characters/HeirAssignmentModal';
 import { BureaucraticInlineValue, BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
 import { bureaucraticTooltipLine } from '../../bureaucracy/BureaucraticThroughputModel';
 import { useGameActions } from '../../../context/GameContext';
-import { useFaction, usePlayerFactionId } from '../../../data-source/index';
+import { usePlayerFactionSummaryBridgeState } from '../../../bridge/app/usePlayerFactionBridge';
 import {
   useFactionInteractionsBridge,
   type FactionInteractionsState,
   type FactionInteractionView,
 } from '../../../bridge/diplomacy/useFactionInteractionsBridge';
-import { useFamilyTreeBridge, type FamilyTreePerson } from '../../../bridge/characters/useCharactersBridge';
+import { useFactionBridgeState } from '../../../bridge/diplomacy/useFactionBridge';
+import { useFamilyTreeBridgeState, type FamilyTreeData, type FamilyTreePerson } from '../../../bridge/characters/useCharactersBridge';
 import { useBridgeQuery } from '../../../bridge/core/useBridgeQuery';
 import type { GetIncomeBreakdownResponse } from '../../../bridge-types.generated.ts';
 import type { Faction } from '../../../data/types';
@@ -246,7 +247,7 @@ function SuccessionStrip({
   onOpenCharacter,
   onAssignHeir,
 }: {
-  familyTree: ReturnType<typeof useFamilyTreeBridge>;
+  familyTree: FamilyTreeData | null;
   onOpenCharacter: (id: string) => void;
   onAssignHeir: () => void;
 }) {
@@ -428,6 +429,7 @@ function OverviewTab({
   faction,
   totals,
   familyTree,
+  edictsPending,
   edicts,
   interactionsState,
   interactionsActive,
@@ -439,7 +441,8 @@ function OverviewTab({
 }: {
   faction: Faction;
   totals: ReturnType<typeof getIncomeTotals>;
-  familyTree: ReturnType<typeof useFamilyTreeBridge>;
+  familyTree: FamilyTreeData | null;
+  edictsPending: boolean;
   edicts: FactionInteractionView[];
   interactionsState: FactionInteractionsState | null;
   interactionsActive: boolean;
@@ -514,7 +517,7 @@ function OverviewTab({
         <div className="fov-policies-col">
           <SectionHeading variant="ornate" title={t('FactionOverview.Edicts')} />
           <div className="fov-edicts-list">
-            {edicts.length === 0 ? (
+            {edictsPending ? null : edicts.length === 0 ? (
               <div className="fov-empty-state">{t('FactionOverview.NoEdicts')}</div>
             ) : edicts.map(edict => {
               const canStart = edict.availability === 'available' && !edict.inProgress && edict.cooldownRemainingDays <= 0;
@@ -616,9 +619,11 @@ function RulerEntry({
 
 function RulersTab({
   familyTree,
+  pending,
   onOpenCharacter,
 }: {
-  familyTree: ReturnType<typeof useFamilyTreeBridge>;
+  familyTree: FamilyTreeData | null;
+  pending: boolean;
   onOpenCharacter: (id: string) => void;
 }) {
   const t = useWebUIText();
@@ -642,7 +647,7 @@ function RulersTab({
   return (
     <div className="fov-wrap">
       <SectionHeading variant="ornate" title={t('FactionOverview.RulerHistory')} />
-      {rulers.length === 0 ? (
+      {pending ? null : rulers.length === 0 ? (
         <div className="fov-empty-state">{t('FactionOverview.NoRulerHistory')}</div>
       ) : (
         <div className="fov-rulers-timeline">
@@ -674,10 +679,13 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
     setActiveTab(factionOverviewTabFromScreenId(screenId));
   }, [screenId]);
   const [heirModalOpen, setHeirModalOpen] = useState(false);
-  const playerFactionId = usePlayerFactionId();
-  const faction = useFaction(playerFactionId, 'overview');
+  const playerFaction = usePlayerFactionSummaryBridgeState();
+  const playerFactionId = playerFaction.summary?.id ?? null;
+  const factionState = useFactionBridgeState(playerFactionId, 'overview');
+  const faction = factionState.faction;
   const income = useIncomeBreakdown();
-  const familyTree = useFamilyTreeBridge(undefined, 'lineage');
+  const familyTreeState = useFamilyTreeBridgeState(undefined, 'lineage');
+  const familyTree = familyTreeState.familyTree;
   const interactions = useFactionInteractionsBridge(playerFactionId);
   const { openSidebar } = useGameActions();
 
@@ -715,6 +723,7 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
             faction={faction}
             totals={totals}
             familyTree={familyTree}
+            edictsPending={interactions.pending}
             edicts={edicts}
             interactionsState={interactions.state}
             interactionsActive={interactionsActive}
@@ -728,11 +737,11 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
       case 'court':
         return <CourtPositionsPanel enabled={activeTab === 'court'} onOpenCharacter={openCharacter} />;
       case 'rulers':
-        return <RulersTab familyTree={familyTree} onOpenCharacter={openCharacter} />;
+        return <RulersTab familyTree={familyTree} pending={familyTreeState.pending} onOpenCharacter={openCharacter} />;
       default:
         return null;
     }
-  })() : (
+  })() : playerFaction.pending || factionState.pending ? null : (
     <div className="fov-wrap">
       <div className="fov-empty-state">{t('FactionOverview.NoPlayerFactionData')}</div>
     </div>

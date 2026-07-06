@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { bridgeCall } from '../../bridge-types.generated.ts';
-import { useBridgeQuery } from '../core/useBridgeQuery';
+import { useBridgeQueryState } from '../core/useBridgeQuery';
 import type {
   GetPeaceNegotiationStateResponse,
   GetPeaceNegotiationPreviewResponse,
@@ -17,6 +17,7 @@ export type PeaceTermDraft = PeaceNegotiationTermDraft;
 
 export interface PeaceNegotiationBridge {
   state: PeaceNegotiationState | null;
+  statePending: boolean;
   draftPreview: PeaceNegotiationDraftPreview | null;
   submit: (terms: PeaceTermDraft[]) => Promise<PeaceNegotiationSubmitResult | null>;
   startSettlementSelection: (terms: PeaceTermDraft[]) => Promise<StartPeaceSettlementSelectionResponse | null>;
@@ -27,7 +28,7 @@ export function usePeaceNegotiationBridge(
   terms: PeaceTermDraft[],
   submitTargetFactionId: string | null | undefined = targetFactionId,
 ): PeaceNegotiationBridge {
-  const state = useBridgeQuery({
+  const stateQuery = useBridgeQueryState({
     action: 'game.get_peace_negotiation_state',
     payload: targetFactionId ? { targetFactionId, terms: [] } : null,
     map: data => data,
@@ -87,5 +88,5 @@ export function usePeaceNegotiationBridge(
     }
   }, [targetFactionId]);
 
-  return { state, draftPreview, submit, startSettlementSelection };
+  return { state: stateQuery.value, statePending: stateQuery.pending, draftPreview, submit, startSettlementSelection };
 }

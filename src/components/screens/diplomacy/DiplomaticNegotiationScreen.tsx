@@ -175,6 +175,21 @@ function ResourceDropdown({
 }) {
   const selected = resources.find(resource => resource.name === value) ?? resources[0];
   if (!selected) return null;
+
+  if (resources.length === 1) {
+    return (
+      <ResourceLabel
+        icon={resourceIcon(selected.name)}
+        name={selected.label}
+        amount={formatNumber(Math.round(selected.amount))}
+        className="pns-resource-label pns-resource-label--static"
+        iconClassName="pns-resource-select-icon"
+        nameClassName="pns-resource-select-name"
+        amountClassName="pns-resource-select-amount"
+      />
+    );
+  }
+
   const options: DropdownSelectOption[] = resources.map(resource => ({
     value: resource.name,
     label: resource.label,
@@ -435,6 +450,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
   const acceptedHoldTimerRef = useRef<number | null>(null);
   const bridge = useDiplomaticNegotiationBridge(targetFactionId, proposals);
   const state = bridge.state ?? submitState;
+  const statePending = bridge.statePending && !submitState;
   const preview = state?.preview;
   const selectedIds = useMemo(() => new Set(proposals.map(proposal => proposal.proposalId || proposalKey(proposal))), [proposals]);
   const availableOffers = (state?.availableOffers ?? []).filter(option => !option.isSelected && !selectedIds.has(option.optionId));
@@ -653,7 +669,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
       </div>
       <OptionsPanel title={webUIText('TreatyNegotiation.WeCanRequest')} options={availableRequests} onAdd={addProposal} />
     </div>
-  ) : (
+  ) : statePending ? null : (
     <Panel title={webUIText('TreatyNegotiation.Title')} className="pns-panel pns-panel--empty">
       <div className="pns-empty-state"><WebUIText textKey="TreatyNegotiation.NoFaction" /></div>
     </Panel>

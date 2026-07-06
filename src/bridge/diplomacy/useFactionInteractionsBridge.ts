@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useBridgeQuery } from '../core/useBridgeQuery';
+import { useBridgeQueryState } from '../core/useBridgeQuery';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type {
   BridgeFactionInteractionProvidedInput,
@@ -132,6 +132,7 @@ function mapResponse(data: GetFactionInteractionsResponse): FactionInteractionsS
 
 export interface FactionInteractionsBridge {
   state: FactionInteractionsState | null;
+  pending: boolean;
   selection: FactionInteractionSelectionState | null;
   start: (
     interactionId: string,
@@ -168,13 +169,13 @@ function mapSelectionResponse(data: StartFactionInteractionResponse): FactionInt
 export function useFactionInteractionsBridge(targetFactionId: string | null): FactionInteractionsBridge {
   const [selection, setSelection] = useState<FactionInteractionSelectionState | null>(null);
   const selectionRef = useRef<FactionInteractionSelectionState | null>(null);
-  const queriedState = useBridgeQuery({
+  const queriedState = useBridgeQueryState({
     action: 'game.get_faction_interactions',
     payload: targetFactionId ? { targetFactionId } : null,
     map: mapResponse,
     matchPush: (data) => data.targetFactionId === targetFactionId,
   });
-  const state = queriedState?.targetFactionId === targetFactionId ? queriedState : null;
+  const state = queriedState.value?.targetFactionId === targetFactionId ? queriedState.value : null;
   const scopedSelection = selection?.targetFactionId === targetFactionId ? selection : null;
 
   const applySelectionResponse = useCallback((response: StartFactionInteractionResponse | null) => {
@@ -272,5 +273,5 @@ export function useFactionInteractionsBridge(targetFactionId: string | null): Fa
     bridgeCall('game.cancel_faction_interaction', { targetFactionId }).catch(acknowledgeBridgeFailure);
   }, [targetFactionId]);
 
-  return { state, selection: scopedSelection, start, confirmSelection, cancelSelection, cancel };
+  return { state, pending: queriedState.pending, selection: scopedSelection, start, confirmSelection, cancelSelection, cancel };
 }
