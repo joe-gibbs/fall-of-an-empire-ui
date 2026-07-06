@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguageBridge } from '../../bridge/app/useLanguageBridge';
+import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import { useEscapeStackEntry } from '../../context/EscapeStack';
 import { webUIText, useWebUIText } from '../../localization/WebUITextContext';
 import './LanguageSelector.css';
@@ -100,7 +101,10 @@ const LanguageSelector: React.FC = () => {
             <img src="/assets/icons/I_Close.png" alt="" className="mm-lang-modal__close-icon" draggable={false} />
           </button>
         </div>
-        <div className="mm-lang-modal__list">
+        <StyledScrollArea
+          className="mm-lang-modal__list"
+          viewportClassName="mm-lang-modal__list-viewport"
+        >
           {languages.map(lang => (
             <button
               key={lang.code}
@@ -117,7 +121,7 @@ const LanguageSelector: React.FC = () => {
               <span className="mm-lang-row__code">{lang.code}</span>
             </button>
           ))}
-        </div>
+        </StyledScrollArea>
       </div>
     </div>
   ) : null;

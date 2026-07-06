@@ -62,9 +62,12 @@
 .mm-lang-modal {
   width: 38.1818rem;
   max-width: calc(100vw - 2rem);
-  max-height: 70vh;
+  height: min(44rem, calc(100vh - 4rem));
+  max-height: calc(100vh - 4rem);
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
   background-color: #16181d;
   background-image: url('/assets/baked/modal-charcoal.png');
   background-position: 0 0;
@@ -111,6 +114,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
   padding: 1.2727rem 1.6364rem 0.9091rem;
   border-bottom: 0.0909rem solid rgba(201, 168, 76, 0.18);
 }
@@ -143,9 +147,12 @@
 .mm-lang-modal__close:hover .mm-lang-modal__close-icon { opacity: 1; }
 
 .mm-lang-modal__list {
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0.5455rem 0;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.mm-lang-modal__list-viewport {
+  padding: 0.5455rem 1.0909rem 0.5455rem 0;
 }
 
 .mm-lang-row {
