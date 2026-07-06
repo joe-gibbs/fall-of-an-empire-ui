@@ -6,6 +6,7 @@ import { renderEventTextChunk } from '../../utils/eventTextFlow';
 import { renderRichText } from '../../utils/richText';
 import Portrait from '../common/portraits/Portrait';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
+import PersonTooltip from '../common/tooltips/PersonTooltip';
 import Tooltip from '../common/tooltips/Tooltip';
 import { EventEffectList } from './EventEffects';
 import './EventPopup.css';
@@ -354,15 +355,17 @@ const EventPopup: React.FC<EventPopupProps> = ({
 
           {event.sender && (
             <div className="event-sender">
-              <Portrait
-                personId={event.sender.personId}
-                src={event.sender.portrait}
-                layers={event.sender.portraitLayers}
-                name={event.sender.name}
-                size="sm"
-                showBadge={false}
-                className="event-sender-portrait"
-              />
+              <PersonTooltip characterId={event.sender.personId} position="right" delay={200}>
+                <Portrait
+                  personId={event.sender.personId}
+                  src={event.sender.portrait}
+                  layers={event.sender.portraitLayers}
+                  name={event.sender.name}
+                  size="sm"
+                  showBadge={false}
+                  className="event-sender-portrait"
+                />
+              </PersonTooltip>
               <div className="event-sender-copy">
                 {event.sender.title && (
                   <span className="event-sender-title">{event.sender.title}</span>

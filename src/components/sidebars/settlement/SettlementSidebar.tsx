@@ -352,7 +352,9 @@ function ShareTooltipPanel({
           </div>
           <div className="settle-share-clergy-row">
             {bishopric.bishop ? (
-              <Portrait personId={bishopric.bishop.id} name={bishopric.bishop.name} size="sm" shape="circle" showBorder borderTier="bronze" />
+              <PersonTooltip characterId={bishopric.bishop.id} position="right" delay={200}>
+                <Portrait personId={bishopric.bishop.id} name={bishopric.bishop.name} size="sm" shape="circle" showBorder borderTier="bronze" />
+              </PersonTooltip>
             ) : (
               <img src={bishopric.religionIcon} alt="" className="settle-share-clergy-empty-icon" />
             )}
@@ -1383,8 +1385,8 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                     ],
                   }} position="bottom" delay={200}>
                     <div className="settle-army-row">
-                      <PersonTooltip characterId={army.commanderName} position="bottom">
-                        <Portrait name={army.commanderName} src={army.commanderPortrait} size="sm" shape="circle" showBorder borderTier="silver" />
+                      <PersonTooltip characterId={army.commanderId ?? null} position="bottom">
+                        <Portrait personId={army.commanderId} name={army.commanderName} src={army.commanderPortrait} size="sm" shape="circle" showBorder borderTier="silver" />
                       </PersonTooltip>
                       <div className="settle-army-info">
                         <span className="settle-army-name">{army.name}</span>
