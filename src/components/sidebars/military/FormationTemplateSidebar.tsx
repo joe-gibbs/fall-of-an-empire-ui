@@ -7,6 +7,7 @@ import {
   applyFormationTemplateBridge,
   deleteFormationTemplateBridge,
   saveFormationTemplateBridge,
+  useFormationTemplateCatalogueBridge,
   useFormationTemplatesBridge,
 } from '../../../bridge/military-map/useFormationTemplatesBridge';
 import { setMilitaryFormationTemplateBridge } from '../../../bridge/military-map/useMilitaryBridge';
@@ -87,6 +88,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
   const [activeTab, setActiveTab] = useState<TemplateTab>('composition');
   const [renaming, setRenaming] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [catalogueRequested, setCatalogueRequested] = useState(false);
   const [message, setMessage] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -162,8 +164,9 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
     return () => window.clearTimeout(timer);
   }, [assignmentTarget, assignmentTargetId, assignmentTemplateType, baseline, newTemplateType, requestedTemplateId, shouldStartRenaming, templatesForMode]);
 
-  const landCatalogue = data?.landUnitCatalogue ?? EMPTY_UNIT_CATALOGUE;
-  const navalCatalogue = data?.navalUnitCatalogue ?? EMPTY_UNIT_CATALOGUE;
+  const catalogueData = useFormationTemplateCatalogueBridge(catalogueRequested);
+  const landCatalogue = catalogueData?.landUnitCatalogue ?? EMPTY_UNIT_CATALOGUE;
+  const navalCatalogue = catalogueData?.navalUnitCatalogue ?? EMPTY_UNIT_CATALOGUE;
   const catalogue = draft.type === 'naval' ? navalCatalogue : landCatalogue;
 
   const unitById = useMemo(() => {
@@ -567,7 +570,14 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
               </div>
             )}
 
-            <button type="button" className="tpl-add-unit" onMouseDown={() => setPickerOpen(true)}>
+            <button
+              type="button"
+              className="tpl-add-unit"
+              onMouseDown={() => {
+                setCatalogueRequested(true);
+                setPickerOpen(true);
+              }}
+            >
               <img src="/assets/icons/I_NewTemplate.png" alt="" className="tpl-add-unit-icon" />
               <span className="tpl-add-unit-label"><WebUIText textKey="FormationTemplate.ChooseUnits" /></span>
             </button>

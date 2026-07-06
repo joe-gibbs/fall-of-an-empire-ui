@@ -3,7 +3,7 @@ import { clearBuildQueueCache } from '../settlements-economy/useBuildQueueBridge
 import { clearCharacterCaches } from '../characters/useCharactersBridge';
 import { clearEconomyOverviewCache } from '../settlements-economy/useEconomyOverviewBridge';
 import { clearFactionCaches } from '../diplomacy/useFactionBridge';
-import { clearFormationTemplateCaches } from '../military-map/useFormationTemplatesBridge';
+import { clearFormationTemplateCaches, clearFormationTemplateCatalogueCache } from '../military-map/useFormationTemplatesBridge';
 import { clearLedgerOverviewCache } from '../settlements-economy/useLedgerOverviewBridge';
 import { clearMilitaryCaches } from '../military-map/useMilitaryBridge';
 import { clearPersonCaches } from '../characters/usePersonBridge';
@@ -19,6 +19,7 @@ export function clearGameplayDataCaches(): void {
   clearEconomyOverviewCache();
   clearFactionCaches();
   clearFormationTemplateCaches();
+  clearFormationTemplateCatalogueCache();
   clearLedgerOverviewCache();
   clearMilitaryCaches();
   clearPersonCaches();

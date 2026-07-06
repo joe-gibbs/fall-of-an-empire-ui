@@ -964,10 +964,13 @@ export interface FormationTemplateEntry {
 
 export interface GetFormationTemplatesResponse {
   templates: FormationTemplateEntry[];
-  landUnitCatalogue: FormationTemplateUnitEntry[];
-  navalUnitCatalogue: FormationTemplateUnitEntry[];
   activeBuildTemplateId: string;
   playerGold: number;
+}
+
+export interface GetFormationTemplateCatalogueResponse {
+  landUnitCatalogue: FormationTemplateUnitEntry[];
+  navalUnitCatalogue: FormationTemplateUnitEntry[];
 }
 
 export interface SaveFormationTemplateUnitRequest {
@@ -1311,6 +1314,7 @@ export interface CharacterListEntry {
 
 export interface GetCharacterListRequest {
   factionId: string;
+  scope: string;
 }
 
 export interface GetCharacterListResponse {
@@ -1318,6 +1322,7 @@ export interface GetCharacterListResponse {
   factionName: string;
   rulerId: string;
   heirId: string;
+  scope: string;
   characters: CharacterListEntry[];
   traits: CharacterListTraitEntry[];
 }
@@ -3667,6 +3672,7 @@ export interface SettlementGarrisonUnit {
   name: string;
   description: string;
   unitType: string;
+  portrait: string;
   tier: number;
   strength: number;
   maxStrength: number;
@@ -5746,6 +5752,7 @@ export interface BridgeActions {
   'game.get_faction_data': { request: GetFactionDataRequest; response: GetFactionDataResponse };
   'game.get_faction_interactions': { request: GetFactionInteractionsRequest; response: GetFactionInteractionsResponse };
   'game.get_family_tree': { request: GetFamilyTreeRequest; response: GetFamilyTreeResponse };
+  'game.get_formation_template_catalogue': { request: void; response: GetFormationTemplateCatalogueResponse };
   'game.get_formation_templates': { request: void; response: GetFormationTemplatesResponse };
   'game.get_game_state': { request: void; response: GetGameStateResponse };
   'game.get_game_version': { request: void; response: GetGameVersionResponse };

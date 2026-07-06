@@ -2026,6 +2026,7 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
         name: 'Limitanei',
         description: 'Local infantry trained for walls and roads.',
         unitType: 'infantry',
+        portrait: '/assets/units/Rephsian/I_Rephsian_Limitanei.png',
         tier: 2,
         strength: 720,
         maxStrength: 900,
@@ -2043,7 +2044,8 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
       {
         name: 'Civic Archers',
         description: 'Militia archers raised from the city districts.',
-        unitType: 'archer',
+        unitType: 'ranged',
+        portrait: '/assets/units/Rephsian/I_Rephsian_Sagittarii.png',
         tier: 1,
         strength: 420,
         maxStrength: 560,
@@ -3010,7 +3012,7 @@ const MOCK_CHARACTER_LIST_PERSON_IDS = [
   'mock-person-advocate',
 ];
 
-function characterListForFaction(factionId: string): BridgeResponse<'game.get_character_list'> {
+function characterListForFaction(factionId: string, scope: string = 'faction'): BridgeResponse<'game.get_character_list'> {
   if (factionId === MOCK_IDS.rivalFaction) {
     const rulerId = 'mock-person-rival';
     const personIds = [
@@ -3022,6 +3024,7 @@ function characterListForFaction(factionId: string): BridgeResponse<'game.get_ch
       factionName: 'Aurestian League',
       rulerId,
       heirId: '',
+      scope: 'faction',
       characters: personIds.map(id => characterListEntry(id, MOCK_IDS.rivalFaction, 'Aurestian League', '')),
       traits: characterListTraits(personIds),
     };
@@ -3035,18 +3038,27 @@ function characterListForFaction(factionId: string): BridgeResponse<'game.get_ch
       factionName: 'Meridian Prefecture',
       rulerId,
       heirId: '',
+      scope: 'faction',
       characters: personIds.map(id => characterListEntry(id, MOCK_IDS.subjectFaction, 'Meridian Prefecture', '')),
       traits: characterListTraits(personIds),
     };
   }
 
-  const personIds = MOCK_CHARACTER_LIST_PERSON_IDS.filter(id => personById(id).isAlive);
+  const realm = scope === 'realm';
+  const subjectPersonIds = realm ? ['mock-person-subject'].filter(id => personById(id).isAlive) : [];
+  const personIds = [
+    ...MOCK_CHARACTER_LIST_PERSON_IDS,
+    ...subjectPersonIds,
+  ].filter(id => personById(id).isAlive);
   return {
     factionId: MOCK_IDS.playerFaction,
     factionName: 'Rephsian Empire',
     rulerId: MOCK_IDS.character,
     heirId: MOCK_IDS.heir,
-    characters: personIds.map(id => characterListEntry(id)),
+    scope: realm ? 'realm' : 'faction',
+    characters: personIds.map(id => subjectPersonIds.includes(id)
+      ? characterListEntry(id, MOCK_IDS.subjectFaction, 'Meridian Prefecture', '')
+      : characterListEntry(id)),
     traits: characterListTraits(personIds),
   };
 }
@@ -5066,7 +5078,10 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.get_ledger_overview':
         return clone(ledgerOverview());
       case 'game.get_character_list':
-        return clone(characterListForFaction(payloadString(payload, 'factionId', MOCK_IDS.playerFaction)));
+        return clone(characterListForFaction(
+          payloadString(payload, 'factionId', MOCK_IDS.playerFaction),
+          payloadString(payload, 'scope', 'faction'),
+        ));
       case 'game.get_family_tree': {
         const focusPersonId = payloadString(payload, 'personId', MOCK_IDS.character) || MOCK_IDS.character;
         const scope = payloadString(payload, 'scope', 'lineage') === 'patronage' ? 'patronage' : 'lineage';
@@ -5977,11 +5992,14 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             { id: 'balanced-field-army', name: 'Balanced Field Army', iconId: 'balanced', type: 'land', description: 'A mixed infantry core with mobile support.', totalStrength: 4200, creationCost: 500, initialUnitCost: 1400, creationTimeDays: 90, monthlyUpkeep: 84, averageTier: 2, battleGroups: [{ id: 'mock-bg-1', role: 'melee', unitCount: 6, units: [{ unitId: 'limitanei', count: 4 }, { unitId: 'clibanarii', count: 2 }] }, { id: 'mock-bg-2', role: 'melee', unitCount: 3, units: [{ unitId: 'limitanei', count: 2 }, { unitId: 'clibanarii', count: 1 }] }], canApply: true, canEdit: true, canDelete: true, applyReason: '', isActiveBuildTemplate: true, units: [formationUnit('limitanei', 'Limitanei', 'infantry', 'land', 6, 4200, true), formationUnit('clibanarii', 'Clibanarii', 'cavalry', 'land', 3, 1900)], assignedForces: [{ id: MOCK_IDS.military, name: 'I Field Army', rank: 'Dux', commanderName: 'Valen Arcastus', strength: 6800, maxStrength: 7600, isNavy: false, location: 'Aurelion' }, { id: 'mock-military-detachment', name: 'Aurelion Detachment', rank: 'Tribune', commanderName: 'Cassian Arcastus', strength: 1600, maxStrength: 1800, isNavy: false, location: 'Aurelion' }] },
             { id: 'coastal-patrol', name: 'Coastal Patrol', iconId: 'naval', type: 'naval', description: 'A compact squadron for blockades and troop movement.', totalStrength: 2200, creationCost: 420, initialUnitCost: 860, creationTimeDays: 75, monthlyUpkeep: 58, averageTier: 2, battleGroups: [{ id: 'mock-bg-navy-1', role: 'ranged', unitCount: 10, units: [{ unitId: 'dromons', count: 10 }] }, { id: 'mock-bg-navy-2', role: 'melee', unitCount: 6, units: [{ unitId: 'supply-galleys', count: 6 }] }], canApply: true, canEdit: true, canDelete: true, applyReason: '', isActiveBuildTemplate: false, units: [formationUnit('dromons', 'Dromons', 'navy', 'naval', 10, 1200, true), formationUnit('supply-galleys', 'Supply Galleys', 'navy', 'naval', 6, 700)], assignedForces: [{ id: MOCK_IDS.navy, name: 'Classis Meridian', rank: 'Praefectus', commanderName: 'Marcia Vennor', strength: 1800, maxStrength: 2200, isNavy: true, location: 'Namaris' }, { id: 'mock-navy-rival', name: 'Salt Squadron', rank: 'Praefectus', commanderName: 'Nera Solun', strength: 1200, maxStrength: 1500, isNavy: true, location: 'Namaris' }] },
           ],
-          landUnitCatalogue: [formationUnit('limitanei', 'Limitanei', 'infantry', 'land', 6, 4200), formationUnit('clibanarii', 'Clibanarii', 'cavalry', 'land', 3, 1900, false, aurestianCulture)],
-          navalUnitCatalogue: [formationUnit('dromons', 'Dromons', 'navy', 'naval', 10, 1200), formationUnit('supply-galleys', 'Supply Galleys', 'navy', 'naval', 6, 700)],
           activeBuildTemplateId: 'balanced-field-army',
           playerGold: 4280,
         } satisfies BridgeResponse<'game.get_formation_templates'>;
+      case 'game.get_formation_template_catalogue':
+        return {
+          landUnitCatalogue: [formationUnit('limitanei', 'Limitanei', 'infantry', 'land', 6, 4200), formationUnit('clibanarii', 'Clibanarii', 'cavalry', 'land', 3, 1900, false, aurestianCulture)],
+          navalUnitCatalogue: [formationUnit('dromons', 'Dromons', 'navy', 'naval', 10, 1200), formationUnit('supply-galleys', 'Supply Galleys', 'navy', 'naval', 6, 700)],
+        } satisfies BridgeResponse<'game.get_formation_template_catalogue'>;
       case 'game.get_peace_negotiation_state':
         return peaceState();
       case 'game.start_peace_settlement_selection': {

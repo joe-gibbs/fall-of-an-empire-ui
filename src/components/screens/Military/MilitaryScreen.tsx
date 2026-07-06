@@ -156,7 +156,8 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
   const overview = useMilitaryOverview();
   const court = useCourtPositions(true);
   const playerFactionId = usePlayerFactionId();
-  const templateData = useFormationTemplatesBridge();
+  const [showOnly, setShowOnly] = useState<MilitaryScreenTab>(() => initialMilitaryTab(screenId));
+  const templateData = useFormationTemplatesBridge(showOnly === 'templates');
   const overviewForces = useMemo(
     () => (overview?.forces as Force[] | undefined) ?? [],
     [overview],
@@ -184,7 +185,6 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
   } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [courtPosition, setCourtPosition] = useState<CourtPositionView | null>(null);
-  const [showOnly, setShowOnly] = useState<MilitaryScreenTab>(() => initialMilitaryTab(screenId));
   const [highlight, setHighlight] = useState<HighlightKey>(null);
   const initialTemplateId = useMemo(() => templateIdFromScreenId(screenId), [screenId]);
   const initialCreateType = useMemo(() => createTypeFromScreenId(screenId), [screenId]);
@@ -532,8 +532,6 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       {showOnly === 'templates' ? (
         <TemplatesPanel
           templates={templates}
-          landUnitCatalogue={templateData?.landUnitCatalogue ?? []}
-          navalUnitCatalogue={templateData?.navalUnitCatalogue ?? []}
           initialTemplateId={initialTemplateId}
           initialCreateType={initialCreateType}
           assignmentTargetId={assignmentTargetId}

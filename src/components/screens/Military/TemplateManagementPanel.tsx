@@ -14,6 +14,7 @@ import {
   applyFormationTemplateBridge,
   deleteFormationTemplateBridge,
   saveFormationTemplateBridge,
+  useFormationTemplateCatalogueBridge,
 } from '../../../bridge/military-map/useFormationTemplatesBridge';
 import { acknowledgeBridgeFailure, getRuntimeEngine } from '../../../bridge/core/runtimeEngine';
 import type {
@@ -725,6 +726,7 @@ function TemplateEditor({
   type,
   unitCatalogue,
   assignmentTarget,
+  onNeedCatalogue,
   onRaiseTemplate,
   onAssignTemplate,
   onSaved,
@@ -734,6 +736,7 @@ function TemplateEditor({
   type: TemplateCreateType;
   unitCatalogue: FormationTemplateUnitEntry[];
   assignmentTarget?: Army | null;
+  onNeedCatalogue: () => void;
   onRaiseTemplate: (id: string) => void;
   onAssignTemplate?: (id: string) => void;
   onSaved: (templateId: string) => void;
@@ -1073,6 +1076,7 @@ function TemplateEditor({
               onClick={() => {
                 if (editable) {
                   setIconPickerOpen(false);
+                  onNeedCatalogue();
                   setCatalogueOpen(true);
                 }
               }}
@@ -1289,21 +1293,21 @@ function TemplateEditor({
 
 export function TemplatesPanel({
   templates,
-  landUnitCatalogue,
-  navalUnitCatalogue,
   initialTemplateId,
   initialCreateType,
   assignmentTargetId,
   onCloseScreen,
 }: {
   templates: FormationTemplateEntry[];
-  landUnitCatalogue: FormationTemplateUnitEntry[];
-  navalUnitCatalogue: FormationTemplateUnitEntry[];
   initialTemplateId: string | null;
   initialCreateType: TemplateCreateType | null;
   assignmentTargetId: string | null;
   onCloseScreen: () => void;
 }) {
+  const [catalogueRequested, setCatalogueRequested] = useState(false);
+  const catalogueData = useFormationTemplateCatalogueBridge(catalogueRequested);
+  const landUnitCatalogue = catalogueData?.landUnitCatalogue ?? [];
+  const navalUnitCatalogue = catalogueData?.navalUnitCatalogue ?? [];
   const assignmentTarget = useMilitary(assignmentTargetId);
   const assignmentTemplateType: TemplateCreateType | null = assignmentTarget
     ? (assignmentTarget.isNavy ? 'naval' : 'land')
@@ -1498,6 +1502,7 @@ export function TemplatesPanel({
           type={editorType}
           unitCatalogue={editorCatalogue}
           assignmentTarget={assignmentTarget}
+          onNeedCatalogue={() => setCatalogueRequested(true)}
           onRaiseTemplate={raiseTemplate}
           onAssignTemplate={assignTemplate}
           onSaved={(templateId) => {

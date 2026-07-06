@@ -2,6 +2,7 @@ import { bridgeCall } from '../../bridge-types.generated.ts';
 import type {
   ApplyFormationTemplateResponse,
   DeleteFormationTemplateResponse,
+  GetFormationTemplateCatalogueResponse,
   GetFormationTemplatesResponse,
   SaveFormationTemplateRequest,
   SaveFormationTemplateResponse,
@@ -9,6 +10,7 @@ import type {
 import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
 
 let formationTemplatesCache: GetFormationTemplatesResponse | null = null;
+let formationTemplateCatalogueCache: GetFormationTemplateCatalogueResponse | null = null;
 
 export function clearFormationTemplateCache(templateId: string | undefined): void {
   clearBridgeQueryCache('game.get_formation_templates');
@@ -27,13 +29,19 @@ export function clearFormationTemplateCaches(): void {
   clearBridgeQueryCache('game.get_formation_templates');
 }
 
+export function clearFormationTemplateCatalogueCache(): void {
+  formationTemplateCatalogueCache = null;
+  clearBridgeQueryCache('game.get_formation_template_catalogue');
+}
+
 function dispatchBridgeResponse(action: string, detail: unknown): void {
   window.dispatchEvent(new CustomEvent(`bridge:${action}`, { detail }));
 }
 
-export function useFormationTemplatesBridge(): GetFormationTemplatesResponse | null {
+export function useFormationTemplatesBridge(fetchTemplates = true): GetFormationTemplatesResponse | null {
   const live = useBridgeQuery({
     action: 'game.get_formation_templates',
+    payload: fetchTemplates ? undefined : null,
     cacheResponse: true,
     map: (data) => {
       formationTemplatesCache = data;
@@ -44,11 +52,26 @@ export function useFormationTemplatesBridge(): GetFormationTemplatesResponse | n
   return live ?? formationTemplatesCache;
 }
 
+export function useFormationTemplateCatalogueBridge(fetchCatalogue = true): GetFormationTemplateCatalogueResponse | null {
+  const live = useBridgeQuery({
+    action: 'game.get_formation_template_catalogue',
+    payload: fetchCatalogue ? undefined : null,
+    cacheResponse: true,
+    map: (data) => {
+      formationTemplateCatalogueCache = data;
+      return data;
+    },
+  });
+
+  return live ?? formationTemplateCatalogueCache;
+}
+
 export function saveFormationTemplateBridge(
   request: SaveFormationTemplateRequest,
 ): Promise<SaveFormationTemplateResponse> {
   return bridgeCall('game.save_formation_template', request).then(response => {
     clearFormationTemplateCaches();
+    clearFormationTemplateCatalogueCache();
     return response;
   });
 }
