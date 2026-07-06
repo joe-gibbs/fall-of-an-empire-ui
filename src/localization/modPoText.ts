@@ -16,16 +16,37 @@ type PoField = 'msgctxt' | 'msgid' | 'msgstr';
 
 const catalogues: ModPoCatalogue[] = [];
 const loadedLocaleMaps = new Map<string, Promise<Map<string, string>>>();
+const listeners = new Set<() => void>();
+let catalogueVersion = 0;
 
 export function registerModPoCatalogues(nextCatalogues: ModPoCatalogue[]): void {
+  let changed = false;
   for (const catalogue of nextCatalogues) {
     if (!catalogue.packId || !catalogue.urlPattern) continue;
     if (catalogues.some(existing => existing.packId === catalogue.packId && existing.urlPattern === catalogue.urlPattern)) {
       continue;
     }
     catalogues.push(catalogue);
+    changed = true;
   }
+  if (!changed) return;
+
   loadedLocaleMaps.clear();
+  catalogueVersion += 1;
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
+export function getModPoCatalogueVersion(): number {
+  return catalogueVersion;
+}
+
+export function subscribeModPoCatalogues(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 export function formatModPoText(key: string, args?: WebUITextArgs): string {
@@ -47,6 +68,11 @@ function localeCandidates(locale: string): string[] {
   const baseLocale = locale.split('-')[0];
   if (baseLocale && baseLocale !== locale) {
     candidates.push(baseLocale);
+  }
+  if (baseLocale.toLowerCase() === 'zh') {
+    const localeLower = locale.toLowerCase();
+    const traditionalRegions = ['zh-hant', 'zh-tw', 'zh-hk', 'zh-mo'];
+    candidates.push(traditionalRegions.some(candidate => localeLower.startsWith(candidate)) ? 'zh-Hant' : 'zh-Hans');
   }
   if (locale) {
     candidates.push(locale);

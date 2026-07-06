@@ -75,6 +75,9 @@ interface ContentPackWebUIManifest {
 const MANIFEST_URL = '/mods/manifest.json';
 const CONTENT_PACK_MANIFEST_RETRY_MS = 2500;
 const CONTENT_PACK_MANIFEST_RETRY_INTERVAL_MS = 100;
+const CONTENT_PACK_BACKGROUND_RETRY_COUNT = 30;
+const CONTENT_PACK_BACKGROUND_RETRY_INTERVAL_MS = 1000;
+const loadedModEntries = new Set<string>();
 
 function loadJson(url: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -214,21 +217,8 @@ async function loadOne(mod: ModManifestEntry): Promise<void> {
   });
 }
 
-async function loadMods(): Promise<void> {
-  if (import.meta.env.DEV && (import.meta.env.MODE === 'mock' || new URLSearchParams(window.location.search).has('mock'))) {
-    return;
-  }
-
-  const manifest = await fetchManifest();
-  const contentPackManifest = await fetchContentPackManifest();
-  const byEntry = new Map<string, ModManifestEntry>();
-  [...manifest, ...contentPackManifest].forEach(mod => {
-    if (mod.entry) byEntry.set(mod.entry, mod);
-  });
-  const allMods = Array.from(byEntry.values());
-  if (allMods.length === 0) return;
-
-  registerModPoCatalogues(allMods
+function registerModManifestCatalogues(mods: ModManifestEntry[]): void {
+  registerModPoCatalogues(mods
     .map((mod) => {
       const localizationPath = mod.localization || mod.localisation;
       if (!localizationPath) return null;
@@ -239,16 +229,23 @@ async function loadMods(): Promise<void> {
       return { packId: mod.name, urlPattern };
     })
     .filter((catalogue): catalogue is { packId: string; urlPattern: string } => catalogue !== null));
+}
+
+async function loadModManifestEntries(mods: ModManifestEntry[]): Promise<boolean> {
+  const pendingMods = mods.filter(mod => mod.entry && !loadedModEntries.has(mod.entry));
+  if (pendingMods.length === 0) {
+    return false;
+  }
+
+  registerModManifestCatalogues(pendingMods);
 
   const loaded: string[] = [];
   const failed: { name: string; error: unknown }[] = [];
 
-  // Load in parallel. Each mod's registrations are idempotent and keyed
-  // by id, so ordering only matters when two mods claim the same id -
-  // the one that resolves last wins, same rule as the static path.
-  await Promise.all(allMods.map(async (mod) => {
+  await Promise.all(pendingMods.map(async (mod) => {
     try {
       await loadOne(mod);
+      loadedModEntries.add(mod.entry);
       loaded.push(mod.name);
     } catch (e) {
       failed.push({ name: mod.name, error: e });
@@ -261,6 +258,48 @@ async function loadMods(): Promise<void> {
   for (const f of failed) {
     console.error(`[mods] failed to load ${f.name}:`, f.error);
   }
+
+  return loaded.length > 0;
+}
+
+function scheduleContentPackManifestRetry(): void {
+  let attempts = 0;
+  const retry = async () => {
+    attempts += 1;
+    const entries = await fetchContentPackManifest();
+    const loadedAny = await loadModManifestEntries(entries);
+    if (loadedAny || attempts >= CONTENT_PACK_BACKGROUND_RETRY_COUNT) {
+      return;
+    }
+    window.setTimeout(() => {
+      void retry();
+    }, CONTENT_PACK_BACKGROUND_RETRY_INTERVAL_MS);
+  };
+
+  window.setTimeout(() => {
+    void retry();
+  }, CONTENT_PACK_BACKGROUND_RETRY_INTERVAL_MS);
+}
+
+async function loadMods(): Promise<void> {
+  if (import.meta.env.DEV && (import.meta.env.MODE === 'mock' || new URLSearchParams(window.location.search).has('mock'))) {
+    return;
+  }
+
+  const manifest = await fetchManifest();
+  const contentPackManifest = await fetchContentPackManifest();
+  if (contentPackManifest.length === 0) {
+    scheduleContentPackManifestRetry();
+  }
+
+  const byEntry = new Map<string, ModManifestEntry>();
+  [...manifest, ...contentPackManifest].forEach(mod => {
+    if (mod.entry) byEntry.set(mod.entry, mod);
+  });
+  const allMods = Array.from(byEntry.values());
+  if (allMods.length === 0) return;
+
+  await loadModManifestEntries(allMods);
 }
 
 /**

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useBridgeQuery } from '../bridge/core/useBridgeQuery';
 import { formatWebUIText, setCurrentWebUIText, WebUITextContext, type WebUITextContextValue } from './WebUITextContext';
-import { loadRegisteredModPoText } from './modPoText';
+import { getModPoCatalogueVersion, loadRegisteredModPoText, subscribeModPoCatalogues } from './modPoText';
 import { WEBUI_TEXT_SOURCE } from './webui-text.generated.ts';
 
 export function WebUITextProvider({ children }: { children: ReactNode }) {
@@ -15,6 +15,11 @@ export function WebUITextProvider({ children }: { children: ReactNode }) {
     locale: '',
     texts: new Map(),
   }));
+  const [modCatalogueVersion, setModCatalogueVersion] = useState(getModPoCatalogueVersion);
+
+  useEffect(() => subscribeModPoCatalogues(() => {
+    setModCatalogueVersion(getModPoCatalogueVersion());
+  }), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +38,7 @@ export function WebUITextProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [locale, modCatalogueVersion]);
 
   const textByKey = useMemo(() => {
     const map = new Map<string, string>(Object.entries(WEBUI_TEXT_SOURCE));
