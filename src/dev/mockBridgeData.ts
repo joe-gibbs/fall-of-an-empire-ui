@@ -4005,6 +4005,16 @@ const MOCK_FORMATION_UNIT_TYPE_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
+function formationResourceCost(name: string, amount: number) {
+  return {
+    name,
+    displayName: name,
+    description: `${name} fixture resource description.`,
+    effects: `${name} fixture resource effect.`,
+    amount,
+  };
+}
+
 function formationUnit(id: string, name: string, type: string, category: string, count: number, maxStrength: number, includesCore = false, culture = rephsianCulture) {
   return {
     id,
@@ -4025,8 +4035,8 @@ function formationUnit(id: string, name: string, type: string, category: string,
     buildTimeDays: category === 'naval' ? 70 : 80,
     upkeep: category === 'naval' ? 34 : 42,
     foodConsumption: category === 'naval' ? 10 : 18,
-    resourceCost: [{ name: 'Iron', amount: 12 }, { name: 'Wood', amount: 20 }],
-    monthlyConsumption: [{ name: 'Grain', amount: category === 'naval' ? 2 : 4 }],
+    resourceCost: [formationResourceCost('Iron', 12), formationResourceCost('Wood', 20)],
+    monthlyConsumption: [formationResourceCost('Grain', category === 'naval' ? 2 : 4)],
     speed: category === 'naval' ? 180 : 170,
     range: type === 'ranged' || type === 'siege' || id === 'dromons' ? 220 : 0,
     siegePower: type === 'siege' ? 12 : 0,

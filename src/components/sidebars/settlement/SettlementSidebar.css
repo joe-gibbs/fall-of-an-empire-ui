@@ -663,6 +663,11 @@
   padding-right: 0.2rem;
 }
 
+.settle-unit-tooltip-settlement-item {
+  display: inline;
+  margin-right: 0.35rem;
+}
+
 .settle-unit-tooltip-settlement-link {
   padding: 0;
   border-width: 0;
@@ -725,8 +730,9 @@
 .settle-unit-stat-label {
   font-size: 0.85rem;
   color: var(--text-muted);
-  width: 3.6rem;
+  width: 4.7rem;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .settle-unit-stat-bar {
@@ -865,6 +871,7 @@
   color: var(--text-bright);
   font-family: var(--font-header);
   font-size: 0.95rem;
+  cursor: help;
 }
 
 .unit-tt-res-icon {

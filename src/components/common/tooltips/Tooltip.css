@@ -4,6 +4,12 @@
   flex-direction: column;
 }
 
+.tooltip-wrapper-inline {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+}
+
 .tt-positioner {
   z-index: 99999;
   width: 0;

@@ -118,6 +118,9 @@ function templateResourceCosts(unit: FormationTemplateUnitEntry, kind: 'raise' |
   const costs = kind === 'raise' ? unit.resourceCost : unit.monthlyConsumption;
   return costs.map(cost => ({
     name: cost.name,
+    displayName: cost.displayName,
+    description: cost.description,
+    effects: cost.effects,
     amount: cost.amount,
     icon: `/assets/resources/${cost.name}.png`,
   }));
@@ -168,6 +171,32 @@ function templateUnitAttack(unit: FormationTemplateUnitEntry): number {
 
 function templateUnitDefence(unit: FormationTemplateUnitEntry): number {
   return unit.pierceArmour + unit.crushArmour + unit.slashArmour;
+}
+
+function UnitQuickStat({
+  icon,
+  value,
+  title,
+  body,
+}: {
+  icon: string;
+  value: number;
+  title: string;
+  body: string;
+}) {
+  return (
+    <Tooltip
+      inline
+      delay={120}
+      position="bottom"
+      content={{ title, body }}
+    >
+      <span>
+        <img src={icon} alt="" className="chart-template-unit-stat-icon" draggable={false} />
+        {formatNumber(value)}
+      </span>
+    </Tooltip>
+  );
 }
 
 function TemplateListItem({
@@ -1086,9 +1115,24 @@ function TemplateEditor({
                       <span className="chart-template-unit-copy">
                         <span className="chart-template-unit-name">{unit.name}</span>
                         <span className="chart-template-unit-quick-stats">
-                          <span><img src={SWORDS_ICON} alt="" className="chart-template-unit-stat-icon" draggable={false} />{formatNumber(unit.maxStrength)}</span>
-                          <span><img src="/assets/icons/I_Damage_Slash.png" alt="" className="chart-template-unit-stat-icon" draggable={false} />{formatNumber(templateUnitAttack(unit))}</span>
-                          <span><img src="/assets/icons/I_Armour_Slash.png" alt="" className="chart-template-unit-stat-icon" draggable={false} />{formatNumber(templateUnitDefence(unit))}</span>
+                          <UnitQuickStat
+                            icon={SWORDS_ICON}
+                            value={unit.maxStrength}
+                            title={webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.436.6')}
+                            body={webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.437.7')}
+                          />
+                          <UnitQuickStat
+                            icon="/assets/icons/I_Damage_Slash.png"
+                            value={templateUnitAttack(unit)}
+                            title={webUIText('FormationTemplate.QuickStat.TotalDamage')}
+                            body={webUIText('FormationTemplate.QuickStat.TotalDamageBody')}
+                          />
+                          <UnitQuickStat
+                            icon="/assets/icons/I_Armour_Slash.png"
+                            value={templateUnitDefence(unit)}
+                            title={webUIText('FormationTemplate.QuickStat.TotalArmour')}
+                            body={webUIText('FormationTemplate.QuickStat.TotalArmourBody')}
+                          />
                         </span>
                       </span>
                     </span>

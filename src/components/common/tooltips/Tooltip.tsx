@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useCallback, useContext, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { toRootRem } from '../../../utils/cssUnits';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
@@ -72,6 +72,12 @@ interface TooltipPlacement {
 }
 
 let nextTooltipId = 1;
+
+const TooltipNestingContext = React.createContext<{
+  tooltipId: number;
+  keepOpen: () => void;
+  scheduleHide: (delayMs: number) => void;
+} | null>(null);
 
 /** Default hover-open delay when the settings bridge has not supplied one yet. */
 const MIN_TOOLTIP_DELAY = 450;
@@ -529,6 +535,204 @@ function TooltipLineItem({
   );
 }
 
+interface NestedTooltipProps {
+  content: TooltipContent;
+  children: React.ReactNode;
+  delay?: number;
+  inline?: boolean;
+  disabled?: boolean;
+  wrapperClassName?: string;
+  bubbleClassName?: string;
+}
+
+function NestedTooltip({
+  content,
+  children,
+  delay = 180,
+  inline = false,
+  disabled = false,
+  wrapperClassName,
+  bubbleClassName,
+}: NestedTooltipProps) {
+  const nesting = useContext(TooltipNestingContext);
+  const [visible, setVisible] = useState(false);
+  const wrapperRef = useRef<HTMLElement>(null);
+  const subRef = useRef<HTMLDivElement>(null);
+  const showRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const placementFrameRef = useRef<number | null>(null);
+  const placementRetryFrameRef = useRef<number | null>(null);
+
+  const setWrapperRef = useCallback((node: HTMLElement | null) => {
+    wrapperRef.current = node;
+  }, []);
+
+  const clearShow = useCallback(() => {
+    if (showRef.current) {
+      clearTimeout(showRef.current);
+      showRef.current = null;
+    }
+  }, []);
+
+  const clearHide = useCallback(() => {
+    if (hideRef.current) {
+      clearTimeout(hideRef.current);
+      hideRef.current = null;
+    }
+  }, []);
+
+  const keepOpen = useCallback(() => {
+    clearHide();
+    nesting?.keepOpen();
+  }, [clearHide, nesting]);
+
+  const show = useCallback(() => {
+    if (disabled || !hasTooltipContent(content)) return;
+    keepOpen();
+    clearShow();
+    showRef.current = setTimeout(() => {
+      showRef.current = null;
+      nesting?.keepOpen();
+      setVisible(true);
+    }, delay);
+  }, [clearShow, content, delay, disabled, keepOpen, nesting]);
+
+  const hide = useCallback(() => {
+    clearShow();
+    hideRef.current = setTimeout(() => setVisible(false), 80);
+  }, [clearShow]);
+
+  const hideAndScheduleParent = useCallback(() => {
+    hide();
+    nesting?.scheduleHide(80);
+  }, [hide, nesting]);
+
+  const cancelPlacementFrames = useCallback(() => {
+    if (placementFrameRef.current !== null) {
+      cancelAnimationFrame(placementFrameRef.current);
+      placementFrameRef.current = null;
+    }
+    if (placementRetryFrameRef.current !== null) {
+      cancelAnimationFrame(placementRetryFrameRef.current);
+      placementRetryFrameRef.current = null;
+    }
+  }, []);
+
+  const placeSubTooltip = useCallback(() => {
+    if (!visible || !wrapperRef.current || !subRef.current || !wrapperRef.current.isConnected) return;
+    const triggerRect = rectFromBounds(wrapperRef.current.getBoundingClientRect());
+    const subEl = subRef.current;
+    const { width: vw, height: vh } = viewportSize();
+    if (vw <= 0 || vh <= 0) return;
+
+    subEl.style.visibility = 'hidden';
+    beginTooltipMeasurement(subEl);
+    let subSize = constrainElementToViewport(subEl, vw, vh);
+    let subW = subSize.width;
+    let subH = subSize.height;
+    if (subW <= 0 || subH <= 0) return;
+
+    const leftSpace = Math.max(0, triggerRect.left - VIEWPORT_PAD - SUB_TOOLTIP_GAP);
+    const rightSpace = Math.max(0, vw - VIEWPORT_PAD - triggerRect.right - SUB_TOOLTIP_GAP);
+    const openRight = leftSpace < subW && rightSpace > leftSpace;
+    const availableSideWidth = Math.max(1, openRight ? rightSpace : leftSpace);
+
+    if (subW > availableSideWidth) {
+      subEl.style.minWidth = '0';
+      subEl.style.maxWidth = toRootRem(availableSideWidth);
+      subSize = constrainElementToViewport(subEl, vw, vh);
+      subW = subSize.width;
+      subH = subSize.height;
+      if (subW <= 0 || subH <= 0) return;
+    }
+
+    const rawLeft = openRight
+      ? triggerRect.right + SUB_TOOLTIP_GAP
+      : triggerRect.left - SUB_TOOLTIP_GAP - subW;
+    const rawTop = triggerRect.top - SUB_TOOLTIP_VERTICAL_OFFSET;
+    const left = clamp(rawLeft, VIEWPORT_PAD, vw - subW - VIEWPORT_PAD);
+    const top = clamp(rawTop, VIEWPORT_PAD, vh - subH - VIEWPORT_PAD);
+
+    subEl.style.left = toRootRem(left);
+    subEl.style.right = 'auto';
+    subEl.style.top = toRootRem(top);
+    subEl.style.marginLeft = '0';
+    subEl.style.marginRight = '0';
+    subEl.style.transformOrigin = openRight ? 'left center' : 'right center';
+    subEl.style.visibility = 'visible';
+  }, [visible]);
+
+  const scheduleSubPlacement = useCallback(() => {
+    cancelPlacementFrames();
+    placementFrameRef.current = requestAnimationFrame(() => {
+      placementFrameRef.current = null;
+      placeSubTooltip();
+      placementRetryFrameRef.current = requestAnimationFrame(() => {
+        placementRetryFrameRef.current = null;
+        placeSubTooltip();
+      });
+    });
+  }, [cancelPlacementFrames, placeSubTooltip]);
+
+  useEffect(() => {
+    return () => {
+      clearShow();
+      clearHide();
+      cancelPlacementFrames();
+    };
+  }, [cancelPlacementFrames, clearHide, clearShow]);
+
+  useLayoutEffect(() => {
+    placeSubTooltip();
+  }, [placeSubTooltip]);
+
+  useEffect(() => {
+    if (!visible) {
+      cancelPlacementFrames();
+      return undefined;
+    }
+    scheduleSubPlacement();
+    window.addEventListener('resize', scheduleSubPlacement);
+    window.addEventListener('scroll', scheduleSubPlacement, true);
+    return () => {
+      cancelPlacementFrames();
+      window.removeEventListener('resize', scheduleSubPlacement);
+      window.removeEventListener('scroll', scheduleSubPlacement, true);
+    };
+  }, [visible, scheduleSubPlacement, cancelPlacementFrames]);
+
+  const Wrapper = inline ? 'span' : 'div';
+
+  return (
+    <>
+      <Wrapper
+        ref={setWrapperRef}
+        className={`${inline ? 'tooltip-wrapper-inline' : 'tooltip-wrapper'}${wrapperClassName ? ` ${wrapperClassName}` : ''}`}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+      >
+        {children}
+      </Wrapper>
+      {visible && createPortal(
+        <div
+          ref={subRef}
+          className={`tt-sub tt-sub--portal${bubbleClassName ? ` ${bubbleClassName}` : ''}`}
+          style={{ visibility: 'hidden' }}
+          onMouseEnter={keepOpen}
+          onMouseLeave={hideAndScheduleParent}
+        >
+          <TooltipBody
+            data={content}
+            tooltipId={nesting?.tooltipId}
+            keepAncestorOpen={keepOpen}
+          />
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
 function isTooltipContent(c: unknown): c is TooltipContent {
   return typeof c === 'object'
     && c !== null
@@ -748,14 +952,20 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
         onMouseLeave={() => scheduleSharedTooltipHide(active.id, 80)}
         onLoadCapture={schedulePlacement}
       >
-        <div className="tt-content">
-          {isTooltipContent(active.content)
-            ? <TooltipBody data={active.content} sidebar={active.variant === 'sidebar'} tooltipId={active.id} />
-            : typeof active.content === 'string' || typeof active.content === 'number'
-              ? <div className="tt-simple">{active.content}</div>
-              : <div className="tt-custom">{active.content}</div>
-          }
-        </div>
+        <TooltipNestingContext.Provider value={{
+          tooltipId: active.id,
+          keepOpen: () => cancelSharedTooltipHide(active.id),
+          scheduleHide: (delayMs: number) => scheduleSharedTooltipHide(active.id, delayMs),
+        }}>
+          <div className="tt-content">
+            {isTooltipContent(active.content)
+              ? <TooltipBody data={active.content} sidebar={active.variant === 'sidebar'} tooltipId={active.id} />
+              : typeof active.content === 'string' || typeof active.content === 'number'
+                ? <div className="tt-simple">{active.content}</div>
+                : <div className="tt-custom">{active.content}</div>
+            }
+          </div>
+        </TooltipNestingContext.Provider>
       </div>
     </div>
   );
@@ -912,4 +1122,5 @@ const Tooltip: React.FC<TooltipProps> = ({
 
 export default Tooltip;
 export { TooltipHost };
+export { NestedTooltip };
 export type { TooltipContent, TooltipLine };

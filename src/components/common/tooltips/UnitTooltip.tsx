@@ -1,7 +1,7 @@
 import React from 'react';
 import PaintedBar from '../data-display/bars/PaintedBar';
 import CultureTooltip from './CultureTooltip';
-import Tooltip from './Tooltip';
+import { NestedTooltip } from './Tooltip';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber } from '../../../utils/numberFormat';
@@ -9,24 +9,6 @@ import type { BuildingResourceCost, CultureInfo } from '../../../data/types';
 import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
-/** Short player-facing description of each strategic resource. Used by the
- *  nested tooltip on each build-cost / monthly-consumption pill. */
-const RESOURCE_DESCRIPTIONS: Record<string, string> = {
-  get Weapons() { return webUIText('UnitTooltip.Resource.Weapons'); },
-  get Armour() { return webUIText('UnitTooltip.Resource.Armour'); },
-  get Clothes() { return webUIText('UnitTooltip.Resource.Clothes'); },
-  get FineClothes() { return webUIText('UnitTooltip.Resource.FineClothes'); },
-  get Horses() { return webUIText('UnitTooltip.Resource.Horses'); },
-  get Fittings() { return webUIText('UnitTooltip.Resource.Fittings'); },
-  get Sails() { return webUIText('UnitTooltip.Resource.Sails'); },
-  get Oil() { return webUIText('UnitTooltip.Resource.Oil'); },
-  get Pitch() { return webUIText('UnitTooltip.Resource.Pitch'); },
-  get Iron() { return webUIText('UnitTooltip.Resource.Iron'); },
-  get Wood() { return webUIText('UnitTooltip.Resource.Wood'); },
-  get Stone() { return webUIText('UnitTooltip.Resource.Stone'); },
-  get Leather() { return webUIText('UnitTooltip.Resource.Leather'); },
-  get Grain() { return webUIText('UnitTooltip.Resource.Grain'); },
-};
 
 /** Rich unit tooltip body. Matches the Garrison tab's `.settle-unit-tooltip`
  *  layout: portrait + name + tier, type/culture/source building, description,
@@ -154,13 +136,13 @@ function ResourceList({ title, items, perContext }: { title: string; items: Buil
             ? n(r.amount)
             : formatNumber(r.amount, { maximumFractionDigits: r.amount >= 0.1 ? 1 : 2 });
           return (
-            <Tooltip
+            <NestedTooltip
               key={r.name}
-              position="bottom"
+              inline
               delay={150}
               content={{
-                title: r.name,
-                get body() { return RESOURCE_DESCRIPTIONS[r.name] ?? webUIText("Auto.Fix.PropExprFallback.componentscommonUnitTooltip.156.1"); },
+                title: r.displayName || r.name,
+                body: r.description || r.effects || webUIText("Auto.Fix.PropExprFallback.componentscommonUnitTooltip.156.1"),
                 lines: [
                   { label: perContext, value: valueLabel, valueIcon: r.icon, valueColor: 'var(--gold-light)' },
                 ],
@@ -170,7 +152,7 @@ function ResourceList({ title, items, perContext }: { title: string; items: Buil
                 <img src={r.icon} alt="" className="unit-tt-res-icon" />
                 <span className="unit-tt-res-val">{valueLabel}</span>
               </span>
-            </Tooltip>
+            </NestedTooltip>
           );
         })}
       </div>
@@ -281,6 +263,8 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
     ? allBuildabilitySettlements
     : allBuildabilitySettlements.slice(0, 4);
   const hiddenBuildabilitySettlementCount = allBuildabilitySettlements.length - buildabilitySettlements.length;
+  const canCollapseBuildabilitySettlements = showAllBuildabilitySettlements && allBuildabilitySettlements.length > 4;
+  const hasBuildabilityListAction = hiddenBuildabilitySettlementCount > 0 || canCollapseBuildabilitySettlements;
 
   return (
     <div className="settle-unit-tooltip">
@@ -423,7 +407,7 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
               <div className="tt-line tt-line--label-only settle-unit-tooltip-settlement-row">
                 <span className="tt-line-label settle-unit-tooltip-settlements">
                   {buildabilitySettlements.map((settlement, index) => (
-                    <React.Fragment key={settlement.id}>
+                    <span className="settle-unit-tooltip-settlement-item" key={settlement.id}>
                       <button
                         type="button"
                         className="settle-unit-tooltip-settlement-link"
@@ -435,14 +419,13 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
                       >
                         {settlement.name}
                       </button>
-                      {index < buildabilitySettlements.length - 1 && (
-                        <span className="settle-unit-tooltip-settlement-separator">, </span>
+                      {(index < buildabilitySettlements.length - 1 || hasBuildabilityListAction) && (
+                        <span className="settle-unit-tooltip-settlement-separator">,</span>
                       )}
-                    </React.Fragment>
+                    </span>
                   ))}
                   {hiddenBuildabilitySettlementCount > 0 && (
-                    <>
-                      <span className="settle-unit-tooltip-settlement-separator">, </span>
+                    <span className="settle-unit-tooltip-settlement-item">
                       <button
                         type="button"
                         className="settle-unit-tooltip-settlement-link settle-unit-tooltip-more-link"
@@ -454,7 +437,22 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
                       >
                         {webUIText("Auto.Fix.Expr.componentsscreensMilitaryMilitaryScreen.518.1", { Value1: n(hiddenBuildabilitySettlementCount) })}
                       </button>
-                    </>
+                    </span>
+                  )}
+                  {canCollapseBuildabilitySettlements && (
+                    <span className="settle-unit-tooltip-settlement-item">
+                      <button
+                        type="button"
+                        className="settle-unit-tooltip-settlement-link settle-unit-tooltip-more-link"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          setShowAllBuildabilitySettlements(false);
+                        }}
+                      >
+                        {webUIText('UnitTooltip.ShowFewerSettlements')}
+                      </button>
+                    </span>
                   )}
                 </span>
               </div>

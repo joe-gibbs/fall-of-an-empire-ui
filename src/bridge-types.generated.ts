@@ -873,6 +873,9 @@ export interface FormationTemplateEligibleSettlementEntry {
 
 export interface FormationTemplateResourceCost {
   name: string;
+  displayName: string;
+  description: string;
+  effects: string;
   amount: number;
 }
 

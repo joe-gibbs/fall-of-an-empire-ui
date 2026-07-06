@@ -195,12 +195,24 @@ export function unitPortrait(unit: FormationTemplateUnitEntry): string {
 export function resourceCosts(costs: FormationTemplateResourceCost[]) {
   return costs.map(cost => ({
     name: cost.name,
+    displayName: cost.displayName,
+    description: cost.description,
+    effects: cost.effects,
     amount: cost.amount,
     icon: resourceIcon(cost.name),
   }));
 }
 
+function availableSettlementEntries(unit: FormationTemplateUnitEntry): { id: string; name: string }[] {
+  return unit.availableSettlements
+    .filter(settlement => settlement.available)
+    .map(settlement => ({ id: settlement.id, name: settlement.name }))
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
 export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number): UnitTooltipData {
+  const buildabilitySettlements = availableSettlementEntries(unit);
+  const availableSettlementCount = unit.availableSettlementCount || buildabilitySettlements.length;
   return {
     name: unit.name,
     description: unit.description,
@@ -229,6 +241,11 @@ export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number)
     immuneToWinterAttrition: unit.immuneToWinterAttrition,
     immuneToDesertAttrition: unit.immuneToDesertAttrition,
     count,
+    buildability: {
+      count: availableSettlementCount,
+      total: Math.max(unit.availableSettlements.length, availableSettlementCount),
+      settlements: buildabilitySettlements,
+    },
   };
 }
 

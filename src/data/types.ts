@@ -482,6 +482,9 @@ export type BuildingCategory =
 export interface BuildingResourceCost {
   /** Raw FName like "Stone", "Wood", "Iron", "PreciousMetals". */
   name: string;
+  displayName?: string;
+  description?: string;
+  effects?: string;
   /** /assets/resources/<name>.png */
   icon: string;
   amount: number;
