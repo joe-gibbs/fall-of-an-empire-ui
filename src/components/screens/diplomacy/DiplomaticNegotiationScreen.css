@@ -83,6 +83,23 @@
   max-width: 100%;
 }
 
+.screen--treaty-negotiation .pns-resource-label--static {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 1.65rem;
+  display: flex;
+  align-items: center;
+  padding: 0.14rem 0.32rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  background-color: rgba(4, 5, 6, 0.78);
+  color: var(--text);
+}
+
 .screen--treaty-negotiation .pns-term-field--resource-amount {
   flex-grow: 0;
   flex-shrink: 0;
@@ -105,7 +122,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  padding: 0.35rem 1rem 0.45rem;
+  justify-content: center;
+  min-height: 2.65rem;
+  padding: 0.35rem 8.75rem 0.45rem 1rem;
   border-bottom-width: 0.077rem;
   border-bottom-style: solid;
   border-bottom-color: var(--separator);
@@ -118,11 +137,13 @@
 }
 
 .tns-faction-pair {
+  max-width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
   min-width: 0;
-  margin-left: auto;
-  margin-right: auto;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .tns-faction-name {
@@ -146,15 +167,24 @@
 }
 
 .tns-opinion {
+  position: absolute;
+  top: 50%;
+  right: 8.7rem;
   min-width: 3rem;
   color: var(--gold);
   font-family: var(--font-header);
   font-size: 0.95rem;
   text-align: right;
+  transform: translateY(-50%);
 }
 
 .tns-header > * + * {
   margin-left: 0.45rem;
+}
+
+.tns-header > .tns-faction-pair,
+.tns-header > .tns-opinion {
+  margin-left: 0;
 }
 
 .tns-faction-pair > * + * {
