@@ -426,9 +426,10 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
   }, [r, templateData]);
 
   const formations = React.useMemo(() => {
-    if (r) return r.formations;
-    return templateData?.templates.map(formationTemplateFromBridge) ?? [];
-  }, [r, templateData]);
+    const source = r ? r.formations : (templateData?.templates.map(formationTemplateFromBridge) ?? []);
+    if (settlement.hasPort === true) return source;
+    return source.filter(formation => formation.type !== 'naval');
+  }, [r, templateData, settlement.hasPort]);
 
   const newTemplateType = React.useMemo(() => {
     if (!r) return 'land';

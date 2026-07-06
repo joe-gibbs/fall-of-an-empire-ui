@@ -1815,6 +1815,7 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     isCapital: !isPort,
     isFactionIndependent: true,
     type: isPort ? 'port' : 'metropolis',
+    hasPort: isPort,
     population: isPort ? 142000 : 384000,
     populationGrowth: isPort ? 960 : 1820,
     income: isPort ? 46 : 122,

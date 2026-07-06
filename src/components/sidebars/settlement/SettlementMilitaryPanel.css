@@ -115,6 +115,7 @@
 .mil-queue-next-icon {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .mil-queue-next-tier {
@@ -312,6 +313,7 @@
 .mil-formation-slot-portrait {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .mil-formation--locked .mil-formation-slot-portrait {
@@ -507,6 +509,7 @@
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
 }
 
 .mil-cap-locked-text {

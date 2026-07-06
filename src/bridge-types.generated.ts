@@ -3765,6 +3765,7 @@ export interface GetSettlementDataResponse {
   isCapital: boolean;
   isFactionIndependent: boolean;
   type: string;
+  hasPort: boolean;
   population: number;
   populationGrowth: number;
   income: number;

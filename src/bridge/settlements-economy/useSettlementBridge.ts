@@ -108,6 +108,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
     unrest: data.unrest * 100,
     unrestLabel: data.unrestLabel,
     buildings: data.buildings.map((b, i) => ({ id: `bld-${i}`, name: b.name, level: b.level })),
+    hasPort: data.hasPort,
     garrison: data.garrison.map(u => ({
       name: u.name,
       description: u.description,
