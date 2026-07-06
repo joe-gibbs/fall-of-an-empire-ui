@@ -532,4 +532,4 @@ export function removeUnitsFromBattleGroups(
 
   return pruneEmptyGroups(nextGroups);
 }
-
+
