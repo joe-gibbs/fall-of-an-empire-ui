@@ -136,6 +136,8 @@ export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count:
     typeLabel: templateUnitTypeLabel(unit),
     typeIcon: templateUnitTypeIcon(unit),
     tier: unit.tier,
+    culture: unit.cultureName,
+    cultureIcon: unit.cultureId ? `/assets/cultures/${unit.cultureId}.png` : undefined,
     maxStrength: unit.maxStrength,
     price: unit.price,
     buildTime: unit.buildTimeDays,
