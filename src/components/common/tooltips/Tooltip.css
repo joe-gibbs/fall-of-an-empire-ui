@@ -347,6 +347,10 @@
   flex-shrink: 0;
 }
 
+.tt-line-value > .tt-line-icon {
+  margin-right: 0.28rem;
+}
+
 .tt-footer {
   font-size: 0.9rem;
   color: var(--text-dark);

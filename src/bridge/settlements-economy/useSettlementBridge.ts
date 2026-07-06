@@ -7,12 +7,13 @@ import { FoaeCefUIAssetPath } from '../../utils/assets';
 
 type SettlementBishopricResponse = GetSettlementDataResponse['bishoprics'][number];
 
-const UNIT_TYPE_ICONS: Record<ArmyUnitType, string> = {
+const UNIT_TYPE_ICONS: Record<ArmyUnitType | 'Garrison', string> = {
   infantry: '/assets/icons/UnitTypes/Infantry.png',
   cavalry: '/assets/icons/UnitTypes/Cavalry.png',
   ranged: '/assets/icons/UnitTypes/Ranged.png',
   siege: '/assets/icons/I_Siege.png',
   navy: '/assets/icons/I_NaviesQuickButton.png',
+  Garrison: '/assets/icons/Doctrines/I_Doctrine_Garrison.png',
 };
 
 function mapBishopCharacter(data: GetSettlementDataResponse, bishopric: SettlementBishopricResponse): Character {
@@ -113,8 +114,8 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       name: u.name,
       description: u.description,
       type: u.unitType,
-      typeIcon: UNIT_TYPE_ICONS[u.unitType as ArmyUnitType],
-      portrait: '',
+      typeIcon: FoaeCefUIAssetPath(UNIT_TYPE_ICONS[u.unitType as ArmyUnitType | 'Garrison']) ?? '',
+      portrait: FoaeCefUIAssetPath(u.portrait) ?? '',
       tier: u.tier,
       sourceBuilding: '',
       strength: u.strength,
