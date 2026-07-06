@@ -23,7 +23,8 @@ import { StatCellGrid, StatCell } from '../components/sidebars/shared/StatCellGr
 import { FoaeCefUIAssetPath } from '../utils/assets';
 import { resolveFactionBorderVariant } from '../utils/factionBorder';
 import { formatNumber, formatSignedNumber } from '../utils/numberFormat';
-import { useWebUIText, type WebUITextFormatter } from '../localization/WebUITextContext';
+import { useWebUILocale, useWebUIText, type WebUITextFormatter } from '../localization/WebUITextContext';
+import { loadScenarioMapText, type ScenarioMapText } from '../localization/scenarioMapText';
 import { MAP_MODE_ICONS } from '../components/bottombar/mapModeIcons';
 import { MAP_MODE_TOOLTIPS } from '../components/bottombar/mapModeTooltipContent';
 import {
@@ -454,6 +455,95 @@ function applyFactionGeometry(
       const geometry = geometriesByBase.get(faction.baseName);
       return geometry ? { ...faction, geometry } : faction;
     }),
+  };
+}
+
+function translatedTextOrFallback(t: WebUITextFormatter, key: string, fallback: string): string {
+  if (!fallback) return fallback;
+  const translated = t(key);
+  return translated === key ? fallback : translated;
+}
+
+function translatedName(t: WebUITextFormatter, source: string, scenarioText?: ScenarioMapText): string {
+  if (!source) return source;
+  const scenarioName = scenarioText?.names?.[source];
+  if (scenarioName) return scenarioName;
+  return translatedTextOrFallback(t, `NameLocalisation.${source}`, source);
+}
+
+function translatedScenarioText(
+  t: WebUITextFormatter,
+  mapId: string,
+  field: string,
+  fallback: string,
+  scenarioText?: ScenarioMapText,
+): string {
+  const scenarioTranslated = scenarioText?.[field as keyof ScenarioMapText];
+  if (typeof scenarioTranslated === 'string' && scenarioTranslated) return scenarioTranslated;
+  return translatedTextOrFallback(t, `ScenarioMap.${mapId}.${field}`, fallback);
+}
+
+function translateFactionSelectionData(
+  data: GetNewGameMapFactionSelectionResponse,
+  t: WebUITextFormatter,
+  scenarioText?: ScenarioMapText,
+): GetNewGameMapFactionSelectionResponse {
+  return {
+    ...data,
+    displayName: translatedScenarioText(t, data.mapId, 'displayName', data.displayName, scenarioText),
+    factionSelectionDescription: translatedScenarioText(
+      t,
+      data.mapId,
+      'factionSelectionDescription',
+      data.factionSelectionDescription,
+      scenarioText,
+    ),
+    defaultPlayerFactionBaseName: data.defaultPlayerFactionBaseName,
+    factions: data.factions.map((faction) => ({
+      ...faction,
+      displayName: translatedName(t, faction.displayName, scenarioText),
+      realm: translatedName(t, faction.realm, scenarioText),
+      cultureDisplayName: translatedName(t, faction.cultureDisplayName, scenarioText),
+      cultureGroup: translatedName(t, faction.cultureGroup, scenarioText),
+      cultureInfo: {
+        ...faction.cultureInfo,
+        name: translatedName(t, faction.cultureInfo.name, scenarioText),
+        description: translatedName(t, faction.cultureInfo.description, scenarioText),
+        groupDisplayName: translatedName(t, faction.cultureInfo.groupDisplayName, scenarioText),
+      },
+      religionDisplayName: translatedName(t, faction.religionDisplayName, scenarioText),
+      religionInfo: {
+        ...faction.religionInfo,
+        name: translatedName(t, faction.religionInfo.name, scenarioText),
+        description: translatedName(t, faction.religionInfo.description, scenarioText),
+      },
+      capitalSettlementName: translatedName(t, faction.capitalSettlementName, scenarioText),
+      governmentDisplayName: translatedName(t, faction.governmentDisplayName, scenarioText),
+      governmentDescription: translatedName(t, faction.governmentDescription, scenarioText),
+      treaties: faction.treaties.map((treaty) => ({
+        ...treaty,
+        withFactionDisplayName: translatedName(t, treaty.withFactionDisplayName, scenarioText),
+        displayName: translatedName(t, treaty.displayName, scenarioText),
+        description: translatedName(t, treaty.description, scenarioText),
+      })),
+      leader: {
+        ...faction.leader,
+        displayName: translatedName(t, faction.leader.displayName, scenarioText),
+        dynasty: translatedName(t, faction.leader.dynasty, scenarioText),
+      },
+    })),
+    wars: data.wars.map((war) => ({
+      ...war,
+      name: translatedName(t, war.name, scenarioText),
+      attacker: {
+        ...war.attacker,
+        leaderFactionDisplayName: translatedName(t, war.attacker.leaderFactionDisplayName, scenarioText),
+      },
+      defender: {
+        ...war.defender,
+        leaderFactionDisplayName: translatedName(t, war.defender.leaderFactionDisplayName, scenarioText),
+      },
+    })),
   };
 }
 
@@ -1460,8 +1550,10 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
   onConfirm,
 }) => {
   const t = useWebUIText();
+  const locale = useWebUILocale();
   const initialSelectionData = initialData?.mapId === mapId ? initialData : null;
   const [data, setData] = useState<GetNewGameMapFactionSelectionResponse | null>(initialSelectionData);
+  const [scenarioText, setScenarioText] = useState<ScenarioMapText>({});
   const [selectedBaseName, setSelectedBaseName] = useState(
     initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '',
   );
@@ -1485,6 +1577,20 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
   useEffect(() => {
     geometryRequestMapIdRef.current = '';
   }, [mapId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadScenarioMapText(mapId, locale)
+      .then((text) => {
+        if (!cancelled) {
+          setScenarioText(text);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locale, mapId]);
 
   useEffect(() => {
     if (!initialSelectionData || data?.mapId === initialSelectionData.mapId) {
@@ -1561,8 +1667,15 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     };
   }, [data]);
 
-  const factions = data?.factions ?? [];
-  const factionsByBase = new Map(factions.map((faction) => [faction.baseName, faction]));
+  const displayData = useMemo(
+    () => data ? translateFactionSelectionData(data, t, scenarioText) : null,
+    [data, scenarioText, t],
+  );
+  const factions = useMemo(() => displayData?.factions ?? [], [displayData?.factions]);
+  const factionsByBase = useMemo(
+    () => new Map(factions.map((faction) => [faction.baseName, faction])),
+    [factions],
+  );
   const selected = factionsByBase.get(selectedBaseName) ?? factions[0] ?? null;
   const selectedLeader = getLeader(selected);
   const selectedSubjects = selected
@@ -1572,9 +1685,9 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     : [];
   const selectedProvinceSubjects = selectedSubjects.filter((subject) => subject.subjectSubtype === 'province');
   const selectedFoederatiSubjects = selectedSubjects.filter((subject) => subject.subjectSubtype === 'foederati');
-  const warsInvolvingSelected = selected ? getWarsForFaction(data?.wars ?? [], selected.baseName) : [];
-  const scenarioTitle = scenario?.displayName || data?.displayName || '';
-  const scenarioDescription = data?.factionSelectionDescription ?? '';
+  const warsInvolvingSelected = selected ? getWarsForFaction(displayData?.wars ?? [], selected.baseName) : [];
+  const scenarioTitle = displayData?.displayName || scenario?.displayName || '';
+  const scenarioDescription = displayData?.factionSelectionDescription ?? '';
   const scenarioDescriptionParts = scenarioDescription
     .split(/\n\s*\n/)
     .map((part) => part.trim())
@@ -1600,6 +1713,14 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     mapHoverRef.current?.clearHovered();
   }, []);
 
+  const selectFactionBaseName = useCallback((baseName: string) => {
+    const faction = factionsByBase.get(baseName);
+    if (faction && !belongsToPlayableRealm(faction, factionsByBase)) {
+      setShowForeign(true);
+    }
+    setSelectedBaseName(baseName);
+  }, [factionsByBase]);
+
   const renderSubjectRoundels = (subjects: ScenarioMapFactionDto[]) => (
     <div className="fs-subject-roundel-list">
       {subjects.map((subject) => (
@@ -1617,7 +1738,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
             type="button"
             className={`fs-subject-roundel-btn${!subject.playable ? ' fs-subject-roundel-btn--locked' : ''}`}
             aria-label={subject.displayName}
-            onClick={() => setSelectedBaseName(subject.baseName)}
+            onClick={() => selectFactionBaseName(subject.baseName)}
             onMouseEnter={() => handleFactionHover(subject.baseName)}
             onMouseLeave={handleFactionHoverEnd}
           >
@@ -1629,6 +1750,53 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
       ))}
     </div>
   );
+
+  const renderWarSide = (
+    side: ScenarioMapWarDto['attacker'],
+    leader: ScenarioMapFactionDto | undefined,
+    allyCount: number,
+    tone: 'ours' | 'theirs',
+  ) => {
+    const content = (
+      <>
+        {leader && (
+          <span className={roundelClassName(leader, 'sm')} style={roundelStyle(leader)}>
+            {renderRoundelSymbol(leader.emblemAssetPath)}
+          </span>
+        )}
+        <div className="fs-war-side-meta">
+          <div className="fs-war-side-label">{t(tone === 'ours' ? 'MainMenu.OurSide' : 'MainMenu.Enemy')}</div>
+          <div className="fs-war-side-leader">{side.leaderFactionDisplayName}</div>
+          {allyCount > 0 && (
+            <div className="fs-war-side-count">
+              {`+${formatNumber(allyCount)} ${t(allyCount === 1 ? 'Common.Ally' : 'Common.Allies')}`}
+            </div>
+          )}
+        </div>
+      </>
+    );
+
+    if (!leader) {
+      return (
+        <div className={`fs-war-side fs-war-side--${tone}`}>
+          {content}
+        </div>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        className={`fs-war-side fs-war-side--${tone} fs-war-side--clickable`}
+        aria-label={leader.displayName}
+        onClick={() => selectFactionBaseName(leader.baseName)}
+        onMouseEnter={() => handleFactionHover(leader.baseName)}
+        onMouseLeave={handleFactionHoverEnd}
+      >
+        {content}
+      </button>
+    );
+  };
 
   if (loadError) {
     return (
@@ -1642,7 +1810,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     );
   }
 
-  if (!data) {
+  if (!data || !displayData) {
     return (
       <FactionSelectionLoadingFrame
         title={scenarioTitle}
@@ -1656,7 +1824,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     return (
       <StateView
         title={t('MainMenu.ChooseYourFaction')}
-        subtitle={data.displayName}
+        subtitle={displayData.displayName}
         message={t('MainMenu.MapNoFactions')}
         closing={closing}
         onClose={onClose}
@@ -1682,10 +1850,10 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
         <FactionSelectionBrowseColumn
           ref={mapHoverRef}
           mapId={mapId}
-          data={data}
+          data={displayData}
           selected={selected}
           selectedBaseName={selectedBaseName}
-          onSelectBaseName={setSelectedBaseName}
+          onSelectBaseName={selectFactionBaseName}
           search={search}
           onSearchChange={setSearch}
           showForeign={showForeign}
@@ -1835,39 +2003,9 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
                       <div key={war.id} className="fs-war">
                         <div className="fs-war-name">{war.name}</div>
                         <div className="fs-war-sides">
-                          <div className="fs-war-side fs-war-side--ours">
-                            {ourLeader && (
-                              <span className={roundelClassName(ourLeader, 'sm')} style={roundelStyle(ourLeader)}>
-                                {renderRoundelSymbol(ourLeader.emblemAssetPath)}
-                              </span>
-                            )}
-                            <div className="fs-war-side-meta">
-                              <div className="fs-war-side-label">{t('MainMenu.OurSide')}</div>
-                              <div className="fs-war-side-leader">{ourSide.leaderFactionDisplayName}</div>
-                              {ourAllyCount > 0 && (
-                                <div className="fs-war-side-count">
-                                  {`+${formatNumber(ourAllyCount)} ${t(ourAllyCount === 1 ? 'Common.Ally' : 'Common.Allies')}`}
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                          {renderWarSide(ourSide, ourLeader, ourAllyCount, 'ours')}
                           <div className="fs-war-vs"><WebUIText textKey="Auto.PagesFactionSelection.928.2" /></div>
-                          <div className="fs-war-side fs-war-side--theirs">
-                            {enemyLeader && (
-                              <span className={roundelClassName(enemyLeader, 'sm')} style={roundelStyle(enemyLeader)}>
-                                {renderRoundelSymbol(enemyLeader.emblemAssetPath)}
-                              </span>
-                            )}
-                            <div className="fs-war-side-meta">
-                              <div className="fs-war-side-label">{t('MainMenu.Enemy')}</div>
-                              <div className="fs-war-side-leader">{enemySide.leaderFactionDisplayName}</div>
-                              {enemyAllyCount > 0 && (
-                                <div className="fs-war-side-count">
-                                  {`+${formatNumber(enemyAllyCount)} ${t(enemyAllyCount === 1 ? 'Common.Ally' : 'Common.Allies')}`}
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                          {renderWarSide(enemySide, enemyLeader, enemyAllyCount, 'theirs')}
                         </div>
                         {totalSideStrength > 0 && (
                           <div className="fs-war-strength">

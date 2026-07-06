@@ -18,7 +18,8 @@ import { useModsBridge } from '../bridge/app/useModsBridge';
 import type { ModEntry, SteamWorkshopItem } from '../bridge/app/useModsBridge';
 import { useEscapeStackEntry } from '../context/EscapeStack';
 
-import { webUIText, WebUIText } from '../localization/WebUITextContext';
+import { useWebUILocale, webUIText, WebUIText } from '../localization/WebUITextContext';
+import { loadScenarioMapTexts, type ScenarioMapText } from '../localization/scenarioMapText';
 type MenuView = 'menu' | 'settings' | 'mods' | 'encyclopedia' | 'credits' | 'newgame';
 type ModsPanelView = 'installed' | 'workshop' | 'subscribed';
 
@@ -70,7 +71,30 @@ function compareScenarioMaps(left: NewGameMapEntry, right: NewGameMapEntry): num
   return left.id.localeCompare(right.id);
 }
 
+function translatedScenarioMapText(
+  map: NewGameMapEntry,
+  field: 'displayName' | 'menuKicker' | 'menuDescription',
+  scenarioText?: ScenarioMapText,
+): string {
+  const scenarioTranslated = scenarioText?.[field];
+  if (scenarioTranslated) return scenarioTranslated;
+
+  const key = `ScenarioMap.${map.id}.${field}`;
+  const translated = webUIText(key);
+  return translated === key ? map[field] : translated;
+}
+
+function translatedScenarioMap(map: NewGameMapEntry, scenarioText?: ScenarioMapText): NewGameMapEntry {
+  return {
+    ...map,
+    displayName: translatedScenarioMapText(map, 'displayName', scenarioText),
+    menuKicker: translatedScenarioMapText(map, 'menuKicker', scenarioText),
+    menuDescription: translatedScenarioMapText(map, 'menuDescription', scenarioText),
+  };
+}
+
 const MainMenu: React.FC = () => {
+  const locale = useWebUILocale();
   const [view, setView] = useState<MenuView>('menu');
 
   const [skipMenuIntro, setSkipMenuIntro] = useState(false);
@@ -79,6 +103,7 @@ const MainMenu: React.FC = () => {
   const [version, setVersion] = useState<string | null>(null);
   const [showLoad, setShowLoad] = useState(false);
   const [newGameMaps, setNewGameMaps] = useState<NewGameMapEntry[]>([]);
+  const [scenarioTextByMapId, setScenarioTextByMapId] = useState<Record<string, ScenarioMapText>>({});
   const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [modsPanelView, setModsPanelView] = useState<ModsPanelView>('installed');
@@ -120,36 +145,52 @@ const MainMenu: React.FC = () => {
 
   const modsNeedRestart = modChangesRequireRestart || workshopChangesRequireRestart;
   const activeModsPanelView: ModsPanelView = steamWorkshopAvailable ? modsPanelView : 'installed';
+  const translatedNewGameMaps = newGameMaps.map((map) => translatedScenarioMap(map, scenarioTextByMapId[map.id]));
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadScenarioMapTexts(newGameMaps.map((map) => map.id), locale)
+      .then((texts) => {
+        if (!cancelled) {
+          setScenarioTextByMapId(texts);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locale, newGameMaps]);
 
   const preloadFactionSelection = useCallback((mapId: string) => {
-    const cached = factionSelectionCacheRef.current.get(mapId);
+    const cacheKey = `${locale}:${mapId}`;
+    const cached = factionSelectionCacheRef.current.get(cacheKey);
     if (cached) {
       return Promise.resolve(cached);
     }
 
-    const existingRequest = factionSelectionRequestRef.current.get(mapId);
+    const existingRequest = factionSelectionRequestRef.current.get(cacheKey);
     if (existingRequest) {
       return existingRequest;
     }
 
     const request = bridgeCall('game.get_new_game_map_faction_selection', { mapId })
       .then((response) => {
-        factionSelectionCacheRef.current.set(mapId, response);
+        factionSelectionCacheRef.current.set(cacheKey, response);
         setFactionSelectionCache((current) => ({
           ...current,
-          [mapId]: response,
+          [cacheKey]: response,
         }));
-        factionSelectionRequestRef.current.delete(mapId);
+        factionSelectionRequestRef.current.delete(cacheKey);
         return response;
       })
       .catch((error) => {
-        factionSelectionRequestRef.current.delete(mapId);
+        factionSelectionRequestRef.current.delete(cacheKey);
         throw error;
       });
 
-    factionSelectionRequestRef.current.set(mapId, request);
+    factionSelectionRequestRef.current.set(cacheKey, request);
     return request;
-  }, []);
+  }, [locale]);
 
   // Track latest save metadata so the Continue card can show character/faction/date.
   // Subscribes to list_saves pushes so deletions keep it in sync.
@@ -225,7 +266,7 @@ const MainMenu: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [modsNeedRestart, preloadFactionSelection]);
+  }, [locale, modsNeedRestart, preloadFactionSelection]);
 
   const handleContinue = async () => {
     try {
@@ -741,6 +782,11 @@ const MainMenu: React.FC = () => {
     </div>
   );
 
+  const activeSelectedNewGameMap = selectedNewGameMap
+    ? translatedNewGameMaps.find((map) => map.id === selectedNewGameMap.id) ??
+      translatedScenarioMap(selectedNewGameMap, scenarioTextByMapId[selectedNewGameMap.id])
+    : null;
+
   const loadGameButton: MainMenuIllustratedButtonData = {
     id: 'load-game',
     variant: 'load-game',
@@ -751,7 +797,7 @@ const MainMenu: React.FC = () => {
       setShowLoad(true);
     },
   };
-  const scenarioButtons: MainMenuIllustratedButtonData[] = newGameMaps
+  const scenarioButtons: MainMenuIllustratedButtonData[] = translatedNewGameMaps
     .slice()
     .sort(compareScenarioMaps)
     .map(map => ({
@@ -960,17 +1006,17 @@ const MainMenu: React.FC = () => {
       </div>
       {view === 'encyclopedia' && renderEncyclopedia()}
       <LoadGameModal visible={showLoad} onClosed={() => setShowLoad(false)} />
-      {view === 'newgame' && selectedNewGameMap && (
+      {view === 'newgame' && activeSelectedNewGameMap && (
         <FactionSelection
-          mapId={selectedNewGameMap.id}
-          initialData={factionSelectionCache[selectedNewGameMap.id] ?? null}
+          mapId={activeSelectedNewGameMap.id}
+          initialData={factionSelectionCache[`${locale}:${activeSelectedNewGameMap.id}`] ?? null}
           loadFactionSelection={preloadFactionSelection}
           closing={closing}
           scenario={{
-            displayName: selectedNewGameMap.displayName,
+            displayName: activeSelectedNewGameMap.displayName,
           }}
           onClose={goBack}
-          onConfirm={(faction) => { void handleStartScenarioMap(selectedNewGameMap.id, faction.baseName); }}
+          onConfirm={(faction) => { void handleStartScenarioMap(activeSelectedNewGameMap.id, faction.baseName); }}
         />
       )}
     </>

@@ -514,7 +514,7 @@
     width: clamp(27rem, 40%, 42rem);
     max-width: calc(100% - 2rem);
     height: 100%;
-    padding: 0.9rem 1.25rem 1rem;
+    padding: 1.25rem 1.25rem 1rem;
     border-right-width: 0.0909rem;
     border-left-width: 0.0909rem;
     border-right-style: solid;
@@ -1694,6 +1694,37 @@
   .fs-war-side {
     flex: 1;
     min-width: 0;
+  }
+
+  .fs-war-side--clickable {
+    appearance: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0.15rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: var(--cursor-pointer);
+    transition: background-color 0.15s, color 0.15s;
+  }
+
+  .fs-war-side--theirs.fs-war-side--clickable {
+    text-align: right;
+  }
+
+  .fs-war-side--clickable:hover {
+    background-color: rgba(201, 168, 76, 0.08);
+    color: var(--text-bright);
+  }
+
+  .fs-war-side--clickable:hover .fs-war-side-leader {
+    color: var(--gold-light);
+  }
+
+  .fs-war-side--clickable:focus-visible {
+    outline: 0.077rem solid rgba(201, 168, 76, 0.75);
+    outline-offset: 0.08rem;
   }
 
   .fs-war .fs-roundel--sm {
