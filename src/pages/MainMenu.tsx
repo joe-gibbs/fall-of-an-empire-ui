@@ -721,8 +721,16 @@ const MainMenu: React.FC = () => {
   );
 
   const renderCredits = () => (
-    <div className={`${subViewClass} mm-sub-view--full`}>
-      {renderBackHeader(webUIText('MainMenu.SubviewCredits'))}
+    <div className={`mm-credits-view${closing ? ' mm-credits-view--closing' : ''}`}>
+      <button
+        className="mm-credits-back-btn"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          goBack();
+        }}
+      >
+        <span className="mm-back-arrow" aria-hidden="true" /><span><WebUIText textKey="Auto.PagesMainMenu.362.7" /></span>
+      </button>
       <CreditsRoll />
     </div>
   );
@@ -928,6 +936,7 @@ const MainMenu: React.FC = () => {
   const rootClassName = [
     'mm-root',
     view !== 'menu' ? 'mm-root--subview' : '',
+    view === 'credits' ? 'mm-root--credits' : '',
     view === 'menu' && skipMenuIntro ? 'mm-root--menu-return' : '',
     latestSave ? 'mm-root--has-continue' : 'mm-root--no-continue',
     'mm-root--mockup mm-root--mockup-2',

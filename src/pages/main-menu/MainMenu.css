@@ -71,6 +71,24 @@
   justify-content: center;
 }
 
+.mm-root--credits,
+.mm-root--credits.mm-root--mockup,
+.mm-root--credits.mm-root--no-bg.mm-root--mockup {
+  background-color: #000;
+  background-image: none;
+}
+
+.mm-root--credits::after,
+.mm-root--credits.mm-root--mockup::after,
+.mm-root--credits.mm-root--subview.mm-root--mockup::after {
+  background-color: transparent;
+  background-image: none;
+}
+
+.mm-root--credits .mm-menu-layer--background {
+  opacity: 0;
+}
+
 /* Left column */
 .mm-left {
   position: relative;
@@ -903,11 +921,13 @@
   transform: rotate(-45deg);
 }
 
-.mm-back-btn:hover .mm-back-arrow::before {
+.mm-back-btn:hover .mm-back-arrow::before,
+.mm-credits-back-btn:hover .mm-back-arrow::before {
   background-color: var(--gold);
 }
 
-.mm-back-btn:hover .mm-back-arrow::after {
+.mm-back-btn:hover .mm-back-arrow::after,
+.mm-credits-back-btn:hover .mm-back-arrow::after {
   border-top-color: var(--gold);
   border-left-color: var(--gold);
 }
@@ -1250,15 +1270,51 @@
 }
 
 /* Credits */
+.mm-credits-view {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  animation-name: mm-fade-in;
+  animation-duration: 0.22s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+}
+
+.mm-credits-view--closing {
+  animation: mm-fade-in 0.18s ease-in reverse both;
+  pointer-events: none;
+}
+
+.mm-credits-back-btn {
+  position: absolute;
+  top: 2.1818rem;
+  left: 2.1818rem;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: rgba(240, 236, 224, 0.72);
+  font-family: var(--font-body);
+  font-size: 1.1818rem;
+  cursor: var(--cursor-pointer);
+}
+
+.mm-credits-back-btn:hover {
+  color: var(--text-header);
+}
+
 .mm-credits-stage {
   flex: 1;
   position: relative;
   overflow: hidden;
   width: 100%;
-  animation-name: mm-fade-in;
-  animation-duration: 0.22s;
-  animation-timing-function: var(--ease-snap);
-  animation-fill-mode: both;
+  background-color: #000;
 }
 
 .mm-credits-stage::before,
@@ -1274,12 +1330,12 @@
 
 .mm-credits-stage::before {
   top: 0;
-  background: linear-gradient(180deg, rgba(36, 42, 48, 0.98), rgba(36, 42, 48, 0));
+  background: linear-gradient(180deg, #000, rgba(0, 0, 0, 0));
 }
 
 .mm-credits-stage::after {
   bottom: 0;
-  background: linear-gradient(0deg, rgba(36, 42, 48, 0.98), rgba(36, 42, 48, 0));
+  background: linear-gradient(0deg, #000, rgba(0, 0, 0, 0));
 }
 
 .mm-credits-scroll {
