@@ -1,7 +1,8 @@
-import { isGameLocalResourceUrl } from './localResourceUrl';
+import { isGameLocalResourceUrl, joinGameLocalResourceUrl } from './localResourceUrl';
 
 const OPTIMISED_ASSET_EXT = /\.(png|jpe?g)([?#].*)?$/i;
 const SIZABLE_ASSET_EXT = /\.(png|jpe?g|webp)([?#].*)?$/i;
+const CONTENT_PACK_ASSET_EXT = /\.(png|jpe?g|webp|svg)$/i;
 const SIZED_ASSET_FAMILIES = new Set(['icons']);
 export const SIZED_ASSET_BUCKETS = [16, 24, 32, 48, 64, 96, 128, 192, 256] as const;
 const BASE_GAME_ASSET_URL_PREFIX = 'coui://foae/assets/';
@@ -18,6 +19,38 @@ export function registerAssetOverride(sourcePath: string, targetPath: string): v
   if (!sourcePath || !targetPath) return;
   if (!isGameLocalResourceUrl(targetPath)) return;
   assetOverrides.set(sourcePath, targetPath);
+}
+
+function normaliseContentPackAssetPath(path: string): string | undefined {
+  const normalised = path.trim().replace(/\\/g, '/').replace(/^\/+/, '');
+  const assetPath = normalised.startsWith('assets/') ? normalised.slice('assets/'.length) : normalised;
+  if (!assetPath || assetPath.includes('..') || !CONTENT_PACK_ASSET_EXT.test(assetPath)) return undefined;
+  return assetPath;
+}
+
+function registerContentPackAssetAlias(assetPath: string, targetPath: string): void {
+  registerAssetOverride(`/assets/${assetPath}`, targetPath);
+}
+
+export function registerContentPackAssetPaths(baseUrl: string, assetPaths: readonly string[]): void {
+  if (!baseUrl || assetPaths.length === 0) return;
+
+  for (const path of assetPaths) {
+    const assetPath = normaliseContentPackAssetPath(path);
+    if (!assetPath) continue;
+
+    const targetPath = joinGameLocalResourceUrl(baseUrl, `WebUI/dist/assets/${assetPath}`);
+    if (!targetPath) continue;
+
+    registerContentPackAssetAlias(assetPath, targetPath);
+
+    if (assetPath.toLowerCase().endsWith('.webp')) {
+      const withoutExt = assetPath.slice(0, -'.webp'.length);
+      registerContentPackAssetAlias(`${withoutExt}.png`, targetPath);
+      registerContentPackAssetAlias(`${withoutExt}.jpg`, targetPath);
+      registerContentPackAssetAlias(`${withoutExt}.jpeg`, targetPath);
+    }
+  }
 }
 
 function baseAssetPathFromUrl(path: string): string | undefined {

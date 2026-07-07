@@ -1,6 +1,6 @@
 import { bridgeCall } from '../bridge-types.generated.ts';
 import { registerModPoCatalogues } from '../localization/modPoText';
-import { registerAssetOverride } from '../utils/assets';
+import { registerAssetOverride, registerContentPackAssetPaths } from '../utils/assets';
 import { joinGameLocalResourceUrl } from '../utils/localResourceUrl';
 
 /**
@@ -65,6 +65,7 @@ interface ContentPackWebUIPack {
   localization?: string;
   localisation?: string;
   assetOverrides?: Record<string, string>;
+  assetPaths?: string[];
   entries?: ContentPackWebUIEntry[];
 }
 
@@ -124,6 +125,7 @@ function contentPackManifestHasWebUISurface(value: ContentPackWebUIManifest): bo
     (pack.styles?.length ?? 0) > 0
     || !!pack.localization
     || !!pack.localisation
+    || (pack.assetPaths?.length ?? 0) > 0
     || Object.keys(pack.assetOverrides ?? {}).length > 0
     || (pack.entries?.length ?? 0) > 0
   ));
@@ -180,6 +182,8 @@ async function fetchContentPackManifest(): Promise<ModManifestEntry[]> {
         urlPattern: joinGameLocalResourceUrl(baseUrl, localizationPath),
       }]);
     }
+
+    registerContentPackAssetPaths(baseUrl, pack.assetPaths ?? []);
 
     for (const [sourcePath, targetPath] of Object.entries(pack.assetOverrides ?? {})) {
       registerAssetOverride(sourcePath, joinGameLocalResourceUrl(baseUrl, targetPath));
