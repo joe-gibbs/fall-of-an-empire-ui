@@ -21,8 +21,7 @@ const severityFrames: Record<WarningSeverity, string> = {
   critical: '/assets/icons/I_Warning.png',
 };
 
-// Mirrors the Content/Data/WarningIcons/WarningIcons.csv lookup table on the
-// game side. Add entries here when a new warning key is introduced.
+// Maps game warning icon keys to packaged WebUI assets.
 const iconKeyToAsset: Record<string, string> = {
   FoodShortage: '/assets/icons/I_Food.png',
   TreasuryDeficit: '/assets/icons/I_Coins.png',
