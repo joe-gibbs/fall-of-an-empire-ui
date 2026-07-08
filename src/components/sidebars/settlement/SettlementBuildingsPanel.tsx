@@ -974,6 +974,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const [queueingBuildingIds, setQueueingBuildingIds] = React.useState<string[]>([]);
   const queueAnchorRef = React.useRef<QueueAnchor | null>(null);
   const queueingAnimationTimerRef = React.useRef<number | null>(null);
+  const pendingQueueBuildingIdsRef = React.useRef<Set<string>>(new Set());
   const pendingTutorialBuildingTargetRef = React.useRef<string | null>(null);
   const pendingUnqueueSet = React.useMemo(
     () => new Set(pendingUnqueueIndices),
@@ -1001,6 +1002,11 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     };
   }, []);
   const handleQueueBuilding = React.useCallback((buildingId: string, element?: HTMLElement | null) => {
+    if (pendingQueueBuildingIdsRef.current.has(buildingId)) {
+      return;
+    }
+
+    pendingQueueBuildingIdsRef.current.add(buildingId);
     rememberQueueAnchor(buildingId, element);
     setQueueingBuildingIds(prev => (prev.includes(buildingId) ? prev : [...prev, buildingId]));
     if (queueingAnimationTimerRef.current !== null) {
@@ -1016,6 +1022,9 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
         queueAnchorRef.current = null;
         setQueueingBuildingIds(prev => prev.filter(id => id !== buildingId));
         acknowledgeBridgeFailure(error);
+      })
+      .finally(() => {
+        pendingQueueBuildingIdsRef.current.delete(buildingId);
       });
   }, [rememberQueueAnchor, settlement.id]);
   const handlePlaceBuilding = React.useCallback((buildingId: string) => {

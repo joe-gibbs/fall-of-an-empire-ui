@@ -1224,6 +1224,10 @@ export interface GetBlocInteractionsResponse {
   lastInteractionOutcomeText: string;
 }
 
+export interface GetBuildQueueRequest {
+  subscribe: boolean;
+}
+
 export interface BuildQueueCost {
   name: string;
   label: string;
@@ -5734,7 +5738,7 @@ export interface BridgeActions {
   'game.get_battle_frame': { request: GetBattleFrameRequest; response: GetBattleFrameResponse };
   'game.get_bishop_candidates': { request: GetBishopCandidatesRequest; response: GetBishopCandidatesResponse };
   'game.get_bloc_interactions': { request: GetBlocInteractionsRequest; response: GetBlocInteractionsResponse };
-  'game.get_build_queue': { request: void; response: GetBuildQueueResponse };
+  'game.get_build_queue': { request: GetBuildQueueRequest; response: GetBuildQueueResponse };
   'game.get_bureaucratic_throughput': { request: void; response: GetBureaucraticThroughputResponse };
   'game.get_character_list': { request: GetCharacterListRequest; response: GetCharacterListResponse };
   'game.get_content_pack_webui_manifest': { request: void; response: GetContentPackWebUIManifestResponse };

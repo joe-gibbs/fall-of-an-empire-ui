@@ -1,10 +1,11 @@
-import { bridgeCall } from '../../bridge-types.generated.ts';
+import { useEffect, useState } from 'react';
+import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type {
   BuildQueueCost,
   BuildQueueItemGroup,
   GetBuildQueueResponse,
 } from '../../bridge-types.generated.ts';
-import { useBridgeQuery } from '../core/useBridgeQuery';
+import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import { FoaeCefUIAssetPath } from '../../utils/assets';
 
 export interface BuildQueueCostView extends BuildQueueCost {
@@ -84,15 +85,31 @@ function mapResponse(data: GetBuildQueueResponse): BuildQueueState {
 }
 
 export function useBuildQueueBridge(): BuildQueueState | null {
-  const live = useBridgeQuery({
-    action: 'game.get_build_queue',
-    map: (data) => {
-      buildQueueCache = mapResponse(data);
-      return buildQueueCache;
-    },
-  });
+  const [live, setLive] = useState<BuildQueueState | null>(() => buildQueueCache);
 
-  return live ?? buildQueueCache;
+  useEffect(() => {
+    let cancelled = false;
+
+    const applyResponse = (data: GetBuildQueueResponse) => {
+      if (cancelled) return;
+      buildQueueCache = mapResponse(data);
+      setLive(buildQueueCache);
+    };
+
+    const unsubscribe = onBridgeEvent('game.get_build_queue', applyResponse);
+
+    bridgeCall('game.get_build_queue', { subscribe: true })
+      .then(applyResponse)
+      .catch(acknowledgeBridgeFailure);
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+      bridgeCall('game.get_build_queue', { subscribe: false }).catch(() => undefined);
+    };
+  }, []);
+
+  return live;
 }
 
 export function unqueueBuildQueueItem(settlementId: string, queueIndex: number): Promise<void> {
