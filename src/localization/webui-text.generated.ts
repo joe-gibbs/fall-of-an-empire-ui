@@ -177,6 +177,7 @@ export const WEBUI_TEXT_SOURCE = {
   "BottomBar.BuildingPlacement.Treasury": "{Amount} gold left",
   "SettlementBuildings.ResourceRequiredAmount": "{Amount} required",
   "SettlementBuildings.ResourceMissingAmount": "{Amount} missing",
+  "SettlementBuildings.RightClickCancelConstruction": "Right-click to cancel this construction.",
   "BottomBar.FormationSelection.Title": "Raise Formation",
   "BottomBar.FormationSelection.GoldCost": "{Amount} gold",
   "MapModeFilter.ActiveCount": "{Active}/{Total}",

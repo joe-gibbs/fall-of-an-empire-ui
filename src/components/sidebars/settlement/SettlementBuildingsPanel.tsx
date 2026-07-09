@@ -170,6 +170,10 @@ function displayQueueItem(summary?: BuildingQueueSummary): ConstructionQueueItem
   return summary.activeItem ?? summary.leadItem;
 }
 
+function cancellationQueueIndex(summary?: BuildingQueueSummary): number | undefined {
+  return displayQueueItem(summary)?.queueIndex;
+}
+
 function queueBuildProgressPercent(item: ConstructionQueueItem): number | undefined {
   if (item.remainingDays === undefined || item.durationDays <= 0) return undefined;
   return Math.max(0, Math.min(100, (1 - item.remainingDays / item.durationDays) * 100));
@@ -224,7 +228,7 @@ function buildChainTrees(nodes: TreeNode[]): ChainTree[] {
 // Tooltip builders
 // ---------------------------------------------------------------------------
 
-function queueTooltipLines(summary?: BuildingQueueSummary): TooltipLine[] {
+function queueTooltipLines(summary?: BuildingQueueSummary, canCancel = false): TooltipLine[] {
   const item = displayQueueItem(summary);
   if (!item) return [];
 
@@ -242,6 +246,10 @@ function queueTooltipLines(summary?: BuildingQueueSummary): TooltipLine[] {
 
   if (item.statusReason) {
     lines.push({ label: item.statusReason });
+  }
+
+  if (canCancel) {
+    lines.push({ label: webUIText('SettlementBuildings.RightClickCancelConstruction'), valueColor: 'var(--gold-light)' });
   }
 
   for (const missing of item.missingResources ?? []) {
@@ -301,7 +309,12 @@ function addBuildingRequirementLines(lines: TooltipLine[], requiredBuildings?: B
   }
 }
 
-function builtTooltip(b: Building, queueSummary?: BuildingQueueSummary, lockReason?: string): TooltipContent {
+function builtTooltip(
+  b: Building,
+  queueSummary?: BuildingQueueSummary,
+  lockReason?: string,
+  canCancel = false,
+): TooltipContent {
   const lines: TooltipLine[] = [];
   if (b.maxLevel !== undefined) {
     const maxLevel = b.maxLevel;
@@ -328,7 +341,7 @@ function builtTooltip(b: Building, queueSummary?: BuildingQueueSummary, lockReas
     const label = condition >= 80 ? webUIText("Auto.Fix.VarExprTrue.componentssidebarsSettlementBuildingsPanel.253.1") : condition >= 50 ? webUIText("Auto.Fix.VarExprFalseTrue.componentssidebarsSettlementBuildingsPanel.254.1") : condition >= 20 ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsSettlementBuildingsPanel.255.1") : webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsSettlementBuildingsPanel.256.1");
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.261.4'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.257.1", { Value1: n(condition), Value2: label }); }, valueColor: color });
   }
-  lines.push(...queueTooltipLines(queueSummary));
+  lines.push(...queueTooltipLines(queueSummary, canCancel));
   if (b.nextBuildState) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.265.5'), isHeader: true });
     if (b.nextLevelPrice !== undefined) {
@@ -347,7 +360,12 @@ function builtTooltip(b: Building, queueSummary?: BuildingQueueSummary, lockReas
   return { title: b.name, body: buildingTooltipBody(b.description, b.effectsHtml), lines };
 }
 
-function availTooltip(a: AvailableBuilding, queueSummary?: BuildingQueueSummary, lockReason?: string): TooltipContent {
+function availTooltip(
+  a: AvailableBuilding,
+  queueSummary?: BuildingQueueSummary,
+  lockReason?: string,
+  canCancel = false,
+): TooltipContent {
   const lines: TooltipLine[] = [];
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.281.8'), value: n(a.price), valueIcon: '/assets/icons/I_Coins.png' });
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.282.9'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.278.1", { Value1: n(a.buildTime) }); } });
@@ -361,7 +379,7 @@ function availTooltip(a: AvailableBuilding, queueSummary?: BuildingQueueSummary,
   }
   addResourceCostLines(lines, a.resourceCost);
   addBuildingRequirementLines(lines, a.requiredBuildings);
-  lines.push(...queueTooltipLines(queueSummary));
+  lines.push(...queueTooltipLines(queueSummary, canCancel));
   if (lockReason) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.293.11'), isHeader: true });
     lines.push({ label: lockReason, valueColor: 'var(--red)' });
@@ -507,12 +525,14 @@ function EffectsBlock({ html }: { html?: string }) {
 function BuiltCard({
   b,
   onQueue,
+  onUnqueue,
   onPlace,
   queueSummary,
   queueing = false,
 }: {
   b: Building;
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
+  onUnqueue?: (queueIndex: number) => void;
   onPlace?: (buildingId: string) => void;
   queueSummary?: BuildingQueueSummary;
   queueing?: boolean;
@@ -525,6 +545,8 @@ function BuiltCard({
     : panelLockReason || (intrinsicLocked ? b.nextBuildState?.reason : undefined);
   const actionable = !!onQueue && !panelLockReason && b.nextBuildState?.state === 'visible';
   const queuedToLevel = queueSummary?.highestToLevel;
+  const cancelQueueIndex = cancellationQueueIndex(queueSummary);
+  const cancellable = !!onUnqueue && cancelQueueIndex !== undefined;
   const conditionColor: 'green' | 'red' | 'gold' =
     b.condition === undefined ? 'gold'
       : b.condition >= 80 ? 'green'
@@ -536,9 +558,20 @@ function BuiltCard({
     : maxed
       ? 'Max'
       : (b.maxLevel !== undefined ? `${n(b.level)} / ${n(b.maxLevel)}` : undefined);
+  const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button === 0) {
+      if (actionable) onQueue?.(b.id, event.currentTarget);
+      return;
+    }
+
+    if (event.button === 2 && cancellable) {
+      event.preventDefault();
+      onUnqueue?.(cancelQueueIndex);
+    }
+  }, [actionable, b.id, cancelQueueIndex, cancellable, onQueue, onUnqueue]);
 
   return (
-    <Tooltip content={builtTooltip(b, queueSummary, lockReason)} position="left" delay={200}>
+    <Tooltip content={builtTooltip(b, queueSummary, lockReason, cancellable)} position="left" delay={200}>
       <div
         className={
           `bld-node bld-node--built${maxed ? ' bld-node--maxed' : ''}`
@@ -548,8 +581,9 @@ function BuiltCard({
         data-tutorial-target="DynamicBuilding"
         data-tutorial-building-id={b.assetKey ?? b.id}
         data-tutorial-building-class-id={b.id}
-        onMouseDown={actionable ? (event) => onQueue?.(b.id, event.currentTarget) : undefined}
-        role={actionable ? 'button' : undefined}
+        onMouseDown={actionable || cancellable ? handleMouseDown : undefined}
+        onContextMenu={cancellable ? event => event.preventDefault() : undefined}
+        role={actionable || cancellable ? 'button' : undefined}
       >
         <div className="bld-node-icon-wrap">
           <img src={b.icon ?? GENERIC_ICON} alt="" className="bld-node-icon" />
@@ -608,12 +642,14 @@ function BuiltCard({
 function AvailCard({
   a,
   onQueue,
+  onUnqueue,
   onPlace,
   queueSummary,
   queueing = false,
 }: {
   a: AvailableBuilding;
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
+  onUnqueue?: (queueIndex: number) => void;
   onPlace?: (buildingId: string) => void;
   queueSummary?: BuildingQueueSummary;
   queueing?: boolean;
@@ -627,8 +663,22 @@ function AvailCard({
     : panelLockReason || (intrinsicLocked ? a.buildState.reason : undefined);
   const actionable = !!onQueue && !locked;
   const queuedToLevel = queueSummary?.highestToLevel;
+  const cancelQueueIndex = cancellationQueueIndex(queueSummary);
+  const cancellable = !!onUnqueue && cancelQueueIndex !== undefined;
+  const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button === 0) {
+      if (actionable) onQueue?.(a.id, event.currentTarget);
+      return;
+    }
+
+    if (event.button === 2 && cancellable) {
+      event.preventDefault();
+      onUnqueue?.(cancelQueueIndex);
+    }
+  }, [a.id, actionable, cancelQueueIndex, cancellable, onQueue, onUnqueue]);
+
   return (
-    <Tooltip content={availTooltip(a, queueSummary, lockReason)} position="left" delay={200}>
+    <Tooltip content={availTooltip(a, queueSummary, lockReason, cancellable)} position="left" delay={200}>
       <div
         className={
           `bld-node bld-node--avail${locked ? ' bld-node--locked' : ''}`
@@ -638,8 +688,9 @@ function AvailCard({
         data-tutorial-target="DynamicBuilding"
         data-tutorial-building-id={a.assetKey}
         data-tutorial-building-class-id={a.id}
-        onMouseDown={actionable ? (event) => onQueue?.(a.id, event.currentTarget) : undefined}
-        role={actionable ? 'button' : undefined}
+        onMouseDown={actionable || cancellable ? handleMouseDown : undefined}
+        onContextMenu={cancellable ? event => event.preventDefault() : undefined}
+        role={actionable || cancellable ? 'button' : undefined}
       >
         <div className="bld-node-icon-wrap">
           <img src={a.icon ?? GENERIC_ICON} alt="" className="bld-node-icon" />
@@ -706,6 +757,7 @@ function ChainBranch({
   childrenByParent,
   depth,
   onQueue,
+  onUnqueue,
   onPlace,
   queueSummaries,
   queueingBuildingIds,
@@ -715,6 +767,7 @@ function ChainBranch({
   childrenByParent: Map<string, TreeNode[]>;
   depth: number;
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
+  onUnqueue?: (queueIndex: number) => void;
   onPlace?: (buildingId: string) => void;
   queueSummaries: Map<string, BuildingQueueSummary>;
   queueingBuildingIds: Set<string>;
@@ -729,8 +782,8 @@ function ChainBranch({
     : queueingBuildingIds.has(node.a.id);
 
   const card = node.kind === 'built'
-    ? <BuiltCard b={node.b} onQueue={onQueue} onPlace={onPlace} queueSummary={queueSummary} queueing={queueing} />
-    : <AvailCard a={node.a} onQueue={onQueue} onPlace={onPlace} queueSummary={queueSummary} queueing={queueing} />;
+    ? <BuiltCard b={node.b} onQueue={onQueue} onUnqueue={onUnqueue} onPlace={onPlace} queueSummary={queueSummary} queueing={queueing} />
+    : <AvailCard a={node.a} onQueue={onQueue} onUnqueue={onUnqueue} onPlace={onPlace} queueSummary={queueSummary} queueing={queueing} />;
 
   return (
     <div
@@ -752,6 +805,7 @@ function ChainBranch({
               childrenByParent={childrenByParent}
               depth={depth + 1}
               onQueue={onQueue}
+              onUnqueue={onUnqueue}
               onPlace={onPlace}
               queueSummaries={queueSummaries}
               queueingBuildingIds={queueingBuildingIds}
@@ -1231,6 +1285,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
                   childrenByParent={tree.children}
                   depth={0}
                   onQueue={canQueueViaBridge ? handleQueueBuilding : undefined}
+                  onUnqueue={canQueueViaBridge ? handleUnqueueBuilding : undefined}
                   onPlace={canQueueViaBridge ? handlePlaceBuilding : undefined}
                   queueSummaries={queueSummaries}
                   queueingBuildingIds={queueingBuildingSet}
