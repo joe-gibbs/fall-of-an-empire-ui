@@ -58,6 +58,7 @@ const WORLD_INPUT_BLOCKING_CLASSES = [
   'chart-unit-picker',
   'tpl-picker',
   'mm-root',
+  'fs-root',
   'tt-bubble',
   'world-glance',
 ];

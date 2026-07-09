@@ -223,36 +223,65 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
   }, [frameRef, handleWheel]);
 
   const clearDrag = useCallback(() => {
-    const drag = dragRef.current;
     dragRef.current = null;
-
-    const thumb = thumbRef.current;
-    if (drag && thumb?.hasPointerCapture?.(drag.pointerId)) {
-      thumb.releasePointerCapture(drag.pointerId);
-    }
   }, []);
 
+  const updateDragPosition = useCallback((clientY: number) => {
+    const drag = dragRef.current;
+    const viewport = viewportRef.current;
+    if (!drag || !viewport) return;
+
+    const nextTop = Math.max(0, Math.min(drag.maxTop, drag.startTop + clientY - drag.startY));
+    viewport.scrollTop = drag.maxTop > 0
+      ? (nextTop / drag.maxTop) * drag.maxScroll
+      : 0;
+    updateMetrics();
+  }, [updateMetrics, viewportRef]);
+
   useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      if ((event.buttons & 1) === 0) {
+        clearDrag();
+        return;
+      }
+
+      event.preventDefault();
+      updateDragPosition(event.clientY);
+    };
     const handlePointerEnd = (event: PointerEvent) => {
       const drag = dragRef.current;
       if (!drag || drag.pointerId !== event.pointerId) return;
       clearDrag();
     };
-    const handleMouseUp = () => {
-      clearDrag();
-    };
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!dragRef.current) return;
+      if ((event.buttons & 1) === 0) {
+        clearDrag();
+        return;
+      }
 
+      event.preventDefault();
+      updateDragPosition(event.clientY);
+    };
+    const handleMouseUp = () => clearDrag();
+
+    window.addEventListener('pointermove', handlePointerMove, true);
     window.addEventListener('pointerup', handlePointerEnd, true);
     window.addEventListener('pointercancel', handlePointerEnd, true);
+    window.addEventListener('mousemove', handleMouseMove, true);
     window.addEventListener('mouseup', handleMouseUp, true);
     window.addEventListener('blur', clearDrag);
     return () => {
+      window.removeEventListener('pointermove', handlePointerMove, true);
       window.removeEventListener('pointerup', handlePointerEnd, true);
       window.removeEventListener('pointercancel', handlePointerEnd, true);
+      window.removeEventListener('mousemove', handleMouseMove, true);
       window.removeEventListener('mouseup', handleMouseUp, true);
       window.removeEventListener('blur', clearDrag);
     };
-  }, [clearDrag]);
+  }, [clearDrag, updateDragPosition]);
 
   const jumpToClientY = useCallback((clientY: number) => {
     const viewport = viewportRef.current;
@@ -283,7 +312,6 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
     event.preventDefault();
     event.stopPropagation();
     cancelSmoothScroll();
-    event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = {
       pointerId: event.pointerId,
       startY: event.clientY,
@@ -295,8 +323,7 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
 
   const handleThumbPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
-    const viewport = viewportRef.current;
-    if (!drag || drag.pointerId !== event.pointerId || !viewport) return;
+    if (!drag || drag.pointerId !== event.pointerId) return;
 
     if ((event.buttons & 1) === 0) {
       clearDrag();
@@ -305,20 +332,13 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
 
     event.preventDefault();
     event.stopPropagation();
-    const nextTop = Math.max(0, Math.min(drag.maxTop, drag.startTop + event.clientY - drag.startY));
-    viewport.scrollTop = drag.maxTop > 0
-      ? (nextTop / drag.maxTop) * drag.maxScroll
-      : 0;
-    updateMetrics();
-  }, [clearDrag, updateMetrics, viewportRef]);
+    updateDragPosition(event.clientY);
+  }, [clearDrag, updateDragPosition]);
 
   const handleThumbPointerEnd = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
     if (drag && drag.pointerId === event.pointerId) {
       clearDrag();
-    }
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
     }
   }, [clearDrag]);
 
