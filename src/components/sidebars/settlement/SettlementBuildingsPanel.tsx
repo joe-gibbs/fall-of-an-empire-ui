@@ -12,7 +12,13 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
-import { queueSettlementBuilding, unqueueSettlementBuilding, useSettlementBuildingsBridgeState } from '../../../bridge/settlements-economy/useSettlementBuildingsBridge';
+import {
+  demolishSettlementBuilding,
+  downgradeSettlementBuilding,
+  queueSettlementBuilding,
+  unqueueSettlementBuilding,
+  useSettlementBuildingsBridgeState,
+} from '../../../bridge/settlements-economy/useSettlementBuildingsBridge';
 import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBottomBarOperationsBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import HtmlContent from '../../common/layout/content/HtmlContent';
@@ -314,6 +320,7 @@ function builtTooltip(
   queueSummary?: BuildingQueueSummary,
   lockReason?: string,
   canCancel = false,
+  actions?: React.ReactNode,
 ): TooltipContent {
   const lines: TooltipLine[] = [];
   if (b.maxLevel !== undefined) {
@@ -357,7 +364,7 @@ function builtTooltip(
     }
   }
   addBuildingRequirementLines(lines, b.requiredBuildings);
-  return { title: b.name, body: buildingTooltipBody(b.description, b.effectsHtml), lines };
+  return { title: b.name, body: buildingTooltipBody(b.description, b.effectsHtml), lines, afterLines: actions };
 }
 
 function availTooltip(
@@ -516,6 +523,90 @@ function EffectsBlock({ html }: { html?: string }) {
   return <HtmlContent html={html} className="bld-effects" />;
 }
 
+type BuildingManagementAction = 'downgrade' | 'demolish';
+
+function BuildingManagementActions({
+  building,
+  confirmingAction,
+  pendingAction,
+  onAction,
+}: {
+  building: Building;
+  confirmingAction: BuildingManagementAction | null;
+  pendingAction: BuildingManagementAction | null;
+  onAction: (action: BuildingManagementAction, event: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  const downgradeLabel = confirmingAction === 'downgrade'
+    ? webUIText('SettlementBuildings.ConfirmDowngrade')
+    : webUIText('SettlementBuildings.Downgrade');
+  const demolishLabel = confirmingAction === 'demolish'
+    ? webUIText('SettlementBuildings.ConfirmDismantle')
+    : webUIText('SettlementBuildings.Dismantle');
+  const actionPending = pendingAction !== null;
+  const downgradeDisabled = actionPending || !building.canDowngrade;
+  const demolishDisabled = actionPending || !building.canDemolish;
+
+  return (
+    <div className="bld-tooltip-actions">
+      <div className="bld-tooltip-actions-title">{webUIText('SettlementBuildings.ManageBuilding')}</div>
+      <div className="bld-tooltip-action-row">
+        <div className="bld-tooltip-action-copy">
+          <span className="bld-tooltip-action-name">{webUIText('SettlementBuildings.Downgrade')}</span>
+          <span className="bld-tooltip-action-detail">
+            {building.canDowngrade && building.downgradeTargetName && building.downgradeTargetLevel !== undefined
+              ? webUIText('SettlementBuildings.DowngradeTo', { Name: building.downgradeTargetName, Level: n(building.downgradeTargetLevel) })
+              : building.downgradeReason}
+          </span>
+        </div>
+        <button
+          type="button"
+          className={`bld-tooltip-action-btn${confirmingAction === 'downgrade' ? ' bld-tooltip-action-btn--confirm' : ''}`}
+          disabled={downgradeDisabled}
+          onMouseDown={event => onAction('downgrade', event)}
+        >
+          {downgradeLabel}
+        </button>
+      </div>
+      <div className="bld-tooltip-action-row bld-tooltip-action-row--danger">
+        <div className="bld-tooltip-action-copy">
+          <span className="bld-tooltip-action-name">{webUIText('SettlementBuildings.Dismantle')}</span>
+          <span className="bld-tooltip-action-detail">
+            {building.canDemolish ? webUIText('SettlementBuildings.DismantleBody') : building.demolishReason}
+          </span>
+          {building.canDemolish && (
+            <span className="bld-tooltip-spoils">
+              <span className="bld-tooltip-spoils-label">{webUIText('SettlementBuildings.DismantleSpoils')}</span>
+              {(building.dismantleSpoils ?? []).length > 0 ? (
+                <span className="bld-tooltip-spoils-list">
+                  {building.dismantleSpoils!.map(spoil => (
+                    <span key={spoil.name} className="bld-tooltip-spoil">
+                      <img src={spoil.icon} alt="" className="bld-tooltip-spoil-icon" draggable={false} />
+                      {n(spoil.amount)}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                <span className="bld-tooltip-spoils-empty">{webUIText('SettlementBuildings.NoSpoils')}</span>
+              )}
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          className={`bld-tooltip-action-btn bld-tooltip-action-btn--danger${confirmingAction === 'demolish' ? ' bld-tooltip-action-btn--confirm' : ''}`}
+          disabled={demolishDisabled}
+          onMouseDown={event => onAction('demolish', event)}
+        >
+          {demolishLabel}
+        </button>
+      </div>
+      {confirmingAction && !pendingAction && (
+        <div className="bld-tooltip-confirm-note">{webUIText('SettlementBuildings.PressAgain')}</div>
+      )}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Building node card - mirrors the InteractionCard structure (0.2727rem gold-frame
 // border, dark gradient, left icon + body) so it lives in the same visual
@@ -527,6 +618,8 @@ function BuiltCard({
   onQueue,
   onUnqueue,
   onPlace,
+  onDemolish,
+  onDowngrade,
   queueSummary,
   queueing = false,
 }: {
@@ -534,9 +627,13 @@ function BuiltCard({
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
   onUnqueue?: (queueIndex: number) => void;
   onPlace?: (buildingId: string) => void;
+  onDemolish?: (buildingId: string) => Promise<void>;
+  onDowngrade?: (buildingId: string) => Promise<void>;
   queueSummary?: BuildingQueueSummary;
   queueing?: boolean;
 }) {
+  const [confirmingAction, setConfirmingAction] = React.useState<BuildingManagementAction | null>(null);
+  const [pendingAction, setPendingAction] = React.useState<BuildingManagementAction | null>(null);
   const panelLockReason = React.useContext(PanelLockContext);
   const maxed = b.maxLevel !== undefined && b.level >= b.maxLevel;
   const intrinsicLocked = b.nextBuildState !== undefined && b.nextBuildState.state !== 'visible';
@@ -569,9 +666,39 @@ function BuiltCard({
       onUnqueue?.(cancelQueueIndex);
     }
   }, [actionable, b.id, cancelQueueIndex, cancellable, onQueue, onUnqueue]);
+  const handleManagementAction = React.useCallback((action: BuildingManagementAction, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (pendingAction !== null) return;
+
+    const enabled = action === 'downgrade' ? b.canDowngrade : b.canDemolish;
+    const handler = action === 'downgrade' ? onDowngrade : onDemolish;
+    if (!enabled || !handler) return;
+
+    if (confirmingAction !== action) {
+      setConfirmingAction(action);
+      return;
+    }
+
+    setPendingAction(action);
+    handler(b.id)
+      .catch(acknowledgeBridgeFailure)
+      .finally(() => {
+        setPendingAction(null);
+        setConfirmingAction(null);
+      });
+  }, [b.canDemolish, b.canDowngrade, b.id, confirmingAction, onDemolish, onDowngrade, pendingAction]);
+  const managementActions = (onDemolish || onDowngrade) ? (
+    <BuildingManagementActions
+      building={b}
+      confirmingAction={confirmingAction}
+      pendingAction={pendingAction}
+      onAction={handleManagementAction}
+    />
+  ) : undefined;
 
   return (
-    <Tooltip content={builtTooltip(b, queueSummary, lockReason, cancellable)} position="left" delay={200}>
+    <Tooltip content={builtTooltip(b, queueSummary, lockReason, cancellable, managementActions)} position="left" delay={200}>
       <div
         className={
           `bld-node bld-node--built${maxed ? ' bld-node--maxed' : ''}`
@@ -759,6 +886,8 @@ function ChainBranch({
   onQueue,
   onUnqueue,
   onPlace,
+  onDemolish,
+  onDowngrade,
   queueSummaries,
   queueingBuildingIds,
   isLastChild = false,
@@ -769,6 +898,8 @@ function ChainBranch({
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
   onUnqueue?: (queueIndex: number) => void;
   onPlace?: (buildingId: string) => void;
+  onDemolish?: (buildingId: string) => Promise<void>;
+  onDowngrade?: (buildingId: string) => Promise<void>;
   queueSummaries: Map<string, BuildingQueueSummary>;
   queueingBuildingIds: Set<string>;
   isLastChild?: boolean;
@@ -782,7 +913,7 @@ function ChainBranch({
     : queueingBuildingIds.has(node.a.id);
 
   const card = node.kind === 'built'
-    ? <BuiltCard b={node.b} onQueue={onQueue} onUnqueue={onUnqueue} onPlace={onPlace} queueSummary={queueSummary} queueing={queueing} />
+    ? <BuiltCard b={node.b} onQueue={onQueue} onUnqueue={onUnqueue} onPlace={onPlace} onDemolish={onDemolish} onDowngrade={onDowngrade} queueSummary={queueSummary} queueing={queueing} />
     : <AvailCard a={node.a} onQueue={onQueue} onUnqueue={onUnqueue} onPlace={onPlace} queueSummary={queueSummary} queueing={queueing} />;
 
   return (
@@ -807,6 +938,8 @@ function ChainBranch({
               onQueue={onQueue}
               onUnqueue={onUnqueue}
               onPlace={onPlace}
+              onDemolish={onDemolish}
+              onDowngrade={onDowngrade}
               queueSummaries={queueSummaries}
               queueingBuildingIds={queueingBuildingIds}
               isLastChild={index === children.length - 1}
@@ -1092,6 +1225,12 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
         setPendingUnqueueIndices(prev => prev.filter(index => index !== queueIndex));
       });
   }, [settlement.id]);
+  const handleDemolishBuilding = React.useCallback((buildingId: string) => {
+    return demolishSettlementBuilding(settlement.id, buildingId);
+  }, [settlement.id]);
+  const handleDowngradeBuilding = React.useCallback((buildingId: string) => {
+    return downgradeSettlementBuilding(settlement.id, buildingId);
+  }, [settlement.id]);
 
   const built = React.useMemo(() => data?.buildings ?? [], [data]);
   const available = React.useMemo(() => data?.availableBuildings ?? [], [data]);
@@ -1287,6 +1426,8 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
                   onQueue={canQueueViaBridge ? handleQueueBuilding : undefined}
                   onUnqueue={canQueueViaBridge ? handleUnqueueBuilding : undefined}
                   onPlace={canQueueViaBridge ? handlePlaceBuilding : undefined}
+                  onDemolish={canQueueViaBridge ? handleDemolishBuilding : undefined}
+                  onDowngrade={canQueueViaBridge ? handleDowngradeBuilding : undefined}
                   queueSummaries={queueSummaries}
                   queueingBuildingIds={queueingBuildingSet}
                 />

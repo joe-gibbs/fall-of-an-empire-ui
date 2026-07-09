@@ -133,12 +133,19 @@ function mapBuiltBuilding(entry: SettlementBuiltBuildingEntry): Building {
     nextLevelBuildTime: entry.nextLevelBuildTime > 0 ? entry.nextLevelBuildTime : undefined,
     upkeep: entry.upkeep,
     resourceCost: entry.resourceCost.map(mapCost),
+    dismantleSpoils: entry.dismantleSpoils.map(mapCost),
     nextBuildState: toBuildState(entry.nextBuildState),
     developedFrom: entry.developedFrom || undefined,
     canBeDevelopedInto: entry.canBeDevelopedInto,
     requiredBuildings: entry.requiredBuildings.map(mapRequirement),
     replacesParent: entry.replacesParent,
     blocksConstruction: entry.blocksConstruction,
+    canDemolish: entry.canDemolish,
+    demolishReason: entry.demolishReason || undefined,
+    canDowngrade: entry.canDowngrade,
+    downgradeReason: entry.downgradeReason || undefined,
+    downgradeTargetName: entry.downgradeTargetName || undefined,
+    downgradeTargetLevel: entry.downgradeTargetLevel > 0 ? entry.downgradeTargetLevel : undefined,
   };
 }
 
@@ -233,4 +240,12 @@ export function queueSettlementBuilding(settlementId: string, buildingId: string
 
 export function unqueueSettlementBuilding(settlementId: string, queueIndex: number): Promise<void> {
   return bridgeCall('game.unqueue_settlement_building', { settlementId, queueIndex });
+}
+
+export function demolishSettlementBuilding(settlementId: string, buildingId: string): Promise<void> {
+  return bridgeCall('game.demolish_settlement_building', { settlementId, buildingId });
+}
+
+export function downgradeSettlementBuilding(settlementId: string, buildingId: string): Promise<void> {
+  return bridgeCall('game.downgrade_settlement_building', { settlementId, buildingId });
 }

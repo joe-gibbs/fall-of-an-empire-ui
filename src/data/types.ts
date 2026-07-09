@@ -527,6 +527,8 @@ export interface Building {
   upkeep?: number;
   /** Resource cost to upgrade to the next level. Empty when at max. */
   resourceCost?: BuildingResourceCost[];
+  /** Resources and gold returned by dismantling this building. */
+  dismantleSpoils?: BuildingResourceCost[];
   /** Whether queueing the next level is currently possible. */
   nextBuildState?: BuildingBuildState;
   /** Parent in the chain (UBuilding.DevelopedFrom). */
@@ -541,6 +543,12 @@ export interface Building {
   replacesParent?: boolean;
   /** If true, blocks any further construction while present. */
   blocksConstruction?: boolean;
+  canDemolish?: boolean;
+  demolishReason?: string;
+  canDowngrade?: boolean;
+  downgradeReason?: string;
+  downgradeTargetName?: string;
+  downgradeTargetLevel?: number;
 }
 
 /** One cross-chain prerequisite entry. */

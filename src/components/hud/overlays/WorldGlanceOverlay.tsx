@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+﻿import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import type { GetWorldGlancesResponse } from '../../../bridge-types.generated.ts';
 import {
   handleWorldGlanceHover,
@@ -358,9 +358,8 @@ function setGlanceContentHydrationPaused(paused: boolean) {
 
 function formatPx(value: number): string {
   if (!Number.isFinite(value)) return '0';
-  const quantized = Math.round(value * 2) / 2;
-  if (Math.abs(quantized) < 0.0001) return '0';
-  return `${quantized.toFixed(1).replace(/\.0$/, '')}px`;
+  if (Math.abs(value) < 0.0001) return '0';
+  return `${value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')}px`;
 }
 
 function formatOpacity(value: number): string {

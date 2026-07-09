@@ -1788,12 +1788,19 @@ function settlementBuilding(assetKey: string, name: string, level: number, categ
     nextLevelBuildTime: 80,
     upkeep: 12,
     resourceCost: [{ name: 'Stone', amount: 40 }, { name: 'Wood', amount: 25 }],
+    dismantleSpoils: [{ name: 'Gold', amount: 130 }, { name: 'Stone', amount: 16 }, { name: 'Wood', amount: 10 }],
     nextBuildState: { state: 'visible', reason: '' },
     developedFrom: '',
     canBeDevelopedInto: [],
     requiredBuildings: [],
     replacesParent: true,
     blocksConstruction: false,
+    canDemolish: level > 0,
+    demolishReason: level > 0 ? '' : 'This building has not been constructed.',
+    canDowngrade: level > 1,
+    downgradeReason: level > 1 ? '' : 'This building has no lower step.',
+    downgradeTargetName: level > 1 ? name : '',
+    downgradeTargetLevel: level > 1 ? level - 1 : 0,
   };
 }
 
@@ -3695,6 +3702,8 @@ function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
     resourceCount: 2,
     buildingCount: 2,
     notificationCount: 3,
+    filteredSettlementCount: 2,
+    filteredBuildingCount: 2,
     rowOffset: 0,
     rowLimit: 0,
     settlements: [
@@ -5569,6 +5578,24 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           { id: 'extended', name: 'Restoration', iconPath: '/assets/icons/Victory/I_Victory_Silver.png', isAchieved: true, conditions: [{ id: 'extended-domains', kind: 'domains', label: 'Restore Required Domains', description: '<p>Control every domain required for restoration.</p>', domains: [], progress: 100, detailText: 'Required domains controlled.', isMet: true }, { id: 'extended-year', kind: 'deadline', label: 'Meet Restoration Deadline', description: '<p>Complete restoration before the target year.</p>', domains: [], progress: 100, detailText: 'Deadline met.', isMet: true }] },
           { id: 'ultimate', name: 'Total Victory', iconPath: '/assets/icons/Victory/I_Victory_Gold.png', isAchieved: false, conditions: [{ id: 'ultimate-domains', kind: 'domains', label: 'Rule Every Required Domain', description: '<p>Control every domain required for total victory.</p>', domains: [], progress: 64, detailText: '5 of 8 domains controlled.', isMet: false }, { id: 'ultimate-conversion', kind: 'conversion', label: 'Convert the Realm', description: '<p>Bring every settlement to the required state religion threshold.</p>', domains: [], progress: 72, detailText: '72% realm conversion.', isMet: false }, { id: 'ultimate-year', kind: 'deadline', label: 'Meet Ultimate Deadline', description: '<p>Complete total victory before the target year.</p>', domains: [], progress: 100, detailText: 'Still within the deadline.', isMet: true }] },
         ] } satisfies BridgeResponse<'game.get_victory_conditions'>;
+      case 'game.get_achievements':
+        return {
+          totalAchievements: 5,
+          unlockedAchievements: 2,
+          completionPercent: 0.4,
+          platformAvailable: true,
+          platformName: 'Mock',
+          achievementsEnabled: false,
+          disabledReason: 'A mod is enabled.',
+          disabledReasons: ['A mod is enabled.'],
+          achievements: [
+            { id: 'SURVIVE_COLLAPSE', displayName: 'Weather the Collapse', description: 'Survive the first year.', effectiveDescription: 'Survive the first year.', category: 'challenge', rarity: 'common', hidden: false, unlocked: true, currentProgress: 1, targetProgress: 1, progressPercent: 1, progressText: '1/1', canBeEarned: true },
+            { id: 'MASTER_OF_ALL', displayName: 'Master of All', description: 'Have a ruler with all four stats above 40.', effectiveDescription: 'Have a ruler with all four stats above 40.', category: 'characters', rarity: 'legendary', hidden: false, unlocked: false, currentProgress: 0, targetProgress: 1, progressPercent: 0, progressText: '0/1', canBeEarned: false },
+            { id: 'BATTLE_HARDENED', displayName: 'Battle Hardened', description: 'Win ten battles.', effectiveDescription: 'Win ten battles.', category: 'military', rarity: 'uncommon', hidden: false, unlocked: false, currentProgress: 4, targetProgress: 10, progressPercent: 0.4, progressText: '4/10', canBeEarned: false },
+            { id: 'OLD_GODS_ENDURE', displayName: 'Old Gods Endure', description: 'Restore five old shrines.', effectiveDescription: 'Restore five old shrines.', category: 'religion', rarity: 'rare', hidden: false, unlocked: true, currentProgress: 5, targetProgress: 5, progressPercent: 1, progressText: '5/5', canBeEarned: true },
+            { id: 'HIDDEN_TEST', displayName: 'Hidden Achievement', description: 'Find the hidden condition.', effectiveDescription: 'Hidden achievement', category: 'hidden', rarity: 'epic', hidden: true, unlocked: false, currentProgress: 0, targetProgress: 1, progressPercent: 0, progressText: '0/1', canBeEarned: false },
+          ],
+        } satisfies BridgeResponse<'game.get_achievements'>;
       case 'game.loading_screen':
         return { visible: false, progress: 0, background: '', tip: '' } satisfies BridgeResponse<'game.loading_screen'>;
       case 'game.get_settings':
@@ -6273,6 +6300,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.reset_notification_mutes':
       case 'game.queue_settlement_building':
       case 'game.unqueue_settlement_building':
+      case 'game.demolish_settlement_building':
+      case 'game.downgrade_settlement_building':
       case 'game.set_auto_assign_commands':
       case 'game.set_auto_replenish_formations':
       case 'game.clear_military_selection':

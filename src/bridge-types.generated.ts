@@ -565,6 +565,11 @@ export interface DeleteSaveResponse {
   deleted: boolean;
 }
 
+export interface DemolishSettlementBuildingRequest {
+  settlementId: string;
+  buildingId: string;
+}
+
 export interface DiplomacyFactionReference {
   id: string;
   name: string;
@@ -796,6 +801,11 @@ export interface DiplomaticNotificationEventPayload {
 
 export interface DiplomaticNotificationDismissedPayload {
   id: string;
+}
+
+export interface DowngradeSettlementBuildingRequest {
+  settlementId: string;
+  buildingId: string;
 }
 
 export interface SetEconomyAutoBuyRequest {
@@ -1062,6 +1072,9 @@ export interface GetAchievementsResponse {
   completionPercent: number;
   platformAvailable: boolean;
   platformName: string;
+  achievementsEnabled: boolean;
+  disabledReason: string;
+  disabledReasons: string[];
   achievements: AchievementEntry[];
 }
 
@@ -2343,6 +2356,12 @@ export interface GetLedgerOverviewRequest {
   rowLimit: number;
   sortKey: string;
   sortDirection: string;
+  searchText: string;
+  settlementFactionFilter: string;
+  settlementTypeFilter: string;
+  settlementRegionFilter: string;
+  buildingCategoryFilter: string;
+  buildingFactionFilter: string;
 }
 
 export interface LedgerSettlementRow {
@@ -2445,6 +2464,8 @@ export interface GetLedgerOverviewResponse {
   resourceCount: number;
   buildingCount: number;
   notificationCount: number;
+  filteredSettlementCount: number;
+  filteredBuildingCount: number;
   rowOffset: number;
   rowLimit: number;
   settlements: LedgerSettlementRow[];
@@ -3502,12 +3523,19 @@ export interface SettlementBuiltBuildingEntry {
   nextLevelBuildTime: number;
   upkeep: number;
   resourceCost: SettlementBuildingCost[];
+  dismantleSpoils: SettlementBuildingCost[];
   nextBuildState: SettlementBuildingBuildState;
   developedFrom: string;
   canBeDevelopedInto: string[];
   requiredBuildings: SettlementBuildingRequirement[];
   replacesParent: boolean;
   blocksConstruction: boolean;
+  canDemolish: boolean;
+  demolishReason: string;
+  canDowngrade: boolean;
+  downgradeReason: string;
+  downgradeTargetName: string;
+  downgradeTargetLevel: number;
 }
 
 export interface SettlementAvailableBuildingEntry {
@@ -5723,9 +5751,11 @@ export interface BridgeActions {
   'game.create_province_from_candidate': { request: CreateProvinceFromCandidateRequest; response: void };
   'game.delete_formation_template': { request: DeleteFormationTemplateRequest; response: DeleteFormationTemplateResponse };
   'game.delete_save': { request: DeleteSaveRequest; response: DeleteSaveResponse };
+  'game.demolish_settlement_building': { request: DemolishSettlementBuildingRequest; response: void };
   'game.diplomatic_notification_events': { request: DiplomaticNotificationEventsRequest; response: void };
   'game.disband_military': { request: DisbandMilitaryRequest; response: void };
   'game.dismiss_campaign_outcome': { request: void; response: void };
+  'game.downgrade_settlement_building': { request: DowngradeSettlementBuildingRequest; response: void };
   'game.download_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.duplicate_military_formation_template': { request: DuplicateMilitaryFormationTemplateRequest; response: DuplicateMilitaryFormationTemplateResponse };
   'game.end_peace_settlement_selection': { request: void; response: void };
