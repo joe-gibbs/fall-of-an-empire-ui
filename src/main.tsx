@@ -219,7 +219,13 @@ function dispatchBridgeEvent(eventName: string, data: unknown) {
   window.dispatchEvent(new CustomEvent(`bridge:${eventName}`, { detail: data }));
 }
 
-function bindBridgeEvents(): boolean {
+function bindRuntimeViewportScaleEvents() {
+  window.addEventListener('foae:runtime-viewport', (event) => {
+    applyRuntimeViewportScale((event as CustomEvent<RuntimeViewportState>).detail);
+  });
+}
+
+function bindBridgeEvents(announceScriptingReady = true): boolean {
   const engine = getRuntimeEngine();
   if (!engine) {
     setRuntimeClass(false);
@@ -369,8 +375,10 @@ function bindBridgeEvents(): boolean {
     recordUIPerfBridgeEvent('game.notification_anchors_frame', startedAtMs, Date.now());
   });
 
-  void Promise.resolve(engine.call('ScriptingReady'))
-    .catch(error => acknowledgeBridgeFailure(error, 'ScriptingReady'));
+  if (announceScriptingReady) {
+    void Promise.resolve(engine.call('ScriptingReady'))
+      .catch(error => acknowledgeBridgeFailure(error, 'ScriptingReady'));
+  }
   return true;
 }
 
@@ -415,8 +423,13 @@ function installMockRuntimeScript(): Promise<void> {
 async function bootstrap() {
   await installMockRuntimeScript();
 
-  window.addEventListener('foae:runtime-viewport', (event) => {
-    applyRuntimeViewportScale((event as CustomEvent<RuntimeViewportState>).detail);
+  bindRuntimeViewportScaleEvents();
+
+  // While the engine composites glance plates itself (same-frame placement), the DOM copies
+  // stay mounted for input but their visuals are hidden via this root class.
+  window.addEventListener('bridge:ui.native_glance_composite', (event) => {
+    const enabled = Boolean((event as CustomEvent<{ enabled?: boolean }>).detail?.enabled);
+    document.documentElement.classList.toggle('native-glance-composite', enabled);
   });
 
   bindUIPerfCommands();
@@ -437,4 +450,42 @@ async function bootstrap() {
   );
 }
 
-void bootstrap();
+// The glance-atlas view boots the same bundle in a minimal mode: it binds engine events (the
+// snapshot and per-frame glance payloads arrive as events), renders plate slots for the engine
+// compositor to sample, and announces readiness through its own bridge action — never
+// ScriptingReady, which gates the main view.
+async function bootstrapGlanceAtlas() {
+  bindRuntimeViewportScaleEvents();
+
+  if (!bindBridgeEvents(false)) {
+    await new Promise<void>((resolve) => {
+      const retryId = window.setInterval(() => {
+        if (bindBridgeEvents(false)) {
+          window.clearInterval(retryId);
+          resolve();
+        }
+      }, 50);
+    });
+  }
+
+  const [{ default: GlanceAtlasRoot }, { GameProvider }] = await Promise.all([
+    import('./components/world-glances/GlanceAtlasRoot'),
+    import('./context/GameProvider'),
+  ]);
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <GameProvider>
+        <GlanceAtlasRoot />
+      </GameProvider>
+    </StrictMode>,
+  );
+
+  const engine = getRuntimeEngine();
+  if (engine) {
+    void Promise.resolve(engine.call('GlanceAtlasReady'))
+      .catch(error => acknowledgeBridgeFailure(error, 'GlanceAtlasReady'));
+  }
+}
+
+const bootView = new URLSearchParams(window.location.search).get('view');
+void (bootView === 'strategy_glance_atlas' ? bootstrapGlanceAtlas() : bootstrap());

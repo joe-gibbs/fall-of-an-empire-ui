@@ -1,0 +1,29 @@
+/* Offscreen atlas page: plates paint into fixed slots; the engine composites slot sub-rects
+   at same-frame positions. Nothing here is ever shown directly to the player. */
+
+.glance-atlas-root {
+  position: relative;
+  width: 4096px;
+  height: 4096px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.glance-atlas-cell {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Plates reuse the DOM overlay's node classes for styling but are pinned visible at the cell
+   origin; the overlay drives these properties imperatively so the shared CSS leaves them off. */
+.glance-atlas-plate {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  pointer-events: none !important;
+}
