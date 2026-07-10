@@ -86,12 +86,12 @@
   .fs-back-btn {
     display: flex;
     align-items: center;
-    border-width: 0.0909rem;
-    border-style: solid;
-    border-top-color: var(--border);
-    border-right-color: var(--border);
-    border-bottom-color: var(--border);
-    border-left-color: var(--border);
+    border: 0.1818rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.1818rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background-color: rgba(13, 18, 24, 0.52);
     background-image: url('/assets/baked/main-menu-button.png');
     background-position: 0 0;
@@ -140,10 +140,7 @@
   }
 
   .fs-back-btn:hover {
-    border-top-color: var(--gold);
-    border-right-color: var(--gold);
-    border-bottom-color: var(--gold);
-    border-left-color: var(--gold);
+    background-image: url('/assets/baked/main-menu-button-hover.png');
     color: var(--text-bright);
   }
 
@@ -200,12 +197,12 @@
   .fs-map-panel,
   .fs-detail-panel {
     min-height: 0;
-    border-width: 0.0909rem;
-    border-style: solid;
-    border-top-color: var(--border);
-    border-right-color: var(--border);
-    border-bottom-color: var(--border);
-    border-left-color: var(--border);
+    border: 0.231rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.231rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background-color: rgba(36, 42, 48, 0.2);
     background-image:
       linear-gradient(180deg, rgba(36, 42, 48, 0.16) 0%, rgba(18, 23, 29, 0.28) 100%),
@@ -262,12 +259,12 @@
 
   .fs-state-card {
     padding: 1rem 1.2rem;
-    border-width: 0.0909rem;
-    border-style: solid;
-    border-top-color: var(--border);
-    border-right-color: var(--border);
-    border-bottom-color: var(--border);
-    border-left-color: var(--border);
+    border: 0.231rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.231rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background-color: rgba(36, 42, 48, 0.24);
     background-image: url('/assets/baked/texture-overlay-heavy.png');
     background-position: 0 0;
@@ -515,12 +512,12 @@
     max-width: calc(100% - 2rem);
     height: 100%;
     padding: 0;
-    border-right-width: 0.0909rem;
-    border-left-width: 0.0909rem;
-    border-right-style: solid;
-    border-left-style: solid;
-    border-right-color: rgba(201, 168, 76, 0.18);
-    border-left-color: rgba(201, 168, 76, 0.18);
+    border: 0.231rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.231rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     box-sizing: border-box;
     background-color: rgba(13, 18, 24, 0.32);
   }
@@ -705,6 +702,12 @@
   }
 
   .fs-faction-row--active {
+    border: 0.154rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.154rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background-color: rgba(31, 18, 18, 0.58);
     background-image: linear-gradient(90deg, rgba(74, 21, 48, 0.66), rgba(31, 18, 18, 0.58));
   }
@@ -980,12 +983,12 @@
     display: flex;
     align-items: center;
     padding: 0.45rem 0.6rem;
-    border-width: 0.0909rem;
-    border-style: solid;
-    border-top-color: var(--gold-muted);
-    border-right-color: var(--gold-muted);
-    border-bottom-color: var(--gold-muted);
-    border-left-color: var(--gold-muted);
+    border: 0.231rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.231rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background-color: rgba(36, 42, 48, 0.82);
     background-image: url('/assets/baked/texture-overlay-heavy.png');
     background-position: 0 0;
@@ -1029,12 +1032,12 @@
     flex-direction: row;
     align-items: center;
     padding: 0.28rem;
-    border-width: 0.0909rem;
-    border-style: solid;
-    border-top-color: var(--border);
-    border-right-color: var(--border);
-    border-bottom-color: var(--border);
-    border-left-color: var(--border);
+    border: 0.231rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.231rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background-color: rgba(28, 34, 40, 0.84);
     background-image: url('/assets/baked/texture-overlay-heavy.png');
     background-position: 0 0;
@@ -1173,7 +1176,12 @@
 
   .fs-capital-name {
     padding: 0.18rem 0.4rem;
-    border: 0.0909rem solid rgba(201, 168, 76, 0.46);
+    border: 0.154rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.154rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background: rgba(36, 42, 48, 0.82);
     font-size: 0.68rem;
     letter-spacing: 0.06em;
@@ -1563,22 +1571,18 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    border-width: 0.0909rem;
-    border-style: solid;
-    border-top-color: rgba(201, 168, 76, 0.16);
-    border-right-color: rgba(201, 168, 76, 0.1);
-    border-bottom-color: rgba(13, 18, 24, 0.55);
-    border-left-color: rgba(201, 168, 76, 0.1);
+    border: 0.154rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.154rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background: rgba(21, 27, 32, 0.42);
     cursor: var(--cursor-pointer);
   }
 
   .fs-subject-roundel-btn:hover {
     background: rgba(74, 21, 48, 0.28);
-    border-top-color: rgba(201, 168, 76, 0.45);
-    border-right-color: rgba(201, 168, 76, 0.36);
-    border-bottom-color: rgba(201, 168, 76, 0.26);
-    border-left-color: rgba(201, 168, 76, 0.36);
   }
 
   .fs-subject-roundel-btn--locked {
@@ -1616,9 +1620,12 @@
     display: flex;
     align-items: center;
     padding: 0.25rem 0.45rem;
-    border-width: 0.077rem;
-    border-style: solid;
-    border-color: rgba(201, 168, 76, 0.24);
+    border: 0.154rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.154rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background: rgba(21, 27, 32, 0.46);
     font-size: 0.8rem;
   }
@@ -1664,9 +1671,12 @@
 
   .fs-war {
     padding: 0.45rem 0.5rem 0.42rem;
-    border-width: 0.077rem;
-    border-style: solid;
-    border-color: rgba(176, 72, 72, 0.45);
+    border: 0.1818rem solid transparent;
+    border-image-source: url('/assets/modifier-frame-negative.png');
+    border-image-slice: 3;
+    border-image-width: 0.1818rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background: rgba(20, 6, 6, 0.55);
   }
 
@@ -1852,12 +1862,12 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-width: 0.1818rem;
-    border-style: solid;
-    border-top-color: var(--gold);
-    border-right-color: var(--gold);
-    border-bottom-color: var(--gold);
-    border-left-color: var(--gold);
+    border: 0.1818rem solid transparent;
+    border-image-source: url('/assets/gold-frame.png');
+    border-image-slice: 6;
+    border-image-width: 0.1818rem;
+    border-image-outset: 0;
+    border-image-repeat: round;
     background-color: #4a1530;
     background-image: url('/assets/baked/button-burgundy.png');
     background-repeat: repeat;
@@ -1871,10 +1881,6 @@
   }
 
   .fs-begin-btn:hover {
-    border-top-color: var(--gold-light);
-    border-right-color: var(--gold-light);
-    border-bottom-color: var(--gold-light);
-    border-left-color: var(--gold-light);
     background-image: url('/assets/baked/button-burgundy-hover.png');
     color: #fff7d0;
   }
@@ -1882,10 +1888,6 @@
   .fs-begin-btn.fs-begin-btn--disabled {
     cursor: default;
     opacity: 0.46;
-    border-top-color: var(--border-dim);
-    border-right-color: var(--border-dim);
-    border-bottom-color: var(--border-dim);
-    border-left-color: var(--border-dim);
     transform: none;
   }
 
