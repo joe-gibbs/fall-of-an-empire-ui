@@ -234,7 +234,7 @@ function buildChainTrees(nodes: TreeNode[]): ChainTree[] {
 // Tooltip builders
 // ---------------------------------------------------------------------------
 
-function queueTooltipLines(summary?: BuildingQueueSummary, canCancel = false): TooltipLine[] {
+function queueTooltipLines(summary?: BuildingQueueSummary): TooltipLine[] {
   const item = displayQueueItem(summary);
   if (!item) return [];
 
@@ -252,10 +252,6 @@ function queueTooltipLines(summary?: BuildingQueueSummary, canCancel = false): T
 
   if (item.statusReason) {
     lines.push({ label: item.statusReason });
-  }
-
-  if (canCancel) {
-    lines.push({ label: webUIText('SettlementBuildings.RightClickCancelConstruction'), valueColor: 'var(--gold-light)' });
   }
 
   for (const missing of item.missingResources ?? []) {
@@ -348,7 +344,7 @@ function builtTooltip(
     const label = condition >= 80 ? webUIText("Auto.Fix.VarExprTrue.componentssidebarsSettlementBuildingsPanel.253.1") : condition >= 50 ? webUIText("Auto.Fix.VarExprFalseTrue.componentssidebarsSettlementBuildingsPanel.254.1") : condition >= 20 ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsSettlementBuildingsPanel.255.1") : webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsSettlementBuildingsPanel.256.1");
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.261.4'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.257.1", { Value1: n(condition), Value2: label }); }, valueColor: color });
   }
-  lines.push(...queueTooltipLines(queueSummary, canCancel));
+  lines.push(...queueTooltipLines(queueSummary));
   if (b.nextBuildState) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.265.5'), isHeader: true });
     if (b.nextLevelPrice !== undefined) {
@@ -364,7 +360,15 @@ function builtTooltip(
     }
   }
   addBuildingRequirementLines(lines, b.requiredBuildings);
-  return { title: b.name, body: buildingTooltipBody(b.description, b.effectsHtml), lines, afterLines: actions };
+  return {
+    title: b.name,
+    body: buildingTooltipBody(b.description, b.effectsHtml),
+    lines,
+    afterLines: actions,
+    footer: canCancel && displayQueueItem(queueSummary)
+      ? webUIText('SettlementBuildings.RightClickCancelConstruction')
+      : undefined,
+  };
 }
 
 function availTooltip(
@@ -386,12 +390,19 @@ function availTooltip(
   }
   addResourceCostLines(lines, a.resourceCost);
   addBuildingRequirementLines(lines, a.requiredBuildings);
-  lines.push(...queueTooltipLines(queueSummary, canCancel));
+  lines.push(...queueTooltipLines(queueSummary));
   if (lockReason) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.293.11'), isHeader: true });
     lines.push({ label: lockReason, valueColor: 'var(--red)' });
   }
-  return { title: a.name, body: buildingTooltipBody(a.description, a.effectsHtml), lines };
+  return {
+    title: a.name,
+    body: buildingTooltipBody(a.description, a.effectsHtml),
+    lines,
+    footer: canCancel && displayQueueItem(queueSummary)
+      ? webUIText('SettlementBuildings.RightClickCancelConstruction')
+      : undefined,
+  };
 }
 
 // ---------------------------------------------------------------------------
