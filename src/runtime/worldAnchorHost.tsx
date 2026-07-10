@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { acknowledgeBridgeFailure, getRuntimeEngine } from '../bridge/core/runtimeEngine';
+import { registerWorldAnchorContentChangeHandler } from './worldAnchorContentChanges';
 
 /**
  * World-anchor host: the mechanism behind engine-composited (same-frame) UI elements, exposed
@@ -109,6 +110,7 @@ class WorldAnchorHostController {
   private repackTimer: number | null = null;
   private lastRepackAt = 0;
   private reportFrameIds: number[] = [];
+  private readonly contentChangeGhosts = new Map<HTMLElement, HTMLElement>();
   private disposed = false;
 
   constructor(liveLayer: HTMLElement, ghostLayer: HTMLElement) {
@@ -185,6 +187,32 @@ class WorldAnchorHostController {
       window.cancelAnimationFrame(frameId);
     }
     this.elements.clear();
+    this.contentChangeGhosts.clear();
+  }
+
+  prepareContentChange(element: HTMLElement) {
+    const state = this.elements.get(element);
+    if (this.disposed || !state?.slot) {
+      return;
+    }
+
+    this.contentChangeGhosts.get(element)?.remove();
+
+    const ghost = element.cloneNode(true) as HTMLElement;
+    ghost.removeAttribute('data-world-anchor');
+    ghost.removeAttribute('data-world-anchor-priority');
+    ghost.style.left = `${state.slot.x}px`;
+    ghost.style.top = `${state.slot.y}px`;
+    // The live plate changes in the same cell before the repack moves it. Keep the preserved
+    // representation above that changing plate so the old layout always samples intact pixels.
+    ghost.style.zIndex = '1';
+    ghost.dataset.worldAnchorGhostGeneration = String(this.generation);
+    this.ghostLayer.appendChild(ghost);
+    this.contentChangeGhosts.set(element, ghost);
+
+    // The content change may resize the element before ResizeObserver runs. Queue the repack now
+    // so the preserved pixels remain sampleable until the replacement cell has painted.
+    this.scheduleRepack(true);
   }
 
   private collectAnchoredElements(root: HTMLElement): boolean {
@@ -288,6 +316,11 @@ class WorldAnchorHostController {
       if (!state.slot) {
         continue;
       }
+      const contentChangeGhost = this.contentChangeGhosts.get(element);
+      if (contentChangeGhost) {
+        contentChangeGhost.dataset.worldAnchorGhostGeneration = String(generation - 1);
+        continue;
+      }
       const ghost = element.cloneNode(true) as HTMLElement;
       ghost.removeAttribute('data-world-anchor');
       ghost.removeAttribute('data-world-anchor-priority');
@@ -296,6 +329,7 @@ class WorldAnchorHostController {
       ghost.dataset.worldAnchorGhostGeneration = String(generation - 1);
       this.ghostLayer.appendChild(ghost);
     }
+    this.contentChangeGhosts.clear();
 
     // Prune ghosts old enough that the engine provably no longer samples their layout: it draws
     // the newest layout past its paint guard, at most ~two generations behind this one.
@@ -413,7 +447,13 @@ export default function WorldAnchorHost({ children }: { children: ReactNode }) {
       return undefined;
     }
     const controller = new WorldAnchorHostController(liveLayerRef.current, ghostLayerRef.current);
-    return () => controller.dispose();
+    const unregisterContentChangeHandler = registerWorldAnchorContentChangeHandler(
+      element => controller.prepareContentChange(element),
+    );
+    return () => {
+      unregisterContentChangeHandler();
+      controller.dispose();
+    };
   }, []);
 
   return (

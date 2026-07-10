@@ -23,6 +23,7 @@ import {
 import { useGameState } from '../../context/GameContextCore';
 import type { Notification } from '../../data/types';
 import NotificationBanner from '../notifications/NotificationBanner';
+import { prepareWorldAnchorContentChange } from '../../runtime/worldAnchorContentChanges';
 import type { WorldGlanceDetailClass } from './WorldGlanceTypes';
 import ArmyGlance from './ArmyGlance';
 import BattleGlance from './BattleGlance';
@@ -294,6 +295,10 @@ export default function GlanceAtlasRoot() {
 
           const nextDetail = detailClass(entry.detailLevel);
           if (detailByKeyRef.current.get(key) !== nextDetail) {
+            const node = plateNodesRef.current.get(key);
+            if (node) {
+              prepareWorldAnchorContentChange(node);
+            }
             detailByKeyRef.current.set(key, nextDetail);
             detailChanged = true;
           }
