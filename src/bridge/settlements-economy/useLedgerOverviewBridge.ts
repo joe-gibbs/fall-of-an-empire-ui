@@ -2,10 +2,20 @@ import type { GetLedgerOverviewResponse } from '../../bridge-types.generated.ts'
 import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
 import type { SortState } from '../../components/common/layout/tables/sortUtils';
 
+const ALL_FILTER = '__all__';
 const ledgerOverviewCache = new Map<string, GetLedgerOverviewResponse>();
 let latestCounts: Pick<GetLedgerOverviewResponse,
   'settlementCount' | 'militaryCount' | 'factionCount' | 'resourceCount' | 'buildingCount' | 'notificationCount'
 > | null = null;
+
+export interface LedgerOverviewBridgeFilters {
+  searchText?: string;
+  settlementFactionFilter?: string;
+  settlementTypeFilter?: string;
+  settlementRegionFilter?: string;
+  buildingCategoryFilter?: string;
+  buildingFactionFilter?: string;
+}
 
 export function clearLedgerOverviewCache(): void {
   ledgerOverviewCache.clear();
@@ -18,13 +28,40 @@ export function useLedgerOverviewBridge(
   rowOffset = 0,
   rowLimit = 0,
   sortState?: SortState<string>,
+  filters: LedgerOverviewBridgeFilters = {},
 ): GetLedgerOverviewResponse | null {
   const sortKey = sortState?.key ?? '';
   const sortDirection = sortState?.direction ?? 'asc';
-  const cacheKey = `${activeTab}:${rowOffset}:${rowLimit}:${sortKey}:${sortDirection}`;
+  const searchText = filters.searchText ?? '';
+  const settlementFactionFilter = filters.settlementFactionFilter ?? ALL_FILTER;
+  const settlementTypeFilter = filters.settlementTypeFilter ?? ALL_FILTER;
+  const settlementRegionFilter = filters.settlementRegionFilter ?? ALL_FILTER;
+  const buildingCategoryFilter = filters.buildingCategoryFilter ?? ALL_FILTER;
+  const buildingFactionFilter = filters.buildingFactionFilter ?? ALL_FILTER;
+  const filterKey = [
+    searchText,
+    settlementFactionFilter,
+    settlementTypeFilter,
+    settlementRegionFilter,
+    buildingCategoryFilter,
+    buildingFactionFilter,
+  ].join(':');
+  const cacheKey = `${activeTab}:${rowOffset}:${rowLimit}:${sortKey}:${sortDirection}:${filterKey}`;
   const live = useBridgeQuery({
     action: 'game.get_ledger_overview',
-    payload: { activeTab, rowOffset, rowLimit, sortKey, sortDirection },
+    payload: {
+      activeTab,
+      rowOffset,
+      rowLimit,
+      sortKey,
+      sortDirection,
+      searchText,
+      settlementFactionFilter,
+      settlementTypeFilter,
+      settlementRegionFilter,
+      buildingCategoryFilter,
+      buildingFactionFilter,
+    },
     cacheResponseMs: 1000,
     matchPush: (data) => {
       if (data.rowOffset !== rowOffset || data.rowLimit !== rowLimit) return false;

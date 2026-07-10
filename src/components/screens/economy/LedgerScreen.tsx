@@ -266,6 +266,7 @@ function BulkTable<T>({
   defaultSortDirection,
   sortState,
   onSortChange,
+  serverFiltered = false,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -279,6 +280,7 @@ function BulkTable<T>({
   defaultSortDirection?: SortDirection;
   sortState?: LedgerSortState;
   onSortChange?: (sort: LedgerSortState) => void;
+  serverFiltered?: boolean;
 }) {
   return (
     <DataTable
@@ -291,8 +293,8 @@ function BulkTable<T>({
       onSearchChange={onSearch}
       searchPlaceholder={searchLabel}
       searchWrapClassName="ledger-search-wrap"
-      searchPredicate={(row, query) => norm(JSON.stringify(row)).includes(query)}
-      filterPredicate={filterPredicate}
+      searchPredicate={serverFiltered ? () => true : (row, query) => norm(JSON.stringify(row)).includes(query)}
+      filterPredicate={serverFiltered ? undefined : filterPredicate}
       toolsExtra={toolsExtra}
       toolsClassName="ledger-tools"
       searchClassName="ledger-search"
@@ -329,10 +331,27 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   const isPagedTab = activeTab === 'settlements' || activeTab === 'buildings';
   const rowLimit = isPagedTab ? LEDGER_PAGE_SIZE : 0;
   const activeSort = sortByTab[activeTab] ?? DEFAULT_LEDGER_SORTS[activeTab];
-  const data = useLedgerOverviewBridge(activeTab, rowOffset, rowLimit, isPagedTab ? activeSort : undefined);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<LedgerFilters>(DEFAULT_FILTERS);
   const [virtualRowHeight, setVirtualRowHeight] = useState(60);
+  const bridgeFilters = useMemo(() => ({
+    searchText: isPagedTab ? search : '',
+    settlementFactionFilter: activeTab === 'settlements' ? filters.settlementFaction : ALL_FILTER,
+    settlementTypeFilter: activeTab === 'settlements' ? filters.settlementType : ALL_FILTER,
+    settlementRegionFilter: activeTab === 'settlements' ? filters.settlementRegion : ALL_FILTER,
+    buildingCategoryFilter: activeTab === 'buildings' ? filters.buildingCategory : ALL_FILTER,
+    buildingFactionFilter: activeTab === 'buildings' ? filters.buildingFaction : ALL_FILTER,
+  }), [
+    activeTab,
+    filters.buildingCategory,
+    filters.buildingFaction,
+    filters.settlementFaction,
+    filters.settlementRegion,
+    filters.settlementType,
+    isPagedTab,
+    search,
+  ]);
+  const data = useLedgerOverviewBridge(activeTab, rowOffset, rowLimit, isPagedTab ? activeSort : undefined, bridgeFilters);
 
   const settlements = data?.settlements ?? EMPTY_SETTLEMENTS;
   const militaries = data?.militaries ?? EMPTY_MILITARIES;
@@ -405,9 +424,9 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   ];
 
   const activeRowCount = activeTab === 'settlements'
-    ? (data?.settlementCount ?? settlements.length)
+    ? (data?.filteredSettlementCount ?? data?.settlementCount ?? settlements.length)
     : activeTab === 'buildings'
-      ? (data?.buildingCount ?? buildings.length)
+      ? (data?.filteredBuildingCount ?? data?.buildingCount ?? buildings.length)
       : 0;
   const activePageRowCount = activeTab === 'settlements'
     ? settlements.length
@@ -609,7 +628,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
 
   const table = (() => {
     if (activeTab === 'settlements') {
-      return <BulkTable rows={settlements} columns={settlementColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.266.1')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.266.2')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} sortState={activeSort} onSortChange={setLedgerSort} filterPredicate={row => matchFilter(filters.settlementFaction, row.factionId) && matchFilter(filters.settlementType, normaliseToken(row.type)) && matchFilter(filters.settlementRegion, row.region)} />;
+      return <BulkTable rows={settlements} columns={settlementColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.266.1')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.266.2')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} sortState={activeSort} onSortChange={setLedgerSort} serverFiltered filterPredicate={row => matchFilter(filters.settlementFaction, row.factionId) && matchFilter(filters.settlementType, normaliseToken(row.type)) && matchFilter(filters.settlementRegion, row.region)} />;
     }
     if (activeTab === 'militaries') {
       return <BulkTable rows={militaries} columns={militaryColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.269.3')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.269.4')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} filterPredicate={row => matchFilter(filters.militaryFaction, row.factionId) && matchFilter(filters.militaryKind, militaryKindFilterValue(row.kind))} />;
@@ -621,7 +640,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
       return <BulkTable rows={resources} columns={resourceColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.275.7')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.275.8')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} filterPredicate={row => matchFilter(filters.resourceCategory, normaliseToken(row.category))} />;
     }
     if (activeTab === 'buildings') {
-      return <BulkTable rows={buildings} columns={buildingColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.9')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.10')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} sortState={activeSort} onSortChange={setLedgerSort} filterPredicate={row => matchFilter(filters.buildingCategory, normaliseToken(row.category)) && matchFilter(filters.buildingFaction, row.factionId)} />;
+      return <BulkTable rows={buildings} columns={buildingColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.9')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.10')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} sortState={activeSort} onSortChange={setLedgerSort} serverFiltered filterPredicate={row => matchFilter(filters.buildingCategory, normaliseToken(row.category)) && matchFilter(filters.buildingFaction, row.factionId)} />;
     }
     if (activeTab === 'notifications') {
       return <BulkTable rows={notifications} columns={notificationColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Ledger.Empty.Notifications')} searchLabel={webUIText('Ledger.Search.Notifications')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} defaultSortDirection="desc" filterPredicate={row => matchFilter(filters.notificationCategory, notificationCategoryFilterValue(row))} />;
