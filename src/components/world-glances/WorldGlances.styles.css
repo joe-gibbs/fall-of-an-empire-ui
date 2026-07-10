@@ -1330,6 +1330,12 @@
   opacity: 1;
 }
 
+.world-glance-node:not(.is-selected):hover .glance--military::before,
+.world-glance-node:not(.is-selected).is-hovered .glance--military::before,
+.glance--military:not(.is-selected):hover::before {
+  background-color: var(--relation-target-bg);
+}
+
 .glance--military::after {
   top: 0.2273rem;
   right: 0.2273rem;
@@ -1464,6 +1470,27 @@
 .glance-military-faction-roundel {
   width: 3rem;
   height: 3rem;
+}
+
+.glance-military-faction-roundel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  border-radius: 50%;
+  background-color: var(--relation-target-bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 100ms linear;
+}
+
+.world-glance-node:not(.is-selected):hover .glance-military-faction-roundel::before,
+.world-glance-node:not(.is-selected).is-hovered .glance-military-faction-roundel::before,
+.glance--military:not(.is-selected):hover .glance-military-faction-roundel::before {
+  opacity: 0.72;
 }
 
 .glance-military-selected-symbol {

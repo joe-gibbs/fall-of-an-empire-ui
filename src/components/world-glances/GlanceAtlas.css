@@ -36,11 +36,32 @@
   pointer-events: none !important;
 }
 
+.glance-atlas-plate .glance--military {
+  align-items: flex-start;
+}
+
+.glance-atlas-plate .glance-military-core {
+  margin-top: 0.9545rem;
+}
+
+.glance-atlas-plate.detail-flag .glance-military-core,
+.glance-atlas-plate.detail-name .glance-military-core {
+  margin-top: 0.8432rem;
+}
+
 /* Population-scaled settlement badges overflow their layout box. Give only those enlarged
    plates enough transparent atlas space to preserve the transformed badge edges. */
 .glance-atlas-plate.world-glance-node--settlement {
   box-sizing: content-box;
   padding: var(--settlement-atlas-bleed, 0);
+}
+
+/* Military status sockets and the strength label deliberately extend beyond the circular
+   marker. Include that overflow in the sampled atlas cell while keeping its anchor centred. */
+.glance-atlas-plate.world-glance-node--army,
+.glance-atlas-plate.world-glance-node--navy {
+  box-sizing: content-box;
+  padding: var(--military-atlas-bleed, 0);
 }
 
 .glance-atlas-notification-plate {

@@ -43,6 +43,8 @@ import './GlanceAtlas.css';
 const SETTLEMENT_RASTER_SCALE = 1.5;
 const SETTLEMENT_BADGE_HALF_SIZE_REM = 2.1364;
 const SETTLEMENT_ATLAS_EDGE_BLEED_REM = 0.0909;
+// Covers the furthest military crown socket (1.5rem) plus a small atlas edge guard.
+const MILITARY_ATLAS_BLEED_REM = 1.5909;
 
 // Anchor constants mirror the DOM overlay's settlement transform offset (negated); every other
 // world kind is centre-anchored, notifications bottom-centre.
@@ -112,6 +114,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   const style = {
     '--glance-atlas-raster-scale': rasterScale,
     '--settlement-atlas-bleed': `${settlementBleedRem}rem`,
+    '--military-atlas-bleed': `${section === 'army' || section === 'navy' ? MILITARY_ATLAS_BLEED_REM : 0}rem`,
   } as CSSProperties;
   const setNode = (node: HTMLDivElement | null) => plateRef(anchorKey, node);
 
