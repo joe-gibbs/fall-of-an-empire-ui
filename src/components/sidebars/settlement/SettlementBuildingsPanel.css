@@ -222,12 +222,6 @@
   display: flex;
   align-items: center;
   padding: 0.07rem 0.28rem;
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
   background: rgba(8, 12, 17, 0.28);
   color: var(--gold-light);
   font-size: 0.64rem;
@@ -237,17 +231,7 @@
 }
 
 .bld-queue-card--awaiting_resources .bld-queue-card-status {
-  border-top-color: var(--red-dark);
-  border-right-color: var(--red-dark);
-  border-bottom-color: var(--red-dark);
-  border-left-color: var(--red-dark);
   color: var(--red-light);
-}
-
-.bld-queue-card--building .bld-queue-card-status,
-.bld-queue-card--starting .bld-queue-card-status {
-  border-color: rgba(90, 166, 114, 0.45);
-  color: var(--green);
 }
 
 .bld-queue-card-action {

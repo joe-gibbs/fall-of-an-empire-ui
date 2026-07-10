@@ -241,16 +241,11 @@ function queueTooltipLines(summary?: BuildingQueueSummary): TooltipLine[] {
   const lines: TooltipLine[] = [];
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.209.1'), isHeader: true });
 
-  if (item.statusLabel) {
-    const valueColor = item.state === 'awaiting_resources'
-      ? 'var(--red)'
-      : item.state === 'building' || item.state === 'starting'
-        ? 'var(--green)'
-        : 'var(--gold)';
-    lines.push({ label: item.statusLabel, valueColor });
+  if (item.statusLabel && !isRoutineQueueState(item.state)) {
+    lines.push({ label: item.statusLabel, valueColor: 'var(--red)' });
   }
 
-  if (item.statusReason) {
+  if (item.statusReason && !isRoutineQueueState(item.state)) {
     lines.push({ label: item.statusReason });
   }
 
@@ -966,6 +961,10 @@ function ChainBranch({
 // Queue
 // ---------------------------------------------------------------------------
 
+function isRoutineQueueState(state: ConstructionQueueItem['state']): boolean {
+  return state === 'queued' || state === 'starting' || state === 'building';
+}
+
 function QueueItemCard({
   item,
   order,
@@ -980,6 +979,7 @@ function QueueItemCard({
   const buildProgressPercent = queueBuildProgressPercent(item);
   const showResourceCost = item.state === 'awaiting_resources' && item.resourceCost.length > 0;
   const showBuildProgress = item.state !== 'awaiting_resources' && buildProgressPercent !== undefined;
+  const showStatus = !isRoutineQueueState(item.state);
   const canUnqueue = !!onUnqueue && item.queueIndex !== undefined && !pendingRemoval;
 
   return (
@@ -1000,7 +1000,7 @@ function QueueItemCard({
         <div className="bld-queue-card-header">
           <div className="bld-queue-card-title-wrap">
             <span className="bld-queue-card-title">{item.name}</span>
-            {item.statusLabel && (
+            {showStatus && item.statusLabel && (
               <span className="bld-queue-card-status">{item.statusLabel}</span>
             )}
           </div>
@@ -1036,7 +1036,7 @@ function QueueItemCard({
           </span>
         </div>
 
-        {item.statusReason && (
+        {showStatus && item.statusReason && (
           <div className="bld-queue-card-reason">{item.statusReason}</div>
         )}
 
