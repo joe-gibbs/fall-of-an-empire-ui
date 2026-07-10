@@ -9,7 +9,7 @@
     "build:numeric-fonts": "python scripts/make-numeric-fonts.py",
     "import-portrait-layers": "python scripts/import-portrait-layers.py",
     "optimize-images": "python scripts/optimize-images.py",
-    "build": "tsc -b && vite build && python scripts/optimize-images.py && npm run compile:runtime-css",
+    "build": "tsc -b && vite build --logLevel warn && python scripts/optimize-images.py && npm run compile:runtime-css",
     "compile:runtime-css": "node ../Automation/compile_gameui_css.cjs --input ../UIResources/foae/assets/style.css --output ../UIResources/foae/assets/style.css",
     "refresh:runtime-capabilities": "python ../Automation/generate_gameui_runtime_capabilities.py --run-unreal",
     "lint": "python ../Automation/generate_gameui_runtime_capabilities.py --check && python ../Automation/find_unlocalised.py --webui-only --check --webui-dir src --webui-csv ../Content/Localization/WebUI.csv && python ../Automation/lint_gameui_css.py && tsc -b --pretty false && eslint .",

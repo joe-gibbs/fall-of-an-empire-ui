@@ -39,117 +39,53 @@ function cleanBuildOutputButKeepPublicFiles(): Plugin {
   }
 }
 
-// With preserveModules, CSS imports create internal virtual modules that claim
-// the clean filename (e.g. Badge.js), pushing the actual component to Badge2.js.
-// The virtual module isn't emitted as a file, but it reserves the name. This
-// plugin renames the suffixed files back and fixes all import paths.
-function fixCssNameCollisions(): Plugin {
+function preservedModuleFileName(name: string, facadeModuleId: string | null | undefined): string {
+  if (facadeModuleId && !facadeModuleId.startsWith('\0')) {
+    const modulePath = facadeModuleId.split('?', 1)[0]
+    if (/\.[cm]?[jt]sx?$/i.test(modulePath)) {
+      const relativePath = path.relative(__dirname, modulePath)
+      if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
+        return relativePath
+          .replaceAll(path.sep, '/')
+          .replace(/\.[cm]?[jt]sx?$/i, '.js')
+      }
+    }
+  }
+
+  const safeName = name.replace(/[^A-Za-z0-9._-]/g, '_')
+  return `_virtual/${safeName}-[hash].js`
+}
+
+function conciseBuildSummary(): Plugin {
   let outDir: string
 
   return {
-    name: 'fix-css-name-collisions',
+    name: 'concise-build-summary',
+    apply: 'build',
     configResolved(config) {
       outDir = config.build.outDir
     },
     closeBundle() {
-      const jsFiles: string[] = []
+      let jsFiles = 0
+      let cssFiles = 0
+      let codeBytes = 0
       const walk = (dir: string) => {
         for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
           const full = path.join(dir, entry.name)
           if (entry.isDirectory()) walk(full)
-          else if (entry.name.endsWith('.js')) jsFiles.push(full)
+          else if (entry.name.endsWith('.js')) {
+            jsFiles += 1
+            codeBytes += fs.statSync(full).size
+          } else if (entry.name.endsWith('.css')) {
+            cssFiles += 1
+            codeBytes += fs.statSync(full).size
+          }
         }
       }
       walk(outDir)
-
-      // Find files ending in 2.js where the unsuffixed name doesn't exist
-      const renames = new Map<string, string>() // old path -> new path
-      for (const file of jsFiles) {
-        const basename = path.basename(file, '.js')
-        if (!basename.endsWith('2')) continue
-        const cleanName = basename.slice(0, -1) // strip trailing "2"
-        const cleanPath = path.join(path.dirname(file), `${cleanName}.js`)
-        if (!fs.existsSync(cleanPath)) {
-          renames.set(file, cleanPath)
-        }
-      }
-
-      if (renames.size === 0) return
-
-      // Rename files
-      for (const [oldPath, newPath] of renames) {
-        fs.renameSync(oldPath, newPath)
-      }
-
-      // Rebuild file list after renames
-      const updatedFiles: string[] = []
-      const walk2 = (dir: string) => {
-        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-          const full = path.join(dir, entry.name)
-          if (entry.isDirectory()) walk2(full)
-          else if (entry.name.endsWith('.js')) updatedFiles.push(full)
-        }
-      }
-      walk2(outDir)
-
-      // Build import path replacements
-      const importFixes: Array<{ pattern: RegExp; replacement: string }> = []
-      for (const [oldPath] of renames) {
-        const oldBase = path.basename(oldPath, '.js')
-        const newBase = oldBase.slice(0, -1)
-        importFixes.push({
-          pattern: new RegExp(
-            `((?:from|import)\\s+["'][^"']*/)${escapeRegex(oldBase)}(\\.js["'])`,
-            'g',
-          ),
-          replacement: `$1${newBase}$2`,
-        })
-      }
-
-      // Fix import paths in all JS files
-      for (const file of updatedFiles) {
-        let code = fs.readFileSync(file, 'utf-8')
-        let changed = false
-        for (const { pattern, replacement } of importFixes) {
-          const updated = code.replace(pattern, replacement)
-          if (updated !== code) {
-            code = updated
-            changed = true
-          }
-        }
-        if (changed) {
-          fs.writeFileSync(file, code, 'utf-8')
-        }
-      }
-
-      // Fix HTML references in index.html
-      const htmlPath = path.join(outDir, 'index.html')
-      if (fs.existsSync(htmlPath)) {
-        let html = fs.readFileSync(htmlPath, 'utf-8')
-        let htmlChanged = false
-        for (const [oldPath] of renames) {
-          const oldBase = path.basename(oldPath, '.js')
-          const newBase = oldBase.slice(0, -1)
-          const htmlPattern = new RegExp(
-            `((?:href|src)="[^"]*/)${escapeRegex(oldBase)}(\\.js")`,
-            'g',
-          )
-          const updated = html.replace(htmlPattern, `$1${newBase}$2`)
-          if (updated !== html) {
-            html = updated
-            htmlChanged = true
-          }
-        }
-        if (htmlChanged) {
-          fs.writeFileSync(htmlPath, html, 'utf-8')
-        }
-      }
+      console.log(`WebUI code bundle: ${jsFiles} JS modules, ${cssFiles} CSS file, ${(codeBytes / 1024 / 1024).toFixed(1)} MB`)
     },
   }
-}
-
-function escapeRegex(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 /**
@@ -366,7 +302,7 @@ function serveExternalMods(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
-  plugins: [cleanBuildOutputButKeepPublicFiles(), serveOptimisedAssetVariants(), react(), fixCssNameCollisions(), serveExternalMods()],
+  plugins: [cleanBuildOutputButKeepPublicFiles(), serveOptimisedAssetVariants(), react(), conciseBuildSummary(), serveExternalMods()],
   build: {
     modulePreload: { polyfill: false },
     outDir: path.resolve(__dirname, '../UIResources/foae'),
@@ -374,12 +310,13 @@ export default defineConfig(() => ({
     copyPublicDir: false,
     minify: false,
     sourcemap: 'hidden' as const,
+    reportCompressedSize: false,
     cssCodeSplit: false,
     rollupOptions: {
       output: {
         preserveModules: true,
         preserveModulesRoot: 'src',
-        entryFileNames: '[name].js',
+        entryFileNames: chunkInfo => preservedModuleFileName(chunkInfo.name, chunkInfo.facadeModuleId),
         assetFileNames: 'assets/[name].[ext]',
       },
     },
