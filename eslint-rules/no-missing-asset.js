@@ -101,7 +101,7 @@ const rule = {
     },
     messages: {
       missing:
-        'Public file `{{path}}` does not exist under WebUI/public. Either add the file (convert from C:\\Users\\joegi\\Desktop\\foae\\assets\\Game\\... TGAs if applicable) or fix the path.',
+        'Public file `{{path}}` does not exist under WebUI/public. Either add the source asset or fix the path.',
       missingPersonInteractionBackground:
         'Generated person interaction background `{{path}}` is missing for interaction key `{{key}}`.',
     },

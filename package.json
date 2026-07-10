@@ -3,11 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
+    "scripts": {
     "dev": "vite",
     "dev:mock": "vite --mode mock",
-    "build:numeric-fonts": "python scripts/make-numeric-fonts.py",
-    "import-portrait-layers": "python scripts/import-portrait-layers.py",
     "optimize-images": "python scripts/optimize-images.py",
     "build": "tsc -b && vite build --logLevel warn && python scripts/optimize-images.py && npm run compile:runtime-css",
     "compile:runtime-css": "node ../Automation/compile_gameui_css.cjs --input ../UIResources/foae/assets/style.css --output ../UIResources/foae/assets/style.css",

@@ -24,57 +24,6 @@
         };
       })();
     </script>
-    <script>
-      window.process = window.process || {};
-      window.process.env = window.process.env || {};
-      window.process.env.NODE_ENV = window.process.env.NODE_ENV || 'production';
-      window.process.env.NODE_DEBUG = window.process.env.NODE_DEBUG || '';
-    </script>
-    <script src="/devtools/react-devtools-backend.js"></script>
-    <script>
-      (function () {
-        var backend = window.FoaeReactDevToolsBackend;
-        if (!backend || window.__FOAE_REACT_DEVTOOLS__) return;
-
-        backend.initialize(window);
-
-        var listeners = [];
-        var outbound = [];
-        var activated = false;
-        var bridge = null;
-
-        var wall = {
-          listen: function (listener) {
-            listeners.push(listener);
-            return function () {
-              var index = listeners.indexOf(listener);
-              if (index !== -1) listeners.splice(index, 1);
-            };
-          },
-          send: function (event, payload) {
-            outbound.push({ event: event, payload: payload });
-          },
-        };
-
-        window.__FOAE_REACT_DEVTOOLS__ = {
-          sendToBackend: function (event, payload) {
-            listeners.slice().forEach(function (listener) {
-              listener({ event: event, payload: payload });
-            });
-          },
-          drain: function () {
-            return outbound.splice(0, outbound.length);
-          },
-        };
-
-        window.__FOAE_REACT_DEVTOOLS_ACTIVATE__ = function () {
-          if (activated) return;
-          activated = true;
-          bridge = backend.createBridge(window, wall);
-          backend.activate(window, { bridge: bridge });
-        };
-      })();
-    </script>
   </head>
   <body oncontextmenu="return false">
     <div id="root"></div>
