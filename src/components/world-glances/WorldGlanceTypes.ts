@@ -100,6 +100,7 @@ export interface SettlementGlanceData {
   isCapital?: boolean;
   isProvincialCapital?: boolean;
   settlementType: 'city' | 'town' | 'village' | 'metropolis' | 'fortress' | 'monastery' | 'port' | 'mining';
+  badgeScale: number;
   health: number;
   selected?: boolean;
   targeted?: boolean;

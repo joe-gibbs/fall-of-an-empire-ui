@@ -1,7 +1,7 @@
 /* Offscreen atlas page: plates paint into fixed slots; the engine composites slot sub-rects
    at same-frame positions. Nothing here is ever shown directly to the player. */
 
-.glance-atlas-root {
+.world-anchor-atlas-root {
   position: relative;
   width: 4096px;
   height: 4096px;
@@ -9,10 +9,17 @@
   background: transparent;
 }
 
-.glance-atlas-cell {
+.world-anchor-ghost-layer,
+.world-anchor-live-layer {
   position: absolute;
-  overflow: hidden;
+  inset: 0;
   pointer-events: none;
+}
+
+/* Ghosts sit under live elements; both layers span the whole atlas and their children are
+   absolutely positioned by the world-anchor host. */
+.world-anchor-ghost-layer > * {
+  position: absolute;
 }
 
 /* Plates reuse the DOM overlay's node classes for styling but are pinned visible at the cell
@@ -24,6 +31,26 @@
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
-  transform: none !important;
+  transform: scale(var(--glance-atlas-raster-scale, 1)) !important;
+  transform-origin: left top;
   pointer-events: none !important;
+}
+
+/* Population-scaled settlement badges overflow their layout box. Give only those enlarged
+   plates enough transparent atlas space to preserve the transformed badge edges. */
+.glance-atlas-plate.world-glance-node--settlement {
+  box-sizing: content-box;
+  padding: var(--settlement-atlas-bleed, 0);
+}
+
+.glance-atlas-notification-plate {
+  width: 19rem;
+  max-width: 19rem;
+  transform-origin: left top;
+}
+
+.glance-atlas-notification-plate .notification-slot,
+.glance-atlas-notification-plate .notification-banner {
+  animation: none !important;
+  transition: none !important;
 }

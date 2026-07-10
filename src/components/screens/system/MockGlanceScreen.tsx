@@ -443,6 +443,7 @@ function mockSettlementData(data: SettlementMock, variant: SettlementVariant): S
     isCapital: data.status === 'Capital',
     isProvincialCapital: false,
     settlementType: settlementType(data.typeLabel),
+    badgeScale: data.population < 1500 ? 0.65 : data.population < 10000 ? 0.9 : data.population < 100000 ? 1.15 : 1.35,
     health: data.health,
     besieged: data.status === 'Besieged',
     siegeProgress: data.status === 'Besieged' ? data.siegeProgress : 0,

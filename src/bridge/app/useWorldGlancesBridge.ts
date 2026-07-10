@@ -141,6 +141,9 @@ function frameHasEntries(frame: WorldGlancesFrameResponse): boolean {
 }
 
 const FRAME_SETTLEMENT_PROGRESS_EPSILON = 0.0001;
+const FRAME_BATTLE_MORALE_EPSILON = 0.001;
+const WORLD_GLANCE_FRAME_HEADER_NUMBER_COUNT = 7;
+const WORLD_GLANCE_FRAME_BATTLE_NUMBER_STRIDE = 6;
 
 function clampUnit(value: number): number {
   if (!Number.isFinite(value)) {
@@ -213,6 +216,89 @@ function mergeFrameSettlementProgress(
   });
 
   return changed ? { ...data, settlements } : data;
+}
+
+function mergeFrameBattleValues(
+  data: GetWorldGlancesResponse | null,
+  frame: WorldGlancesFrameResponse,
+): GetWorldGlancesResponse | null {
+  const battleCount = worldGlanceFrameEntryCount(frame, 'battle');
+  if (!data || battleCount === 0) {
+    return data;
+  }
+
+  const frameBattleById = new Map<string, Required<Pick<WorldGlanceFrameEntry,
+    | 'attackerStrength'
+    | 'attackerMorale'
+    | 'attackerLastLosses'
+    | 'defenderStrength'
+    | 'defenderMorale'
+    | 'defenderLastLosses'
+  >>>();
+  const scratch = makeWorldGlanceFrameEntryScratch();
+  for (let index = 0; index < battleCount; index += 1) {
+    const entry = readWorldGlanceFrameEntry(frame, 'battle', index, scratch);
+    const id = worldGlanceFrameEntryIdFromSnapshot(data, frame, 'battle', index);
+    if (
+      !entry
+      || !id
+      || entry.attackerStrength === undefined
+      || entry.attackerMorale === undefined
+      || entry.attackerLastLosses === undefined
+      || entry.defenderStrength === undefined
+      || entry.defenderMorale === undefined
+      || entry.defenderLastLosses === undefined
+    ) {
+      continue;
+    }
+
+    frameBattleById.set(id, {
+      attackerStrength: entry.attackerStrength,
+      attackerMorale: entry.attackerMorale,
+      attackerLastLosses: entry.attackerLastLosses,
+      defenderStrength: entry.defenderStrength,
+      defenderMorale: entry.defenderMorale,
+      defenderLastLosses: entry.defenderLastLosses,
+    });
+  }
+
+  let changed = false;
+  const battles = data.battles.map((battle) => {
+    const values = frameBattleById.get(battle.id);
+    if (!values) {
+      return battle;
+    }
+
+    if (
+      battle.attacker.totalStrength === values.attackerStrength
+      && Math.abs(battle.attacker.morale - values.attackerMorale) <= FRAME_BATTLE_MORALE_EPSILON
+      && battle.attacker.lastLosses === values.attackerLastLosses
+      && battle.defender.totalStrength === values.defenderStrength
+      && Math.abs(battle.defender.morale - values.defenderMorale) <= FRAME_BATTLE_MORALE_EPSILON
+      && battle.defender.lastLosses === values.defenderLastLosses
+    ) {
+      return battle;
+    }
+
+    changed = true;
+    return {
+      ...battle,
+      attacker: {
+        ...battle.attacker,
+        totalStrength: values.attackerStrength,
+        morale: values.attackerMorale,
+        lastLosses: values.attackerLastLosses,
+      },
+      defender: {
+        ...battle.defender,
+        totalStrength: values.defenderStrength,
+        morale: values.defenderMorale,
+        lastLosses: values.defenderLastLosses,
+      },
+    };
+  });
+
+  return changed ? { ...data, battles } : data;
 }
 
 function cachedWorldGlancesSnapshot(): GetWorldGlancesResponse | null {
@@ -290,7 +376,8 @@ export function useWorldGlancesBridge(enabled = true) {
     });
 
     const unsubFrame = onWorldGlancesFrame((frame) => {
-      const nextData = mergeFrameSettlementProgress(dataRef.current, frame);
+      const settlementData = mergeFrameSettlementProgress(dataRef.current, frame);
+      const nextData = mergeFrameBattleValues(settlementData, frame);
       if (nextData !== dataRef.current) {
         applySnapshot(nextData);
       }
@@ -330,6 +417,12 @@ export interface WorldGlanceFrameEntry {
   siegeProgress?: number;
   hasBuilding?: boolean;
   buildProgress?: number;
+  attackerStrength?: number;
+  attackerMorale?: number;
+  attackerLastLosses?: number;
+  defenderStrength?: number;
+  defenderMorale?: number;
+  defenderLastLosses?: number;
 }
 
 export interface ObjectWorldGlancesFrameResponse {
@@ -523,6 +616,22 @@ export function readWorldGlanceFrameEntry(
   out.hasBuilding = (flags & WORLD_GLANCE_FRAME_HAS_BUILDING_FLAG) !== 0;
   out.siegeProgress = frame.entryNumbers[numberOffset + 6] ?? 0;
   out.buildProgress = frame.entryNumbers[numberOffset + 7] ?? 0;
+  out.attackerStrength = undefined;
+  out.attackerMorale = undefined;
+  out.attackerLastLosses = undefined;
+  out.defenderStrength = undefined;
+  out.defenderMorale = undefined;
+  out.defenderLastLosses = undefined;
+  if (section === 'battle') {
+    const battleNumberOffset = WORLD_GLANCE_FRAME_HEADER_NUMBER_COUNT
+      + localIndex * WORLD_GLANCE_FRAME_BATTLE_NUMBER_STRIDE;
+    out.attackerStrength = frame.frameNumbers[battleNumberOffset] ?? 0;
+    out.attackerMorale = frame.frameNumbers[battleNumberOffset + 1] ?? 0;
+    out.attackerLastLosses = frame.frameNumbers[battleNumberOffset + 2] ?? 0;
+    out.defenderStrength = frame.frameNumbers[battleNumberOffset + 3] ?? 0;
+    out.defenderMorale = frame.frameNumbers[battleNumberOffset + 4] ?? 0;
+    out.defenderLastLosses = frame.frameNumbers[battleNumberOffset + 5] ?? 0;
+  }
   return out;
 }
 

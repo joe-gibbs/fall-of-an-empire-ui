@@ -2669,6 +2669,8 @@
   border-color: rgba(18, 20, 22, 0);
   border-radius: 0;
   overflow: visible;
+  transform: scale(var(--settlement-badge-scale));
+  transform-origin: center;
 }
 
 .gset-type-core::before,
@@ -2716,6 +2718,20 @@
 
 .gset-badge-layer--foreground {
   z-index: 4;
+}
+
+.gset-badge-layer--hover {
+  z-index: 5;
+  opacity: 0;
+  transition-property: opacity;
+  transition-duration: 90ms;
+  transition-timing-function: linear;
+}
+
+.world-glance-node:hover .glance--settlement .gset-badge-layer--hover,
+.world-glance-node.is-hovered .glance--settlement .gset-badge-layer--hover,
+.glance--settlement.is-hovered .gset-badge-layer--hover {
+  opacity: 0.58;
 }
 
 .gset-selected-indicator,
@@ -2863,7 +2879,7 @@
   flex-basis: 8.6364rem;
   min-width: 0;
   min-height: 2.4545rem;
-  margin-left: 0;
+  margin-left: var(--settlement-badge-overhang);
   padding: 0.3636rem 0.5rem 0.3182rem 0.4091rem;
   transform: translateX(0) scaleX(1);
   transform-origin: left center;
@@ -2936,9 +2952,12 @@
   letter-spacing: 0;
   color: var(--text-header);
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
   white-space: nowrap;
   text-align: left;
+  game-ui-font-fit-mode: shrink;
+  game-ui-font-fit-min-size: 0.5rem;
+  game-ui-font-fit-max-size: 0.8182rem;
 }
 
 .gset-info,

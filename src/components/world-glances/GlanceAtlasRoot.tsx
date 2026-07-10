@@ -1,6 +1,7 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { memo, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
-import { acknowledgeBridgeFailure, getRuntimeEngine } from '../../bridge/core/runtimeEngine';
+import { useUIScale } from '../../bridge/core/useUIScale';
+import { onNotificationAnchorsFrame } from '../../bridge/app/useNotificationsBridge';
 import {
   WORLD_GLANCE_FRAME_SECTIONS,
   makeWorldGlanceFrameEntryScratch,
@@ -19,6 +20,9 @@ import {
   mapPort,
   mapSettlement,
 } from './WorldGlanceMappers';
+import { useGameState } from '../../context/GameContextCore';
+import type { Notification } from '../../data/types';
+import NotificationBanner from '../notifications/NotificationBanner';
 import type { WorldGlanceDetailClass } from './WorldGlanceTypes';
 import ArmyGlance from './ArmyGlance';
 import BattleGlance from './BattleGlance';
@@ -27,60 +31,33 @@ import NavyGlance from './NavyGlance';
 import PortGlance from './PortGlance';
 import SettlementGlance from './SettlementGlance';
 import './WorldGlances.css';
+import '../notifications/NotificationStack.css';
 import './GlanceAtlas.css';
 
-// The atlas page paints every catalogued glance plate into a fixed slot; the engine composites
-// slot sub-rects at the current game frame's positions. Slots are shelf-packed into alternating
-// vertical halves of the atlas per layout revision, so the previously reported half stays
-// painted while the engine transitions to a new layout (its texture arrives frames later).
+// Consumer of the world-anchor host (src/runtime/worldAnchorHost.tsx): renders one plate per
+// catalogued glance entity / active notification with data-world-anchor attributes. The host
+// owns all geometry (packing, atlas regions, ghosting, layout reports); this component owns
+// CONTENT only — which plates exist, their detail class, selection/hover styling.
 
-const ATLAS_WIDTH = 4096;
-const ATLAS_HEIGHT = 4096;
-// Four rotating regions: the engine may sample a couple of layout generations behind (each
-// must age past its paint guard), so a region is only repainted three layouts after it was
-// last reported — old layouts stay sampleable instead of tearing.
-const ATLAS_REGIONS = 4;
-const REGION_HEIGHT = ATLAS_HEIGHT / ATLAS_REGIONS;
-const CELL_GAP = 4;
-const RELAYOUT_THROTTLE_MS = 400;
-const RELAYOUT_MIN_INTERVAL_MS = 120;
+const SETTLEMENT_RASTER_SCALE = 1.5;
+const SETTLEMENT_BADGE_HALF_SIZE_REM = 2.1364;
+const SETTLEMENT_ATLAS_EDGE_BLEED_REM = 0.0909;
 
-function noopPlateRef() {}
 // Anchor constants mirror the DOM overlay's settlement transform offset (negated); every other
-// kind is centre-anchored on its rendered plate.
+// world kind is centre-anchored, notifications bottom-centre.
 const SETTLEMENT_ANCHOR_X_REM = 1.9091;
 const SETTLEMENT_ANCHOR_Y_REM = 2.1364;
 
-const CELL_BUDGETS: Record<WorldGlanceFrameSection, Record<WorldGlanceDetailClass, [number, number]>> = {
-  settlement: { 'detail-flag': [96, 84], 'detail-name': [244, 100], 'detail-detailed': [424, 344] },
-  port: { 'detail-flag': [84, 68], 'detail-name': [244, 92], 'detail-detailed': [324, 204] },
-  convoy: { 'detail-flag': [284, 174], 'detail-name': [284, 174], 'detail-detailed': [284, 174] },
-  army: { 'detail-flag': [100, 84], 'detail-name': [264, 114], 'detail-detailed': [324, 244] },
-  navy: { 'detail-flag': [100, 84], 'detail-name': [264, 114], 'detail-detailed': [324, 244] },
-  battle: { 'detail-flag': [324, 174], 'detail-name': [324, 174], 'detail-detailed': [324, 174] },
-};
+type AtlasSection = WorldGlanceFrameSection | 'notification';
+const ATLAS_SECTIONS: readonly AtlasSection[] = [...WORLD_GLANCE_FRAME_SECTIONS, 'notification'];
 
-interface AtlasCell {
-  key: string;
-  section: WorldGlanceFrameSection;
-  // Stable entity id: cell content must be resolved against the CURRENT snapshot by id at
-  // render time — an array index captured at packing time dereferences the wrong entity (or
-  // nothing) once a newer catalogue replaces the data, blanking plates until the next repack.
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  detail: WorldGlanceDetailClass;
+// Anchor keys are the modder-facing contract with the engine compositor: an engine placement
+// source must emit the same key for the element to be drawn.
+function worldAnchorKey(section: AtlasSection, id: string): string {
+  return section === 'notification' ? `notif:${id}` : `glance:${section}:${id}`;
 }
 
-interface AtlasLayoutState {
-  revision: number;
-  snapshotRevision: number;
-  cells: AtlasCell[];
-}
-
-function sectionEntries(data: GetWorldGlancesResponse, section: WorldGlanceFrameSection): { id: string }[] {
+function worldSectionEntries(data: GetWorldGlancesResponse, section: WorldGlanceFrameSection): { id: string }[] {
   if (section === 'settlement') return data.settlements;
   if (section === 'port') return data.ports;
   if (section === 'convoy') return data.convoys;
@@ -89,83 +66,69 @@ function sectionEntries(data: GetWorldGlancesResponse, section: WorldGlanceFrame
   return data.battles;
 }
 
-// Cell keys use the stable entity id (matching the ids in frame entries) so a layout stays
-// valid for the engine across snapshot revisions — source indexes remap every revision.
-function cellKey(section: WorldGlanceFrameSection, id: string): string {
-  return `${WORLD_GLANCE_FRAME_SECTIONS.indexOf(section)}:${id}`;
+function currentRuntimeRootFontPx(): number {
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--runtime-root-font-size');
+  return Number.parseFloat(value) || 13.2;
 }
 
-function currentRuntimeViewportScale(): number {
-  const value = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--runtime-viewport-scale'));
-  return Number.isFinite(value) && value > 0 ? value : 1;
+function anchorPointFor(section: AtlasSection, remPx: number, settlementBleedRem: number): string {
+  if (section === 'settlement') {
+    return `${((SETTLEMENT_ANCHOR_X_REM + settlementBleedRem) * remPx).toFixed(2)},${((SETTLEMENT_ANCHOR_Y_REM + settlementBleedRem) * remPx).toFixed(2)}`;
+  }
+  if (section === 'notification') {
+    return '50% 100%';
+  }
+  return 'center';
 }
 
-function packCells(
-  data: GetWorldGlancesResponse,
-  detailByKey: Map<string, WorldGlanceDetailClass>,
-  seenByKey: Map<string, number>,
-  regionIndex: number,
-  runtimeScale: number,
-): AtlasCell[] {
-  // Pack plates the engine has recently placed on screen first: the catalogue can outgrow the
-  // atlas region, and overflow must only ever drop plates that are not currently visible.
-  const pending: { key: string; section: WorldGlanceFrameSection; id: string; seenAt: number }[] = [];
-  for (const section of WORLD_GLANCE_FRAME_SECTIONS) {
-    const entries = sectionEntries(data, section);
-    for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
-      const id = entries[entryIndex]?.id;
-      if (!id) {
-        continue;
-      }
-      const key = cellKey(section, id);
-      pending.push({ key, section, id, seenAt: seenByKey.get(key) ?? 0 });
-    }
-  }
-  pending.sort((a, b) => b.seenAt - a.seenAt);
-
-  const cells: AtlasCell[] = [];
-  const originY = regionIndex * REGION_HEIGHT;
-  let cursorX = CELL_GAP;
-  let cursorY = originY + CELL_GAP;
-  let rowHeight = 0;
-  let overflowed = 0;
-
-  for (const item of pending) {
-    const detail = detailByKey.get(item.key) ?? 'detail-flag';
-    const [baseWidth, baseHeight] = CELL_BUDGETS[item.section][detail];
-    const width = Math.ceil(baseWidth * runtimeScale);
-    const height = Math.ceil(baseHeight * runtimeScale);
-
-    if (cursorX + width + CELL_GAP > ATLAS_WIDTH) {
-      cursorX = CELL_GAP;
-      cursorY += rowHeight + CELL_GAP;
-      rowHeight = 0;
-    }
-    if (cursorY + height > originY + REGION_HEIGHT) {
-      overflowed += 1;
-      continue;
-    }
-
-    cells.push({ key: item.key, section: item.section, id: item.id, x: cursorX, y: cursorY, width, height, detail });
-    cursorX += width + CELL_GAP;
-    rowHeight = Math.max(rowHeight, height);
-  }
-
-  if (overflowed > 0) {
-    console.warn(`glance atlas region ${regionIndex} overflowed: ${overflowed} plates unpacked (least recently visible)`);
-  }
-
-  return cells;
+function rasterScaleForSection(section: AtlasSection): number {
+  return section === 'settlement' ? SETTLEMENT_RASTER_SCALE : 1;
 }
 
-const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, entry, detail, selected, targeted, plateRef }: {
-  section: WorldGlanceFrameSection;
+const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, remPx, plateRef }: {
+  section: AtlasSection;
+  id: string;
   entry: unknown;
   detail: WorldGlanceDetailClass;
   selected: boolean;
   targeted: boolean;
-  plateRef: (node: HTMLDivElement | null) => void;
+  hovered: boolean;
+  remPx: number;
+  plateRef: (key: string, node: HTMLDivElement | null) => void;
 }) {
+  const anchorKey = worldAnchorKey(section, id);
+  const rasterScale = rasterScaleForSection(section);
+  const settlementBleedRem = section === 'settlement'
+    ? ((entry as GetWorldGlancesResponse['settlements'][number]).badgeScale > 1
+      ? (((entry as GetWorldGlancesResponse['settlements'][number]).badgeScale - 1) * SETTLEMENT_BADGE_HALF_SIZE_REM) + SETTLEMENT_ATLAS_EDGE_BLEED_REM
+      : 0)
+    : 0;
+  const anchorAttributes = {
+    'data-world-anchor': anchorKey,
+    'data-world-anchor-point': anchorPointFor(section, remPx, settlementBleedRem),
+    'data-world-anchor-raster-scale': rasterScale,
+  };
+  const style = {
+    '--glance-atlas-raster-scale': rasterScale,
+    '--settlement-atlas-bleed': `${settlementBleedRem}rem`,
+  } as CSSProperties;
+  const setNode = (node: HTMLDivElement | null) => plateRef(anchorKey, node);
+
+  if (section === 'notification') {
+    return (
+      <div
+        ref={setNode}
+        className="world-glance world-glance-node world-glance-node--notification detail-flag glance-atlas-plate glance-atlas-notification-plate"
+        style={style}
+        {...anchorAttributes}
+      >
+        <div className="settlement-notification-slot notification-slot notification-slot--regular">
+          <NotificationBanner notification={entry as Notification} onClose={() => {}} />
+        </div>
+      </div>
+    );
+  }
+
   let content: ReactNode = null;
   if (section === 'settlement') content = <SettlementGlance data={mapSettlement(entry as GetWorldGlancesResponse['settlements'][number])} />;
   else if (section === 'port') content = <PortGlance data={mapPort(entry as GetWorldGlancesResponse['ports'][number])} />;
@@ -183,155 +146,149 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, entry, detail
   ];
   if (selected) classes.push('is-selected');
   if (targeted) classes.push('is-targeted');
+  if (hovered) classes.push('is-hovered');
 
   return (
-    <div ref={plateRef} className={classes.join(' ')}>
+    <div ref={setNode} className={classes.join(' ')} style={style} {...anchorAttributes}>
       <div className="glance-tip world-glance-tip">{content}</div>
     </div>
   );
 });
 
 export default function GlanceAtlasRoot() {
+  const uiScale = useUIScale();
   const data = useWorldGlancesBridge();
-  const dataRef = useRef<GetWorldGlancesResponse | null>(null);
+  const { notifications } = useGameState();
 
   const detailByKeyRef = useRef<Map<string, WorldGlanceDetailClass>>(new Map());
   const flagsByKeyRef = useRef<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
-  const seenByKeyRef = useRef<Map<string, number>>(new Map());
-  const packedKeysRef = useRef<Set<string>>(new Set());
   const plateNodesRef = useRef<Map<string, HTMLDivElement>>(new Map());
   // Last known entry per entity: plates keep rendering through brief catalogue churn (fog
   // flicker, event latency) instead of blanking a cell the engine is still compositing.
-  const entryCacheRef = useRef<Map<WorldGlanceFrameSection, Map<string, { id: string }>>>(new Map());
-  const layoutRevisionRef = useRef(0);
-  const relayoutTimerRef = useRef<number | null>(null);
-  const lastRelayoutAtRef = useRef(0);
+  const entryCacheRef = useRef<Map<AtlasSection, Map<string, { id: string }>>>(new Map());
 
-  // Newest-first, up to three generations. Older generations STAY MOUNTED: unmounting (or
-  // moving) their plates damage-clears their atlas region immediately, while the engine keeps
-  // compositing from an older layout until the newest one ages past its paint guard — every
-  // repack then strobed all plates blank. With three generations resident (four regions), the
-  // region cleared by pruning is never one the engine can still be reading.
-  const [layouts, setLayouts] = useState<AtlasLayoutState[]>([]);
+  const [detailByKey, setDetailByKey] = useState<Map<string, WorldGlanceDetailClass>>(new Map());
   const [flagsByKey, setFlagsByKey] = useState<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
-  const [entryCache, setEntryCache] = useState<Map<WorldGlanceFrameSection, Map<string, { id: string }>>>(new Map());
+  const [hoveredKeys, setHoveredKeys] = useState<Set<string>>(new Set());
+  const [entryCache, setEntryCache] = useState<Map<AtlasSection, Map<string, { id: string }>>>(new Map());
+  const [activeNotificationIds, setActiveNotificationIds] = useState<Set<string>>(new Set());
+  const [runtimeRootFontPx, setRuntimeRootFontPx] = useState(() => currentRuntimeRootFontPx());
+  const remPx = runtimeRootFontPx * (uiScale ?? 1);
 
-  const rebuildLayout = useCallback(() => {
-    const snapshot = dataRef.current;
-    if (!snapshot) {
-      return;
+  const plateRef = (key: string, node: HTMLDivElement | null) => {
+    if (node) {
+      plateNodesRef.current.set(key, node);
+    } else {
+      plateNodesRef.current.delete(key);
     }
+  };
 
-    lastRelayoutAtRef.current = Date.now();
-    layoutRevisionRef.current += 1;
-    const revision = layoutRevisionRef.current;
-    const cells = packCells(snapshot, detailByKeyRef.current, seenByKeyRef.current, revision % ATLAS_REGIONS, currentRuntimeViewportScale());
-    packedKeysRef.current = new Set(cells.map((cell) => cell.key));
-    setLayouts((previous) => [
-      {
-        revision,
-        snapshotRevision: snapshot.snapshotRevision ?? 0,
-        cells,
-      },
-      ...previous,
-    ].slice(0, 3));
-  }, []);
-
-  const scheduleRelayout = useCallback((urgent = false) => {
-    // Snapshot-revision changes remap every SourceIndex, so the engine freezes on the previous
-    // pairing until the new layout lands — repack those near-immediately. Content-driven repacks
-    // (detail class churn) stay coarsely throttled.
-    const minInterval = urgent ? RELAYOUT_MIN_INTERVAL_MS : RELAYOUT_THROTTLE_MS;
-    const dueAt = lastRelayoutAtRef.current + minInterval;
-    const delay = Math.max(dueAt - Date.now(), 0);
-    if (relayoutTimerRef.current !== null) {
-      if (!urgent) {
-        return;
-      }
-      window.clearTimeout(relayoutTimerRef.current);
-    }
-    relayoutTimerRef.current = window.setTimeout(() => {
-      relayoutTimerRef.current = null;
-      rebuildLayout();
-    }, delay);
-  }, [rebuildLayout]);
-
-  // Cells are id-keyed, so catalogue churn does NOT invalidate the layout: entities keep their
-  // cells and just repaint in place (small dirty rects, no region rotation). Repacking on every
-  // snapshot revision saturated the atlas renderer under fast pans / high game speed, and the
-  // engine then sampled regions whose paint lagged the layout report — the plate flicker.
-  // Repacks happen only when the cell SET is wrong: first catalogue, a visible plate without a
-  // cell (frame handler below), detail-class growth, or dead-cell drift after churn.
+  // Fold new catalogue entries into the persistent cache (see comment above).
   useEffect(() => {
     if (!data) {
       return;
     }
-
-    dataRef.current = data;
-    let entryCacheChanged = false;
-    for (const section of WORLD_GLANCE_FRAME_SECTIONS) {
+    let changed = false;
+    for (const section of ATLAS_SECTIONS) {
       let sectionCache = entryCacheRef.current.get(section);
       if (!sectionCache) {
         sectionCache = new Map();
         entryCacheRef.current.set(section, sectionCache);
-        entryCacheChanged = true;
+        changed = true;
       }
-      for (const entry of sectionEntries(data, section)) {
+      const entries = section === 'notification' ? notifications : worldSectionEntries(data, section);
+      for (const entry of entries) {
         if (entry?.id) {
           if (sectionCache.get(entry.id) !== entry) {
-            entryCacheChanged = true;
+            changed = true;
           }
           sectionCache.set(entry.id, entry);
         }
       }
     }
-    if (entryCacheChanged) {
+    if (changed) {
       setEntryCache(new Map(
         Array.from(entryCacheRef.current.entries(), ([section, sectionCache]) => [section, new Map(sectionCache)]),
       ));
     }
+  }, [data, notifications]);
 
-    if (layoutRevisionRef.current === 0) {
-      scheduleRelayout(true);
-      return;
-    }
-
-    const catalogueSize = WORLD_GLANCE_FRAME_SECTIONS.reduce(
-      (total, section) => total + sectionEntries(data, section).length,
-      0,
-    );
-    const packedCount = packedKeysRef.current.size;
-    if (packedCount > catalogueSize * 1.5 + 32 || catalogueSize > packedCount * 1.5 + 32) {
-      scheduleRelayout(false);
-    }
-  }, [data, scheduleRelayout]);
-
+  // Runtime viewport scale changes rem sizing: plates resize (the host repacks via its
+  // ResizeObserver) and settlement anchor points must be restated in fresh px.
   useEffect(() => {
-    const onRuntimeViewport = () => scheduleRelayout(true);
+    const onRuntimeViewport = () => setRuntimeRootFontPx(currentRuntimeRootFontPx());
     window.addEventListener('foae:runtime-viewport', onRuntimeViewport);
     return () => window.removeEventListener('foae:runtime-viewport', onRuntimeViewport);
-  }, [scheduleRelayout]);
+  }, []);
 
-  // Frame events drive per-entry detail level and selection/target content bits (positions are
-  // consumed engine-side only).
+  // Engine-side hover forwarding (native composite input path).
+  useEffect(() => {
+    const onHover = (event: Event) => {
+      const args = (event as CustomEvent<{ args?: unknown[] }>).detail?.args;
+      const section = args?.[0];
+      const id = args?.[1];
+      const hovered = args?.[2];
+      if (typeof section !== 'string' || typeof id !== 'string' || typeof hovered !== 'boolean') {
+        return;
+      }
+      if (!WORLD_GLANCE_FRAME_SECTIONS.includes(section as WorldGlanceFrameSection)) {
+        return;
+      }
+      const key = worldAnchorKey(section as AtlasSection, id);
+      setHoveredKeys((previous) => {
+        const contains = previous.has(key);
+        if (contains === hovered) {
+          return previous;
+        }
+        const next = new Set(previous);
+        if (hovered) next.add(key);
+        else next.delete(key);
+        return next;
+      });
+    };
+
+    window.addEventListener('StrategyWorldGlanceHover', onHover);
+    return () => window.removeEventListener('StrategyWorldGlanceHover', onHover);
+  }, []);
+
+  // Notification anchor frames define which notification plates are live.
+  useEffect(() => onNotificationAnchorsFrame((frame) => {
+    const nextIds = new Set(frame.settlements.map(entry => entry.id).filter(Boolean));
+    const now = Date.now();
+    for (const id of nextIds) {
+      const node = plateNodesRef.current.get(worldAnchorKey('notification', id));
+      if (node) {
+        node.dataset.worldAnchorPriority = String(now);
+      }
+    }
+    setActiveNotificationIds((previous) => {
+      if (previous.size === nextIds.size && [...nextIds].every(id => previous.has(id))) {
+        return previous;
+      }
+      return nextIds;
+    });
+  }), []);
+
+  // Frame events drive per-entry detail level, selection/target styling, and pack priority
+  // (recently-visible plates must win atlas space on overflow). Priority is stamped imperatively
+  // on the DOM nodes: it changes every frame and must not re-render or reorder plates.
   useEffect(() => {
     const scratch = makeWorldGlanceFrameEntryScratch();
     return onWorldGlancesFrame((frame) => {
       let detailChanged = false;
       let flagsChanged = false;
-      let visiblePlateUnpacked = false;
       const now = Date.now();
       for (const section of WORLD_GLANCE_FRAME_SECTIONS) {
         const count = worldGlanceFrameEntryCount(frame, section);
         for (let index = 0; index < count; index += 1) {
           const entry = readWorldGlanceFrameEntry(frame, section, index, scratch);
           if (!entry || !entry.id) continue;
-          const key = cellKey(section, entry.id);
+          const key = worldAnchorKey(section, entry.id);
 
           if ((entry.opacity ?? 0) > 0.05) {
-            seenByKeyRef.current.set(key, now);
-            if (!packedKeysRef.current.has(key)) {
-              visiblePlateUnpacked = true;
+            const node = plateNodesRef.current.get(key);
+            if (node) {
+              node.dataset.worldAnchorPriority = String(now);
             }
           }
 
@@ -351,122 +308,52 @@ export default function GlanceAtlasRoot() {
         }
       }
 
-      if (detailChanged || visiblePlateUnpacked) {
-        // A visible plate without a cell is invisible on screen; restore it urgently.
-        scheduleRelayout(visiblePlateUnpacked);
-      } else if (flagsChanged) {
+      if (detailChanged) {
+        setDetailByKey(new Map(detailByKeyRef.current));
+      }
+      if (flagsChanged) {
         setFlagsByKey(new Map(flagsByKeyRef.current));
       }
     });
-  }, [scheduleRelayout]);
+  }, []);
 
-  // Report the painted layout to the engine only after the browser has actually painted the
-  // new packing (double rAF: the first fires before paint, the second after the frame that
-  // painted). Under renderer load the report self-delays with the paint, so the engine's age
-  // guard only has to cover the texture copy — a fixed guard alone raced real paints.
-  const layout = layouts.length > 0 ? layouts[0] : null;
-  useLayoutEffect(() => {
-    if (!layout) {
-      return;
-    }
-
-    let innerFrameId = 0;
-    const frameId = window.requestAnimationFrame(() => {
-      innerFrameId = window.requestAnimationFrame(() => {
-      const engine = getRuntimeEngine();
-      if (!engine) {
-        return;
-      }
-
-      const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      const cells = layout.cells.map((cell) => {
-        let anchorX = cell.width / 2;
-        let anchorY = cell.height / 2;
-        if (cell.section === 'settlement') {
-          anchorX = SETTLEMENT_ANCHOR_X_REM * remPx;
-          anchorY = SETTLEMENT_ANCHOR_Y_REM * remPx;
-        } else {
-          const node = plateNodesRef.current.get(cell.key);
-          if (node) {
-            anchorX = node.offsetWidth / 2;
-            anchorY = node.offsetHeight / 2;
-          }
-        }
-        return {
-          k: cell.key,
-          x: cell.x,
-          y: cell.y,
-          w: cell.width,
-          h: cell.height,
-          ax: anchorX,
-          ay: anchorY,
-        };
-      });
-
-      void Promise.resolve(engine.call('GlanceAtlasLayout', {
-        layoutRevision: layout.revision,
-        snapshotRevision: layout.snapshotRevision,
-        atlasWidth: ATLAS_WIDTH,
-        atlasHeight: ATLAS_HEIGHT,
-        cells,
-      })).catch((error) => acknowledgeBridgeFailure(error, 'GlanceAtlasLayout'));
-      });
-    });
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      if (innerFrameId) {
-        window.cancelAnimationFrame(innerFrameId);
-      }
-    };
-  }, [layout]);
-
-  // Stable per-cell ref callbacks so memoized plates skip re-rendering when only sibling
-  // content changed.
-  const makePlateRef = (key: string) => (node: HTMLDivElement | null) => {
-    if (node) {
-      plateNodesRef.current.set(key, node);
-    } else {
-      plateNodesRef.current.delete(key);
-    }
-  };
-
-  if (!data || layouts.length === 0) {
-    return <div className="glance-atlas-root" />;
+  if (!data) {
+    return null;
   }
 
-  // Every resident generation renders into its own region; keys are revision-scoped so React
-  // never MOVES a plate between regions (moving damage-clears the source region while the
-  // engine may still be sampling it).
   return (
-    <div className="glance-atlas-root">
-      {layouts.map((generation) => generation.cells.map((cell) => {
-        // Content resolves through the persistent id cache: entities briefly absent from the
-        // current catalogue keep their last-known plate instead of blanking a cell the engine
-        // is still compositing.
-        const entry = entryCache.get(cell.section)?.get(cell.id);
-        if (!entry) {
+    <>
+      {ATLAS_SECTIONS.map((section) => {
+        const sectionCache = entryCache.get(section);
+        if (!sectionCache) {
           return null;
         }
-        const flags = flagsByKey.get(cell.key);
-        const isNewest = generation.revision === layouts[0].revision;
-        return (
-          <div
-            key={`${generation.revision}:${cell.key}`}
-            className="glance-atlas-cell"
-            style={{ left: cell.x, top: cell.y, width: cell.width, height: cell.height }}
-          >
+        const liveEntries = section === 'notification'
+          ? notifications.filter(notification => activeNotificationIds.has(notification.id))
+          : worldSectionEntries(data, section);
+        return liveEntries.map((entry) => {
+          if (!entry?.id) {
+            return null;
+          }
+          const cached = sectionCache.get(entry.id) ?? entry;
+          const key = worldAnchorKey(section, entry.id);
+          const flags = flagsByKey.get(key);
+          return (
             <GlanceAtlasPlate
-              section={cell.section}
-              entry={entry}
-              detail={cell.detail}
+              key={key}
+              section={section}
+              id={entry.id}
+              entry={cached}
+              detail={detailByKey.get(key) ?? 'detail-flag'}
               selected={flags?.selected === true}
               targeted={flags?.targeted === true}
-              plateRef={isNewest ? makePlateRef(cell.key) : noopPlateRef}
+              hovered={hoveredKeys.has(key)}
+              remPx={remPx}
+              plateRef={plateRef}
             />
-          </div>
-        );
-      }))}
-    </div>
+          );
+        });
+      })}
+    </>
   );
 }

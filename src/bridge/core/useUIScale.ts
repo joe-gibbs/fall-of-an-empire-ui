@@ -7,7 +7,7 @@ import { useBridgeQuery } from './useBridgeQuery';
 // index.css multiplies the root font-size by this, so all rem-sized UI scales
 // proportionally - matching what UUserInterfaceSettings ApplicationScale does
 // for native UMG widgets.
-export function useUIScale(): void {
+export function useUIScale(): number | undefined {
   const scales = useBridgeQuery({
     action: 'game.get_settings',
     map: (data) => ({
@@ -30,4 +30,6 @@ export function useUIScale(): void {
     }
     document.documentElement.classList.toggle('ui-reduce-motion', scales?.reduceMotion === true);
   }, [scales]);
+
+  return scales?.uiScale;
 }

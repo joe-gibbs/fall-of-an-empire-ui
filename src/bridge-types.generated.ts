@@ -4175,6 +4175,7 @@ export interface WorldSettlementGlance {
   isCapital: boolean;
   isProvincialCapital: boolean;
   settlementType: string;
+  badgeScale: number;
   health: number;
   besieged: boolean;
   siegeProgress: number;
@@ -4334,6 +4335,12 @@ export interface WorldGlanceFrameEntry {
   siegeProgress: number;
   hasBuilding: boolean;
   buildProgress: number;
+  attackerStrength: number;
+  attackerMorale: number;
+  attackerLastLosses: number;
+  defenderStrength: number;
+  defenderMorale: number;
+  defenderLastLosses: number;
 }
 
 export interface GetWorldGlancesResponse {
@@ -4368,6 +4375,10 @@ export interface WorldGlancesFrameResponse {
 export interface WorldBattleStrengthSnapshot {
   attackerStrength: number;
   defenderStrength: number;
+  attackerMorale: number;
+  defenderMorale: number;
+  attackerLastLosses: number;
+  defenderLastLosses: number;
 }
 
 export interface GovernorAssignmentRequest {

@@ -21,6 +21,7 @@ import {
   type WorldGlancesFrameResponse,
 } from '../../bridge/app/useWorldGlancesBridge';
 import { toRootRem } from '../../utils/cssUnits';
+import '../world-glances/WorldGlances.css';
 import './NotificationStack.css';
 
 interface NotificationStackProps {
@@ -53,7 +54,6 @@ function canUseSettlementAnchor(notification: Notification): boolean {
 function hasInitialSettlementAnchor(notification: Notification): boolean {
   return Boolean(
     canUseSettlementAnchor(notification)
-    && notification.settlementId
     && Number.isFinite(notification.settlementScreenX)
     && Number.isFinite(notification.settlementScreenY)
     && Number.isFinite(notification.settlementViewportWidth)
@@ -437,7 +437,7 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
             return (
               <div
                 key={n.id}
-                className="settlement-notification-node"
+                className="world-glance world-glance-node world-glance-node--notification detail-flag settlement-notification-node"
                 style={settlementNotificationStyle(anchor, i)}
               >
                 <div
@@ -453,8 +453,6 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
                     onLinkClick={onLinkClick}
                     countdownProgress={notificationCountdownProgress(n, currentGameDay)}
                   />
-                  <div className="settlement-notification-stalk" />
-                  <div className="settlement-notification-pin" />
                 </div>
               </div>
             );

@@ -20,6 +20,14 @@
   game-ui-simple-opacity: on;
 }
 
+/* Engine-side glance compositing active: the engine draws the plates at same-frame positions
+   beneath this page, so the DOM copies hide their pixels but keep their (lagged) hit areas
+   until engine-side input lands. Overrides the overlay's inline per-frame opacity. */
+:root.native-glance-composite .world-glance-node,
+:root.native-glance-composite .port-settlement-hover-line {
+  opacity: 0 !important;
+}
+
 .port-settlement-hover-line {
   position: absolute;
   left: 0;
@@ -229,7 +237,7 @@
   display: none;
 }
 
-.world-glance-node.detail-flag .glance--military {
+.world-glance-overlay .world-glance-node.detail-flag .glance--military {
   width: 4.1364rem;
   height: 4.1364rem;
   min-width: 0;
@@ -289,7 +297,7 @@
   display: none;
 }
 
-.world-glance-node.detail-name .glance--military {
+.world-glance-overlay .world-glance-node.detail-name .glance--military {
   width: 4.1364rem;
   height: 4.1364rem;
   min-width: 0;
@@ -298,7 +306,7 @@
   display: block;
 }
 
-.world-glance-node.detail-detailed .glance--military {
+.world-glance-overlay .world-glance-node.detail-detailed .glance--military {
   width: 4.1364rem;
   height: 4.1364rem;
   min-width: 0;

@@ -450,11 +450,12 @@ async function bootstrap() {
   );
 }
 
-// The glance-atlas view boots the same bundle in a minimal mode: it binds engine events (the
-// snapshot and per-frame glance payloads arrive as events), renders plate slots for the engine
-// compositor to sample, and announces readiness through its own bridge action — never
-// ScriptingReady, which gates the main view.
-async function bootstrapGlanceAtlas() {
+// The world-anchor view boots the same bundle in a minimal mode: it binds engine events (the
+// snapshot and per-frame glance payloads arrive as events), renders anchored elements for the
+// engine compositor to sample (any element with data-world-anchor — see
+// src/runtime/worldAnchorHost.tsx), and announces readiness through its own bridge action —
+// never ScriptingReady, which gates the main view.
+async function bootstrapWorldAnchors() {
   bindRuntimeViewportScaleEvents();
 
   if (!bindBridgeEvents(false)) {
@@ -468,24 +469,27 @@ async function bootstrapGlanceAtlas() {
     });
   }
 
-  const [{ default: GlanceAtlasRoot }, { GameProvider }] = await Promise.all([
+  const [{ default: WorldAnchorHost }, { default: GlanceAtlasRoot }, { GameProvider }] = await Promise.all([
+    import('./runtime/worldAnchorHost'),
     import('./components/world-glances/GlanceAtlasRoot'),
     import('./context/GameProvider'),
   ]);
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <GameProvider>
-        <GlanceAtlasRoot />
+        <WorldAnchorHost>
+          <GlanceAtlasRoot />
+        </WorldAnchorHost>
       </GameProvider>
     </StrictMode>,
   );
 
   const engine = getRuntimeEngine();
   if (engine) {
-    void Promise.resolve(engine.call('GlanceAtlasReady'))
-      .catch(error => acknowledgeBridgeFailure(error, 'GlanceAtlasReady'));
+    void Promise.resolve(engine.call('WorldAnchorReady'))
+      .catch(error => acknowledgeBridgeFailure(error, 'WorldAnchorReady'));
   }
 }
 
 const bootView = new URLSearchParams(window.location.search).get('view');
-void (bootView === 'strategy_glance_atlas' ? bootstrapGlanceAtlas() : bootstrap());
+void (bootView === 'strategy_world_anchors' ? bootstrapWorldAnchors() : bootstrap());

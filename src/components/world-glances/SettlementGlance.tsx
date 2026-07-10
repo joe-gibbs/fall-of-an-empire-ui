@@ -115,7 +115,7 @@ function settlementTypeIcon(t: SettlementType): string {
   }
 }
 
-type SettlementBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'enamel-light' | 'foreground';
+type SettlementBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'enamel-light' | 'foreground' | 'hover-overlay';
 
 function settlementBadgeLayerPath(type: SettlementType, layer: SettlementBadgeLayer): string {
   return `/assets/glance/settlement-types-v3/layers/settlement-badge-${type}-${layer}.png`;
@@ -308,6 +308,8 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
   const badgeMask = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'enamel-mask'));
   const badgeLight = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'enamel-light'));
   const badgeForeground = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'foreground'));
+  const badgeHoverOverlay = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'hover-overlay'));
+  const badgeOverhangRem = (data.badgeScale - 1) * 2.1364;
   const capitalIconPath = data.isCapital
     ? '/assets/icons/I_Capital.png'
     : data.isProvincialCapital ? '/assets/icons/I_ProvincialCapital.png' : '';
@@ -328,6 +330,8 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
       style={{
         '--faction-colour': factionColour,
         '--settlement-label-bg': relationBackgroundColour(controller.relation, data.warWithPlayer),
+        '--settlement-badge-scale': data.badgeScale,
+        '--settlement-badge-overhang': `${badgeOverhangRem}rem`,
       } as CSSProperties}
     >
       {debugMode && data.debugShortId !== undefined && (
@@ -353,6 +357,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
             />
             <img className="gset-badge-layer gset-badge-layer--light" src={badgeLight} alt="" />
             <img className="gset-badge-layer gset-badge-layer--foreground" src={badgeForeground} alt="" />
+            <img className="gset-badge-layer gset-badge-layer--hover" src={badgeHoverOverlay} alt="" />
           </span>
           {data.occupier && (
             <FactionRoundel

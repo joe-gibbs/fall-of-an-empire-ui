@@ -66,6 +66,7 @@ function mapSettlement(entry: GetWorldGlancesResponse['settlements'][number]): S
     isCapital: entry.isCapital ?? false,
     isProvincialCapital: entry.isProvincialCapital ?? false,
     settlementType: entry.settlementType as SettlementGlanceData['settlementType'],
+    badgeScale: entry.badgeScale,
     health: entry.health,
     selected: false,
     targeted: false,
