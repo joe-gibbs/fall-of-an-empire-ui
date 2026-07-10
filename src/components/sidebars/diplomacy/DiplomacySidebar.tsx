@@ -737,7 +737,6 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             <>
               <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsDiplomacySidebar.386.23')} />
               <div className="sidebar-debug-rows">
-                <InfoRow label={webUIText('Debug.FactionId')} value={faction.id} />
                 <InfoRow label={webUIText('Auto.Attr.ComponentsSidebarsDiplomacySidebar.388.24')} value={`#${formatNumber(faction.debugShortId ?? 0)}`} />
                 {faction.rulerDebugShortId ? <InfoRow label={webUIText('Auto.Attr.ComponentsSidebarsDiplomacySidebar.389.25')} value={`#${formatNumber(faction.rulerDebugShortId)}`} /> : null}
               </div>

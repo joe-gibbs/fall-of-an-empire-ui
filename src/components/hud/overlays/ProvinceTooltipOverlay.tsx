@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
 import type { GetProvinceTooltipResponse } from '../../../bridge-types.generated.ts';
 import { useProvinceTooltipBridge } from '../../../bridge/provinces/useProvinceTooltipBridge';
-import { useGameState } from '../../../context/GameContext';
-import { webUIText } from '../../../localization/WebUITextContext';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { toRootRem } from '../../../utils/cssUnits';
 import { formatNumber } from '../../../utils/numberFormat';
@@ -306,60 +304,30 @@ function MapModeContent({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   );
 }
 
-function DebugRow({ label, value }: { label: string; value: string }) {
-  if (!value) {
-    return null;
-  }
-
-  return (
-    <div className="province-tooltip-debug-row">
-      <span className="province-tooltip-debug-label">{label}</span>
-      <span className="province-tooltip-debug-value">{value}</span>
-    </div>
-  );
-}
-
-function DebugDetails({ tooltip, debugMode }: { tooltip: GetProvinceTooltipResponse; debugMode: boolean }) {
-  if (!debugMode || !tooltip.hasFaction) {
-    return null;
-  }
-
-  return (
-    <div className="province-tooltip-debug">
-      <DebugRow label={webUIText('Debug.FactionId')} value={tooltip.faction.id} />
-      {tooltip.hasOccupier && (
-        <DebugRow label={webUIText('Debug.OccupierFactionId')} value={tooltip.occupier.id} />
-      )}
-    </div>
-  );
-}
-
-function SettlementMapModeDetails({ tooltip, debugMode }: { tooltip: GetProvinceTooltipResponse; debugMode: boolean }) {
+function SettlementMapModeDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   return (
     <div className="province-tooltip-details">
       <div className="province-tooltip-title">{tooltip.settlementName}</div>
       {shouldShowTerrainInfo(tooltip) && <TerrainSummary tooltip={tooltip} />}
       <MapModeContent tooltip={tooltip} />
-      <DebugDetails tooltip={tooltip} debugMode={debugMode} />
     </div>
   );
 }
 
-function SettlementDetails({ tooltip, debugMode }: { tooltip: GetProvinceTooltipResponse; debugMode: boolean }) {
+function SettlementDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   if (hasMapModeContent(tooltip)) {
-    return <SettlementMapModeDetails tooltip={tooltip} debugMode={debugMode} />;
+    return <SettlementMapModeDetails tooltip={tooltip} />;
   }
 
   return (
     <div className="province-tooltip-details">
       <div className="province-tooltip-title">{tooltip.settlementName}</div>
       <TerrainSummary tooltip={tooltip} />
-      <DebugDetails tooltip={tooltip} debugMode={debugMode} />
     </div>
   );
 }
 
-function LandingDetails({ tooltip, debugMode }: { tooltip: GetProvinceTooltipResponse; debugMode: boolean }) {
+function LandingDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   return (
     <div className="province-tooltip-details">
       <div className="province-tooltip-title">{tooltip.landingTitle}</div>
@@ -367,7 +335,6 @@ function LandingDetails({ tooltip, debugMode }: { tooltip: GetProvinceTooltipRes
       {tooltip.landingInstruction && (
         <div className="province-tooltip-action">{tooltip.landingInstruction}</div>
       )}
-      <DebugDetails tooltip={tooltip} debugMode={debugMode} />
     </div>
   );
 }
@@ -385,7 +352,7 @@ function ConvoyRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ConvoyDetails({ tooltip, debugMode }: { tooltip: GetProvinceTooltipResponse; debugMode: boolean }) {
+function ConvoyDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   const cargo = tooltip.convoyCargo ?? [];
 
   return (
@@ -419,43 +386,40 @@ function ConvoyDetails({ tooltip, debugMode }: { tooltip: GetProvinceTooltipResp
           </div>
         </div>
       )}
-      <DebugDetails tooltip={tooltip} debugMode={debugMode} />
     </div>
   );
 }
 
-function TerrainDetails({ tooltip, debugMode }: { tooltip: GetProvinceTooltipResponse; debugMode: boolean }) {
+function TerrainDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   return (
     <div className="province-tooltip-details province-tooltip-details--terrain">
       <TerrainSummary tooltip={tooltip} />
-      <DebugDetails tooltip={tooltip} debugMode={debugMode} />
     </div>
   );
 }
 
-function ExpandedDetails({ tooltip, debugMode }: { tooltip: GetProvinceTooltipResponse; debugMode: boolean }) {
+function ExpandedDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   if (!tooltip.expanded) {
     return null;
   }
 
   if (tooltip.kind === 'settlement') {
-    return <SettlementDetails tooltip={tooltip} debugMode={debugMode} />;
+    return <SettlementDetails tooltip={tooltip} />;
   }
 
   if (tooltip.kind === 'landing') {
-    return <LandingDetails tooltip={tooltip} debugMode={debugMode} />;
+    return <LandingDetails tooltip={tooltip} />;
   }
 
   if (tooltip.kind === 'convoy') {
-    return <ConvoyDetails tooltip={tooltip} debugMode={debugMode} />;
+    return <ConvoyDetails tooltip={tooltip} />;
   }
 
-  return <TerrainDetails tooltip={tooltip} debugMode={debugMode} />;
+  return <TerrainDetails tooltip={tooltip} />;
 }
 
 export default function ProvinceTooltipOverlay() {
   const tooltip = useProvinceTooltipBridge();
-  const { debugMode } = useGameState();
   const tooltipRef = useFoaeCefUICursorPlacement(tooltip);
 
   if (!tooltip || !tooltip.visible) {
@@ -473,7 +437,7 @@ export default function ProvinceTooltipOverlay() {
       <div ref={tooltipRef} className={baseTooltipClass(tooltip)} style={tooltipStyle(initialPosition)}>
         <div className="province-tooltip-card">
           {shouldShowTerrainIcon(tooltip) && <TerrainIcon tooltip={tooltip} />}
-          <ExpandedDetails tooltip={tooltip} debugMode={debugMode} />
+          <ExpandedDetails tooltip={tooltip} />
         </div>
       </div>
     </div>
