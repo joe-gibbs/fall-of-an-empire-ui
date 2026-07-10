@@ -17,6 +17,10 @@ interface PauseMenuProps {
 
 const CLOSE_DURATION = 280;
 type SaveDialogMode = 'save' | 'saveAndQuit';
+interface OverwriteTarget {
+  name: string;
+  slotName: string;
+}
 
 const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   const { resetAdvisorHints } = useGameActions();
@@ -25,6 +29,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   const [showLoad, setShowLoad] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showResetHintsConfirm, setShowResetHintsConfirm] = useState(false);
+  const [overwriteTarget, setOverwriteTarget] = useState<OverwriteTarget | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [suggestedName, setSuggestedName] = useState('');
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -33,6 +38,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     setShowSave(false);
     setShowLoad(false);
     setShowSettings(false);
+    setOverwriteTarget(null);
   }, []);
 
   const handleAfterClosed = useCallback(() => {
@@ -77,9 +83,9 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     statusTimerRef.current = setTimeout(() => setStatusMsg(null), 2800);
   }, []);
 
-  const saveGame = useCallback(async (displayName: string): Promise<boolean> => {
+  const saveGame = useCallback(async (displayName: string, existingSlotName = ''): Promise<boolean> => {
     try {
-      const res = await bridgeCall('game.save_game', { displayName });
+      const res = await bridgeCall('game.save_game', { displayName, existingSlotName });
       return res.saved;
     } catch (err) {
       console.error('[PauseMenu] save failed', err);
@@ -92,15 +98,15 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     setShowSave(true);
   }, []);
 
-  const handleSaveConfirm = useCallback(async (name: string) => {
+  const handleSaveConfirm = useCallback(async (name: string, existingSlotName = '') => {
     setShowSave(false);
-    const saved = await saveGame(name);
+    const saved = await saveGame(name, existingSlotName);
     showStatus(webUIText(saved ? 'PauseMenu.GameSaved' : 'PauseMenu.SaveFailed'));
   }, [saveGame, showStatus]);
 
-  const handleSaveAndQuitConfirm = useCallback(async (name: string) => {
+  const handleSaveAndQuitConfirm = useCallback(async (name: string, existingSlotName = '') => {
     setShowSave(false);
-    const saved = await saveGame(name);
+    const saved = await saveGame(name, existingSlotName);
     if (!saved) {
       showStatus(webUIText('PauseMenu.SaveFailed'));
       return;
@@ -112,13 +118,40 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     }
   }, [saveGame, showStatus]);
 
-  const handleSaveDialogConfirm = useCallback((name: string) => {
+  const completeSave = useCallback((name: string, existingSlotName = '') => {
     if (saveDialogMode === 'saveAndQuit') {
-      void handleSaveAndQuitConfirm(name);
+      void handleSaveAndQuitConfirm(name, existingSlotName);
       return;
     }
-    void handleSaveConfirm(name);
+    void handleSaveConfirm(name, existingSlotName);
   }, [handleSaveAndQuitConfirm, handleSaveConfirm, saveDialogMode]);
+
+  const handleSaveDialogConfirm = useCallback(async (name: string) => {
+    setShowSave(false);
+    try {
+      const { saves } = await bridgeCall('game.list_saves');
+      const normalisedName = name.toLocaleLowerCase();
+      const existing = saves
+        .filter(save => (
+          !save.isAutosave
+          && save.displayName.trim().toLocaleLowerCase() === normalisedName
+        ))
+        .sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0];
+      if (existing) {
+        setOverwriteTarget({ name, slotName: existing.slotName });
+        return;
+      }
+      completeSave(name);
+    } catch (err) {
+      console.error('[PauseMenu] failed to check existing saves', err);
+      showStatus(webUIText('PauseMenu.SaveFailed'));
+    }
+  }, [completeSave, showStatus]);
+
+  const confirmOverwrite = useCallback(() => {
+    if (!overwriteTarget) return;
+    completeSave(overwriteTarget.name, overwriteTarget.slotName);
+  }, [completeSave, overwriteTarget]);
 
   const handleExitToDesktop = useCallback(async () => {
     try {
@@ -183,6 +216,16 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
       <SettingsModal
         visible={showSettings}
         onClosed={() => setShowSettings(false)}
+      />
+
+      <ConfirmDialog
+        visible={overwriteTarget !== null}
+        title={webUIText('PauseMenu.OverwriteSaveTitle')}
+        message={overwriteTarget ? webUIText('PauseMenu.OverwriteSaveMessage', { SaveName: overwriteTarget.name }) : ''}
+        confirmText={webUIText('PauseMenu.OverwriteSaveConfirm')}
+        cancelText={webUIText('Common.Cancel')}
+        onConfirm={confirmOverwrite}
+        onClosed={() => setOverwriteTarget(null)}
       />
 
       <ConfirmDialog
