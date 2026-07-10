@@ -3,6 +3,28 @@ import Portrait from '../../common/portraits/Portrait';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
 import { firstName, type FamilyGraph, type FamilyGraphEntry } from './FamilyGraphModel';
 
+const FAMILY_BRANCH_WIDTH_REM = 8.2;
+
+type FamilyRailStyle = React.CSSProperties & {
+  '--family-rail-left-extent': string;
+  '--family-rail-right-extent': string;
+};
+
+function familyBranchWidth(entry: FamilyGraphEntry): number {
+  return Math.max(FAMILY_BRANCH_WIDTH_REM, (entry.descendants?.length ?? 0) * FAMILY_BRANCH_WIDTH_REM);
+}
+
+function familyRailStyle(entries: FamilyGraphEntry[]): FamilyRailStyle | undefined {
+  if (entries.length < 2) return undefined;
+
+  const widths = entries.map(familyBranchWidth);
+  const totalWidth = widths.reduce((total, width) => total + width, 0);
+  return {
+    '--family-rail-left-extent': `${(totalWidth - widths[0]) / 2}rem`,
+    '--family-rail-right-extent': `${(totalWidth - widths[widths.length - 1]) / 2}rem`,
+  };
+}
+
 function FamilyGraphCard({
   entry,
   onOpen,
@@ -27,7 +49,7 @@ function FamilyGraphCard({
     <button
       type="button"
       className={`char-family-card${entry.isFocus ? ' char-family-card--focus' : ''}${isAlive === false ? ' char-family-card--dead' : ''}${isImprisoned && isAlive !== false ? ' char-family-card--imprisoned' : ''}${canOpen ? '' : ' char-family-card--static'}`}
-      onMouseDown={canOpen ? () => onOpen(entry.id) : undefined}
+      onPointerDown={canOpen ? () => onOpen(entry.id) : undefined}
       aria-label={displayName}
     >
       <PersonTooltip characterId={entry.id} position="left" delay={150}>
@@ -79,11 +101,18 @@ export function FamilyGraphView({
       {graph.rows.map(row => (
         <div key={row.id} className={`char-family-row char-family-row--${row.id}`}>
           <div className="char-family-row-label">{row.title}</div>
-          <div className={`char-family-row-cards${row.entries.length > 1 ? ' char-family-row-cards--multi' : ''}`}>
+          <div
+            className={`char-family-row-cards${row.entries.length > 1 ? ' char-family-row-cards--multi' : ''}`}
+            style={familyRailStyle(row.entries)}
+          >
+            {row.id === 'parents' && row.entries.length > 1 && (
+              <span className="char-family-parent-couple-link" aria-hidden="true" />
+            )}
             {row.entries.map(entry => {
               const descendants = entry.descendants ?? [];
-              const branchStyle: React.CSSProperties | undefined = descendants.length > 0
-                ? { width: `${Math.max(5.9, descendants.length * 5.9)}rem` }
+              const branchWidth = familyBranchWidth(entry);
+              const branchStyle: React.CSSProperties | undefined = branchWidth > FAMILY_BRANCH_WIDTH_REM
+                ? { width: `${branchWidth}rem` }
                 : undefined;
 
               return (
@@ -94,7 +123,10 @@ export function FamilyGraphView({
                   {descendants.length > 0 && (
                     <div className="char-family-descendants">
                       <div className="char-family-descendants-label">{row.descendantTitle}</div>
-                      <div className={`char-family-descendant-cards${descendants.length > 1 ? ' char-family-descendant-cards--multi' : ''}`}>
+                      <div
+                        className={`char-family-descendant-cards${descendants.length > 1 ? ' char-family-descendant-cards--multi' : ''}`}
+                        style={familyRailStyle(descendants)}
+                      >
                         {descendants.map(descendant => (
                           <div key={descendant.id} className="char-family-descendant-branch">
                             <FamilyGraphCard entry={descendant} onOpen={onOpen} />

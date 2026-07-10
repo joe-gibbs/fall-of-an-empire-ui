@@ -180,16 +180,17 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
       const directLabel = (id: string, fallback: string): string => genderedFamilyLabel(people.get(id), fallback);
       const parentIds = sortPeopleByAge(parentsByChild.get(character.id) ?? [], people);
       const grandparentIds = sortPeopleByAge(parentIds.flatMap(id => parentsByChild.get(id) ?? []), people);
-      const siblingIds = sortPeopleByAge(parentIds.flatMap(id => childrenByParent.get(id) ?? []), people)
-        .filter(id => id !== character.id);
       const spouseIds = sortPeopleByAge(spousesById.get(character.id) ?? [], people);
       const childIds = sortPeopleByAge(childrenByParent.get(character.id) ?? [], people);
 
       pushRow('grandparents', 'Grandparents', grandparentIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Grandparent'))));
       pushRow('parents', 'Parents', parentIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Parent'))));
-      const sameGenerationTitle = siblingIds.length > 0 && spouseIds.length > 0 ? webUIText("Auto.Fix.VarExprTrue.componentssidebarsCharacterSidebar.520.1") : siblingIds.length > 0 ? webUIText("Auto.Fix.VarExprFalseTrue.componentssidebarsCharacterSidebar.522.1") : spouseIds.length > 1 ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsCharacterSidebar.524.1") : webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsCharacterSidebar.525.1");
-      pushRow('household', sameGenerationTitle, [
-        ...siblingIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Sibling'))),
+      const householdTitle = spouseIds.length > 1
+        ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsCharacterSidebar.524.1")
+        : spouseIds.length === 1
+          ? webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsCharacterSidebar.525.1")
+          : webUIText("Auto.Fix.PropExprFallback.componentssidebarsCharacterSidebar.424.1");
+      pushRow('household', householdTitle, [
         familyEntryFromPerson(person, person.shortTitle || person.title || 'Selected', true),
         ...spouseIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Spouse'))),
       ]);
@@ -211,11 +212,13 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
 
   pushRow('grandparents', 'Grandparents', byType(['Grandfather', 'Grandmother', 'Grandparent']));
   pushRow('parents', 'Parents', byType(['Father', 'Mother', 'Parent']));
-  const fallbackSiblings = byType(['Brother', 'Sister', 'Sibling']);
   const fallbackSpouses = byType(['Husband', 'Wife', 'Spouse', 'Consort']);
-  const fallbackSameGenerationTitle = fallbackSiblings.length > 0 && fallbackSpouses.length > 0 ? webUIText("Auto.Fix.VarExprTrue.componentssidebarsCharacterSidebar.547.1") : fallbackSiblings.length > 0 ? webUIText("Auto.Fix.VarExprFalseTrue.componentssidebarsCharacterSidebar.549.1") : fallbackSpouses.length > 1 ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsCharacterSidebar.551.1") : webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsCharacterSidebar.552.1");
-  pushRow('household', fallbackSameGenerationTitle, [
-    ...fallbackSiblings,
+  const fallbackHouseholdTitle = fallbackSpouses.length > 1
+    ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsCharacterSidebar.551.1")
+    : fallbackSpouses.length === 1
+      ? webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsCharacterSidebar.552.1")
+      : webUIText("Auto.Fix.PropExprFallback.componentssidebarsCharacterSidebar.424.1");
+  pushRow('household', fallbackHouseholdTitle, [
     familyEntryFromCharacter(character),
     ...fallbackSpouses,
   ]);
