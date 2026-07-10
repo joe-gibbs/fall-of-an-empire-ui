@@ -22,6 +22,7 @@ import BattleGlance from '../../world-glances/BattleGlance';
 import SettlementGlance from '../../world-glances/SettlementGlance';
 import ConvoyGlance from '../../world-glances/ConvoyGlance';
 import PortGlance from '../../world-glances/PortGlance';
+import ModWorldGlanceLayer from '../../world-glances/ModWorldGlanceLayer';
 import type {
   ArmyGlanceData,
   BattleGlanceData,
@@ -122,39 +123,25 @@ function mapSettlement(entry: GetWorldGlancesResponse['settlements'][number]): S
 
 function mapPort(entry: GetWorldGlancesResponse['ports'][number]): PortGlanceData {
   return {
-    debugShortId: entry.debugShortId || undefined,
-    name: entry.name,
-    settlementName: entry.settlementName,
+    id: entry.id,
     faction: mapFaction(entry.faction),
     level: entry.level ?? 0,
     selected: false,
     targeted: false,
     blockaded: entry.blockaded ?? false,
-    blockadingNavies: entry.blockadingNavies ?? 0,
-    blockadingStrength: entry.blockadingStrength ?? 0,
-    dockedNavyName: entry.dockedNavyName || undefined,
-    dockedNavyStrength: entry.dockedNavyStrength ?? 0,
-    tradeValue: entry.tradeValue ?? 0,
-    warWithPlayer: entry.warWithPlayer ?? false,
   };
 }
 
 function mapMilitary(entry: GetWorldGlancesResponse['armies'][number]): ArmyGlanceData {
   return {
-    debugShortId: entry.debugShortId || undefined,
-    name: entry.name,
-    commander: entry.commander ?? '',
-    currentAction: entry.currentAction ?? '',
-    commanderDebugShortId: entry.commanderDebugShortId || undefined,
+    id: entry.id,
     faction: mapFaction(entry.faction),
     strength: entry.strength ?? 0,
-    maxStrength: entry.maxStrength ?? 0,
     morale: entry.morale ?? 0,
     tier: clampTier(entry.tier),
     raiding: entry.raiding ?? false,
     attrition: entry.attrition ?? false,
     attritionIcon: entry.attritionIcon,
-    atWarWithPlayer: entry.atWarWithPlayer ?? false,
     selected: false,
     targeted: false,
   };
@@ -173,17 +160,11 @@ function arrayOrEmpty<T>(value: T[] | undefined): T[] {
 
 function mapBattle(entry: GetWorldGlancesResponse['battles'][number]): BattleGlanceData {
   return {
+    id: entry.id,
     targeted: false,
     attacker: {
       participants: arrayOrEmpty(entry.attacker?.participants).map((participant) => ({
         faction: mapFaction(participant.faction),
-        debugShortId: participant.debugShortId || undefined,
-        tier: clampTier(participant.tier),
-        name: participant.name,
-        commander: participant.commander,
-        commanderDebugShortId: participant.commanderDebugShortId || undefined,
-        strength: participant.strength,
-        isNavy: participant.isNavy,
       })),
       totalStrength: entry.attacker.totalStrength,
       morale: entry.attacker.morale,
@@ -192,13 +173,6 @@ function mapBattle(entry: GetWorldGlancesResponse['battles'][number]): BattleGla
     defender: {
       participants: arrayOrEmpty(entry.defender?.participants).map((participant) => ({
         faction: mapFaction(participant.faction),
-        debugShortId: participant.debugShortId || undefined,
-        tier: clampTier(participant.tier),
-        name: participant.name,
-        commander: participant.commander,
-        commanderDebugShortId: participant.commanderDebugShortId || undefined,
-        strength: participant.strength,
-        isNavy: participant.isNavy,
       })),
       totalStrength: entry.defender.totalStrength,
       morale: entry.defender.morale,
@@ -209,20 +183,11 @@ function mapBattle(entry: GetWorldGlancesResponse['battles'][number]): BattleGla
 
 function mapConvoy(entry: GetWorldGlancesResponse['convoys'][number]): ConvoyGlanceData {
   return {
-    debugHandle: entry.debugHandle || undefined,
+    id: entry.id,
     faction: mapFaction(entry.faction),
-    originName: entry.originName,
-    destinationName: entry.destinationName,
-    purpose: entry.purpose,
-    purposeDetails: entry.purposeDetails,
-    progress: entry.progress,
-    etaDays: entry.etaDays,
-    cargoLoad: entry.cargoLoad,
     routeType: entry.routeType === 'sea' ? 'sea' : 'road',
-    clusterCount: entry.clusterCount,
     cargo: entry.cargo.map((item) => ({
       icon: item.icon,
-      label: item.label,
       amount: item.amount,
     })),
   };
@@ -1316,12 +1281,16 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
     applyFrameSnapshotRef.current(latestFrameRef.current);
   }, [data, overlaySize, glanceWidgetsVisible]);
 
-  if (!data || !glanceWidgetsVisible) {
+  if (!glanceWidgetsVisible) {
     return null;
   }
 
-  const fieldArmies = data.armies;
-  const fieldNavies = data.navies;
+  const settlements = data?.settlements ?? [];
+  const ports = data?.ports ?? [];
+  const convoys = data?.convoys ?? [];
+  const fieldArmies = data?.armies ?? [];
+  const fieldNavies = data?.navies ?? [];
+  const battles = data?.battles ?? [];
 
   return (
     <div
@@ -1331,8 +1300,9 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
       style={{ visibility: visible ? 'visible' : 'hidden' }}
     >
       <div ref={portSettlementLineRef} className="port-settlement-hover-line" />
+      <ModWorldGlanceLayer />
 
-      {data.settlements.map((entry) => {
+      {settlements.map((entry) => {
         return (
           <GlanceNode
             key={`settlement:${entry.id}`}
@@ -1346,7 +1316,7 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
         );
       })}
 
-      {data.ports.map((entry) => {
+      {ports.map((entry) => {
         return (
           <GlanceNode
             key={`port:${entry.id}`}
@@ -1360,7 +1330,7 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
         );
       })}
 
-      {data.convoys.map((entry) => {
+      {convoys.map((entry) => {
         return (
           <GlanceNode
             key={`convoy:${entry.id}`}
@@ -1402,7 +1372,7 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
         );
       })}
 
-      {data.battles.map((entry) => {
+      {battles.map((entry) => {
         return (
           <GlanceNode
             key={`battle:${entry.id}`}

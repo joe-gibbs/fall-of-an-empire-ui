@@ -4,7 +4,8 @@ import Tooltip, { type TooltipContent } from '../common/tooltips/Tooltip';
 import type { BattleGlanceData, BattleSideData, FactionRelation } from './WorldGlanceTypes';
 import { clampUnitFraction } from './glanceMath';
 import { formatCompactNumber, formatNumber, formatPercent } from '../../utils/numberFormat';
-import { useGameState } from '../../context/GameContext';
+import type { GetWorldGlanceTooltipResponse } from '../../bridge-types.generated';
+import { useWorldGlanceTooltip } from '../../bridge/app/useWorldGlanceTooltip';
 
 import { webUIText } from '../../localization/WebUITextContext';
 
@@ -18,17 +19,13 @@ function relationColour(r: FactionRelation): string {
   return '#c9a042';
 }
 
-function sideName(side: BattleSideData): string {
-  return side.participants[0]?.name || side.participants[0]?.faction.name || 'Unknown faction';
-}
-
 function battleTooltip(
   data: BattleGlanceData,
   attackerMorale: number,
   defenderMorale: number,
   attackerColour: string,
   defenderColour: string,
-  debugMode: boolean,
+  detail: GetWorldGlanceTooltipResponse,
 ): TooltipContent {
   const lines: TooltipContent['lines'] = [
     {
@@ -57,25 +54,13 @@ function battleTooltip(
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesBattleGlance.61.5'),
-      get value() { return webUIText('Auto.Prop.componentsworldglancesBattleGlance.63.1', { Value1: formatNumber(data.attacker.participants.length), Value2: formatNumber(data.defender.participants.length) }); },
+      get value() { return webUIText('Auto.Prop.componentsworldglancesBattleGlance.63.1', { Value1: formatNumber(detail.attackerCount), Value2: formatNumber(detail.defenderCount) }); },
     },
   ];
 
-  if (debugMode) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesBattleGlance.67.6'), isHeader: true });
-    lines.push({
-      label: webUIText('Auto.Prop.ComponentsWorldGlancesBattleGlance.69.7'),
-      value: data.attacker.participants.map(participant => `#${formatNumber(participant.debugShortId ?? 0)}`).join(', '),
-    });
-    lines.push({
-      label: webUIText('Auto.Prop.ComponentsWorldGlancesBattleGlance.73.8'),
-      value: data.defender.participants.map(participant => `#${formatNumber(participant.debugShortId ?? 0)}`).join(', '),
-    });
-  }
-
   return {
     title: webUIText('Auto.Prop.ComponentsWorldGlancesBattleGlance.79.9'),
-    get body() { return webUIText('Auto.Prop.componentsworldglancesBattleGlance.81.1', { Value1: sideName(data.attacker), Value2: sideName(data.defender) }); },
+    get body() { return webUIText('Auto.Prop.componentsworldglancesBattleGlance.81.1', { Value1: detail.attackerName, Value2: detail.defenderName }); },
     lines,
   };
 }
@@ -155,7 +140,7 @@ function BattleSideValues({
 }
 
 export default function BattleGlance({ data }: BattleGlanceProps) {
-  const { debugMode } = useGameState();
+  const { detail, request } = useWorldGlanceTooltip('battle', data.id);
   const attackerParticipant = data.attacker.participants[0];
   const defenderParticipant = data.defender.participants[0];
   const attColour = relationColour(attackerParticipant?.faction.relation ?? 'neutral');
@@ -169,7 +154,8 @@ export default function BattleGlance({ data }: BattleGlanceProps) {
 
   return (
     <Tooltip
-      content={battleTooltip(data, attackerMorale, defenderMorale, attColour, defColour, debugMode)}
+      content={detail ? battleTooltip(data, attackerMorale, defenderMorale, attColour, defColour, detail) : null}
+      onShowIntent={request}
       position="top"
       delay={520}
       bubbleClassName="tt-bubble--glance"

@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import { WEBUI_TEXT_SOURCE } from './webui-text.generated';
 
 type TextArg = string | number | boolean | null | undefined;
 export type WebUITextArgs = Record<string, TextArg>;
@@ -17,16 +18,17 @@ export function formatWebUIText(template: string, args?: WebUITextArgs): string 
   });
 }
 
-const missingText: WebUITextFormatter = (key, args) => formatWebUIText(key, args);
+const sourceCatalogue: Readonly<Record<string, string>> = WEBUI_TEXT_SOURCE;
+const sourceText: WebUITextFormatter = (key, args) => formatWebUIText(sourceCatalogue[key] ?? key, args);
 
 export const WebUITextContext = createContext<WebUITextContextValue>({
-  locale: '',
-  t: missingText,
+  locale: 'en',
+  t: sourceText,
 });
 
 let currentWebUIText: WebUITextContextValue = {
-  locale: '',
-  t: missingText,
+  locale: 'en',
+  t: sourceText,
 };
 
 export function setCurrentWebUIText(value: WebUITextContextValue): void {

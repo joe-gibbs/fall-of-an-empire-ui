@@ -501,18 +501,14 @@ function mockArmyData(data: ForceMock): ArmyGlanceData {
   const relation = relationForFaction(data.faction);
   const attrition = data.name === 'Red Hills Levy' || data.name === 'Saltmere Squadron';
   return {
-    name: data.name,
-    commander: data.commander,
-    currentAction: data.status,
+    id: data.name,
     faction: mockGlanceFaction(data.faction, relation),
     strength: data.strength,
-    maxStrength: data.maxStrength,
     morale: data.morale,
     tier: data.tier,
     raiding: data.status === 'Raiding',
     attrition,
     attritionIcon: attrition ? '/assets/icons/Terrain/I_Attrition.png' : '',
-    atWarWithPlayer: data.status === 'At war',
     selected: data.name === 'Crown Vanguard' || data.name === 'Dawnwater Fleet',
     targeted: data.name === 'Red Hills Levy' || data.name === 'Saltmere Squadron',
   };
@@ -557,11 +553,6 @@ function battleSide(side: BattleSideMock): BattleGlanceData['attacker'] {
   return {
     participants: [{
       faction: mockGlanceFaction(side.faction, relationForFaction(side.faction)),
-      tier: side.strength >= 8000 ? 3 : 2,
-      name: side.faction.name,
-      commander: 'Field commander',
-      strength: side.strength,
-      isNavy: false,
     }],
     totalStrength: side.strength,
     morale: side.morale,
@@ -571,6 +562,7 @@ function battleSide(side: BattleSideMock): BattleGlanceData['attacker'] {
 
 function mockBattleData(data: BattleMock): BattleGlanceData {
   return {
+    id: `mock-battle-${data.attacker.faction.id}-${data.defender.faction.id}`,
     attacker: battleSide(data.attacker),
     defender: battleSide(data.defender),
   };
@@ -578,33 +570,19 @@ function mockBattleData(data: BattleMock): BattleGlanceData {
 
 function mockConvoyData(data: ConvoyMock): ConvoyGlanceData {
   return {
+    id: `mock-convoy-${data.originName}-${data.destinationName}`,
     faction: mockGlanceFaction(data.faction, relationForFaction(data.faction)),
-    originName: data.originName,
-    destinationName: data.destinationName,
-    purpose: data.purpose,
-    purposeDetails: data.purposeDetails,
-    progress: data.progress,
-    etaDays: data.etaDays,
-    cargoLoad: data.cargoLoad,
     routeType: data.routeType,
-    clusterCount: 1,
-    cargo: data.cargo,
+    cargo: data.cargo.map(({ icon, amount }) => ({ icon, amount })),
   };
 }
 
 function mockPortData(data: PortMock): PortGlanceData {
   return {
-    name: data.name,
-    settlementName: data.settlementName,
+    id: `mock-port-${data.settlementName}`,
     faction: mockGlanceFaction(data.faction, relationForFaction(data.faction)),
     level: data.level,
     blockaded: data.blockaded,
-    blockadingNavies: data.blockadingNavies,
-    blockadingStrength: data.blockadingStrength,
-    dockedNavyName: data.dockedNavyName,
-    dockedNavyStrength: data.dockedNavyStrength,
-    tradeValue: data.tradeValue,
-    warWithPlayer: data.faction !== FACTIONS.crown && data.faction !== FACTIONS.marches,
   };
 }
 

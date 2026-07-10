@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { toRootRem } from '../../../utils/cssUnits';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { renderRichText } from '../../../utils/richText';
+import { readableFactionTextColour } from '../../../utils/colorFormatters';
 import { subscribeTooltipDismissEvent } from './tooltipEvents';
 import './Tooltip.css';
 
@@ -514,7 +515,7 @@ function TooltipLineItem({
         <span style={line.labelColor ? { color: line.labelColor } : undefined}>{line.label}</span>
       </span>
       {hasValue && (
-        <span className="tt-line-value" style={line.valueColor ? { color: line.valueColor } : undefined}>
+        <span className="tt-line-value" style={line.valueColor ? { color: readableFactionTextColour(line.valueColor) } : undefined}>
           {line.valueIcon && <img src={FoaeCefUIAssetPath(line.valueIcon)} alt="" className="tt-line-icon" draggable={false} />}
           {line.value !== undefined && <span>{line.value}</span>}
         </span>
@@ -1027,6 +1028,11 @@ const Tooltip: React.FC<TooltipProps> = ({
     wrapperElement: wrapper,
     anchorElement: anchorRef?.current ?? wrapper,
   }), [anchorRef, bubbleClassName, content, position, variant]);
+  const buildActiveTooltipRef = useRef(buildActiveTooltip);
+
+  useLayoutEffect(() => {
+    buildActiveTooltipRef.current = buildActiveTooltip;
+  }, [buildActiveTooltip]);
 
   const scheduleShow = useCallback((delayMs: number) => {
     if (showRef.current) clearTimeout(showRef.current);
@@ -1034,10 +1040,10 @@ const Tooltip: React.FC<TooltipProps> = ({
       showRef.current = null;
       const wrapper = wrapperRef.current;
       if (!disabledRef.current && hoveredRef.current && wrapper) {
-        showSharedTooltip(buildActiveTooltip(wrapper));
+        showSharedTooltip(buildActiveTooltipRef.current(wrapper));
       }
     }, delayMs);
-  }, [buildActiveTooltip]);
+  }, []);
 
   const show = useCallback(() => {
     onShowIntent?.();

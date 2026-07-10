@@ -9,6 +9,8 @@ import FactionRoundel from '../common/entities/FactionRoundel';
 import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel } from './WorldGlancePresentation';
 
 import { webUIText } from '../../localization/WebUITextContext';
+import type { GetWorldGlanceTooltipResponse } from '../../bridge-types.generated';
+import { useWorldGlanceTooltip } from '../../bridge/app/useWorldGlanceTooltip';
 function relationBorderColour(relation: ConvoyGlanceData['faction']['relation']): string {
   if (relation === 'ally') return 'rgba(112, 170, 106, 0.72)';
   if (relation === 'enemy') return 'rgba(204, 75, 55, 0.82)';
@@ -39,16 +41,17 @@ function cargoAmount(amount: number): string {
   return formatNumber(amount);
 }
 
-function cargoSummary(data: ConvoyGlanceData): string {
-  if (data.cargo.length === 0) return webUIText('ConvoyFilter.NoCargo');
-  return data.cargo.slice(0, 3).map((item) => item.label).join(', ');
+function cargoSummary(detail: GetWorldGlanceTooltipResponse): string {
+  if (detail.cargo.length === 0) return webUIText('ConvoyFilter.NoCargo');
+  return detail.cargo.slice(0, 3).map((item) => item.label).join(', ');
 }
 
-function convoyTooltip(data: ConvoyGlanceData, progress: number, debugMode: boolean): TooltipContent {
+function convoyTooltip(data: ConvoyGlanceData, detail: GetWorldGlanceTooltipResponse, debugMode: boolean): TooltipContent {
+  const progress = clampUnitFraction(detail.progress);
   const lines: TooltipLine[] = [
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.59.1'),
-      value: data.faction.name,
+      value: detail.factionName,
       valueColor: readableFactionTextColour(data.faction.colour),
     },
     {
@@ -58,21 +61,21 @@ function convoyTooltip(data: ConvoyGlanceData, progress: number, debugMode: bool
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.68.3'),
-      value: data.purpose,
+      value: detail.purpose,
       valueIcon: '/assets/icons/I_Resources.png',
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.73.4'),
-      value: routeLabel(data.routeType),
-      valueIcon: routeIcon(data.routeType),
+      value: routeLabel(detail.routeType === 'sea' ? 'sea' : 'road'),
+      valueIcon: routeIcon(detail.routeType === 'sea' ? 'sea' : 'road'),
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.78.5'),
-      value: data.originName,
+      value: detail.originName,
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.82.6'),
-      value: data.destinationName,
+      value: detail.destinationName,
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.86.7'),
@@ -80,18 +83,18 @@ function convoyTooltip(data: ConvoyGlanceData, progress: number, debugMode: bool
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.90.8'),
-      value: etaText(data.etaDays),
+      value: etaText(detail.etaDays),
     },
   ];
 
-  if (data.clusterCount > 1) {
+  if (detail.clusterCount > 1) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.97.9'),
-      value: formatNumber(data.clusterCount),
+      value: formatNumber(detail.clusterCount),
     });
   }
 
-  for (const item of data.cargo) {
+  for (const item of detail.cargo) {
     lines.push({
       label: item.label,
       value: cargoAmount(item.amount),
@@ -101,15 +104,15 @@ function convoyTooltip(data: ConvoyGlanceData, progress: number, debugMode: bool
 
   if (debugMode) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.111.10'), isHeader: true });
-    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.112.11'), value: `#${formatNumber(data.faction.debugShortId ?? 0)}` });
-    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.113.12'), value: formatNumber(data.clusterCount) });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.112.11'), value: `#${formatNumber(detail.factionDebugShortId)}` });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.113.12'), value: formatNumber(detail.clusterCount) });
   }
 
   return {
     title: webUIText('Auto.Prop.ComponentsWorldGlancesConvoyGlance.117.13'),
-    get body() { return webUIText("Auto.Prop.componentsworldglancesConvoyGlance.118.1", { Value1: cargoSummary(data), Value2: data.destinationName }); },
+    get body() { return webUIText("Auto.Prop.componentsworldglancesConvoyGlance.118.1", { Value1: cargoSummary(detail), Value2: detail.destinationName }); },
     lines,
-    footer: data.purposeDetails || undefined,
+    footer: detail.purposeDetails || undefined,
   };
 }
 
@@ -119,13 +122,14 @@ interface ConvoyGlanceProps {
 
 export default function ConvoyGlance({ data }: ConvoyGlanceProps) {
   const { debugMode } = useGameState();
-  const progress = clampUnitFraction(data.progress);
+  const { detail, request } = useWorldGlanceTooltip('convoy', data.id);
   const visibleCargo = data.cargo.slice(0, 3);
   const route = routeIcon(data.routeType);
 
   return (
     <Tooltip
-      content={convoyTooltip(data, progress, debugMode)}
+      content={detail ? convoyTooltip(data, detail, debugMode) : null}
+      onShowIntent={request}
       position="top"
       delay={520}
       bubbleClassName="tt-bubble--glance"
@@ -164,8 +168,8 @@ export default function ConvoyGlance({ data }: ConvoyGlanceProps) {
 
         {visibleCargo.length > 0 && (
           <div className="gconv-cargo-strip" aria-hidden="true">
-            {visibleCargo.map((item) => (
-              <div key={`${item.label}:${String(item.amount)}`} className="gconv-cargo-item">
+            {visibleCargo.map((item, index) => (
+              <div key={`${item.icon}:${String(item.amount)}:${index}`} className="gconv-cargo-item">
                 <img src={FoaeCefUIAssetPath(item.icon)} alt="" />
                 <span className="gconv-cargo-ct">{cargoAmount(item.amount)}</span>
               </div>

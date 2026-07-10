@@ -2850,10 +2850,10 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: 8.6364rem;
+  width: 11.8182rem;
   flex-grow: 0;
   flex-shrink: 0;
-  flex-basis: 8.6364rem;
+  flex-basis: 11.8182rem;
   min-width: 0;
   min-height: 2.4545rem;
   margin-left: var(--settlement-badge-overhang);
@@ -2922,7 +2922,7 @@
 .gset-name,
 .world-glance-node.detail-name .gset-name {
   display: block;
-  max-width: 6.3636rem;
+  max-width: 10.4545rem;
   font-family: var(--font-header);
   font-size: 0.8182rem;
   line-height: 1.05;
@@ -2969,15 +2969,18 @@
 .gset-info-value,
 .world-glance-node.detail-name .gset-info-value {
   min-width: 0;
-  max-width: 5.9091rem;
+  max-width: 10rem;
   font-family: var(--font-header);
   font-size: 0.7273rem;
   line-height: 1;
   letter-spacing: 0;
   color: var(--text-bright);
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
   white-space: nowrap;
+  game-ui-font-fit-mode: shrink;
+  game-ui-font-fit-min-size: 0.5rem;
+  game-ui-font-fit-max-size: 0.7273rem;
 }
 
 .gset-info-value--numeric,
@@ -3068,8 +3071,17 @@
 .detail-detailed .glance--settlement,
 .world-glance-node.detail-detailed .glance--settlement,
 .mock-production-glance.detail-detailed .glance--settlement {
-  width: 12rem;
+  width: 15.1818rem;
   height: 4.2727rem;
+}
+
+.detail-name .gset-body,
+.world-glance-node.detail-name .gset-body,
+.mock-production-glance.detail-name .gset-body,
+.detail-detailed .gset-body,
+.world-glance-node.detail-detailed .gset-body,
+.mock-production-glance.detail-detailed .gset-body {
+  width: 15.1818rem;
 }
 
 .glance--military,

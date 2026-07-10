@@ -4148,7 +4148,6 @@ export interface WorldGlanceResource {
 
 export interface WorldConvoyCargo {
   icon: string;
-  label: string;
   amount: number;
 }
 
@@ -4216,7 +4215,6 @@ export interface WorldSettlementGlance {
 
 export interface WorldPortGlance {
   id: string;
-  debugShortId: number;
   screenX: number;
   screenY: number;
   scale: number;
@@ -4225,17 +4223,9 @@ export interface WorldPortGlance {
   detailLevel: string;
   selected: boolean;
   targeted: boolean;
-  name: string;
-  settlementName: string;
   faction: WorldGlanceFaction;
   level: number;
   blockaded: boolean;
-  blockadingNavies: number;
-  blockadingStrength: number;
-  dockedNavyName: string;
-  dockedNavyStrength: number;
-  tradeValue: number;
-  warWithPlayer: boolean;
 }
 
 export interface WorldMilitaryGlance {
@@ -4247,21 +4237,13 @@ export interface WorldMilitaryGlance {
   opacity: number;
   zOrder: number;
   detailLevel: string;
-  name: string;
-  commander: string;
-  currentAction: string;
-  commanderDebugShortId: number;
   faction: WorldGlanceFaction;
   strength: number;
-  maxStrength: number;
   morale: number;
   tier: number;
   raiding: boolean;
-  atWarWithPlayer: boolean;
   selected: boolean;
   targeted: boolean;
-  garrisoned: boolean;
-  garrisonedSettlementId: string;
   blockading: boolean;
   attrition: boolean;
   attritionIcon: string;
@@ -4269,13 +4251,6 @@ export interface WorldMilitaryGlance {
 
 export interface WorldBattleParticipant {
   faction: WorldGlanceFaction;
-  debugShortId: number;
-  tier: number;
-  name: string;
-  commander: string;
-  commanderDebugShortId: number;
-  strength: number;
-  isNavy: boolean;
 }
 
 export interface WorldBattleSide {
@@ -4300,7 +4275,6 @@ export interface WorldBattleGlance {
 
 export interface WorldConvoyGlance {
   id: string;
-  debugHandle: string;
   screenX: number;
   screenY: number;
   scale: number;
@@ -4308,15 +4282,7 @@ export interface WorldConvoyGlance {
   zOrder: number;
   detailLevel: string;
   faction: WorldGlanceFaction;
-  originName: string;
-  destinationName: string;
-  purpose: string;
-  purposeDetails: string;
-  progress: number;
-  etaDays: number;
-  cargoLoad: number;
   routeType: string;
-  clusterCount: number;
   cargo: WorldConvoyCargo[];
 }
 
@@ -4379,6 +4345,48 @@ export interface WorldBattleStrengthSnapshot {
   defenderMorale: number;
   attackerLastLosses: number;
   defenderLastLosses: number;
+}
+
+export interface GetWorldGlanceTooltipRequest {
+  kind: string;
+  id: string;
+}
+
+export interface WorldGlanceTooltipCargo {
+  icon: string;
+  label: string;
+  amount: number;
+}
+
+export interface GetWorldGlanceTooltipResponse {
+  found: boolean;
+  kind: string;
+  id: string;
+  name: string;
+  settlementName: string;
+  factionName: string;
+  debugShortId: number;
+  factionDebugShortId: number;
+  tradeValue: number;
+  warWithPlayer: boolean;
+  blockaded: boolean;
+  blockadingNavies: number;
+  blockadingStrength: number;
+  dockedNavyName: string;
+  dockedNavyStrength: number;
+  originName: string;
+  destinationName: string;
+  purpose: string;
+  purposeDetails: string;
+  progress: number;
+  etaDays: number;
+  routeType: string;
+  clusterCount: number;
+  attackerName: string;
+  defenderName: string;
+  attackerCount: number;
+  defenderCount: number;
+  cargo: WorldGlanceTooltipCargo[];
 }
 
 export interface GovernorAssignmentRequest {
@@ -5860,6 +5868,7 @@ export interface BridgeActions {
   'game.get_victory_conditions': { request: void; response: GetVictoryConditionsResponse };
   'game.get_warnings': { request: void; response: GetWarningsResponse };
   'game.get_webui_text': { request: void; response: GetWebUITextResponse };
+  'game.get_world_glance_tooltip': { request: GetWorldGlanceTooltipRequest; response: GetWorldGlanceTooltipResponse };
   'game.get_world_glances': { request: void; response: GetWorldGlancesResponse };
   'game.governor_assignment': { request: GovernorAssignmentRequest; response: GovernorAssignmentResponse };
   'game.handle_world_glance_hover': { request: HandleWorldGlanceHoverRequest; response: void };

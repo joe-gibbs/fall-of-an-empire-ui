@@ -5,6 +5,7 @@ import { clampUnitFraction, percentWidth } from './glanceMath';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
 import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { readableFactionTextColour } from '../../utils/colorFormatters';
 
 import { webUIText } from '../../localization/WebUITextContext';
 type SettlementType = SettlementGlanceData['settlementType'];
@@ -126,10 +127,10 @@ function settlementTypeLabel(type: SettlementType): string {
 }
 
 function relationLabel(relation: SettlementGlanceData['faction']['relation'], atWar?: boolean): string {
-  if (atWar || relation === 'enemy') return webUIText("Auto.Return.componentsworldglancesSettlementGlance.66.1");
-  if (relation === 'own') return webUIText("Auto.Return.componentsworldglancesSettlementGlance.67.1");
-  if (relation === 'ally') return webUIText("Auto.Return.componentsworldglancesSettlementGlance.68.1");
-  return webUIText("Auto.Fix.Return.componentsworldglancesSettlementGlance.69.1");
+  if (atWar || relation === 'enemy') return webUIText('WorldGlances.Relation.Hostile');
+  if (relation === 'own') return webUIText('WorldGlances.Relation.Own');
+  if (relation === 'ally') return webUIText('WorldGlances.Relation.Allied');
+  return webUIText('WorldGlances.Relation.Neutral');
 }
 
 function relationColour(relation: SettlementGlanceData['faction']['relation'], atWar?: boolean): string {
@@ -239,7 +240,7 @@ function renderInfo(data: SettlementGlanceData) {
     case 'gold':
       return renderGoldInfo(data);
     case 'political':
-      return renderInfoRow('/assets/icons/I_DependentFactions.png', controller.name, controller.colour);
+      return renderInfoRow('/assets/icons/I_DependentFactions.png', controller.name, readableFactionTextColour(controller.colour));
     case 'overlord':
       return renderGoldInfo(data);
     case 'diplomaticRelation':
@@ -255,9 +256,9 @@ function renderInfo(data: SettlementGlanceData) {
     case 'garrisons':
       return renderInfoRow('/assets/icons/I_ArmiesQuickButton.png', formatNumber(data.garrison), undefined, true);
     case 'culture':
-      return renderInfoRow('/assets/icons/I_Cultures.png', data.culture.label, data.culture.colour);
+      return renderInfoRow('/assets/icons/I_Cultures.png', data.culture.label, readableFactionTextColour(data.culture.colour));
     case 'religion':
-      return renderInfoRow('/assets/icons/I_Religions.png', data.religion.label, data.religion.colour);
+      return renderInfoRow('/assets/icons/I_Religions.png', data.religion.label, readableFactionTextColour(data.religion.colour));
     case 'landscape':
     case 'settlementType':
       return renderInfoRow(settlementTypeIcon(data.settlementType), settlementTypeLabel(data.settlementType));

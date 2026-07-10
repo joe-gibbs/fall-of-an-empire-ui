@@ -97,39 +97,25 @@ export function mapSettlement(entry: GetWorldGlancesResponse['settlements'][numb
 
 export function mapPort(entry: GetWorldGlancesResponse['ports'][number]): PortGlanceData {
   return {
-    debugShortId: entry.debugShortId || undefined,
-    name: entry.name,
-    settlementName: entry.settlementName,
+    id: entry.id,
     faction: mapFaction(entry.faction),
     level: entry.level ?? 0,
     selected: false,
     targeted: false,
     blockaded: entry.blockaded ?? false,
-    blockadingNavies: entry.blockadingNavies ?? 0,
-    blockadingStrength: entry.blockadingStrength ?? 0,
-    dockedNavyName: entry.dockedNavyName || undefined,
-    dockedNavyStrength: entry.dockedNavyStrength ?? 0,
-    tradeValue: entry.tradeValue ?? 0,
-    warWithPlayer: entry.warWithPlayer ?? false,
   };
 }
 
 export function mapMilitary(entry: GetWorldGlancesResponse['armies'][number]): ArmyGlanceData {
   return {
-    debugShortId: entry.debugShortId || undefined,
-    name: entry.name,
-    commander: entry.commander ?? '',
-    currentAction: entry.currentAction ?? '',
-    commanderDebugShortId: entry.commanderDebugShortId || undefined,
+    id: entry.id,
     faction: mapFaction(entry.faction),
     strength: entry.strength ?? 0,
-    maxStrength: entry.maxStrength ?? 0,
     morale: entry.morale ?? 0,
     tier: clampTier(entry.tier),
     raiding: entry.raiding ?? false,
     attrition: entry.attrition ?? false,
     attritionIcon: entry.attritionIcon,
-    atWarWithPlayer: entry.atWarWithPlayer ?? false,
     selected: false,
     targeted: false,
   };
@@ -148,17 +134,11 @@ function arrayOrEmpty<T>(value: T[] | undefined): T[] {
 
 export function mapBattle(entry: GetWorldGlancesResponse['battles'][number]): BattleGlanceData {
   return {
+    id: entry.id,
     targeted: false,
     attacker: {
       participants: arrayOrEmpty(entry.attacker?.participants).map((participant) => ({
         faction: mapFaction(participant.faction),
-        debugShortId: participant.debugShortId || undefined,
-        tier: clampTier(participant.tier),
-        name: participant.name,
-        commander: participant.commander,
-        commanderDebugShortId: participant.commanderDebugShortId || undefined,
-        strength: participant.strength,
-        isNavy: participant.isNavy,
       })),
       totalStrength: entry.attacker.totalStrength,
       morale: entry.attacker.morale,
@@ -167,13 +147,6 @@ export function mapBattle(entry: GetWorldGlancesResponse['battles'][number]): Ba
     defender: {
       participants: arrayOrEmpty(entry.defender?.participants).map((participant) => ({
         faction: mapFaction(participant.faction),
-        debugShortId: participant.debugShortId || undefined,
-        tier: clampTier(participant.tier),
-        name: participant.name,
-        commander: participant.commander,
-        commanderDebugShortId: participant.commanderDebugShortId || undefined,
-        strength: participant.strength,
-        isNavy: participant.isNavy,
       })),
       totalStrength: entry.defender.totalStrength,
       morale: entry.defender.morale,
@@ -184,20 +157,11 @@ export function mapBattle(entry: GetWorldGlancesResponse['battles'][number]): Ba
 
 export function mapConvoy(entry: GetWorldGlancesResponse['convoys'][number]): ConvoyGlanceData {
   return {
-    debugHandle: entry.debugHandle || undefined,
+    id: entry.id,
     faction: mapFaction(entry.faction),
-    originName: entry.originName,
-    destinationName: entry.destinationName,
-    purpose: entry.purpose,
-    purposeDetails: entry.purposeDetails,
-    progress: entry.progress,
-    etaDays: entry.etaDays,
-    cargoLoad: entry.cargoLoad,
     routeType: entry.routeType === 'sea' ? 'sea' : 'road',
-    clusterCount: entry.clusterCount,
     cargo: entry.cargo.map((item) => ({
       icon: item.icon,
-      label: item.label,
       amount: item.amount,
     })),
   };

@@ -674,23 +674,10 @@ function customFactionReference(id: string, name: string, colour: string, second
 
 function worldBattleParticipant(
   faction: MockFactionReference & { relation: string },
-  tier: number,
-  name: string,
-  commander: string,
-  commanderId: string,
-  strength: number,
-  isNavy = false,
+  ...detail: [number, string, string, string, number, boolean?]
 ) {
-  return {
-    faction,
-    debugShortId: mockDebugShortId(name),
-    tier,
-    name,
-    commander,
-    commanderDebugShortId: mockDebugShortId(commanderId),
-    strength,
-    isNavy,
-  };
+  void detail;
+  return { faction };
 }
 
 function convoyFactionFilters(state: MockBridgeState): BridgeResponse<'game.get_convoy_glance_filters'> {
@@ -819,7 +806,6 @@ function mockWorldConvoys(state: MockBridgeState): BridgeResponse<'game.get_worl
   const convoys: BridgeResponse<'game.get_world_glances'>['convoys'] = [
     {
       id: 'mock-convoy-grain',
-      debugHandle: 'mock-convoy-grain',
       screenX: 980,
       screenY: 585,
       scale: 1,
@@ -827,24 +813,15 @@ function mockWorldConvoys(state: MockBridgeState): BridgeResponse<'game.get_worl
       zOrder: 10,
       detailLevel: 'full',
       faction: { ...playerFactionReference(), relation: 'own' },
-      originName: 'Aurelion',
-      destinationName: 'I Field Army',
-      purpose: 'Army Resupply',
-      purposeDetails: 'I Field Army',
-      progress: 0.58,
-      etaDays: 5.2,
-      cargoLoad: 740,
       routeType: 'road',
-      clusterCount: 1,
       cargo: [
-        { icon: '/assets/icons/Resources/I_Grain.png', label: 'Grain', amount: 420 },
-        { icon: '/assets/icons/Resources/I_Weapons.png', label: 'Weapons', amount: 160 },
-        { icon: '/assets/icons/Resources/I_Leather.png', label: 'Leather', amount: 160 },
+        { icon: '/assets/icons/Resources/I_Grain.png', amount: 420 },
+        { icon: '/assets/icons/Resources/I_Weapons.png', amount: 160 },
+        { icon: '/assets/icons/Resources/I_Leather.png', amount: 160 },
       ],
     },
     {
       id: 'mock-convoy-naval',
-      debugHandle: 'mock-convoy-naval',
       screenX: 1110,
       screenY: 705,
       scale: 0.95,
@@ -852,24 +829,15 @@ function mockWorldConvoys(state: MockBridgeState): BridgeResponse<'game.get_worl
       zOrder: 10,
       detailLevel: 'full',
       faction: { ...subjectFactionReference(), relation: 'ally' },
-      originName: 'Namaris',
-      destinationName: 'Meridian Prefecture',
-      purpose: 'Subject Support',
-      purposeDetails: 'Meridian Prefecture',
-      progress: 0.35,
-      etaDays: 8.4,
-      cargoLoad: 510,
       routeType: 'sea',
-      clusterCount: 1,
       cargo: [
-        { icon: '/assets/icons/Resources/I_Oil.png', label: 'Oil', amount: 190 },
-        { icon: '/assets/icons/Resources/I_Sails.png', label: 'Sails', amount: 85 },
-        { icon: '/assets/icons/Resources/I_Wood.png', label: 'Wood', amount: 235 },
+        { icon: '/assets/icons/Resources/I_Oil.png', amount: 190 },
+        { icon: '/assets/icons/Resources/I_Sails.png', amount: 85 },
+        { icon: '/assets/icons/Resources/I_Wood.png', amount: 235 },
       ],
     },
     {
       id: 'mock-convoy-rival',
-      debugHandle: 'mock-convoy-rival',
       screenX: 735,
       screenY: 625,
       scale: 0.98,
@@ -877,19 +845,11 @@ function mockWorldConvoys(state: MockBridgeState): BridgeResponse<'game.get_worl
       zOrder: 10,
       detailLevel: 'full',
       faction: { ...rivalFactionReference(), relation: 'enemy' },
-      originName: 'Velath Keep',
-      destinationName: 'Salt Squadron',
-      purpose: 'Army Resupply',
-      purposeDetails: 'Salt Squadron',
-      progress: 0.71,
-      etaDays: 2.6,
-      cargoLoad: 1180,
       routeType: 'road',
-      clusterCount: 1,
       cargo: [
-        { icon: '/assets/icons/Resources/I_Iron.png', label: 'Iron', amount: 520 },
-        { icon: '/assets/icons/Resources/I_Armour.png', label: 'Armour', amount: 240 },
-        { icon: '/assets/icons/Resources/I_Grain.png', label: 'Grain', amount: 420 },
+        { icon: '/assets/icons/Resources/I_Iron.png', amount: 520 },
+        { icon: '/assets/icons/Resources/I_Armour.png', amount: 240 },
+        { icon: '/assets/icons/Resources/I_Grain.png', amount: 420 },
       ],
     },
   ];
@@ -5390,15 +5350,15 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuilding: true, building: { label: 'Docks', progress: 0.22 }, warWithPlayer: false },
           ],
           ports: [
-            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1088, screenY: 650, scale: 0.94, opacity: 1, zOrder: 10, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris Port', settlementName: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, level: 3, blockaded: true, blockadingNavies: 1, blockadingStrength: 1200, dockedNavyName: 'Classis Meridian', dockedNavyStrength: 1800, tradeValue: 18.4, warWithPlayer: false },
+            { id: MOCK_IDS.portSettlement, screenX: 1088, screenY: 650, scale: 0.94, opacity: 1, zOrder: 10, detailLevel: 'name', selected: false, targeted: false, faction: { ...playerFactionReference(), relation: 'own' }, level: 3, blockaded: true },
           ],
           armies: [
-            { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), screenX: 900, screenY: 520, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', name: 'I Field Army', commander: 'Valen Arcastus', currentAction: 'Moving to Aurelion', commanderDebugShortId: mockDebugShortId(MOCK_IDS.character), faction: { ...playerFactionReference(), relation: 'own' }, strength: 6800, maxStrength: 7600, morale: 84, tier: 3, raiding: false, atWarWithPlayer: false, selected: false, targeted: false, garrisoned: false, garrisonedSettlementId: '', blockading: false, attrition: false, attritionIcon: '' },
-            { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), screenX: 820, screenY: 570, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', name: 'Aurelion Detachment', commander: 'Cassian Arcastus', currentAction: 'Idle', commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), faction: { ...playerFactionReference(), relation: 'own' }, strength: 1600, maxStrength: 1800, morale: 71, tier: 2, raiding: false, atWarWithPlayer: false, selected: false, targeted: false, garrisoned: false, garrisonedSettlementId: '', blockading: false, attrition: false, attritionIcon: '' },
+            { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), screenX: 900, screenY: 520, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 6800, morale: 84, tier: 3, raiding: false, selected: false, targeted: false, blockading: false, attrition: false, attritionIcon: '' },
+            { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), screenX: 820, screenY: 570, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1600, morale: 71, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, attrition: false, attritionIcon: '' },
           ],
           navies: [
-            { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), screenX: 1060, screenY: 610, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', name: 'Classis Meridian', commander: 'Marcia Vennor', currentAction: 'Patrolling Namaris', commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), faction: { ...playerFactionReference(), relation: 'own' }, strength: 1800, maxStrength: 2200, morale: 76, tier: 2, raiding: false, atWarWithPlayer: false, selected: false, targeted: false, garrisoned: false, garrisonedSettlementId: '', blockading: false, attrition: false, attritionIcon: '' },
-            { id: 'mock-navy-rival', debugShortId: mockDebugShortId('mock-navy-rival'), screenX: 1200, screenY: 540, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', name: 'Salt Squadron', commander: 'Nera Solun', currentAction: 'Blockading Namaris', commanderDebugShortId: mockDebugShortId('mock-person-salt-leader'), faction: { ...rivalFactionReference(), relation: 'enemy' }, strength: 1200, maxStrength: 1500, morale: 68, tier: 2, raiding: false, atWarWithPlayer: true, selected: false, targeted: false, garrisoned: false, garrisonedSettlementId: '', blockading: true, attrition: false, attritionIcon: '' },
+            { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), screenX: 1060, screenY: 610, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1800, morale: 76, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, attrition: false, attritionIcon: '' },
+            { id: 'mock-navy-rival', debugShortId: mockDebugShortId('mock-navy-rival'), screenX: 1200, screenY: 540, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...rivalFactionReference(), relation: 'enemy' }, strength: 1200, morale: 68, tier: 2, raiding: false, selected: false, targeted: false, blockading: true, attrition: false, attritionIcon: '' },
           ],
           convoys: mockWorldConvoys(state),
           battles: [
@@ -5460,6 +5420,75 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             },
           ],
         } satisfies BridgeResponse<'game.get_world_glances'>;
+      case 'game.get_world_glance_tooltip': {
+        const kind = payloadString(payload, 'kind');
+        const id = payloadString(payload, 'id');
+        if (kind === 'port') {
+          return {
+            found: true,
+            kind,
+            id,
+            name: 'Namaris Port',
+            settlementName: 'Namaris',
+            factionName: playerFactionReference().name,
+            debugShortId: mockDebugShortId(MOCK_IDS.portSettlement),
+            factionDebugShortId: mockDebugShortId(MOCK_IDS.playerFaction),
+            tradeValue: 18.4,
+            warWithPlayer: false,
+            blockaded: true,
+            blockadingNavies: 1,
+            blockadingStrength: 1200,
+            dockedNavyName: 'Classis Meridian',
+            dockedNavyStrength: 1800,
+            originName: '',
+            destinationName: '',
+            purpose: '',
+            purposeDetails: '',
+            progress: 0,
+            etaDays: 0,
+            routeType: '',
+            clusterCount: 0,
+            attackerName: '',
+            defenderName: '',
+            attackerCount: 0,
+            defenderCount: 0,
+            cargo: [],
+          } satisfies BridgeResponse<'game.get_world_glance_tooltip'>;
+        }
+        return {
+          found: true,
+          kind,
+          id,
+          name: '',
+          settlementName: '',
+          factionName: playerFactionReference().name,
+          debugShortId: 0,
+          factionDebugShortId: mockDebugShortId(MOCK_IDS.playerFaction),
+          tradeValue: 0,
+          warWithPlayer: false,
+          blockaded: false,
+          blockadingNavies: 0,
+          blockadingStrength: 0,
+          dockedNavyName: '',
+          dockedNavyStrength: 0,
+          originName: 'Aurelion',
+          destinationName: 'I Field Army',
+          purpose: 'Army Resupply',
+          purposeDetails: 'I Field Army',
+          progress: 0.58,
+          etaDays: 5.2,
+          routeType: 'road',
+          clusterCount: 1,
+          attackerName: kind === 'battle' ? 'Berginian Rebellion' : '',
+          defenderName: kind === 'battle' ? 'Imperial Field Army' : '',
+          attackerCount: kind === 'battle' ? 2 : 0,
+          defenderCount: kind === 'battle' ? 2 : 0,
+          cargo: [
+            { icon: '/assets/icons/Resources/I_Grain.png', label: 'Grain', amount: 420 },
+            { icon: '/assets/icons/Resources/I_Weapons.png', label: 'Weapons', amount: 160 },
+          ],
+        } satisfies BridgeResponse<'game.get_world_glance_tooltip'>;
+      }
       case 'game.get_province_tooltip':
         return {
           visible: false,

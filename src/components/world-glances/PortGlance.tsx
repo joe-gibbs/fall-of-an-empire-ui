@@ -7,6 +7,8 @@ import { FoaeCefUIAssetPath } from '../../utils/assets';
 import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel } from './WorldGlancePresentation';
 
 import { webUIText } from '../../localization/WebUITextContext';
+import type { GetWorldGlanceTooltipResponse } from '../../bridge-types.generated';
+import { useWorldGlanceTooltip } from '../../bridge/app/useWorldGlanceTooltip';
 type PortBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'enamel-light' | 'foreground';
 
 function portBadgeLayerPath(layer: PortBadgeLayer): string {
@@ -41,48 +43,48 @@ function portLevelRoman(level: number): string {
   return result;
 }
 
-function portTooltip(data: PortGlanceData, debugMode: boolean): TooltipContent {
+function portTooltip(data: PortGlanceData, detail: GetWorldGlanceTooltipResponse, debugMode: boolean): TooltipContent {
   const lines: TooltipLine[] = [
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.31.1'),
-      value: data.settlementName,
+      value: detail.settlementName,
       valueIcon: '/assets/icons/I_City.png',
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.36.2'),
-      value: data.faction.name,
+      value: detail.factionName,
       valueColor: readableFactionTextColour(data.faction.colour),
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.41.3'),
-      value: relationDisplayLabel(data.faction.relation, data.warWithPlayer),
-      valueColor: relationDisplayColour(data.faction.relation, data.warWithPlayer),
+      value: relationDisplayLabel(data.faction.relation, detail.warWithPlayer),
+      valueColor: relationDisplayColour(data.faction.relation, detail.warWithPlayer),
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.45.4'),
-      value: formatNumber(data.tradeValue, { maximumFractionDigits: 1 }),
-      valueColor: data.tradeValue > 0 ? 'var(--gold-light)' : 'var(--text-muted)',
+      value: formatNumber(detail.tradeValue, { maximumFractionDigits: 1 }),
+      valueColor: detail.tradeValue > 0 ? 'var(--gold-light)' : 'var(--text-muted)',
       valueIcon: '/assets/icons/Treaties/I_TradeAgreement.png',
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.51.5'),
-      get value() { return data.blockaded ? webUIText("Auto.Fix.PropExprTrue.componentsworldglancesPortGlance.53.1") : webUIText("Auto.Fix.PropExprFalse.componentsworldglancesPortGlance.53.1"); },
-      valueColor: data.blockaded ? 'var(--red)' : 'var(--green)',
+      get value() { return detail.blockaded ? webUIText("Auto.Fix.PropExprTrue.componentsworldglancesPortGlance.53.1") : webUIText("Auto.Fix.PropExprFalse.componentsworldglancesPortGlance.53.1"); },
+      valueColor: detail.blockaded ? 'var(--red)' : 'var(--green)',
     },
   ];
 
-  if (data.dockedNavyName) {
+  if (detail.dockedNavyName) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.59.6'),
-      get value() { return webUIText("Auto.Prop.componentsworldglancesPortGlance.61.1", { DockedNavyName: data.dockedNavyName, Value2: formatNumber(data.dockedNavyStrength) }); },
+      get value() { return webUIText("Auto.Prop.componentsworldglancesPortGlance.61.1", { DockedNavyName: detail.dockedNavyName, Value2: formatNumber(detail.dockedNavyStrength) }); },
       valueIcon: '/assets/icons/I_NaviesQuickButton.png',
     });
   }
 
-  if (data.blockadingNavies > 0) {
+  if (detail.blockadingNavies > 0) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.67.7'),
-      get value() { return webUIText("Auto.Prop.componentsworldglancesPortGlance.69.1", { Value1: formatNumber(data.blockadingNavies), Value2: formatNumber(data.blockadingStrength) }); },
+      get value() { return webUIText("Auto.Prop.componentsworldglancesPortGlance.69.1", { Value1: formatNumber(detail.blockadingNavies), Value2: formatNumber(detail.blockadingStrength) }); },
       valueColor: 'var(--red)',
       valueIcon: '/assets/icons/I_NaviesQuickButton.png',
     });
@@ -90,13 +92,13 @@ function portTooltip(data: PortGlanceData, debugMode: boolean): TooltipContent {
 
   if (debugMode) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.75.8'), isHeader: true });
-    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.76.9'), value: `#${formatNumber(data.debugShortId ?? 0)}` });
-    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.77.10'), value: `#${formatNumber(data.faction.debugShortId ?? 0)}` });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.76.9'), value: `#${formatNumber(detail.debugShortId)}` });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.77.10'), value: `#${formatNumber(detail.factionDebugShortId)}` });
   }
 
   return {
-    title: data.name,
-    get body() { return data.blockaded ? webUIText("Auto.Fix.PropExprTrue.componentsworldglancesPortGlance.84.1", { SettlementName: data.settlementName }) : webUIText("Auto.Fix.PropExprFalse.componentsworldglancesPortGlance.85.1", { SettlementName: data.settlementName }); },
+    title: detail.name,
+    get body() { return detail.blockaded ? webUIText("Auto.Fix.PropExprTrue.componentsworldglancesPortGlance.84.1", { SettlementName: detail.settlementName }) : webUIText("Auto.Fix.PropExprFalse.componentsworldglancesPortGlance.85.1", { SettlementName: detail.settlementName }); },
     lines,
   };
 }
@@ -107,6 +109,7 @@ interface PortGlanceProps {
 
 export default function PortGlance({ data }: PortGlanceProps) {
   const { debugMode } = useGameState();
+  const { detail, request } = useWorldGlanceTooltip('port', data.id);
   const rootClass = [
     'glance',
     'glance--port',
@@ -123,7 +126,8 @@ export default function PortGlance({ data }: PortGlanceProps) {
 
   return (
     <Tooltip
-      content={portTooltip(data, debugMode)}
+      content={detail ? portTooltip(data, detail, debugMode) : null}
+      onShowIntent={request}
       position="top"
       delay={520}
       bubbleClassName="tt-bubble--glance"
@@ -134,9 +138,6 @@ export default function PortGlance({ data }: PortGlanceProps) {
           '--faction-colour': data.faction.colour,
         } as CSSProperties}
       >
-        {debugMode && data.debugShortId !== undefined && (
-          <div className="glance-debug-id">#{formatNumber(data.debugShortId)}</div>
-        )}
         {levelLabel && <div className="gport-level-label" aria-hidden="true">{levelLabel}</div>}
         <div className="gport-badge" aria-hidden="true">
           <span className="gport-selected-indicator" />
