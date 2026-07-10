@@ -256,6 +256,23 @@
   flex-grow: 1;
 }
 
+/* Resource values are compact enough to share the available table width. */
+.ledger-table--resources .ledger-cell--name {
+  flex: 1 1 18rem;
+}
+
+.ledger-table--resources .ledger-cell--category {
+  flex: 0.2 1 8.5rem;
+}
+
+.ledger-table--resources .ledger-cell--stockpile,
+.ledger-table--resources .ledger-cell--production,
+.ledger-table--resources .ledger-cell--consumption,
+.ledger-table--resources .ledger-cell--net,
+.ledger-table--resources .ledger-cell--settlements {
+  flex: 0.6 1 6rem;
+}
+
 .ledger-cell--faction,
 .ledger-cell--settlement,
 .ledger-cell--commander,

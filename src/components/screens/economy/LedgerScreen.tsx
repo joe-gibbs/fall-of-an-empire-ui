@@ -263,6 +263,7 @@ function BulkTable<T>({
   filterPredicate,
   toolsExtra,
   virtualRowHeight,
+  tableClassName = 'ledger-table',
   defaultSortDirection,
   sortState,
   onSortChange,
@@ -279,6 +280,7 @@ function BulkTable<T>({
   virtualRowHeight: number;
   defaultSortDirection?: SortDirection;
   sortState?: LedgerSortState;
+  tableClassName?: string;
   onSortChange?: (sort: LedgerSortState) => void;
   serverFiltered?: boolean;
 }) {
@@ -299,7 +301,7 @@ function BulkTable<T>({
       toolsClassName="ledger-tools"
       searchClassName="ledger-search"
       wrapperClassName="ledger-table-wrap"
-      tableClassName="ledger-table"
+      tableClassName={tableClassName}
       headerRowClassName="ledger-header-row"
       bodyScrollFrameClassName="ledger-body-scroll"
       bodyClassName="ledger-body"
@@ -637,7 +639,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
       return <BulkTable rows={factions} columns={factionColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.272.5')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.272.6')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} filterPredicate={row => matchFilter(filters.factionStatus, statusFilterValue(row))} />;
     }
     if (activeTab === 'resources') {
-      return <BulkTable rows={resources} columns={resourceColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.275.7')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.275.8')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} filterPredicate={row => matchFilter(filters.resourceCategory, normaliseToken(row.category))} />;
+      return <BulkTable rows={resources} columns={resourceColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.275.7')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.275.8')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} tableClassName="ledger-table ledger-table--resources" filterPredicate={row => matchFilter(filters.resourceCategory, normaliseToken(row.category))} />;
     }
     if (activeTab === 'buildings') {
       return <BulkTable rows={buildings} columns={buildingColumns} search={search} onSearch={setLedgerSearch} emptyLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.9')} searchLabel={webUIText('Auto.ExtraAttr.ComponentsScreensLedgerScreen.278.10')} toolsExtra={activeFilters} virtualRowHeight={virtualRowHeight} sortState={activeSort} onSortChange={setLedgerSort} serverFiltered filterPredicate={row => matchFilter(filters.buildingCategory, normaliseToken(row.category)) && matchFilter(filters.buildingFaction, row.factionId)} />;
