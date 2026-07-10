@@ -181,14 +181,42 @@ const POPUP_EXIT_MS = 120;
 const SETTINGS_MODAL_EXIT_MS = 160;
 const DISPLAY_CONFIRM_SECONDS = 10;
 const DISPLAY_CONFIRM_STORAGE_KEY = 'foae.settings.displayConfirm';
+const DEFAULT_AUDIO_VALUES: ApplyPayload['audio'] = {
+  master: 1.0,
+  music: 0.7,
+  effects: 0.8,
+  ui: 0.8,
+  ambience: 0.8,
+};
+
+const finiteNumber = (value: unknown, fallback: number): number => (
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback
+);
+
+function sanitiseAudioSettings(audio: ApplyPayload['audio']): ApplyPayload['audio'] {
+  return {
+    master: finiteNumber(audio.master, DEFAULT_AUDIO_VALUES.master),
+    music: finiteNumber(audio.music, DEFAULT_AUDIO_VALUES.music),
+    effects: finiteNumber(audio.effects, DEFAULT_AUDIO_VALUES.effects),
+    ui: finiteNumber(audio.ui, DEFAULT_AUDIO_VALUES.ui),
+    ambience: finiteNumber(audio.ambience, DEFAULT_AUDIO_VALUES.ambience),
+  };
+}
+
+function sanitiseApplyPayload(payload: ApplyPayload): ApplyPayload {
+  return {
+    ...payload,
+    audio: sanitiseAudioSettings(payload.audio),
+  };
+}
 
 function snapshotToPayload(data: GetSettingsResponse): ApplyPayload {
-  return {
+  return sanitiseApplyPayload({
     video: { ...data.video },
     audio: { ...data.audio },
     gameplay: { ...data.gameplay, mutedNotificationTypes: [...data.gameplay.mutedNotificationTypes] },
     graphics: { ...data.graphics },
-  };
+  });
 }
 
 function displayConfirmSecondsLeft(expiresAtMs: number): number {
@@ -910,10 +938,11 @@ const SettingsPanel: React.FC = () => {
   const clearRenderedDisplayConfirm = useCallback(() => setRenderedDisplayConfirm(null), []);
   const revertDisplaySettings = useCallback((priorSnapshot: ApplyPayload) => {
     clearStoredDisplayConfirm();
-    void apply(priorSnapshot)
+    const next = sanitiseApplyPayload(priorSnapshot);
+    void apply(next)
       .then(() => {
-        setWorking(priorSnapshot);
-        setAppliedSnapshot(priorSnapshot);
+        setWorking(next);
+        setAppliedSnapshot(next);
         setDisplayConfirm(null);
       })
       .catch(acknowledgeBridgeFailure);
@@ -953,8 +982,11 @@ const SettingsPanel: React.FC = () => {
   if (settings && settings !== hydratedFrom) {
     setHydratedFrom(settings);
     const fresh = snapshotToPayload(settings);
+    const hasLocalChanges = working !== null
+      && appliedSnapshot !== null
+      && JSON.stringify(working) !== JSON.stringify(appliedSnapshot);
     setAppliedSnapshot(fresh);
-    if (!working) {
+    if (!working || !hasLocalChanges) {
       setWorking(fresh);
     }
   }
@@ -994,6 +1026,11 @@ const SettingsPanel: React.FC = () => {
   const audio = working.audio;
   const gameplay = working.gameplay;
   const graphics = working.graphics;
+  const audioMaster = finiteNumber(audio.master, appliedSnapshot.audio.master);
+  const audioMusic = finiteNumber(audio.music, appliedSnapshot.audio.music);
+  const audioEffects = finiteNumber(audio.effects, appliedSnapshot.audio.effects);
+  const audioUi = finiteNumber(audio.ui, appliedSnapshot.audio.ui);
+  const audioAmbience = finiteNumber(audio.ambience, appliedSnapshot.audio.ambience);
   const canSelectResolution = video.windowMode === 'Fullscreen';
   const dlssActive = settings.dlssSupported && video.dlssMode !== 'Off';
 
@@ -1006,7 +1043,7 @@ const SettingsPanel: React.FC = () => {
   // doesn't hammer the bridge with every slider tick.
   const applyLiveAudio = (patch: Partial<typeof audio>) => {
     const previousApplied = appliedSnapshot;
-    const next = { ...working, audio: { ...working.audio, ...patch } };
+    const next = sanitiseApplyPayload({ ...working, audio: { ...working.audio, ...patch } });
     setWorking(next);
     setAppliedSnapshot(next);
     pendingLivePreview.current = next;
@@ -1022,7 +1059,7 @@ const SettingsPanel: React.FC = () => {
   };
   const applyLiveVideo = (patch: Partial<typeof video>) => {
     const previousApplied = appliedSnapshot;
-    const next = { ...working, video: { ...working.video, ...patch } };
+    const next = sanitiseApplyPayload({ ...working, video: { ...working.video, ...patch } });
     setWorking(next);
     setAppliedSnapshot(next);
     pendingLivePreview.current = next;
@@ -1038,7 +1075,7 @@ const SettingsPanel: React.FC = () => {
   };
   const applyLiveGameplay = (patch: Partial<typeof gameplay>) => {
     const previousApplied = appliedSnapshot;
-    const next = { ...working, gameplay: { ...working.gameplay, ...patch } };
+    const next = sanitiseApplyPayload({ ...working, gameplay: { ...working.gameplay, ...patch } });
     applyGameplayCssVariables(next.gameplay);
     setWorking(next);
     setAppliedSnapshot(next);
@@ -1069,10 +1106,11 @@ const SettingsPanel: React.FC = () => {
     }
     pendingLivePreview.current = null;
     const prior = appliedSnapshot;
-    const next = working;
-    const displayChanged = prior.video.resolutionX !== working.video.resolutionX
-      || prior.video.resolutionY !== working.video.resolutionY
-      || prior.video.windowMode !== working.video.windowMode;
+    const next = sanitiseApplyPayload(working);
+    setWorking(next);
+    const displayChanged = prior.video.resolutionX !== next.video.resolutionX
+      || prior.video.resolutionY !== next.video.resolutionY
+      || prior.video.windowMode !== next.video.windowMode;
     const pendingDisplayConfirm = displayChanged ? storeDisplayConfirm(prior) : null;
     void apply(next)
       .then(() => {
@@ -1299,11 +1337,11 @@ const SettingsPanel: React.FC = () => {
 
         {settingsTab === 'audio' && (
           <div className="settings-panel">
-            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.782.66')} value={toPercent(audio.master)} suffix="%" onChange={v => applyLiveAudio({ master: fromPercent(v) })} />
-            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.783.67')} value={toPercent(audio.music)} suffix="%" onChange={v => applyLiveAudio({ music: fromPercent(v) })} />
-            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.784.68')} value={toPercent(audio.effects)} suffix="%" onChange={v => applyLiveAudio({ effects: fromPercent(v) })} />
-            <SettingsSlider label={webUIText('Settings.UIVolume.Label')} desc={webUIText('Settings.UIVolume.Description')} value={toPercent(audio.ui)} suffix="%" onChange={v => applyLiveAudio({ ui: fromPercent(v) })} />
-            <SettingsSlider label={webUIText('Settings.AmbienceVolume.Label')} desc={webUIText('Settings.AmbienceVolume.Description')} value={toPercent(audio.ambience)} suffix="%" onChange={v => applyLiveAudio({ ambience: fromPercent(v) })} />
+            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.782.66')} value={toPercent(audioMaster)} suffix="%" onChange={v => applyLiveAudio({ master: fromPercent(v) })} />
+            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.783.67')} value={toPercent(audioMusic)} suffix="%" onChange={v => applyLiveAudio({ music: fromPercent(v) })} />
+            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.784.68')} value={toPercent(audioEffects)} suffix="%" onChange={v => applyLiveAudio({ effects: fromPercent(v) })} />
+            <SettingsSlider label={webUIText('Settings.UIVolume.Label')} desc={webUIText('Settings.UIVolume.Description')} value={toPercent(audioUi)} suffix="%" onChange={v => applyLiveAudio({ ui: fromPercent(v) })} />
+            <SettingsSlider label={webUIText('Settings.AmbienceVolume.Label')} desc={webUIText('Settings.AmbienceVolume.Description')} value={toPercent(audioAmbience)} suffix="%" onChange={v => applyLiveAudio({ ambience: fromPercent(v) })} />
           </div>
         )}
 
