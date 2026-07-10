@@ -21,7 +21,7 @@ function relationLabel(relation: string): string {
 
 interface FactionRowProps {
   faction: ConvoyGlanceFactionFilter;
-  onToggle: (factionName: string, active: boolean) => void;
+  onToggle: (factionId: string, active: boolean) => void;
 }
 
 function FactionRow({ faction, onToggle }: FactionRowProps) {
@@ -44,7 +44,7 @@ function FactionRow({ faction, onToggle }: FactionRowProps) {
         className={rowClass}
         onMouseDown={(event) => {
           event.preventDefault();
-          onToggle(faction.name, !faction.active);
+          onToggle(faction.id, !faction.active);
         }}
       >
         <span className="convoy-filter-check">

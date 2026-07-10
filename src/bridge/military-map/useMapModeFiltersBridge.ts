@@ -9,27 +9,26 @@ import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
 export type MapModeFiltersState = GetMapModeFiltersResponse;
 
-function activeNames(state: MapModeFiltersState): string[] {
+function activeIds(state: MapModeFiltersState): string[] {
   if (!state.filterActive) {
-    return state.entries.map(entry => entry.name);
+    return state.entries.map(entry => entry.id);
   }
 
   return state.entries
     .filter(entry => entry.active)
-    .map(entry => entry.name);
+    .map(entry => entry.id);
 }
 
-function requestForNames(
+function requestForIds(
   state: MapModeFiltersState,
-  names: string[],
+  ids: string[],
 ): SetMapModeFiltersRequest {
-  const allSelected = names.length >= state.entries.length;
+  const allSelected = ids.length >= state.entries.length;
   return {
     modeId: state.modeId,
     filterActive: !allSelected,
-    activeNames: allSelected ? [] : names,
+    activeIds: allSelected ? [] : ids,
     selectedEntryId: '',
-    selectedName: '',
   };
 }
 
@@ -43,28 +42,27 @@ export function useMapModeFiltersBridge() {
     bridgeCall('game.set_map_mode_filters', request).catch(acknowledgeBridgeFailure);
   }, []);
 
-  const setEntryActive = useCallback((entryName: string, active: boolean) => {
+  const setEntryActive = useCallback((entryId: string, active: boolean) => {
     if (!state) return;
 
-    const nextNames = new Set(activeNames(state));
+    const nextIds = new Set(activeIds(state));
     if (active) {
-      nextNames.add(entryName);
+      nextIds.add(entryId);
     } else {
-      nextNames.delete(entryName);
+      nextIds.delete(entryId);
     }
 
-    apply(requestForNames(state, Array.from(nextNames)));
+    apply(requestForIds(state, Array.from(nextIds)));
   }, [apply, state]);
 
-  const selectEntry = useCallback((entryId: string, entryName: string) => {
+  const selectEntry = useCallback((entryId: string) => {
     if (!state) return;
 
     apply({
       modeId: state.modeId,
       filterActive: false,
-      activeNames: [],
+      activeIds: [],
       selectedEntryId: entryId,
-      selectedName: entryName,
     });
   }, [apply, state]);
 
@@ -73,9 +71,8 @@ export function useMapModeFiltersBridge() {
     apply({
       modeId: state.modeId,
       filterActive: false,
-      activeNames: [],
+      activeIds: [],
       selectedEntryId: '',
-      selectedName: '',
     });
   }, [apply, state]);
 
@@ -84,9 +81,8 @@ export function useMapModeFiltersBridge() {
     apply({
       modeId: state.modeId,
       filterActive: true,
-      activeNames: [],
+      activeIds: [],
       selectedEntryId: '',
-      selectedName: '',
     });
   }, [apply, state]);
 

@@ -13,8 +13,8 @@ function formatAmount(value: number): string {
 interface FilterRowProps {
   entry: MapModeFilterEntry;
   radioMode: boolean;
-  onToggle: (entryName: string, active: boolean) => void;
-  onSelect: (entryId: string, entryName: string) => void;
+  onToggle: (entryId: string, active: boolean) => void;
+  onSelect: (entryId: string) => void;
 }
 
 function FilterRow({ entry, radioMode, onToggle, onSelect }: FilterRowProps) {
@@ -32,9 +32,9 @@ function FilterRow({ entry, radioMode, onToggle, onSelect }: FilterRowProps) {
       onMouseDown={(event) => {
         event.preventDefault();
         if (radioMode) {
-          onSelect(entry.id, entry.name);
+          onSelect(entry.id);
         } else {
-          onToggle(entry.name, !entry.active);
+          onToggle(entry.id, !entry.active);
         }
       }}
     >

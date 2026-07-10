@@ -9,25 +9,25 @@ import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
 export type ConvoyGlanceFiltersState = GetConvoyGlanceFiltersResponse;
 
-function activeFactionNames(state: ConvoyGlanceFiltersState): string[] {
+function activeFactionIds(state: ConvoyGlanceFiltersState): string[] {
   if (!state.factionFilterActive) {
-    return state.factions.map(faction => faction.name);
+    return state.factions.map(faction => faction.id);
   }
 
   return state.factions
     .filter(faction => faction.active)
-    .map(faction => faction.name);
+    .map(faction => faction.id);
 }
 
 function requestForState(
   state: ConvoyGlanceFiltersState,
-  activeNames: string[],
+  activeIds: string[],
 ): SetConvoyGlanceFiltersRequest {
-  const allSelected = activeNames.length >= state.factions.length;
+  const allSelected = activeIds.length >= state.factions.length;
   return {
     showConvoys: state.showConvoys,
     factionFilterActive: !allSelected,
-    activeFactionNames: allSelected ? [] : activeNames,
+    activeFactionIds: allSelected ? [] : activeIds,
   };
 }
 
@@ -46,21 +46,21 @@ export function useConvoyGlanceFiltersBridge() {
     apply({
       showConvoys,
       factionFilterActive: state.factionFilterActive,
-      activeFactionNames: state.factionFilterActive ? activeFactionNames(state) : [],
+      activeFactionIds: state.factionFilterActive ? activeFactionIds(state) : [],
     });
   }, [apply, state]);
 
-  const setFactionActive = useCallback((factionName: string, active: boolean) => {
+  const setFactionActive = useCallback((factionId: string, active: boolean) => {
     if (!state) return;
 
-    const nextNames = new Set(activeFactionNames(state));
+    const nextIds = new Set(activeFactionIds(state));
     if (active) {
-      nextNames.add(factionName);
+      nextIds.add(factionId);
     } else {
-      nextNames.delete(factionName);
+      nextIds.delete(factionId);
     }
 
-    apply(requestForState(state, Array.from(nextNames)));
+    apply(requestForState(state, Array.from(nextIds)));
   }, [apply, state]);
 
   const showAllFactions = useCallback(() => {
@@ -68,7 +68,7 @@ export function useConvoyGlanceFiltersBridge() {
     apply({
       showConvoys: state.showConvoys,
       factionFilterActive: false,
-      activeFactionNames: [],
+      activeFactionIds: [],
     });
   }, [apply, state]);
 
@@ -77,7 +77,7 @@ export function useConvoyGlanceFiltersBridge() {
     apply({
       showConvoys: state.showConvoys,
       factionFilterActive: true,
-      activeFactionNames: [],
+      activeFactionIds: [],
     });
   }, [apply, state]);
 

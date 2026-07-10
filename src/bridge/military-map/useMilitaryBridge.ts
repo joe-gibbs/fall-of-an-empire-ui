@@ -166,6 +166,7 @@ function mapUnitRow(unit: GetMilitaryDataResponse['unitRows'][number]): ArmyUnit
     statusLabel: unit.statusLabel,
     selectable: unit.selectable,
     sources: unit.sources.map(source => ({
+      id: source.id,
       name: source.name,
       count: source.count,
       daysRemaining: source.daysRemaining,

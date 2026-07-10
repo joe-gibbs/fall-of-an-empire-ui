@@ -4618,6 +4618,7 @@ export interface GetMilitaryDataRequest {
 }
 
 export interface MilitaryUnitSourceEntry {
+  id: string;
   name: string;
   count: number;
   daysRemaining: number;
@@ -5359,7 +5360,7 @@ export interface SetAutoReplenishFormationsRequest {
 export interface SetConvoyGlanceFiltersRequest {
   showConvoys: boolean;
   factionFilterActive: boolean;
-  activeFactionNames: string[];
+  activeFactionIds: string[];
 }
 
 export interface SetDesignatedHeirRequest {
@@ -5391,9 +5392,8 @@ export interface SetMapModeRequest {
 export interface SetMapModeFiltersRequest {
   modeId: string;
   filterActive: boolean;
-  activeNames: string[];
+  activeIds: string[];
   selectedEntryId: string;
-  selectedName: string;
 }
 
 export interface SetModEnabledRequest {

@@ -353,7 +353,7 @@ interface MockBridgeState {
   saveSerial: number;
   activeMapMode: string;
   mapModeFilterActive: boolean;
-  activeMapModeFilterNames: string[];
+  activeMapModeFilterIds: string[];
   selectedBishopricFilterId: string;
   eventVisible: boolean;
   eventKind: MockEventKind;
@@ -371,7 +371,7 @@ interface MockBridgeState {
   religionConversionStageStartDay: number;
   showConvoyGlances: boolean;
   convoyFactionFilterActive: boolean;
-  activeConvoyFactionNames: string[];
+  activeConvoyFactionIds: string[];
   pinnedItems: BridgeResponse<'game.get_pinned_items'>['items'];
   governorAssignmentActive: boolean;
   selectedGovernorId: string;
@@ -697,7 +697,7 @@ function convoyFactionFilters(state: MockBridgeState): BridgeResponse<'game.get_
       secondaryColour: faction.secondaryColour,
       relation: faction.relation,
       convoyCount: faction.convoyCount,
-      active: !state.convoyFactionFilterActive || state.activeConvoyFactionNames.indexOf(faction.name) >= 0,
+      active: !state.convoyFactionFilterActive || state.activeConvoyFactionIds.indexOf(faction.id) >= 0,
     })),
   } satisfies BridgeResponse<'game.get_convoy_glance_filters'>;
 }
@@ -716,13 +716,13 @@ function mapModeFilterEntry(
     colour,
     iconPath,
     amount,
-    active: !state.mapModeFilterActive || state.activeMapModeFilterNames.indexOf(name) >= 0,
+    active: !state.mapModeFilterActive || state.activeMapModeFilterIds.indexOf(id) >= 0,
   };
 }
 
 function clearMapModeFilters(state: MockBridgeState) {
   state.mapModeFilterActive = false;
-  state.activeMapModeFilterNames = [];
+  state.activeMapModeFilterIds = [];
 }
 
 function mapModeFilters(state: MockBridgeState): BridgeResponse<'game.get_map_mode_filters'> {
@@ -769,11 +769,11 @@ function mapModeFilters(state: MockBridgeState): BridgeResponse<'game.get_map_mo
   } else if (modeId === 'militaries') {
     response.modeLabel = 'Military Recruitment';
     response.entries = [
-      mapModeFilterEntry(state, 'Infantry', 'Infantry', '#787878', '/assets/icons/UnitTypes/I_Infantry.png'),
-      mapModeFilterEntry(state, 'Ranged', 'Ranged', '#5F8C5F', '/assets/icons/UnitTypes/I_Ranged.png'),
-      mapModeFilterEntry(state, 'Cavalry', 'Cavalry', '#8C6D42', '/assets/icons/UnitTypes/I_Cavalry.png'),
-      mapModeFilterEntry(state, 'Siege', 'Siege', '#9A7A49', '/assets/icons/UnitTypes/I_Siege.png'),
-      mapModeFilterEntry(state, 'Currently Building', 'Currently Building', '#E4C85F', '/assets/icons/I_BuildingsQuickButton.png'),
+      mapModeFilterEntry(state, 'army:infantry', 'Infantry', '#787878', '/assets/icons/UnitTypes/I_Infantry.png'),
+      mapModeFilterEntry(state, 'army:ranged', 'Ranged', '#5F8C5F', '/assets/icons/UnitTypes/I_Ranged.png'),
+      mapModeFilterEntry(state, 'army:cavalry', 'Cavalry', '#8C6D42', '/assets/icons/UnitTypes/I_Cavalry.png'),
+      mapModeFilterEntry(state, 'army:siege', 'Siege', '#9A7A49', '/assets/icons/UnitTypes/I_Siege.png'),
+      mapModeFilterEntry(state, 'currentlyBuilding', 'Currently Building', '#E4C85F', '/assets/icons/I_BuildingsQuickButton.png'),
     ];
   } else if (modeId === 'bishopric') {
     response.modeLabel = 'Bishoprics';
@@ -794,8 +794,8 @@ function mapModeFilters(state: MockBridgeState): BridgeResponse<'game.get_map_mo
   return response satisfies BridgeResponse<'game.get_map_mode_filters'>;
 }
 
-function convoyFactionVisible(state: MockBridgeState, factionName: string): boolean {
-  return !state.convoyFactionFilterActive || state.activeConvoyFactionNames.indexOf(factionName) >= 0;
+function convoyFactionVisible(state: MockBridgeState, factionId: string): boolean {
+  return !state.convoyFactionFilterActive || state.activeConvoyFactionIds.indexOf(factionId) >= 0;
 }
 
 function mockWorldConvoys(state: MockBridgeState): BridgeResponse<'game.get_world_glances'>['convoys'] {
@@ -854,7 +854,7 @@ function mockWorldConvoys(state: MockBridgeState): BridgeResponse<'game.get_worl
     },
   ];
 
-  return convoys.filter(convoy => convoyFactionVisible(state, convoy.faction.name));
+  return convoys.filter(convoy => convoyFactionVisible(state, convoy.faction.id));
 }
 
 function mockPolicy(id: string, name: string, value: number) {
@@ -2425,7 +2425,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
       progress: 0.46,
       statusLabel: '46% built',
       selectable: false,
-      sources: [{ name: profile.garrisonedAt, count: 1, daysRemaining: 0 }],
+      sources: [{ id: isNavy ? MOCK_IDS.portSettlement : MOCK_IDS.settlement, name: profile.garrisonedAt, count: 1, daysRemaining: 0 }],
     },
     {
       ...units[1],
@@ -2439,7 +2439,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
       progress: 0.72,
       statusLabel: '72% arrived',
       selectable: false,
-      sources: [{ name: isNavy ? 'Namaris' : 'Aurelion', count: 1, daysRemaining: 5 }],
+      sources: [{ id: isNavy ? MOCK_IDS.portSettlement : MOCK_IDS.settlement, name: isNavy ? 'Namaris' : 'Aurelion', count: 1, daysRemaining: 5 }],
     },
   ];
   return {
@@ -4406,7 +4406,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     saveSerial: 0,
     activeMapMode: 'political',
     mapModeFilterActive: false,
-    activeMapModeFilterNames: [],
+    activeMapModeFilterIds: [],
     selectedBishopricFilterId: rephsianReligion.id,
     eventVisible: searchParams.has('event'),
     eventKind: searchParams.has('importantEvent') || searchParams.has('important')
@@ -4426,7 +4426,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     religionConversionStageStartDay: 249409,
     showConvoyGlances: true,
     convoyFactionFilterActive: false,
-    activeConvoyFactionNames: [],
+    activeConvoyFactionIds: [],
     pinnedItems: clone(pinnedItems),
     governorAssignmentActive: false,
     selectedGovernorId: MOCK_IDS.governor,
@@ -4908,7 +4908,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           clearMapModeFilters(state);
         } else {
           state.mapModeFilterActive = payloadBoolean(payload, 'filterActive', false);
-          state.activeMapModeFilterNames = payloadStringArray(payload, 'activeNames');
+          state.activeMapModeFilterIds = payloadStringArray(payload, 'activeIds');
         }
         emit('game.get_map_mode_filters', responseFor('game.get_map_mode_filters', undefined, emit));
         emit('game.get_world_glances', responseFor('game.get_world_glances', undefined, emit));
@@ -4967,7 +4967,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.set_convoy_glance_filters':
         state.showConvoyGlances = payloadBoolean(payload, 'showConvoys', true);
         state.convoyFactionFilterActive = payloadBoolean(payload, 'factionFilterActive', false);
-        state.activeConvoyFactionNames = payloadStringArray(payload, 'activeFactionNames');
+        state.activeConvoyFactionIds = payloadStringArray(payload, 'activeFactionIds');
         emit('game.get_convoy_glance_filters', responseFor('game.get_convoy_glance_filters', undefined, emit));
         emit('game.get_world_glances', responseFor('game.get_world_glances', undefined, emit));
         return undefined;

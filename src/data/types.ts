@@ -1054,6 +1054,7 @@ export interface ArmyUnit {
 export type ArmyUnitRowType = 'existing' | 'beingBuilt' | 'inTransit' | 'pending' | 'unbuildable' | 'replenishDisabled';
 
 export interface ArmyUnitSource {
+  id: string;
   name: string;
   count: number;
   daysRemaining: number;
