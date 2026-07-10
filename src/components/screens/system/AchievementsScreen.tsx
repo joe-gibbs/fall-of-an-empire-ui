@@ -41,16 +41,6 @@ function rarityLabel(rarity: string): string {
   return webUIText(labels[rarity] ?? 'Achievements.Rarity.Common');
 }
 
-function statusLabel(entry: AchievementEntry): string {
-  if (entry.unlocked) {
-    return webUIText('Achievements.Status.Unlocked');
-  }
-  if (!entry.canBeEarned) {
-    return webUIText('Achievements.Status.Unavailable');
-  }
-  return webUIText('Achievements.Status.Locked');
-}
-
 function groupAchievements(entries: AchievementEntry[]): Array<[string, AchievementEntry[]]> {
   const groups = new Map<string, AchievementEntry[]>();
   for (const entry of entries) {
@@ -151,7 +141,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ onClose }) => {
                     return (
                       <article
                         key={entry.id}
-                        className={`achievement-row${entry.unlocked ? ' achievement-row--unlocked' : ''}${!entry.canBeEarned && !entry.unlocked ? ' achievement-row--unavailable' : ''}`}
+                        className={`achievement-row achievement-row--with-icon${entry.unlocked ? ' achievement-row--unlocked' : ''}${!entry.canBeEarned && !entry.unlocked ? ' achievement-row--unavailable' : ''}`}
                       >
                         {entry.iconUrl && (
                           <img src={entry.iconUrl} alt="" className="achievement-row-icon" draggable={false} />
@@ -159,7 +149,6 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ onClose }) => {
                         <div className="achievement-row-main">
                           <div className="achievement-row-heading">
                             <span className="achievement-row-title">{entry.displayName}</span>
-                            <span className="achievement-row-status">{statusLabel(entry)}</span>
                           </div>
                           <div className="achievement-row-description">{entry.effectiveDescription}</div>
                           <div className="achievement-row-progress">
