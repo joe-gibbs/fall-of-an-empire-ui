@@ -27,6 +27,7 @@ import type { PortraitLayerData } from '../../../data/types';
 import type { AppointmentContestView } from '../../../bridge/characters/useCourtAppointmentContestsBridge';
 import { runCourtOfficeAction, runGovernorMissionAction, type ProvinceModeCourtOfficeAction, type ProvinceModeMissionStatus, type ProvinceModeOverview } from '../../../bridge/provinces/useProvinceModeOverviewBridge';
 import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
+import Tooltip from '../../common/tooltips/Tooltip';
 import { registerScreen } from '../../../registry/index';
 import { useWebUIText } from '../../../localization/WebUITextContext';
 import { CourtPositionsPanel, FactionModifierCard, PolicyEntry } from './FactionOverviewShared';
@@ -40,6 +41,7 @@ type WarningStageTone = 'favoured' | 'stable' | 'active' | 'danger' | 'critical'
 interface WarningStage {
   id: string;
   labelKey: string;
+  tooltipKey: string;
   tone: WarningStageTone;
   icon: string;
 }
@@ -138,11 +140,11 @@ interface AppointmentRole {
 const RECALL_STATUS_ICON = '/assets/icons/RecallStatus/I_RecallStatus_Overview.png';
 
 const WARNING_STAGES: WarningStage[] = [
-  { id: 'favoured', labelKey: 'ProvinceMode.Warning.Favoured', tone: 'favoured', icon: '/assets/icons/RecallStatus/I_RecallStatus_Favoured.png' },
-  { id: 'stable', labelKey: 'ProvinceMode.Warning.Stable', tone: 'stable', icon: '/assets/icons/RecallStatus/I_RecallStatus_Stable.png' },
-  { id: 'recall-status', labelKey: 'ProvinceMode.Warning.Watched', tone: 'active', icon: '/assets/icons/RecallStatus/I_RecallStatus_Watched.png' },
-  { id: 'recall-warning', labelKey: 'ProvinceMode.Warning.RecallWarning', tone: 'danger', icon: '/assets/icons/RecallStatus/I_RecallStatus_Warning.png' },
-  { id: 'recall-ordered', labelKey: 'ProvinceMode.Warning.RecallOrdered', tone: 'critical', icon: '/assets/icons/RecallStatus/I_RecallStatus_Ordered.png' },
+  { id: 'favoured', labelKey: 'ProvinceMode.Warning.Favoured', tooltipKey: 'ProvinceMode.Warning.FavouredTooltip', tone: 'favoured', icon: '/assets/icons/RecallStatus/I_RecallStatus_Favoured.png' },
+  { id: 'stable', labelKey: 'ProvinceMode.Warning.Stable', tooltipKey: 'ProvinceMode.Warning.StableTooltip', tone: 'stable', icon: '/assets/icons/RecallStatus/I_RecallStatus_Stable.png' },
+  { id: 'recall-status', labelKey: 'ProvinceMode.Warning.Watched', tooltipKey: 'ProvinceMode.Warning.WatchedTooltip', tone: 'active', icon: '/assets/icons/RecallStatus/I_RecallStatus_Watched.png' },
+  { id: 'recall-warning', labelKey: 'ProvinceMode.Warning.RecallWarning', tooltipKey: 'ProvinceMode.Warning.RecallWarningTooltip', tone: 'danger', icon: '/assets/icons/RecallStatus/I_RecallStatus_Warning.png' },
+  { id: 'recall-ordered', labelKey: 'ProvinceMode.Warning.RecallOrdered', tooltipKey: 'ProvinceMode.Warning.RecallOrderedTooltip', tone: 'critical', icon: '/assets/icons/RecallStatus/I_RecallStatus_Ordered.png' },
 ];
 
 function scoreColour(score: number): string {
@@ -420,16 +422,21 @@ function RecallStatusPanel({
             {WARNING_STAGES.map((stage, index) => {
               const state = index === activeStage ? 'active' : index < activeStage ? 'past' : 'future';
               return (
-                <div
+                <Tooltip
                   key={stage.id}
-                  className={`gfov-recall-stage gfov-recall-stage--${state} gfov-recall-stage--tone-${stage.tone}`}
+                  content={{ title: t(stage.labelKey), body: t(stage.tooltipKey) }}
+                  position="top"
+                  delay={150}
+                  wrapperClassName="gfov-recall-stage-tooltip"
                 >
-                  <span className="gfov-recall-stage-connector" aria-hidden="true" />
-                  <span className="gfov-recall-stage-marker">
-                    <img src={stage.icon} alt="" draggable={false} />
-                  </span>
-                  <span className="gfov-recall-stage-label">{t(stage.labelKey)}</span>
-                </div>
+                  <div className={`gfov-recall-stage gfov-recall-stage--${state} gfov-recall-stage--tone-${stage.tone}`}>
+                    <span className="gfov-recall-stage-connector" aria-hidden="true" />
+                    <span className="gfov-recall-stage-marker">
+                      <img src={stage.icon} alt="" draggable={false} />
+                    </span>
+                    <span className="gfov-recall-stage-label">{t(stage.labelKey)}</span>
+                  </div>
+                </Tooltip>
               );
             })}
           </div>

@@ -465,9 +465,20 @@
   justify-content: space-between;
 }
 
-.gfov-recall-stage {
-  position: relative;
+.gfov-recall-stage-tooltip {
   flex: 1;
+  min-width: 0;
+}
+
+.gfov-recall-stage {
+  --recall-ink: rgba(201, 168, 76, 0.48);
+  --recall-fill: rgba(38, 41, 42, 0.82);
+  --recall-marker-shape: polygon(49% 0%, 73% 23%, 100% 47%, 78% 73%, 54% 100%, 27% 78%, 0% 55%, 23% 27%);
+  --recall-marker-inner-shape: polygon(48% 1%, 75% 25%, 99% 48%, 76% 76%, 53% 99%, 25% 76%, 1% 54%, 25% 25%);
+  --recall-marker-turn: -0.8deg;
+  --recall-marker-inner-turn: 0.4deg;
+  position: relative;
+  width: 100%;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -476,24 +487,60 @@
   text-align: center;
 }
 
+.gfov-recall-stage-tooltip:nth-child(2) .gfov-recall-stage {
+  --recall-marker-shape: polygon(52% 1%, 76% 25%, 99% 51%, 75% 76%, 49% 99%, 24% 74%, 1% 47%, 25% 22%);
+  --recall-marker-inner-shape: polygon(51% 0%, 74% 24%, 100% 50%, 77% 74%, 50% 100%, 26% 76%, 0% 48%, 23% 25%);
+  --recall-marker-turn: 0.9deg;
+  --recall-marker-inner-turn: -0.45deg;
+}
+
+.gfov-recall-stage-tooltip:nth-child(3) .gfov-recall-stage {
+  --recall-marker-shape: polygon(47% 0%, 72% 24%, 100% 52%, 79% 76%, 53% 100%, 26% 79%, 0% 49%, 22% 25%);
+  --recall-marker-inner-shape: polygon(49% 1%, 76% 26%, 99% 51%, 76% 75%, 52% 99%, 24% 76%, 1% 50%, 24% 23%);
+  --recall-marker-turn: -0.35deg;
+  --recall-marker-inner-turn: 0.18deg;
+}
+
+.gfov-recall-stage-tooltip:nth-child(4) .gfov-recall-stage {
+  --recall-marker-shape: polygon(51% 0%, 75% 22%, 100% 49%, 76% 77%, 50% 100%, 23% 75%, 0% 52%, 25% 25%);
+  --recall-marker-inner-shape: polygon(50% 1%, 73% 25%, 99% 50%, 78% 75%, 51% 99%, 25% 77%, 1% 51%, 23% 24%);
+  --recall-marker-turn: 0.55deg;
+  --recall-marker-inner-turn: -0.28deg;
+}
+
+.gfov-recall-stage-tooltip:nth-child(5) .gfov-recall-stage {
+  --recall-marker-shape: polygon(48% 1%, 74% 25%, 99% 48%, 77% 74%, 52% 100%, 25% 77%, 1% 53%, 22% 26%);
+  --recall-marker-inner-shape: polygon(50% 0%, 76% 23%, 100% 49%, 75% 76%, 51% 99%, 24% 75%, 0% 52%, 25% 24%);
+  --recall-marker-turn: -1deg;
+  --recall-marker-inner-turn: 0.5deg;
+}
+
 .gfov-recall-stage-connector {
   position: absolute;
   z-index: 0;
-  top: 1.19rem;
+  top: 1.23rem;
   left: 50%;
   width: 100%;
-  height: 0.34rem;
-  box-sizing: border-box;
-  border-top-width: 0.077rem;
-  border-right-width: 0;
-  border-bottom-width: 0.077rem;
-  border-left-width: 0;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.26);
-  background-color: rgba(72, 76, 76, 0.5);
+  height: 0.22rem;
 }
 
-.gfov-recall-stage:last-child .gfov-recall-stage-connector {
+.gfov-recall-stage-connector::before {
+  content: '';
+  position: absolute;
+  left: -0.06rem;
+  top: 0;
+  width: calc(100% + 0.12rem);
+  height: 0.18rem;
+  background-color: var(--recall-ink);
+  clip-path: polygon(0% 37%, 12% 23%, 27% 38%, 43% 16%, 59% 34%, 76% 24%, 100% 41%, 100% 69%, 82% 61%, 64% 80%, 45% 59%, 28% 76%, 12% 56%, 0% 68%);
+  opacity: 0.82;
+}
+
+.gfov-recall-stage-connector::after {
+  content: none;
+}
+
+.gfov-recall-stage-tooltip:last-child .gfov-recall-stage-connector {
   display: none;
 }
 
@@ -512,25 +559,35 @@
   content: '';
   position: absolute;
   z-index: 0;
-  top: 0.36rem;
-  right: 0.36rem;
-  bottom: 0.36rem;
-  left: 0.36rem;
-  box-sizing: border-box;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.48);
+  top: 0.19rem;
+  right: 0.19rem;
+  bottom: 0.19rem;
+  left: 0.19rem;
+  background-color: var(--recall-ink);
+  clip-path: var(--recall-marker-shape);
+  transform: rotate(var(--recall-marker-turn));
+}
+
+.gfov-recall-stage-marker::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 0.34rem;
+  right: 0.34rem;
+  bottom: 0.34rem;
+  left: 0.34rem;
   background-image: url('/assets/baked/texture-overlay-heavy.png');
   background-position: 0 0;
   background-repeat: repeat;
   background-size: 93.0909rem 93.0909rem;
-  background-color: rgba(38, 41, 42, 0.82);
-  transform: rotate(45deg);
+  background-color: var(--recall-fill);
+  clip-path: var(--recall-marker-inner-shape);
+  transform: rotate(var(--recall-marker-inner-turn));
 }
 
 .gfov-recall-stage-marker img {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: block;
   width: 1.48rem;
   height: 1.48rem;
@@ -549,56 +606,36 @@
 }
 
 .gfov-recall-stage--tone-favoured .gfov-recall-stage-marker::before {
-  border-color: rgba(113, 199, 76, 0.76);
-  background-color: rgba(24, 70, 38, 0.84);
+  background-color: var(--recall-fill);
 }
 
-.gfov-recall-stage--tone-favoured .gfov-recall-stage-connector {
-  border-color: rgba(113, 199, 76, 0.28);
-  background-color: rgba(40, 115, 48, 0.56);
+.gfov-recall-stage--tone-favoured {
+  --recall-ink: rgba(113, 199, 76, 0.76);
+  --recall-fill: rgba(24, 70, 38, 0.84);
 }
 
-.gfov-recall-stage--tone-stable .gfov-recall-stage-marker::before {
-  border-color: rgba(188, 190, 180, 0.58);
-  background-color: rgba(56, 62, 64, 0.86);
+.gfov-recall-stage--tone-stable {
+  --recall-ink: rgba(188, 190, 180, 0.58);
+  --recall-fill: rgba(56, 62, 64, 0.86);
 }
 
-.gfov-recall-stage--tone-stable .gfov-recall-stage-connector {
-  border-color: rgba(188, 190, 180, 0.24);
-  background-color: rgba(74, 80, 78, 0.54);
+.gfov-recall-stage--tone-active {
+  --recall-ink: rgba(201, 168, 76, 0.74);
+  --recall-fill: rgba(92, 72, 35, 0.84);
 }
 
-.gfov-recall-stage--tone-active .gfov-recall-stage-marker::before {
-  border-color: rgba(201, 168, 76, 0.74);
-  background-color: rgba(92, 72, 35, 0.84);
+.gfov-recall-stage--tone-danger {
+  --recall-ink: rgba(229, 115, 30, 0.8);
+  --recall-fill: rgba(101, 52, 24, 0.85);
 }
 
-.gfov-recall-stage--tone-active .gfov-recall-stage-connector {
-  border-color: rgba(201, 168, 76, 0.3);
-  background-color: rgba(111, 84, 35, 0.55);
-}
-
-.gfov-recall-stage--tone-danger .gfov-recall-stage-marker::before {
-  border-color: rgba(229, 115, 30, 0.8);
-  background-color: rgba(101, 52, 24, 0.85);
-}
-
-.gfov-recall-stage--tone-danger .gfov-recall-stage-connector {
-  border-color: rgba(229, 115, 30, 0.32);
-  background-color: rgba(126, 58, 24, 0.56);
-}
-
-.gfov-recall-stage--tone-critical .gfov-recall-stage-marker::before {
-  border-color: rgba(220, 50, 50, 0.82);
-  background-color: rgba(92, 27, 30, 0.88);
-}
-
-.gfov-recall-stage--tone-critical .gfov-recall-stage-connector {
-  border-color: rgba(220, 50, 50, 0.34);
-  background-color: rgba(112, 29, 33, 0.58);
+.gfov-recall-stage--tone-critical {
+  --recall-ink: rgba(220, 50, 50, 0.82);
+  --recall-fill: rgba(92, 27, 30, 0.88);
 }
 
 .gfov-recall-stage--past .gfov-recall-stage-marker::before,
+.gfov-recall-stage--past .gfov-recall-stage-marker::after,
 .gfov-recall-stage--past .gfov-recall-stage-connector {
   opacity: 0.78;
 }
@@ -612,7 +649,7 @@
 }
 
 .gfov-recall-stage--active .gfov-recall-stage-marker::before {
-  border-width: 0.115rem;
+  opacity: 1;
 }
 
 .gfov-recall-stage--active .gfov-recall-stage-connector {
