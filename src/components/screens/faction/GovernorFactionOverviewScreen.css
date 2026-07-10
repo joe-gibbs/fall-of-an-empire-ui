@@ -766,12 +766,7 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 0.3rem 0.45rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(154, 139, 111, 0.2);
-  background-image: url('/assets/chart-noise.png');
-  background-size: 5.8182rem 5.8182rem;
-  background-color: rgba(8, 12, 17, 0.28);
+  background: transparent;
   font-size: 0.9rem;
 }
 
@@ -837,12 +832,7 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 0.3rem 0.45rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(154, 139, 111, 0.2);
-  background-image: url('/assets/chart-noise.png');
-  background-size: 5.8182rem 5.8182rem;
-  background-color: rgba(8, 12, 17, 0.28);
+  background: transparent;
   font-size: 0.9rem;
 }
 
@@ -1576,22 +1566,25 @@
   color: var(--text);
   text-align: left;
   cursor: pointer;
+  transition: transform 0.15s ease-out, background-color 0.15s ease-out;
 }
 
 .gfov-appointment-role:hover,
 .gfov-appointment-role--active {
-  border-top-color: rgba(201, 168, 76, 0.5);
-  border-right-color: rgba(201, 168, 76, 0.5);
-  border-bottom-color: rgba(201, 168, 76, 0.5);
-  border-left-color: rgba(201, 168, 76, 0.5);
-  background-color: rgba(201, 168, 76, 0.08);
+  background-image:
+    linear-gradient(90deg, rgba(201, 168, 76, 0.18), rgba(72, 48, 24, 0.12)),
+    url('/assets/chart-noise.png'),
+    url('/assets/baked/panel-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.8182rem 5.8182rem, 93.0909rem 93.0909rem;
+  background-color: rgba(72, 48, 24, 0.3);
+}
+
+.gfov-appointment-role:hover {
+  transform: translateX(0.15rem);
 }
 
 .gfov-appointment-role--entered {
-  border-top-color: rgba(201, 168, 76, 0.58);
-  border-right-color: rgba(201, 168, 76, 0.42);
-  border-bottom-color: rgba(201, 168, 76, 0.36);
-  border-left-color: rgba(201, 168, 76, 0.42);
   background-color: rgba(34, 26, 16, 0.52);
 }
 
@@ -1720,6 +1713,19 @@
   overflow: visible;
   text-overflow: clip;
   overflow-wrap: break-word;
+}
+
+.gfov-appointment-role-leading {
+  display: flex;
+  align-items: center;
+}
+
+.gfov-appointment-role-leading-portrait.portrait {
+  width: 1.45rem !important;
+  height: 1.45rem !important;
+  min-width: 1.45rem !important;
+  min-height: 1.45rem !important;
+  margin-right: 0.3rem;
 }
 
 .gfov-appointment-detail-header {

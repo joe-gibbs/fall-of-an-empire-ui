@@ -5,6 +5,7 @@ interface BadgeProps {
   text: string;
   colour?: string;
   variant?: 'filled' | 'outline';
+  className?: string;
 }
 
 const TOKEN_HEX: Record<string, string> = {
@@ -39,6 +40,7 @@ const Badge: React.FC<BadgeProps> = ({
   text,
   colour,
   variant = 'filled',
+  className,
 }) => {
   const badgeColour = colour || 'var(--gold)';
 
@@ -62,7 +64,7 @@ const Badge: React.FC<BadgeProps> = ({
         };
 
   return (
-    <span className={`badge badge--${variant}`} style={style}>
+    <span className={`badge badge--${variant}${className ? ` ${className}` : ''}`} style={style}>
       {text}
     </span>
   );

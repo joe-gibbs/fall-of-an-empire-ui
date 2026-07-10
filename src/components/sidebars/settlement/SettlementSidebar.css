@@ -407,14 +407,16 @@
   min-width: 0;
   padding: 0.16rem 0.25rem;
   background-color: rgba(13, 18, 24, 0.45);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(80, 92, 104, 0.34);
+  border: 0.154rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   cursor: auto;
 }
 
 .settle-resource-category-head--shortage {
-  border-color: rgba(199, 91, 58, 0.38);
   background-color: rgba(92, 28, 28, 0.25);
 }
 

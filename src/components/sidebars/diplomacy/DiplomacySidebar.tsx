@@ -623,7 +623,11 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             <span className="diplo-header-name">{faction.name}</span>
             {!faction.isPlayer && <div className="diplo-header-status-row">
               <img src={statusIcons[faction.diplomaticStatus] || statusIcons.neutral} alt="" className="diplo-header-status-icon" />
-              <Badge text={status.text} colour={status.colour} />
+              <Badge
+                text={status.text}
+                colour={status.colour}
+                className={faction.diplomaticStatus === 'subject' ? 'diplo-subject-badge' : undefined}
+              />
               {faction.isRebel && <Badge text={webUIText('Auto.ExtraAttr.ComponentsSidebarsDiplomacySidebar.317.1')} colour="var(--red)" />}
             </div>}
             <div className="diplo-header-capital">

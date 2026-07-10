@@ -108,6 +108,7 @@ interface AppointmentCandidate {
 
 interface AppointmentRole {
   id: string;
+  isContestData: boolean;
   positionKey?: string;
   icon: string;
   titleKey?: string;
@@ -251,6 +252,7 @@ function appointmentContestIcon(positionKey: string): string {
 function appointmentRoleFromContest(contest: AppointmentContestView, t: ReturnType<typeof useWebUIText>): AppointmentRole {
   return {
     id: contest.positionKey,
+    isContestData: true,
     positionKey: contest.positionKey,
     icon: contest.icon || appointmentContestIcon(contest.positionKey),
     title: contest.title,
@@ -295,6 +297,7 @@ function appointmentRoleFromPosition(position: CourtPositionView, t: ReturnType<
 
   return {
     id: position.key,
+    isContestData: false,
     positionKey: position.key,
     icon: appointmentContestIcon(position.key),
     title: position.name,
@@ -317,12 +320,6 @@ function appointmentRoleFromPosition(position: CourtPositionView, t: ReturnType<
     playerRank: position.playerContestRank,
     candidates: [],
   };
-}
-
-function formatAppointmentCandidateCount(count: number, t: ReturnType<typeof useWebUIText>): string {
-  return t(count === 1 ? 'ProvinceMode.Appointment.CandidateCountOne' : 'ProvinceMode.Appointment.CandidateCountMany', {
-    Count: formatNumber(count),
-  });
 }
 
 function appointmentScoreValue(score: number | undefined, t: ReturnType<typeof useWebUIText>): string {
@@ -637,12 +634,14 @@ function AppointmentRoleCard({
   playerEntered,
   contestWindowDays,
   onSelect,
+  onOpenCharacter,
 }: {
   role: AppointmentRole;
   active: boolean;
   playerEntered: boolean;
   contestWindowDays: number;
   onSelect: () => void;
+  onOpenCharacter: (id: string) => void;
 }) {
   const t = useWebUIText();
   const visibleCandidates = playerEntered ? role.candidates : role.candidates.filter(candidate => !candidate.isPlayer);
@@ -685,7 +684,22 @@ function AppointmentRoleCard({
           </span>
           <span className="gfov-appointment-role-status-cell gfov-appointment-role-status-cell--leader">
             <span>{t('ProvinceMode.Appointment.LeadCandidate')}</span>
-            <strong>{leading ? appointmentCandidateName(leading, t) : t('Common.None')}</strong>
+            <strong className="gfov-appointment-role-leading">
+              {leading && (
+                <Portrait
+                  personId={leading.id}
+                  src={leading.portrait}
+                  layers={leading.portraitLayers}
+                  name={appointmentCandidateName(leading, t)}
+                  size="sm"
+                  className="gfov-appointment-role-leading-portrait"
+                  showBadge={false}
+                  resolvePerson={false}
+                  onClick={() => onOpenCharacter(leading.id)}
+                />
+              )}
+              <span>{leading ? appointmentCandidateName(leading, t) : t('Common.None')}</span>
+            </strong>
           </span>
           <span className="gfov-appointment-role-status-cell">
             <span>{t('ProvinceMode.Appointment.Term')}</span>
@@ -818,16 +832,20 @@ function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceMode
     const position = courtPositionForRole(role);
     if (!position) return role;
 
-    const contestWindowDays = position.appointmentContestWindowDays ?? role.contestWindowDays ?? 0;
-    const holderDaysRemaining = position.holderDaysRemaining ?? role.remainingDays;
-    const isOpen = position.appointmentContestOpen === true;
+    const contestWindowDays = role.isContestData
+      ? role.contestWindowDays ?? 0
+      : position.appointmentContestWindowDays ?? role.contestWindowDays ?? 0;
+    const holderDaysRemaining = role.isContestData
+      ? role.remainingDays
+      : position.holderDaysRemaining ?? role.remainingDays;
+    const isOpen = role.isContestData ? role.isOpen : position.appointmentContestOpen === true;
     const playerSubmitted = role.playerSubmitted || position.playerEnteredContest === true;
     return {
       ...role,
       currentHolderId: position.holder?.id ?? role.currentHolderId,
       currentHolderName: position.holder?.name ?? role.currentHolderName,
       remainingDays: holderDaysRemaining,
-      availableInDays: isOpen ? 0 : Math.max(0, holderDaysRemaining - contestWindowDays),
+      availableInDays: role.isContestData ? role.availableInDays : isOpen ? 0 : Math.max(0, holderDaysRemaining - contestWindowDays),
       contestWindowDays,
       termYears: position.appointmentTermYears ?? role.termYears,
       isOpen,
@@ -886,7 +904,6 @@ function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceMode
     : canSubmitPlayer
       ? t('ProvinceMode.Appointment.PutForward.Body')
       : appointmentEntryBlockReason(activeRole, t);
-  const candidateCount = activeRole.candidates.length > 0 ? activeRole.candidates.length : activePosition?.contestCandidateCount ?? 0;
   const leadingCandidate = activeRole.candidates[0];
   const leadingScore = typeof leadingCandidate?.total === 'number'
     ? leadingCandidate.total
@@ -941,6 +958,7 @@ function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceMode
                 playerEntered={enteredRoleIds.includes(role.id) || role.playerSubmitted}
                 contestWindowDays={role.contestWindowDays ?? contestWindowDays}
                 onSelect={() => setActiveRoleId(role.id)}
+                onOpenCharacter={onOpenCharacter}
               />
             ))}
           </div>
@@ -977,28 +995,27 @@ function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceMode
               wide
               onOpenCharacter={onOpenCharacter}
             />
-            <AppointmentSummaryCell
-              label={t('ProvinceMode.Appointment.YourScore')}
-              personId={playerId}
-              portrait={playerPortrait}
-              portraitLayers={playerPortraitLayers}
-              name={playerName}
-              value={playerName}
-              detail={appointmentPlayerScoreValue(playerScore, playerRank, t)}
-              wide
-              onOpenCharacter={onOpenCharacter}
-            />
-            <AppointmentSummaryCell
-              label={t('ProvinceMode.Appointment.ScoreGap')}
-              value={scoreGap !== undefined ? formatSignedNumber(scoreGap) : t('Common.None')}
-              toneColour={scoreGapColour}
-              onOpenCharacter={onOpenCharacter}
-            />
-            <AppointmentSummaryCell
-              label={t('ProvinceMode.Appointment.Field')}
-              value={formatAppointmentCandidateCount(candidateCount, t)}
-              onOpenCharacter={onOpenCharacter}
-            />
+            {playerEntered && (
+              <>
+                <AppointmentSummaryCell
+                  label={t('ProvinceMode.Appointment.YourScore')}
+                  personId={playerId}
+                  portrait={playerPortrait}
+                  portraitLayers={playerPortraitLayers}
+                  name={playerName}
+                  value={playerName}
+                  detail={appointmentPlayerScoreValue(playerScore, playerRank, t)}
+                  wide
+                  onOpenCharacter={onOpenCharacter}
+                />
+                <AppointmentSummaryCell
+                  label={t('ProvinceMode.Appointment.ScoreGap')}
+                  value={scoreGap !== undefined ? formatSignedNumber(scoreGap) : t('Common.None')}
+                  toneColour={scoreGapColour}
+                  onOpenCharacter={onOpenCharacter}
+                />
+              </>
+            )}
           </div>
 
           <div className="gfov-appointment-progress-panel">
