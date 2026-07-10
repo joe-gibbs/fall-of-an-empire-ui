@@ -12,11 +12,18 @@ interface AchievementUnlockedPayload {
 }
 
 const DISPLAY_DURATION_MS = 5000;
+const EXIT_DURATION_MS = 240;
+
+interface ActiveAchievement {
+  payload: AchievementUnlockedPayload;
+  closing: boolean;
+}
 
 export default function AchievementUnlockToast() {
   const t = useWebUIText();
-  const [achievement, setAchievement] = useState<AchievementUnlockedPayload | null>(null);
+  const [achievement, setAchievement] = useState<ActiveAchievement | null>(null);
   const dismissTimer = useRef<number | undefined>(undefined);
+  const closeTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const onAchievementUnlocked = (event: Event) => {
@@ -26,11 +33,18 @@ export default function AchievementUnlockToast() {
       if (dismissTimer.current !== undefined) {
         window.clearTimeout(dismissTimer.current);
       }
+      if (closeTimer.current !== undefined) {
+        window.clearTimeout(closeTimer.current);
+      }
 
-      setAchievement(payload);
+      setAchievement({ payload, closing: false });
       dismissTimer.current = window.setTimeout(() => {
-        setAchievement(null);
+        setAchievement(current => current ? { ...current, closing: true } : null);
         dismissTimer.current = undefined;
+        closeTimer.current = window.setTimeout(() => {
+          setAchievement(null);
+          closeTimer.current = undefined;
+        }, EXIT_DURATION_MS);
       }, DISPLAY_DURATION_MS);
     };
 
@@ -42,18 +56,21 @@ export default function AchievementUnlockToast() {
       if (dismissTimer.current !== undefined) {
         window.clearTimeout(dismissTimer.current);
       }
+      if (closeTimer.current !== undefined) {
+        window.clearTimeout(closeTimer.current);
+      }
     };
   }, []);
 
   if (!achievement) return null;
 
   return (
-    <aside className="achievement-unlock-toast" role="status" aria-live="polite">
-      {achievement.iconUrl && <img src={achievement.iconUrl} alt="" className="achievement-unlock-toast-icon" draggable={false} />}
+    <aside className={`achievement-unlock-toast${achievement.closing ? ' achievement-unlock-toast--closing' : ''}`} role="status" aria-live="polite">
+      {achievement.payload.iconUrl && <img src={achievement.payload.iconUrl} alt="" className="achievement-unlock-toast-icon" draggable={false} />}
       <div className="achievement-unlock-toast-copy">
         <div className="achievement-unlock-toast-label">{t('Achievements.UnlockNotificationTitle')}</div>
-        <div className="achievement-unlock-toast-title">{achievement.displayName}</div>
-        <div className="achievement-unlock-toast-description">{achievement.description}</div>
+        <div className="achievement-unlock-toast-title">{achievement.payload.displayName}</div>
+        <div className="achievement-unlock-toast-description">{achievement.payload.description}</div>
       </div>
     </aside>
   );

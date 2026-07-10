@@ -34,7 +34,12 @@
   background-position: 0 0;
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 9.846rem 9.846rem, 93.0909rem 93.0909rem;
-  border: 0.154rem solid rgba(201, 168, 76, 0.24);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   animation-name: advisor-enter;
   animation-duration: 260ms;
   animation-timing-function: var(--ease-snap);

@@ -1,13 +1,10 @@
 .panel {
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--border-dim);
-  border-right-color: var(--border-dim);
-  border-bottom-color: var(--border-dim);
-  border-left-color: var(--border-dim);
-  border-top-width: 0.154rem;
-  border-top-style: solid;
-  border-top-color: var(--gold);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   position: relative;
 }
 

@@ -14,7 +14,12 @@
   background-repeat: repeat;
   background-size: 93.0909rem 93.0909rem;
   background-color: #1a1d22;
-  border: 0.154rem solid rgba(80, 85, 100, 0.2);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   animation: vc-dropdown-enter 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 
@@ -31,19 +36,6 @@
 @keyframes vc-dropdown-exit {
   from { opacity: 1; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(-0.7273rem); }
-}
-
-/* Gold top edge accent */
-.vc-dropdown::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 0.1818rem;
-  background: url('/assets/gold-line.png') repeat-x;
-  background-size: auto 100%;
-  z-index: 1;
 }
 
 /* Greek wave meander at bottom */

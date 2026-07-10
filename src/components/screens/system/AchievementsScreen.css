@@ -21,7 +21,12 @@
   align-items: center;
   gap: 0.8rem;
   padding: 0.65rem 0.75rem;
-  border: 0.077rem solid var(--border);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(12, 16, 20, 0.32);
 }
 
@@ -83,7 +88,12 @@
 .achievements-disabled {
   margin-top: 0.65rem;
   padding: 0.65rem 0.75rem;
-  border: 0.077rem solid rgba(170, 75, 67, 0.72);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(75, 24, 24, 0.28);
 }
 
@@ -132,7 +142,12 @@
   grid-template-columns: minmax(0, 1fr) 6rem;
   gap: 0.7rem;
   padding: 0.65rem 0.75rem;
-  border: 0.077rem solid var(--border-dim);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(10, 14, 18, 0.28);
 }
 
@@ -148,7 +163,6 @@
 }
 
 .achievement-row--unlocked {
-  border-color: var(--gold-muted);
   background-color: rgba(79, 64, 31, 0.16);
 }
 

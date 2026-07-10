@@ -239,12 +239,12 @@
   display: flex;
   align-items: center;
   padding: 0.75rem 0.9rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.22);
-  border-right-color: rgba(201, 168, 76, 0.12);
-  border-bottom-color: rgba(8, 12, 17, 0.5);
-  border-left-color: rgba(201, 168, 76, 0.12);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-image: url('/assets/baked/panel-charcoal.png');
   background-color: rgba(9, 10, 12, 0.6);
   background-size: 93.0909rem 93.0909rem;
@@ -302,9 +302,12 @@
   justify-content: center;
   width: 12rem;
   padding: 0.5rem 0.65rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(154, 139, 111, 0.22);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-image: url('/assets/chart-noise.png');
   background-size: 5.8182rem 5.8182rem;
   background-color: rgba(8, 12, 17, 0.38);
@@ -384,12 +387,12 @@
   align-items: stretch;
   padding: 0.72rem 0.82rem;
   overflow: hidden;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.26);
-  border-right-color: rgba(201, 168, 76, 0.16);
-  border-bottom-color: rgba(8, 12, 17, 0.62);
-  border-left-color: rgba(201, 168, 76, 0.16);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-image:
     linear-gradient(180deg, rgba(79, 24, 34, 0.22) 0%, rgba(10, 13, 17, 0.34) 100%),
     url('/assets/baked/texture-overlay-heavy.png'),
@@ -398,19 +401,6 @@
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 93.0909rem 93.0909rem, 93.0909rem 93.0909rem;
   background-color: rgba(9, 10, 12, 0.68);
-}
-
-.gfov-recall-status::before {
-  content: '';
-  position: absolute;
-  top: 0.3rem;
-  right: 0.35rem;
-  bottom: 0.3rem;
-  left: 0.35rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.11);
-  pointer-events: none;
 }
 
 .gfov-recall-seal {
@@ -666,12 +656,12 @@
   display: flex;
   align-items: center;
   padding: 0.65rem 0.75rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(201, 168, 76, 0.12);
-  border-bottom-color: rgba(8, 12, 17, 0.45);
-  border-left-color: rgba(201, 168, 76, 0.12);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-image: url('/assets/baked/panel-charcoal.png');
   background-position: 0 0;
   background-repeat: repeat;
@@ -732,12 +722,12 @@
 /* ── Panel ────────────────────────────────────────────────────────────────── */
 
 .gfov-panel {
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(201, 168, 76, 0.12);
-  border-bottom-color: rgba(8, 12, 17, 0.45);
-  border-left-color: rgba(201, 168, 76, 0.12);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-image: url('/assets/baked/panel-charcoal.png');
   background-position: 0 0;
   background-repeat: repeat;
@@ -921,9 +911,12 @@
   display: flex;
   align-items: flex-start;
   padding: 0.55rem 0.6rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(154, 139, 111, 0.22);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-image: url('/assets/chart-noise.png'), url('/assets/baked/panel-charcoal.png');
   background-size: 5.8182rem 5.8182rem, 93.0909rem 93.0909rem;
   background-color: rgba(8, 12, 17, 0.3);
@@ -1499,12 +1492,12 @@
 
 .gfov-appointments-list-panel,
 .gfov-appointments-detail-panel {
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(201, 168, 76, 0.12);
-  border-bottom-color: rgba(8, 12, 17, 0.45);
-  border-left-color: rgba(201, 168, 76, 0.12);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-image: url('/assets/baked/panel-charcoal.png');
   background-position: 0 0;
   background-repeat: repeat;
@@ -1570,9 +1563,12 @@
   align-items: flex-start;
   width: 100%;
   padding: 0.55rem 0.6rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(154, 139, 111, 0.2);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-image: url('/assets/chart-noise.png'), url('/assets/baked/panel-charcoal.png');
   background-repeat: repeat, repeat;
   background-size: 5.8182rem 5.8182rem, 93.0909rem 93.0909rem;

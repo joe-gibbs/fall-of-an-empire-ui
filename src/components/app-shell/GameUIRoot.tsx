@@ -352,6 +352,7 @@ export default function GameUIRoot() {
 
   return (
     <div className="game-container">
+      <AchievementUnlockToast />
       <TopBar
         onScreenChange={handleScreenChange}
         activeScreen={activeScreenButtonId}
@@ -408,7 +409,6 @@ export default function GameUIRoot() {
         placement={leftSidebar ? 'shifted' : 'left'}
         onLinkClick={handleEventLinkClick}
       />
-      <AchievementUnlockToast />
       <Profiler id="dropdown:pinned-items" onRender={recordUIPerfReactRender}>
         <PinnedItemsBar
           isOpen={showPinned}

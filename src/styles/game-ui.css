@@ -24,8 +24,12 @@
   background-repeat: repeat, repeat, repeat, repeat;
   background-size: auto, 9.846rem 9.846rem, auto, 93.0909rem 93.0909rem;
   background-color: #242a30;
-  border-left: 0.154rem solid rgba(80, 92, 104, 0.32);
-  border-right: 0.154rem solid rgba(80, 92, 104, 0.32);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -278,7 +282,12 @@
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
   background-color: #151b20;
-  border: 0.154rem solid rgba(80, 92, 104, 0.32);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   position: relative;
   padding: 0.308rem 0.462rem;
 }
@@ -1071,12 +1080,12 @@
   background-repeat: repeat, repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, auto, 93.0909rem 93.0909rem;
   background-color: #242a30;
-  border-width: 0.154rem;
-  border-style: solid;
-  border-top-color: var(--border-dim);
-  border-right-color: var(--border-dim);
-  border-bottom-color: var(--border-dim);
-  border-left-color: var(--border-dim);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   position: relative;
 }
 

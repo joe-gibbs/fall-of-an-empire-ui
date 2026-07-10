@@ -28,8 +28,12 @@
   min-height: 12rem;
   max-height: 24rem;
   padding: 1rem;
-  border: 0.1rem solid rgba(216, 180, 95, 0.72);
-  border-radius: 0.4rem;
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(20, 22, 23, 0.96);
   color: var(--text);
   pointer-events: auto;

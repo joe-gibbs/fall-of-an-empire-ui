@@ -1,17 +1,26 @@
 .achievement-unlock-toast {
   position: fixed;
-  top: calc(var(--topbar-height) + 1rem);
-  right: 1.25rem;
-  z-index: 46;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  z-index: 1000;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   box-sizing: border-box;
   width: min(22rem, calc(100vw - 2.5rem));
   padding: 0.75rem;
-  border: 0.077rem solid var(--gold-muted);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(14, 18, 22, 0.96);
-  animation: achievement-unlock-toast-in 0.22s cubic-bezier(0.16, 0.84, 0.22, 1) both;
+  animation: achievement-unlock-toast-in 0.32s cubic-bezier(0.16, 0.84, 0.22, 1) both;
+}
+
+.achievement-unlock-toast--closing {
+  animation: achievement-unlock-toast-out 0.24s cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .achievement-unlock-toast-icon {
@@ -50,10 +59,21 @@
 @keyframes achievement-unlock-toast-in {
   from {
     opacity: 0;
-    transform: translateX(1rem);
+    transform: translateX(-1.25rem);
   }
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes achievement-unlock-toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-1.25rem);
   }
 }
