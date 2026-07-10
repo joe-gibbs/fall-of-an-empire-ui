@@ -10,6 +10,7 @@ import VictoryConditionsDropdown from '../hud/panels/VictoryConditionsDropdown';
 import WorldGlanceOverlay from '../hud/overlays/WorldGlanceOverlay';
 import ProvinceTooltipOverlay from '../hud/overlays/ProvinceTooltipOverlay';
 import DragSelectionMarquee from '../hud/overlays/DragSelectionMarquee';
+import AchievementUnlockToast from '../hud/overlays/AchievementUnlockToast';
 import VictoryScreen from '../screens/campaign/VictoryScreen';
 import GameOverScreen, { type GameOverCause } from '../screens/campaign/GameOverScreen';
 import type { CampaignOutcomeSummary } from '../screens/campaign/CampaignOutcomeData';
@@ -407,6 +408,7 @@ export default function GameUIRoot() {
         placement={leftSidebar ? 'shifted' : 'left'}
         onLinkClick={handleEventLinkClick}
       />
+      <AchievementUnlockToast />
       <Profiler id="dropdown:pinned-items" onRender={recordUIPerfReactRender}>
         <PinnedItemsBar
           isOpen={showPinned}

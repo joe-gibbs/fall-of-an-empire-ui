@@ -5583,17 +5583,16 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           totalAchievements: 5,
           unlockedAchievements: 2,
           completionPercent: 0.4,
-          platformAvailable: true,
-          platformName: 'Mock',
+          steamAvailable: true,
           achievementsEnabled: false,
           disabledReason: 'A mod is enabled.',
           disabledReasons: ['A mod is enabled.'],
           achievements: [
-            { id: 'SURVIVE_COLLAPSE', displayName: 'Weather the Collapse', description: 'Survive the first year.', effectiveDescription: 'Survive the first year.', category: 'challenge', rarity: 'common', hidden: false, unlocked: true, currentProgress: 1, targetProgress: 1, progressPercent: 1, progressText: '1/1', canBeEarned: true },
-            { id: 'MASTER_OF_ALL', displayName: 'Master of All', description: 'Have a ruler with all four stats above 40.', effectiveDescription: 'Have a ruler with all four stats above 40.', category: 'characters', rarity: 'legendary', hidden: false, unlocked: false, currentProgress: 0, targetProgress: 1, progressPercent: 0, progressText: '0/1', canBeEarned: false },
-            { id: 'BATTLE_HARDENED', displayName: 'Battle Hardened', description: 'Win ten battles.', effectiveDescription: 'Win ten battles.', category: 'military', rarity: 'uncommon', hidden: false, unlocked: false, currentProgress: 4, targetProgress: 10, progressPercent: 0.4, progressText: '4/10', canBeEarned: false },
-            { id: 'OLD_GODS_ENDURE', displayName: 'Old Gods Endure', description: 'Restore five old shrines.', effectiveDescription: 'Restore five old shrines.', category: 'religion', rarity: 'rare', hidden: false, unlocked: true, currentProgress: 5, targetProgress: 5, progressPercent: 1, progressText: '5/5', canBeEarned: true },
-            { id: 'HIDDEN_TEST', displayName: 'Hidden Achievement', description: 'Find the hidden condition.', effectiveDescription: 'Hidden achievement', category: 'hidden', rarity: 'epic', hidden: true, unlocked: false, currentProgress: 0, targetProgress: 1, progressPercent: 0, progressText: '0/1', canBeEarned: false },
+            { id: 'SURVIVE_COLLAPSE', displayName: 'Weather the Collapse', description: 'Survive the first year.', effectiveDescription: 'Survive the first year.', category: 'challenge', rarity: 'common', hidden: false, unlocked: true, currentProgress: 1, targetProgress: 1, progressPercent: 1, progressText: '1/1', canBeEarned: true, iconUrl: '/assets/icons/Victory/I_Victory_Bronze.png' },
+            { id: 'MASTER_OF_ALL', displayName: 'Master of All', description: 'Have a ruler with all four stats above 40.', effectiveDescription: 'Have a ruler with all four stats above 40.', category: 'characters', rarity: 'legendary', hidden: false, unlocked: false, currentProgress: 0, targetProgress: 1, progressPercent: 0, progressText: '0/1', canBeEarned: false, iconUrl: '/assets/icons/Victory/I_Victory_Gold.png' },
+            { id: 'BATTLE_HARDENED', displayName: 'Battle Hardened', description: 'Win ten battles.', effectiveDescription: 'Win ten battles.', category: 'military', rarity: 'uncommon', hidden: false, unlocked: false, currentProgress: 4, targetProgress: 10, progressPercent: 0.4, progressText: '4/10', canBeEarned: false, iconUrl: '/assets/icons/Victory/I_Victory_Silver.png' },
+            { id: 'OLD_GODS_ENDURE', displayName: 'Old Gods Endure', description: 'Restore five old shrines.', effectiveDescription: 'Restore five old shrines.', category: 'religion', rarity: 'rare', hidden: false, unlocked: true, currentProgress: 5, targetProgress: 5, progressPercent: 1, progressText: '5/5', canBeEarned: true, iconUrl: '/assets/icons/Victory/I_Victory_Gold.png' },
+            { id: 'HIDDEN_TEST', displayName: 'Hidden Achievement', description: 'Find the hidden condition.', effectiveDescription: 'Hidden achievement', category: 'hidden', rarity: 'epic', hidden: true, unlocked: false, currentProgress: 0, targetProgress: 1, progressPercent: 0, progressText: '0/1', canBeEarned: false, iconUrl: '/assets/icons/Victory/I_Victory_Bronze.png' },
           ],
         } satisfies BridgeResponse<'game.get_achievements'>;
       case 'game.loading_screen':

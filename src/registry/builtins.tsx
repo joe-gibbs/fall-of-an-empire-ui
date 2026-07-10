@@ -25,6 +25,7 @@ import '../components/screens/characters/FamilyTreeScreen';
 import '../components/screens/characters/CharactersScreen';
 import '../components/screens/encyclopedia/EncyclopediaScreen';
 import '../components/screens/economy/LedgerScreen';
+import '../components/screens/system/AchievementsScreen';
 import '../components/screens/Military/MilitaryScreen';
 import '../components/screens/Battle/BattleScreen';
 import '../components/screens/system/MockGlanceScreen';

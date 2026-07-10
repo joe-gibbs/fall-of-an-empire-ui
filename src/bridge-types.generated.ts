@@ -2,6 +2,13 @@
 // Do not edit - run: python Automation/generate_bridge_types.py
 import { callRuntimeBridge } from './bridge/core/runtimeEngine';
 
+export interface AchievementUnlockedPayload {
+  id: string;
+  displayName: string;
+  description: string;
+  iconUrl: string;
+}
+
 export interface AllyCallLikelihoodReason {
   finalPercent: number;
   basePercent: number;
@@ -1064,14 +1071,14 @@ export interface AchievementEntry {
   progressPercent: number;
   progressText: string;
   canBeEarned: boolean;
+  iconUrl: string;
 }
 
 export interface GetAchievementsResponse {
   totalAchievements: number;
   unlockedAchievements: number;
   completionPercent: number;
-  platformAvailable: boolean;
-  platformName: string;
+  steamAvailable: boolean;
   achievementsEnabled: boolean;
   disabledReason: string;
   disabledReasons: string[];
@@ -5727,6 +5734,7 @@ export interface ZoomToResponse {
 }
 
 export interface BridgeActions {
+  'game.achievement_events': { request: void; response: void };
   'game.adjust_subject_tax_rate': { request: AdjustSubjectTaxRateRequest; response: void };
   'game.advance_religion_conversion': { request: void; response: ReligionConversionActionResponse };
   'game.apply_formation_template': { request: ApplyFormationTemplateRequest; response: ApplyFormationTemplateResponse };
@@ -5842,6 +5850,7 @@ export interface BridgeActions {
   'game.loading_screen': { request: void; response: LoadingScreenResponse };
   'game.navigate_settlement': { request: NavigateSettlementRequest; response: NavigateSettlementResponse };
   'game.notification_events': { request: NotificationEventsRequest; response: void };
+  'game.open_steam_achievements': { request: void; response: void };
   'game.perform_siege_command': { request: PerformSiegeCommandRequest; response: PerformSiegeCommandResponse };
   'game.pick_new_game_map_faction': { request: PickNewGameMapFactionRequest; response: PickNewGameMapFactionResponse };
   'game.promote_courtier': { request: PromoteCourtierRequest; response: PromoteCourtierResponse };
