@@ -1,12 +1,14 @@
 import React from 'react';
 import { playSound } from '../../../hooks/useSound';
 import { formatNumber } from '../../../utils/numberFormat';
+import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import './SidebarTabBar.css';
 
 interface SidebarTab {
   id: string;
   label: string;
   count?: number;
+  icon?: string;
 }
 
 interface SidebarTabBarProps {
@@ -27,6 +29,7 @@ const SidebarTabBar: React.FC<SidebarTabBarProps> = ({ tabs, activeTab, onTabCha
           data-tutorial-target={`SidebarTab:${tab.id}`}
           onMouseDown={() => { playSound('tab'); handleChange(tab.id); }}
         >
+          {tab.icon && <img src={FoaeCefUIAssetPath(tab.icon)} alt="" className="sidebar-tab-icon" draggable={false} />}
           {tab.label}
           {tab.count !== undefined && (
             <span className="sidebar-tab-count">{formatNumber(tab.count)}</span>

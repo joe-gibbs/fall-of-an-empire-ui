@@ -3,6 +3,7 @@ import ScreenShell from '../../common/layout/shell/ScreenShell';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import EntityLink from '../../common/entities/EntityLink';
+import FactionRoundel from '../../common/entities/FactionRoundel';
 import GameButton from '../../common/buttons/GameButton';
 import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
 import Tooltip from '../../common/tooltips/Tooltip';
@@ -19,6 +20,7 @@ import type {
   LedgerNotificationHistoryRow,
   LedgerResourceRow,
   LedgerSettlementRow,
+  LedgerFactionVisual,
 } from '../../../bridge-types.generated.ts';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
@@ -70,6 +72,15 @@ const DEFAULT_FILTERS: LedgerFilters = {
 
 type Column<T> = DataTableColumn<T>;
 type LedgerSortState = SortState<string>;
+
+interface LedgerSummaryCounts {
+  settlementCount: number;
+  militaryCount: number;
+  factionCount: number;
+  resourceCount: number;
+  buildingCount: number;
+  notificationCount: number;
+}
 
 const DEFAULT_LEDGER_SORTS: Record<LedgerTab, LedgerSortState> = {
   settlements: { key: 'name', direction: 'asc' },
@@ -184,6 +195,48 @@ function FactionStatusIcon({ row }: { row: LedgerFactionRow }) {
   );
 }
 
+function settlementTypeIcon(type: string): string {
+  const icons: Record<string, string> = {
+    village: '/assets/icons/I_Village.png', town: '/assets/icons/I_Town.png', city: '/assets/icons/I_City.png',
+    metropolis: '/assets/icons/I_Metropolis.png', fortress: '/assets/icons/I_Fortress.png', monastery: '/assets/icons/I_Monastery.png',
+    port: '/assets/icons/I_Port.png', mining: '/assets/icons/I_Mining.png',
+  };
+  return icons[normaliseToken(type)] ?? '/assets/icons/I_City.png';
+}
+
+function militaryKindIcon(kind: string): string {
+  return militaryKindFilterValue(kind) === 'navy' ? '/assets/icons/I_Anchor.png' : '/assets/icons/I_Swords.png';
+}
+
+function buildingCategoryIcon(category: string): string {
+  const icons: Record<string, string> = {
+    economic: '/assets/icons/I_Economy.png', military: '/assets/icons/I_Swords.png', defensive: '/assets/icons/I_Fortification.png',
+    infrastructure: '/assets/icons/I_Domain.png', cultural: '/assets/icons/I_Cultures.png', administrative: '/assets/icons/I_Ledger.png', naval: '/assets/icons/I_Anchor.png',
+  };
+  return icons[normaliseToken(category)] ?? '/assets/icons/I_BuildingsQuickButton.png';
+}
+
+function LedgerIconLabel({ icon, children }: { icon: string; children: ReactNode }) {
+  return <span className="ledger-icon-label"><img src={FoaeCefUIAssetPath(icon)} alt="" draggable={false} /><span>{children}</span></span>;
+}
+
+function LedgerMetric({ icon, children }: { icon: string; children: ReactNode }) {
+  return <span className="ledger-metric"><img src={FoaeCefUIAssetPath(icon)} alt="" draggable={false} /><span>{children}</span></span>;
+}
+
+function LedgerFactionLink({
+  factionId, factionName, visual, diplomaticStatus, isPlayer, isRebel, onOpen,
+}: {
+  factionId: string; factionName: string; visual: LedgerFactionVisual; diplomaticStatus?: string; isPlayer?: boolean; isRebel?: boolean; onOpen: () => void;
+}) {
+  return (
+    <div className="ledger-faction-link">
+      <FactionRoundel factionId={factionId} name={factionName} colour={visual.colour} secondaryColour={visual.secondaryColour} cultureGroup={visual.cultureGroup} emblem={visual.emblem} resolveFaction={false} diplomaticStatus={diplomaticStatus} isPlayer={isPlayer} isRebel={isRebel} size="xs" onClick={onOpen} />
+      <EntityLink type="faction" id={factionId}>{factionName}</EntityLink>
+    </div>
+  );
+}
+
 function notificationCategoryFilterValue(row: LedgerNotificationHistoryRow): string {
   return normaliseToken(row.category);
 }
@@ -278,9 +331,9 @@ function BulkTable<T>({
   filterPredicate?: (row: T) => boolean;
   toolsExtra?: ReactNode;
   virtualRowHeight: number;
+  tableClassName?: string;
   defaultSortDirection?: SortDirection;
   sortState?: LedgerSortState;
-  tableClassName?: string;
   onSortChange?: (sort: LedgerSortState) => void;
   serverFiltered?: boolean;
 }) {
@@ -336,6 +389,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<LedgerFilters>(DEFAULT_FILTERS);
   const [virtualRowHeight, setVirtualRowHeight] = useState(60);
+  const [summaryCounts, setSummaryCounts] = useState<LedgerSummaryCounts | null>(null);
   const bridgeFilters = useMemo(() => ({
     searchText: isPagedTab ? search : '',
     settlementFactionFilter: activeTab === 'settlements' ? filters.settlementFaction : ALL_FILTER,
@@ -361,6 +415,18 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   const resources = data?.resources ?? EMPTY_RESOURCES;
   const buildings = data?.buildings ?? EMPTY_BUILDINGS;
   const notifications = data?.notifications ?? EMPTY_NOTIFICATIONS;
+
+  useEffect(() => {
+    if (!data) return;
+    setSummaryCounts({
+      settlementCount: data.settlementCount,
+      militaryCount: data.militaryCount,
+      factionCount: data.factionCount,
+      resourceCount: data.resourceCount,
+      buildingCount: data.buildingCount,
+      notificationCount: data.notificationCount,
+    });
+  }, [data]);
 
   const setFilter = (key: LedgerFilterKey, value: string) => {
     if (
@@ -417,12 +483,12 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   }, []);
 
   const tabs = [
-    { id: 'settlements', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.196.1'), count: data?.settlementCount ?? settlements.length },
-    { id: 'militaries', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.197.2'), count: data?.militaryCount ?? militaries.length },
-    { id: 'factions', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.198.3'), count: data?.factionCount ?? factions.length },
-    { id: 'resources', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.199.4'), count: data?.resourceCount ?? resources.length },
-    { id: 'buildings', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.200.5'), count: data?.buildingCount ?? buildings.length },
-    { id: 'notifications', label: webUIText('Ledger.Tab.Notifications'), count: data?.notificationCount ?? notifications.length },
+    { id: 'settlements', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.196.1'), icon: '/assets/icons/I_City.png', count: summaryCounts?.settlementCount ?? data?.settlementCount ?? settlements.length },
+    { id: 'militaries', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.197.2'), icon: '/assets/icons/I_Swords.png', count: summaryCounts?.militaryCount ?? data?.militaryCount ?? militaries.length },
+    { id: 'factions', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.198.3'), icon: '/assets/icons/I_IndependentFactions.png', count: summaryCounts?.factionCount ?? data?.factionCount ?? factions.length },
+    { id: 'resources', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.199.4'), icon: '/assets/icons/I_Resources.png', count: summaryCounts?.resourceCount ?? data?.resourceCount ?? resources.length },
+    { id: 'buildings', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.200.5'), icon: '/assets/icons/I_BuildingsQuickButton.png', count: summaryCounts?.buildingCount ?? data?.buildingCount ?? buildings.length },
+    { id: 'notifications', label: webUIText('Ledger.Tab.Notifications'), icon: '/assets/icons/I_Warning.png', count: summaryCounts?.notificationCount ?? data?.notificationCount ?? notifications.length },
   ];
 
   const activeRowCount = activeTab === 'settlements'
@@ -531,61 +597,61 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
     {
       id: 'name',
       label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.206.6'),
-      render: row => <EntityLink type="settlement" id={row.id}>{row.name}</EntityLink>,
+      render: row => <LedgerIconLabel icon={settlementTypeIcon(row.type)}><EntityLink type="settlement" id={row.id}>{row.name}</EntityLink></LedgerIconLabel>,
       sortValue: row => row.name,
     },
-    { id: 'faction', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.210.7'), render: row => <EntityLink type="faction" id={row.factionId}>{row.factionName}</EntityLink>, sortValue: row => row.factionName },
-    { id: 'type', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.211.8'), render: row => settlementTypeLabel(row.type), sortValue: row => settlementTypeLabel(row.type) },
+    { id: 'faction', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.210.7'), render: row => <LedgerFactionLink factionId={row.factionId} factionName={row.factionName} visual={row.factionVisual} onOpen={() => openSidebar('faction', row.factionId)} />, sortValue: row => row.factionName },
+    { id: 'type', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.211.8'), render: row => <LedgerIconLabel icon={settlementTypeIcon(row.type)}>{settlementTypeLabel(row.type)}</LedgerIconLabel>, sortValue: row => settlementTypeLabel(row.type) },
     { id: 'region', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.212.9'), render: row => row.region || '-', sortValue: row => row.region },
-    { id: 'population', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.213.10'), align: 'right', render: row => fmt(row.population), sortValue: row => row.population },
-    { id: 'income', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.214.11'), align: 'right', className: 'ledger-value', render: row => signed(row.income), sortValue: row => row.income },
-    { id: 'food', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.215.12'), align: 'right', className: 'ledger-value', render: row => signed(row.foodProduction - row.foodConsumption), sortValue: row => row.foodProduction - row.foodConsumption },
-    { id: 'unrest', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.216.13'), align: 'right', render: row => `${fmt1(row.unrest)}%`, sortValue: row => row.unrest },
-    { id: 'buildings', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.217.14'), align: 'right', render: row => fmt(row.buildingCount), sortValue: row => row.buildingCount },
+    { id: 'population', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.213.10'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Population.png">{fmt(row.population)}</LedgerMetric>, sortValue: row => row.population },
+    { id: 'income', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.214.11'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Coins.png">{signed(row.income)}</LedgerMetric>, sortValue: row => row.income },
+    { id: 'food', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.215.12'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Food.png">{signed(row.foodProduction - row.foodConsumption)}</LedgerMetric>, sortValue: row => row.foodProduction - row.foodConsumption },
+    { id: 'unrest', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.216.13'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Unrest.png">{`${fmt1(row.unrest)}%`}</LedgerMetric>, sortValue: row => row.unrest },
+    { id: 'buildings', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.217.14'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_BuildingsQuickButton.png">{fmt(row.buildingCount)}</LedgerMetric>, sortValue: row => row.buildingCount },
   ];
 
   const militaryColumns: Column<LedgerMilitaryRow>[] = [
-    { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.221.15'), render: row => <EntityLink type="military" id={row.id}>{row.name}</EntityLink>, sortValue: row => row.name },
-    { id: 'faction', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.222.16'), render: row => <EntityLink type="faction" id={row.factionId}>{row.factionName}</EntityLink>, sortValue: row => row.factionName },
-    { id: 'kind', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.223.17'), render: row => webUIText(row.kind === 'navy' ? 'Common.Fleet' : 'Common.Army'), sortValue: row => row.kind },
+    { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.221.15'), render: row => <LedgerIconLabel icon={militaryKindIcon(row.kind)}><EntityLink type="military" id={row.id}>{row.name}</EntityLink></LedgerIconLabel>, sortValue: row => row.name },
+    { id: 'faction', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.222.16'), render: row => <LedgerFactionLink factionId={row.factionId} factionName={row.factionName} visual={row.factionVisual} onOpen={() => openSidebar('faction', row.factionId)} />, sortValue: row => row.factionName },
+    { id: 'kind', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.223.17'), render: row => <LedgerIconLabel icon={militaryKindIcon(row.kind)}>{webUIText(row.kind === 'navy' ? 'Common.Fleet' : 'Common.Army')}</LedgerIconLabel>, sortValue: row => row.kind },
     { id: 'commander', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.224.18'), render: row => <EntityLink type="character" id={row.commanderId}>{row.commanderName || webUIText('Common.NoCommander')}</EntityLink>, sortValue: row => row.commanderName },
-    { id: 'strength', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.225.19'), align: 'right', render: row => `${fmt(row.strength)} / ${fmt(row.maxStrength)}`, sortValue: row => row.strength },
-    { id: 'morale', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.226.20'), align: 'right', render: row => `${fmt(row.morale)}%`, sortValue: row => row.morale },
-    { id: 'upkeep', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.227.21'), align: 'right', className: 'ledger-value ledger-value--bad', render: row => `-${fmt(row.upkeep)}`, sortValue: row => row.upkeep },
-    { id: 'supply', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.228.22'), align: 'right', render: row => webUIText('Common.DayAbbrevValue', { Days: fmt(row.supplyDays) }), sortValue: row => row.supplyDays },
+    { id: 'strength', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.225.19'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Swords.png">{`${fmt(row.strength)} / ${fmt(row.maxStrength)}`}</LedgerMetric>, sortValue: row => row.strength },
+    { id: 'morale', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.226.20'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Loyalty.png">{`${fmt(row.morale)}%`}</LedgerMetric>, sortValue: row => row.morale },
+    { id: 'upkeep', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.227.21'), align: 'right', className: 'ledger-value ledger-value--bad', render: row => <LedgerMetric icon="/assets/icons/I_Coins.png">{`-${fmt(row.upkeep)}`}</LedgerMetric>, sortValue: row => row.upkeep },
+    { id: 'supply', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.228.22'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Food.png">{webUIText('Common.DayAbbrevValue', { Days: fmt(row.supplyDays) })}</LedgerMetric>, sortValue: row => row.supplyDays },
     { id: 'location', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.229.23'), render: row => row.location || '-', sortValue: row => row.location },
   ];
 
   const factionColumns: Column<LedgerFactionRow>[] = [
-    { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.233.24'), render: row => <EntityLink type="faction" id={row.id}>{row.name}</EntityLink>, sortValue: row => row.name },
+    { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.233.24'), render: row => <LedgerFactionLink factionId={row.id} factionName={row.name} visual={row.visual} diplomaticStatus={row.diplomaticStatus} isPlayer={row.isPlayer} isRebel={row.isRebel} onOpen={() => openSidebar('faction', row.id)} />, sortValue: row => row.name },
     { id: 'status', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.234.25'), align: 'centre', render: row => <FactionStatusIcon row={row} />, sortValue: row => statusLabel(row.diplomaticStatus, row.isRebel) },
     { id: 'ruler', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.235.26'), render: row => <EntityLink type="character" id={row.rulerId}>{row.rulerName || webUIText("Auto.Fix.ExprFallback.componentsscreensLedgerScreen.235.1")}</EntityLink>, sortValue: row => row.rulerName },
-    { id: 'settlements', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.236.27'), align: 'right', render: row => fmt(row.settlementCount), sortValue: row => row.settlementCount },
-    { id: 'population', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.237.28'), align: 'right', render: row => fmt(row.population), sortValue: row => row.population },
-    { id: 'strength', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.238.29'), align: 'right', render: row => fmt(row.strength), sortValue: row => row.strength },
-    { id: 'forces', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.239.30'), align: 'right', render: row => `${fmt(row.armyCount)} / ${fmt(row.navyCount)}`, sortValue: row => row.armyCount + row.navyCount },
-    { id: 'gold', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.240.31'), align: 'right', className: 'ledger-value', render: row => fmt(row.gold), sortValue: row => row.gold },
-    { id: 'income', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.241.32'), align: 'right', className: 'ledger-value', render: row => signed(row.income), sortValue: row => row.income },
+    { id: 'settlements', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.236.27'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_City.png">{fmt(row.settlementCount)}</LedgerMetric>, sortValue: row => row.settlementCount },
+    { id: 'population', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.237.28'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Population.png">{fmt(row.population)}</LedgerMetric>, sortValue: row => row.population },
+    { id: 'strength', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.238.29'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Swords.png">{fmt(row.strength)}</LedgerMetric>, sortValue: row => row.strength },
+    { id: 'forces', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.239.30'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_ArmiesQuickButton.png">{`${fmt(row.armyCount)} / ${fmt(row.navyCount)}`}</LedgerMetric>, sortValue: row => row.armyCount + row.navyCount },
+    { id: 'gold', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.240.31'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Coins.png">{fmt(row.gold)}</LedgerMetric>, sortValue: row => row.gold },
+    { id: 'income', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.241.32'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Coins.png">{signed(row.income)}</LedgerMetric>, sortValue: row => row.income },
   ];
 
   const resourceColumns: Column<LedgerResourceRow>[] = [
     { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.245.33'), render: row => <ResourceLabel resourceId={row.id} name={row.name} className="ledger-resource" />, sortValue: row => row.name },
     { id: 'category', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.246.34'), render: row => resourceCategoryLabel(row.category), sortValue: row => resourceCategoryLabel(row.category) },
-    { id: 'stockpile', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.247.35'), align: 'right', render: row => fmt1(row.stockpile), sortValue: row => row.stockpile },
-    { id: 'production', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.248.36'), align: 'right', className: 'ledger-value ledger-value--good', render: row => `+${fmt1(row.production)}`, sortValue: row => row.production },
-    { id: 'consumption', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.249.37'), align: 'right', className: 'ledger-value ledger-value--bad', render: row => `-${fmt1(row.consumption)}`, sortValue: row => row.consumption },
-    { id: 'net', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.250.38'), align: 'right', className: 'ledger-value', render: row => signed(row.netPerMonth), sortValue: row => row.netPerMonth },
+    { id: 'stockpile', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.247.35'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Resources.png">{fmt1(row.stockpile)}</LedgerMetric>, sortValue: row => row.stockpile },
+    { id: 'production', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.248.36'), align: 'right', className: 'ledger-value ledger-value--good', render: row => <LedgerMetric icon="/assets/icons/I_Plus.png">{`+${fmt1(row.production)}`}</LedgerMetric>, sortValue: row => row.production },
+    { id: 'consumption', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.249.37'), align: 'right', className: 'ledger-value ledger-value--bad', render: row => <LedgerMetric icon="/assets/icons/I_Minus.png">{`-${fmt1(row.consumption)}`}</LedgerMetric>, sortValue: row => row.consumption },
+    { id: 'net', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.250.38'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Chart.png">{signed(row.netPerMonth)}</LedgerMetric>, sortValue: row => row.netPerMonth },
     { id: 'settlements', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.251.39'), align: 'right', render: row => fmt(row.settlementCount), sortValue: row => row.settlementCount },
   ];
 
   const buildingColumns: Column<LedgerBuildingRow>[] = [
-    { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.255.40'), render: row => row.name, sortValue: row => row.name },
-    { id: 'category', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.256.41'), render: row => buildingCategoryLabel(row.category), sortValue: row => buildingCategoryLabel(row.category) },
-    { id: 'level', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.257.42'), align: 'right', render: row => `${fmt(row.level)} / ${fmt(row.maxLevel)}`, sortValue: row => row.level },
+    { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.255.40'), render: row => <LedgerIconLabel icon={buildingCategoryIcon(row.category)}>{row.name}</LedgerIconLabel>, sortValue: row => row.name },
+    { id: 'category', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.256.41'), render: row => <LedgerIconLabel icon={buildingCategoryIcon(row.category)}>{buildingCategoryLabel(row.category)}</LedgerIconLabel>, sortValue: row => buildingCategoryLabel(row.category) },
+    { id: 'level', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.257.42'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_BuildingUpgraded.png">{`${fmt(row.level)} / ${fmt(row.maxLevel)}`}</LedgerMetric>, sortValue: row => row.level },
     { id: 'settlement', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.258.43'), render: row => <EntityLink type="settlement" id={row.settlementId}>{row.settlementName}</EntityLink>, sortValue: row => row.settlementName },
-    { id: 'faction', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.259.44'), render: row => <EntityLink type="faction" id={row.factionId}>{row.factionName}</EntityLink>, sortValue: row => row.factionName },
-    { id: 'upkeep', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.260.45'), align: 'right', className: 'ledger-value ledger-value--bad', render: row => row.upkeep > 0 ? `-${fmt(row.upkeep)}` : '0', sortValue: row => row.upkeep },
-    { id: 'condition', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.261.46'), align: 'right', render: row => `${fmt1(row.condition)}%`, sortValue: row => row.condition },
+    { id: 'faction', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.259.44'), render: row => <LedgerFactionLink factionId={row.factionId} factionName={row.factionName} visual={row.factionVisual} onOpen={() => openSidebar('faction', row.factionId)} />, sortValue: row => row.factionName },
+    { id: 'upkeep', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.260.45'), align: 'right', className: 'ledger-value ledger-value--bad', render: row => <LedgerMetric icon="/assets/icons/I_Coins.png">{row.upkeep > 0 ? `-${fmt(row.upkeep)}` : '0'}</LedgerMetric>, sortValue: row => row.upkeep },
+    { id: 'condition', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.261.46'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Fortification.png">{`${fmt1(row.condition)}%`}</LedgerMetric>, sortValue: row => row.condition },
   ];
 
   const notificationColumns: Column<LedgerNotificationHistoryRow>[] = [

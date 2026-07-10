@@ -2371,11 +2371,19 @@ export interface GetLedgerOverviewRequest {
   buildingFactionFilter: string;
 }
 
+export interface LedgerFactionVisual {
+  colour: string;
+  secondaryColour: string;
+  cultureGroup: string;
+  emblem: string;
+}
+
 export interface LedgerSettlementRow {
   id: string;
   name: string;
   factionId: string;
   factionName: string;
+  factionVisual: LedgerFactionVisual;
   type: string;
   region: string;
   population: number;
@@ -2394,6 +2402,7 @@ export interface LedgerMilitaryRow {
   name: string;
   factionId: string;
   factionName: string;
+  factionVisual: LedgerFactionVisual;
   kind: string;
   commanderId: string;
   commanderName: string;
@@ -2409,6 +2418,7 @@ export interface LedgerMilitaryRow {
 export interface LedgerFactionRow {
   id: string;
   name: string;
+  visual: LedgerFactionVisual;
   rulerId: string;
   rulerName: string;
   diplomaticStatus: string;
@@ -2446,6 +2456,7 @@ export interface LedgerBuildingRow {
   settlementName: string;
   factionId: string;
   factionName: string;
+  factionVisual: LedgerFactionVisual;
   upkeep: number;
   condition: number;
 }

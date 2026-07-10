@@ -356,6 +356,46 @@
   text-decoration-color: var(--gold);
 }
 
+.ledger-icon-label,
+.ledger-faction-link,
+.ledger-metric {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.ledger-icon-label > img,
+.ledger-metric > img {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  margin-right: 0.4rem;
+  object-fit: contain;
+}
+
+.ledger-icon-label > span,
+.ledger-faction-link > .entity-link {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-faction-link > .faction-roundel {
+  margin-right: 0.45rem;
+}
+
+.ledger-metric {
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.ledger-metric > img {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.3rem;
+  opacity: 0.78;
+}
+
 .ledger-value {
   font-weight: 700;
   color: var(--gold-light);
@@ -393,8 +433,6 @@
   justify-content: center;
   width: 1.65rem;
   height: 1.65rem;
-  border: 0.077rem solid #3f382f;
-  background: rgba(8, 12, 17, 0.22);
 }
 
 .ledger-status-icon img {
@@ -402,24 +440,6 @@
   width: 1.05rem;
   height: 1.05rem;
   object-fit: contain;
-}
-
-.ledger-status-icon--player,
-.ledger-status-icon--ally,
-.ledger-status-icon--subject {
-  border-color: rgba(96, 152, 90, 0.62);
-  background: rgba(38, 86, 48, 0.18);
-}
-
-.ledger-status-icon--war,
-.ledger-status-icon--rebel {
-  border-color: rgba(168, 61, 57, 0.65);
-  background: rgba(97, 32, 34, 0.2);
-}
-
-.ledger-status-icon--rival {
-  border-color: rgba(201, 168, 76, 0.62);
-  background: rgba(126, 92, 28, 0.18);
 }
 
 .ledger-notification-category {

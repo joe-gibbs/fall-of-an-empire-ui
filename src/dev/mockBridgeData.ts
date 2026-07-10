@@ -3695,6 +3695,8 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
 }
 
 function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
+  const playerVisual = { colour: PLAYER_COLOUR, secondaryColour: PLAYER_SECONDARY, cultureGroup: 'Rephsian', emblem: 'Rephsian_1' };
+  const rivalVisual = { colour: RIVAL_COLOUR, secondaryColour: RIVAL_SECONDARY, cultureGroup: 'Aurestian', emblem: 'Aurestian_1' };
   return {
     settlementCount: 2,
     militaryCount: 4,
@@ -3707,26 +3709,26 @@ function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
     rowOffset: 0,
     rowLimit: 0,
     settlements: [
-      { id: MOCK_IDS.settlement, name: 'Aurelion', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', type: 'metropolis', region: 'Heartland', population: 384000, income: 122, foodProduction: 980, foodConsumption: 1210, unrest: 8, buildingCount: 18, resourceCount: 6, isCapital: true, isUnderSiege: false },
-      { id: MOCK_IDS.portSettlement, name: 'Namaris', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', type: 'port', region: 'Meridian Coast', population: 142000, income: 46, foodProduction: 540, foodConsumption: 610, unrest: 18, buildingCount: 9, resourceCount: 5, isCapital: false, isUnderSiege: false },
+      { id: MOCK_IDS.settlement, name: 'Aurelion', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, type: 'metropolis', region: 'Heartland', population: 384000, income: 122, foodProduction: 980, foodConsumption: 1210, unrest: 8, buildingCount: 18, resourceCount: 6, isCapital: true, isUnderSiege: false },
+      { id: MOCK_IDS.portSettlement, name: 'Namaris', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, type: 'port', region: 'Meridian Coast', population: 142000, income: 46, foodProduction: 540, foodConsumption: 610, unrest: 18, buildingCount: 9, resourceCount: 5, isCapital: false, isUnderSiege: false },
     ],
     militaries: [
-      { id: MOCK_IDS.military, name: 'I Field Army', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', kind: 'Army', commanderId: MOCK_IDS.character, commanderName: 'Valen Arcastus', strength: 6800, maxStrength: 7600, morale: 84, upkeep: 116, supplyDays: 54, location: 'Aurelion', unitCount: 8 },
-      { id: 'mock-military-detachment', name: 'Aurelion Detachment', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', kind: 'Army', commanderId: MOCK_IDS.heir, commanderName: 'Cassian Arcastus', strength: 1600, maxStrength: 1800, morale: 71, upkeep: 42, supplyDays: 43, location: 'Aurelion', unitCount: 3 },
-      { id: MOCK_IDS.navy, name: 'Classis Meridian', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', kind: 'Navy', commanderId: MOCK_IDS.governor, commanderName: 'Marcia Vennor', strength: 1800, maxStrength: 2200, morale: 76, upkeep: 90, supplyDays: 88, location: 'Namaris', unitCount: 18 },
-      { id: 'mock-navy-riverwatch', name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', kind: 'Navy', commanderId: 'mock-person-tribune', commanderName: 'Severus Laco', strength: 900, maxStrength: 1100, morale: 69, upkeep: 38, supplyDays: 61, location: 'Tavarii Ford', unitCount: 8 },
+      { id: MOCK_IDS.military, name: 'I Field Army', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, kind: 'Army', commanderId: MOCK_IDS.character, commanderName: 'Valen Arcastus', strength: 6800, maxStrength: 7600, morale: 84, upkeep: 116, supplyDays: 54, location: 'Aurelion', unitCount: 8 },
+      { id: 'mock-military-detachment', name: 'Aurelion Detachment', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, kind: 'Army', commanderId: MOCK_IDS.heir, commanderName: 'Cassian Arcastus', strength: 1600, maxStrength: 1800, morale: 71, upkeep: 42, supplyDays: 43, location: 'Aurelion', unitCount: 3 },
+      { id: MOCK_IDS.navy, name: 'Classis Meridian', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, kind: 'Navy', commanderId: MOCK_IDS.governor, commanderName: 'Marcia Vennor', strength: 1800, maxStrength: 2200, morale: 76, upkeep: 90, supplyDays: 88, location: 'Namaris', unitCount: 18 },
+      { id: 'mock-navy-riverwatch', name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, kind: 'Navy', commanderId: 'mock-person-tribune', commanderName: 'Severus Laco', strength: 900, maxStrength: 1100, morale: 69, upkeep: 38, supplyDays: 61, location: 'Tavarii Ford', unitCount: 8 },
     ],
     factions: [
-      { id: MOCK_IDS.playerFaction, name: 'Rephsian Empire', rulerId: MOCK_IDS.character, rulerName: 'Valen Arcastus', diplomaticStatus: 'Player', settlementCount: 14, population: 1284000, gold: 4280, income: 186, strength: 18400, armyCount: 3, navyCount: 2, vassalCount: 2, isPlayer: true, isRebel: false },
-      { id: MOCK_IDS.rivalFaction, name: 'Aurestian League', rulerId: 'mock-person-rival', rulerName: 'Soran Velk', diplomaticStatus: 'War', settlementCount: 7, population: 642000, gold: 1130, income: 58, strength: 9100, armyCount: 2, navyCount: 0, vassalCount: 0, isPlayer: false, isRebel: false },
+      { id: MOCK_IDS.playerFaction, name: 'Rephsian Empire', visual: playerVisual, rulerId: MOCK_IDS.character, rulerName: 'Valen Arcastus', diplomaticStatus: 'Player', settlementCount: 14, population: 1284000, gold: 4280, income: 186, strength: 18400, armyCount: 3, navyCount: 2, vassalCount: 2, isPlayer: true, isRebel: false },
+      { id: MOCK_IDS.rivalFaction, name: 'Aurestian League', visual: rivalVisual, rulerId: 'mock-person-rival', rulerName: 'Soran Velk', diplomaticStatus: 'War', settlementCount: 7, population: 642000, gold: 1130, income: 58, strength: 9100, armyCount: 2, navyCount: 0, vassalCount: 0, isPlayer: false, isRebel: false },
     ],
     resources: [
       { id: 'Food', name: 'Food', category: 'Food', stockpile: 1630, production: 1520, consumption: 1898, netPerMonth: -378, settlementCount: 14, isFood: true },
       { id: 'Stone', name: 'Stone', category: 'Construction', stockpile: 260, production: 30, consumption: 16, netPerMonth: 14, settlementCount: 5, isFood: false },
     ],
     buildings: [
-      { id: 'mock-building-forum', name: 'Forum', category: 'Administrative', level: 3, maxLevel: 4, settlementId: MOCK_IDS.settlement, settlementName: 'Aurelion', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', upkeep: 12, condition: 92 },
-      { id: 'mock-building-docks', name: 'Docks', category: 'Naval', level: 2, maxLevel: 4, settlementId: MOCK_IDS.portSettlement, settlementName: 'Namaris', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', upkeep: 18, condition: 88 },
+      { id: 'mock-building-forum', name: 'Forum', category: 'Administrative', level: 3, maxLevel: 4, settlementId: MOCK_IDS.settlement, settlementName: 'Aurelion', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, upkeep: 12, condition: 92 },
+      { id: 'mock-building-docks', name: 'Docks', category: 'Naval', level: 2, maxLevel: 4, settlementId: MOCK_IDS.portSettlement, settlementName: 'Namaris', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, upkeep: 18, condition: 88 },
     ],
     notifications: [
       { id: 'mock-ledger-food-shortage', gameDate: 286212, date: '18 Harvest 784', category: 'settlement', categoryLabel: 'Settlement', icon: '/assets/icons/I_Food.png', titleHtml: 'Stores run low in Namaris', bodyHtml: 'Food consumption has overtaken local production. The settlement will draw from realm stores unless supply improves.', decision: '', hasDecision: false, isAccepted: false },
