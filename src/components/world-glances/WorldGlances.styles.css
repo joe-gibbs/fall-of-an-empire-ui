@@ -2730,60 +2730,10 @@
 
 .world-glance-node:hover .glance--settlement .gset-badge-layer--hover,
 .world-glance-node.is-hovered .glance--settlement .gset-badge-layer--hover,
-.glance--settlement.is-hovered .gset-badge-layer--hover {
+.glance--settlement.is-hovered .gset-badge-layer--hover,
+.world-glance-node.is-targeted .glance--settlement .gset-badge-layer--hover,
+.glance--settlement.is-targeted .gset-badge-layer--hover {
   opacity: 0.58;
-}
-
-.gset-selected-indicator,
-.gset-target-indicator,
-.world-glance-node.detail-name .gset-selected-indicator,
-.world-glance-node.detail-name .gset-target-indicator {
-  position: absolute;
-  top: 0.1818rem;
-  left: 0.1818rem;
-  display: block;
-  width: 3.9091rem;
-  height: 3.9091rem;
-  box-sizing: border-box;
-  border-radius: 0.5rem;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.gset-selected-indicator,
-.world-glance-node.detail-name .gset-selected-indicator {
-  z-index: 5;
-  border-width: 0.1364rem;
-  border-style: solid;
-  border-top-color: #f4efe2;
-  border-right-color: #d6a83a;
-  border-bottom-color: #d6a83a;
-  border-left-color: #d6a83a;
-}
-
-.gset-target-indicator,
-.world-glance-node.detail-name .gset-target-indicator {
-  z-index: 7;
-  border-width: 0.0455rem;
-  border-style: solid;
-  border-top-color: #f4efe2;
-  border-right-color: #d6a83a;
-  border-bottom-color: #d6a83a;
-  border-left-color: #d6a83a;
-}
-
-.world-glance-node.is-selected .glance--settlement .gset-selected-indicator,
-.glance--settlement.is-selected .gset-selected-indicator {
-  opacity: 1;
-}
-
-.world-glance-node.is-targeted .glance--settlement .gset-target-indicator,
-.glance--settlement.is-targeted .gset-target-indicator {
-  opacity: 1;
-  animation-name: world-glance-target-roundel-pulse;
-  animation-duration: 0.9s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
 }
 
 .gset-status-icon {

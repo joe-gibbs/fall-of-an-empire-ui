@@ -317,7 +317,6 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
   const rootClass = [
     'glance',
     'glance--settlement',
-    data.selected ? 'is-selected' : '',
     data.targeted ? 'is-targeted' : '',
     besieged ? 'is-besieged' : '',
     data.starving ? 'is-starving' : '',
@@ -346,8 +345,6 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
       )}
       <div className="gset-body">
         <div className="gset-emblem">
-          <span className="gset-selected-indicator" aria-hidden="true" />
-          <span className="gset-target-indicator" aria-hidden="true" />
           <span className="gset-type-core" aria-hidden="true">
             <img className="gset-badge-layer gset-badge-layer--shadow" src={badgeShadow} alt="" />
             <img className="gset-badge-layer gset-badge-layer--background" src={badgeBackground} alt="" />
