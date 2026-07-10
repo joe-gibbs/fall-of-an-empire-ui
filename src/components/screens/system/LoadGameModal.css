@@ -80,10 +80,6 @@
 .load-game__error {
   margin: 0.9091rem 1.4545rem 0;
   padding: 0.7273rem 0.9091rem;
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-color: rgba(206, 80, 74, 0.5);
-  background-color: rgba(80, 24, 28, 0.55);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;

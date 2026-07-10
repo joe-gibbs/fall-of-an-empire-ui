@@ -27,8 +27,7 @@
 }
 
 .mil-panel-status--warning {
-  border-color: rgba(178, 70, 70, 0.48);
-  color: var(--red-light);
+  border-image-source: url('/assets/gold-frame.png');
 }
 
 /* ============ Sticky training queue ============ */

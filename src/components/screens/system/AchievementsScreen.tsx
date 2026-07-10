@@ -115,7 +115,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ onClose }) => {
         </div>
 
         {!data.achievementsEnabled && (
-          <div className="achievements-disabled">
+          <div className="game-notice game-notice--warning achievements-disabled">
             <div className="achievements-disabled-title">{t('Achievements.DisabledTitle')}</div>
             <div className="achievements-disabled-body">
               {data.disabledReasons.map(reason => (

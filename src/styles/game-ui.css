@@ -1323,20 +1323,38 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Panel-wide blocked banner: shown above a panel (buildings, recruitment, etc.)
- * when the player can't act there - settlement under siege, occupied, not
- * owned, etc. Single visual treatment so all panels gate the same way.
+ * Notices
+ * Ornate inset messages for warnings and errors. The framed treatment keeps
+ * them part of the game's visual language instead of reading as web alerts.
  * --------------------------------------------------------------------------- */
+.game-notice {
+  box-sizing: border-box;
+}
+
+.game-notice.game-notice--warning {
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: rgba(75, 24, 24, 0.28);
+  background-image: none;
+  color: #f0c0b8;
+}
+
+.game-notice.game-notice--compact {
+  border-width: 0.154rem;
+  border-image-width: 0.154rem;
+}
+
+/* Panel-wide blocked notice: shown above buildings, recruitment, and other
+ * panels when the player cannot act there. */
 .panel-blocked-banner {
   display: flex;
   align-items: center;
   margin: 0 0 0.6rem 0;
-  padding: 0.5rem 0.7rem;
-  background: rgba(170, 32, 32, 0.18);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(170, 32, 32, 0.5);
-  color: #f2dede;
+  padding: 0.55rem 0.7rem;
   font-size: 0.85rem;
   line-height: 1.25;
 }
@@ -1346,12 +1364,12 @@
 }
 
 .panel-blocked-banner-icon {
-  width: 1.1rem;
+  width: 1rem;
   height: auto;
-  max-height: 1.1rem;
+  max-height: 1rem;
   display: block;
   flex-shrink: 0;
-  opacity: 0.9;
+  opacity: 0.72;
 }
 
 .panel-blocked-banner-text {

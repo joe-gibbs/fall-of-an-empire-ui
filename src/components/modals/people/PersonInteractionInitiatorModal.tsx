@@ -302,7 +302,7 @@ export default function PersonInteractionInitiatorModal({
                   </span>
                 </CandidateSection>
 
-                {error && <div className="cam-action-error">{error}</div>}
+                {error && <div className="game-notice game-notice--warning cam-action-error">{error}</div>}
               </div>
 
               <CandidateFooter prefix="cam">

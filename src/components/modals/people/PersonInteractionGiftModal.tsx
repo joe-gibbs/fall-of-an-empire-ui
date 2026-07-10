@@ -262,7 +262,7 @@ export default function PersonInteractionGiftModal({
                 <div className="pig-list__empty"><WebUIText textKey="Auto.ComponentsModalsPersonInteractionGiftModal.251.12" /></div>
               )}
             </div>
-            {error && <div className="pig-error">{error}</div>}
+            {error && <div className="game-notice game-notice--warning pig-error">{error}</div>}
           </div>
         </div>
 

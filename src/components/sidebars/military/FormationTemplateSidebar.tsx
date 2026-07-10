@@ -547,7 +547,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
               </div>
             )}
             {message && <div className="tpl-status">{message}</div>}
-            {selected?.applyReason && <div className="tpl-status tpl-status--warning">{selected.applyReason}</div>}
+            {selected?.applyReason && <div className="game-notice game-notice--warning tpl-status tpl-status--warning">{selected.applyReason}</div>}
 
             <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.1128.35')} />
             {visibleUnits.length === 0 ? (

@@ -464,14 +464,14 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
   return (
     <div className={`mil-panel${blockedReason ? ' mil-panel--blocked' : ''}`}>
       {blockedReason && (
-        <div className="panel-blocked-banner">
+        <div className="game-notice game-notice--warning panel-blocked-banner">
           <img src={asset('/assets/icons/I_Locked.png')} alt="" className="panel-blocked-banner-icon" />
           <span className="panel-blocked-banner-text">{blockedReason}</span>
         </div>
       )}
 
       {formationMessage && (
-        <div className={`mil-panel-status${formationMessage.applied ? '' : ' mil-panel-status--warning'}`}>
+        <div className={`mil-panel-status${formationMessage.applied ? '' : ' game-notice game-notice--warning mil-panel-status--warning'}`}>
           {formationMessage.text}
         </div>
       )}

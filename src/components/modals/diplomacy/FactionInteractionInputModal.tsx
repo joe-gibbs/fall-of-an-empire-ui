@@ -389,7 +389,7 @@ export default function FactionInteractionInputModal({
                   )}
                 </div>
               ))}
-              {error && <div className="pig-error">{error}</div>}
+              {error && <div className="game-notice game-notice--warning pig-error">{error}</div>}
             </div>
           </div>
         </div>

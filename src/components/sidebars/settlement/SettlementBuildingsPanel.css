@@ -1243,13 +1243,8 @@
 
 .bld-node-reason {
   margin-top: 0.15rem;
-  padding: 0.15rem 0.3rem;
+  padding: 0.2rem 0.35rem;
   font-size: 0.72rem;
-  color: var(--red-light);
-  background: rgba(139, 32, 32, 0.16);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(139, 32, 32, 0.45);
   line-height: 1.3;
 }
 

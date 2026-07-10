@@ -391,12 +391,7 @@
 }
 
 .tpl-status--warning {
-  color: var(--red-light);
-  background-color: rgba(120, 32, 24, 0.2);
-  border-top-color: var(--red-dark);
-  border-right-color: var(--red-dark);
-  border-bottom-color: var(--red-dark);
-  border-left-color: var(--red-dark);
+  border-image-source: url('/assets/gold-frame.png');
 }
 
 .tpl-empty {

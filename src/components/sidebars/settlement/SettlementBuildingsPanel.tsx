@@ -878,7 +878,7 @@ function AvailCard({
               <ResourceRow items={a.resourceCost} />
           </div>
           {locked && lockReason && (
-            <div className="bld-node-reason">{lockReason}</div>
+            <div className="game-notice game-notice--warning game-notice--compact bld-node-reason">{lockReason}</div>
           )}
         </div>
       </div>
@@ -1400,7 +1400,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     <PanelLockContext.Provider value={panelLockReason}>
       <div className="bld-panel">
         {panelLockReason && (
-          <div className="panel-blocked-banner">
+          <div className="game-notice game-notice--warning panel-blocked-banner">
             <img src="/assets/icons/I_Locked.png" alt="" className="panel-blocked-banner-icon" />
             <span className="panel-blocked-banner-text">{panelLockReason}</span>
           </div>

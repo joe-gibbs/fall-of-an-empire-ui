@@ -88,13 +88,6 @@
 .achievements-disabled {
   margin-top: 0.65rem;
   padding: 0.65rem 0.75rem;
-  border: 0.231rem solid transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
-  background-color: rgba(75, 24, 24, 0.28);
 }
 
 .achievements-disabled-title {

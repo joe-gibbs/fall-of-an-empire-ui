@@ -263,7 +263,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
           </div>
 
           {loadError && (
-            <div className="load-game__error">
+            <div className="game-notice game-notice--warning load-game__error">
               <span className="load-game__error-title">{webUIText('MainMenu.LoadSaveFailed')}</span>
               <span className="load-game__error-message">{loadError}</span>
             </div>
