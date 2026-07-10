@@ -81,7 +81,11 @@
   height: 1.1rem;
 }
 
-.diplo-subject-badge.badge {
+.diplo-status-badge.badge {
+  --diplo-status-background: rgba(31, 31, 28, 0.9);
+  --diplo-status-highlight: rgba(143, 139, 124, 0.12);
+  --diplo-status-shade: rgba(14, 15, 14, 0.32);
+  --diplo-status-text: #b7b2a7;
   margin-left: 0.14rem;
   padding: 0.12rem 0.42rem 0.1rem;
   border: 0.154rem solid transparent;
@@ -90,16 +94,44 @@
   border-image-width: 0.154rem;
   border-image-outset: 0;
   border-image-repeat: round;
-  background-color: rgba(20, 34, 43, 0.9) !important;
+  background-color: var(--diplo-status-background) !important;
   background-image:
-    linear-gradient(180deg, rgba(101, 131, 145, 0.18), rgba(9, 15, 19, 0.32)),
+    linear-gradient(180deg, var(--diplo-status-highlight), var(--diplo-status-shade)),
     url('/assets/baked/texture-overlay-heavy.png') !important;
   background-repeat: repeat, repeat;
   background-size: auto, 5.538rem 5.538rem;
-  color: #9eb6c2 !important;
+  color: var(--diplo-status-text) !important;
   font-family: var(--font-header);
   font-size: 0.78rem;
   letter-spacing: 0.08em;
+}
+
+.diplo-status-badge--subject.badge {
+  --diplo-status-background: rgba(20, 34, 43, 0.9);
+  --diplo-status-highlight: rgba(101, 131, 145, 0.18);
+  --diplo-status-shade: rgba(9, 15, 19, 0.32);
+  --diplo-status-text: #9eb6c2;
+}
+
+.diplo-status-badge--war.badge {
+  --diplo-status-background: rgba(43, 20, 21, 0.92);
+  --diplo-status-highlight: rgba(168, 55, 52, 0.18);
+  --diplo-status-shade: rgba(22, 8, 9, 0.36);
+  --diplo-status-text: #d65a57;
+}
+
+.diplo-status-badge--ally.badge {
+  --diplo-status-background: rgba(24, 39, 24, 0.9);
+  --diplo-status-highlight: rgba(91, 134, 73, 0.16);
+  --diplo-status-shade: rgba(10, 18, 10, 0.34);
+  --diplo-status-text: #83aa72;
+}
+
+.diplo-status-badge--rival.badge {
+  --diplo-status-background: rgba(43, 31, 20, 0.9);
+  --diplo-status-highlight: rgba(160, 102, 55, 0.16);
+  --diplo-status-shade: rgba(21, 13, 7, 0.34);
+  --diplo-status-text: #c58a5c;
 }
 
 .diplo-header-capital {

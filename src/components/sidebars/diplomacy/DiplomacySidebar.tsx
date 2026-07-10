@@ -626,7 +626,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
               <Badge
                 text={status.text}
                 colour={status.colour}
-                className={faction.diplomaticStatus === 'subject' ? 'diplo-subject-badge' : undefined}
+                className={`diplo-status-badge diplo-status-badge--${faction.diplomaticStatus}`}
               />
               {faction.isRebel && <Badge text={webUIText('Auto.ExtraAttr.ComponentsSidebarsDiplomacySidebar.317.1')} colour="var(--red)" />}
             </div>}
