@@ -61,6 +61,40 @@ export interface TopbarButtonRegistration {
   factionMode?: FactionModeVisibility;
 }
 
+export interface ModWorldGlanceEntry {
+  anchorKey: string;
+  payload: unknown;
+  screenX: number;
+  screenY: number;
+  scale: number;
+  opacity: number;
+  zOrder: number;
+  viewportWidth: number;
+  viewportHeight: number;
+}
+
+export interface WorldGlanceInput {
+  anchorKey: string;
+  payload: unknown;
+  mouseButton: 'left' | 'right';
+  shiftKey: boolean;
+}
+
+export interface WorldGlanceHover {
+  anchorKey: string;
+  payload: unknown;
+  hovered: boolean;
+}
+
+export interface WorldGlanceRegistration {
+  id: string;
+  render(entry: ModWorldGlanceEntry): ReactNode;
+  onInput?(input: WorldGlanceInput): void;
+  onHover?(hover: WorldGlanceHover): void;
+  anchorPoint?: string;
+  rasterScale?: number;
+}
+
 export interface GameState {
   isPaused?: boolean;
   speed?: number;
@@ -132,6 +166,8 @@ export interface FoaeModSDK {
     unregisterSidebar(id: string): void;
     registerTopbarButton(registration: TopbarButtonRegistration): void;
     unregisterTopbarButton(id: string): void;
+    registerWorldGlance(registration: WorldGlanceRegistration): void;
+    unregisterWorldGlance(id: string): void;
   };
   components: {
     ScreenShell: FC<{
@@ -195,6 +231,8 @@ export const registerSidebar: FoaeModSDK['registry']['registerSidebar'];
 export const unregisterSidebar: FoaeModSDK['registry']['unregisterSidebar'];
 export const registerTopbarButton: FoaeModSDK['registry']['registerTopbarButton'];
 export const unregisterTopbarButton: FoaeModSDK['registry']['unregisterTopbarButton'];
+export const registerWorldGlance: FoaeModSDK['registry']['registerWorldGlance'];
+export const unregisterWorldGlance: FoaeModSDK['registry']['unregisterWorldGlance'];
 
 export const ScreenShell: FoaeModSDK['components']['ScreenShell'];
 export const SectionHeading: FoaeModSDK['components']['SectionHeading'];

@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
 import { useUIScale } from '../../bridge/core/useUIScale';
-import { onNotificationAnchorsFrame } from '../../bridge/app/useNotificationsBridge';
+import { mapNotificationShown, onNotificationAnchorsFrame } from '../../bridge/app/useNotificationsBridge';
 import {
   WORLD_GLANCE_FRAME_SECTIONS,
   makeWorldGlanceFrameEntryScratch,
@@ -20,7 +20,6 @@ import {
   mapPort,
   mapSettlement,
 } from './WorldGlanceMappers';
-import { useGameState } from '../../context/GameContextCore';
 import type { Notification } from '../../data/types';
 import NotificationBanner from '../notifications/NotificationBanner';
 import { prepareWorldAnchorContentChange } from '../../runtime/worldAnchorContentChanges';
@@ -31,6 +30,7 @@ import ConvoyGlance from './ConvoyGlance';
 import NavyGlance from './NavyGlance';
 import PortGlance from './PortGlance';
 import SettlementGlance from './SettlementGlance';
+import ModWorldGlanceLayer from './ModWorldGlanceLayer';
 import './WorldGlances.css';
 import '../notifications/NotificationStack.css';
 import './GlanceAtlas.css';
@@ -41,8 +41,17 @@ import './GlanceAtlas.css';
 // CONTENT only — which plates exist, their detail class, selection/hover styling.
 
 const SETTLEMENT_RASTER_SCALE = 1.5;
+// Notification plates are created only after their placement frame arrives. They therefore
+// cannot receive the usual "recently visible" priority stamp until after the host has already
+// scheduled its admission repack. Keep live notifications ahead of the persistent world
+// catalogue so their native cell is always present for the main-view handover.
+const ACTIVE_NOTIFICATION_ATLAS_PRIORITY = Number.MAX_SAFE_INTEGER;
 const SETTLEMENT_BADGE_HALF_SIZE_REM = 2.1364;
 const SETTLEMENT_ATLAS_EDGE_BLEED_REM = 0.0909;
+// The siege progress track and capital socket sit above the settlement plate's layout box.
+// Reserve that transparent space for every settlement so a state change cannot be clipped by
+// the already-packed atlas cell.
+const SETTLEMENT_STATUS_TOP_BLEED_REM = 0.4545;
 // Covers the furthest military crown socket (1.5rem) plus a small atlas edge guard.
 const MILITARY_ATLAS_BLEED_REM = 1.5909;
 
@@ -102,14 +111,20 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   const anchorKey = worldAnchorKey(section, id);
   const rasterScale = rasterScaleForSection(section);
   const settlementBleedRem = section === 'settlement'
-    ? ((entry as GetWorldGlancesResponse['settlements'][number]).badgeScale > 1
-      ? (((entry as GetWorldGlancesResponse['settlements'][number]).badgeScale - 1) * SETTLEMENT_BADGE_HALF_SIZE_REM) + SETTLEMENT_ATLAS_EDGE_BLEED_REM
-      : 0)
+    ? Math.max(
+      SETTLEMENT_STATUS_TOP_BLEED_REM,
+      ((entry as GetWorldGlancesResponse['settlements'][number]).badgeScale > 1
+        ? (((entry as GetWorldGlancesResponse['settlements'][number]).badgeScale - 1) * SETTLEMENT_BADGE_HALF_SIZE_REM) + SETTLEMENT_ATLAS_EDGE_BLEED_REM
+        : 0),
+    )
     : 0;
   const anchorAttributes = {
     'data-world-anchor': anchorKey,
     'data-world-anchor-point': anchorPointFor(section, remPx, settlementBleedRem),
     'data-world-anchor-raster-scale': rasterScale,
+    ...(section === 'notification'
+      ? { 'data-world-anchor-priority': ACTIVE_NOTIFICATION_ATLAS_PRIORITY }
+      : {}),
   };
   const style = {
     '--glance-atlas-raster-scale': rasterScale,
@@ -162,11 +177,11 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
 export default function GlanceAtlasRoot() {
   const uiScale = useUIScale();
   const data = useWorldGlancesBridge();
-  const { notifications } = useGameState();
 
   const detailByKeyRef = useRef<Map<string, WorldGlanceDetailClass>>(new Map());
   const flagsByKeyRef = useRef<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
   const plateNodesRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const notificationContentSignatureRef = useRef('');
   // Last known entry per entity: plates keep rendering through brief catalogue churn (fog
   // flicker, event latency) instead of blanking a cell the engine is still compositing.
   const entryCacheRef = useRef<Map<AtlasSection, Map<string, { id: string }>>>(new Map());
@@ -175,7 +190,7 @@ export default function GlanceAtlasRoot() {
   const [flagsByKey, setFlagsByKey] = useState<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
   const [hoveredKeys, setHoveredKeys] = useState<Set<string>>(new Set());
   const [entryCache, setEntryCache] = useState<Map<AtlasSection, Map<string, { id: string }>>>(new Map());
-  const [activeNotificationIds, setActiveNotificationIds] = useState<Set<string>>(new Set());
+  const [notificationEntries, setNotificationEntries] = useState<Notification[]>([]);
   const [runtimeRootFontPx, setRuntimeRootFontPx] = useState(() => currentRuntimeRootFontPx());
   const remPx = runtimeRootFontPx * (uiScale ?? 1);
 
@@ -189,9 +204,6 @@ export default function GlanceAtlasRoot() {
 
   // Fold new catalogue entries into the persistent cache (see comment above).
   useEffect(() => {
-    if (!data) {
-      return;
-    }
     let changed = false;
     for (const section of ATLAS_SECTIONS) {
       let sectionCache = entryCacheRef.current.get(section);
@@ -200,7 +212,9 @@ export default function GlanceAtlasRoot() {
         entryCacheRef.current.set(section, sectionCache);
         changed = true;
       }
-      const entries = section === 'notification' ? notifications : worldSectionEntries(data, section);
+      const entries = section === 'notification'
+        ? notificationEntries
+        : (data ? worldSectionEntries(data, section) : []);
       for (const entry of entries) {
         if (entry?.id) {
           if (sectionCache.get(entry.id) !== entry) {
@@ -215,7 +229,7 @@ export default function GlanceAtlasRoot() {
         Array.from(entryCacheRef.current.entries(), ([section, sectionCache]) => [section, new Map(sectionCache)]),
       ));
     }
-  }, [data, notifications]);
+  }, [data, notificationEntries]);
 
   // Runtime viewport scale changes rem sizing: plates resize (the host repacks via its
   // ResizeObserver) and settlement anchor points must be restated in fresh px.
@@ -257,20 +271,14 @@ export default function GlanceAtlasRoot() {
 
   // Notification anchor frames define which notification plates are live.
   useEffect(() => onNotificationAnchorsFrame((frame) => {
-    const nextIds = new Set(frame.settlements.map(entry => entry.id).filter(Boolean));
-    const now = Date.now();
-    for (const id of nextIds) {
-      const node = plateNodesRef.current.get(worldAnchorKey('notification', id));
-      if (node) {
-        node.dataset.worldAnchorPriority = String(now);
-      }
+    const contentSignature = frame.settlements
+      .map(entry => `${entry.id}\u0000${entry.payloadJson}`)
+      .join('\u0001');
+    if (contentSignature === notificationContentSignatureRef.current) {
+      return;
     }
-    setActiveNotificationIds((previous) => {
-      if (previous.size === nextIds.size && [...nextIds].every(id => previous.has(id))) {
-        return previous;
-      }
-      return nextIds;
-    });
+    notificationContentSignatureRef.current = contentSignature;
+    setNotificationEntries(frame.settlements.map(entry => mapNotificationShown(entry.payload)));
   }), []);
 
   // Frame events drive per-entry detail level, selection/target styling, and pack priority
@@ -325,10 +333,6 @@ export default function GlanceAtlasRoot() {
     });
   }, []);
 
-  if (!data) {
-    return null;
-  }
-
   return (
     <>
       {ATLAS_SECTIONS.map((section) => {
@@ -336,9 +340,12 @@ export default function GlanceAtlasRoot() {
         if (!sectionCache) {
           return null;
         }
+        if (section !== 'notification' && !data) {
+          return null;
+        }
         const liveEntries = section === 'notification'
-          ? notifications.filter(notification => activeNotificationIds.has(notification.id))
-          : worldSectionEntries(data, section);
+          ? notificationEntries
+          : worldSectionEntries(data!, section);
         return liveEntries.map((entry) => {
           if (!entry?.id) {
             return null;
@@ -362,6 +369,7 @@ export default function GlanceAtlasRoot() {
           );
         });
       })}
+      <ModWorldGlanceLayer atlas />
     </>
   );
 }

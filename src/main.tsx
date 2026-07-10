@@ -365,14 +365,38 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     recordUIPerfBridgeEvent('game.world_glances_frame', startedAtMs, Date.now());
   });
 
+  engine.on('StrategyModWorldGlancesFrame', (
+    providerId,
+    anchorKeys,
+    frameNumbers,
+    entryPayloads,
+  ) => {
+    if (typeof providerId !== 'string') return;
+    const startedAtMs = Date.now();
+    dispatchBridgeEvent('ui.mod_world_glances_frame', {
+      providerId,
+      anchorKeys: Array.isArray(anchorKeys) ? anchorKeys : [],
+      frameNumbers: Array.isArray(frameNumbers) ? frameNumbers : [],
+      entryPayloads: Array.isArray(entryPayloads) ? entryPayloads : [],
+    });
+    recordUIPerfBridgeEvent('ui.mod_world_glances_frame', startedAtMs, Date.now());
+  });
+
   engine.on('StrategyNotificationAnchorsFrame', (
     entryStrings,
     entryNumbers,
+    entryPayloads,
   ) => {
     const startedAtMs = Date.now();
-    const data = nativeNotificationAnchorsFramePayload(entryStrings, entryNumbers);
+    const data = nativeNotificationAnchorsFramePayload(entryStrings, entryNumbers, entryPayloads);
     dispatchBridgeEvent('game.notification_anchors_frame', data);
     recordUIPerfBridgeEvent('game.notification_anchors_frame', startedAtMs, Date.now());
+  });
+
+  engine.on('StrategyWorldAnchorLayoutKeys', (keys) => {
+    dispatchBridgeEvent('ui.world_anchor_layout_keys', {
+      keys: Array.isArray(keys) ? keys : [],
+    });
   });
 
   if (announceScriptingReady) {
@@ -469,25 +493,41 @@ async function bootstrapWorldAnchors() {
     });
   }
 
-  const [{ default: WorldAnchorHost }, { default: GlanceAtlasRoot }, { GameProvider }] = await Promise.all([
+  // The atlas is a second browser process. It must load the same mod renderers as the visible
+  // HUD before mounted anchor elements are packed into its texture.
+  await modsReady;
+
+  const [
+    { default: WorldAnchorHost },
+    { default: GlanceAtlasRoot },
+    { EscapeStackProvider },
+    { WorldAnchorGameStateProvider },
+  ] = await Promise.all([
     import('./runtime/worldAnchorHost'),
     import('./components/world-glances/GlanceAtlasRoot'),
-    import('./context/GameProvider'),
+    import('./context/EscapeStackProvider'),
+    import('./context/WorldAnchorGameStateProvider'),
   ]);
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <GameProvider>
-        <WorldAnchorHost>
-          <GlanceAtlasRoot />
-        </WorldAnchorHost>
-      </GameProvider>
+      <WorldAnchorGameStateProvider>
+        <EscapeStackProvider>
+          <WorldAnchorHost>
+            <GlanceAtlasRoot />
+          </WorldAnchorHost>
+        </EscapeStackProvider>
+      </WorldAnchorGameStateProvider>
     </StrictMode>,
   );
 
   const engine = getRuntimeEngine();
   if (engine) {
-    void Promise.resolve(engine.call('WorldAnchorReady'))
-      .catch(error => acknowledgeBridgeFailure(error, 'WorldAnchorReady'));
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        void Promise.resolve(engine.call('WorldAnchorReady'))
+          .catch(error => acknowledgeBridgeFailure(error, 'WorldAnchorReady'));
+      });
+    });
   }
 }
 

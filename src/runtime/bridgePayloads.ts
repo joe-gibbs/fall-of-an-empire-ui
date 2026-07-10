@@ -626,13 +626,16 @@ export function nativeWorldGlancesFramePayload(
 export function nativeNotificationAnchorsFramePayload(
   entryStringsValue: unknown,
   entryNumbersValue: unknown,
+  entryPayloadsValue: unknown,
 ) {
   const entryStrings = nativeStringArray(entryStringsValue);
   const entryNumbers = nativeNumberArray(entryNumbersValue);
+  const entryPayloads = nativeStringArray(entryPayloadsValue);
 
   return {
     settlements: entryStrings.map((id, index) => {
       const numberOffset = index * NATIVE_NOTIFICATION_ANCHOR_FRAME_NUMBER_STRIDE;
+      const payloadJson = entryPayloads[index];
       return {
         id,
         screenX: entryNumbers[numberOffset] ?? 0,
@@ -640,6 +643,8 @@ export function nativeNotificationAnchorsFramePayload(
         viewportWidth: entryNumbers[numberOffset + 2] ?? 0,
         viewportHeight: entryNumbers[numberOffset + 3] ?? 0,
         zOrder: entryNumbers[numberOffset + 4] ?? 0,
+        payloadJson,
+        payload: JSON.parse(payloadJson),
       };
     }),
   };

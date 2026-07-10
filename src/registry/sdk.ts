@@ -22,6 +22,7 @@ import {
   registerScreen, unregisterScreen,
   registerSidebar, unregisterSidebar,
   registerTopbarButton, unregisterTopbarButton,
+  registerWorldGlance, unregisterWorldGlance,
 } from './index';
 
 import ScreenShell from '../components/common/layout/shell/ScreenShell';
@@ -78,6 +79,8 @@ interface FoaeSDK {
     unregisterSidebar: typeof unregisterSidebar;
     registerTopbarButton: typeof registerTopbarButton;
     unregisterTopbarButton: typeof unregisterTopbarButton;
+    registerWorldGlance: typeof registerWorldGlance;
+    unregisterWorldGlance: typeof unregisterWorldGlance;
   };
 
   /** Shared UI primitives. Keep this list conservative - every entry is
@@ -144,6 +147,8 @@ globalThis.FOAE = {
     unregisterSidebar,
     registerTopbarButton,
     unregisterTopbarButton,
+    registerWorldGlance,
+    unregisterWorldGlance,
   },
   components: {
     ScreenShell,

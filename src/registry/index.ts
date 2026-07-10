@@ -5,6 +5,13 @@ export type {
   TopbarButtonRegistration,
 } from './types';
 
+export type {
+  ModWorldGlanceEntry,
+  WorldGlanceHover,
+  WorldGlanceInput,
+  WorldGlanceRegistration,
+} from './worldGlances';
+
 export {
   isVisibleForFactionMode,
 } from './factionMode';
@@ -32,3 +39,10 @@ export {
   getTopbarButton,
   getAllTopbarButtons,
 } from './topbarButtons';
+
+export {
+  registerWorldGlance,
+  unregisterWorldGlance,
+  getWorldGlance,
+  getAllWorldGlances,
+} from './worldGlances';

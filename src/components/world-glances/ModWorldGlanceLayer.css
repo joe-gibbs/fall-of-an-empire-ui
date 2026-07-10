@@ -1,0 +1,18 @@
+.mod-world-glance-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mod-world-glance--overlay {
+  position: absolute;
+  transform-origin: 0 0;
+}
+
+:root.native-glance-composite .mod-world-glance--overlay {
+  opacity: 0 !important;
+}
+
+.mod-world-glance--atlas {
+  pointer-events: none !important;
+}

@@ -5,8 +5,9 @@ import type { Notification, Warning, WarningSeverity } from '../../data/types';
 import { webUIText } from '../../localization/WebUITextContext';
 import { FoaeCefUIAssetPath } from '../../utils/assets';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
+import { getCachedBridgeEventByName } from '../core/bridgeEventCache';
 
-interface NotificationShown {
+export interface NotificationShown {
   id: string;
   title: string;
   description: string;
@@ -82,6 +83,8 @@ export interface NotificationAnchorFrameEntry {
   viewportWidth: number;
   viewportHeight: number;
   zOrder: number;
+  payloadJson: string;
+  payload: NotificationShown;
 }
 
 export interface NotificationAnchorsFrameResponse {
@@ -102,6 +105,32 @@ function mapNotificationType(raw: string): Notification['type'] {
 
 function mapNotificationStyle(raw?: string): NonNullable<Notification['style']> {
   return raw === 'cinematic' ? 'cinematic' : 'regular';
+}
+
+export function mapNotificationShown(data: NotificationShown): Notification {
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    type: mapNotificationType(data.type),
+    notificationTypeId: data.notificationTypeId || undefined,
+    notificationTypeLabel: data.notificationTypeLabel || undefined,
+    iconPath: FoaeCefUIAssetPath(data.iconPath),
+    timestamp: data.timestamp,
+    style: mapNotificationStyle(data.style),
+    createdOnDay: data.createdOnDay,
+    expiresOnDay: data.expiresOnDay,
+    durationDays: data.durationDays,
+    portraitLayers: data.hasPortrait ? data.portraitLayers : undefined,
+    characterName: data.characterName,
+    canAnchorAtSettlement: data.canAnchorAtSettlement,
+    settlementId: data.settlementId || undefined,
+    settlementScreenX: data.settlementScreenX,
+    settlementScreenY: data.settlementScreenY,
+    settlementViewportWidth: data.settlementViewportWidth,
+    settlementViewportHeight: data.settlementViewportHeight,
+    battleAfterActionReport: mapBattleAfterActionReport(data.battleAfterActionReport),
+  };
 }
 
 function mapSeverity(raw: string): WarningSeverity {
@@ -203,33 +232,11 @@ interface BridgeHandlers {
  */
 export function useNotificationsAndWarningsBridge(handlers: BridgeHandlers) {
   useEffect(() => {
-    const onShown = (e: Event) => {
-      const data = (e as CustomEvent<NotificationShown>).detail;
+    const publishShown = (data: NotificationShown | undefined) => {
       if (!data) return;
-      handlers.onNotificationShown({
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        type: mapNotificationType(data.type),
-        notificationTypeId: data.notificationTypeId || undefined,
-        notificationTypeLabel: data.notificationTypeLabel || undefined,
-        iconPath: FoaeCefUIAssetPath(data.iconPath),
-        timestamp: data.timestamp,
-        style: mapNotificationStyle(data.style),
-        createdOnDay: data.createdOnDay,
-        expiresOnDay: data.expiresOnDay,
-        durationDays: data.durationDays,
-        portraitLayers: data.hasPortrait ? data.portraitLayers : undefined,
-        characterName: data.characterName,
-        canAnchorAtSettlement: data.canAnchorAtSettlement,
-        settlementId: data.settlementId || undefined,
-        settlementScreenX: data.settlementScreenX,
-        settlementScreenY: data.settlementScreenY,
-        settlementViewportWidth: data.settlementViewportWidth,
-        settlementViewportHeight: data.settlementViewportHeight,
-        battleAfterActionReport: mapBattleAfterActionReport(data.battleAfterActionReport),
-      });
+      handlers.onNotificationShown(mapNotificationShown(data));
     };
+    const onShown = (e: Event) => publishShown((e as CustomEvent<NotificationShown>).detail);
     const onCleared = () => handlers.onNotificationsCleared();
     const onDiplomaticShown = (e: Event) => {
       const data = (e as CustomEvent<DiplomaticNotificationShown>).detail;
@@ -267,6 +274,11 @@ export function useNotificationsAndWarningsBridge(handlers: BridgeHandlers) {
     window.addEventListener('bridge:game.warning_updated', onUpdated);
     window.addEventListener('bridge:game.warning_removed', onRemoved);
     window.addEventListener('bridge:game.warnings_cleared', onWarningsClearedFn);
+
+    // The offscreen atlas can receive its replayed catalogue between bridge binding and React's
+    // passive effects. Recover that event from the bridge cache so its notification plate is
+    // still created; GameProvider de-duplicates the normal in-order path.
+    publishShown(getCachedBridgeEventByName('game.notification_shown') as NotificationShown | undefined);
 
     return () => {
       window.removeEventListener('bridge:game.notification_shown', onShown);
@@ -320,6 +332,10 @@ export function dismissDiplomaticNotificationOnBridge(notificationId: string) {
 export function onNotificationAnchorsFrame(callback: (data: NotificationAnchorsFrameResponse) => void): () => void {
   const handler = (event: Event) => callback((event as CustomEvent<NotificationAnchorsFrameResponse>).detail);
   window.addEventListener('bridge:game.notification_anchors_frame', handler as EventListener);
+  const cached = getCachedBridgeEventByName('game.notification_anchors_frame') as NotificationAnchorsFrameResponse | undefined;
+  if (cached) {
+    callback(cached);
+  }
   return () => window.removeEventListener('bridge:game.notification_anchors_frame', handler as EventListener);
 }
 

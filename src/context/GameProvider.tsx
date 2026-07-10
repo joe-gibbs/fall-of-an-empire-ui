@@ -14,6 +14,7 @@ import { beginUIPerfInteraction } from '../perf/uiPerfProfiler';
 import {
   GameActionsContext,
   GameStateContext,
+  createInitialGameState,
   type AgentRole,
   type GameActions,
   type GameState,
@@ -46,42 +47,6 @@ function recordSidebarNavigation(state: GameState, type: SidebarType, id: string
 
 function shouldClearMilitarySelectionOnClose(type: LeftSidebarType): boolean {
   return type === 'military' || type === 'military-selection';
-}
-
-function createInitialGameState(): GameState {
-  return {
-    isPaused: true,
-    speed: 1,
-    date: { day: 1, month: 1, year: 0 },
-    dateText: '',
-    season: 'Winter',
-    gameDay: 0,
-    debugMode: false,
-    climateTrend: 0,
-    climateDescription: '',
-    saveSerial: 0,
-    gold: 0,
-    goldDelta: 0,
-    population: 0,
-    populationDelta: 0,
-
-    leftSidebar: null,
-    leftSidebarId: null,
-    rightSidebar: null,
-    rightSidebarId: null,
-    activeScreen: null,
-    activeScreenId: null,
-    sidebarNavigation: {},
-
-    advisorHint: null,
-    advisorStep: 0,
-    advisorVisible: false,
-
-    warnings: [],
-    notifications: [],
-
-    agentSelect: { open: false },
-  };
 }
 
 export function GameProvider({ children }: { children: ReactNode }) {
@@ -125,7 +90,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const notificationAndWarningHandlers = useMemo(() => ({
     onNotificationShown: (n: Notification) => {
-      setState(s => ({ ...s, notifications: [...s.notifications, n] }));
+      setState(s => ({
+        ...s,
+        notifications: s.notifications.some(existing => existing.id === n.id)
+          ? s.notifications.map(existing => existing.id === n.id ? n : existing)
+          : [...s.notifications, n],
+      }));
     },
     onNotificationDismissed: (id: string) => {
       setState(s => ({ ...s, notifications: s.notifications.filter(n => n.id !== id) }));
