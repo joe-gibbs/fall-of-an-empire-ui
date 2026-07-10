@@ -395,6 +395,7 @@ export interface BureaucraticThroughputSourceEntry {
   category: string;
   value: number;
   expiresInDays: number;
+  expiresOnDate: number;
   details: BureaucraticThroughputSourceDetail[];
 }
 
@@ -4351,6 +4352,11 @@ export interface WorldBattleStrengthSnapshot {
   defenderLastLosses: number;
 }
 
+export interface WorldGlancesCatalogueDelta {
+  removedArmyIds: string[];
+  removedNavyIds: string[];
+}
+
 export interface GetWorldGlanceTooltipRequest {
   kind: string;
   id: string;
@@ -4622,6 +4628,11 @@ export interface MilitaryUnitSourceEntry {
   name: string;
   count: number;
   daysRemaining: number;
+  startsOnDate: number;
+  expiresOnDate: number;
+  progressAtSnapshot: number;
+  dailyProgress: number;
+  snapshotDate: number;
 }
 
 export interface MilitaryUnitEntry {
@@ -5271,6 +5282,12 @@ export interface RenameSettlementResponse {
   message: string;
 }
 
+export interface ReorderSettlementBuildingRequest {
+  settlementId: string;
+  sourceQueueIndex: number;
+  targetQueueIndex: number;
+}
+
 export interface ResetSettingsRequest {
   page: string;
 }
@@ -5897,6 +5914,7 @@ export interface BridgeActions {
   'game.rebind_action_key': { request: RebindActionKeyRequest; response: RebindActionKeyResponse };
   'game.recruit_character_for_role': { request: RecruitCharacterForRoleRequest; response: RecruitCharacterForRoleResponse };
   'game.rename_settlement': { request: RenameSettlementRequest; response: RenameSettlementResponse };
+  'game.reorder_settlement_building': { request: ReorderSettlementBuildingRequest; response: void };
   'game.replace_military_commander': { request: ReplaceMilitaryCommanderRequest; response: void };
   'game.replenish_military': { request: ReplenishMilitaryRequest; response: void };
   'game.request_battle_retreat': { request: RequestBattleRetreatRequest; response: RequestBattleRetreatResponse };

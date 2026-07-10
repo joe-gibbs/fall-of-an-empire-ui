@@ -2425,7 +2425,17 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
       progress: 0.46,
       statusLabel: '46% built',
       selectable: false,
-      sources: [{ id: isNavy ? MOCK_IDS.portSettlement : MOCK_IDS.settlement, name: profile.garrisonedAt, count: 1, daysRemaining: 0 }],
+      sources: [{
+        id: isNavy ? MOCK_IDS.portSettlement : MOCK_IDS.settlement,
+        name: profile.garrisonedAt,
+        count: 1,
+        daysRemaining: 0,
+        startsOnDate: 0,
+        expiresOnDate: 0,
+        progressAtSnapshot: 0,
+        dailyProgress: 0,
+        snapshotDate: 0,
+      }],
     },
     {
       ...units[1],
@@ -2439,7 +2449,17 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
       progress: 0.72,
       statusLabel: '72% arrived',
       selectable: false,
-      sources: [{ id: isNavy ? MOCK_IDS.portSettlement : MOCK_IDS.settlement, name: isNavy ? 'Namaris' : 'Aurelion', count: 1, daysRemaining: 5 }],
+      sources: [{
+        id: isNavy ? MOCK_IDS.portSettlement : MOCK_IDS.settlement,
+        name: isNavy ? 'Namaris' : 'Aurelion',
+        count: 1,
+        daysRemaining: 5,
+        startsOnDate: 249391,
+        expiresOnDate: 249409,
+        progressAtSnapshot: 0.72,
+        dailyProgress: 1 / 18,
+        snapshotDate: 249404,
+      }],
     },
   ];
   return {
@@ -4544,11 +4564,11 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       vacantOffices: 0,
       rushPressure,
       sources: [
-        { sourceId: 'capacity:baseline', label: 'Central administration', kind: 'capacity', category: 'baseline', value: 40, expiresInDays: 0, details: [] },
-        { sourceId: 'capacity:court:MasterOfEconomy', label: 'Master of Economy', kind: 'capacity', category: 'court', value: 15, expiresInDays: 0, details: [] },
-        { sourceId: 'capacity:court:MasterOfDiplomacy', label: 'Master of Diplomacy', kind: 'capacity', category: 'court', value: 15, expiresInDays: 0, details: [] },
-        { sourceId: 'capacity:governors', label: 'Regional governors', kind: 'capacity', category: 'governance', value: 12, expiresInDays: 0, details: [] },
-        { sourceId: 'capacity:fiscal-health', label: 'Treasury balance', kind: 'capacity', category: 'economy', value: 9, expiresInDays: 0, details: [] },
+        { sourceId: 'capacity:baseline', label: 'Central administration', kind: 'capacity', category: 'baseline', value: 40, expiresInDays: 0, expiresOnDate: 0, details: [] },
+        { sourceId: 'capacity:court:MasterOfEconomy', label: 'Master of Economy', kind: 'capacity', category: 'court', value: 15, expiresInDays: 0, expiresOnDate: 0, details: [] },
+        { sourceId: 'capacity:court:MasterOfDiplomacy', label: 'Master of Diplomacy', kind: 'capacity', category: 'court', value: 15, expiresInDays: 0, expiresOnDate: 0, details: [] },
+        { sourceId: 'capacity:governors', label: 'Regional governors', kind: 'capacity', category: 'governance', value: 12, expiresInDays: 0, expiresOnDate: 0, details: [] },
+        { sourceId: 'capacity:fiscal-health', label: 'Treasury balance', kind: 'capacity', category: 'economy', value: 9, expiresInDays: 0, expiresOnDate: 0, details: [] },
         {
           sourceId: 'load:direct-settlements',
           label: 'Directly controlled settlements',
@@ -4556,6 +4576,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           category: 'administration',
           value: 18,
           expiresInDays: 0,
+          expiresOnDate: 0,
           details: [
             { sourceId: 'aurelion', label: 'Aurelion', kind: 'load', value: 3 },
             { sourceId: 'vellum', label: 'Vellum', kind: 'load', value: 3 },
@@ -4565,7 +4586,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             { sourceId: 'Tarkhen', label: 'Tarkhen', kind: 'load', value: 3 },
           ],
         },
-        { sourceId: 'load:governed-regions', label: 'Governor-led regions', kind: 'load', category: 'administration', value: 6, expiresInDays: 0, details: [] },
+        { sourceId: 'load:governed-regions', label: 'Governor-led regions', kind: 'load', category: 'administration', value: 6, expiresInDays: 0, expiresOnDate: 0, details: [] },
         {
           sourceId: 'load:provinces',
           label: 'Subject provinces',
@@ -4573,16 +4594,17 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           category: 'administration',
           value: 2,
           expiresInDays: 0,
+          expiresOnDate: 0,
           details: [
             { sourceId: 'narovan', label: 'Narovan March', kind: 'load', value: 1 },
             { sourceId: 'durath', label: 'Durath Province', kind: 'load', value: 1 },
           ],
         },
-        { sourceId: 'load:policy', label: 'Tax policy change', kind: 'load', category: 'policy', value: 21, expiresInDays: 12, details: [] },
-        { sourceId: 'load:interaction', label: 'Provincial requisition', kind: 'load', category: 'interaction', value: 14, expiresInDays: 18, details: [] },
-        { sourceId: 'load:province-pressure', label: 'Province pressure', kind: 'load', category: 'province', value: 8, expiresInDays: 0, details: [] },
+        { sourceId: 'load:policy', label: 'Tax policy change', kind: 'load', category: 'policy', value: 21, expiresInDays: 12, expiresOnDate: state.gameDay + 12, details: [] },
+        { sourceId: 'load:interaction', label: 'Provincial requisition', kind: 'load', category: 'interaction', value: 14, expiresInDays: 18, expiresOnDate: state.gameDay + 18, details: [] },
+        { sourceId: 'load:province-pressure', label: 'Province pressure', kind: 'load', category: 'province', value: 8, expiresInDays: 0, expiresOnDate: 0, details: [] },
         ...(rushPressure > 0 ? [
-          { sourceId: 'load:rush:mock', label: 'Rushed action', kind: 'load', category: 'rush', value: rushPressure, expiresInDays: 7, details: [] },
+          { sourceId: 'load:rush:mock', label: 'Rushed action', kind: 'load', category: 'rush', value: rushPressure, expiresInDays: 7, expiresOnDate: state.gameDay + 7, details: [] },
         ] : []),
       ],
     };
@@ -6329,6 +6351,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.set_notification_muted':
       case 'game.reset_notification_mutes':
       case 'game.queue_settlement_building':
+      case 'game.reorder_settlement_building':
       case 'game.unqueue_settlement_building':
       case 'game.demolish_settlement_building':
       case 'game.downgrade_settlement_building':

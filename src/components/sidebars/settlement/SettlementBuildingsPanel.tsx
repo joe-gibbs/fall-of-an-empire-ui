@@ -16,6 +16,7 @@ import {
   demolishSettlementBuilding,
   downgradeSettlementBuilding,
   queueSettlementBuilding,
+  reorderSettlementBuilding,
   unqueueSettlementBuilding,
   useSettlementBuildingsBridgeState,
 } from '../../../bridge/settlements-economy/useSettlementBuildingsBridge';
@@ -23,6 +24,7 @@ import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBo
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import HtmlContent from '../../common/layout/content/HtmlContent';
 import { formatNumber } from '../../../utils/numberFormat';
+import { toRootRem } from '../../../utils/cssUnits';
 import './SettlementBuildingsPanel.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -34,6 +36,22 @@ interface Props {
  *  (e.g. settlement under siege). Empty string = no override. Used by AvailCard
  *  to short-circuit interactivity without prop-drilling through ChainBranch. */
 const PanelLockContext = React.createContext<string>('');
+
+interface BuildingLinkTarget {
+  assetKey: string;
+  name: string;
+}
+
+interface BuildingNavigationContextValue {
+  navigateToBuilding: (buildingId: string) => void;
+  findRequirementTarget: (
+    reason: string | undefined,
+    developedFrom: string | undefined,
+    requiredBuildings: BuildingRequirement[] | undefined,
+  ) => BuildingLinkTarget | undefined;
+}
+
+const BuildingNavigationContext = React.createContext<BuildingNavigationContextValue | null>(null);
 
 /** Matches the category tab order in BuildingBrowser.GetCategoryTabIndex. */
 const CATEGORY_ORDER: BuildingCategory[] = [
@@ -371,6 +389,8 @@ function availTooltip(
   queueSummary?: BuildingQueueSummary,
   lockReason?: string,
   canCancel = false,
+  requirementTarget?: BuildingLinkTarget,
+  onNavigate?: (buildingId: string) => void,
 ): TooltipContent {
   const lines: TooltipLine[] = [];
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.281.8'), value: n(a.price), valueIcon: '/assets/icons/I_Coins.png' });
@@ -388,7 +408,18 @@ function availTooltip(
   lines.push(...queueTooltipLines(queueSummary));
   if (lockReason) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.293.11'), isHeader: true });
-    lines.push({ label: lockReason, valueColor: 'var(--red)' });
+    lines.push({
+      label: requirementTarget && onNavigate
+        ? (
+            <BuildingRequirementLink
+              reason={lockReason}
+              target={requirementTarget}
+              onNavigate={onNavigate}
+              variant="tooltip"
+            />
+          )
+        : lockReason,
+    });
   }
   return {
     title: a.name,
@@ -499,6 +530,7 @@ function MapPlaceButton({
 /** Cross-chain prerequisites row: small icons of each RequiredBuilding with
  *  a tick (met) or cross (missing) marker. */
 function RequiresRow({ items }: { items: BuildingRequirement[] }) {
+  const buildingNavigation = React.useContext(BuildingNavigationContext);
   if (items.length === 0) return null;
   return (
     <div className="bld-requires-row">
@@ -510,14 +542,29 @@ function RequiresRow({ items }: { items: BuildingRequirement[] }) {
             content={{
               title: r.name,
               get body() { return r.met ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementBuildingsPanel.367.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsSettlementBuildingsPanel.368.1"); },
+              footer: webUIText('SettlementBuildings.ViewRequirement', { Name: r.name }),
             }}
             position="bottom"
             delay={150}
           >
-            <span className={`bld-requires-item${r.met ? ' bld-requires-item--met' : ' bld-requires-item--missing'}`}>
+            <button
+              type="button"
+              className={`bld-requires-item${r.met ? ' bld-requires-item--met' : ' bld-requires-item--missing'}`}
+              aria-label={webUIText('SettlementBuildings.ViewRequirement', { Name: r.name })}
+              onPointerDown={(event) => {
+                if (event.button !== 0) return;
+                event.stopPropagation();
+                buildingNavigation?.navigateToBuilding(r.assetKey);
+              }}
+              onMouseDown={event => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (event.detail === 0) buildingNavigation?.navigateToBuilding(r.assetKey);
+              }}
+            >
               {r.icon && <img src={r.icon} alt="" className="bld-requires-icon" />}
               <span className="bld-requires-mark">{r.met ? '+' : webUIText("Auto.Fix.ExprFalse.componentssidebarsSettlementBuildingsPanel.375.1")}</span>
-            </span>
+            </button>
           </Tooltip>
         ))}
       </div>
@@ -610,6 +657,38 @@ function BuildingManagementActions({
         <div className="bld-tooltip-confirm-note">{webUIText('SettlementBuildings.PressAgain')}</div>
       )}
     </div>
+  );
+}
+
+function BuildingRequirementLink({
+  reason,
+  target,
+  onNavigate,
+  variant,
+}: {
+  reason: string;
+  target: BuildingLinkTarget;
+  onNavigate: (buildingId: string) => void;
+  variant: 'card' | 'tooltip';
+}) {
+  return (
+    <button
+      type="button"
+      className={`bld-requirement-link bld-requirement-link--${variant}`}
+      aria-label={webUIText('SettlementBuildings.ViewRequirement', { Name: target.name })}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        event.stopPropagation();
+        onNavigate(target.assetKey);
+      }}
+      onMouseDown={event => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (event.detail === 0) onNavigate(target.assetKey);
+      }}
+    >
+      {reason}
+    </button>
   );
 }
 
@@ -787,6 +866,7 @@ function AvailCard({
   queueSummary?: BuildingQueueSummary;
   queueing?: boolean;
 }) {
+  const buildingNavigation = React.useContext(BuildingNavigationContext);
   const panelLockReason = React.useContext(PanelLockContext);
   const intrinsicLocked = a.buildState.state !== 'visible';
   const locked = intrinsicLocked || !!panelLockReason;
@@ -798,6 +878,11 @@ function AvailCard({
   const queuedToLevel = queueSummary?.highestToLevel;
   const cancelQueueIndex = cancellationQueueIndex(queueSummary);
   const cancellable = !!onUnqueue && cancelQueueIndex !== undefined;
+  const requirementTarget = buildingNavigation?.findRequirementTarget(
+    lockReason,
+    a.developedFrom,
+    a.requiredBuildings,
+  );
   const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (event.button === 0) {
       if (actionable) onQueue?.(a.id, event.currentTarget);
@@ -811,7 +896,18 @@ function AvailCard({
   }, [a.id, actionable, cancelQueueIndex, cancellable, onQueue, onUnqueue]);
 
   return (
-    <Tooltip content={availTooltip(a, queueSummary, lockReason, cancellable)} position="left" delay={200}>
+    <Tooltip
+      content={availTooltip(
+        a,
+        queueSummary,
+        lockReason,
+        cancellable,
+        requirementTarget,
+        buildingNavigation?.navigateToBuilding,
+      )}
+      position="left"
+      delay={200}
+    >
       <div
         className={
           `bld-node bld-node--avail${locked ? ' bld-node--locked' : ''}`
@@ -873,7 +969,18 @@ function AvailCard({
               <ResourceRow items={a.resourceCost} />
           </div>
           {locked && lockReason && (
-            <div className="game-notice game-notice--warning game-notice--compact bld-node-reason">{lockReason}</div>
+            requirementTarget && buildingNavigation ? (
+              <div className="game-notice game-notice--warning game-notice--compact bld-node-reason">
+                <BuildingRequirementLink
+                  reason={lockReason}
+                  target={requirementTarget}
+                  onNavigate={buildingNavigation.navigateToBuilding}
+                  variant="card"
+                />
+              </div>
+            ) : (
+              <div className="game-notice game-notice--warning game-notice--compact bld-node-reason">{lockReason}</div>
+            )
           )}
         </div>
       </div>
@@ -965,16 +1072,44 @@ function isRoutineQueueState(state: ConstructionQueueItem['state']): boolean {
   return state === 'queued' || state === 'starting' || state === 'building';
 }
 
+type QueueDropPosition = 'before' | 'after';
+const QUEUE_DRAG_THRESHOLD = 5;
+
+function finalQueueIndex(
+  sourceQueueIndex: number,
+  hoveredQueueIndex: number,
+  position: QueueDropPosition,
+): number {
+  if (sourceQueueIndex < hoveredQueueIndex) {
+    return position === 'before' ? hoveredQueueIndex - 1 : hoveredQueueIndex;
+  }
+  return position === 'after' ? hoveredQueueIndex + 1 : hoveredQueueIndex;
+}
+
 function QueueItemCard({
   item,
   order,
   onUnqueue,
   pendingRemoval = false,
+  canReorder = false,
+  dragging = false,
+  dropPosition,
+  onHandlePointerDown,
+  onHandlePointerMove,
+  onHandlePointerUp,
+  onHandlePointerCancel,
 }: {
   item: ConstructionQueueItem;
   order: number;
   onUnqueue?: (queueIndex: number) => void;
   pendingRemoval?: boolean;
+  canReorder?: boolean;
+  dragging?: boolean;
+  dropPosition?: QueueDropPosition;
+  onHandlePointerDown?: (event: React.PointerEvent<HTMLElement>, item: ConstructionQueueItem) => void;
+  onHandlePointerMove?: (event: React.PointerEvent<HTMLElement>) => void;
+  onHandlePointerUp?: (event: React.PointerEvent<HTMLElement>) => void;
+  onHandlePointerCancel?: (event: React.PointerEvent<HTMLElement>) => void;
 }) {
   const buildProgressPercent = queueBuildProgressPercent(item);
   const showResourceCost = item.state === 'awaiting_resources' && item.resourceCost.length > 0;
@@ -987,10 +1122,24 @@ function QueueItemCard({
       className={
         `bld-queue-card${item.state ? ` bld-queue-card--${item.state}` : ''}`
         + (pendingRemoval ? ' bld-queue-card--pending' : '')
+        + (dragging ? ' bld-queue-card--dragging' : '')
+        + (dropPosition ? ` bld-queue-card--drop-${dropPosition}` : '')
       }
+      data-queue-item-id={item.id}
     >
+      {canReorder && !pendingRemoval && (
+        <span
+          className="bld-queue-card-drag-handle"
+          aria-hidden="true"
+          onPointerDown={event => onHandlePointerDown?.(event, item)}
+          onPointerMove={onHandlePointerMove}
+          onPointerUp={onHandlePointerUp}
+          onPointerCancel={onHandlePointerCancel}
+          onLostPointerCapture={onHandlePointerCancel}
+        />
+      )}
       <div className="bld-queue-card-art">
-        <img src={item.icon ?? GENERIC_ICON} alt="" className="bld-queue-card-icon" />
+        <img src={item.icon ?? GENERIC_ICON} alt="" className="bld-queue-card-icon" draggable={false} />
         <span className="bld-queue-card-order">{n(order)}</span>
         {item.kind === 'upgrade' && (
           <span className="bld-queue-card-level">{webUIText("Auto.Fix.Expr.componentssidebarsSettlementBuildingsPanel.654.1", { Value1: n(item.toLevel) })}</span>
@@ -1063,13 +1212,149 @@ function QueueItemCard({
 function ConstructionSection({
   items,
   onUnqueue,
+  onReorder,
   pendingUnqueueIndices,
+  reordering = false,
 }: {
   items: ConstructionQueueItem[];
   onUnqueue?: (queueIndex: number) => void;
+  onReorder?: (sourceQueueIndex: number, targetQueueIndex: number) => void;
   pendingUnqueueIndices: Set<number>;
+  reordering?: boolean;
 }) {
+  const draggedItemRef = React.useRef<ConstructionQueueItem | null>(null);
+  const pointerIdRef = React.useRef<number | null>(null);
+  const dragOriginRef = React.useRef<{ x: number; y: number } | null>(null);
+  const dragStartedRef = React.useRef(false);
+  const sourceCardRef = React.useRef<HTMLDivElement | null>(null);
+  const dragCopyRef = React.useRef<HTMLDivElement | null>(null);
+  const dropTargetRef = React.useRef<{ item: ConstructionQueueItem; position: QueueDropPosition } | null>(null);
+  const [draggedItemId, setDraggedItemId] = React.useState<string | null>(null);
+  const [dropTarget, setDropTarget] = React.useState<{ itemId: string; position: QueueDropPosition } | null>(null);
+
+  const removeDragCopy = React.useCallback(() => {
+    dragCopyRef.current?.remove();
+    dragCopyRef.current = null;
+  }, []);
+
+  const createDragCopy = React.useCallback(() => {
+    const sourceCard = sourceCardRef.current;
+    if (!sourceCard || dragCopyRef.current) return;
+
+    const copy = sourceCard.cloneNode(true) as HTMLDivElement;
+    copy.classList.remove(
+      'bld-queue-card--dragging',
+      'bld-queue-card--drop-before',
+      'bld-queue-card--drop-after',
+    );
+    copy.classList.add('bld-queue-drag-copy');
+    copy.removeAttribute('data-queue-item-id');
+    copy.setAttribute('aria-hidden', 'true');
+    copy.querySelector('.bld-queue-card-drag-handle')?.remove();
+    copy.style.width = toRootRem(sourceCard.getBoundingClientRect().width);
+    document.body.appendChild(copy);
+    dragCopyRef.current = copy;
+    window.requestAnimationFrame(() => {
+      if (copy.isConnected) copy.classList.add('bld-queue-drag-copy--shown');
+    });
+  }, []);
+
+  const moveDragCopy = React.useCallback((clientX: number, clientY: number) => {
+    const copy = dragCopyRef.current;
+    if (!copy) return;
+    copy.style.transform = `translate3d(${toRootRem(clientX + 14)}, ${toRootRem(clientY + 10)}, 0) rotate(-3deg)`;
+  }, []);
+
+  const clearDrag = React.useCallback(() => {
+    removeDragCopy();
+    draggedItemRef.current = null;
+    pointerIdRef.current = null;
+    dragOriginRef.current = null;
+    dragStartedRef.current = false;
+    sourceCardRef.current = null;
+    dropTargetRef.current = null;
+    setDraggedItemId(null);
+    setDropTarget(null);
+  }, [removeDragCopy]);
+
+  const handlePointerDown = React.useCallback((event: React.PointerEvent<HTMLElement>, item: ConstructionQueueItem) => {
+    if (event.button !== 0 || item.queueIndex === undefined) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    draggedItemRef.current = item;
+    pointerIdRef.current = event.pointerId;
+    dragOriginRef.current = { x: event.clientX, y: event.clientY };
+    dragStartedRef.current = false;
+    sourceCardRef.current = event.currentTarget.closest<HTMLDivElement>('.bld-queue-card');
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, []);
+
+  const handlePointerMove = React.useCallback((event: React.PointerEvent<HTMLElement>) => {
+    const source = draggedItemRef.current;
+    if (!source || pointerIdRef.current !== event.pointerId) return;
+
+    event.preventDefault();
+    const origin = dragOriginRef.current;
+    if (!dragStartedRef.current && origin) {
+      const distance = Math.hypot(event.clientX - origin.x, event.clientY - origin.y);
+      if (distance <= QUEUE_DRAG_THRESHOLD) return;
+
+      dragStartedRef.current = true;
+      setDraggedItemId(source.id);
+      createDragCopy();
+    }
+    if (!dragStartedRef.current) return;
+
+    moveDragCopy(event.clientX, event.clientY);
+    const pointedElement = document.elementFromPoint(event.clientX, event.clientY);
+    const card = pointedElement?.closest<HTMLElement>('.bld-queue-card');
+    const itemId = card?.dataset.queueItemId;
+    const item = itemId ? items.find(candidate => candidate.id === itemId) : undefined;
+    if (!card || !item || source.id === item.id || item.queueIndex === undefined) {
+      dropTargetRef.current = null;
+      setDropTarget(null);
+      return;
+    }
+
+    const bounds = card.getBoundingClientRect();
+    const position: QueueDropPosition = event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after';
+    dropTargetRef.current = { item, position };
+    setDropTarget(current => (
+      current?.itemId === item.id && current.position === position
+        ? current
+        : { itemId: item.id, position }
+    ));
+  }, [createDragCopy, items, moveDragCopy]);
+
+  const handlePointerUp = React.useCallback((event: React.PointerEvent<HTMLElement>) => {
+    const source = draggedItemRef.current;
+    const target = dropTargetRef.current;
+    if (!source || pointerIdRef.current !== event.pointerId) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    if (dragStartedRef.current && source.queueIndex !== undefined && target?.item.queueIndex !== undefined) {
+      const targetQueueIndex = finalQueueIndex(source.queueIndex, target.item.queueIndex, target.position);
+      if (targetQueueIndex !== source.queueIndex) {
+        onReorder?.(source.queueIndex, targetQueueIndex);
+      }
+    }
+    clearDrag();
+  }, [clearDrag, onReorder]);
+
+  const handlePointerCancel = React.useCallback((event: React.PointerEvent<HTMLElement>) => {
+    if (pointerIdRef.current !== event.pointerId) return;
+    clearDrag();
+  }, [clearDrag]);
+
   if (items.length === 0) return null;
+
+  const canReorder = !!onReorder && items.length > 1 && pendingUnqueueIndices.size === 0 && !reordering;
 
   return (
     <div className="bld-construction">
@@ -1085,6 +1370,13 @@ function ConstructionSection({
             order={index + 1}
             onUnqueue={onUnqueue}
             pendingRemoval={item.queueIndex !== undefined && pendingUnqueueIndices.has(item.queueIndex)}
+            canReorder={canReorder}
+            dragging={draggedItemId === item.id}
+            dropPosition={dropTarget?.itemId === item.id ? dropTarget.position : undefined}
+            onHandlePointerDown={handlePointerDown}
+            onHandlePointerMove={handlePointerMove}
+            onHandlePointerUp={handlePointerUp}
+            onHandlePointerCancel={handlePointerCancel}
           />
         ))}
       </div>
@@ -1170,10 +1462,11 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const canQueueViaBridge = liveData !== null;
   const [pendingUnqueueIndices, setPendingUnqueueIndices] = React.useState<number[]>([]);
   const [queueingBuildingIds, setQueueingBuildingIds] = React.useState<string[]>([]);
+  const [reorderingQueue, setReorderingQueue] = React.useState(false);
   const queueAnchorRef = React.useRef<QueueAnchor | null>(null);
   const queueingAnimationTimerRef = React.useRef<number | null>(null);
   const pendingQueueBuildingIdsRef = React.useRef<Set<string>>(new Set());
-  const pendingTutorialBuildingTargetRef = React.useRef<string | null>(null);
+  const pendingBuildingTargetRef = React.useRef<string | null>(null);
   const pendingUnqueueSet = React.useMemo(
     () => new Set(pendingUnqueueIndices),
     [pendingUnqueueIndices],
@@ -1236,6 +1529,14 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
         setPendingUnqueueIndices(prev => prev.filter(index => index !== queueIndex));
       });
   }, [settlement.id]);
+  const handleReorderBuilding = React.useCallback((sourceQueueIndex: number, targetQueueIndex: number) => {
+    if (reorderingQueue) return;
+
+    setReorderingQueue(true);
+    reorderSettlementBuilding(settlement.id, sourceQueueIndex, targetQueueIndex)
+      .catch(acknowledgeBridgeFailure)
+      .finally(() => setReorderingQueue(false));
+  }, [reorderingQueue, settlement.id]);
   const handleDemolishBuilding = React.useCallback((buildingId: string) => {
     return demolishSettlementBuilding(settlement.id, buildingId);
   }, [settlement.id]);
@@ -1338,6 +1639,60 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     return 'economic';
   });
 
+  const navigateToBuilding = React.useCallback((target: string) => {
+    const targetNode = nodes.find(node => nodeMatchesBuildingTarget(node, target));
+    const targetCategory = targetNode ? nodeCategory(targetNode) : undefined;
+    if (!targetCategory || disabledCategories.has(targetCategory)) return;
+
+    pendingBuildingTargetRef.current = target;
+    if (targetCategory !== activeTab) {
+      setActiveTab(targetCategory);
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      if (pendingBuildingTargetRef.current === target && scrollTutorialBuildingIntoView(target)) {
+        pendingBuildingTargetRef.current = null;
+      }
+    });
+  }, [activeTab, disabledCategories, nodes, scrollTutorialBuildingIntoView]);
+
+  const findRequirementTarget = React.useCallback((
+    reason: string | undefined,
+    developedFrom: string | undefined,
+    requiredBuildings: BuildingRequirement[] | undefined,
+  ): BuildingLinkTarget | undefined => {
+    if (!reason) return undefined;
+
+    const candidates = new Map<string, BuildingLinkTarget>();
+    if (developedFrom) {
+      const predecessor = nodes.find(node => nodeMatchesBuildingTarget(node, developedFrom));
+      if (predecessor) {
+        candidates.set(developedFrom, {
+          assetKey: developedFrom,
+          name: predecessor.kind === 'built' ? predecessor.b.name : predecessor.a.name,
+        });
+      }
+    }
+    for (const requirement of requiredBuildings ?? []) {
+      candidates.set(requirement.assetKey, {
+        assetKey: requirement.assetKey,
+        name: requirement.name,
+      });
+    }
+
+    const normalisedReason = reason.toLocaleLowerCase();
+    const matches = [...candidates.values()].filter(candidate => (
+      normalisedReason.includes(candidate.name.toLocaleLowerCase())
+    ));
+    return matches.length === 1 ? matches[0] : undefined;
+  }, [nodes]);
+
+  const buildingNavigation = React.useMemo<BuildingNavigationContextValue>(() => ({
+    navigateToBuilding,
+    findRequirementTarget,
+  }), [findRequirementTarget, navigateToBuilding]);
+
   // Filter nodes to active category, then build per-chain trees.
   const chainTrees = React.useMemo(() => {
     const inCat = nodes.filter(n => nodeCategory(n) === activeTab);
@@ -1358,35 +1713,20 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     const handler = (event: Event) => {
       const target = String((event as CustomEvent).detail ?? '');
       if (!target) return;
-
-      const targetNode = nodes.find(node => nodeMatchesBuildingTarget(node, target));
-      const targetCategory = targetNode ? nodeCategory(targetNode) : undefined;
-      if (!targetCategory || disabledCategories.has(targetCategory)) return;
-
-      pendingTutorialBuildingTargetRef.current = target;
-      if (targetCategory !== activeTab) {
-        setActiveTab(targetCategory);
-        return;
-      }
-
-      window.requestAnimationFrame(() => {
-        if (pendingTutorialBuildingTargetRef.current === target && scrollTutorialBuildingIntoView(target)) {
-          pendingTutorialBuildingTargetRef.current = null;
-        }
-      });
+      navigateToBuilding(target);
     };
 
     window.addEventListener('tutorial:building-target-request', handler);
     return () => window.removeEventListener('tutorial:building-target-request', handler);
-  }, [activeTab, disabledCategories, nodes, scrollTutorialBuildingIntoView]);
+  }, [navigateToBuilding]);
 
   React.useLayoutEffect(() => {
-    const target = pendingTutorialBuildingTargetRef.current;
+    const target = pendingBuildingTargetRef.current;
     if (!target) return;
 
     const frameId = window.requestAnimationFrame(() => {
-      if (pendingTutorialBuildingTargetRef.current === target && scrollTutorialBuildingIntoView(target)) {
-        pendingTutorialBuildingTargetRef.current = null;
+      if (pendingBuildingTargetRef.current === target && scrollTutorialBuildingIntoView(target)) {
+        pendingBuildingTargetRef.current = null;
       }
     });
     return () => window.cancelAnimationFrame(frameId);
@@ -1397,8 +1737,9 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     : '';
 
   return (
-    <PanelLockContext.Provider value={panelLockReason}>
-      <div className="bld-panel">
+    <BuildingNavigationContext.Provider value={buildingNavigation}>
+      <PanelLockContext.Provider value={panelLockReason}>
+        <div className="bld-panel">
         {panelLockReason && (
           <div className="game-notice game-notice--warning panel-blocked-banner">
             <img src="/assets/icons/I_Locked.png" alt="" className="panel-blocked-banner-icon" />
@@ -1412,8 +1753,10 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
           <>
             <ConstructionSection
               items={queue}
-              onUnqueue={canQueueViaBridge ? handleUnqueueBuilding : undefined}
+              onUnqueue={canQueueViaBridge && !reorderingQueue ? handleUnqueueBuilding : undefined}
+              onReorder={canQueueViaBridge ? handleReorderBuilding : undefined}
               pendingUnqueueIndices={pendingUnqueueSet}
+              reordering={reorderingQueue}
             />
 
             <CategoryTabs
@@ -1446,8 +1789,9 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
             ))}
           </>
         )}
-      </div>
-    </PanelLockContext.Provider>
+        </div>
+      </PanelLockContext.Provider>
+    </BuildingNavigationContext.Provider>
   );
 };
 

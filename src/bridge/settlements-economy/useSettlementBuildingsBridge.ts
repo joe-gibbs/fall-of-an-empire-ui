@@ -242,6 +242,14 @@ export function unqueueSettlementBuilding(settlementId: string, queueIndex: numb
   return bridgeCall('game.unqueue_settlement_building', { settlementId, queueIndex });
 }
 
+export function reorderSettlementBuilding(
+  settlementId: string,
+  sourceQueueIndex: number,
+  targetQueueIndex: number,
+): Promise<void> {
+  return bridgeCall('game.reorder_settlement_building', { settlementId, sourceQueueIndex, targetQueueIndex });
+}
+
 export function demolishSettlementBuilding(settlementId: string, buildingId: string): Promise<void> {
   return bridgeCall('game.demolish_settlement_building', { settlementId, buildingId });
 }

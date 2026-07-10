@@ -8,7 +8,7 @@ import { subscribeTooltipDismissEvent } from './tooltipEvents';
 import './Tooltip.css';
 
 interface TooltipLine {
-  label: string;
+  label: React.ReactNode;
   labelColor?: string;
   labelIcon?: string;
   value?: string;
