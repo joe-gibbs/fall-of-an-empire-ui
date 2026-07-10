@@ -59,6 +59,9 @@ export function buildingPortrait(assetKey: string): string | undefined {
 }
 
 function resourceIcon(name: string): string {
+  if (name === 'Gold') {
+    return FoaeCefUIAssetPath('/assets/icons/I_Coins.png');
+  }
   return FoaeCefUIAssetPath(`/assets/resources/${name}.png`);
 }
 
