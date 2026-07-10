@@ -375,6 +375,37 @@ export function useWorldGlancesBridge(enabled = true) {
       applySnapshot(normaliseWorldGlancesSnapshot(next));
     });
 
+    const catalogueDeltaHandler = (event: Event) => {
+      const rawDelta = (event as CustomEvent<unknown>).detail;
+      const delta = rawDelta && typeof rawDelta === 'object'
+        ? rawDelta as { removedArmyIds?: unknown; removedNavyIds?: unknown }
+        : {};
+      const removedArmyIds = new Set(
+        Array.isArray(delta.removedArmyIds)
+          ? delta.removedArmyIds.filter((id): id is string => typeof id === 'string')
+          : [],
+      );
+      const removedNavyIds = new Set(
+        Array.isArray(delta.removedNavyIds)
+          ? delta.removedNavyIds.filter((id): id is string => typeof id === 'string')
+          : [],
+      );
+      const current = dataRef.current;
+      if (!current || (removedArmyIds.size === 0 && removedNavyIds.size === 0)) {
+        return;
+      }
+
+      applySnapshot({
+        ...current,
+        armies: current.armies.filter(entry => !removedArmyIds.has(entry.id)),
+        navies: current.navies.filter(entry => !removedNavyIds.has(entry.id)),
+      });
+    };
+    window.addEventListener('bridge:game.world_glances_catalogue_delta', catalogueDeltaHandler);
+    const unsubCatalogueDelta = () => {
+      window.removeEventListener('bridge:game.world_glances_catalogue_delta', catalogueDeltaHandler);
+    };
+
     const unsubFrame = onWorldGlancesFrame((frame) => {
       const settlementData = mergeFrameSettlementProgress(dataRef.current, frame);
       const nextData = mergeFrameBattleValues(settlementData, frame);
@@ -396,6 +427,7 @@ export function useWorldGlancesBridge(enabled = true) {
         refreshTimerRef.current = null;
       }
       unsub();
+      unsubCatalogueDelta();
       unsubFrame();
     };
   }, [enabled]);

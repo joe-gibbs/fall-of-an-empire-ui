@@ -1058,6 +1058,11 @@ export interface ArmyUnitSource {
   name: string;
   count: number;
   daysRemaining: number;
+  startsOnDate: number;
+  expiresOnDate: number;
+  progressAtSnapshot: number;
+  dailyProgress: number;
+  snapshotDate: number;
 }
 
 export interface ArmyUnitRow extends ArmyUnit {

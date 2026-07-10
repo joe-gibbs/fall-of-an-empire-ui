@@ -8,6 +8,7 @@ import type {
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import { dispatchFactionData } from '../diplomacy/useFactionBridge';
 import { useBridgeQuery } from '../core/useBridgeQuery';
+import { useGameState } from '../../context/GameContext';
 
 export type BureaucraticThroughputStateName = 'stable' | 'strained' | 'overloaded';
 export type BureaucraticThroughputSourceKind = 'capacity' | 'load';
@@ -26,6 +27,7 @@ export interface BureaucraticThroughputSource {
   category: string;
   value: number;
   expiresInDays: number;
+  expiresOnDate: number;
   details: BureaucraticThroughputSourceDetail[];
 }
 
@@ -78,6 +80,7 @@ function mapSource(source: BureaucraticThroughputSourceEntry): BureaucraticThrou
     category: source.category,
     value: source.value,
     expiresInDays: source.expiresInDays,
+    expiresOnDate: source.expiresOnDate,
     details: source.details.map(mapSourceDetail),
   };
 }
@@ -101,10 +104,22 @@ function mapResponse(data: GetBureaucraticThroughputResponse): BureaucraticThrou
 }
 
 export function useBureaucraticThroughputBridge(): BureaucraticThroughputState | null {
-  return useBridgeQuery({
+  const { gameDay } = useGameState();
+  const state = useBridgeQuery({
     action: 'game.get_bureaucratic_throughput',
     map: mapResponse,
   });
+  if (!state) return null;
+
+  return {
+    ...state,
+    sources: state.sources.map(source => ({
+      ...source,
+      expiresInDays: source.expiresOnDate > 0
+        ? Math.max(0, source.expiresOnDate - gameDay)
+        : 0,
+    })),
+  };
 }
 
 export async function rushBureaucraticAction({

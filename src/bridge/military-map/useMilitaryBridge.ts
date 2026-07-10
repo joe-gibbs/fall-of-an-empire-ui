@@ -8,6 +8,7 @@ import type {
   FoederatiOverviewEntry,
 } from '../../bridge-types.generated.ts';
 import { useBridgeQuery } from '../core/useBridgeQuery';
+import { useGameState } from '../../context/GameContext';
 import { mapPortraitLayers, mapPortraitPath } from '../characters/portraitMapping';
 import type {
   Army,
@@ -170,6 +171,11 @@ function mapUnitRow(unit: GetMilitaryDataResponse['unitRows'][number]): ArmyUnit
       name: source.name,
       count: source.count,
       daysRemaining: source.daysRemaining,
+      startsOnDate: source.startsOnDate,
+      expiresOnDate: source.expiresOnDate,
+      progressAtSnapshot: source.progressAtSnapshot,
+      dailyProgress: source.dailyProgress,
+      snapshotDate: source.snapshotDate,
     })),
   };
 }
@@ -317,6 +323,7 @@ function mapOverview(data: GetMilitaryOverviewResponse): MilitaryOverview {
 }
 
 export function useMilitaryBridge(militaryId: string | null | undefined): Army | null {
+  const { gameDay } = useGameState();
   const live = useBridgeQuery({
     action: 'game.get_military_data',
     payload: militaryId ? { militaryId } : null,
@@ -328,9 +335,38 @@ export function useMilitaryBridge(militaryId: string | null | undefined): Army |
     matchPush: (data) => data.id === militaryId,
   });
 
-  if (live) return live;
-  if (militaryId) return militaryCache.get(militaryId) ?? null;
-  return null;
+  const army = live ?? (militaryId ? militaryCache.get(militaryId) ?? null : null);
+  if (!army) return null;
+
+  return {
+    ...army,
+    unitRows: army.unitRows.map(row => {
+      if (row.rowType !== 'inTransit' && row.rowType !== 'beingBuilt') return row;
+      const timedSources = row.sources.filter(source => source.snapshotDate > 0);
+      if (timedSources.length === 0) return row;
+
+      let weightedProgress = 0;
+      let weightedCount = 0;
+      const sources = row.sources.map(source => {
+        if (source.snapshotDate <= 0) return source;
+        const elapsedDays = Math.max(0, gameDay - source.snapshotDate);
+        const progress = Math.max(0, Math.min(1, source.progressAtSnapshot + elapsedDays * source.dailyProgress));
+        weightedProgress += progress * source.count;
+        weightedCount += source.count;
+        return {
+          ...source,
+          daysRemaining: source.expiresOnDate > 0 ? Math.max(1, source.expiresOnDate - gameDay) : source.daysRemaining,
+        };
+      });
+      const progress = weightedCount > 0 ? weightedProgress / weightedCount : row.progress;
+      return {
+        ...row,
+        progress,
+        statusLabel: row.statusLabel.replace(/\d+%/, `${Math.round(progress * 100)}%`),
+        sources,
+      };
+    }),
+  };
 }
 
 export function useMilitaryOverviewBridge(fetch = true): MilitaryOverview | null {
