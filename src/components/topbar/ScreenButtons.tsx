@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { bridgeCall } from '../../bridge-types.generated.ts';
+import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { playSound } from '../../hooks/useSound';
 import Tooltip from '../common/tooltips/Tooltip';
 import type { TooltipContent, TooltipLine } from '../common/tooltips/Tooltip';
@@ -32,6 +34,7 @@ const FACTION_BUTTON_ID = 'faction';
 const FACTION_FALLBACK_ICON = '/assets/icons/I_Domain.png';
 const FACTION_LABEL_KEY = 'Topbar.Faction';
 const RELIGION_BUTTON_ID = 'religion';
+const ACHIEVEMENTS_BUTTON_ID = 'achievements';
 const LEGACY_TOPBAR_TARGETS: Record<string, string[]> = {
   characters: ['CharacterSearchButton'],
   diplomacy: ['DiplomacyButton'],
@@ -107,12 +110,28 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
 }) => {
   const t = useWebUIText();
   const playerFaction = usePlayerFactionSummary();
+  const [steamAchievementsAvailable, setSteamAchievementsAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    bridgeCall('game.achievement_events')
+      .then(response => {
+        if (!cancelled) setSteamAchievementsAvailable(response.steamAvailable);
+      })
+      .catch(acknowledgeBridgeFailure);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const registrations = getAllTopbarButtons();
   const subjectMode = playerFaction?.diplomaticStatus === 'subject';
   const factionButton = registrations.find(b => b.id === FACTION_BUTTON_ID);
   const showFactionButton = Boolean(factionButton && isVisibleForFactionMode(factionButton, subjectMode));
   const buttons = registrations.filter(b => (
     b.id !== FACTION_BUTTON_ID
+    && (b.id !== ACHIEVEMENTS_BUTTON_ID || steamAchievementsAvailable === false)
     && (b.placement ?? 'left') === placement
     && isVisibleForFactionMode(b, subjectMode)
   ));

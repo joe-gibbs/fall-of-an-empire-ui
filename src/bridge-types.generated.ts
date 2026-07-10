@@ -9,6 +9,10 @@ export interface AchievementUnlockedPayload {
   iconUrl: string;
 }
 
+export interface AchievementEventStatusResponse {
+  steamAvailable: boolean;
+}
+
 export interface AllyCallLikelihoodReason {
   finalPercent: number;
   basePercent: number;
@@ -5321,6 +5325,7 @@ export interface RushBureaucraticActionResponse {
 
 export interface SaveGameRequest {
   displayName: string;
+  existingSlotName: string;
 }
 
 export interface SaveGameResponse {
@@ -5764,7 +5769,7 @@ export interface ZoomToResponse {
 }
 
 export interface BridgeActions {
-  'game.achievement_events': { request: void; response: void };
+  'game.achievement_events': { request: void; response: AchievementEventStatusResponse };
   'game.adjust_subject_tax_rate': { request: AdjustSubjectTaxRateRequest; response: void };
   'game.advance_religion_conversion': { request: void; response: ReligionConversionActionResponse };
   'game.apply_formation_template': { request: ApplyFormationTemplateRequest; response: ApplyFormationTemplateResponse };
