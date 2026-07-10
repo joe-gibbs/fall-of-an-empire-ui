@@ -1310,7 +1310,7 @@
 
 .char-header-spouse {
   display: block;
-  opacity: 0.78;
+  filter: brightness(0.78);
 }
 
 .char-header-spouse .portrait--hero {
