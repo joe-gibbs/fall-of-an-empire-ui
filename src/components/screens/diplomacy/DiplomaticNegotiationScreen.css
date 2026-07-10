@@ -106,6 +106,24 @@
   flex-basis: 6.4rem;
 }
 
+.screen--treaty-negotiation .pns-term-row {
+  border-width: 0.154rem;
+  border-color: transparent;
+  border-image-source: url('/assets/modifier-frame.png');
+  border-image-slice: 3;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+}
+
+.screen--treaty-negotiation .pns-term-row--concession {
+  border-image-source: url('/assets/modifier-frame-positive.png');
+}
+
+.screen--treaty-negotiation .pns-term-row--demand {
+  border-image-source: url('/assets/modifier-frame-negative.png');
+}
+
 .tns-term-score--positive {
   color: var(--green);
 }
