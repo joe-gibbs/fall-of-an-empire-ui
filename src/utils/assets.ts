@@ -180,7 +180,9 @@ export function FoaeCefUIAssetPath(path?: string | null): string | undefined {
 
 export function interactionAssetPath(key: string | undefined | null, basePath: string): string | undefined {
   if (!key) return undefined;
-  if (key.startsWith('/') || key.startsWith('coui://')) return FoaeCefUIAssetPath(key);
+  if (key.startsWith('/') || key.startsWith('coui://') || key.startsWith('http://foae.local/')) {
+    return FoaeCefUIAssetPath(key);
+  }
   return FoaeCefUIAssetPath(`${basePath}${key}.png`);
 }
 
