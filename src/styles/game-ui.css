@@ -1488,6 +1488,16 @@
   padding-left: 0.72rem;
 }
 
+.building-effect-line.level {
+  padding-left: 0.72rem;
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
+.building-effect-line.level + .building-effect-line.bullet {
+  margin-top: 0.32rem;
+}
+
 .building-effect-concept {
   width: 0.95rem;
   height: 0.95rem;
