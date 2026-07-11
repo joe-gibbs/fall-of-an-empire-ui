@@ -42,13 +42,18 @@ interface BuildingLinkTarget {
   name: string;
 }
 
+interface BuildingLinkMatch extends BuildingLinkTarget {
+  start: number;
+  end: number;
+}
+
 interface BuildingNavigationContextValue {
   navigateToBuilding: (buildingId: string) => void;
-  findRequirementTarget: (
+  findRequirementTargets: (
     reason: string | undefined,
     developedFrom: string | undefined,
     requiredBuildings: BuildingRequirement[] | undefined,
-  ) => BuildingLinkTarget | undefined;
+  ) => BuildingLinkMatch[];
 }
 
 const BuildingNavigationContext = React.createContext<BuildingNavigationContextValue | null>(null);
@@ -330,6 +335,8 @@ function builtTooltip(
   lockReason?: string,
   canCancel = false,
   actions?: React.ReactNode,
+  requirementTargets: BuildingLinkMatch[] = [],
+  onNavigate?: (buildingId: string) => void,
 ): TooltipContent {
   const lines: TooltipLine[] = [];
   if (b.maxLevel !== undefined) {
@@ -369,7 +376,18 @@ function builtTooltip(
     }
     addResourceCostLines(lines, b.resourceCost);
     if (lockReason) {
-      lines.push({ label: lockReason, valueColor: 'var(--red)' });
+      lines.push({
+        label: requirementTargets.length > 0 && onNavigate
+          ? (
+              <BuildingRequirementText
+                reason={lockReason}
+                targets={requirementTargets}
+                onNavigate={onNavigate}
+                variant="tooltip"
+              />
+            )
+          : lockReason,
+      });
     }
   }
   addBuildingRequirementLines(lines, b.requiredBuildings);
@@ -389,7 +407,7 @@ function availTooltip(
   queueSummary?: BuildingQueueSummary,
   lockReason?: string,
   canCancel = false,
-  requirementTarget?: BuildingLinkTarget,
+  requirementTargets: BuildingLinkMatch[] = [],
   onNavigate?: (buildingId: string) => void,
 ): TooltipContent {
   const lines: TooltipLine[] = [];
@@ -409,11 +427,11 @@ function availTooltip(
   if (lockReason) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.293.11'), isHeader: true });
     lines.push({
-      label: requirementTarget && onNavigate
+      label: requirementTargets.length > 0 && onNavigate
         ? (
-            <BuildingRequirementLink
+            <BuildingRequirementText
               reason={lockReason}
-              target={requirementTarget}
+              targets={requirementTargets}
               onNavigate={onNavigate}
               variant="tooltip"
             />
@@ -551,12 +569,11 @@ function RequiresRow({ items }: { items: BuildingRequirement[] }) {
               type="button"
               className={`bld-requires-item${r.met ? ' bld-requires-item--met' : ' bld-requires-item--missing'}`}
               aria-label={webUIText('SettlementBuildings.ViewRequirement', { Name: r.name })}
-              onPointerDown={(event) => {
+              onMouseDown={(event) => {
                 if (event.button !== 0) return;
                 event.stopPropagation();
                 buildingNavigation?.navigateToBuilding(r.assetKey);
               }}
-              onMouseDown={event => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation();
                 if (event.detail === 0) buildingNavigation?.navigateToBuilding(r.assetKey);
@@ -660,35 +677,52 @@ function BuildingManagementActions({
   );
 }
 
-function BuildingRequirementLink({
+function BuildingRequirementText({
   reason,
-  target,
+  targets,
   onNavigate,
   variant,
 }: {
   reason: string;
-  target: BuildingLinkTarget;
+  targets: BuildingLinkMatch[];
   onNavigate: (buildingId: string) => void;
   variant: 'card' | 'tooltip';
 }) {
+  const content: React.ReactNode[] = [];
+  let cursor = 0;
+  for (const target of targets) {
+    if (target.start > cursor) {
+      content.push(reason.slice(cursor, target.start));
+    }
+    content.push(
+      <button
+        key={`${target.assetKey}-${target.start}`}
+        type="button"
+        className="bld-requirement-link"
+        aria-label={webUIText('SettlementBuildings.ViewRequirement', { Name: target.name })}
+        onMouseDown={(event) => {
+          if (event.button !== 0) return;
+          event.stopPropagation();
+          onNavigate(target.assetKey);
+        }}
+        onClick={(event) => {
+          event.stopPropagation();
+          if (event.detail === 0) onNavigate(target.assetKey);
+        }}
+      >
+        {reason.slice(target.start, target.end)}
+      </button>,
+    );
+    cursor = target.end;
+  }
+  if (cursor < reason.length) {
+    content.push(reason.slice(cursor));
+  }
+
   return (
-    <button
-      type="button"
-      className={`bld-requirement-link bld-requirement-link--${variant}`}
-      aria-label={webUIText('SettlementBuildings.ViewRequirement', { Name: target.name })}
-      onPointerDown={(event) => {
-        if (event.button !== 0) return;
-        event.stopPropagation();
-        onNavigate(target.assetKey);
-      }}
-      onMouseDown={event => event.stopPropagation()}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (event.detail === 0) onNavigate(target.assetKey);
-      }}
-    >
-      {reason}
-    </button>
+    <span className={`bld-requirement-text bld-requirement-text--${variant}`}>
+      {content}
+    </span>
   );
 }
 
@@ -717,6 +751,7 @@ function BuiltCard({
   queueSummary?: BuildingQueueSummary;
   queueing?: boolean;
 }) {
+  const buildingNavigation = React.useContext(BuildingNavigationContext);
   const [confirmingAction, setConfirmingAction] = React.useState<BuildingManagementAction | null>(null);
   const [pendingAction, setPendingAction] = React.useState<BuildingManagementAction | null>(null);
   const panelLockReason = React.useContext(PanelLockContext);
@@ -781,9 +816,26 @@ function BuiltCard({
       onAction={handleManagementAction}
     />
   ) : undefined;
+  const requirementTargets = buildingNavigation?.findRequirementTargets(
+    lockReason,
+    b.developedFrom,
+    b.requiredBuildings,
+  ) ?? [];
 
   return (
-    <Tooltip content={builtTooltip(b, queueSummary, lockReason, cancellable, managementActions)} position="left" delay={200}>
+    <Tooltip
+      content={builtTooltip(
+        b,
+        queueSummary,
+        lockReason,
+        cancellable,
+        managementActions,
+        requirementTargets,
+        buildingNavigation?.navigateToBuilding,
+      )}
+      position="left"
+      delay={200}
+    >
       <div
         className={
           `bld-node bld-node--built${maxed ? ' bld-node--maxed' : ''}`
@@ -878,11 +930,11 @@ function AvailCard({
   const queuedToLevel = queueSummary?.highestToLevel;
   const cancelQueueIndex = cancellationQueueIndex(queueSummary);
   const cancellable = !!onUnqueue && cancelQueueIndex !== undefined;
-  const requirementTarget = buildingNavigation?.findRequirementTarget(
+  const requirementTargets = buildingNavigation?.findRequirementTargets(
     lockReason,
     a.developedFrom,
     a.requiredBuildings,
-  );
+  ) ?? [];
   const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (event.button === 0) {
       if (actionable) onQueue?.(a.id, event.currentTarget);
@@ -902,7 +954,7 @@ function AvailCard({
         queueSummary,
         lockReason,
         cancellable,
-        requirementTarget,
+        requirementTargets,
         buildingNavigation?.navigateToBuilding,
       )}
       position="left"
@@ -969,11 +1021,11 @@ function AvailCard({
               <ResourceRow items={a.resourceCost} />
           </div>
           {locked && lockReason && (
-            requirementTarget && buildingNavigation ? (
+            requirementTargets.length > 0 && buildingNavigation ? (
               <div className="game-notice game-notice--warning game-notice--compact bld-node-reason">
-                <BuildingRequirementLink
+                <BuildingRequirementText
                   reason={lockReason}
-                  target={requirementTarget}
+                  targets={requirementTargets}
                   onNavigate={buildingNavigation.navigateToBuilding}
                   variant="card"
                 />
@@ -1542,22 +1594,32 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const queue = React.useMemo(() => data?.construction.queue ?? [], [data]);
   const queueSummaries = React.useMemo(() => buildQueueSummaries(queue), [queue]);
 
-  const scrollTutorialBuildingIntoView = React.useCallback((buildingId: string) => {
+  const bringBuildingIntoView = React.useCallback((buildingId: string) => {
     const element = findBuildingNode(buildingId);
     if (!element) return false;
 
     const viewport = findScrollViewport(element);
-    if (!viewport) return true;
-
-    const viewportRect = viewport.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-    const topGap = elementRect.top - viewportRect.top;
-    const bottomGap = elementRect.bottom - viewportRect.bottom;
-    if (topGap < 0) {
-      viewport.scrollTop += topGap - 12;
-    } else if (bottomGap > 0) {
-      viewport.scrollTop += bottomGap + 12;
+    if (viewport) {
+      const viewportRect = viewport.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      viewport.scrollTop += elementRect.top - viewportRect.top - 12;
     }
+
+    element.animate(
+      [
+        { opacity: 1 },
+        { opacity: 0.48, offset: 0.42 },
+        { opacity: 1 },
+      ],
+      { duration: 620, easing: 'ease-out' },
+    );
+    document.querySelectorAll('.bld-node--navigation-target').forEach(node => {
+      node.classList.remove('bld-node--navigation-target');
+    });
+    window.requestAnimationFrame(() => {
+      element.classList.add('bld-node--navigation-target');
+      window.setTimeout(() => element.classList.remove('bld-node--navigation-target'), 900);
+    });
     return true;
   }, []);
 
@@ -1643,47 +1705,79 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     }
 
     window.requestAnimationFrame(() => {
-      if (pendingBuildingTargetRef.current === target && scrollTutorialBuildingIntoView(target)) {
+      if (pendingBuildingTargetRef.current === target && bringBuildingIntoView(target)) {
         pendingBuildingTargetRef.current = null;
       }
     });
-  }, [activeTab, disabledCategories, nodes, scrollTutorialBuildingIntoView]);
+  }, [activeTab, bringBuildingIntoView, disabledCategories, nodes]);
 
-  const findRequirementTarget = React.useCallback((
+  const findRequirementTargets = React.useCallback((
     reason: string | undefined,
     developedFrom: string | undefined,
     requiredBuildings: BuildingRequirement[] | undefined,
-  ): BuildingLinkTarget | undefined => {
-    if (!reason) return undefined;
+  ): BuildingLinkMatch[] => {
+    if (!reason) return [];
 
     const candidates = new Map<string, BuildingLinkTarget>();
+    for (const node of nodes) {
+      const assetKey = nodeAssetKey(node);
+      const name = node.kind === 'built' ? node.b.name : node.a.name;
+      candidates.set(normaliseBuildingIdentifier(assetKey), { assetKey, name });
+    }
+
+    const normalisedReason = reason.toLocaleLowerCase();
+    const found: BuildingLinkMatch[] = [];
+    for (const candidate of candidates.values()) {
+      const normalisedName = candidate.name.toLocaleLowerCase();
+      let searchFrom = 0;
+      while (searchFrom < normalisedReason.length) {
+        const start = normalisedReason.indexOf(normalisedName, searchFrom);
+        if (start < 0) break;
+        found.push({ ...candidate, start, end: start + normalisedName.length });
+        searchFrom = start + normalisedName.length;
+      }
+    }
+
+    found.sort((left, right) => left.start - right.start || right.end - right.start - (left.end - left.start));
+    const matches: BuildingLinkMatch[] = [];
+    for (const match of found) {
+      const previous = matches[matches.length - 1];
+      if (!previous || match.start >= previous.end) {
+        matches.push(match);
+      }
+    }
+
+    if (matches.length > 0) return matches;
+
+    const fallbackTargets = new Map<string, BuildingLinkTarget>();
     if (developedFrom) {
       const predecessor = nodes.find(node => nodeMatchesBuildingTarget(node, developedFrom));
-      if (predecessor) {
-        candidates.set(developedFrom, {
+      if (predecessor?.kind === 'avail') {
+        fallbackTargets.set(normaliseBuildingIdentifier(developedFrom), {
           assetKey: developedFrom,
-          name: predecessor.kind === 'built' ? predecessor.b.name : predecessor.a.name,
+          name: predecessor.a.name,
         });
       }
     }
     for (const requirement of requiredBuildings ?? []) {
-      candidates.set(requirement.assetKey, {
-        assetKey: requirement.assetKey,
-        name: requirement.name,
-      });
+      const requirementNode = nodes.find(node => nodeMatchesBuildingTarget(node, requirement.assetKey));
+      if (!requirement.met && requirementNode) {
+        fallbackTargets.set(normaliseBuildingIdentifier(requirement.assetKey), {
+          assetKey: requirement.assetKey,
+          name: requirementNode.kind === 'built' ? requirementNode.b.name : requirementNode.a.name,
+        });
+      }
     }
 
-    const normalisedReason = reason.toLocaleLowerCase();
-    const matches = [...candidates.values()].filter(candidate => (
-      normalisedReason.includes(candidate.name.toLocaleLowerCase())
-    ));
-    return matches.length === 1 ? matches[0] : undefined;
+    if (fallbackTargets.size !== 1) return [];
+    const fallback = [...fallbackTargets.values()][0];
+    return [{ ...fallback, start: 0, end: reason.length }];
   }, [nodes]);
 
   const buildingNavigation = React.useMemo<BuildingNavigationContextValue>(() => ({
     navigateToBuilding,
-    findRequirementTarget,
-  }), [findRequirementTarget, navigateToBuilding]);
+    findRequirementTargets,
+  }), [findRequirementTargets, navigateToBuilding]);
 
   // Filter nodes to active category, then build per-chain trees.
   const chainTrees = React.useMemo(() => {
@@ -1717,12 +1811,12 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     if (!target) return;
 
     const frameId = window.requestAnimationFrame(() => {
-      if (pendingBuildingTargetRef.current === target && scrollTutorialBuildingIntoView(target)) {
+      if (pendingBuildingTargetRef.current === target && bringBuildingIntoView(target)) {
         pendingBuildingTargetRef.current = null;
       }
     });
     return () => window.cancelAnimationFrame(frameId);
-  }, [activeTab, chainTrees, scrollTutorialBuildingIntoView]);
+  }, [activeTab, bringBuildingIntoView, chainTrees]);
 
   const panelLockReason = data?.canBuild === false
     ? (data.cannotBuildReason || 'Construction is not available right now.')
