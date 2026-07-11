@@ -3,7 +3,6 @@ import Portrait from '../../common/portraits/Portrait';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
 import FactionRoundel from '../../common/entities/FactionRoundel';
 import FactionTooltip from '../../common/tooltips/FactionTooltip';
-import Badge from '../../common/data-display/stats/Badge';
 import GameButton from '../../common/buttons/GameButton';
 import InfoRow from '../../common/data-display/stats/InfoRow';
 import InteractionCard from '../../common/interactions/InteractionCard';
@@ -163,14 +162,18 @@ function buildFactionInteractionTooltip(
   };
 }
 
-function getStatusBadge(status: Faction['diplomaticStatus']): { text: string; colour: string } {
+function getStatusBadgeText(status: Faction['diplomaticStatus']): string {
   switch (status) {
-    case 'war': return { text: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.118.9'), colour: 'var(--red)' };
-    case 'ally': return { text: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.119.10'), colour: 'var(--green)' };
-    case 'rival': return { text: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.120.11'), colour: 'var(--orange)' };
-    case 'subject': return { text: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.121.12'), colour: 'var(--blue)' };
-    default: return { text: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.122.13'), colour: 'var(--text-muted)' };
+    case 'war': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.118.9');
+    case 'ally': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.119.10');
+    case 'rival': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.120.11');
+    case 'subject': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.121.12');
+    default: return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.122.13');
   }
+}
+
+function DiplomacyStatusBadge({ text, status }: { text: string; status: string }) {
+  return <span className={`diplo-status-badge diplo-status-badge--${status}`}>{text}</span>;
 }
 
 function getOpinionColor(opinion: number): string {
@@ -313,7 +316,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
   const diplomacyNavigation = sidebarNavigation.diplomacy;
   const canNavigateBack = (diplomacyNavigation?.back.length ?? 0) > 0;
   const canNavigateForward = (diplomacyNavigation?.forward.length ?? 0) > 0;
-  const status = getStatusBadge(faction.diplomaticStatus);
+  const statusText = getStatusBadgeText(faction.diplomaticStatus);
   const isProvinceSubject = faction.subjectSubtype === 'province';
   const hasBuildFocus = isProvinceSubject && Boolean(faction.buildFocus);
   const focusKey = focusKeyForFaction(faction);
@@ -623,12 +626,13 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             <span className="diplo-header-name">{faction.name}</span>
             {!faction.isPlayer && <div className="diplo-header-status-row">
               <img src={statusIcons[faction.diplomaticStatus] || statusIcons.neutral} alt="" className="diplo-header-status-icon" />
-              <Badge
-                text={status.text}
-                colour={status.colour}
-                className={`diplo-status-badge diplo-status-badge--${faction.diplomaticStatus}`}
-              />
-              {faction.isRebel && <Badge text={webUIText('Auto.ExtraAttr.ComponentsSidebarsDiplomacySidebar.317.1')} colour="var(--red)" />}
+              <DiplomacyStatusBadge text={statusText} status={faction.diplomaticStatus} />
+              {faction.isRebel && (
+                <DiplomacyStatusBadge
+                  text={webUIText('Auto.ExtraAttr.ComponentsSidebarsDiplomacySidebar.317.1')}
+                  status="war"
+                />
+              )}
             </div>}
             <div className="diplo-header-capital">
               <img src="/assets/icons/I_Capital.png" alt="" className="diplo-header-capital-icon" />
