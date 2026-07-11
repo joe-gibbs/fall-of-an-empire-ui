@@ -1369,6 +1369,20 @@
   border-left-color: var(--gold);
 }
 
+.world-glance-node:not(.is-selected):hover .glance--military::after,
+.world-glance-node:not(.is-selected).is-hovered .glance--military::after,
+.glance--military:not(.is-selected):hover::after {
+  top: 0.0909rem;
+  right: 0.0909rem;
+  bottom: 0.0909rem;
+  left: 0.0909rem;
+  border-width: 0.1364rem;
+  border-top-color: var(--gold-light);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
 .world-glance-node.is-selected .glance--military::before,
 .glance--military.is-selected::before {
   background-color: var(--gold);
