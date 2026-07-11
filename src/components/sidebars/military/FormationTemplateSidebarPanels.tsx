@@ -481,7 +481,7 @@ export function CombatTab({
             aria-label={webUIText('FormationTemplate.BattlePlan.NewRangedGroup')}
           >
             <img src="/assets/icons/I_Plus.png" alt="" className="tpl-battle-group-add-icon" />
-            <img src="/assets/icons/UnitTypes/Ranged.png" alt="" className="tpl-battle-group-add-icon" />
+            <img src="/assets/icons/UnitTypes/I_ArmyRanged.png" alt="" className="tpl-battle-group-add-icon" />
           </button>
         </Tooltip>
       </div>
@@ -490,7 +490,7 @@ export function CombatTab({
           <div className="tpl-empty tpl-empty--plain"><WebUIText textKey="FormationTemplate.BattlePlan.EmptyGroups" /></div>
         ) : draft.battleGroups.map((group, index) => {
           const groupCount = battleGroupUnitCount(group);
-          const roleIcon = group.role === 'ranged' ? '/assets/icons/UnitTypes/Ranged.png' : '/assets/icons/I_Swords.png';
+          const roleIcon = group.role === 'ranged' ? '/assets/icons/UnitTypes/I_ArmyRanged.png' : '/assets/icons/I_Swords.png';
           const roleTitle = group.role === 'ranged'
             ? webUIText('FormationTemplate.BattlePlan.RangedTitle')
             : webUIText('FormationTemplate.BattlePlan.MeleeTitle');

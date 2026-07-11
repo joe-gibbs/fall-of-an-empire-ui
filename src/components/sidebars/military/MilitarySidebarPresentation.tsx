@@ -9,22 +9,24 @@ import glossary from '../../../data/glossary';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 
 const unitTypeIcons: Record<string, string> = {
-  'Heavy Infantry': '/assets/icons/UnitTypes/Infantry.png',
-  'Medium Infantry': '/assets/icons/UnitTypes/Infantry.png',
-  'Light Infantry': '/assets/icons/UnitTypes/Infantry.png',
-  'Ranged': '/assets/icons/UnitTypes/Ranged.png',
-  'Cavalry': '/assets/icons/UnitTypes/Cavalry.png',
-  'Heavy Cavalry': '/assets/icons/UnitTypes/Cavalry.png',
-  'Siege': '/assets/icons/I_Siege.png',
-  'Warship': '/assets/icons/I_NaviesQuickButton.png',
-  'Light Warship': '/assets/icons/I_NaviesQuickButton.png',
-  'Transport': '/assets/icons/I_NaviesQuickButton.png',
-  'Naval Infantry': '/assets/icons/UnitTypes/Infantry.png',
-  'Scout Ships': '/assets/icons/I_NaviesQuickButton.png',
-  'Galleys': '/assets/icons/I_NaviesQuickButton.png',
-  'Triremes': '/assets/icons/I_NaviesQuickButton.png',
-  'Quinqueremes': '/assets/icons/I_NaviesQuickButton.png',
-  'Transports': '/assets/icons/I_NaviesQuickButton.png',
+  'Heavy Infantry': '/assets/icons/UnitTypes/I_ArmyInfantry.png',
+  'Medium Infantry': '/assets/icons/UnitTypes/I_ArmyInfantry.png',
+  'Light Infantry': '/assets/icons/UnitTypes/I_ArmyInfantry.png',
+  'Infantry': '/assets/icons/UnitTypes/I_ArmyInfantry.png',
+  'Ranged': '/assets/icons/UnitTypes/I_ArmyRanged.png',
+  'Cavalry': '/assets/icons/UnitTypes/I_ArmyCavalry.png',
+  'Heavy Cavalry': '/assets/icons/UnitTypes/I_ArmyCavalry.png',
+  'Siege': '/assets/icons/UnitTypes/I_ArmySiege.png',
+  'Special': '/assets/icons/UnitTypes/I_ArmySpecial.png',
+  'Warship': '/assets/icons/UnitTypes/I_NavyGalley.png',
+  'Light Warship': '/assets/icons/UnitTypes/I_NavyScout.png',
+  'Transport': '/assets/icons/UnitTypes/I_NavyTransport.png',
+  'Naval Infantry': '/assets/icons/UnitTypes/I_ArmyInfantry.png',
+  'Scout Ships': '/assets/icons/UnitTypes/I_NavyScout.png',
+  'Galleys': '/assets/icons/UnitTypes/I_NavyGalley.png',
+  'Triremes': '/assets/icons/UnitTypes/I_NavyTrireme.png',
+  'Quinqueremes': '/assets/icons/UnitTypes/I_NavyQuinquereme.png',
+  'Transports': '/assets/icons/UnitTypes/I_NavyTransport.png',
 };
 
 export const DELEGATION_ICON_OFF = '/assets/icons/Command/I_Command_Direct.png';
@@ -329,7 +331,7 @@ export function unitTypeIconPath(type: string): string {
 
   const lowerType = type.toLowerCase();
   const matchingKey = Object.keys(unitTypeIcons).find((key) => key.toLowerCase() === lowerType);
-  return matchingKey ? unitTypeIcons[matchingKey] : '/assets/icons/UnitTypes/Infantry.png';
+  return matchingKey ? unitTypeIcons[matchingKey] : '/assets/icons/UnitTypes/I_ArmyInfantry.png';
 }
 
 export function formatResourceAmount(value: number): string {
