@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { clearBridgeQueryCache, useBridgeQuery, useBridgeQueryState } from '../core/useBridgeQuery';
 import type { GetCharacterListResponse } from '../../bridge-types.generated.ts';
 import type { PortraitLayerData } from '../../data/types';
@@ -126,6 +127,7 @@ const familyTreeCache = new Map<string, FamilyTreeData>();
 const DEFAULT_FAMILY_TREE_KEY = '';
 export type FamilyTreeScope = 'lineage' | 'patronage';
 export type CharacterListScope = 'faction' | 'realm';
+export type CharacterListRequestScope = CharacterListScope | 'default';
 
 // The native character-list bridge emits compact arrays because realm-wide lists
 // are large enough that repeated JSON object keys become a measurable cost.
@@ -276,15 +278,23 @@ function cacheFamilyTree(value: Omit<FamilyTreeData, 'scope'> & { scope: string 
   return mapped;
 }
 
-export function useCharacterListBridge(factionId: string | null | undefined, fetch = true, scope: CharacterListScope = 'faction'): CharacterListData | null {
+export function useCharacterListBridge(factionId: string | null | undefined, fetch = true, scope: CharacterListRequestScope = 'faction'): CharacterListData | null {
   const requestedFactionId = factionId ?? '';
+  const resolvedDefaultScope = useRef<CharacterListScope | null>(null);
   const live = useBridgeQuery({
     action: 'game.get_character_list',
-    payload: fetch && requestedFactionId ? { factionId: requestedFactionId, scope } : null,
+    payload: fetch && requestedFactionId ? { factionId: requestedFactionId, scope: scope === 'default' ? '' : scope } : null,
     cacheResponseMs: 5000,
-    map: mapCharacterList,
+    map: data => {
+      const mapped = mapCharacterList(data);
+      if (scope === 'default') {
+        resolvedDefaultScope.current = mapped.scope;
+      }
+      return mapped;
+    },
     matchPush: data => (data.factionId === requestedFactionId || data.factionName === requestedFactionId)
-      && (data.scope === scope || (!data.scope && scope === 'faction')),
+      && (data.scope === (scope === 'default' ? resolvedDefaultScope.current : scope)
+        || (!data.scope && scope === 'faction')),
   });
 
   if (live) return live;
