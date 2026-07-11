@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { memo } from 'react';
 import type { GetWorldGlancesResponse } from '../../../bridge-types.generated.ts';
 import {
   handleWorldGlanceHover,
@@ -858,7 +859,19 @@ function frameHasMountedNode(
     || frameEntriesHaveMountedNode('battle', data, frame, nodeStates);
 }
 
-function GlanceNode({
+interface GlanceNodeProps {
+  kind: string;
+  id: string;
+  attached?: boolean;
+  nodeRef?: (kind: string, id: string, node: HTMLDivElement | null, attached?: boolean) => void;
+  onHoverChange?: (kind: string, id: string, hovered: boolean) => void;
+  renderContent: () => ReactNode;
+  contentRevision: unknown;
+  deferContent?: boolean;
+  hydrationEnabled?: boolean;
+}
+
+const GlanceNode = memo(function GlanceNode({
   kind,
   id,
   attached = false,
@@ -867,16 +880,7 @@ function GlanceNode({
   renderContent,
   deferContent = true,
   hydrationEnabled = true,
-}: {
-  kind: string;
-  id: string;
-  attached?: boolean;
-  nodeRef?: (kind: string, id: string, node: HTMLDivElement | null, attached?: boolean) => void;
-  onHoverChange?: (kind: string, id: string, hovered: boolean) => void;
-  renderContent: () => ReactNode;
-  deferContent?: boolean;
-  hydrationEnabled?: boolean;
-}) {
+}: GlanceNodeProps) {
   const lastRightMouseDownRef = useRef(0);
   const isHoveredTargetRef = useRef(false);
   const contentKey = `${kind}:${id}`;
@@ -967,7 +971,16 @@ function GlanceNode({
       </div>
     </div>
   );
-}
+}, (previous, next) => (
+  previous.kind === next.kind
+  && previous.id === next.id
+  && previous.attached === next.attached
+  && previous.nodeRef === next.nodeRef
+  && previous.onHoverChange === next.onHoverChange
+  && previous.contentRevision === next.contentRevision
+  && previous.deferContent === next.deferContent
+  && previous.hydrationEnabled === next.hydrationEnabled
+));
 
 function GlanceContentPlaceholder({ kind }: { kind: string }) {
   return <div className={`glance glance-placeholder glance-placeholder--${kind}`} aria-hidden="true" />;
@@ -977,7 +990,137 @@ interface WorldGlanceOverlayProps {
   visible?: boolean;
 }
 
-export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) {
+interface NativeGlanceHitTarget {
+  node: HTMLDivElement;
+  hovered: boolean;
+}
+
+const NATIVE_HIT_TARGET_SECTIONS: readonly WorldGlanceFrameSection[] = [
+  'settlement',
+  'port',
+  'convoy',
+  'army',
+  'navy',
+  'battle',
+];
+
+function nativeHitTargetSize(kind: WorldGlanceFrameSection, detailLevel: WorldGlanceDetailLevel | string | number) {
+  if (kind === 'settlement') {
+    const detail = detailClass(detailLevel);
+    return detail === 'detail-flag'
+      ? { width: 72, height: 72, offsetX: -36, offsetY: -36 }
+      : { width: 260, height: 82, offsetX: -38, offsetY: -40 };
+  }
+  if (kind === 'port' || kind === 'convoy') {
+    return { width: 72, height: 72, offsetX: -36, offsetY: -36 };
+  }
+  return { width: 96, height: 96, offsetX: -48, offsetY: -48 };
+}
+
+function NativeWorldGlanceInputOverlay({ visible = true }: WorldGlanceOverlayProps) {
+  const data = useWorldGlancesBridge(true);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const targetsRef = useRef<Map<string, NativeGlanceHitTarget>>(new Map());
+
+  useEffect(() => onWorldGlancesFrame((frame) => {
+    const overlay = overlayRef.current;
+    if (!overlay || !data || !visible) {
+      return;
+    }
+
+    const viewportWidth = worldGlanceFrameViewportWidth(frame);
+    const viewportHeight = worldGlanceFrameViewportHeight(frame);
+    const positionScaleX = viewportWidth > 0 ? overlay.clientWidth / viewportWidth : 1;
+    const positionScaleY = viewportHeight > 0 ? overlay.clientHeight / viewportHeight : 1;
+    const seen = new Set<string>();
+    const scratch = makeWorldGlanceFrameEntryScratch();
+
+    for (const kind of NATIVE_HIT_TARGET_SECTIONS) {
+      const count = worldGlanceFrameEntryCount(frame, kind);
+      for (let index = 0; index < count; index += 1) {
+        const entry = readWorldGlanceFrameEntry(frame, kind, index, scratch);
+        if (!entry || !frameEntryInteractive(entry)) {
+          continue;
+        }
+
+        const id = worldGlanceFrameEntryIdFromSnapshot(data, frame, kind, index);
+        if (!id) {
+          continue;
+        }
+
+        const key = nodeKey(kind, id);
+        seen.add(key);
+        let target = targetsRef.current.get(key);
+        if (!target) {
+          const node = document.createElement('div');
+          node.className = `native-world-glance-hit-target native-world-glance-hit-target--${kind}`;
+          node.dataset.kind = kind;
+          node.dataset.id = id;
+          const nextTarget: NativeGlanceHitTarget = { node, hovered: false };
+
+          node.addEventListener('mouseenter', () => {
+            if (nextTarget.hovered) return;
+            nextTarget.hovered = true;
+            handleWorldGlanceHover(kind, id, true);
+          });
+          node.addEventListener('mouseleave', () => {
+            if (!nextTarget.hovered) return;
+            nextTarget.hovered = false;
+            handleWorldGlanceHover(kind, id, false);
+          });
+          node.addEventListener('mousedown', (event) => {
+            if (event.button !== 0 && event.button !== 2) return;
+            event.preventDefault();
+            event.stopPropagation();
+            handleWorldGlanceInput(kind, id, event.button === 2 ? 'right' : 'left', event.shiftKey);
+          });
+          node.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          });
+
+          overlay.appendChild(node);
+          targetsRef.current.set(key, nextTarget);
+          target = nextTarget;
+        }
+
+        const size = nativeHitTargetSize(kind, entry.detailLevel);
+        const x = entry.screenX * positionScaleX + size.offsetX;
+        const y = entry.screenY * positionScaleY + size.offsetY;
+        const node = target.node;
+        node.style.display = 'block';
+        node.style.width = `${size.width}px`;
+        node.style.height = `${size.height}px`;
+        node.style.zIndex = String(localGlanceZIndex(kind, entry.zOrder));
+        node.style.transform = `translate3d(${formatPx(x)}, ${formatPx(y)}, 0) scale(${formatScale(entry.scale)})`;
+      }
+    }
+
+    for (const [key, target] of targetsRef.current) {
+      if (seen.has(key)) continue;
+      if (target.hovered) {
+        target.hovered = false;
+        const separator = key.indexOf(':');
+        handleWorldGlanceHover(key.slice(0, separator), key.slice(separator + 1), false);
+      }
+      target.node.style.display = 'none';
+    }
+  }), [data, visible]);
+
+  useEffect(() => () => {
+    for (const [key, target] of targetsRef.current) {
+      if (target.hovered) {
+        const separator = key.indexOf(':');
+        handleWorldGlanceHover(key.slice(0, separator), key.slice(separator + 1), false);
+      }
+    }
+    targetsRef.current.clear();
+  }, []);
+
+  return <div ref={overlayRef} className="native-world-glance-input-overlay" aria-hidden="true" />;
+}
+
+function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) {
   const data = useWorldGlancesBridge(true);
   const hasData = data !== null;
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -1311,6 +1454,7 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <SettlementGlance data={mapSettlement(entry)} />}
+            contentRevision={entry}
             hydrationEnabled={visible}
           />
         );
@@ -1325,6 +1469,7 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <PortGlance data={mapPort(entry)} />}
+            contentRevision={entry}
             hydrationEnabled={visible}
           />
         );
@@ -1339,6 +1484,7 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <ConvoyGlance data={mapConvoy(entry)} />}
+            contentRevision={entry}
             hydrationEnabled={visible}
           />
         );
@@ -1353,6 +1499,7 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <ArmyGlance data={mapMilitary(entry)} />}
+            contentRevision={entry}
             hydrationEnabled={visible}
           />
         );
@@ -1367,6 +1514,7 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <NavyGlance data={mapNavy(entry)} />}
+            contentRevision={entry}
             hydrationEnabled={visible}
           />
         );
@@ -1381,10 +1529,33 @@ export default function WorldGlanceOverlay({ visible = true }: WorldGlanceOverla
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <BattleGlance data={mapBattle(entry)} />}
+            contentRevision={entry}
             hydrationEnabled={visible}
           />
         );
       })}
     </div>
   );
+}
+
+export default function WorldGlanceOverlay(props: WorldGlanceOverlayProps) {
+  const [nativeCompositeEnabled, setNativeCompositeEnabled] = useState(() => (
+    typeof document !== 'undefined'
+    && document.documentElement.classList.contains('native-glance-composite')
+  ));
+
+  useEffect(() => {
+    const onNativeCompositeChanged = (event: Event) => {
+      setNativeCompositeEnabled(Boolean(
+        (event as CustomEvent<{ enabled?: boolean }>).detail?.enabled,
+      ));
+    };
+
+    window.addEventListener('bridge:ui.native_glance_composite', onNativeCompositeChanged);
+    return () => window.removeEventListener('bridge:ui.native_glance_composite', onNativeCompositeChanged);
+  }, []);
+
+  return nativeCompositeEnabled
+    ? <NativeWorldGlanceInputOverlay {...props} />
+    : <BrowserWorldGlanceOverlay {...props} />;
 }

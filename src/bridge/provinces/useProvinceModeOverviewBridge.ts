@@ -247,6 +247,5 @@ export function useProvinceModeOverviewBridge(enabled: boolean): ProvinceModeOve
     action: 'game.get_province_mode_overview',
     payload: enabled ? undefined : null,
     map: mapResponse,
-    refreshMs: enabled ? 1000 : 0,
   });
 }
