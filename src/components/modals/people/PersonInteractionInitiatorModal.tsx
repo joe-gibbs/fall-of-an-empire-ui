@@ -61,11 +61,6 @@ function chanceFillClass(percent: number): string {
   return 'cam-chance-bar-fill--low';
 }
 
-function startLabel(interaction: PersonInteractionView | null): string {
-  if (!interaction) return webUIText("Auto.Return.componentsmodalsPersonInteractionInitiatorModal.47.1");
-  return interaction.durationDays > 0 ? webUIText("Auto.Fix.ReturnTrue.componentsmodalsPersonInteractionInitiatorModal.48.1") : webUIText("Auto.Fix.ReturnFalse.componentsmodalsPersonInteractionInitiatorModal.48.1");
-}
-
 export default function PersonInteractionInitiatorModal({
   interaction,
   targetPersonId,
@@ -308,7 +303,7 @@ export default function PersonInteractionInitiatorModal({
               <CandidateFooter prefix="cam">
                 <GameButton variant="outline" onClick={handleView}>{webUIText('Common.View')}</GameButton>
                 <GameButton variant="outline" onClick={handleClose}>{webUIText('Auto.ComponentsModalsPersonInteractionInitiatorModal.223.6')}</GameButton>
-                <GameButton variant="burgundy" onClick={handleConfirm} disabled={!selected || submitting}>{startLabel(activeInteraction)}</GameButton>
+                <GameButton variant="burgundy" onClick={handleConfirm} disabled={!selected || submitting}>{activeInteraction.name}</GameButton>
               </CandidateFooter>
             </>
           ) : (
