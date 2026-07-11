@@ -1094,10 +1094,7 @@ function QueueItemCard({
   canReorder = false,
   dragging = false,
   dropPosition,
-  onHandlePointerDown,
-  onHandlePointerMove,
-  onHandlePointerUp,
-  onHandlePointerCancel,
+  onHandleMouseDown,
 }: {
   item: ConstructionQueueItem;
   order: number;
@@ -1106,10 +1103,7 @@ function QueueItemCard({
   canReorder?: boolean;
   dragging?: boolean;
   dropPosition?: QueueDropPosition;
-  onHandlePointerDown?: (event: React.PointerEvent<HTMLElement>, item: ConstructionQueueItem) => void;
-  onHandlePointerMove?: (event: React.PointerEvent<HTMLElement>) => void;
-  onHandlePointerUp?: (event: React.PointerEvent<HTMLElement>) => void;
-  onHandlePointerCancel?: (event: React.PointerEvent<HTMLElement>) => void;
+  onHandleMouseDown?: (event: React.MouseEvent<HTMLElement>, item: ConstructionQueueItem) => void;
 }) {
   const buildProgressPercent = queueBuildProgressPercent(item);
   const showResourceCost = item.state === 'awaiting_resources' && item.resourceCost.length > 0;
@@ -1131,11 +1125,7 @@ function QueueItemCard({
         <span
           className="bld-queue-card-drag-handle"
           aria-hidden="true"
-          onPointerDown={event => onHandlePointerDown?.(event, item)}
-          onPointerMove={onHandlePointerMove}
-          onPointerUp={onHandlePointerUp}
-          onPointerCancel={onHandlePointerCancel}
-          onLostPointerCapture={onHandlePointerCancel}
+          onMouseDown={event => onHandleMouseDown?.(event, item)}
         />
       )}
       <div className="bld-queue-card-art">
@@ -1223,7 +1213,6 @@ function ConstructionSection({
   reordering?: boolean;
 }) {
   const draggedItemRef = React.useRef<ConstructionQueueItem | null>(null);
-  const pointerIdRef = React.useRef<number | null>(null);
   const dragOriginRef = React.useRef<{ x: number; y: number } | null>(null);
   const dragStartedRef = React.useRef(false);
   const sourceCardRef = React.useRef<HTMLDivElement | null>(null);
@@ -1268,7 +1257,6 @@ function ConstructionSection({
   const clearDrag = React.useCallback(() => {
     removeDragCopy();
     draggedItemRef.current = null;
-    pointerIdRef.current = null;
     dragOriginRef.current = null;
     dragStartedRef.current = false;
     sourceCardRef.current = null;
@@ -1277,24 +1265,23 @@ function ConstructionSection({
     setDropTarget(null);
   }, [removeDragCopy]);
 
-  const handlePointerDown = React.useCallback((event: React.PointerEvent<HTMLElement>, item: ConstructionQueueItem) => {
+  const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLElement>, item: ConstructionQueueItem) => {
     if (event.button !== 0 || item.queueIndex === undefined) return;
 
     event.preventDefault();
     event.stopPropagation();
     draggedItemRef.current = item;
-    pointerIdRef.current = event.pointerId;
     dragOriginRef.current = { x: event.clientX, y: event.clientY };
     dragStartedRef.current = false;
     sourceCardRef.current = event.currentTarget.closest<HTMLDivElement>('.bld-queue-card');
-    event.currentTarget.setPointerCapture(event.pointerId);
   }, []);
 
-  const handlePointerMove = React.useCallback((event: React.PointerEvent<HTMLElement>) => {
+  const handleMouseMove = React.useCallback((event: MouseEvent) => {
     const source = draggedItemRef.current;
-    if (!source || pointerIdRef.current !== event.pointerId) return;
+    if (!source) return;
 
     event.preventDefault();
+    event.stopPropagation();
     const origin = dragOriginRef.current;
     if (!dragStartedRef.current && origin) {
       const distance = Math.hypot(event.clientX - origin.x, event.clientY - origin.y);
@@ -1327,30 +1314,38 @@ function ConstructionSection({
     ));
   }, [createDragCopy, items, moveDragCopy]);
 
-  const handlePointerUp = React.useCallback((event: React.PointerEvent<HTMLElement>) => {
+  const handleMouseUp = React.useCallback((event: MouseEvent) => {
     const source = draggedItemRef.current;
     const target = dropTargetRef.current;
-    if (!source || pointerIdRef.current !== event.pointerId) return;
+    if (!source) return;
 
     event.preventDefault();
     event.stopPropagation();
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-
+    let targetQueueIndex: number | undefined;
     if (dragStartedRef.current && source.queueIndex !== undefined && target?.item.queueIndex !== undefined) {
-      const targetQueueIndex = finalQueueIndex(source.queueIndex, target.item.queueIndex, target.position);
-      if (targetQueueIndex !== source.queueIndex) {
-        onReorder?.(source.queueIndex, targetQueueIndex);
+      const finalIndex = finalQueueIndex(source.queueIndex, target.item.queueIndex, target.position);
+      if (finalIndex !== source.queueIndex) {
+        targetQueueIndex = finalIndex;
       }
     }
+
     clearDrag();
+    if (targetQueueIndex !== undefined && source.queueIndex !== undefined) {
+      onReorder?.(source.queueIndex, targetQueueIndex);
+    }
   }, [clearDrag, onReorder]);
 
-  const handlePointerCancel = React.useCallback((event: React.PointerEvent<HTMLElement>) => {
-    if (pointerIdRef.current !== event.pointerId) return;
-    clearDrag();
-  }, [clearDrag]);
+  React.useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('blur', clearDrag);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('blur', clearDrag);
+      removeDragCopy();
+    };
+  }, [clearDrag, handleMouseMove, handleMouseUp, removeDragCopy]);
 
   if (items.length === 0) return null;
 
@@ -1373,10 +1368,7 @@ function ConstructionSection({
             canReorder={canReorder}
             dragging={draggedItemId === item.id}
             dropPosition={dropTarget?.itemId === item.id ? dropTarget.position : undefined}
-            onHandlePointerDown={handlePointerDown}
-            onHandlePointerMove={handlePointerMove}
-            onHandlePointerUp={handlePointerUp}
-            onHandlePointerCancel={handlePointerCancel}
+            onHandleMouseDown={handleMouseDown}
           />
         ))}
       </div>
