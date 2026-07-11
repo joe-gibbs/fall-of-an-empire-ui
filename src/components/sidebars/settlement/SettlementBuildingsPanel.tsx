@@ -203,6 +203,15 @@ function cancellationQueueIndex(summary?: BuildingQueueSummary): number | undefi
   return displayQueueItem(summary)?.queueIndex;
 }
 
+function lockReasonIsShownByRequirements(
+  targets: BuildingLinkMatch[],
+  requiredBuildings?: BuildingRequirement[],
+): boolean {
+  return targets.some(target => requiredBuildings?.some(requirement => (
+    !requirement.met && buildingIdentifierMatches(requirement.assetKey, target.assetKey)
+  )));
+}
+
 function queueBuildProgressPercent(item: ConstructionQueueItem): number | undefined {
   if (item.remainingDays === undefined || item.durationDays <= 0) return undefined;
   return Math.max(0, Math.min(100, (1 - item.remainingDays / item.durationDays) * 100));
@@ -757,7 +766,7 @@ function BuiltCard({
   const panelLockReason = React.useContext(PanelLockContext);
   const maxed = b.maxLevel !== undefined && b.level >= b.maxLevel;
   const intrinsicLocked = b.nextBuildState !== undefined && b.nextBuildState.state !== 'visible';
-  const lockReason = queueSummary
+  const rawLockReason = queueSummary
     ? undefined
     : panelLockReason || (intrinsicLocked ? b.nextBuildState?.reason : undefined);
   const actionable = !!onQueue && !panelLockReason && b.nextBuildState?.state === 'visible';
@@ -816,11 +825,15 @@ function BuiltCard({
       onAction={handleManagementAction}
     />
   ) : undefined;
-  const requirementTargets = buildingNavigation?.findRequirementTargets(
-    lockReason,
+  const rawRequirementTargets = buildingNavigation?.findRequirementTargets(
+    rawLockReason,
     b.developedFrom,
     b.requiredBuildings,
   ) ?? [];
+  const lockReason = !panelLockReason && lockReasonIsShownByRequirements(rawRequirementTargets, b.requiredBuildings)
+    ? undefined
+    : rawLockReason;
+  const requirementTargets = lockReason ? rawRequirementTargets : [];
 
   return (
     <Tooltip
@@ -923,18 +936,22 @@ function AvailCard({
   const intrinsicLocked = a.buildState.state !== 'visible';
   const locked = intrinsicLocked || !!panelLockReason;
   // Panel-wide locks (siege/occupation) take precedence over per-building reasons.
-  const lockReason = queueSummary
+  const rawLockReason = queueSummary
     ? undefined
     : panelLockReason || (intrinsicLocked ? a.buildState.reason : undefined);
   const actionable = !!onQueue && !locked;
   const queuedToLevel = queueSummary?.highestToLevel;
   const cancelQueueIndex = cancellationQueueIndex(queueSummary);
   const cancellable = !!onUnqueue && cancelQueueIndex !== undefined;
-  const requirementTargets = buildingNavigation?.findRequirementTargets(
-    lockReason,
+  const rawRequirementTargets = buildingNavigation?.findRequirementTargets(
+    rawLockReason,
     a.developedFrom,
     a.requiredBuildings,
   ) ?? [];
+  const lockReason = !panelLockReason && lockReasonIsShownByRequirements(rawRequirementTargets, a.requiredBuildings)
+    ? undefined
+    : rawLockReason;
+  const requirementTargets = lockReason ? rawRequirementTargets : [];
   const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (event.button === 0) {
       if (actionable) onQueue?.(a.id, event.currentTarget);
