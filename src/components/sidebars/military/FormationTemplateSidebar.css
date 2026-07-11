@@ -102,21 +102,13 @@
   min-height: 1.35rem;
 }
 
-.tpl-header-name-btn {
-  display: flex;
-  align-items: center;
-  max-width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  color: var(--text-bright);
-  background-color: transparent;
-  border-width: 0;
-  border-style: none;
-  cursor: pointer;
+.tpl-header-name-row > .tooltip-wrapper {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
 }
 
-.tpl-header-name-btn > * + * {
+.tpl-header-name-row > * + * {
   margin-left: 0.35rem;
 }
 
@@ -134,15 +126,30 @@
 }
 
 .tpl-header-edit-pencil {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.12s linear;
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
-.tpl-header-name-btn:hover .tpl-header-edit-pencil {
-  opacity: 0.9;
+.tpl-header-rename-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
+  background-image: linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%);
+  background-repeat: repeat;
+  background-size: auto;
+  background-color: rgba(13, 18, 24, 0.58);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.25);
+  cursor: pointer;
+}
+
+.tpl-header-rename-btn:hover {
+  background-color: rgba(201, 168, 76, 0.12);
+  border-color: var(--gold);
 }
 
 .tpl-header-name-input {

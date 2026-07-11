@@ -508,10 +508,14 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
                   maxLength={64}
                 />
               ) : (
-                <button type="button" className="tpl-header-name-btn" onMouseDown={() => setRenaming(true)}>
+                <>
                   <span className="tpl-header-name">{draft.name || webUIText("Auto.Fix.ExprFallback.componentssidebarsFormationTemplateSidebar.1097.1")}</span>
-                  <img src="/assets/icons/I_Rename.png" alt="" className="tpl-header-edit-pencil" />
-                </button>
+                  <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12'), body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.587.13') }} position="bottom" delay={150}>
+                    <button type="button" className="tpl-header-rename-btn" onClick={() => setRenaming(true)}>
+                      <img src="/assets/icons/I_Rename.png" alt="" className="tpl-header-edit-pencil" />
+                    </button>
+                  </Tooltip>
+                </>
               )}
             </div>
             <div className="tpl-header-status-row">
