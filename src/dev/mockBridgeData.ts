@@ -4183,6 +4183,7 @@ function battleFormationDetail(
     minimumAttackRange,
     collisionRadius: Math.min(25, Math.max(4, 1 + Math.sqrt(maxStrength / 100))),
     attackChargePercent: unitType === 'cavalry' ? 0.78 : 0.32,
+    attackSequence: 0,
     hasManualTarget: false,
     isRouting,
     isWithdrawing: false,

@@ -265,6 +265,7 @@ function normaliseBattleFormationFrame(payload: unknown) {
     rotation: bridgeNumber(bridgeProperty(payload, 'rotation')),
     zIndex: bridgeNumber(bridgeProperty(payload, 'zIndex')),
     attackChargePercent: bridgeNumber(bridgeProperty(payload, 'attackChargePercent')),
+    attackSequence: bridgeNumber(bridgeProperty(payload, 'attackSequence')),
     hasManualTarget: bridgeBoolean(bridgeProperty(payload, 'hasManualTarget')),
     isRouting: bridgeBoolean(bridgeProperty(payload, 'isRouting')),
     isWithdrawing: bridgeBoolean(bridgeProperty(payload, 'isWithdrawing')),
@@ -287,7 +288,7 @@ const NATIVE_BATTLE_PARTICIPANT_STRING_STRIDE = 11;
 const NATIVE_BATTLE_PARTICIPANT_NUMBER_STRIDE = 6;
 const NATIVE_BATTLE_SIDE_NUMBER_STRIDE = 6;
 const NATIVE_BATTLE_FORMATION_STRING_STRIDE = 19;
-const NATIVE_BATTLE_FORMATION_DETAIL_NUMBER_STRIDE = 15;
+const NATIVE_BATTLE_FORMATION_DETAIL_NUMBER_STRIDE = 16;
 const NATIVE_BATTLE_ACTION_STRING_STRIDE = 5;
 const NATIVE_BATTLE_ACTION_NUMBER_STRIDE = 7;
 const NATIVE_BATTLE_OBSTACLE_STRING_STRIDE = 2;
@@ -532,6 +533,7 @@ export function nativeBattleDataPayload(
       isRouting: (flags & NATIVE_BATTLE_FORMATION_ROUTING_FLAG) !== 0,
       isWithdrawing: (flags & NATIVE_BATTLE_FORMATION_WITHDRAWING_FLAG) !== 0,
       agentCount: formationNumbers[numberOffset + 14] ?? 0,
+      attackSequence: formationNumbers[numberOffset + 15] ?? 0,
       targetFormationId: formationStrings[stringOffset + 15] ?? '',
       targetFormationName: formationStrings[stringOffset + 16] ?? '',
       activeActionId: formationStrings[stringOffset + 17] ?? '',

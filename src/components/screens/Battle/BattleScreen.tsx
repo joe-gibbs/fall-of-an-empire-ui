@@ -134,9 +134,9 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
     battleId: '',
     strengths: new Map(),
   });
-  const previousAttackChargesRef = useRef<{ battleId: string; charges: Map<string, number> }>({
+  const previousAttackSequencesRef = useRef<{ battleId: string; sequences: Map<string, number> }>({
     battleId: '',
-    charges: new Map(),
+    sequences: new Map(),
   });
   const damageIndexRef = useRef(0);
   const attackIndexRef = useRef(0);
@@ -212,18 +212,18 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
   useEffect(() => {
     if (!battle?.found) {
       previousStrengthsRef.current = { battleId: activeBattleId, strengths: new Map() };
-      previousAttackChargesRef.current = { battleId: activeBattleId, charges: new Map() };
+      previousAttackSequencesRef.current = { battleId: activeBattleId, sequences: new Map() };
       return;
     }
 
     const previous = previousStrengthsRef.current.battleId === activeBattleId
       ? previousStrengthsRef.current.strengths
       : new Map<string, number>();
-    const previousCharges = previousAttackChargesRef.current.battleId === activeBattleId
-      ? previousAttackChargesRef.current.charges
+    const previousSequences = previousAttackSequencesRef.current.battleId === activeBattleId
+      ? previousAttackSequencesRef.current.sequences
       : new Map<string, number>();
     const nextStrengths = new Map<string, number>();
-    const nextCharges = new Map<string, number>();
+    const nextSequences = new Map<string, number>();
     const nextIndicators: BattleDamageIndicator[] = [];
     const nextAttacks: BattleAttackEffect[] = [];
     const formationsById = new Map(battle.formations.map(formation => [formation.id, formation]));
@@ -247,12 +247,12 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
         }
       }
 
-      const priorCharge = previousCharges.get(formation.id);
-      const currentCharge = clamp(formation.attackChargePercent ?? 0, 0, 1);
-      nextCharges.set(formation.id, currentCharge);
+      const priorSequence = previousSequences.get(formation.id);
+      const currentSequence = Math.max(0, Math.trunc(formation.attackSequence ?? 0));
+      nextSequences.set(formation.id, currentSequence);
 
       const kind = attackKind(formation);
-      if (typeof priorCharge === 'number' && priorCharge > 0.72 && currentCharge < 0.25) {
+      if (typeof priorSequence === 'number' && currentSequence > priorSequence) {
         const target = formation.targetFormationId ? formationsById.get(formation.targetFormationId) : null;
         if (target) {
           attackIndexRef.current += 1;
@@ -272,7 +272,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
     }
 
     previousStrengthsRef.current = { battleId: activeBattleId, strengths: nextStrengths };
-    previousAttackChargesRef.current = { battleId: activeBattleId, charges: nextCharges };
+    previousAttackSequencesRef.current = { battleId: activeBattleId, sequences: nextSequences };
 
     if (nextIndicators.length > 0) {
       const addTimer = window.setTimeout(() => {

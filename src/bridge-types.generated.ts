@@ -227,6 +227,7 @@ export interface BattleFormationDetail {
   minimumAttackRange: number;
   collisionRadius: number;
   attackChargePercent: number;
+  attackSequence: number;
   hasManualTarget: boolean;
   isRouting: boolean;
   isWithdrawing: boolean;
@@ -253,6 +254,7 @@ export interface BattleFormationFrame {
   rotation: number;
   zIndex: number;
   attackChargePercent: number;
+  attackSequence: number;
   hasManualTarget: boolean;
   isRouting: boolean;
   isWithdrawing: boolean;
