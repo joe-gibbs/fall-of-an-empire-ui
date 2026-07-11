@@ -131,6 +131,7 @@ const TopBar: React.FC<TopBarProps> = ({
     >
       <span className="topbar-portrait-surface">
         <Portrait
+          key={`${saveSerial}:${playerCharacterId ?? ''}:${playerFaction?.rulerPortrait ?? ''}`}
           personId={playerCharacterId ?? undefined}
           name={playerCharacterName}
           src={playerFaction?.rulerPortrait}

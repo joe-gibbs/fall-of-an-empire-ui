@@ -350,7 +350,12 @@ function AvailableTreatyRow({ option, onAdd }: { option: TreatyOption; onAdd: ()
 
   return (
     <Tooltip content={{ title: option.label, body: option.description, lines }} position="bottom" delay={200}>
-      <button type="button" className={`pns-term-row pns-term-row--${side}`} onMouseDown={onAdd}>
+      <button
+        type="button"
+        className={`pns-term-row pns-term-row--${side}`}
+        data-tutorial-target={option.type === 'military_alliance' ? 'MilitaryAllianceOption' : undefined}
+        onMouseDown={onAdd}
+      >
         <img src={proposalIcon(option.type)} alt="" className="pns-term-icon" />
         <span className="pns-term-copy">
           <span className="pns-term-name">{option.label}</span>

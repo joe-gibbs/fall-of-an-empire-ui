@@ -1075,6 +1075,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             <PersonTooltip characterId={faction.assignedDiplomat.id} position="bottom" delay={200}>
               <div
                 className="diplo-agent-section diplo-agent-section--clickable diplo-agent-section--filled"
+                data-tutorial-target="DiplomatPortrait"
                 onMouseDown={() => openAgentSelect(faction.id, 'diplomat')}
                 role="button"
               >
@@ -1107,6 +1108,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.623.45'), body: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.623.46'), lines: [{ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.623.47'), get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.623.1"); }, valueColor: 'var(--gold)' }] }} position="bottom" delay={200}>
               <div
                 className="diplo-agent-section diplo-agent-section--clickable"
+                data-tutorial-target="DiplomatPortrait"
                 onMouseDown={() => openAgentSelect(faction.id, 'diplomat')}
                 role="button"
               >
