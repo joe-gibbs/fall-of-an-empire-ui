@@ -77,6 +77,7 @@ import {
 } from './MilitarySidebarPresentation';
 
 import { webUIText } from '../../../localization/WebUITextContext';
+import { RANK_META } from '../../screens/Military/forces';
 interface MilitarySidebarProps {
   army: Army;
   onClose: () => void;
@@ -360,7 +361,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     ...(army.commandRank !== 'Dux' ? [{
       label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.468.2'),
       icon: '/assets/icons/I_Promote.png',
-      description: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.470.3'),
+      description: army.commandRank === 'Legatus' ? RANK_META.Praefectus.desc : RANK_META.Dux.desc,
       disabled: !isPlayerControlled,
       onClick: () => {
         promoteMilitaryCommandBridge(army.id).catch(acknowledgeBridgeFailure);
@@ -611,7 +612,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   );
 
   const renderSubordinates = () => {
-    if (!canHaveSubordinates && subordinateRows.length === 0 && !army.parentCommand) return null;
+    if (!canHaveSubordinates && subordinateRows.length === 0 && !army.parentCommand && commandActions.length === 0) return null;
 
     const collapsible = subordinateRows.length > 3;
     const visibleSubs = collapsible && !subsExpanded ? subordinateRows.slice(0, 3) : subordinateRows;
