@@ -158,8 +158,8 @@ function shouldBatchBridgeAction(action: string): boolean {
 
 export function cancelPendingGameplayBridgeRequests(): void {
   bridgeRequestGeneration += 1;
-  const cancelled = bridgeBatchQueue.filter(request => isGameplayBridgeAction(request.action));
-  bridgeBatchQueue = bridgeBatchQueue.filter(request => !isGameplayBridgeAction(request.action));
+  const cancelled = bridgeBatchQueue.filter(request => isWorldGameplayBridgeAction(request.action));
+  bridgeBatchQueue = bridgeBatchQueue.filter(request => !isWorldGameplayBridgeAction(request.action));
   const error = new Error('Bridge call cancelled due to app mode change');
   cancelled.forEach(request => request.fail(error, 'cancelled'));
 }
@@ -332,8 +332,8 @@ function enqueueBridgeRequest(request: QueuedBridgeRequest): void {
 }
 
 async function flushBridgeBatch(): Promise<void> {
-  const batch = bridgeBatchQueue.filter(request => request.generation === bridgeRequestGeneration || !isGameplayBridgeAction(request.action));
-  const cancelled = bridgeBatchQueue.filter(request => request.generation !== bridgeRequestGeneration && isGameplayBridgeAction(request.action));
+  const batch = bridgeBatchQueue.filter(request => request.generation === bridgeRequestGeneration || !isWorldGameplayBridgeAction(request.action));
+  const cancelled = bridgeBatchQueue.filter(request => request.generation !== bridgeRequestGeneration && isWorldGameplayBridgeAction(request.action));
   bridgeBatchQueue = [];
   bridgeBatchScheduled = false;
   if (cancelled.length > 0) {
@@ -378,7 +378,7 @@ export async function callRuntimeBridge(request: Record<string, unknown>, transi
     const engine = await waitForruntimeEngine();
     const requestId = bridgeRequestId();
     const requestObject = { ...request, requestId };
-    if (generation !== bridgeRequestGeneration && isGameplayBridgeAction(action)) {
+    if (generation !== bridgeRequestGeneration && isWorldGameplayBridgeAction(action)) {
       throw new Error('Bridge call cancelled due to app mode change');
     }
 
