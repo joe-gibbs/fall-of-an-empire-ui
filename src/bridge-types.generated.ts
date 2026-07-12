@@ -3519,6 +3519,7 @@ export interface GetSettlementBuildingsRequest {
 
 export interface SettlementBuildingCost {
   name: string;
+  displayName: string;
   amount: number;
 }
 

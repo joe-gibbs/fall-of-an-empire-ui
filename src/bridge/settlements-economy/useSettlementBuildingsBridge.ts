@@ -105,6 +105,7 @@ function toQueueState(raw: string): ConstructionQueueState | undefined {
 function mapCost(cost: RawCost): BuildingResourceCost {
   return {
     name: cost.name,
+    displayName: cost.displayName,
     amount: cost.amount,
     icon: resourceIcon(cost.name),
   };

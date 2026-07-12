@@ -283,7 +283,7 @@ function queueTooltipLines(summary?: BuildingQueueSummary): TooltipLine[] {
 
   for (const missing of item.missingResources ?? []) {
     lines.push({
-      label: missing.name,
+      label: missing.displayName || missing.name,
       get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.223.1", { Value1: n(missing.amount) }); },
       valueIcon: missing.icon,
       valueColor: 'var(--red)',
@@ -314,7 +314,7 @@ function addResourceCostLines(lines: TooltipLine[], resourceCost?: BuildingResou
   lines.push({ label: webUIText('Common.Resources'), isHeader: true });
   for (const cost of resourceCost) {
     lines.push({
-      label: cost.name,
+      label: cost.displayName || cost.name,
       labelIcon: cost.icon,
       value: n(cost.amount),
       valueColor: 'var(--gold-light)',
@@ -507,7 +507,7 @@ function ResourceRow({
       {items.map(r => (
         <Tooltip
           key={r.name}
-          content={{ title: r.name, get body() { return webUIText(amountTooltipKey, { Amount: n(r.amount) }); } }}
+          content={{ title: r.displayName || r.name, get body() { return webUIText(amountTooltipKey, { Amount: n(r.amount) }); } }}
           position="bottom"
           delay={150}
         >
