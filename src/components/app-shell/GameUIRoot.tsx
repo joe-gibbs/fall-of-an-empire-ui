@@ -456,6 +456,7 @@ export default function GameUIRoot() {
         onResolve={tutorialSpotlight.resolve}
         onDismiss={tutorialSpotlight.dismiss}
         onNavigate={tutorialSpotlight.navigate}
+        onLinkClick={handleEventLinkClick}
       />
 
       <Profiler id="screen:pause-menu" onRender={recordUIPerfReactRender}>

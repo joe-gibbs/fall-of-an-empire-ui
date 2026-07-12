@@ -10,6 +10,7 @@ interface TutorialSpotlightOverlayProps {
   onResolve: (eventId: string) => void;
   onDismiss: (eventId: string) => void;
   onNavigate: (direction: -1 | 1) => void;
+  onLinkClick: (type: string, id: string) => void;
 }
 
 interface SpotlightRect {
@@ -275,6 +276,7 @@ export default function TutorialSpotlightOverlay({
   onResolve,
   onDismiss,
   onNavigate,
+  onLinkClick,
 }: TutorialSpotlightOverlayProps) {
   const [targetRect, setTargetRect] = useState<SpotlightRect | null>(null);
   const [targetEventId, setTargetEventId] = useState('');
@@ -394,6 +396,7 @@ export default function TutorialSpotlightOverlay({
           {bodyParagraphs.map((paragraph, index) => (
             <p key={`${index}:${paragraph}`}>
               {renderRichText(paragraph.replace(/\n/g, '<br/>'), {
+                onLinkClick,
                 blockBullets: true,
                 transformText: (chunk, key) => renderEventTextChunk(chunk, `tutorial-spotlight-${String(index)}-${key}`),
               })}
