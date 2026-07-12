@@ -22,9 +22,11 @@ import type {
   SettlementConstruction,
 } from '../../data/types';
 import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { useGameState } from '../../context/GameContext';
 
 export interface SettlementBuildingsState {
   settlementId: string;
+  snapshotDay: number;
   buildings: Building[];
   availableBuildings: AvailableBuilding[];
   hasPort: boolean;
@@ -206,6 +208,7 @@ function mapConstruction(construction: RawConstruction): SettlementConstruction 
 function mapResponse(data: GetSettlementBuildingsResponse): SettlementBuildingsState {
   return {
     settlementId: data.settlementId,
+    snapshotDay: data.snapshotDay,
     buildings: data.buildings.map(mapBuiltBuilding),
     availableBuildings: data.availableBuildings.map(mapAvailableBuilding),
     hasPort: data.hasPort,
@@ -216,25 +219,72 @@ function mapResponse(data: GetSettlementBuildingsResponse): SettlementBuildingsS
 }
 
 export function useSettlementBuildingsBridge(settlementId: string | null): SettlementBuildingsState | null {
-  return useBridgeQuery({
+  const { gameDay } = useGameState();
+  const state = useBridgeQuery({
     action: 'game.get_settlement_buildings',
     payload: settlementId ? { settlementId } : null,
     map: mapResponse,
     matchPush: (data) => data.settlementId === settlementId,
+    mergePush: mergeResponse,
   });
+  return advanceConstructionProgress(state, gameDay);
 }
 
 export function useSettlementBuildingsBridgeState(settlementId: string | null): SettlementBuildingsBridgeState {
+  const { gameDay } = useGameState();
   const query = useBridgeQueryState({
     action: 'game.get_settlement_buildings',
     payload: settlementId ? { settlementId } : null,
     map: mapResponse,
     matchPush: (data) => data.settlementId === settlementId,
+    mergePush: mergeResponse,
   });
 
   return {
-    data: query.value,
+    data: advanceConstructionProgress(query.value, gameDay),
     pending: query.pending,
+  };
+}
+
+function mergeResponse(
+  current: SettlementBuildingsState | null,
+  data: GetSettlementBuildingsResponse,
+): SettlementBuildingsState | null {
+  if (!data.conditionOnly) {
+    return mapResponse(data);
+  }
+  if (!current || current.settlementId !== data.settlementId) {
+    return current;
+  }
+
+  const conditions = new Map(data.buildings.map(building => [building.id, building.condition]));
+  return {
+    ...current,
+    buildings: current.buildings.map(building => conditions.has(building.id)
+      ? { ...building, condition: conditions.get(building.id)! }
+      : building),
+  };
+}
+
+function advanceConstructionProgress(
+  state: SettlementBuildingsState | null,
+  gameDay: number,
+): SettlementBuildingsState | null {
+  if (!state || gameDay <= state.snapshotDay) {
+    return state;
+  }
+
+  const elapsedDays = gameDay - state.snapshotDay;
+  return {
+    ...state,
+    construction: {
+      ...state.construction,
+      queue: state.construction.queue.map(item => (
+        item.state === 'building' && item.remainingDays !== undefined
+          ? { ...item, remainingDays: Math.max(0, item.remainingDays - elapsedDays) }
+          : item
+      )),
+    },
   };
 }
 

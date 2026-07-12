@@ -79,6 +79,8 @@ interface UseBridgeQueryOptions<A extends BridgeActionName, T> {
    * settlement) doesn't overwrite our current data.
    */
   matchPush?: (data: ResponseOf<A>) => boolean;
+  /** Merge a partial pushed response into the current mapped value. */
+  mergePush?: (current: T | null, data: ResponseOf<A>) => T | null;
 }
 
 export interface BridgeQueryState<T> {
@@ -96,7 +98,7 @@ export interface BridgeQueryState<T> {
 export function useBridgeQueryState<A extends BridgeActionName, T>(
   options: UseBridgeQueryOptions<A, T>,
 ): BridgeQueryState<T> {
-  const { action, payload, map, matchPush, fetch = true } = options;
+  const { action, payload, map, matchPush, mergePush, fetch = true } = options;
   const cacheResponse = options.cacheResponse === true;
   const cacheResponseMs = options.cacheResponseMs ?? 0;
   const refreshMs = options.refreshMs ?? 0;
@@ -107,8 +109,10 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
   // Hold map / matchPush in refs so callers don't have to memoise them.
   const mapRef = useRef(map);
   const matchRef = useRef(matchPush);
+  const mergePushRef = useRef(mergePush);
   mapRef.current = map;
   matchRef.current = matchPush;
+  mergePushRef.current = mergePush;
 
   // Serialise payload so a fresh-but-equal object doesn't refire the effect.
   const payloadKey = payload === undefined ? '__void__' : JSON.stringify(payload);
@@ -132,17 +136,37 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
       if (shouldCacheResponse) {
         writeCompletedQuery(requestKey, raw, completedTtlMs);
       }
-      setData({ requestKey, value: mapRef.current(raw) });
+      setData((current) => {
+        const currentValue = current?.requestKey === requestKey ? current.value : null;
+        return {
+          requestKey,
+          value: mergePushRef.current
+            ? mergePushRef.current(currentValue, raw)
+            : mapRef.current(raw),
+        };
+      });
     }) as never);
 
     const cached = getCachedBridgeEvent(action);
     if (cached !== undefined && (!matchRef.current || matchRef.current(cached as ResponseOf<A>))) {
-      setData({ requestKey, value: mapRef.current(cached as ResponseOf<A>) });
+      const cachedResponse = cached as ResponseOf<A>;
+      setData({
+        requestKey,
+        value: mergePushRef.current
+          ? mergePushRef.current(null, cachedResponse)
+          : mapRef.current(cachedResponse),
+      });
     }
 
     const completed = shouldCacheResponse ? readCompletedQuery(requestKey) : undefined;
     if (completed !== undefined && (!matchRef.current || matchRef.current(completed as ResponseOf<A>))) {
-      setData({ requestKey, value: mapRef.current(completed as ResponseOf<A>) });
+      const completedResponse = completed as ResponseOf<A>;
+      setData({
+        requestKey,
+        value: mergePushRef.current
+          ? mergePushRef.current(null, completedResponse)
+          : mapRef.current(completedResponse),
+      });
     }
 
     // The variadic typing on bridgeCall can't be satisfied generically here;

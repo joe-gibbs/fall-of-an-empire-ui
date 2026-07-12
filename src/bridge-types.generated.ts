@@ -1867,6 +1867,7 @@ export interface EncyclopediaBuildingDTO {
 
 export interface EncyclopediaResourceCostDTO {
   name: string;
+  displayName: string;
   amount: number;
 }
 
@@ -3608,6 +3609,8 @@ export interface SettlementConstructionData {
 
 export interface GetSettlementBuildingsResponse {
   settlementId: string;
+  snapshotDay: number;
+  conditionOnly: boolean;
   buildings: SettlementBuiltBuildingEntry[];
   availableBuildings: SettlementAvailableBuildingEntry[];
   hasPort: boolean;
@@ -4356,8 +4359,19 @@ export interface WorldBattleStrengthSnapshot {
 }
 
 export interface WorldGlancesCatalogueDelta {
+  snapshotRevision: number;
+  upsertedSettlements: WorldSettlementGlance[];
+  upsertedPorts: WorldPortGlance[];
+  upsertedArmies: WorldMilitaryGlance[];
+  upsertedNavies: WorldMilitaryGlance[];
+  upsertedBattles: WorldBattleGlance[];
+  upsertedConvoys: WorldConvoyGlance[];
+  removedSettlementIds: string[];
+  removedPortIds: string[];
   removedArmyIds: string[];
   removedNavyIds: string[];
+  removedBattleIds: string[];
+  removedConvoyIds: string[];
 }
 
 export interface GetWorldGlanceTooltipRequest {
@@ -4530,6 +4544,7 @@ export interface SaveGameEntryDto {
 
 export interface ListSavesResponse {
   saves: SaveGameEntryDto[];
+  loadError: string;
 }
 
 export interface LoadingScreenResponse {
