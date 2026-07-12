@@ -208,6 +208,7 @@ const MainMenu: React.FC = () => {
         const res = await bridgeCall('game.list_saves');
         if (!cancelled) {
           applyList(res.saves ?? []);
+          setMenuError(res.loadError || null);
         }
       } catch {
         if (!cancelled) {

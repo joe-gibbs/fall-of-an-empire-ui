@@ -5671,7 +5671,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           { id: 'mock-balance-mod', name: 'Mock Balance Pack', version: '0.2', author: 'Local', description: 'Second fixture entry for mod list spacing.', loadOrder: 1, enabled: false, pakMounted: false, hasScripts: true, canUploadToWorkshop: true },
         ], steamWorkshopAvailable: true, workshopCategories: ['Campaign', 'Map', 'Gameplay', 'Faction', 'Units', 'Buildings', 'UI', 'Total Conversion', 'Translation'] } satisfies BridgeResponse<'game.list_mods'>;
       case 'game.list_saves':
-        return { saves: [
+        return { loadError: '', saves: [
           { slotName: 'mock-autosave', displayName: 'Mock Autosave', playerCharacterName: 'Valen Arcastus', playerFactionName: 'Rephsian Empire', gameDateString: '17 Summer 742', timestamp: '2026-05-01T00:00:00Z', isAutosave: true, factionId: MOCK_IDS.playerFaction, factionColour: PLAYER_COLOUR, factionSecondaryColour: PLAYER_SECONDARY, factionEmblem: 'Rephsian_1', cultureGroup: 'Rephsian', characterGender: 'male', characterPortraitIndex: 1 },
           { slotName: 'mock-manual-save', displayName: 'Before the Western Pass', playerCharacterName: 'Cassian Arcastus', playerFactionName: 'Rephsian Empire', gameDateString: '3 Autumn 742', timestamp: '2026-04-28T18:30:00Z', isAutosave: false, factionId: MOCK_IDS.playerFaction, factionColour: PLAYER_COLOUR, factionSecondaryColour: PLAYER_SECONDARY, factionEmblem: 'Rephsian_1', cultureGroup: 'Rephsian', characterGender: 'male', characterPortraitIndex: 2 },
         ] } satisfies BridgeResponse<'game.list_saves'>;
