@@ -346,8 +346,8 @@ export default function TutorialSpotlightOverlay({
       }, 0);
     };
 
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('mousedown', handler, true);
+    return () => document.removeEventListener('mousedown', handler, true);
   }, [eventId, onResolve, spotlight]);
 
   const panels = useMemo<PanelSide[]>(() => (targetRect ? ['top', 'bottom', 'left', 'right'] : ['full']), [targetRect]);

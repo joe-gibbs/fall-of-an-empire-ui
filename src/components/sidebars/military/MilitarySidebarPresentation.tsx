@@ -131,6 +131,7 @@ export interface MilitaryAction {
   label: string;
   icon: string;
   description: string;
+  tutorialTarget?: string;
   tooltip?: TooltipContent;
   onClick?: () => void;
   isActive?: boolean;

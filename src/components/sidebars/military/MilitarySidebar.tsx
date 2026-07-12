@@ -362,6 +362,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.468.2'),
       icon: '/assets/icons/I_Promote.png',
       description: army.commandRank === 'Legatus' ? RANK_META.Praefectus.desc : RANK_META.Dux.desc,
+      tutorialTarget: 'PromoteMilitaryCommandButton',
       disabled: !isPlayerControlled,
       onClick: () => {
         promoteMilitaryCommandBridge(army.id).catch(acknowledgeBridgeFailure);
@@ -596,6 +597,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     <Tooltip key={action.label} content={action.tooltip ?? { title: action.label, body: action.description }} position="bottom" delay={150}>
       <button
         type="button"
+        data-tutorial-target={action.tutorialTarget}
         className={`mil-order-command${action.isActive ? ' is-active' : ''}${action.disabled ? ' is-disabled' : ''}${action.tone === 'danger' ? ' mil-order-command--danger' : ''}`}
         aria-label={action.label}
         aria-pressed={action.isActive || undefined}

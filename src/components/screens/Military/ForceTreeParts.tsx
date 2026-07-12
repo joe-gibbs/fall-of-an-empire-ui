@@ -166,6 +166,7 @@ export function NodeCard({
     <>
       <Tooltip content={buildCardTooltip(force, allForces)} position="right" delay={250} variant="sidebar">
         <div
+          data-tutorial-target={force.isPlayerControlled && force.rank === 'Legatus' ? 'PromotableMilitaryCommand' : undefined}
           className={[
             'chart-node',
             `chart-node--${force.rank.toLowerCase()}`,
