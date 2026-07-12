@@ -24,6 +24,7 @@ from PIL import Image
 from pathlib import Path
 import hashlib
 import json
+import os
 import re
 import shutil
 import sys
@@ -36,6 +37,7 @@ WEB_ASSETS = WEB_DIR / 'assets'
 CACHE_DIR = ROOT / '.image-cache'
 CACHE_ASSETS = CACHE_DIR / 'assets'
 CACHE_MANIFEST = CACHE_DIR / 'manifest.json'
+SOURCE_TREE_STATE = CACHE_DIR / 'source-tree-state.json'
 
 WEBP_DEFAULT_QUALITY = 88
 WEBP_MEDIUM_QUALITY = 92
@@ -463,6 +465,39 @@ def save_cache_manifest(images: dict[str, dict]) -> None:
     tmp_path = CACHE_MANIFEST.with_suffix('.tmp')
     tmp_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding='utf-8')
     tmp_path.replace(CACHE_MANIFEST)
+
+
+def source_tree_state() -> dict[str, list[int]]:
+    """Return a cheap metadata fingerprint for every public source file."""
+    state: dict[str, list[int]] = {}
+    for dirpath, _, filenames in os.walk(SOURCE_PUBLIC):
+        for filename in filenames:
+            filepath = Path(dirpath) / filename
+            stat = filepath.stat()
+            rel = filepath.relative_to(SOURCE_PUBLIC).as_posix()
+            state[rel] = [stat.st_size, stat.st_mtime_ns]
+    return state
+
+
+def load_source_tree_state() -> dict[str, list[int]]:
+    if not SOURCE_TREE_STATE.exists():
+        return {}
+    try:
+        data = json.loads(SOURCE_TREE_STATE.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if data.get('version') != CACHE_VERSION:
+        return {}
+    files = data.get('files')
+    return files if isinstance(files, dict) else {}
+
+
+def save_source_tree_state(state: dict[str, list[int]]) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    payload = {'version': CACHE_VERSION, 'files': state}
+    tmp_path = SOURCE_TREE_STATE.with_suffix('.tmp')
+    tmp_path.write_text(json.dumps(payload, separators=(',', ':'), sort_keys=True), encoding='utf-8')
+    tmp_path.replace(SOURCE_TREE_STATE)
 
 
 def cache_output_path(rel_key: str) -> Path:
@@ -1074,6 +1109,14 @@ def main():
     else:
         WEB_ASSETS.mkdir(parents=True, exist_ok=True)
 
+    current_tree_state = source_tree_state() if not dry_run and not only_paths else {}
+    if current_tree_state and current_tree_state == load_source_tree_state():
+        print('Public assets unchanged; using published image outputs')
+        print(f'\n--- Rewriting references in {WEB_DIR.relative_to(ROOT.parent)}/ ---')
+        nf = rewrite_built_refs()
+        print(f'Updated {nf} files')
+        return
+
     copied_public = 0 if only_paths else copy_public_files(dry_run)
     copied_static = 0 if only_paths else copy_static_assets(dry_run)
 
@@ -1166,6 +1209,8 @@ def main():
         print(f'\n--- Verifying published assets ---')
         checked = verify_published_assets(only_paths)
         print(f'Verified {checked} assets')
+        if not only_paths:
+            save_source_tree_state(current_tree_state)
 
 
 if __name__ == '__main__':
