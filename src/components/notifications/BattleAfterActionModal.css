@@ -329,6 +329,74 @@
   overflow-wrap: break-word;
 }
 
+.battle-aar-side-commanders {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.14);
+}
+
+.battle-aar-commander {
+  min-width: 10rem;
+  display: flex;
+  align-items: center;
+  margin-right: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.battle-aar-commander-portrait.portrait {
+  flex-shrink: 0;
+}
+
+.battle-aar-commander-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.65rem;
+}
+
+.battle-aar-side-commander-label {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.battle-aar-commander-name {
+  min-width: 0;
+  margin-top: 0.12rem;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.92rem;
+  line-height: 1.15;
+  overflow-wrap: break-word;
+}
+
+.battle-aar-commander-name--clickable {
+  padding: 0;
+  background-color: transparent;
+  background-image: none;
+  border-width: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.battle-aar-commander-name--clickable:hover {
+  color: var(--gold-light);
+  text-decoration-line: underline;
+  text-decoration-color: rgba(201, 168, 76, 0.4);
+  text-underline-offset: 0.18rem;
+}
+
+.battle-aar-commander--vacant {
+  opacity: 0.72;
+}
+
 .battle-aar-strength-bar.painted-bar-track {
   height: 0.5rem;
   margin-top: 0.7rem;
@@ -463,23 +531,58 @@
   overflow-wrap: break-word;
 }
 
-.battle-aar-damage-row {
+.battle-aar-unit-card {
+  position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  min-height: 3rem;
-  padding: 0.45rem 0;
-  border-top-width: 0.077rem;
-  border-top-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.14);
+  min-height: 7.1rem;
+  padding: 0.6rem;
+  background-color: rgba(18, 25, 31, 0.52);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.18);
 }
 
-.battle-aar-damage-row:first-child {
-  border-top-width: 0;
+.battle-aar-unit-card + .battle-aar-unit-card {
+  margin-top: 0.45rem;
 }
 
-.battle-aar-damage-roundel.faction-roundel {
+.battle-aar-unit-card--destroyed {
+  border-color: rgba(170, 68, 58, 0.42);
+}
+
+.battle-aar-unit-card-portrait-frame {
+  position: relative;
+  width: 4.2rem;
+  height: 5.4rem;
   flex-shrink: 0;
-  margin-right: 0.6rem;
+  margin-right: 0.85rem;
+  overflow: visible;
+  background-color: #11171c;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.32);
+}
+
+.battle-aar-unit-card-portrait {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+}
+
+.battle-aar-unit-card--destroyed .battle-aar-unit-card-portrait {
+  opacity: 0.58;
+  filter: grayscale(0.7);
+}
+
+.battle-aar-unit-card-roundel.faction-roundel {
+  position: absolute;
+  left: 0.2rem;
+  bottom: 0.2rem;
+  z-index: 1;
 }
 
 .battle-aar-damage-main {
@@ -537,29 +640,64 @@
   overflow-wrap: break-word;
 }
 
-.battle-aar-damage-stats {
-  width: 9.2rem;
-  flex-shrink: 0;
+.battle-aar-unit-card-status {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.7rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.battle-aar-unit-card--destroyed .battle-aar-unit-card-status {
+  color: var(--red-light);
+}
+
+.battle-aar-unit-card-stats {
+  width: 100%;
+  display: flex;
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.12);
+}
+
+.battle-aar-unit-card-stat {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  margin-left: 0.75rem;
+  align-self: flex-start;
+  padding-top: 0.15rem;
+  padding-right: 4.75rem;
 }
 
-.battle-aar-damage-loss {
-  color: var(--red-light);
+.battle-aar-unit-card-stat + .battle-aar-unit-card-stat {
+  margin-left: 0.45rem;
+}
+
+.battle-aar-unit-card-stat-value {
+  color: var(--text-bright);
   font-family: var(--font-header);
-  font-size: 1rem;
+  font-size: 0.92rem;
   line-height: 1.1;
 }
 
-.battle-aar-damage-remaining,
-.battle-aar-damage-percent {
-  margin-top: 0.12rem;
+.battle-aar-unit-card-stat-value--loss {
+  color: var(--red-light);
+}
+
+.battle-aar-unit-card-stat-label {
+  margin-top: 0.1rem;
   color: var(--text-muted);
-  font-size: 0.74rem;
+  font-size: 0.62rem;
+  font-weight: 700;
   line-height: 1.1;
-  text-align: right;
+  text-transform: uppercase;
 }
 
 .battle-aar-footer {
@@ -596,7 +734,7 @@
     margin-top: 0.75rem;
   }
 
-  .battle-aar-damage-row {
+  .battle-aar-unit-card {
     align-items: flex-start;
   }
 
@@ -609,7 +747,4 @@
     margin-top: 0.75rem;
   }
 
-  .battle-aar-damage-stats {
-    width: 6.8rem;
-  }
 }

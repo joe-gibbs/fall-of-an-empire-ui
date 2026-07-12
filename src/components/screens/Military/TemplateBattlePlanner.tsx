@@ -64,7 +64,7 @@ export function TemplateBattlePlanner({
             aria-label={webUIText('FormationTemplate.BattlePlan.NewRangedGroup')}
           >
             <img src={ADD_ICON} alt="" className="chart-template-battle-add-plus" draggable={false} />
-            <img src="/assets/icons/UnitTypes/Ranged.png" alt="" className="chart-template-battle-add-icon" draggable={false} />
+            <img src="/assets/icons/UnitTypes/I_ArmyRanged.png" alt="" className="chart-template-battle-add-icon" draggable={false} />
           </button>
         </Tooltip>
       </div>
@@ -74,7 +74,7 @@ export function TemplateBattlePlanner({
           <div className="chart-template-empty-inline"><WebUIText textKey="FormationTemplate.BattlePlan.EmptyGroups" /></div>
         ) : draft.battleGroups.map((group, index) => {
           const groupCount = battleGroupUnitCount(group);
-          const roleIcon = group.role === 'ranged' ? '/assets/icons/UnitTypes/Ranged.png' : SWORDS_ICON;
+          const roleIcon = group.role === 'ranged' ? '/assets/icons/UnitTypes/I_ArmyRanged.png' : SWORDS_ICON;
           const roleTitle = group.role === 'ranged'
             ? webUIText('FormationTemplate.BattlePlan.RangedTitle')
             : webUIText('FormationTemplate.BattlePlan.MeleeTitle');

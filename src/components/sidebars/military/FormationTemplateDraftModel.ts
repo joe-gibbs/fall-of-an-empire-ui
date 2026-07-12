@@ -85,7 +85,7 @@ const UNIT_TYPE_ICONS: Record<string, string> = {
   quinquereme: '/assets/icons/UnitTypes/I_NavyQuinquereme.png',
   navy: '/assets/icons/I_NaviesQuickButton.png',
   naval: '/assets/icons/I_NaviesQuickButton.png',
-  other: '/assets/icons/I_Swords.png',
+  other: '/assets/icons/UnitTypes/I_ArmySpecial.png',
 };
 
 const UNIT_PORTRAITS: Record<string, string> = {

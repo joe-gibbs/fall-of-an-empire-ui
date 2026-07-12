@@ -53,7 +53,7 @@ export interface BattleVisualAgent {
   key: string;
   formationId: string;
   side: string;
-  typeKey: 'infantry' | 'ranged' | 'cavalry' | 'siege';
+  typeKey: 'infantry' | 'ranged' | 'cavalry' | 'siege' | 'special';
   colour: string;
   formationName: string;
   unitTypeLabel: string;
@@ -178,11 +178,12 @@ export function readableCounterColour(formation: BattleFormationLive, playerRefe
   return '#76623f';
 }
 
-export function unitTypeKey(formation: BattleFormationLive): 'infantry' | 'ranged' | 'cavalry' | 'siege' {
+export function unitTypeKey(formation: BattleFormationLive): 'infantry' | 'ranged' | 'cavalry' | 'siege' | 'special' {
   const type = formation.unitType.toLowerCase();
   if (type.indexOf('cavalry') >= 0 || type.indexOf('horse') >= 0) return 'cavalry';
   if (type.indexOf('archer') >= 0 || type.indexOf('ranged') >= 0 || type.indexOf('skirmish') >= 0) return 'ranged';
   if (type.indexOf('siege') >= 0 || type.indexOf('ballist') >= 0 || type.indexOf('catapult') >= 0) return 'siege';
+  if (type.indexOf('special') >= 0) return 'special';
   return 'infantry';
 }
 
@@ -281,7 +282,7 @@ export function buildBattleVisualAgents(
   return agents;
 }
 
-export function formationAgentFootprint(formation: BattleFormationLive, typeKey: 'infantry' | 'ranged' | 'cavalry' | 'siege'): { width: number; height: number } {
+export function formationAgentFootprint(formation: BattleFormationLive, typeKey: 'infantry' | 'ranged' | 'cavalry' | 'siege' | 'special'): { width: number; height: number } {
   const count = Math.max(1, formation.agentCount || battleFrameAgentCount(formation) || Math.ceil(Math.max(formation.maxStrength, 1) / 180));
   const widthBias = typeKey === 'cavalry' ? 1.8 : typeKey === 'ranged' || typeKey === 'siege' ? 1.35 : 1.55;
   const columns = clamp(Math.ceil(Math.sqrt(count) * widthBias), 1, count);
@@ -298,10 +299,11 @@ export function formationAgentFootprint(formation: BattleFormationLive, typeKey:
 
 export function unitIcon(formation: BattleFormationLive): string {
   const key = unitTypeKey(formation);
-  if (key === 'cavalry') return '/assets/icons/UnitTypes/I_Cavalry.png';
-  if (key === 'ranged') return '/assets/icons/UnitTypes/I_Ranged.png';
-  if (key === 'siege') return '/assets/icons/UnitTypes/I_Siege.png';
-  return '/assets/icons/UnitTypes/I_Infantry.png';
+  if (key === 'cavalry') return '/assets/icons/UnitTypes/I_ArmyCavalry.png';
+  if (key === 'ranged') return '/assets/icons/UnitTypes/I_ArmyRanged.png';
+  if (key === 'siege') return '/assets/icons/UnitTypes/I_ArmySiege.png';
+  if (key === 'special') return '/assets/icons/UnitTypes/I_ArmySpecial.png';
+  return '/assets/icons/UnitTypes/I_ArmyInfantry.png';
 }
 
 export function actionIcon(action: BattleActionOption): string {

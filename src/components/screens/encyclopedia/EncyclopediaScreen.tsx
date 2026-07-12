@@ -71,10 +71,11 @@ const ARMY_TYPE_ORDER = ['infantry', 'cavalry', 'ranged', 'siege', 'special'];
 const NAVY_TYPE_ORDER = ['scout', 'transport', 'galley', 'trireme', 'quinquereme'];
 
 const UNIT_TYPE_ICONS: Record<string, string> = {
-  infantry: '/assets/icons/UnitTypes/Infantry.png',
-  cavalry: '/assets/icons/UnitTypes/Cavalry.png',
-  ranged: '/assets/icons/UnitTypes/Ranged.png',
-  siege: '/assets/icons/UnitTypes/I_Siege.png',
+  infantry: '/assets/icons/UnitTypes/I_ArmyInfantry.png',
+  cavalry: '/assets/icons/UnitTypes/I_ArmyCavalry.png',
+  ranged: '/assets/icons/UnitTypes/I_ArmyRanged.png',
+  siege: '/assets/icons/UnitTypes/I_ArmySiege.png',
+  special: '/assets/icons/UnitTypes/I_ArmySpecial.png',
 };
 
 const DEFAULT_ARMY_TOOLTIP_PORTRAIT = '/assets/ui-shadowed/ArmySidebar/Property_1_T_Army_Background.png';
@@ -148,7 +149,7 @@ function unitTooltipData(unit: EncyclopediaUnitDTO): UnitTooltipData {
       ? FoaeCefUIAssetPath(unit.portrait)
       : FoaeCefUIAssetPath(unit.isNaval ? DEFAULT_NAVY_TOOLTIP_PORTRAIT : DEFAULT_ARMY_TOOLTIP_PORTRAIT),
     typeLabel: unit.unitTypeLabel || unit.unitType,
-    typeIcon: unitTypeIcon(unit.unitType) ?? FoaeCefUIAssetPath(unit.isNaval ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/I_ArmiesQuickButton.png'),
+    typeIcon: unitTypeIcon(unit.unitType) ?? FoaeCefUIAssetPath(unit.isNaval ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/UnitTypes/I_ArmySpecial.png'),
     tier: unit.tier,
     culture: unit.cultureName || undefined,
     cultureIcon: unit.cultureIcon ? FoaeCefUIAssetPath(unit.cultureIcon) : undefined,

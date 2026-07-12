@@ -81,10 +81,11 @@ type UnitCatalogueFilterKey = 'type' | 'culture';
 const CATALOGUE_ALL_FILTER = '__all__';
 
 const TEMPLATE_UNIT_TYPE_ICONS: Record<string, string> = {
-  infantry: '/assets/icons/UnitTypes/Infantry.png',
-  cavalry: '/assets/icons/UnitTypes/Cavalry.png',
-  ranged: '/assets/icons/UnitTypes/Ranged.png',
-  siege: '/assets/icons/I_Siege.png',
+  infantry: '/assets/icons/UnitTypes/I_ArmyInfantry.png',
+  cavalry: '/assets/icons/UnitTypes/I_ArmyCavalry.png',
+  ranged: '/assets/icons/UnitTypes/I_ArmyRanged.png',
+  siege: '/assets/icons/UnitTypes/I_ArmySiege.png',
+  special: '/assets/icons/UnitTypes/I_ArmySpecial.png',
   galley: '/assets/icons/I_NaviesQuickButton.png',
   trireme: '/assets/icons/I_NaviesQuickButton.png',
   quinquereme: '/assets/icons/I_NaviesQuickButton.png',
@@ -107,7 +108,7 @@ function templateUnitTypeLabel(unit: FormationTemplateUnitEntry): string {
 }
 
 function templateUnitTypeIcon(unit: FormationTemplateUnitEntry): string {
-  return TEMPLATE_UNIT_TYPE_ICONS[unit.type] ?? TEMPLATE_UNIT_TYPE_ICONS[unit.category] ?? SWORDS_ICON;
+  return TEMPLATE_UNIT_TYPE_ICONS[unit.type] ?? TEMPLATE_UNIT_TYPE_ICONS[unit.category] ?? '/assets/icons/UnitTypes/I_ArmySpecial.png';
 }
 
 export function templateUnitPortrait(unit: FormationTemplateUnitEntry): string {

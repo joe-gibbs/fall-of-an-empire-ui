@@ -11,6 +11,7 @@ import { formatNumber, formatPercent } from '../../utils/numberFormat';
 import { renderRichText } from '../../utils/richText';
 import CloseButton from '../common/buttons/CloseButton';
 import FactionRoundel from '../common/entities/FactionRoundel';
+import Portrait from '../common/portraits/Portrait';
 import GameButton from '../common/buttons/GameButton';
 import PaintedBar from '../common/data-display/bars/PaintedBar';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
@@ -26,6 +27,7 @@ interface BattleAfterActionModalProps {
 }
 
 const damageGroupKey = (unit: BattleAfterActionUnitDamagePayload): string => {
+  if (unit.unitId) return unit.unitId;
   const factionKey = unit.factionId || unit.factionName || 'unknown';
   const unitKey = unit.unitName || unit.iconPath || 'unit';
   return `${unit.side}|${factionKey}|${unitKey}|${unit.iconPath}`;
@@ -54,6 +56,8 @@ const combineUnitDamage = (
     existing.initialStrength += unit.initialStrength;
     existing.remainingStrength += unit.remainingStrength;
     existing.losses += unit.losses;
+    existing.kills += unit.kills;
+    existing.damageDealt += unit.damageDealt;
 
     const sources = sourceNames.get(key);
     if (sources && unit.militaryName) {
@@ -70,7 +74,7 @@ const combineUnitDamage = (
       lossPercent:
         unit.initialStrength > 0 ? Math.round((unit.losses / unit.initialStrength) * 100) : 0,
     }))
-    .sort((a, b) => b.losses - a.losses);
+    .sort((a, b) => b.damageDealt - a.damageDealt || b.kills - a.kills || b.losses - a.losses);
 };
 
 const renderBattleAARFlowText = (
@@ -148,6 +152,64 @@ function SideReport({
       <div className="battle-aar-side-names">
         {renderBattleAARRichText(side.names, onLinkClick)}
       </div>
+      <div className="battle-aar-side-commanders">
+        {(side.commanderDetails || []).length > 0 ? side.commanderDetails.map(commander => {
+          const handleCommanderClick = onLinkClick ? () => onLinkClick('character', commander.id) : undefined;
+          return (
+            <div key={commander.id} className="battle-aar-commander">
+              <Portrait
+                personId={commander.id}
+                resolvePerson={false}
+                layers={commander.portraitLayers}
+                name={commander.name}
+                size="row"
+                borderTier="silver"
+                isAlive={commander.isAlive}
+                isImprisoned={commander.isImprisoned}
+                showBadge={false}
+                onClick={handleCommanderClick}
+                className="battle-aar-commander-portrait"
+              />
+              <div className="battle-aar-commander-copy">
+                <span className="battle-aar-side-commander-label">
+                  <WebUIText textKey="Military.Selection.Tooltip.Commander" />
+                </span>
+                {handleCommanderClick ? (
+                  <button
+                    type="button"
+                    className="battle-aar-commander-name battle-aar-commander-name--clickable"
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handleCommanderClick();
+                    }}
+                  >
+                    {commander.name}
+                  </button>
+                ) : (
+                  <span className="battle-aar-commander-name">{commander.name}</span>
+                )}
+              </div>
+            </div>
+          );
+        }) : (
+          <div className="battle-aar-commander battle-aar-commander--vacant">
+            <Portrait
+              name={webUIText('Common.NoCommander')}
+              size="row"
+              borderTier="bronze"
+              showBadge={false}
+              className="battle-aar-commander-portrait"
+            />
+            <div className="battle-aar-commander-copy">
+              <span className="battle-aar-side-commander-label">
+                <WebUIText textKey="Military.Selection.Tooltip.Commander" />
+              </span>
+              <span className="battle-aar-commander-name">{webUIText('Common.NoCommander')}</span>
+            </div>
+          </div>
+        )}
+      </div>
       <PaintedBar className="battle-aar-strength-bar" percent={remainingPercent} color={side.won ? 'gold' : 'red'} />
       <div className="battle-aar-stats">
         <div className="battle-aar-stat">
@@ -196,33 +258,54 @@ function DamageList({
       {units.map((unit, index) => {
         const factionId = unit.factionId || undefined;
         const handleFactionClick = factionId && onLinkClick ? () => onLinkClick('faction', factionId) : undefined;
+        const unitPortrait = FoaeCefUIAssetPath(unit.portraitPath) ?? unit.portraitPath;
 
         return (
-          <div key={`${unit.side}-${unit.factionId}-${unit.unitName}-${index}`} className="battle-aar-damage-row">
-            <FactionRoundel
-              factionId={factionId}
-              colour={unit.factionColour || undefined}
-              secondaryColour={unit.factionSecondaryColour || undefined}
-              emblem={unit.factionEmblem || undefined}
-              cultureGroup={unit.factionCultureGroup || undefined}
-              name={unit.factionName || unit.militaryName}
-              size="sm"
-              className="battle-aar-damage-roundel"
-              onClick={handleFactionClick}
-            />
+          <div key={unit.unitId || `${unit.side}-${unit.factionId}-${unit.unitName}-${index}`} className={`battle-aar-unit-card${unit.destroyed ? ' battle-aar-unit-card--destroyed' : ''}`}>
+            <div className="battle-aar-unit-card-portrait-frame">
+              {unitPortrait ? (
+                <img
+                  src={unitPortrait}
+                  alt=""
+                  className="battle-aar-unit-card-portrait"
+                  draggable={false}
+                />
+              ) : null}
+              <FactionRoundel
+                factionId={factionId}
+                colour={unit.factionColour || undefined}
+                secondaryColour={unit.factionSecondaryColour || undefined}
+                emblem={unit.factionEmblem || undefined}
+                cultureGroup={unit.factionCultureGroup || undefined}
+                name={unit.factionName || unit.militaryName}
+                size="sm"
+                className="battle-aar-unit-card-roundel"
+                onClick={handleFactionClick}
+              />
+            </div>
             <div className="battle-aar-damage-main">
               <div className="battle-aar-damage-title-row">
                 <span className="battle-aar-damage-name">{unit.unitName}</span>
-                <img src={unit.iconPath || "/assets/icons/I_Swords.png"} alt="" className="battle-aar-damage-unit-icon" draggable={false} />
+                <img src={unit.iconPath || "/assets/icons/UnitTypes/I_ArmySpecial.png"} alt="" className="battle-aar-damage-unit-icon" draggable={false} />
               </div>
               <span className="battle-aar-damage-source">{unit.militaryName || unit.factionName}</span>
             </div>
-            <div className="battle-aar-damage-stats">
-              <span className="battle-aar-damage-loss">-{formatNumber(unit.losses)}</span>
-              <span className="battle-aar-damage-remaining">
-                {unit.destroyed ? webUIText("Auto.Fix.ExprTrue.componentsnotificationsBattleAfterActionModal.127.1") : webUIText("Auto.Fix.ExprFalse.componentsnotificationsBattleAfterActionModal.127.1", { Value1: formatNumber(unit.remainingStrength) })}
-              </span>
-              <span className="battle-aar-damage-percent">{formatPercent(unit.lossPercent)}</span>
+            <div className="battle-aar-unit-card-status">
+              {unit.destroyed ? webUIText("Auto.Fix.ExprTrue.componentsnotificationsBattleAfterActionModal.127.1") : webUIText("Auto.Fix.ExprFalse.componentsnotificationsBattleAfterActionModal.127.1", { Value1: formatNumber(unit.remainingStrength) })}
+            </div>
+            <div className="battle-aar-unit-card-stats">
+              <div className="battle-aar-unit-card-stat">
+                <span className="battle-aar-unit-card-stat-value">{formatNumber(unit.kills)}</span>
+                <span className="battle-aar-unit-card-stat-label"><WebUIText textKey="BattleResults.Kills" /></span>
+              </div>
+              <div className="battle-aar-unit-card-stat">
+                <span className="battle-aar-unit-card-stat-value">{formatNumber(Math.round(unit.damageDealt))}</span>
+                <span className="battle-aar-unit-card-stat-label"><WebUIText textKey="BattleResults.DamageDealt" /></span>
+              </div>
+              <div className="battle-aar-unit-card-stat">
+                <span className="battle-aar-unit-card-stat-value battle-aar-unit-card-stat-value--loss">{formatNumber(unit.losses)}</span>
+                <span className="battle-aar-unit-card-stat-label"><WebUIText textKey="BattleResults.Lost" /></span>
+              </div>
             </div>
           </div>
         );
@@ -332,10 +415,6 @@ export default function BattleAfterActionModal({
                 {renderBattleAARRichText(report.location || webUIText('Common.Unknown'), onLinkClick)}
               </span>
             </div>
-            <div className="battle-aar-meta">
-              <span className="battle-aar-meta-label"><WebUIText textKey="Auto.ComponentsNotificationsBattleAfterActionModal.219.6" /></span>
-              <span className="battle-aar-meta-value">{report.outcome}</span>
-            </div>
           </div>
 
           <div className="battle-aar-sides">
@@ -357,7 +436,7 @@ export default function BattleAfterActionModal({
 
           {damagedUnits.length > 0 ? (
             <div className="battle-aar-damage-section">
-              <span className="battle-aar-meta-label"><WebUIText textKey="Auto.ComponentsNotificationsBattleAfterActionModal.243.9" /></span>
+          <span className="battle-aar-meta-label"><WebUIText textKey="BattleResults.UnitPerformance" /></span>
               <div className="battle-aar-damage-columns">
                 <DamageSideGroup side="our" title={report.ourSide.label} units={ourDamagedUnits} onLinkClick={onLinkClick} />
                 <DamageSideGroup side="enemy" title={report.enemySide.label} units={enemyDamagedUnits} onLinkClick={onLinkClick} />

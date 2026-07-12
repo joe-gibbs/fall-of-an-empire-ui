@@ -167,7 +167,7 @@ const TECHNOLOGIES: TechNode[] = withUnlocks([
   tech('standard-bearers', 1, 0, 1, 'TechnologyMock.Node.StandardBearers', '/assets/icons/I_Fame.png', '/assets/events/military-victory.png', 'researched', ['levy-signals']),
   tech('shield-drill', 1, 1, 0, 'TechnologyMock.Node.ShieldDrill', '/assets/icons/I_Armour.png', '/assets/events/edict-reform-field-armies.png', 'researched', ['camp-discipline']),
   tech('drilled-formations', 1, 1, 1, 'TechnologyMock.Node.DrilledFormations', '/assets/icons/FormationStance/I_Defensive.png', '/assets/events/interaction-study-military-tactics.png', 'researching', ['shield-drill', 'muster-rolls'], 0.62),
-  tech('horse-screens', 1, 2, 0, 'TechnologyMock.Node.HorseScreens', '/assets/icons/UnitTypes/I_Cavalry.png', '/assets/events/cavalry-charge.png', 'available', ['watch-patrols']),
+  tech('horse-screens', 1, 2, 0, 'TechnologyMock.Node.HorseScreens', '/assets/icons/UnitTypes/I_ArmyCavalry.png', '/assets/events/cavalry-charge.png', 'available', ['watch-patrols']),
   tech('road-wardens', 1, 2, 1, 'TechnologyMock.Node.RoadWardens', '/assets/icons/I_Rebuild.png', '/assets/events/road-building.png', 'available', ['river-scouts']),
   tech('forage-tables', 1, 3, 0, 'TechnologyMock.Node.ForageTables', '/assets/icons/I_Food.png', '/assets/events/harvest-celebration.png', 'researched', ['pack-ledgers']),
   tech('field-surgeons', 1, 3, 1, 'TechnologyMock.Node.FieldSurgeons', '/assets/icons/I_Alms.png', '/assets/events/medical-treatment.png', 'available', ['camp-discipline']),

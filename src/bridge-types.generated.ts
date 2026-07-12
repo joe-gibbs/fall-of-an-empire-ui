@@ -4835,9 +4835,19 @@ export interface NotificationEventsRequest {
   id: string;
 }
 
+export interface BattleAfterActionCommanderPayload {
+  id: string;
+  name: string;
+  portraitLayers: PortraitLayerData;
+  isAlive: boolean;
+  isImprisoned: boolean;
+}
+
 export interface BattleAfterActionSidePayload {
   label: string;
   names: string;
+  commanders: string;
+  commanderDetails: BattleAfterActionCommanderPayload[];
   unitLabel: string;
   factionId: string;
   factionName: string;
@@ -4862,9 +4872,11 @@ export interface BattleAfterActionSpoilPayload {
 export interface BattleAfterActionUnitDamagePayload {
   side: string;
   unitName: string;
+  unitId: string;
   militaryName: string;
   militaryId: string;
   iconPath: string;
+  portraitPath: string;
   factionId: string;
   factionName: string;
   factionColour: string;
@@ -4874,6 +4886,8 @@ export interface BattleAfterActionUnitDamagePayload {
   initialStrength: number;
   remainingStrength: number;
   losses: number;
+  kills: number;
+  damageDealt: number;
   lossPercent: number;
   destroyed: boolean;
 }
@@ -4882,9 +4896,7 @@ export interface BattleAfterActionReportPayload {
   available: boolean;
   battleName: string;
   outcome: string;
-  battleType: string;
   location: string;
-  playerRole: string;
   summary: string;
   headerImage: string;
   spoils: string;

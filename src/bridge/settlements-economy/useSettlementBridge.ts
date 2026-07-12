@@ -8,10 +8,10 @@ import { FoaeCefUIAssetPath } from '../../utils/assets';
 type SettlementBishopricResponse = GetSettlementDataResponse['bishoprics'][number];
 
 const UNIT_TYPE_ICONS: Record<ArmyUnitType | 'Garrison', string> = {
-  infantry: '/assets/icons/UnitTypes/Infantry.png',
-  cavalry: '/assets/icons/UnitTypes/Cavalry.png',
-  ranged: '/assets/icons/UnitTypes/Ranged.png',
-  siege: '/assets/icons/I_Siege.png',
+  infantry: '/assets/icons/UnitTypes/I_ArmyInfantry.png',
+  cavalry: '/assets/icons/UnitTypes/I_ArmyCavalry.png',
+  ranged: '/assets/icons/UnitTypes/I_ArmyRanged.png',
+  siege: '/assets/icons/UnitTypes/I_ArmySiege.png',
   navy: '/assets/icons/I_NaviesQuickButton.png',
   Garrison: '/assets/icons/Doctrines/I_Doctrine_Garrison.png',
 };
