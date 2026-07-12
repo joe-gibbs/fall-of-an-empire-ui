@@ -19,7 +19,6 @@ import type { ModEntry, SteamWorkshopItem } from '../bridge/app/useModsBridge';
 import { useEscapeStackEntry } from '../context/EscapeStack';
 
 import { useWebUILocale, webUIText, WebUIText } from '../localization/WebUITextContext';
-import { loadScenarioMapTexts, type ScenarioMapText } from '../localization/scenarioMapText';
 type MenuView = 'menu' | 'settings' | 'mods' | 'encyclopedia' | 'credits' | 'newgame';
 type ModsPanelView = 'installed' | 'workshop' | 'subscribed';
 
@@ -71,28 +70,6 @@ function compareScenarioMaps(left: NewGameMapEntry, right: NewGameMapEntry): num
   return left.id.localeCompare(right.id);
 }
 
-function translatedScenarioMapText(
-  map: NewGameMapEntry,
-  field: 'displayName' | 'menuKicker' | 'menuDescription',
-  scenarioText?: ScenarioMapText,
-): string {
-  const scenarioTranslated = scenarioText?.[field];
-  if (scenarioTranslated) return scenarioTranslated;
-
-  const key = `ScenarioMap.${map.id}.${field}`;
-  const translated = webUIText(key);
-  return translated === key ? map[field] : translated;
-}
-
-function translatedScenarioMap(map: NewGameMapEntry, scenarioText?: ScenarioMapText): NewGameMapEntry {
-  return {
-    ...map,
-    displayName: translatedScenarioMapText(map, 'displayName', scenarioText),
-    menuKicker: translatedScenarioMapText(map, 'menuKicker', scenarioText),
-    menuDescription: translatedScenarioMapText(map, 'menuDescription', scenarioText),
-  };
-}
-
 const MainMenu: React.FC = () => {
   const locale = useWebUILocale();
   const [view, setView] = useState<MenuView>('menu');
@@ -103,7 +80,6 @@ const MainMenu: React.FC = () => {
   const [version, setVersion] = useState<string | null>(null);
   const [showLoad, setShowLoad] = useState(false);
   const [newGameMaps, setNewGameMaps] = useState<NewGameMapEntry[]>([]);
-  const [scenarioTextByMapId, setScenarioTextByMapId] = useState<Record<string, ScenarioMapText>>({});
   const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [modsPanelView, setModsPanelView] = useState<ModsPanelView>('installed');
@@ -145,21 +121,7 @@ const MainMenu: React.FC = () => {
 
   const modsNeedRestart = modChangesRequireRestart || workshopChangesRequireRestart;
   const activeModsPanelView: ModsPanelView = steamWorkshopAvailable ? modsPanelView : 'installed';
-  const translatedNewGameMaps = newGameMaps.map((map) => translatedScenarioMap(map, scenarioTextByMapId[map.id]));
-
-  useEffect(() => {
-    let cancelled = false;
-    void loadScenarioMapTexts(newGameMaps.map((map) => map.id), locale)
-      .then((texts) => {
-        if (!cancelled) {
-          setScenarioTextByMapId(texts);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, newGameMaps]);
+  const translatedNewGameMaps = newGameMaps;
 
   const preloadFactionSelection = useCallback((mapId: string) => {
     const cacheKey = `${locale}:${mapId}`;
@@ -784,8 +746,7 @@ const MainMenu: React.FC = () => {
   );
 
   const activeSelectedNewGameMap = selectedNewGameMap
-    ? translatedNewGameMaps.find((map) => map.id === selectedNewGameMap.id) ??
-      translatedScenarioMap(selectedNewGameMap, scenarioTextByMapId[selectedNewGameMap.id])
+    ? translatedNewGameMaps.find((map) => map.id === selectedNewGameMap.id) ?? selectedNewGameMap
     : null;
 
   const loadGameButton: MainMenuIllustratedButtonData = {

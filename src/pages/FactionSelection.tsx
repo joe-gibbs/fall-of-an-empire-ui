@@ -23,8 +23,7 @@ import { StatCellGrid, StatCell } from '../components/sidebars/shared/StatCellGr
 import { FoaeCefUIAssetPath } from '../utils/assets';
 import { resolveFactionBorderVariant } from '../utils/factionBorder';
 import { formatNumber, formatSignedNumber } from '../utils/numberFormat';
-import { useWebUILocale, useWebUIText, type WebUITextFormatter } from '../localization/WebUITextContext';
-import { loadScenarioMapText, type ScenarioMapText } from '../localization/scenarioMapText';
+import { useWebUIText, type WebUITextFormatter } from '../localization/WebUITextContext';
 import { MAP_MODE_ICONS } from '../components/bottombar/mapModeIcons';
 import { MAP_MODE_TOOLTIPS } from '../components/bottombar/mapModeTooltipContent';
 import {
@@ -464,84 +463,61 @@ function translatedTextOrFallback(t: WebUITextFormatter, key: string, fallback: 
   return translated === key ? fallback : translated;
 }
 
-function translatedName(t: WebUITextFormatter, source: string, scenarioText?: ScenarioMapText): string {
+function translatedName(t: WebUITextFormatter, source: string): string {
   if (!source) return source;
-  const scenarioName = scenarioText?.names?.[source];
-  if (scenarioName) return scenarioName;
   return translatedTextOrFallback(t, `NameLocalisation.${source}`, source);
-}
-
-function translatedScenarioText(
-  t: WebUITextFormatter,
-  mapId: string,
-  field: string,
-  fallback: string,
-  scenarioText?: ScenarioMapText,
-): string {
-  const scenarioTranslated = scenarioText?.[field as keyof ScenarioMapText];
-  if (typeof scenarioTranslated === 'string' && scenarioTranslated) return scenarioTranslated;
-  return translatedTextOrFallback(t, `ScenarioMap.${mapId}.${field}`, fallback);
 }
 
 function translateFactionSelectionData(
   data: GetNewGameMapFactionSelectionResponse,
   t: WebUITextFormatter,
-  scenarioText?: ScenarioMapText,
 ): GetNewGameMapFactionSelectionResponse {
   return {
     ...data,
-    displayName: translatedScenarioText(t, data.mapId, 'displayName', data.displayName, scenarioText),
-    factionSelectionDescription: translatedScenarioText(
-      t,
-      data.mapId,
-      'factionSelectionDescription',
-      data.factionSelectionDescription,
-      scenarioText,
-    ),
     defaultPlayerFactionBaseName: data.defaultPlayerFactionBaseName,
     factions: data.factions.map((faction) => ({
       ...faction,
-      displayName: translatedName(t, faction.displayName, scenarioText),
-      realm: translatedName(t, faction.realm, scenarioText),
-      cultureDisplayName: translatedName(t, faction.cultureDisplayName, scenarioText),
-      cultureGroup: translatedName(t, faction.cultureGroup, scenarioText),
+      displayName: translatedName(t, faction.displayName),
+      realm: translatedName(t, faction.realm),
+      cultureDisplayName: translatedName(t, faction.cultureDisplayName),
+      cultureGroup: translatedName(t, faction.cultureGroup),
       cultureInfo: {
         ...faction.cultureInfo,
-        name: translatedName(t, faction.cultureInfo.name, scenarioText),
-        description: translatedName(t, faction.cultureInfo.description, scenarioText),
-        groupDisplayName: translatedName(t, faction.cultureInfo.groupDisplayName, scenarioText),
+        name: translatedName(t, faction.cultureInfo.name),
+        description: translatedName(t, faction.cultureInfo.description),
+        groupDisplayName: translatedName(t, faction.cultureInfo.groupDisplayName),
       },
-      religionDisplayName: translatedName(t, faction.religionDisplayName, scenarioText),
+      religionDisplayName: translatedName(t, faction.religionDisplayName),
       religionInfo: {
         ...faction.religionInfo,
-        name: translatedName(t, faction.religionInfo.name, scenarioText),
-        description: translatedName(t, faction.religionInfo.description, scenarioText),
+        name: translatedName(t, faction.religionInfo.name),
+        description: translatedName(t, faction.religionInfo.description),
       },
-      capitalSettlementName: translatedName(t, faction.capitalSettlementName, scenarioText),
-      governmentDisplayName: translatedName(t, faction.governmentDisplayName, scenarioText),
-      governmentDescription: translatedName(t, faction.governmentDescription, scenarioText),
+      capitalSettlementName: translatedName(t, faction.capitalSettlementName),
+      governmentDisplayName: translatedName(t, faction.governmentDisplayName),
+      governmentDescription: translatedName(t, faction.governmentDescription),
       treaties: faction.treaties.map((treaty) => ({
         ...treaty,
-        withFactionDisplayName: translatedName(t, treaty.withFactionDisplayName, scenarioText),
-        displayName: translatedName(t, treaty.displayName, scenarioText),
-        description: translatedName(t, treaty.description, scenarioText),
+        withFactionDisplayName: translatedName(t, treaty.withFactionDisplayName),
+        displayName: translatedName(t, treaty.displayName),
+        description: translatedName(t, treaty.description),
       })),
       leader: {
         ...faction.leader,
-        displayName: translatedName(t, faction.leader.displayName, scenarioText),
-        dynasty: translatedName(t, faction.leader.dynasty, scenarioText),
+        displayName: translatedName(t, faction.leader.displayName),
+        dynasty: translatedName(t, faction.leader.dynasty),
       },
     })),
     wars: data.wars.map((war) => ({
       ...war,
-      name: translatedName(t, war.name, scenarioText),
+      name: translatedName(t, war.name),
       attacker: {
         ...war.attacker,
-        leaderFactionDisplayName: translatedName(t, war.attacker.leaderFactionDisplayName, scenarioText),
+        leaderFactionDisplayName: translatedName(t, war.attacker.leaderFactionDisplayName),
       },
       defender: {
         ...war.defender,
-        leaderFactionDisplayName: translatedName(t, war.defender.leaderFactionDisplayName, scenarioText),
+        leaderFactionDisplayName: translatedName(t, war.defender.leaderFactionDisplayName),
       },
     })),
   };
@@ -1550,10 +1526,8 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
   onConfirm,
 }) => {
   const t = useWebUIText();
-  const locale = useWebUILocale();
   const initialSelectionData = initialData?.mapId === mapId ? initialData : null;
   const [data, setData] = useState<GetNewGameMapFactionSelectionResponse | null>(initialSelectionData);
-  const [scenarioText, setScenarioText] = useState<ScenarioMapText>({});
   const [selectedBaseName, setSelectedBaseName] = useState(
     initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '',
   );
@@ -1577,20 +1551,6 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
   useEffect(() => {
     geometryRequestMapIdRef.current = '';
   }, [mapId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void loadScenarioMapText(mapId, locale)
-      .then((text) => {
-        if (!cancelled) {
-          setScenarioText(text);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, mapId]);
 
   useEffect(() => {
     if (!initialSelectionData || data?.mapId === initialSelectionData.mapId) {
@@ -1668,8 +1628,8 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
   }, [data]);
 
   const displayData = useMemo(
-    () => data ? translateFactionSelectionData(data, t, scenarioText) : null,
-    [data, scenarioText, t],
+    () => data ? translateFactionSelectionData(data, t) : null,
+    [data, t],
   );
   const factions = useMemo(() => displayData?.factions ?? [], [displayData?.factions]);
   const factionsByBase = useMemo(
