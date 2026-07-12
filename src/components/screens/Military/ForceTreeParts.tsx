@@ -1,7 +1,10 @@
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
+import { useQuickInteractionMenu } from '../../common/interactions/useQuickInteractionMenu';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { ZoomPanInitialView } from '../../common/layout/scrolling/ZoomPanCanvas';
 import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
+import { promoteMilitaryCommandBridge } from '../../../bridge/military-map/useMilitaryBridge';
+import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { designUnitScale } from '../../../utils/cssUnits';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
 import {
@@ -147,22 +150,35 @@ export function NodeCard({
   const dm = DOCTRINE_META[force.doctrine];
   const pct = strengthPct(force);
   const showDux = force.rank === 'Dux';
+  const quickMenu = useQuickInteractionMenu<HTMLDivElement>({
+    kind: 'military',
+    targetId: force.id,
+    militaryType: force.isNavy ? 'fleet' : 'army',
+    actions: force.isPlayerControlled && force.rank !== 'Dux'
+      ? [{
+          label: webUIText('QuickInteraction.PromoteCommand'),
+          onSelect: () => promoteMilitaryCommandBridge(force.id).catch(acknowledgeBridgeFailure),
+        }]
+      : [],
+  });
 
   return (
-    <Tooltip content={buildCardTooltip(force, allForces)} position="right" delay={250} variant="sidebar">
-      <div
-        className={[
-          'chart-node',
-          `chart-node--${force.rank.toLowerCase()}`,
-          `chart-node--strength-${strengthPaintColor(force)}`,
-          `chart-node--morale-${moralePaintColor(force.morale)}`,
-          selected ? 'is-selected' : '',
-          highlighted ? 'is-highlighted' : '',
-          dimmed ? 'is-dimmed' : '',
-          !force.isPlayerControlled ? 'chart-node--uncontrolled' : '',
-          force.isNavy ? 'chart-node--navy' : '',
-        ].filter(Boolean).join(' ')}
-      >
+    <>
+      <Tooltip content={buildCardTooltip(force, allForces)} position="right" delay={250} variant="sidebar">
+        <div
+          className={[
+            'chart-node',
+            `chart-node--${force.rank.toLowerCase()}`,
+            `chart-node--strength-${strengthPaintColor(force)}`,
+            `chart-node--morale-${moralePaintColor(force.morale)}`,
+            selected ? 'is-selected' : '',
+            highlighted ? 'is-highlighted' : '',
+            dimmed ? 'is-dimmed' : '',
+            !force.isPlayerControlled ? 'chart-node--uncontrolled' : '',
+            force.isNavy ? 'chart-node--navy' : '',
+          ].filter(Boolean).join(' ')}
+          onContextMenu={quickMenu.onContextMenu}
+        >
         <div className="chart-node-inner">
         <Tooltip content={{ title: rankLabel(force), body: rm.desc }}>
           <div className="chart-node-crest">
@@ -246,8 +262,10 @@ export function NodeCard({
           </div>
         </div>
       </div>
-      </div>
-    </Tooltip>
+        </div>
+      </Tooltip>
+      {quickMenu.node}
+    </>
   );
 }
 

@@ -7,6 +7,7 @@ import {
   type PersonInteractionView,
 } from '../../../bridge/characters/usePersonInteractionsBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
+import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import { useOptionalGameActions } from '../../../context/GameContext';
 import type { Notification } from '../../../data/types';
 import { playSound } from '../../../hooks/useSound';
@@ -19,7 +20,7 @@ import InteractionEffectsTooltip from '../tooltips/InteractionEffectsTooltip';
 import { dismissSharedTooltips } from '../tooltips/tooltipEvents';
 import './QuickInteractionMenu.css';
 
-type QuickMenuKind = 'person' | 'faction';
+type QuickMenuKind = 'person' | 'faction' | 'military';
 type QuickInteraction = PersonInteractionView | FactionInteractionView;
 
 interface MenuPoint {
@@ -30,6 +31,11 @@ interface MenuPoint {
 interface UseQuickInteractionMenuOptions {
   kind: QuickMenuKind;
   targetId?: string;
+  militaryType?: 'army' | 'fleet';
+  actions?: ReadonlyArray<{
+    label: string;
+    onSelect: () => void;
+  }>;
 }
 
 interface QuickInteractionMenuResult<T extends HTMLElement> {
@@ -40,7 +46,7 @@ interface QuickInteractionMenuResult<T extends HTMLElement> {
 const MENU_WIDTH_REM = 15.5;
 
 function canUseTargetId(targetId?: string): targetId is string {
-  return Boolean(targetId && targetId.length >= 32);
+  return Boolean(targetId);
 }
 
 function isFactionInteraction(interaction: QuickInteraction): interaction is FactionInteractionView {
@@ -160,12 +166,16 @@ function usePersonQuickInteractions(personId: string | null, requestKey: number)
 }
 
 function quickInteractionNotificationType(kind: QuickMenuKind): Notification['type'] {
-  return kind === 'person' ? 'character' : 'diplomatic';
+  if (kind === 'person') return 'character';
+  if (kind === 'military') return 'military';
+  return 'diplomatic';
 }
 
 export function useQuickInteractionMenu<T extends HTMLElement>({
   kind,
   targetId,
+  militaryType = 'army',
+  actions = [],
 }: UseQuickInteractionMenuOptions): QuickInteractionMenuResult<T> {
   const [requestedTargetId, setRequestedTargetId] = useState<string | null>(null);
   const [requestKey, setRequestKey] = useState(0);
@@ -174,17 +184,24 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
   const factionBridge = useFactionInteractionsBridge(kind === 'faction' ? requestedTargetId : null);
   const gameActions = useOptionalGameActions();
   const hasViewAction = canUseTargetId(requestedTargetId ?? undefined) && Boolean(gameActions);
+  const hasZoomAction = kind === 'military' && canUseTargetId(requestedTargetId ?? undefined) && Boolean(gameActions);
   const viewLabel = kind === 'person'
     ? webUIText('QuickInteraction.ViewCharacter')
-    : webUIText('QuickInteraction.ViewFaction');
+    : kind === 'faction'
+      ? webUIText('QuickInteraction.ViewFaction')
+      : webUIText(militaryType === 'fleet' ? 'QuickInteraction.ViewFleet' : 'QuickInteraction.ViewArmy');
+  const zoomLabel = webUIText(militaryType === 'fleet' ? 'QuickInteraction.ZoomToFleet' : 'QuickInteraction.ZoomToArmy');
 
   const interactions = useMemo(() => {
     if (kind === 'person') {
       return quickInteractions(personQuickInteractions);
     }
+    if (kind === 'military') {
+      return [];
+    }
     return quickInteractions(factionBridge.state?.interactions ?? []);
   }, [factionBridge.state?.interactions, kind, personQuickInteractions]);
-  const itemCount = interactions.length + (hasViewAction ? 1 : 0);
+  const itemCount = interactions.length + actions.length + (hasViewAction ? 1 : 0) + (hasZoomAction ? 1 : 0);
   const style = useMenuPosition(point, itemCount);
 
   const close = useCallback(() => {
@@ -275,12 +292,24 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
     close();
     if (kind === 'person') {
       gameActions.openSidebar('character', targetIdForView);
-    } else {
+    } else if (kind === 'faction') {
       gameActions.openSidebar('diplomacy', targetIdForView);
+    } else {
+      gameActions.closeScreen();
+      gameActions.openSidebar('military', targetIdForView);
     }
   }, [close, gameActions, kind, requestedTargetId]);
 
-  const node = point && style && (hasViewAction || interactions.length > 0) && typeof document !== 'undefined'
+  const zoomToTarget = useCallback(() => {
+    const targetIdForZoom = requestedTargetId ?? undefined;
+    if (!canUseTargetId(targetIdForZoom) || !gameActions || kind !== 'military') return;
+    close();
+    playSound('confirm');
+    gameActions.closeScreen();
+    zoomToBridge('military', targetIdForZoom);
+  }, [close, gameActions, kind, requestedTargetId]);
+
+  const node = point && style && (hasViewAction || hasZoomAction || actions.length > 0 || interactions.length > 0) && typeof document !== 'undefined'
     ? createPortal(
       <div
         className="quick-interaction-menu"
@@ -303,6 +332,37 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
             {viewLabel}
           </button>
         )}
+        {hasZoomAction && (
+          <button
+            type="button"
+            className="quick-interaction-menu__button"
+            onPointerDown={(event) => {
+              if (event.button !== 0) return;
+              event.preventDefault();
+              event.stopPropagation();
+              zoomToTarget();
+            }}
+          >
+            {zoomLabel}
+          </button>
+        )}
+        {actions.map(action => (
+          <button
+            key={action.label}
+            type="button"
+            className="quick-interaction-menu__button"
+            onPointerDown={(event) => {
+              if (event.button !== 0) return;
+              event.preventDefault();
+              event.stopPropagation();
+              close();
+              playSound('confirm');
+              action.onSelect();
+            }}
+          >
+            {action.label}
+          </button>
+        ))}
         {interactions.map(interaction => (
           <Tooltip
             key={interaction.id}
