@@ -667,8 +667,8 @@ function RulersTab({
 
 function factionOverviewTabFromScreenId(screenId: string | null): string {
   const normalised = (screenId ?? '').toLowerCase();
-  if (normalised === '1' || normalised === 'court' || normalised === 'imperialcourt') return 'court';
-  if (normalised === '2' || normalised === 'rulers' || normalised === 'history') return 'rulers';
+  if (normalised === 'court' || normalised === 'imperialcourt') return 'court';
+  if (normalised === 'rulers' || normalised === 'history') return 'rulers';
   return 'overview';
 }
 

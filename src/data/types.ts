@@ -1345,7 +1345,7 @@ export interface Warning {
   targetCount: number;
   /** When non-empty, a click opens this screen instead of navigating to a payload. */
   screenToOpen: string;
-  /** Optional tab id or legacy tab index passed through from the warning payload. */
+  /** Optional tab id passed through from the warning payload. */
   screenTab?: string;
   /** Optional power bloc target id for warning-specific navigation. */
   powerBlocId?: string;

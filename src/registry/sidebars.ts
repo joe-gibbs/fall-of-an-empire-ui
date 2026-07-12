@@ -19,8 +19,7 @@ export function getAllSidebars(): SidebarRegistration[] {
   return Array.from(sidebars.values());
 }
 
-/** Which side does this sidebar id live on? Used by GameContext to route
- *  the legacy `openSidebar(type, id)` call when the caller didn't specify. */
+/** Returns the pane selected by the sidebar's registration. */
 export function getSidebarSide(id: string | null | undefined): 'left' | 'right' | undefined {
   if (!id) return undefined;
   return sidebars.get(id)?.side;

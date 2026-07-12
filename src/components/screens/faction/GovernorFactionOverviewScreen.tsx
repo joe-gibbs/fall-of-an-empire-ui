@@ -217,11 +217,11 @@ function appointmentCandidateHome(candidate: AppointmentCandidate, t: ReturnType
 
 function governorOverviewTabFromScreenId(screenId: string | null): TabId {
   const normalised = (screenId ?? '').toLowerCase();
-  if (normalised === '1' || normalised === 'missions') return 'missions';
-  if (normalised === '2' || normalised === 'governors' || normalised === 'regionalgovernors' || normalised === 'regiongovernors') return 'governors';
-  if (normalised === '3' || normalised === 'empire' || normalised === 'imperial') return 'empire';
-  if (normalised === '4' || normalised === 'court' || normalised === 'imperialcourt') return 'court';
-  if (normalised === '5' || normalised === 'appointments') return 'appointments';
+  if (normalised === 'missions') return 'missions';
+  if (normalised === 'governors' || normalised === 'regionalgovernors' || normalised === 'regiongovernors') return 'governors';
+  if (normalised === 'empire' || normalised === 'imperial') return 'empire';
+  if (normalised === 'court' || normalised === 'imperialcourt') return 'court';
+  if (normalised === 'appointments') return 'appointments';
   return 'province';
 }
 
