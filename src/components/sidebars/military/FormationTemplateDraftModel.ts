@@ -34,6 +34,7 @@ export interface DraftBattleGroup {
 
 export interface ResourceTotal {
   name: string;
+  displayName: string;
   amount: number;
 }
 
@@ -217,7 +218,7 @@ export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number)
     name: unit.name,
     description: unit.description,
     portrait: unitPortrait(unit),
-    typeLabel: unitTypeLabel(unit.type),
+    typeLabel: unit.unitTypeLabel,
     typeIcon: unitTypeIcon(unit.type),
     tier: unit.tier,
     maxStrength: unit.maxStrength,
@@ -380,16 +381,19 @@ export function draftsEqual(a: DraftTemplate | null, b: DraftTemplate | null): b
   });
 }
 
-export function addResourceTotals(target: Map<string, number>, costs: FormationTemplateResourceCost[], count: number) {
+export function addResourceTotals(target: Map<string, ResourceTotal>, costs: FormationTemplateResourceCost[], count: number) {
   costs.forEach(cost => {
-    const current = target.get(cost.name) ?? 0;
-    target.set(cost.name, current + cost.amount * count);
+    const current = target.get(cost.name);
+    target.set(cost.name, {
+      name: cost.name,
+      displayName: cost.displayName || cost.name,
+      amount: (current?.amount ?? 0) + cost.amount * count,
+    });
   });
 }
 
-export function sortedResources(resources: Map<string, number>): ResourceTotal[] {
-  return Array.from(resources.entries())
-    .map(([name, amount]) => ({ name, amount }))
+export function sortedResources(resources: Map<string, ResourceTotal>): ResourceTotal[] {
+  return Array.from(resources.values())
     .sort((a, b) => b.amount - a.amount);
 }
 
@@ -411,8 +415,8 @@ export function computeDerived(draft: DraftTemplate, unitById: Map<string, Forma
   let crushArmour = 0;
   let slashArmour = 0;
   let entries = 0;
-  const resources = new Map<string, number>();
-  const monthlyResources = new Map<string, number>();
+  const resources = new Map<string, ResourceTotal>();
+  const monthlyResources = new Map<string, ResourceTotal>();
 
   requests.forEach((request, index) => {
     const unit = unitById.get(request.unitId);

@@ -127,7 +127,7 @@ function mapFaction(faction: Faction): Partial<FactionTooltipData> {
     treaties: faction.treaties.map((treaty, index) => ({
       key: `${treaty.type}-${treaty.withFactionId ?? treaty.withFaction}-${index}`,
       type: treaty.type,
-      label: formatTreatyType(treaty.type),
+      label: treaty.displayName || formatTreatyType(treaty.type),
       description: treaty.description,
       withFaction: treaty.withFaction,
       withFactionId: treaty.withFactionId,

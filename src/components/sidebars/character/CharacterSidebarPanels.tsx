@@ -3,6 +3,7 @@ import Portrait from '../../common/portraits/Portrait';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
 import Tooltip, { type TooltipContent } from '../../common/tooltips/Tooltip';
 import type { ActivitySegment, CharacterHistoryEntry, CharacterRelationship } from '../../../data/types';
+import { formatRelationshipType } from '../../../utils/displayLabels';
 import { formatNumber } from '../../../utils/numberFormat';
 import { relationshipBadgeForType, relationshipCardClass } from './FamilyGraphModel';
 import { webUIText } from '../../../localization/WebUITextContext';
@@ -171,7 +172,7 @@ export function RelationshipOverviewCard({
   onOpen: (id: string) => void;
 }) {
   const displayName = rel.characterName;
-  const detail = rel.type;
+  const detail = formatRelationshipType(rel.type);
   const status = rel.age && rel.age > 0 ? webUIText('AgentSelect.CandidateAge', { Age: formatNumber(rel.age) }) : '';
   const isAlive = rel.isAlive;
   const isImprisoned = false;
@@ -214,8 +215,7 @@ export function RelationshipOverviewCard({
       </PersonTooltip>
       <span className="char-rel-card-copy">
         <span className="char-rel-card-name">{displayName}</span>
-        <span className="char-rel-card-role">{rel.type}</span>
-        {detail && <span className="char-rel-card-detail">{detail}</span>}
+        <span className="char-rel-card-role">{detail}</span>
         {status && <span className="char-rel-card-status">{status}</span>}
       </span>
     </button>

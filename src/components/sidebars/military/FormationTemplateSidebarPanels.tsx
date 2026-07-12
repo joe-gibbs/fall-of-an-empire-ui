@@ -49,7 +49,7 @@ export function ResourceStrip({ resources, title }: { resources: ResourceTotal[]
           position="bottom"
           delay={150}
           content={{
-            title: resource.name,
+            title: resource.displayName,
             body: title,
             lines: [
               {

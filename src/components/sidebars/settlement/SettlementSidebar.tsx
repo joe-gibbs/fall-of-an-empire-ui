@@ -47,6 +47,7 @@ import '../shared/Sidebar.css';
 import './SettlementSidebar.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
+import { formatSettlementType } from '../../../utils/displayLabels';
 interface SettlementSidebarProps {
   settlement: Settlement;
   onClose: () => void;
@@ -877,7 +878,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
       {/* Header */}
       <div className="settle-header">
         <img src={settlementTypeHeaderBg[settlement.type] || "/assets/events/settlement-village.png"} alt="" className="settle-header-bg" />
-        <Tooltip content={{ title: settlement.type.charAt(0).toUpperCase() + settlement.type.slice(1), body: settlement.region }} position="bottom" delay={200}>
+        <Tooltip content={{ title: formatSettlementType(settlement.type), body: settlement.region }} position="bottom" delay={200}>
           <div className="settle-header-type-badge">
             <img src={FoaeCefUIAssetPath(settlementTypeIcons[settlement.type])} alt="" className="settle-header-type-icon" />
           </div>

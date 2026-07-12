@@ -136,6 +136,7 @@ function unitTypeIcon(type: string | undefined): string | undefined {
 function resourceCosts(costs: EncyclopediaResourceCostDTO[]) {
   return costs.map(cost => ({
     name: cost.name,
+    displayName: cost.displayName,
     amount: cost.amount,
     icon: FoaeCefUIAssetPath(`/assets/resources/${cost.name}.png`),
   }));

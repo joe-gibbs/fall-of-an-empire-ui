@@ -1,5 +1,6 @@
 import type { PortraitBadge } from '../../common/portraits/Portrait';
 import type { Character, CharacterRelationship } from '../../../data/types';
+import { formatRelationshipType } from '../../../utils/displayLabels';
 import type { FamilyTreeData, FamilyTreePerson } from '../../../bridge/characters/useCharactersBridge';
 import { webUIText } from '../../../localization/WebUITextContext';
 
@@ -99,7 +100,7 @@ function familyEntryFromRelationship(rel: CharacterRelationship): FamilyGraphEnt
   return {
     id: rel.characterId,
     name: rel.characterName,
-    label: rel.type,
+    label: formatRelationshipType(rel.type),
     portrait: rel.portrait,
     portraitLayers: rel.portraitLayers,
     activity: 'InCourt',
@@ -231,7 +232,7 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
 export function relationshipMatchesSearch(rel: CharacterRelationship, searchLower: string): boolean {
   if (!searchLower) return true;
   return rel.characterName.toLowerCase().includes(searchLower)
-    || rel.type.toLowerCase().includes(searchLower);
+    || formatRelationshipType(rel.type).toLowerCase().includes(searchLower);
 }
 
 export function relationshipCardClass(type: string, canOpen: boolean): string {
@@ -251,14 +252,7 @@ export function relationshipTone(type: string): 'family' | 'patronage' | 'friend
 }
 
 export function relationshipTypeTitle(type: string): string {
-  const trimmed = type.trim();
-  if (!trimmed) return webUIText("Auto.Return.componentssidebarsCharacterSidebar.588.1");
-  if (trimmed === 'Kinsman' || trimmed === 'Kinswoman') return webUIText("Auto.Return.componentssidebarsCharacterSidebar.589.1");
-  if (trimmed === 'Consort') return webUIText("Auto.Return.componentssidebarsCharacterSidebar.590.1");
-  if (trimmed === 'Heir') return webUIText("Auto.Return.componentssidebarsCharacterSidebar.591.1");
-  if (trimmed.endsWith('s')) return trimmed;
-  if (trimmed.endsWith('y')) return webUIText("Auto.Return.componentssidebarsCharacterSidebar.593.1", { Value1: trimmed.slice(0, trimmed.length - 1) });
-  return webUIText("Auto.Return.componentssidebarsCharacterSidebar.594.1", { Trimmed: trimmed });
+  return formatRelationshipType(type);
 }
 
 export function relationshipBadgeForType(type: string, related: Character | null): PortraitBadge | undefined {
@@ -267,4 +261,4 @@ export function relationshipBadgeForType(type: string, related: Character | null
   if (['Father', 'Mother', 'Grandfather', 'Grandmother', 'GreatGrandfather', 'GreatGrandmother', 'Son', 'Daughter', 'Grandson', 'Granddaughter', 'GreatGrandson', 'GreatGranddaughter', 'Brother', 'Sister', 'Husband', 'Wife', 'Spouse', 'Consort', 'Kinsman', 'Kinswoman', 'Relative', 'Kin'].includes(type) || related?.isFamilyOfPlayer) return 'family';
   return undefined;
 }
-
+

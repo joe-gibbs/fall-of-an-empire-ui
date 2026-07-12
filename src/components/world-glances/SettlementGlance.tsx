@@ -8,6 +8,7 @@ import { FoaeCefUIAssetPath } from '../../utils/assets';
 import { readableFactionTextColour } from '../../utils/colorFormatters';
 
 import { webUIText } from '../../localization/WebUITextContext';
+import { formatSettlementType } from '../../utils/displayLabels';
 type SettlementType = SettlementGlanceData['settlementType'];
 
 const PROGRESS_EPSILON = 0.001;
@@ -120,10 +121,6 @@ type SettlementBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'enamel-li
 
 function settlementBadgeLayerPath(type: SettlementType, layer: SettlementBadgeLayer): string {
   return `/assets/glance/settlement-types-v3/layers/settlement-badge-${type}-${layer}.png`;
-}
-
-function settlementTypeLabel(type: SettlementType): string {
-  return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
 function relationLabel(relation: SettlementGlanceData['faction']['relation'], atWar?: boolean): string {
@@ -261,7 +258,7 @@ function renderInfo(data: SettlementGlanceData) {
       return renderInfoRow('/assets/icons/I_Religions.png', data.religion.label, readableFactionTextColour(data.religion.colour));
     case 'landscape':
     case 'settlementType':
-      return renderInfoRow(settlementTypeIcon(data.settlementType), settlementTypeLabel(data.settlementType));
+      return renderInfoRow(settlementTypeIcon(data.settlementType), formatSettlementType(data.settlementType));
     case 'economicProsperity':
     case 'economy':
       return renderConstructionInfo(data);
