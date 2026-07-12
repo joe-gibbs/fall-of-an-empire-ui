@@ -16,6 +16,10 @@ interface ModWorldGlanceFrameEvent {
   entryPayloads: string[];
 }
 
+interface AtlasModWorldGlanceEntry extends ModWorldGlanceEntry {
+  atlasPriority: number;
+}
+
 function parsePayload(payload: string | undefined): unknown {
   if (!payload) return null;
   try {
@@ -39,10 +43,10 @@ function normaliseFrame(value: unknown): ModWorldGlanceFrameEvent | null {
   return frame as ModWorldGlanceFrameEvent;
 }
 
-function entriesFromFrame(frame: ModWorldGlanceFrameEvent): ModWorldGlanceEntry[] {
+function entriesFromFrame(frame: ModWorldGlanceFrameEvent): AtlasModWorldGlanceEntry[] {
   const viewportWidth = frame.frameNumbers[0] ?? 0;
   const viewportHeight = frame.frameNumbers[1] ?? 0;
-  const entries: ModWorldGlanceEntry[] = [];
+  const entries: AtlasModWorldGlanceEntry[] = [];
   for (let index = 0; index < frame.anchorKeys.length; index += 1) {
     const offset = MOD_FRAME_HEADER_NUMBER_COUNT + index * MOD_FRAME_ENTRY_NUMBER_STRIDE;
     if (offset + MOD_FRAME_ENTRY_NUMBER_STRIDE > frame.frameNumbers.length) break;
@@ -58,23 +62,25 @@ function entriesFromFrame(frame: ModWorldGlanceFrameEvent): ModWorldGlanceEntry[
       zOrder: frame.frameNumbers[offset + 4] ?? 0,
       viewportWidth,
       viewportHeight,
+      atlasPriority: (frame.frameNumbers[offset + 3] ?? 0) > 0.05 ? Date.now() : 0,
     });
   }
   return entries;
 }
 
 function atlasContentMatches(
-  previous: readonly ModWorldGlanceEntry[] | undefined,
-  next: readonly ModWorldGlanceEntry[],
+  previous: readonly AtlasModWorldGlanceEntry[] | undefined,
+  next: readonly AtlasModWorldGlanceEntry[],
 ): boolean {
   return previous?.length === next.length && previous.every((entry, index) => (
     entry.anchorKey === next[index].anchorKey
     && JSON.stringify(entry.payload) === JSON.stringify(next[index].payload)
+    && (entry.opacity > 0.05) === (next[index].opacity > 0.05)
   ));
 }
 
-function useModWorldGlanceFrames(atlas: boolean): ReadonlyMap<string, readonly ModWorldGlanceEntry[]> {
-  const [frames, setFrames] = useState<ReadonlyMap<string, readonly ModWorldGlanceEntry[]>>(() => new Map());
+function useModWorldGlanceFrames(atlas: boolean): ReadonlyMap<string, readonly AtlasModWorldGlanceEntry[]> {
+  const [frames, setFrames] = useState<ReadonlyMap<string, readonly AtlasModWorldGlanceEntry[]>>(() => new Map());
 
   useEffect(() => {
     const onFrame = (event: Event) => {
@@ -113,7 +119,7 @@ function overlayOffset(anchorPoint: string): string {
 
 function ModWorldGlanceNode({ registration, entry, atlas }: {
   registration: WorldGlanceRegistration;
-  entry: ModWorldGlanceEntry;
+  entry: AtlasModWorldGlanceEntry;
   atlas: boolean;
 }) {
   const content: ReactNode = registration.render(entry);
@@ -141,6 +147,8 @@ function ModWorldGlanceNode({ registration, entry, atlas }: {
         data-world-anchor={entry.anchorKey}
         data-world-anchor-point={anchorPoint}
         data-world-anchor-raster-scale={rasterScale}
+        data-world-anchor-priority={entry.atlasPriority}
+        data-world-anchor-demand={entry.opacity > 0.05 ? 'visible' : 'hidden'}
       >
         {content}
       </div>

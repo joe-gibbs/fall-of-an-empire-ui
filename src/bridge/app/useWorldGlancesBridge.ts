@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
 import { getCachedBridgeEvent, getCachedBridgeEventByName } from '../core/bridgeEventCache';
@@ -104,6 +104,25 @@ function collectKnownGlanceKeys(data: GetWorldGlancesResponse | null): Set<strin
   for (const entry of data.battles) keys.add(makeGlanceKey('battle', entry.id));
 
   return keys;
+}
+
+function mergeCatalogueEntries<T extends { id: string }>(
+  current: T[],
+  upserts: T[],
+  removedIds: Set<string>,
+): T[] {
+  const upsertById = new Map(upserts.map(entry => [entry.id, entry]));
+  const merged = current
+    .filter(entry => !removedIds.has(entry.id))
+    .map(entry => upsertById.get(entry.id) ?? entry);
+  const existingIds = new Set(merged.map(entry => entry.id));
+  for (const entry of upserts) {
+    if (!existingIds.has(entry.id)) {
+      merged.push(entry);
+      existingIds.add(entry.id);
+    }
+  }
+  return merged;
 }
 
 function snapshotSectionEntries(data: GetWorldGlancesResponse | null, section: WorldGlanceFrameSection): { id: string }[] {
@@ -310,129 +329,216 @@ function cachedWorldGlancesFrame(): WorldGlancesFrameResponse | null {
   return cached ? normaliseFrameEventDetail(cached) : null;
 }
 
-export function useWorldGlancesBridge(enabled = true) {
-  const initialData = useMemo(() => cachedWorldGlancesSnapshot(), []);
-  const [data, setData] = useState<GetWorldGlancesResponse | null>(() => initialData);
-  const dataRef = useRef<GetWorldGlancesResponse | null>(initialData);
-  const knownKeysRef = useRef<Set<string>>(collectKnownGlanceKeys(initialData));
-  const refreshInFlightRef = useRef(false);
-  const refreshTimerRef = useRef<number | null>(null);
+type WorldGlancesStoreListener = () => void;
 
-  useEffect(() => {
-    if (!enabled) {
-      return undefined;
+let worldGlancesStoreData = cachedWorldGlancesSnapshot();
+let worldGlancesKnownKeys = collectKnownGlanceKeys(worldGlancesStoreData);
+let worldGlancesStoreStop: (() => void) | null = null;
+let worldGlancesStoreGeneration = 0;
+let worldGlancesRefreshInFlight = false;
+let worldGlancesRefreshTimer: number | null = null;
+const worldGlancesStoreListeners = new Set<WorldGlancesStoreListener>();
+
+function getWorldGlancesStoreSnapshot(): GetWorldGlancesResponse | null {
+  return worldGlancesStoreData;
+}
+
+function publishWorldGlancesStoreData(
+  next: GetWorldGlancesResponse | null,
+  catalogueChanged: boolean,
+) {
+  if (next === worldGlancesStoreData) {
+    return;
+  }
+
+  worldGlancesStoreData = next;
+  if (catalogueChanged) {
+    worldGlancesKnownKeys = collectKnownGlanceKeys(next);
+  }
+  for (const listener of worldGlancesStoreListeners) {
+    listener();
+  }
+}
+
+function startWorldGlancesStore() {
+  if (worldGlancesStoreStop) {
+    return;
+  }
+
+  const generation = ++worldGlancesStoreGeneration;
+  const isActive = () => generation === worldGlancesStoreGeneration;
+
+  const applySnapshot = (next: GetWorldGlancesResponse | null) => {
+    if (isActive()) {
+      publishWorldGlancesStoreData(next, true);
+    }
+  };
+
+  const refreshSnapshot = () => {
+    if (!isActive() || worldGlancesRefreshInFlight) {
+      return;
     }
 
-    let cancelled = false;
-
-    const applySnapshot = (next: GetWorldGlancesResponse | null) => {
-      if (cancelled) {
-        return;
-      }
-
-      dataRef.current = next;
-      knownKeysRef.current = collectKnownGlanceKeys(next);
-      setData(next);
-    };
-
-    const refreshSnapshot = () => {
-      if (cancelled || refreshInFlightRef.current) {
-        return;
-      }
-
-      refreshInFlightRef.current = true;
-      bridgeCall('game.get_world_glances')
-        .then((next) => {
-          const snapshot = normaliseWorldGlancesSnapshot(next);
-          if (snapshot) {
-            applySnapshot(snapshot);
-          }
-        })
-        .catch((error) => {
-          acknowledgeBridgeFailure(error);
-          const cached = cachedWorldGlancesSnapshot();
-          if (!cancelled && cached) {
-            applySnapshot(cached);
-          }
-        })
-        .finally(() => {
-          refreshInFlightRef.current = false;
-        });
-    };
-
-    const queueRefresh = () => {
-      if (refreshTimerRef.current !== null || refreshInFlightRef.current) {
-        return;
-      }
-
-      refreshTimerRef.current = window.setTimeout(() => {
-        refreshTimerRef.current = null;
-        refreshSnapshot();
-      }, 0);
-    };
-
-    const unsub = onBridgeEvent('game.get_world_glances', (next) => {
-      applySnapshot(normaliseWorldGlancesSnapshot(next));
-    });
-
-    const catalogueDeltaHandler = (event: Event) => {
-      const rawDelta = (event as CustomEvent<unknown>).detail;
-      const delta = rawDelta && typeof rawDelta === 'object'
-        ? rawDelta as { removedArmyIds?: unknown; removedNavyIds?: unknown }
-        : {};
-      const removedArmyIds = new Set(
-        Array.isArray(delta.removedArmyIds)
-          ? delta.removedArmyIds.filter((id): id is string => typeof id === 'string')
-          : [],
-      );
-      const removedNavyIds = new Set(
-        Array.isArray(delta.removedNavyIds)
-          ? delta.removedNavyIds.filter((id): id is string => typeof id === 'string')
-          : [],
-      );
-      const current = dataRef.current;
-      if (!current || (removedArmyIds.size === 0 && removedNavyIds.size === 0)) {
-        return;
-      }
-
-      applySnapshot({
-        ...current,
-        armies: current.armies.filter(entry => !removedArmyIds.has(entry.id)),
-        navies: current.navies.filter(entry => !removedNavyIds.has(entry.id)),
+    worldGlancesRefreshInFlight = true;
+    bridgeCall('game.get_world_glances')
+      .then((next) => {
+        const snapshot = normaliseWorldGlancesSnapshot(next);
+        if (snapshot) {
+          applySnapshot(snapshot);
+        }
+      })
+      .catch((error) => {
+        acknowledgeBridgeFailure(error);
+        const cached = cachedWorldGlancesSnapshot();
+        if (cached) {
+          applySnapshot(cached);
+        }
+      })
+      .finally(() => {
+        if (isActive()) {
+          worldGlancesRefreshInFlight = false;
+        }
       });
-    };
-    window.addEventListener('bridge:game.world_glances_catalogue_delta', catalogueDeltaHandler);
-    const unsubCatalogueDelta = () => {
-      window.removeEventListener('bridge:game.world_glances_catalogue_delta', catalogueDeltaHandler);
-    };
+  };
 
-    const unsubFrame = onWorldGlancesFrame((frame) => {
-      const settlementData = mergeFrameSettlementProgress(dataRef.current, frame);
-      const nextData = mergeFrameBattleValues(settlementData, frame);
-      if (nextData !== dataRef.current) {
-        applySnapshot(nextData);
+  const queueRefresh = () => {
+    if (!isActive() || worldGlancesRefreshTimer !== null || worldGlancesRefreshInFlight) {
+      return;
+    }
+
+    worldGlancesRefreshTimer = window.setTimeout(() => {
+      worldGlancesRefreshTimer = null;
+      refreshSnapshot();
+    }, 0);
+  };
+
+  const unsubscribeSnapshot = onBridgeEvent('game.get_world_glances', (next) => {
+    applySnapshot(normaliseWorldGlancesSnapshot(next));
+  });
+
+  const catalogueDeltaHandler = (event: Event) => {
+    if (!isActive()) {
+      return;
+    }
+
+    const rawDelta = (event as CustomEvent<unknown>).detail;
+    const delta = rawDelta && typeof rawDelta === 'object'
+      ? rawDelta as {
+        snapshotRevision?: unknown;
+        upsertedSettlements?: unknown;
+        upsertedPorts?: unknown;
+        upsertedArmies?: unknown;
+        upsertedNavies?: unknown;
+        upsertedBattles?: unknown;
+        upsertedConvoys?: unknown;
+        removedSettlementIds?: unknown;
+        removedPortIds?: unknown;
+        removedArmyIds?: unknown;
+        removedNavyIds?: unknown;
+        removedBattleIds?: unknown;
+        removedConvoyIds?: unknown;
       }
+      : {};
+    const current = worldGlancesStoreData;
+    if (!current) {
+      return;
+    }
 
-      if ((!dataRef.current && frameHasEntries(frame)) || frameHasUnknownEntries(frame, dataRef.current, knownKeysRef.current)) {
-        queueRefresh();
-      }
-    });
+    const removedIds = (value: unknown) => new Set(
+      Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [],
+    );
+    publishWorldGlancesStoreData({
+      ...current,
+      snapshotRevision: typeof delta.snapshotRevision === 'number' && delta.snapshotRevision > 0
+        ? delta.snapshotRevision
+        : current.snapshotRevision,
+      settlements: mergeCatalogueEntries(
+        current.settlements,
+        snapshotEntries<GetWorldGlancesResponse['settlements'][number]>(delta.upsertedSettlements),
+        removedIds(delta.removedSettlementIds),
+      ),
+      ports: mergeCatalogueEntries(
+        current.ports,
+        snapshotEntries<GetWorldGlancesResponse['ports'][number]>(delta.upsertedPorts),
+        removedIds(delta.removedPortIds),
+      ),
+      armies: mergeCatalogueEntries(
+        current.armies,
+        snapshotEntries<GetWorldGlancesResponse['armies'][number]>(delta.upsertedArmies),
+        removedIds(delta.removedArmyIds),
+      ),
+      navies: mergeCatalogueEntries(
+        current.navies,
+        snapshotEntries<GetWorldGlancesResponse['navies'][number]>(delta.upsertedNavies),
+        removedIds(delta.removedNavyIds),
+      ),
+      battles: mergeCatalogueEntries(
+        current.battles,
+        snapshotEntries<GetWorldGlancesResponse['battles'][number]>(delta.upsertedBattles),
+        removedIds(delta.removedBattleIds),
+      ),
+      convoys: mergeCatalogueEntries(
+        current.convoys,
+        snapshotEntries<GetWorldGlancesResponse['convoys'][number]>(delta.upsertedConvoys),
+        removedIds(delta.removedConvoyIds),
+      ),
+    }, true);
+  };
+  window.addEventListener('bridge:game.world_glances_catalogue_delta', catalogueDeltaHandler);
 
-    refreshSnapshot();
+  const unsubscribeFrame = onWorldGlancesFrame((frame) => {
+    const settlementData = mergeFrameSettlementProgress(worldGlancesStoreData, frame);
+    const nextData = mergeFrameBattleValues(settlementData, frame);
+    if (nextData !== worldGlancesStoreData) {
+      publishWorldGlancesStoreData(nextData, false);
+    }
 
-    return () => {
-      cancelled = true;
-      if (refreshTimerRef.current !== null) {
-        window.clearTimeout(refreshTimerRef.current);
-        refreshTimerRef.current = null;
-      }
-      unsub();
-      unsubCatalogueDelta();
-      unsubFrame();
-    };
-  }, [enabled]);
+    if ((!worldGlancesStoreData && frameHasEntries(frame))
+      || frameHasUnknownEntries(frame, worldGlancesStoreData, worldGlancesKnownKeys)) {
+      queueRefresh();
+    }
+  });
 
-  return data;
+  worldGlancesStoreStop = () => {
+    if (!isActive()) {
+      return;
+    }
+    ++worldGlancesStoreGeneration;
+    if (worldGlancesRefreshTimer !== null) {
+      window.clearTimeout(worldGlancesRefreshTimer);
+      worldGlancesRefreshTimer = null;
+    }
+    worldGlancesRefreshInFlight = false;
+    unsubscribeSnapshot();
+    unsubscribeFrame();
+    window.removeEventListener('bridge:game.world_glances_catalogue_delta', catalogueDeltaHandler);
+    worldGlancesStoreStop = null;
+  };
+
+  refreshSnapshot();
+}
+
+function subscribeWorldGlancesStore(listener: WorldGlancesStoreListener) {
+  worldGlancesStoreListeners.add(listener);
+  startWorldGlancesStore();
+  return () => {
+    worldGlancesStoreListeners.delete(listener);
+    if (worldGlancesStoreListeners.size === 0) {
+      worldGlancesStoreStop?.();
+    }
+  };
+}
+
+function subscribeDisabledWorldGlancesStore() {
+  return () => {};
+}
+
+export function useWorldGlancesBridge(enabled = true) {
+  return useSyncExternalStore(
+    enabled ? subscribeWorldGlancesStore : subscribeDisabledWorldGlancesStore,
+    getWorldGlancesStoreSnapshot,
+    getWorldGlancesStoreSnapshot,
+  );
 }
 
 export interface WorldGlanceFrameEntry {

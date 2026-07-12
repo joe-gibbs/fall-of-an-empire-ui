@@ -16,6 +16,16 @@
   pointer-events: none;
 }
 
+.world-anchor-paint-fence {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  background: rgb(0, 0, 0);
+  pointer-events: none;
+}
+
 /* Ghosts sit under live elements; both layers span the whole atlas and their children are
    absolutely positioned by the world-anchor host. */
 .world-anchor-ghost-layer > * {
@@ -34,6 +44,19 @@
   transform: scale(var(--glance-atlas-raster-scale, 1)) !important;
   transform-origin: left top;
   pointer-events: none !important;
+}
+
+/* The native compositor owns temporal hand-off between detail states. Browser transitions can
+   expose a transparent intermediate atlas paint, so atlas content changes are deliberately
+   immediate even though the hidden interactive overlay may still animate. */
+.glance-atlas-plate,
+.glance-atlas-plate *,
+.glance-atlas-plate::before,
+.glance-atlas-plate::after,
+.glance-atlas-plate *::before,
+.glance-atlas-plate *::after {
+  animation: none !important;
+  transition: none !important;
 }
 
 .glance-atlas-plate .glance--military {
@@ -62,6 +85,17 @@
 .glance-atlas-plate.world-glance-node--navy {
   box-sizing: content-box;
   padding: var(--military-atlas-bleed, 0);
+}
+
+/* Convoy labels and cargo strips are deliberately much wider than their diamond marker. Keep
+   that overflow inside the convoy's own sampled cell so it cannot paint into adjacent plates. */
+.glance-atlas-plate.world-glance-node--convoy {
+  box-sizing: content-box;
+  padding-top: var(--convoy-atlas-top-bleed, 0);
+  padding-right: var(--convoy-atlas-right-bleed, 0);
+  padding-bottom: var(--convoy-atlas-bottom-bleed, 0);
+  padding-left: var(--convoy-atlas-left-bleed, 0);
+  overflow: hidden;
 }
 
 .glance-atlas-notification-plate {

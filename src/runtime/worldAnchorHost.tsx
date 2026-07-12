@@ -23,25 +23,32 @@ import { registerWorldAnchorContentChangeHandler } from './worldAnchorContentCha
  *                                   it back at layout size (sharper text on small plates). The
  *                                   element must also visually scale itself by the same factor
  *                                   (see --glance-atlas-raster-scale). Default 1.
+ *   data-world-anchor-reserve-size  Optional "width,height" capacity in layout px. Detail/content
+ *                                   changes that fit this cell update in place without repacking.
  *   data-world-anchor-priority     Numeric; higher packs first when the atlas overflows (set it
  *                                   on recently-visible elements). Default 0.
+ *   data-world-anchor-demand       Set to "hidden" to keep an element staged outside the atlas;
+ *                                   change it to "visible" to admit it using the latest priority.
  *
  * Invariants preserved from the glance compositor's flicker saga (see project memory):
  *  - Repacks never move painted pixels out from under the engine: before live elements move to
- *    a new region, static clones of their previous cells are placed in a ghost layer, and ghosts
- *    survive two further generations (four rotating regions) — the engine reads layouts up to
- *    two generations old while new ones age past its paint guard.
+ *    a new region, static clones of their previous cells are placed in a ghost layer. Native code
+ *    reports the oldest paint-confirmed layout it may still sample; that region and its ghosts
+ *    remain owned until the acknowledgement advances.
  *  - Layout reports go out only after the browser has actually painted (double rAF).
- *  - Repacks happen only when the cell set is wrong (new/removed/resized elements), never on
- *    content churn.
+ *    Once native code accepts a report, a one-pixel paint fence advances the CEF paint
+ *    sequence without invalidating and copying the entire 4096x4096 software surface.
+ *  - Content changes update inside stable reserved cells. Repacks happen only when admission or
+ *    cell capacity changes, never merely because a plate switches detail class.
  */
 
 const ATLAS_WIDTH = 4096;
 const ATLAS_HEIGHT = 4096;
-const ATLAS_REGIONS = 4;
+// Paint-confirmed ownership lets the atlas use a true double buffer. Each generation occupies
+// half the surface; a third generation waits until native code releases the older half.
+const ATLAS_REGIONS = 2;
 const REGION_HEIGHT = ATLAS_HEIGHT / ATLAS_REGIONS;
 const CELL_GAP = 8;
-const GHOST_GENERATIONS = 2;
 const REPACK_THROTTLE_MS = 400;
 const REPACK_MIN_INTERVAL_MS = 120;
 // New elements wait here, outside the 4096px atlas canvas, until packed: they get laid out and
@@ -74,6 +81,23 @@ function parsePriority(element: HTMLElement): number {
   return Number.isFinite(value) ? value : 0;
 }
 
+function parseReserveSize(element: HTMLElement): { width: number; height: number } {
+  const parts = (element.dataset.worldAnchorReserveSize ?? '').split(/[,\s]+/).filter(Boolean);
+  if (parts.length !== 2) {
+    return { width: 0, height: 0 };
+  }
+  const width = Number.parseFloat(parts[0]);
+  const height = Number.parseFloat(parts[1]);
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : 0,
+    height: Number.isFinite(height) && height > 0 ? height : 0,
+  };
+}
+
+function isPackingDemanded(element: HTMLElement): boolean {
+  return element.dataset.worldAnchorDemand !== 'hidden';
+}
+
 // Anchor point in element LAYOUT px (pre raster scale); the report converts to atlas texels.
 function parseAnchorPoint(element: HTMLElement, layoutWidth: number, layoutHeight: number): { x: number; y: number } {
   const raw = (element.dataset.worldAnchorPoint ?? 'center').trim();
@@ -103,6 +127,7 @@ function parseAnchorPoint(element: HTMLElement, layoutWidth: number, layoutHeigh
 
 class WorldAnchorHostController {
   private readonly ghostLayer: HTMLElement;
+  private readonly paintFence: HTMLElement;
   private readonly elements = new Map<HTMLElement, AnchoredElementState>();
   private readonly mutationObserver: MutationObserver;
   private readonly resizeObserver: ResizeObserver;
@@ -110,11 +135,35 @@ class WorldAnchorHostController {
   private repackTimer: number | null = null;
   private lastRepackAt = 0;
   private reportFrameIds: number[] = [];
-  private readonly contentChangeGhosts = new Map<HTMLElement, HTMLElement>();
+  private paintFencePhase = false;
+  private protectedLayoutGeneration = 0;
+  private repackWaitingForLayoutRelease = false;
   private disposed = false;
 
-  constructor(liveLayer: HTMLElement, ghostLayer: HTMLElement) {
+  private readonly protectedLayoutHandler = (event: Event) => {
+    const revision = (event as CustomEvent<{ revision?: unknown }>).detail?.revision;
+    if (typeof revision !== 'number' || !Number.isFinite(revision)) {
+      return;
+    }
+
+    const generation = Math.max(0, Math.trunc(revision));
+    if (generation <= this.protectedLayoutGeneration) {
+      return;
+    }
+
+    this.protectedLayoutGeneration = generation;
+    this.pruneReleasedGhosts();
+    if (this.repackWaitingForLayoutRelease) {
+      this.repackWaitingForLayoutRelease = false;
+      this.scheduleRepack(true);
+    }
+  };
+
+  constructor(liveLayer: HTMLElement, ghostLayer: HTMLElement, paintFence: HTMLElement) {
     this.ghostLayer = ghostLayer;
+    this.paintFence = paintFence;
+
+    window.addEventListener('foae:world-anchor-protected-layout', this.protectedLayoutHandler);
 
     this.resizeObserver = new ResizeObserver((observations) => {
       let needsRepack = false;
@@ -123,6 +172,9 @@ class WorldAnchorHostController {
         const element = observation.target as HTMLElement;
         const state = this.elements.get(element);
         if (!state) {
+          continue;
+        }
+        if (!isPackingDemanded(element)) {
           continue;
         }
         const rasterScale = parseRasterScale(element);
@@ -168,7 +220,13 @@ class WorldAnchorHostController {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['data-world-anchor', 'data-world-anchor-raster-scale', 'data-world-anchor-point'],
+      attributeFilter: [
+        'data-world-anchor',
+        'data-world-anchor-raster-scale',
+        'data-world-anchor-reserve-size',
+        'data-world-anchor-point',
+        'data-world-anchor-demand',
+      ],
     });
 
     if (this.collectAnchoredElements(liveLayer)) {
@@ -180,6 +238,7 @@ class WorldAnchorHostController {
     this.disposed = true;
     this.mutationObserver.disconnect();
     this.resizeObserver.disconnect();
+    window.removeEventListener('foae:world-anchor-protected-layout', this.protectedLayoutHandler);
     if (this.repackTimer !== null) {
       window.clearTimeout(this.repackTimer);
     }
@@ -187,7 +246,6 @@ class WorldAnchorHostController {
       window.cancelAnimationFrame(frameId);
     }
     this.elements.clear();
-    this.contentChangeGhosts.clear();
   }
 
   prepareContentChange(element: HTMLElement) {
@@ -195,24 +253,9 @@ class WorldAnchorHostController {
     if (this.disposed || !state?.slot) {
       return;
     }
-
-    this.contentChangeGhosts.get(element)?.remove();
-
-    const ghost = element.cloneNode(true) as HTMLElement;
-    ghost.removeAttribute('data-world-anchor');
-    ghost.removeAttribute('data-world-anchor-priority');
-    ghost.style.left = `${state.slot.x}px`;
-    ghost.style.top = `${state.slot.y}px`;
-    // The live plate changes in the same cell before the repack moves it. Keep the preserved
-    // representation above that changing plate so the old layout always samples intact pixels.
-    ghost.style.zIndex = '1';
-    ghost.dataset.worldAnchorGhostGeneration = String(this.generation);
-    this.ghostLayer.appendChild(ghost);
-    this.contentChangeGhosts.set(element, ghost);
-
-    // The content change may resize the element before ResizeObserver runs. Queue the repack now
-    // so the preserved pixels remain sampleable until the replacement cell has painted.
-    this.scheduleRepack(true);
+    // React applies the new class/content later in this task. The double-rAF report reads the new
+    // dimensions and anchor after paint while the plate stays in the same reserved atlas cell.
+    this.reportAfterPaint(this.generation);
   }
 
   private collectAnchoredElements(root: HTMLElement): boolean {
@@ -251,13 +294,26 @@ class WorldAnchorHostController {
       }
     });
     for (const element of candidates) {
-      if (this.elements.delete(element)) {
-        this.resizeObserver.unobserve(element);
-        changed = true;
+      const state = this.elements.get(element);
+      if (!state) {
+        continue;
       }
+
+      if (state.slot) {
+        const ghost = element.cloneNode(true) as HTMLElement;
+        ghost.removeAttribute('data-world-anchor');
+        ghost.removeAttribute('data-world-anchor-priority');
+        ghost.removeAttribute('data-world-anchor-demand');
+        ghost.style.left = `${state.slot.x}px`;
+        ghost.style.top = `${state.slot.y}px`;
+        ghost.dataset.worldAnchorGhostGeneration = String(this.generation);
+        this.ghostLayer.appendChild(ghost);
+      }
+
+      this.elements.delete(element);
+      this.resizeObserver.unobserve(element);
+      changed = true;
     }
-    // Removal only frees atlas space; the engine stops referencing the key in lockstep with the
-    // entity leaving its placement source, so no urgent repaint is needed.
     return changed;
   }
 
@@ -276,12 +332,28 @@ class WorldAnchorHostController {
       state.key = key;
       return true;
     }
-    // Raster-scale / anchor-point changes only need a fresh report, which a repack provides.
-    return true;
+    // Losing demand does not require moving anything: the native frame stops drawing this key,
+    // while its stable cell remains ready if it re-enters the padded viewport during a zoom.
+    if (!isPackingDemanded(element)) {
+      return false;
+    }
+
+    const rasterScale = parseRasterScale(element);
+    const reserveSize = parseReserveSize(element);
+    const requiredWidth = Math.ceil(Math.max(element.offsetWidth, reserveSize.width) * rasterScale);
+    const requiredHeight = Math.ceil(Math.max(element.offsetHeight, reserveSize.height) * rasterScale);
+    if (!state.slot || requiredWidth !== state.slot.width || requiredHeight !== state.slot.height) {
+      return true;
+    }
+
+    // Re-admission and anchor/raster changes fit the existing cell. Publish fresh geometry after
+    // paint without rotating every other visible plate into another atlas region.
+    this.reportAfterPaint(this.generation);
+    return false;
   }
 
   private scheduleRepack(urgent: boolean) {
-    if (this.disposed) {
+    if (this.disposed || this.repackWaitingForLayoutRelease) {
       return;
     }
     const minInterval = urgent ? REPACK_MIN_INTERVAL_MS : REPACK_THROTTLE_MS;
@@ -304,8 +376,14 @@ class WorldAnchorHostController {
       return;
     }
 
+    const nextGeneration = this.generation + 1;
+    if (nextGeneration - this.protectedLayoutGeneration >= ATLAS_REGIONS) {
+      this.repackWaitingForLayoutRelease = true;
+      return;
+    }
+
     this.lastRepackAt = Date.now();
-    this.generation += 1;
+    this.generation = nextGeneration;
     const generation = this.generation;
     const regionIndex = generation % ATLAS_REGIONS;
     const originY = regionIndex * REGION_HEIGHT;
@@ -316,37 +394,32 @@ class WorldAnchorHostController {
       if (!state.slot) {
         continue;
       }
-      const contentChangeGhost = this.contentChangeGhosts.get(element);
-      if (contentChangeGhost) {
-        contentChangeGhost.dataset.worldAnchorGhostGeneration = String(generation - 1);
-        continue;
-      }
       const ghost = element.cloneNode(true) as HTMLElement;
       ghost.removeAttribute('data-world-anchor');
       ghost.removeAttribute('data-world-anchor-priority');
+      ghost.removeAttribute('data-world-anchor-demand');
       ghost.style.left = `${state.slot.x}px`;
       ghost.style.top = `${state.slot.y}px`;
       ghost.dataset.worldAnchorGhostGeneration = String(generation - 1);
       this.ghostLayer.appendChild(ghost);
     }
-    this.contentChangeGhosts.clear();
 
-    // Prune ghosts old enough that the engine provably no longer samples their layout: it draws
-    // the newest layout past its paint guard, at most ~two generations behind this one.
-    this.ghostLayer.querySelectorAll('[data-world-anchor-ghost-generation]').forEach((node) => {
-      const ghostGeneration = Number.parseInt((node as HTMLElement).dataset.worldAnchorGhostGeneration ?? '0', 10);
-      if (generation - ghostGeneration > GHOST_GENERATIONS) {
-        node.remove();
-      }
-    });
+    this.pruneReleasedGhosts();
 
     // Measure and pack, highest priority first so overflow only ever drops elements their
     // consumer marked as least recently relevant.
     const pending: { element: HTMLElement; state: AnchoredElementState; width: number; height: number; priority: number }[] = [];
     for (const [element, state] of this.elements) {
+      if (!isPackingDemanded(element)) {
+        state.slot = null;
+        element.style.left = `${STAGING_LEFT_PX}px`;
+        element.style.top = '0px';
+        continue;
+      }
       const rasterScale = parseRasterScale(element);
-      const width = Math.ceil(element.offsetWidth * rasterScale);
-      const height = Math.ceil(element.offsetHeight * rasterScale);
+      const reserveSize = parseReserveSize(element);
+      const width = Math.ceil(Math.max(element.offsetWidth, reserveSize.width) * rasterScale);
+      const height = Math.ceil(Math.max(element.offsetHeight, reserveSize.height) * rasterScale);
       if (width <= 0 || height <= 0) {
         state.slot = null;
         continue;
@@ -388,10 +461,27 @@ class WorldAnchorHostController {
     this.reportAfterPaint(generation);
   }
 
+  private pruneReleasedGhosts() {
+    if (this.protectedLayoutGeneration <= 0) {
+      return;
+    }
+
+    this.ghostLayer.querySelectorAll('[data-world-anchor-ghost-generation]').forEach((node) => {
+      const ghostGeneration = Number.parseInt((node as HTMLElement).dataset.worldAnchorGhostGeneration ?? '0', 10);
+      if (ghostGeneration < this.protectedLayoutGeneration) {
+        node.remove();
+      }
+    });
+  }
+
   // Report only after the browser has actually painted the new packing (double rAF: the first
   // fires before paint, the second after the frame that painted). Under renderer load the
   // report self-delays with the paint, so the engine's age guard only covers the texture copy.
   private reportAfterPaint(generation: number) {
+    for (const frameId of this.reportFrameIds) {
+      window.cancelAnimationFrame(frameId);
+    }
+    this.reportFrameIds = [];
     const outerId = window.requestAnimationFrame(() => {
       const innerId = window.requestAnimationFrame(() => {
         this.reportFrameIds = this.reportFrameIds.filter((id) => id !== outerId && id !== innerId);
@@ -430,23 +520,38 @@ class WorldAnchorHostController {
           atlasWidth: ATLAS_WIDTH,
           atlasHeight: ATLAS_HEIGHT,
           cells,
-        })).catch((error) => acknowledgeBridgeFailure(error, 'WorldAnchorLayout'));
+        })).then(() => {
+          this.advancePaintFence();
+        }).catch((error) => acknowledgeBridgeFailure(error, 'WorldAnchorLayout'));
       });
       this.reportFrameIds.push(innerId);
     });
     this.reportFrameIds.push(outerId);
+  }
+
+  private advancePaintFence() {
+    if (this.disposed) {
+      return;
+    }
+    this.paintFencePhase = !this.paintFencePhase;
+    this.paintFence.style.backgroundColor = this.paintFencePhase ? 'rgb(1, 0, 0)' : 'rgb(0, 0, 0)';
   }
 }
 
 export default function WorldAnchorHost({ children }: { children: ReactNode }) {
   const liveLayerRef = useRef<HTMLDivElement | null>(null);
   const ghostLayerRef = useRef<HTMLDivElement | null>(null);
+  const paintFenceRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!liveLayerRef.current || !ghostLayerRef.current) {
+    if (!liveLayerRef.current || !ghostLayerRef.current || !paintFenceRef.current) {
       return undefined;
     }
-    const controller = new WorldAnchorHostController(liveLayerRef.current, ghostLayerRef.current);
+    const controller = new WorldAnchorHostController(
+      liveLayerRef.current,
+      ghostLayerRef.current,
+      paintFenceRef.current,
+    );
     const unregisterContentChangeHandler = registerWorldAnchorContentChangeHandler(
       element => controller.prepareContentChange(element),
     );
@@ -460,6 +565,7 @@ export default function WorldAnchorHost({ children }: { children: ReactNode }) {
     <div className="world-anchor-atlas-root">
       <div ref={ghostLayerRef} className="world-anchor-ghost-layer" />
       <div ref={liveLayerRef} className="world-anchor-live-layer" />
+      <div ref={paintFenceRef} className="world-anchor-paint-fence" />
       <ChildrenIntoLiveLayer liveLayerRef={liveLayerRef}>{children}</ChildrenIntoLiveLayer>
     </div>
   );

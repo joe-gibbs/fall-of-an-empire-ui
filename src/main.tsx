@@ -61,6 +61,7 @@ const WORLD_INPUT_BLOCKING_CLASSES = [
   'fs-root',
   'tt-bubble',
   'world-glance',
+  'native-world-glance-hit-target',
 ];
 
 type NativeCursorKind =
@@ -151,7 +152,7 @@ function hasDisabledCursorTarget(element: Element): boolean {
 
 function webUICursorKind(element: Element | null): NativeCursorKind {
   if (!element) return 'default';
-  if (element.closest('.world-glance')) return 'gameplay';
+  if (element.closest('.world-glance, .native-world-glance-hit-target')) return 'gameplay';
   if (element.closest(BLOCKED_TARGET_SELECTOR) || hasDisabledCursorTarget(element)) return 'blocked';
   if (element.closest(HELP_TARGET_SELECTOR)) return 'help';
   if (element.closest(CROSSHAIR_TARGET_SELECTOR)) return 'crosshair';
@@ -397,6 +398,13 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     dispatchBridgeEvent('ui.world_anchor_layout_keys', {
       keys: Array.isArray(keys) ? keys : [],
     });
+  });
+
+  engine.on('StrategyWorldAnchorProtectedLayout', (revision) => {
+    if (typeof revision !== 'number' || !Number.isFinite(revision)) return;
+    window.dispatchEvent(new CustomEvent('foae:world-anchor-protected-layout', {
+      detail: { revision },
+    }));
   });
 
   if (announceScriptingReady) {

@@ -40,7 +40,6 @@ import './GlanceAtlas.css';
 // owns all geometry (packing, atlas regions, ghosting, layout reports); this component owns
 // CONTENT only — which plates exist, their detail class, selection/hover styling.
 
-const SETTLEMENT_RASTER_SCALE = 1.5;
 // Notification plates are created only after their placement frame arrives. They therefore
 // cannot receive the usual "recently visible" priority stamp until after the host has already
 // scheduled its admission repack. Keep live notifications ahead of the persistent world
@@ -54,6 +53,18 @@ const SETTLEMENT_ATLAS_EDGE_BLEED_REM = 0.0909;
 const SETTLEMENT_STATUS_TOP_BLEED_REM = 0.4545;
 // Covers the furthest military crown socket (1.5rem) plus a small atlas edge guard.
 const MILITARY_ATLAS_BLEED_REM = 1.5909;
+// Settlement cells keep one stable footprint across flag/name/detail changes. The paint-confirmed
+// half-sheet buffer and 1x raster scale provide enough capacity without moving cells during zoom.
+const SETTLEMENT_NAMED_ATLAS_CAPACITY_WIDTH_REM = 15.1818;
+const SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM = 4.2727;
+const MILITARY_ATLAS_CAPACITY_REM = 9;
+const CONVOY_ATLAS_LEFT_BLEED_REM = 0.75;
+const CONVOY_ATLAS_RIGHT_BLEED_REM = 8.75;
+const CONVOY_ATLAS_TOP_BLEED_REM = 0.75;
+const CONVOY_ATLAS_BOTTOM_BLEED_REM = 1.75;
+const CONVOY_DETAILED_SIZE_REM = 3.8182;
+const CONVOY_NAME_SIZE_REM = 3.2727;
+const CONVOY_FLAG_SIZE_REM = 2.7273;
 
 // Anchor constants mirror the DOM overlay's settlement transform offset (negated); every other
 // world kind is centre-anchored, notifications bottom-centre.
@@ -83,9 +94,19 @@ function currentRuntimeRootFontPx(): number {
   return Number.parseFloat(value) || 13.2;
 }
 
-function anchorPointFor(section: AtlasSection, remPx: number, settlementBleedRem: number): string {
+function convoyMarkerSizeRem(detail: WorldGlanceDetailClass): number {
+  if (detail === 'detail-flag') return CONVOY_FLAG_SIZE_REM;
+  if (detail === 'detail-name') return CONVOY_NAME_SIZE_REM;
+  return CONVOY_DETAILED_SIZE_REM;
+}
+
+function anchorPointFor(section: AtlasSection, detail: WorldGlanceDetailClass, remPx: number, settlementBleedRem: number): string {
   if (section === 'settlement') {
     return `${((SETTLEMENT_ANCHOR_X_REM + settlementBleedRem) * remPx).toFixed(2)},${((SETTLEMENT_ANCHOR_Y_REM + settlementBleedRem) * remPx).toFixed(2)}`;
+  }
+  if (section === 'convoy') {
+    const markerHalfSize = convoyMarkerSizeRem(detail) / 2;
+    return `${((CONVOY_ATLAS_LEFT_BLEED_REM + markerHalfSize) * remPx).toFixed(2)},${((CONVOY_ATLAS_TOP_BLEED_REM + markerHalfSize) * remPx).toFixed(2)}`;
   }
   if (section === 'notification') {
     return '50% 100%';
@@ -93,8 +114,26 @@ function anchorPointFor(section: AtlasSection, remPx: number, settlementBleedRem
   return 'center';
 }
 
-function rasterScaleForSection(section: AtlasSection): number {
-  return section === 'settlement' ? SETTLEMENT_RASTER_SCALE : 1;
+function rasterScaleForSection(): number {
+  return 1;
+}
+
+function reserveSizeForSection(section: AtlasSection, remPx: number, settlementBleedRem: number): string | undefined {
+  if (section === 'settlement') {
+    const widthRem = SETTLEMENT_NAMED_ATLAS_CAPACITY_WIDTH_REM + settlementBleedRem * 2;
+    const heightRem = SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM + settlementBleedRem * 2;
+    return `${(widthRem * remPx).toFixed(2)},${(heightRem * remPx).toFixed(2)}`;
+  }
+  if (section === 'army' || section === 'navy') {
+    const extent = (MILITARY_ATLAS_CAPACITY_REM * remPx).toFixed(2);
+    return `${extent},${extent}`;
+  }
+  if (section === 'convoy') {
+    const widthRem = CONVOY_ATLAS_LEFT_BLEED_REM + CONVOY_DETAILED_SIZE_REM + CONVOY_ATLAS_RIGHT_BLEED_REM;
+    const heightRem = CONVOY_ATLAS_TOP_BLEED_REM + CONVOY_DETAILED_SIZE_REM + CONVOY_ATLAS_BOTTOM_BLEED_REM;
+    return `${(widthRem * remPx).toFixed(2)},${(heightRem * remPx).toFixed(2)}`;
+  }
+  return undefined;
 }
 
 const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, remPx, plateRef }: {
@@ -109,7 +148,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   plateRef: (key: string, node: HTMLDivElement | null) => void;
 }) {
   const anchorKey = worldAnchorKey(section, id);
-  const rasterScale = rasterScaleForSection(section);
+  const rasterScale = rasterScaleForSection();
   const settlementBleedRem = section === 'settlement'
     ? Math.max(
       SETTLEMENT_STATUS_TOP_BLEED_REM,
@@ -118,10 +157,12 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
         : 0),
     )
     : 0;
+  const reserveSize = reserveSizeForSection(section, remPx, settlementBleedRem);
   const anchorAttributes = {
     'data-world-anchor': anchorKey,
-    'data-world-anchor-point': anchorPointFor(section, remPx, settlementBleedRem),
+    'data-world-anchor-point': anchorPointFor(section, detail, remPx, settlementBleedRem),
     'data-world-anchor-raster-scale': rasterScale,
+    ...(reserveSize ? { 'data-world-anchor-reserve-size': reserveSize } : {}),
     ...(section === 'notification'
       ? { 'data-world-anchor-priority': ACTIVE_NOTIFICATION_ATLAS_PRIORITY }
       : {}),
@@ -130,6 +171,10 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
     '--glance-atlas-raster-scale': rasterScale,
     '--settlement-atlas-bleed': `${settlementBleedRem}rem`,
     '--military-atlas-bleed': `${section === 'army' || section === 'navy' ? MILITARY_ATLAS_BLEED_REM : 0}rem`,
+    '--convoy-atlas-left-bleed': `${CONVOY_ATLAS_LEFT_BLEED_REM}rem`,
+    '--convoy-atlas-right-bleed': `${CONVOY_ATLAS_RIGHT_BLEED_REM}rem`,
+    '--convoy-atlas-top-bleed': `${CONVOY_ATLAS_TOP_BLEED_REM}rem`,
+    '--convoy-atlas-bottom-bleed': `${CONVOY_ATLAS_BOTTOM_BLEED_REM}rem`,
   } as CSSProperties;
   const setNode = (node: HTMLDivElement | null) => plateRef(anchorKey, node);
 
@@ -181,6 +226,7 @@ export default function GlanceAtlasRoot() {
   const detailByKeyRef = useRef<Map<string, WorldGlanceDetailClass>>(new Map());
   const flagsByKeyRef = useRef<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
   const plateNodesRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const visibleAtlasKeysRef = useRef<Set<string>>(new Set());
   const notificationContentSignatureRef = useRef('');
   // Last known entry per entity: plates keep rendering through brief catalogue churn (fog
   // flicker, event latency) instead of blanking a cell the engine is still compositing.
@@ -197,6 +243,11 @@ export default function GlanceAtlasRoot() {
   const plateRef = (key: string, node: HTMLDivElement | null) => {
     if (node) {
       plateNodesRef.current.set(key, node);
+      const visible = key.startsWith('notif:') || visibleAtlasKeysRef.current.has(key);
+      node.dataset.worldAnchorDemand = visible ? 'visible' : 'hidden';
+      if (visible && !key.startsWith('notif:')) {
+        node.dataset.worldAnchorPriority = String(Date.now());
+      }
     } else {
       plateNodesRef.current.delete(key);
     }
@@ -290,24 +341,31 @@ export default function GlanceAtlasRoot() {
       let detailChanged = false;
       let flagsChanged = false;
       const now = Date.now();
+      const previousVisibleKeys = visibleAtlasKeysRef.current;
+      const nextVisibleKeys = new Set<string>();
       for (const section of WORLD_GLANCE_FRAME_SECTIONS) {
         const count = worldGlanceFrameEntryCount(frame, section);
         for (let index = 0; index < count; index += 1) {
           const entry = readWorldGlanceFrameEntry(frame, section, index, scratch);
           if (!entry || !entry.id) continue;
           const key = worldAnchorKey(section, entry.id);
+          const atlasVisible = (entry.opacity ?? 0) > 0.05;
 
-          if ((entry.opacity ?? 0) > 0.05) {
+          if (atlasVisible) {
+            nextVisibleKeys.add(key);
             const node = plateNodesRef.current.get(key);
-            if (node) {
+            if (node && !previousVisibleKeys.has(key)) {
               node.dataset.worldAnchorPriority = String(now);
+              if (node.dataset.worldAnchorDemand !== 'visible') {
+                node.dataset.worldAnchorDemand = 'visible';
+              }
             }
           }
 
           const nextDetail = detailClass(entry.detailLevel);
           if (detailByKeyRef.current.get(key) !== nextDetail) {
             const node = plateNodesRef.current.get(key);
-            if (node) {
+            if (node && atlasVisible && section !== 'settlement') {
               prepareWorldAnchorContentChange(node);
             }
             detailByKeyRef.current.set(key, nextDetail);
@@ -323,6 +381,15 @@ export default function GlanceAtlasRoot() {
           }
         }
       }
+      for (const key of previousVisibleKeys) {
+        if (!nextVisibleKeys.has(key)) {
+          const node = plateNodesRef.current.get(key);
+          if (node) {
+            node.dataset.worldAnchorDemand = 'hidden';
+          }
+        }
+      }
+      visibleAtlasKeysRef.current = nextVisibleKeys;
 
       if (detailChanged) {
         setDetailByKey(new Map(detailByKeyRef.current));
@@ -343,10 +410,13 @@ export default function GlanceAtlasRoot() {
         if (section !== 'notification' && !data) {
           return null;
         }
-        const liveEntries = section === 'notification'
+        // World plates retain their DOM node and atlas identity after first discovery. The native
+        // frame changes demand as the camera moves; mounting only the latest catalogue would
+        // continuously recycle cells and let an older painted layout sample replacement content.
+        const renderedEntries = section === 'notification'
           ? notificationEntries
-          : worldSectionEntries(data!, section);
-        return liveEntries.map((entry) => {
+          : Array.from(sectionCache.values());
+        return renderedEntries.map((entry) => {
           if (!entry?.id) {
             return null;
           }

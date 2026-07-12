@@ -1014,6 +1014,9 @@ function nativeHitTargetSize(kind: WorldGlanceFrameSection, detailLevel: WorldGl
   if (kind === 'port' || kind === 'convoy') {
     return { width: 72, height: 72, offsetX: -36, offsetY: -36 };
   }
+  if (kind === 'army' || kind === 'navy') {
+    return { width: 132, height: 132, offsetX: -66, offsetY: -66 };
+  }
   return { width: 96, height: 96, offsetX: -48, offsetY: -48 };
 }
 
@@ -1085,14 +1088,15 @@ function NativeWorldGlanceInputOverlay({ visible = true }: WorldGlanceOverlayPro
         }
 
         const size = nativeHitTargetSize(kind, entry.detailLevel);
-        const x = entry.screenX * positionScaleX + size.offsetX;
-        const y = entry.screenY * positionScaleY + size.offsetY;
+        const scale = Math.max(entry.scale, 0.01);
+        const x = entry.screenX * positionScaleX + size.offsetX * scale;
+        const y = entry.screenY * positionScaleY + size.offsetY * scale;
         const node = target.node;
         node.style.display = 'block';
         node.style.width = `${size.width}px`;
         node.style.height = `${size.height}px`;
         node.style.zIndex = String(localGlanceZIndex(kind, entry.zOrder));
-        node.style.transform = `translate3d(${formatPx(x)}, ${formatPx(y)}, 0) scale(${formatScale(entry.scale)})`;
+        node.style.transform = `translate3d(${formatPx(x)}, ${formatPx(y)}, 0) scale(${formatScale(scale)})`;
       }
     }
 
