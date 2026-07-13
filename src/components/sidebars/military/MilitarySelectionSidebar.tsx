@@ -159,9 +159,11 @@ function ForceBranch({ branch, depth, openMilitary }: {
               type="button"
               className="mil-selection-action"
               aria-label={detailLabel}
-              onPointerDown={(event) => {
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.preventDefault();
                 event.stopPropagation();
-                if (event.button === 0) openMilitary(force.id);
+                openMilitary(force.id);
               }}
             >
               <img src={force.isNavy ? "/assets/icons/I_NaviesQuickButton.png" : "/assets/icons/I_ArmiesQuickButton.png"} alt="" />
@@ -170,9 +172,11 @@ function ForceBranch({ branch, depth, openMilitary }: {
               type="button"
               className="mil-selection-action"
               aria-label={zoomLabel}
-              onPointerDown={(event) => {
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.preventDefault();
                 event.stopPropagation();
-                if (event.button === 0) zoomToBridge('military', force.id);
+                zoomToBridge('military', force.id);
               }}
             >
               <img src="/assets/icons/I_ZoomTo.png" alt="" />
