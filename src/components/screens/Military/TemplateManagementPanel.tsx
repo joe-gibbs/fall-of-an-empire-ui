@@ -4,7 +4,6 @@ import CloseButton from '../../common/buttons/CloseButton';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import GameButton from '../../common/buttons/GameButton';
-import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip, { type UnitTooltipData } from '../../common/tooltips/UnitTooltip';
 import { useGameActions } from '../../../context/GameContext';
@@ -35,7 +34,6 @@ import type { TemplateCreateType } from './screenTokens';
 import { TemplateBattlePlanner } from './TemplateBattlePlanner';
 import {
   MAX_BATTLE_FORMATION_SIZE,
-  addUnitToBattleGroups,
   battleGroupUnitCount,
   battleGroupsValid,
   battleRoleForUnit,
@@ -45,14 +43,10 @@ import {
   draftCompositionRequests,
   draftTotals,
   draftUnitCount,
-  groupAssignedCountExcluding,
   normaliseBattleRole,
   normaliseTemplateType,
-  orderedDraftUnitIds,
-  removeUnitsFromBattleGroups,
   romanTier,
   templateDraftsEqual,
-  unassignedUnitCount,
   type BattleFormationRole,
   type TemplateDraft,
 } from './formationTemplateDraft';
@@ -71,10 +65,8 @@ const SAVE_ICON = '/assets/icons/I_SaveFolder.png';
 const DUPLICATE_ICON = '/assets/icons/I_DuplicateTemplate.png';
 const DELETE_ICON = '/assets/icons/I_Close.png';
 const RENAME_ICON = '/assets/icons/I_Rename.png';
-const ADD_ICON = '/assets/icons/I_Plus.png';
 const TEMPLATE_LIMIT = 30;
 
-type TemplateEditorTab = 'units' | 'battle';
 type UnitCatalogueColumnKey = 'unit' | 'type' | 'tier' | 'strength' | 'cost' | 'upkeep' | 'settlements' | 'add';
 type UnitCatalogueFilterKey = 'type' | 'culture';
 
@@ -167,40 +159,6 @@ export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count:
       settlements: buildabilitySettlements,
     },
   };
-}
-
-function templateUnitAttack(unit: FormationTemplateUnitEntry): number {
-  return unit.pierceDamage + unit.crushDamage + unit.slashDamage;
-}
-
-function templateUnitDefence(unit: FormationTemplateUnitEntry): number {
-  return unit.pierceArmour + unit.crushArmour + unit.slashArmour;
-}
-
-function UnitQuickStat({
-  icon,
-  value,
-  title,
-  body,
-}: {
-  icon: string;
-  value: number;
-  title: string;
-  body: string;
-}) {
-  return (
-    <Tooltip
-      inline
-      delay={120}
-      position="bottom"
-      content={{ title, body }}
-    >
-      <span>
-        <img src={icon} alt="" className="chart-template-unit-stat-icon" draggable={false} />
-        {formatNumber(value)}
-      </span>
-    </Tooltip>
-  );
 }
 
 function TemplateListItem({
@@ -745,9 +703,8 @@ function TemplateEditor({
 }) {
   const [draft, setDraft] = useState(() => buildTemplateDraft(template, type));
   const [baseline, setBaseline] = useState(() => buildTemplateDraft(template, type));
-  const [activeTemplateTab, setActiveTemplateTab] = useState<TemplateEditorTab>('units');
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
-  const [catalogueOpen, setCatalogueOpen] = useState(false);
+  const [catalogueGroupId, setCatalogueGroupId] = useState<string | null>(null);
   const [actionActive, setActionActive] = useState(false);
   const [renamingTitle, setRenamingTitle] = useState(!template);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -762,10 +719,18 @@ function TemplateEditor({
     return map;
   }, [template, unitCatalogue]);
   const draftUnits = useMemo(() => (
-    orderedDraftUnitIds(draft)
-      .map(unitId => ({ unit: unitById.get(unitId), count: draft.counts[unitId] ?? 0 }))
+    draftCompositionRequests(draft)
+      .map(request => ({ unit: unitById.get(request.unitId), count: request.count }))
       .filter((entry): entry is { unit: FormationTemplateUnitEntry; count: number } => Boolean(entry.unit) && entry.count > 0)
   ), [draft, unitById]);
+  const catalogueGroup = catalogueGroupId
+    ? draft.battleGroups.find(group => group.id === catalogueGroupId) ?? null
+    : null;
+  const catalogueUnits = useMemo(() => (
+    catalogueGroup
+      ? unitCatalogue.filter(unit => battleRoleForUnit(unit) === catalogueGroup.role)
+      : []
+  ), [catalogueGroup, unitCatalogue]);
   const totals = useMemo(() => draftTotals(draft, unitById), [draft, unitById]);
   const iconProfile = getFormationTemplateIcon(
     draft.type,
@@ -798,59 +763,18 @@ function TemplateEditor({
     }, 0);
   };
 
-  const withUnitCount = (current: TemplateDraft, unitId: string, count: number): TemplateDraft => {
-    const unit = unitById.get(unitId);
-    if (!unit) return current;
-
-    const previousCount = current.counts[unitId] ?? 0;
-    const nextCount = Math.max(0, count);
-    const counts = { ...current.counts };
-    if (nextCount > 0) counts[unitId] = nextCount;
-    else delete counts[unitId];
-    const order = nextCount > 0 && !current.order.includes(unitId)
-      ? [...current.order, unitId]
-      : current.order.filter(id => id !== unitId || nextCount > 0);
-
-    let battleGroups = current.battleGroups;
-    if (nextCount > previousCount) {
-      for (let index = 0; index < nextCount - previousCount; index += 1) {
-        battleGroups = addUnitToBattleGroups(battleGroups, unitId, battleRoleForUnit(unit));
-      }
-    } else if (nextCount < previousCount) {
-      battleGroups = removeUnitsFromBattleGroups(battleGroups, unitId, previousCount - nextCount);
-    }
-
-    return { ...current, counts, order, battleGroups };
-  };
-
-  const adjustUnitCount = (unitId: string, delta: number) => {
-    if (!editable) return;
-    setDraft(current => withUnitCount(current, unitId, (current.counts[unitId] ?? 0) + delta));
-  };
-
   const addBattleGroup = (role: BattleFormationRole) => {
     if (!editable) return;
-    setDraft(current => {
-      const candidate = draftCompositionRequests(current)
-        .map(request => ({ unit: unitById.get(request.unitId), count: unassignedUnitCount(current, request.unitId) }))
-        .find((entry): entry is { unit: FormationTemplateUnitEntry; count: number } => (
-          Boolean(entry.unit) && entry.count > 0 && battleRoleForUnit(entry.unit) === role
-        ));
-      if (!candidate) return current;
-
-      return {
-        ...current,
-        battleGroups: [
-          ...current.battleGroups,
-          {
-            id: createBattleGroupId(),
-            role,
-            counts: { [candidate.unit.id]: 1 },
-            order: [candidate.unit.id],
-          },
-        ],
-      };
-    });
+    const groupId = createBattleGroupId();
+    setDraft(current => ({
+      ...current,
+      battleGroups: [
+        ...current.battleGroups,
+        { id: groupId, role, counts: {}, order: [] },
+      ],
+    }));
+    onNeedCatalogue();
+    setCatalogueGroupId(groupId);
   };
 
   const removeBattleGroup = (groupId: string) => {
@@ -859,9 +783,10 @@ function TemplateEditor({
       ...current,
       battleGroups: current.battleGroups.filter(group => group.id !== groupId),
     }));
+    setCatalogueGroupId(current => current === groupId ? null : current);
   };
 
-  const setBattleGroupUnitCount = (groupId: string, unitId: string, count: number) => {
+  const adjustBattleGroupUnitCount = (groupId: string, unitId: string, delta: number) => {
     if (!editable) return;
     const unit = unitById.get(unitId);
     if (!unit) return;
@@ -870,56 +795,29 @@ function TemplateEditor({
       const role = battleRoleForUnit(unit);
       const targetIndex = current.battleGroups.findIndex(group => group.id === groupId && group.role === role);
       if (targetIndex < 0) return current;
-
-      const battleGroups = current.battleGroups.map(group => ({
-        ...group,
-        counts: { ...group.counts },
-        order: [...group.order],
-      }));
-      const targetGroup = battleGroups[targetIndex];
+      const targetGroup = current.battleGroups[targetIndex];
       const currentCount = targetGroup.counts[unitId] ?? 0;
-      const desiredCount = Math.max(0, count);
-      const groupRoom = MAX_BATTLE_FORMATION_SIZE - battleGroupUnitCount(targetGroup);
-      const totalUnitCount = current.counts[unitId] ?? 0;
-      let nextCount = desiredCount;
+      if (delta > 0 && battleGroupUnitCount(targetGroup) >= MAX_BATTLE_FORMATION_SIZE) return current;
+      if (delta < 0 && currentCount <= 0) return current;
 
-      if (desiredCount > currentCount) {
-        const assignedElsewhere = groupAssignedCountExcluding(current, unitId, groupId);
-        const unassigned = Math.max(0, totalUnitCount - assignedElsewhere - currentCount);
-        const increase = Math.min(desiredCount - currentCount, groupRoom, totalUnitCount - currentCount);
-        let transferNeeded = Math.max(0, increase - unassigned);
-
-        for (let index = 0; index < battleGroups.length && transferNeeded > 0; index += 1) {
-          if (index === targetIndex) continue;
-          const sourceGroup = battleGroups[index];
-          if (sourceGroup.role !== role) continue;
-
-          const sourceCount = sourceGroup.counts[unitId] ?? 0;
-          const moved = Math.min(sourceCount, transferNeeded);
-          if (moved <= 0) continue;
-
-          const remaining = sourceCount - moved;
-          if (remaining > 0) sourceGroup.counts[unitId] = remaining;
-          else {
-            delete sourceGroup.counts[unitId];
-            sourceGroup.order = sourceGroup.order.filter(id => id !== unitId);
-          }
-          transferNeeded -= moved;
-        }
-
-        nextCount = currentCount + increase;
-      } else {
-        nextCount = desiredCount;
-      }
-
-      if (nextCount > 0) targetGroup.counts[unitId] = nextCount;
-      else delete targetGroup.counts[unitId];
-      targetGroup.order = nextCount > 0 && !targetGroup.order.includes(unitId)
+      const nextCount = currentCount + delta;
+      const counts = { ...targetGroup.counts };
+      if (nextCount > 0) counts[unitId] = nextCount;
+      else delete counts[unitId];
+      const order = nextCount > 0 && !targetGroup.order.includes(unitId)
         ? [...targetGroup.order, unitId]
         : targetGroup.order.filter(id => id !== unitId || nextCount > 0);
-
-      return { ...current, battleGroups: battleGroups.filter(group => battleGroupUnitCount(group) > 0) };
+      const battleGroups = current.battleGroups.map((group, index) => (
+        index === targetIndex ? { ...group, counts, order } : group
+      ));
+      return { ...current, battleGroups };
     });
+  };
+
+  const openUnitCatalogue = (groupId: string) => {
+    if (!editable) return;
+    onNeedCatalogue();
+    setCatalogueGroupId(groupId);
   };
 
   const saveDraft = (draftToSave: TemplateDraft) => {
@@ -957,8 +855,6 @@ function TemplateEditor({
           templateId: response.templateId,
           name,
           iconId: resolvedIconId,
-          counts: { ...draftToSave.counts },
-          order: [...draftToSave.order],
           battleGroups: draftToSave.battleGroups.map(group => ({
             ...group,
             counts: { ...group.counts },
@@ -1060,125 +956,19 @@ function TemplateEditor({
                 <img src={RENAME_ICON} alt="" className="chart-template-rename-icon" draggable={false} />
               </button>
             </div>
-            <GameButton
-              variant="burgundy"
-              icon={ADD_ICON}
-              className="chart-template-pick-units"
-              ariaLabel={webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.616.2')}
-              disabled={!editable}
-              onClick={() => {
-                if (editable) {
-                  setIconPickerOpen(false);
-                  onNeedCatalogue();
-                  setCatalogueOpen(true);
-                }
-              }}
-            />
           </div>
 
-          <div className="chart-template-editor-tabs">
-            <SidebarTabBar
-              tabs={[
-                { id: 'units', label: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1116.33') },
-                { id: 'battle', label: webUIText('FormationTemplate.BattlePlan.Title') },
-              ]}
-              activeTab={activeTemplateTab}
-              onTabChange={id => setActiveTemplateTab(id as TemplateEditorTab)}
-            />
-          </div>
-
-          {activeTemplateTab === 'units' ? (
-            <div className="chart-template-unit-table">
-              <div className="chart-template-unit-table-head">
-                <span><WebUIText textKey="FormationTemplate.UnitColumn" /></span>
-                <span><img src={TIER_ICON} alt="" className="chart-template-table-heading-icon" draggable={false} /></span>
-                <span><img src={SWORDS_ICON} alt="" className="chart-template-table-heading-icon" draggable={false} /></span>
-                <span><WebUIText textKey="FormationTemplate.CountColumn" /></span>
-              </div>
-              {draftUnits.length === 0 ? (
-                <div className="chart-template-unit-table-empty">
-                  <img src={TEMPLATE_ICON} alt="" className="chart-template-unit-table-empty-icon" draggable={false} />
-                  <span>{webUIText('Military.NoUnitsAssigned')}</span>
-                </div>
-              ) : draftUnits.map(({ unit, count }) => (
-                <Tooltip
-                  key={unit.id}
-                  content={{ afterLines: <UnitTooltip data={templateUnitTooltipData(unit, count)} /> }}
-                  position="left"
-                  delay={200}
-                  wrapperClassName="chart-template-unit-row-tooltip"
-                >
-                  <div className="chart-template-unit-table-row">
-                    <span className="chart-template-unit-cell chart-template-unit-cell--unit">
-                      <img src={templateUnitPortrait(unit)} alt="" className="chart-template-unit-portrait" draggable={false} />
-                      <span className="chart-template-unit-copy">
-                        <span className="chart-template-unit-name">{unit.name}</span>
-                        <span className="chart-template-unit-quick-stats">
-                          <UnitQuickStat
-                            icon={SWORDS_ICON}
-                            value={unit.maxStrength}
-                            title={webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.436.6')}
-                            body={webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.437.7')}
-                          />
-                          <UnitQuickStat
-                            icon="/assets/icons/I_Damage_Slash.png"
-                            value={templateUnitAttack(unit)}
-                            title={webUIText('FormationTemplate.QuickStat.TotalDamage')}
-                            body={webUIText('FormationTemplate.QuickStat.TotalDamageBody')}
-                          />
-                          <UnitQuickStat
-                            icon="/assets/icons/I_Armour_Slash.png"
-                            value={templateUnitDefence(unit)}
-                            title={webUIText('FormationTemplate.QuickStat.TotalArmour')}
-                            body={webUIText('FormationTemplate.QuickStat.TotalArmourBody')}
-                          />
-                        </span>
-                      </span>
-                    </span>
-                    <span className="chart-template-unit-cell chart-template-unit-cell--tier">
-                      <span className="chart-template-tier-diamond">{romanTier(unit.tier)}</span>
-                    </span>
-                    <span className="chart-template-unit-cell chart-template-unit-cell--role">
-                      <img src={templateUnitTypeIcon(unit)} alt="" className="chart-template-unit-type-icon" draggable={false} />
-                      {templateUnitTypeLabel(unit)}
-                    </span>
-                    <span className="chart-template-unit-cell chart-template-unit-cell--count">
-                      <span className="chart-template-unit-stepper">
-                        <button
-                          type="button"
-                          className="chart-template-stepper-button"
-                          aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25')}
-                          onMouseDown={() => adjustUnitCount(unit.id, -1)}
-                          disabled={!editable}
-                        >
-                          <img src="/assets/icons/I_Minus.png" alt="" className="chart-template-stepper-icon" draggable={false} />
-                        </button>
-                        <span className="chart-template-unit-count">{formatNumber(count)}</span>
-                        <button
-                          type="button"
-                          className="chart-template-stepper-button"
-                          aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.556.26')}
-                          onMouseDown={() => adjustUnitCount(unit.id, 1)}
-                          disabled={!editable}
-                        >
-                          <img src="/assets/icons/I_Plus.png" alt="" className="chart-template-stepper-icon" draggable={false} />
-                        </button>
-                      </span>
-                    </span>
-                  </div>
-                </Tooltip>
-              ))}
-            </div>
-          ) : (
+          <section className="chart-template-battle-workbench">
             <TemplateBattlePlanner
               draft={draft}
               unitById={unitById}
               editable={editable}
               onAddBattleGroup={addBattleGroup}
               onRemoveBattleGroup={removeBattleGroup}
-              onSetBattleGroupUnitCount={setBattleGroupUnitCount}
+              onAdjustBattleGroupUnitCount={adjustBattleGroupUnitCount}
+              onOpenUnitCatalogue={openUnitCatalogue}
             />
-          )}
+          </section>
 
         </div>
 
@@ -1272,12 +1062,12 @@ function TemplateEditor({
         </GameButton>
       </div>
 
-      {catalogueOpen && (
+      {catalogueGroup && (
         <TemplateUnitSelectorModal
-          units={unitCatalogue}
-          currentCounts={draft.counts}
-          onAdd={(unitId) => adjustUnitCount(unitId, 1)}
-          onClose={() => setCatalogueOpen(false)}
+          units={catalogueUnits}
+          currentCounts={catalogueGroup.counts}
+          onAdd={(unitId) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, 1)}
+          onClose={() => setCatalogueGroupId(null)}
         />
       )}
     </section>

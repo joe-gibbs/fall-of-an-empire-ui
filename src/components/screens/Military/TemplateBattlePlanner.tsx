@@ -6,10 +6,7 @@ import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
 import {
   MAX_BATTLE_FORMATION_SIZE,
   battleGroupUnitCount,
-  battleRoleForUnit,
-  draftCompositionRequests,
   orderedBattleGroupUnitIds,
-  unassignedUnitCount,
   type BattleFormationRole,
   type TemplateDraft,
 } from './formationTemplateDraft';
@@ -25,21 +22,17 @@ export function TemplateBattlePlanner({
   editable,
   onAddBattleGroup,
   onRemoveBattleGroup,
-  onSetBattleGroupUnitCount,
+  onAdjustBattleGroupUnitCount,
+  onOpenUnitCatalogue,
 }: {
   draft: TemplateDraft;
   unitById: Map<string, FormationTemplateUnitEntry>;
   editable: boolean;
   onAddBattleGroup: (role: BattleFormationRole) => void;
   onRemoveBattleGroup: (groupId: string) => void;
-  onSetBattleGroupUnitCount: (groupId: string, unitId: string, count: number) => void;
+  onAdjustBattleGroupUnitCount: (groupId: string, unitId: string, delta: number) => void;
+  onOpenUnitCatalogue: (groupId: string) => void;
 }) {
-  const unassignedUnits = draftCompositionRequests(draft)
-    .map(request => ({ unit: unitById.get(request.unitId), count: unassignedUnitCount(draft, request.unitId) }))
-    .filter((entry): entry is { unit: FormationTemplateUnitEntry; count: number } => Boolean(entry.unit) && entry.count > 0);
-  const hasUnassignedMelee = unassignedUnits.some(entry => battleRoleForUnit(entry.unit) === 'melee');
-  const hasUnassignedRanged = unassignedUnits.some(entry => battleRoleForUnit(entry.unit) === 'ranged');
-
   return (
     <div className="chart-template-battle-editor">
       <div className="chart-template-battle-toolbar">
@@ -47,8 +40,8 @@ export function TemplateBattlePlanner({
           <button
             type="button"
             className="chart-template-battle-add chart-template-battle-add--icon"
-            onMouseDown={() => onAddBattleGroup('melee')}
-            disabled={!editable || !hasUnassignedMelee}
+            onClick={() => onAddBattleGroup('melee')}
+            disabled={!editable}
             aria-label={webUIText('FormationTemplate.BattlePlan.NewMeleeGroup')}
           >
             <img src={ADD_ICON} alt="" className="chart-template-battle-add-plus" draggable={false} />
@@ -59,8 +52,8 @@ export function TemplateBattlePlanner({
           <button
             type="button"
             className="chart-template-battle-add chart-template-battle-add--icon"
-            onMouseDown={() => onAddBattleGroup('ranged')}
-            disabled={!editable || !hasUnassignedRanged}
+            onClick={() => onAddBattleGroup('ranged')}
+            disabled={!editable}
             aria-label={webUIText('FormationTemplate.BattlePlan.NewRangedGroup')}
           >
             <img src={ADD_ICON} alt="" className="chart-template-battle-add-plus" draggable={false} />
@@ -78,15 +71,6 @@ export function TemplateBattlePlanner({
           const roleTitle = group.role === 'ranged'
             ? webUIText('FormationTemplate.BattlePlan.RangedTitle')
             : webUIText('FormationTemplate.BattlePlan.MeleeTitle');
-          const compatibleMovable = draftCompositionRequests(draft)
-            .map(request => {
-              const unit = unitById.get(request.unitId);
-              if (!unit || battleRoleForUnit(unit) !== group.role) return null;
-              const inGroup = group.counts[unit.id] ?? 0;
-              const outsideGroup = Math.max(0, request.count - inGroup);
-              return outsideGroup > 0 ? { unit, count: outsideGroup } : null;
-            })
-            .filter((entry): entry is { unit: FormationTemplateUnitEntry; count: number } => Boolean(entry));
           const groupUnits = orderedBattleGroupUnitIds(group)
             .map(unitId => ({ unit: unitById.get(unitId), count: group.counts[unitId] ?? 0 }))
             .filter((entry): entry is { unit: FormationTemplateUnitEntry; count: number } => Boolean(entry.unit) && entry.count > 0);
@@ -104,7 +88,7 @@ export function TemplateBattlePlanner({
                 <button
                   type="button"
                   className="chart-template-battle-remove"
-                  onMouseDown={() => onRemoveBattleGroup(group.id)}
+                  onClick={() => onRemoveBattleGroup(group.id)}
                   disabled={!editable}
                   aria-label={webUIText('FormationTemplate.BattlePlan.RemoveGroup')}
                 >
@@ -116,9 +100,7 @@ export function TemplateBattlePlanner({
                 {groupUnits.length === 0 ? (
                   <div className="chart-template-empty-inline"><WebUIText textKey="FormationTemplate.BattlePlan.EmptyGroup" /></div>
                 ) : groupUnits.map(({ unit, count }) => {
-                  const availableOutsideGroup = Math.max(0, (draft.counts[unit.id] ?? 0) - count);
-                  const groupRoom = MAX_BATTLE_FORMATION_SIZE - groupCount;
-                  const canIncrement = editable && availableOutsideGroup > 0 && groupRoom > 0;
+                  const canIncrement = editable && groupCount < MAX_BATTLE_FORMATION_SIZE;
 
                   return (
                     <div key={unit.id} className="chart-template-battle-unit">
@@ -130,8 +112,9 @@ export function TemplateBattlePlanner({
                         <button
                           type="button"
                           className="chart-template-stepper-button"
-                          onMouseDown={() => onSetBattleGroupUnitCount(group.id, unit.id, count - 1)}
+                          onClick={() => onAdjustBattleGroupUnitCount(group.id, unit.id, -1)}
                           disabled={!editable}
+                          aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25')}
                         >
                           <img src="/assets/icons/I_Minus.png" alt="" className="chart-template-stepper-icon" draggable={false} />
                         </button>
@@ -139,8 +122,9 @@ export function TemplateBattlePlanner({
                         <button
                           type="button"
                           className="chart-template-stepper-button"
-                          onMouseDown={() => onSetBattleGroupUnitCount(group.id, unit.id, count + 1)}
+                          onClick={() => onAdjustBattleGroupUnitCount(group.id, unit.id, 1)}
                           disabled={!canIncrement}
+                          aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.556.26')}
                         >
                           <img src="/assets/icons/I_Plus.png" alt="" className="chart-template-stepper-icon" draggable={false} />
                         </button>
@@ -150,46 +134,19 @@ export function TemplateBattlePlanner({
                 })}
               </div>
 
-              {compatibleMovable.length > 0 && groupCount < MAX_BATTLE_FORMATION_SIZE && (
-                <div className="chart-template-battle-add-list">
-                  {compatibleMovable.map(({ unit, count }) => (
-                    <Tooltip
-                      key={unit.id}
-                      inline
-                      content={{ afterLines: <UnitTooltip data={templateUnitTooltipData(unit, count)} /> }}
-                      position="left"
-                      delay={200}
-                    >
-                      <button
-                        type="button"
-                        className="chart-template-battle-add-unit"
-                        onMouseDown={() => onSetBattleGroupUnitCount(group.id, unit.id, (group.counts[unit.id] ?? 0) + 1)}
-                        disabled={!editable}
-                      >
-                        <img src={ADD_ICON} alt="" className="chart-template-battle-add-unit-plus" draggable={false} />
-                        <img src={templateUnitPortrait(unit)} alt="" className="chart-template-battle-add-unit-icon" draggable={false} />
-                        <span>{unit.name}</span>
-                        <strong>{formatNumber(count)}</strong>
-                      </button>
-                    </Tooltip>
-                  ))}
-                </div>
-              )}
+              <button
+                type="button"
+                className="chart-template-battle-pick-unit"
+                onClick={() => onOpenUnitCatalogue(group.id)}
+                disabled={!editable || groupCount >= MAX_BATTLE_FORMATION_SIZE}
+              >
+                <img src={ADD_ICON} alt="" className="chart-template-battle-pick-unit-icon" draggable={false} />
+                <WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.616.2" />
+              </button>
             </div>
           );
         })}
       </div>
-
-      {unassignedUnits.length > 0 && (
-        <div className="chart-template-battle-unassigned">
-          <span className="chart-template-battle-unassigned-title"><WebUIText textKey="FormationTemplate.BattlePlan.Unassigned" /></span>
-          {unassignedUnits.map(({ unit, count }) => (
-            <span key={unit.id} className="chart-template-battle-unassigned-item">
-              {unit.name} {formatNumber(count)}
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

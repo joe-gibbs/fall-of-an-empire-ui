@@ -19,8 +19,6 @@ export interface TemplateDraft {
   name: string;
   iconId: string;
   type: TemplateCreateType;
-  counts: Record<string, number>;
-  order: string[];
   battleGroups: DraftBattleGroup[];
 }
 
@@ -103,44 +101,27 @@ export function buildTemplateDraft(template: FormationTemplateEntry | null, type
       name: '',
       iconId: '',
       type,
-      counts: {},
-      order: [],
       battleGroups: [],
     };
   }
-
-  const counts: Record<string, number> = {};
-  const order: string[] = [];
-  template.units.forEach(unit => {
-    if (unit.count <= 0) return;
-    counts[unit.id] = unit.count;
-    order.push(unit.id);
-  });
 
   return {
     templateId: template.id,
     name: template.name,
     iconId: template.iconId || '',
     type: normaliseTemplateType(template.type),
-    counts,
-    order,
     battleGroups: buildDraftBattleGroups(template.battleGroups),
   };
 }
 
-export function orderedDraftUnitIds(draft: TemplateDraft): string[] {
-  const ids = [...draft.order];
-  Object.keys(draft.counts).forEach(id => {
-    if (!ids.includes(id)) ids.push(id);
-  });
-  return ids.filter(id => (draft.counts[id] ?? 0) > 0);
-}
-
 export function draftCompositionRequests(draft: TemplateDraft): SaveFormationTemplateUnitRequest[] {
-  return orderedDraftUnitIds(draft).map(unitId => ({
-    unitId,
-    count: draft.counts[unitId] ?? 0,
-  }));
+  const counts = new Map<string, number>();
+  draft.battleGroups.forEach(group => {
+    orderedBattleGroupUnitIds(group).forEach(unitId => {
+      counts.set(unitId, (counts.get(unitId) ?? 0) + (group.counts[unitId] ?? 0));
+    });
+  });
+  return Array.from(counts, ([unitId, count]) => ({ unitId, count }));
 }
 
 export function draftBattleGroupRequests(draft: TemplateDraft): SaveFormationTemplateBattleGroupRequest[] {
@@ -151,8 +132,7 @@ export function draftBattleGroupRequests(draft: TemplateDraft): SaveFormationTem
         unitId,
         count: group.counts[unitId] ?? 0,
       })),
-    }))
-    .filter(group => group.units.length > 0);
+    }));
 }
 
 export function draftUnitCount(draft: TemplateDraft): number {
@@ -161,11 +141,6 @@ export function draftUnitCount(draft: TemplateDraft): number {
 
 export function templateDraftsEqual(left: TemplateDraft, right: TemplateDraft): boolean {
   if (left.templateId !== right.templateId || left.name !== right.name || left.iconId !== right.iconId || left.type !== right.type) return false;
-  const leftUnits = draftCompositionRequests(left);
-  const rightUnits = draftCompositionRequests(right);
-  if (leftUnits.length !== rightUnits.length) return false;
-  if (!leftUnits.every((unit, index) => unit.unitId === rightUnits[index].unitId && unit.count === rightUnits[index].count)) return false;
-
   const leftGroups = draftBattleGroupRequests(left);
   const rightGroups = draftBattleGroupRequests(right);
   if (leftGroups.length !== rightGroups.length) return false;
@@ -211,24 +186,9 @@ export function battleRoleForUnit(unit: FormationTemplateUnitEntry | undefined):
   return unit && unit.range > 0 ? 'ranged' : 'melee';
 }
 
-export function assignedBattleGroupCount(draft: TemplateDraft, unitId: string): number {
-  return draft.battleGroups.reduce((sum, group) => sum + Math.max(0, group.counts[unitId] ?? 0), 0);
-}
-
-export function groupAssignedCountExcluding(draft: TemplateDraft, unitId: string, groupId: string): number {
-  return draft.battleGroups.reduce((sum, group) => (
-    group.id === groupId ? sum : sum + Math.max(0, group.counts[unitId] ?? 0)
-  ), 0);
-}
-
-export function unassignedUnitCount(draft: TemplateDraft, unitId: string): number {
-  return Math.max(0, (draft.counts[unitId] ?? 0) - assignedBattleGroupCount(draft, unitId));
-}
-
 export function battleGroupsValid(draft: TemplateDraft, unitById: Map<string, FormationTemplateUnitEntry>): boolean {
   const requests = draftCompositionRequests(draft);
   if (requests.length === 0) return false;
-  if (!requests.every(request => assignedBattleGroupCount(draft, request.unitId) === request.count)) return false;
 
   return draft.battleGroups.every(group => {
     const total = battleGroupUnitCount(group);
@@ -238,58 +198,6 @@ export function battleGroupsValid(draft: TemplateDraft, unitById: Map<string, Fo
       return unit ? battleRoleForUnit(unit) === group.role : false;
     });
   });
-}
-
-export function removeUnitsFromBattleGroups(groups: DraftBattleGroup[], unitId: string, count: number): DraftBattleGroup[] {
-  let remaining = count;
-  const nextGroups = groups.map(group => {
-    if (remaining <= 0 || !group.counts[unitId]) return group;
-    const currentCount = group.counts[unitId] ?? 0;
-    const removeCount = Math.min(currentCount, remaining);
-    remaining -= removeCount;
-
-    const counts = { ...group.counts };
-    const nextCount = currentCount - removeCount;
-    if (nextCount > 0) counts[unitId] = nextCount;
-    else delete counts[unitId];
-
-    return {
-      ...group,
-      counts,
-      order: group.order.filter(id => id !== unitId || nextCount > 0),
-    };
-  });
-
-  return nextGroups.filter(group => battleGroupUnitCount(group) > 0);
-}
-
-export function addUnitToBattleGroups(
-  groups: DraftBattleGroup[],
-  unitId: string,
-  role: BattleFormationRole,
-): DraftBattleGroup[] {
-  const targetIndex = groups.findIndex(group => group.role === role && battleGroupUnitCount(group) < MAX_BATTLE_FORMATION_SIZE);
-  if (targetIndex >= 0) {
-    return groups.map((group, index) => {
-      if (index !== targetIndex) return group;
-      const count = (group.counts[unitId] ?? 0) + 1;
-      return {
-        ...group,
-        counts: { ...group.counts, [unitId]: count },
-        order: group.order.includes(unitId) ? group.order : [...group.order, unitId],
-      };
-    });
-  }
-
-  return [
-    ...groups,
-    {
-      id: createBattleGroupId(),
-      role,
-      counts: { [unitId]: 1 },
-      order: [unitId],
-    },
-  ];
 }
 
 

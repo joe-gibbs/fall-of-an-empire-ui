@@ -1806,38 +1806,6 @@
   height: 1rem;
 }
 
-.chart-template-pick-units.btn--burgundy {
-  height: 2.05rem;
-  padding: 0 0.65rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--gold-light);
-  background-color: #3a0d25;
-  background-image: url('/assets/baked/button-burgundy-hover.png');
-  background-position: 0 0;
-  background-repeat: repeat;
-  background-size: 11.6364rem 5.8182rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.52);
-  border-right-color: rgba(201, 168, 76, 0.34);
-  border-bottom-color: rgba(201, 168, 76, 0.34);
-  border-left-color: rgba(201, 168, 76, 0.34);
-  font-family: var(--font-header);
-  font-size: 0.8rem;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: var(--cursor-pointer);
-  transform: none;
-}
-
-.chart-template-pick-units.btn--burgundy:hover,
-.chart-template-pick-units.btn--burgundy:active {
-  transform: none;
-}
-
 .chart-template-button-icon {
   width: 1.05rem;
   height: 1.05rem;
@@ -1924,251 +1892,15 @@
   height: 3rem;
 }
 
-.chart-template-editor-tabs {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-  margin-top: 0.55rem;
-  display: block;
-}
-
-.chart-template-editor-tabs .sidebar-tab-bar {
-  padding-right: 0;
-  padding-left: 0;
-}
-
-.chart-template-editor-tab {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-  height: 1.85rem;
-  min-width: 8.6rem;
-  padding: 0 0.55rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  background-color: rgba(8, 12, 17, 0.28);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(255, 255, 255, 0.06);
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-  border-left-color: rgba(255, 255, 255, 0.06);
-  font-family: var(--font-header);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  cursor: var(--cursor-pointer);
-}
-
-.chart-template-editor-tab + .chart-template-editor-tab {
-  border-left-width: 0;
-}
-
-.chart-template-editor-tab--active,
-.chart-template-editor-tab:hover {
-  color: var(--gold-light);
-  background-color: #2d0c1e;
-  background-image: url('/assets/baked/button-burgundy-hover.png');
-  background-position: 0 0;
-  background-repeat: repeat;
-  background-size: 11.6364rem 5.8182rem;
-  border-top-color: var(--gold);
-}
-
-.chart-template-editor-tab-icon {
-  width: 0.9rem;
-  height: 0.9rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-  margin-right: 0.32rem;
-}
-
-.chart-template-unit-table {
+.chart-template-battle-workbench {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: auto;
+  min-width: 0;
   min-height: 0;
-  overflow-y: auto;
   margin-top: 0.55rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(255, 255, 255, 0.06);
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-  border-left-color: rgba(255, 255, 255, 0.06);
-}
-
-.chart-template-unit-table-head,
-.chart-template-unit-table-row {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-.chart-template-unit-table-head {
-  height: 1.95rem;
-  color: var(--gold);
-  background-color: rgba(8, 12, 17, 0.28);
-  border-bottom-width: 0.077rem;
-  border-bottom-style: solid;
-  border-bottom-color: rgba(201, 168, 76, 0.16);
-  font-family: var(--font-header);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-}
-
-.chart-template-unit-table-head span,
-.chart-template-unit-cell {
-  min-width: 0;
-  padding-right: 0.45rem;
-  padding-left: 0.45rem;
-}
-
-.chart-template-unit-table-head span {
-  display: flex;
-  align-items: center;
-}
-
-.chart-template-table-heading-icon {
-  width: 0.82rem;
-  height: 0.82rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-  margin-right: 0.28rem;
-  opacity: 0.82;
-}
-
-.chart-template-unit-table-head span:first-child,
-.chart-template-unit-cell--unit {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 13rem;
-}
-
-.chart-template-unit-table-head span:nth-child(2),
-.chart-template-unit-cell--tier {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 4.2rem;
-}
-
-.chart-template-unit-table-head span:nth-child(3),
-.chart-template-unit-cell--role {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 7.2rem;
-}
-
-.chart-template-unit-table-head span:nth-child(4),
-.chart-template-unit-cell--count {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 6.4rem;
-}
-
-.chart-template-unit-table-row {
-  height: 2.55rem;
-  background-color: rgba(8, 12, 17, 0.12);
-  border-bottom-width: 0.077rem;
-  border-bottom-style: solid;
-  border-bottom-color: rgba(201, 168, 76, 0.12);
-}
-
-.chart-template-unit-table-row:last-child {
-  border-bottom-width: 0;
-}
-
-.chart-template-unit-table .chart-template-unit-row-tooltip {
-  display: block;
-  width: 100%;
-}
-
-.chart-template-unit-table-empty {
-  min-height: 9.5rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.chart-template-unit-table-empty-icon {
-  width: 2.4rem;
-  height: 2.4rem;
-  margin-bottom: 0.45rem;
-  opacity: 0.48;
-}
-
-.chart-template-unit-cell {
-  display: flex;
-  align-items: center;
-  color: var(--text);
-  font-size: 0.88rem;
-}
-
-.chart-template-unit-cell--role {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.chart-template-unit-portrait {
-  width: 2rem;
-  height: 2rem;
-}
-
-.chart-template-unit-type-icon {
-  width: 0.95rem;
-  height: 0.95rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-  margin-right: 0.32rem;
-}
-
-.chart-template-unit-quick-stats {
-  margin-top: 0.25rem;
-  display: flex;
-  align-items: center;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-}
-
-.chart-template-unit-quick-stats > span {
-  display: flex;
-  align-items: center;
-  margin-right: 0.58rem;
-}
-
-.chart-template-unit-stat-icon {
-  width: 0.85rem;
-  height: 0.85rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-  margin-right: 0.22rem;
-}
-
-.chart-template-tier-diamond {
-  width: 1.25rem;
-  height: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--gold-light);
-  background-color: rgba(8, 12, 17, 0.36);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.44);
-  border-right-color: rgba(201, 168, 76, 0.24);
-  border-bottom-color: rgba(201, 168, 76, 0.24);
-  border-left-color: rgba(201, 168, 76, 0.24);
-  font-family: var(--font-header);
-  font-size: 0.72rem;
 }
 
 .chart-template-unit-stepper {
@@ -2448,21 +2180,14 @@
   font-size: 0.86rem;
 }
 
-.chart-template-battle-add-list {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 0.35rem 0.45rem 0.05rem;
-}
-
-.chart-template-battle-add-unit {
+.chart-template-battle-pick-unit {
   height: 2rem;
-  max-width: 12rem;
-  margin-right: 0.35rem;
-  margin-bottom: 0.35rem;
-  padding: 0 0.35rem;
+  margin: 0.4rem 0.45rem;
+  padding: 0 0.55rem;
   display: flex;
   align-items: center;
-  color: var(--text);
+  justify-content: center;
+  color: var(--gold-light);
   background-color: rgba(8, 12, 17, 0.28);
   border-width: 0.077rem;
   border-style: solid;
@@ -2470,72 +2195,23 @@
   border-right-color: rgba(255, 255, 255, 0.05);
   border-bottom-color: rgba(255, 255, 255, 0.05);
   border-left-color: rgba(255, 255, 255, 0.05);
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  text-transform: uppercase;
   cursor: var(--cursor-pointer);
 }
 
-.chart-template-battle-add-unit:hover {
+.chart-template-battle-pick-unit:hover {
   border-top-color: var(--gold);
   border-right-color: rgba(201, 168, 76, 0.42);
   border-bottom-color: rgba(201, 168, 76, 0.42);
   border-left-color: rgba(201, 168, 76, 0.42);
 }
 
-.chart-template-battle-add-unit-icon {
-  width: auto;
-  height: 1.35rem;
-  max-width: 1.8rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-}
-
-.chart-template-battle-add-unit-plus {
-  width: 0.72rem;
-  height: 0.72rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-  margin-right: 0.25rem;
-  opacity: 0.9;
-}
-
-.chart-template-battle-add-unit span {
-  min-width: 0;
-  margin-left: 0.32rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.72rem;
-}
-
-.chart-template-battle-add-unit strong {
-  margin-left: 0.35rem;
-  color: var(--gold-light);
-  font-size: 0.72rem;
-}
-
-.chart-template-battle-unassigned {
-  margin: 0 0.55rem 0.55rem;
-  padding-top: 0.45rem;
-  display: flex;
-  flex-wrap: wrap;
-  border-top-width: 0.077rem;
-  border-top-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.14);
-}
-
-.chart-template-battle-unassigned-title,
-.chart-template-battle-unassigned-item {
-  margin-right: 0.45rem;
-  margin-bottom: 0.3rem;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-}
-
-.chart-template-battle-unassigned-title {
-  color: var(--gold);
-  font-family: var(--font-header);
-  text-transform: uppercase;
+.chart-template-battle-pick-unit-icon {
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-right: 0.35rem;
 }
 
 .chart-template-battle-board {
@@ -5894,46 +5570,6 @@
   height: 1.9rem;
 }
 
-.chart-screen--templates .chart-template-pick-units.btn--burgundy {
-  width: 2.45rem;
-  height: 2.45rem;
-  padding-right: 0;
-  padding-left: 0;
-}
-
-.chart-screen--templates .chart-template-pick-units.btn--burgundy .btn-icon {
-  width: 1.35rem;
-  height: 1.35rem;
-}
-
-.chart-screen--templates .chart-template-editor-tabs {
-  margin-top: 0.45rem;
-  border-bottom-color: var(--separator);
-}
-
-.chart-screen--templates .chart-template-editor-tab {
-  height: 1.9rem;
-  min-width: 8.8rem;
-  background-color: rgba(8, 12, 17, 0.2);
-  border-top-color: rgba(201, 168, 76, 0.16);
-  border-right-color: rgba(201, 168, 76, 0.1);
-  border-bottom-color: rgba(8, 12, 17, 0.55);
-  border-left-color: rgba(201, 168, 76, 0.1);
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-}
-
-.chart-screen--templates .chart-template-editor-tab--active,
-.chart-screen--templates .chart-template-editor-tab:hover {
-  color: var(--text-header);
-  background-color: rgba(74, 21, 48, 0.58);
-  border-top-color: rgba(201, 168, 76, 0.45);
-  border-right-color: rgba(201, 168, 76, 0.36);
-  border-bottom-color: rgba(201, 168, 76, 0.26);
-  border-left-color: rgba(201, 168, 76, 0.36);
-}
-
-.chart-screen--templates .chart-template-unit-table,
 .chart-screen--templates .chart-template-battle-editor {
   margin-top: 0.5rem;
   background-color: rgba(8, 12, 17, 0.14);
@@ -5943,57 +5579,13 @@
   border-left-color: rgba(201, 168, 76, 0.08);
 }
 
-.chart-screen--templates .chart-template-unit-table-head {
-  height: 1.95rem;
-  color: var(--text-muted);
-  background-color: rgba(8, 12, 17, 0.2);
-  border-bottom-color: var(--separator);
-  font-size: 0.76rem;
-  letter-spacing: 0.06em;
+.chart-screen--templates .chart-template-battle-workbench > .chart-template-battle-editor {
+  margin-top: 0;
 }
 
-.chart-screen--templates .chart-template-unit-table-row {
-  height: 6.8rem;
-  background-color: transparent;
-  border-bottom-color: var(--separator);
-}
-
-.chart-screen--templates .chart-template-unit-table-empty {
-  min-height: 13rem;
-  background-color: rgba(8, 12, 17, 0.12);
-}
-
-.chart-screen--templates .chart-template-unit-table-row:hover {
-  background-color: rgba(201, 168, 76, 0.04);
-}
-
-.chart-screen--templates .chart-template-unit-name,
 .chart-screen--templates .chart-template-battle-unit-name {
   color: var(--text-header);
   font-size: 1rem;
-}
-
-.chart-screen--templates .chart-template-unit-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-.chart-screen--templates .chart-template-unit-name,
-.chart-screen--templates .chart-template-unit-quick-stats {
-  width: 100%;
-}
-
-.chart-screen--templates .chart-template-unit-table-head span:first-child,
-.chart-screen--templates .chart-template-unit-cell--unit {
-  flex-basis: 18rem;
-}
-
-.chart-screen--templates .chart-template-unit-portrait {
-  width: auto;
-  height: 6rem;
-  max-width: 7.8rem;
 }
 
 .chart-screen--templates .chart-template-side-rail {
@@ -6110,7 +5702,6 @@
   min-height: 0;
 }
 
-.chart-screen--templates .chart-template-unit-table,
 .chart-screen--templates .chart-template-battle-editor {
   flex-grow: 1;
   flex-shrink: 1;
@@ -6129,12 +5720,10 @@
 .chart-screen--templates .chart-template-composer-icon-button,
 .chart-screen--templates .chart-template-rename-button,
 .chart-screen--templates .chart-template-icon-choice,
-.chart-screen--templates .chart-template-pick-units.btn--burgundy,
-.chart-screen--templates .chart-template-editor-tab,
 .chart-screen--templates .chart-template-stepper-button,
 .chart-screen--templates .chart-template-battle-add,
 .chart-screen--templates .chart-template-battle-remove,
-.chart-screen--templates .chart-template-battle-add-unit,
+.chart-screen--templates .chart-template-battle-pick-unit,
 .chart-screen--templates .chart-template-list-duplicate,
 .chart-screen--templates .chart-template-list-delete {
   box-sizing: border-box;
@@ -6163,12 +5752,10 @@
 .chart-screen--templates .chart-template-composer-icon-button:hover,
 .chart-screen--templates .chart-template-rename-button:hover,
 .chart-screen--templates .chart-template-icon-choice:hover,
-.chart-screen--templates .chart-template-pick-units.btn--burgundy:hover,
-.chart-screen--templates .chart-template-editor-tab:hover,
 .chart-screen--templates .chart-template-stepper-button:hover,
 .chart-screen--templates .chart-template-battle-add:hover,
 .chart-screen--templates .chart-template-battle-remove:hover,
-.chart-screen--templates .chart-template-battle-add-unit:hover,
+.chart-screen--templates .chart-template-battle-pick-unit:hover,
 .chart-screen--templates .chart-template-list-duplicate:hover,
 .chart-screen--templates .chart-template-list-delete:hover {
   border-top-color: transparent;
@@ -6183,7 +5770,6 @@
 }
 
 .chart-screen--templates .chart-template-icon-choice--selected,
-.chart-screen--templates .chart-template-editor-tab--active,
 .chart-screen--templates .chart-template-list-delete--confirm {
   border-top-color: transparent;
   border-right-color: transparent;
@@ -6199,12 +5785,10 @@
 .chart-screen--templates .chart-template-composer-icon-button:active,
 .chart-screen--templates .chart-template-rename-button:active,
 .chart-screen--templates .chart-template-icon-choice:active,
-.chart-screen--templates .chart-template-pick-units.btn--burgundy:active,
-.chart-screen--templates .chart-template-editor-tab:active,
 .chart-screen--templates .chart-template-stepper-button:active,
 .chart-screen--templates .chart-template-battle-add:active,
 .chart-screen--templates .chart-template-battle-remove:active,
-.chart-screen--templates .chart-template-battle-add-unit:active,
+.chart-screen--templates .chart-template-battle-pick-unit:active,
 .chart-screen--templates .chart-template-list-duplicate:active,
 .chart-screen--templates .chart-template-list-delete:active {
   transform: translateY(0.077rem);
@@ -6243,14 +5827,14 @@
   color: var(--text-bright);
 }
 
-.chart-screen--templates .chart-template-pick-units.btn--burgundy[disabled],
-.chart-screen--templates .chart-template-pick-units.btn--burgundy[disabled]:hover,
 .chart-screen--templates .chart-template-rename-button[disabled],
 .chart-screen--templates .chart-template-rename-button[disabled]:hover,
 .chart-screen--templates .chart-template-stepper-button[disabled],
 .chart-screen--templates .chart-template-stepper-button[disabled]:hover,
 .chart-screen--templates .chart-template-battle-add[disabled],
 .chart-screen--templates .chart-template-battle-add[disabled]:hover,
+.chart-screen--templates .chart-template-battle-pick-unit[disabled],
+.chart-screen--templates .chart-template-battle-pick-unit[disabled]:hover,
 .chart-screen--templates .chart-template-list-duplicate[disabled],
 .chart-screen--templates .chart-template-list-duplicate[disabled]:hover,
 .chart-screen--templates .chart-template-list-delete[disabled],
