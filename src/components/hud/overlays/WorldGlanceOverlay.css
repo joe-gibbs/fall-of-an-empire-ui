@@ -476,16 +476,16 @@
 }
 
 .world-glance-overlay .world-glance-node.detail-flag .gset-main,
-.world-glance-overlay .world-glance-node.detail-flag .glance-military-crown,
-.world-glance-overlay .world-glance-node.detail-name .glance-military-crown,
-.world-glance-overlay .world-glance-node.detail-detailed .glance-military-crown,
-.world-glance-overlay .world-glance-node.detail-flag .glance-military-strength,
-.world-glance-overlay .world-glance-node.detail-name .glance-military-strength,
-.world-glance-overlay .world-glance-node.detail-detailed .glance-military-strength,
 .world-glance-overlay .world-glance-node.detail-flag .glance-military-icon-socket,
 .world-glance-overlay .world-glance-node.detail-name .glance-military-icon-socket,
 .world-glance-overlay .world-glance-node.detail-detailed .glance-military-icon-socket {
   display: none;
+}
+
+.world-glance-overlay .world-glance-node.detail-flag .glance-military-status,
+.world-glance-overlay .world-glance-node.detail-name .glance-military-status,
+.world-glance-overlay .world-glance-node.detail-detailed .glance-military-status {
+  display: block;
 }
 
 .world-glance-overlay .world-glance-node.detail-flag .glance-military-kind-socket,

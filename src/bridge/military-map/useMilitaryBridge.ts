@@ -85,6 +85,7 @@ function mapForce(data: MilitaryOverviewForce): MilitaryForce {
     maxStrength: data.maxStrength,
     morale: data.morale,
     supplyDays: data.supplyDays,
+    attrition: data.attrition,
     isNavy: data.isNavy,
     doctrine: parseDoctrine(data.doctrine),
     template: data.template,

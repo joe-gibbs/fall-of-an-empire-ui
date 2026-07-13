@@ -1657,16 +1657,20 @@
 
 .detail-flag .glance-military-icon-socket,
 .detail-name .glance-military-icon-socket,
-.detail-flag .glance-military-crown,
-.detail-name .glance-military-crown,
-.detail-flag .glance-military-strength,
-.detail-name .glance-military-strength {
+.detail-flag .glance-military-tier,
+.detail-name .glance-military-tier {
   visibility: hidden;
   opacity: 0;
 }
 
 .detail-flag .glance-military-kind-socket,
 .detail-name .glance-military-kind-socket {
+  visibility: visible;
+  opacity: 1;
+}
+
+.detail-flag .glance-military-status,
+.detail-name .glance-military-status {
   visibility: visible;
   opacity: 1;
 }

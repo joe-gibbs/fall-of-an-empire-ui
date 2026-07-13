@@ -24,6 +24,7 @@ import SettlementGlance from '../../world-glances/SettlementGlance';
 import ConvoyGlance from '../../world-glances/ConvoyGlance';
 import PortGlance from '../../world-glances/PortGlance';
 import ModWorldGlanceLayer from '../../world-glances/ModWorldGlanceLayer';
+import SelectedMilitaryConnectors from './SelectedMilitaryConnectors';
 import type {
   ArmyGlanceData,
   BattleGlanceData,
@@ -1430,7 +1431,12 @@ export default function WorldGlanceOverlay(props: WorldGlanceOverlayProps) {
     return () => window.removeEventListener('bridge:ui.native_glance_composite', onNativeCompositeChanged);
   }, []);
 
-  return nativeCompositeEnabled
-    ? <NativeWorldGlanceInputOverlay />
-    : <BrowserWorldGlanceOverlay {...props} />;
+  return (
+    <>
+      <SelectedMilitaryConnectors visible={props.visible !== false} />
+      {nativeCompositeEnabled
+        ? <NativeWorldGlanceInputOverlay />
+        : <BrowserWorldGlanceOverlay {...props} />}
+    </>
+  );
 }

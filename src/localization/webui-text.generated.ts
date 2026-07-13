@@ -671,6 +671,7 @@ export const WEBUI_TEXT_SOURCE = {
   "Military.Selection.Tooltip.Command": "Command",
   "Military.Selection.SupplyDays": "{Days} days",
   "Military.Selection.NoSupply": "No supply",
+  "Military.Selection.Attrition": "Attrition",
   "Military.Selection.Command.Direct": "Direct control",
   "Military.Selection.Command.Delegated": "Delegated - {Doctrine}",
   "Military.Selection.Doctrine.concentrate": "Concentrate",

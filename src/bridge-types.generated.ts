@@ -4606,6 +4606,7 @@ export interface MilitaryOverviewForce {
   maxStrength: number;
   morale: number;
   supplyDays: number;
+  attrition: boolean;
   isNavy: boolean;
   doctrine: string;
   template: string;
