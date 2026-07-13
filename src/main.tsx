@@ -61,7 +61,6 @@ const WORLD_INPUT_BLOCKING_CLASSES = [
   'fs-root',
   'tt-bubble',
   'world-glance',
-  'native-world-glance-hit-target',
 ];
 
 type NativeCursorKind =
@@ -152,7 +151,7 @@ function hasDisabledCursorTarget(element: Element): boolean {
 
 function webUICursorKind(element: Element | null): NativeCursorKind {
   if (!element) return 'default';
-  if (element.closest('.world-glance, .native-world-glance-hit-target')) return 'gameplay';
+  if (element.closest('.world-glance')) return 'gameplay';
   if (element.closest(BLOCKED_TARGET_SELECTOR) || hasDisabledCursorTarget(element)) return 'blocked';
   if (element.closest(HELP_TARGET_SELECTOR)) return 'help';
   if (element.closest(CROSSHAIR_TARGET_SELECTOR)) return 'crosshair';
@@ -457,8 +456,8 @@ async function bootstrap() {
 
   bindRuntimeViewportScaleEvents();
 
-  // While the engine composites glance plates itself (same-frame placement), the DOM copies
-  // stay mounted for input but their visuals are hidden via this root class.
+  // The engine enables this only after the native atlas has a paint-confirmed layout. React then
+  // replaces the browser-positioned glance tree with the native input path.
   window.addEventListener('bridge:ui.native_glance_composite', (event) => {
     const enabled = Boolean((event as CustomEvent<{ enabled?: boolean }>).detail?.enabled);
     document.documentElement.classList.toggle('native-glance-composite', enabled);
@@ -501,10 +500,6 @@ async function bootstrapWorldAnchors() {
     });
   }
 
-  // The atlas is a second browser process. It must load the same mod renderers as the visible
-  // HUD before mounted anchor elements are packed into its texture.
-  await modsReady;
-
   const [
     { default: WorldAnchorHost },
     { default: GlanceAtlasRoot },
@@ -527,6 +522,9 @@ async function bootstrapWorldAnchors() {
       </WorldAnchorGameStateProvider>
     </StrictMode>,
   );
+
+  // Base-game atlas plates and readiness must not wait for optional content-pack discovery.
+  // Mod renderers register dynamically and trigger their own atlas admission after modsReady.
 
   const engine = getRuntimeEngine();
   if (engine) {

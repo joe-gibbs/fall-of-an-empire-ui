@@ -990,138 +990,9 @@ interface WorldGlanceOverlayProps {
   visible?: boolean;
 }
 
-interface NativeGlanceHitTarget {
-  node: HTMLDivElement;
-  hovered: boolean;
-}
-
-const NATIVE_HIT_TARGET_SECTIONS: readonly WorldGlanceFrameSection[] = [
-  'settlement',
-  'port',
-  'convoy',
-  'army',
-  'navy',
-  'battle',
-];
-
-function nativeHitTargetSize(kind: WorldGlanceFrameSection, detailLevel: WorldGlanceDetailLevel | string | number) {
-  if (kind === 'settlement') {
-    const detail = detailClass(detailLevel);
-    return detail === 'detail-flag'
-      ? { width: 72, height: 72, offsetX: -36, offsetY: -36 }
-      : { width: 260, height: 82, offsetX: -38, offsetY: -40 };
-  }
-  if (kind === 'port' || kind === 'convoy') {
-    return { width: 72, height: 72, offsetX: -36, offsetY: -36 };
-  }
-  if (kind === 'army' || kind === 'navy') {
-    return { width: 132, height: 132, offsetX: -66, offsetY: -66 };
-  }
-  return { width: 96, height: 96, offsetX: -48, offsetY: -48 };
-}
-
-function NativeWorldGlanceInputOverlay({ visible = true }: WorldGlanceOverlayProps) {
-  const data = useWorldGlancesBridge(true);
-  const overlayRef = useRef<HTMLDivElement | null>(null);
-  const targetsRef = useRef<Map<string, NativeGlanceHitTarget>>(new Map());
-
-  useEffect(() => onWorldGlancesFrame((frame) => {
-    const overlay = overlayRef.current;
-    if (!overlay || !data || !visible) {
-      return;
-    }
-
-    const viewportWidth = worldGlanceFrameViewportWidth(frame);
-    const viewportHeight = worldGlanceFrameViewportHeight(frame);
-    const positionScaleX = viewportWidth > 0 ? overlay.clientWidth / viewportWidth : 1;
-    const positionScaleY = viewportHeight > 0 ? overlay.clientHeight / viewportHeight : 1;
-    const seen = new Set<string>();
-    const scratch = makeWorldGlanceFrameEntryScratch();
-
-    for (const kind of NATIVE_HIT_TARGET_SECTIONS) {
-      const count = worldGlanceFrameEntryCount(frame, kind);
-      for (let index = 0; index < count; index += 1) {
-        const entry = readWorldGlanceFrameEntry(frame, kind, index, scratch);
-        if (!entry || !frameEntryInteractive(entry)) {
-          continue;
-        }
-
-        const id = worldGlanceFrameEntryIdFromSnapshot(data, frame, kind, index);
-        if (!id) {
-          continue;
-        }
-
-        const key = nodeKey(kind, id);
-        seen.add(key);
-        let target = targetsRef.current.get(key);
-        if (!target) {
-          const node = document.createElement('div');
-          node.className = `native-world-glance-hit-target native-world-glance-hit-target--${kind}`;
-          node.dataset.kind = kind;
-          node.dataset.id = id;
-          const nextTarget: NativeGlanceHitTarget = { node, hovered: false };
-
-          node.addEventListener('mouseenter', () => {
-            if (nextTarget.hovered) return;
-            nextTarget.hovered = true;
-            handleWorldGlanceHover(kind, id, true);
-          });
-          node.addEventListener('mouseleave', () => {
-            if (!nextTarget.hovered) return;
-            nextTarget.hovered = false;
-            handleWorldGlanceHover(kind, id, false);
-          });
-          node.addEventListener('mousedown', (event) => {
-            if (event.button !== 0 && event.button !== 2) return;
-            event.preventDefault();
-            event.stopPropagation();
-            handleWorldGlanceInput(kind, id, event.button === 2 ? 'right' : 'left', event.shiftKey);
-          });
-          node.addEventListener('contextmenu', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-          });
-
-          overlay.appendChild(node);
-          targetsRef.current.set(key, nextTarget);
-          target = nextTarget;
-        }
-
-        const size = nativeHitTargetSize(kind, entry.detailLevel);
-        const scale = Math.max(entry.scale, 0.01);
-        const x = entry.screenX * positionScaleX + size.offsetX * scale;
-        const y = entry.screenY * positionScaleY + size.offsetY * scale;
-        const node = target.node;
-        node.style.display = 'block';
-        node.style.width = `${size.width}px`;
-        node.style.height = `${size.height}px`;
-        node.style.zIndex = String(localGlanceZIndex(kind, entry.zOrder));
-        node.style.transform = `translate3d(${formatPx(x)}, ${formatPx(y)}, 0) scale(${formatScale(scale)})`;
-      }
-    }
-
-    for (const [key, target] of targetsRef.current) {
-      if (seen.has(key)) continue;
-      if (target.hovered) {
-        target.hovered = false;
-        const separator = key.indexOf(':');
-        handleWorldGlanceHover(key.slice(0, separator), key.slice(separator + 1), false);
-      }
-      target.node.style.display = 'none';
-    }
-  }), [data, visible]);
-
-  useEffect(() => () => {
-    for (const [key, target] of targetsRef.current) {
-      if (target.hovered) {
-        const separator = key.indexOf(':');
-        handleWorldGlanceHover(key.slice(0, separator), key.slice(separator + 1), false);
-      }
-    }
-    targetsRef.current.clear();
-  }, []);
-
-  return <div ref={overlayRef} className="native-world-glance-input-overlay" aria-hidden="true" />;
+function NativeWorldGlanceInputOverlay() {
+  useWorldGlancesBridge(true);
+  return null;
 }
 
 function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) {
@@ -1560,6 +1431,6 @@ export default function WorldGlanceOverlay(props: WorldGlanceOverlayProps) {
   }, []);
 
   return nativeCompositeEnabled
-    ? <NativeWorldGlanceInputOverlay {...props} />
+    ? <NativeWorldGlanceInputOverlay />
     : <BrowserWorldGlanceOverlay {...props} />;
 }

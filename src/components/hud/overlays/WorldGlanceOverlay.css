@@ -10,25 +10,6 @@
   overflow: visible;
 }
 
-.native-world-glance-input-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.native-world-glance-hit-target {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: none;
-  box-sizing: border-box;
-  transform-origin: top left;
-  pointer-events: auto;
-  contain: strict;
-}
-
 .world-glance-node {
   position: absolute;
   left: 0;
@@ -39,9 +20,8 @@
   game-ui-simple-opacity: on;
 }
 
-/* Engine-side glance compositing active: the engine draws the plates at same-frame positions
-   beneath this page, so the DOM copies hide their pixels but keep their (lagged) hit areas
-   until engine-side input lands. Overrides the overlay's inline per-frame opacity. */
+/* Hide a browser-positioned frame during the handover to engine-side compositing. The native
+   branch removes this DOM tree once React applies the mode change. */
 :root.native-glance-composite .world-glance-node,
 :root.native-glance-composite .port-settlement-hover-line {
   opacity: 0 !important;
