@@ -12,6 +12,7 @@ import { useGameState } from '../../context/GameContext';
 import { mapPortraitLayers, mapPortraitPath } from '../characters/portraitMapping';
 import type {
   Army,
+  ArmyBattleGroup,
   ArmyUnit,
   ArmyUnitRow,
   ArmyUnitRowType,
@@ -259,6 +260,11 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     morale: data.morale,
     units,
     unitRows,
+    battleGroups: data.battleGroups.map(group => ({
+      id: group.id,
+      role: group.role as ArmyBattleGroup['role'],
+      unitIds: group.unitIds,
+    })),
     commandRank: data.commandRank,
     isNavy: data.isNavy,
     doctrine: data.formationTemplate || data.currentOrder || data.commandRank,

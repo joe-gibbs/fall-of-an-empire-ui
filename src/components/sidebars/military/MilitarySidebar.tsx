@@ -39,7 +39,6 @@ import '../shared/Sidebar.css';
 import './MilitarySidebar.css';
 import {
   MilitaryUnitsTab,
-  isInProgressUnitRow,
   renderUnitTypeCounts,
   renderUnitTypeStrengths,
 } from './MilitaryUnitsTab';
@@ -71,7 +70,6 @@ import {
   type CompositionSummaryRow,
   type MilitaryAction,
   type ReadinessCard,
-  type UnitRosterGroup,
   type UnitSelectionBox,
   type UnitSelectionDragState,
 } from './MilitarySidebarPresentation';
@@ -104,7 +102,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const [confirmDestructiveId, setConfirmDestructiveId] = useState<string | null>(null);
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
   const [unitSelectionAnchorId, setUnitSelectionAnchorId] = useState<string | null>(null);
-  const [expandedUnitGroups, setExpandedUnitGroups] = useState<string[]>([]);
   const [unitSelectionBox, setUnitSelectionBox] = useState<UnitSelectionBox | null>(null);
   const unitSelectionDragRef = useRef<UnitSelectionDragState | null>(null);
   const unitRosterRef = useRef<HTMLDivElement | null>(null);
@@ -113,37 +110,16 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const isPinned = checkPinned('military', army.id);
   const strengthRatio = army.maxStrength > 0 ? army.strength / army.maxStrength : 0;
   const unitRows = army.unitRows;
-  const unitGroups = useMemo<UnitRosterGroup[]>(() => {
-    const groups = new Map<string, UnitRosterGroup>();
-    for (const row of unitRows) {
-      const key = row.unitId || row.name;
-      const existing = groups.get(key);
-      if (existing) {
-        existing.rows.push(row);
-        existing.count += row.count;
-        existing.strength += row.strength;
-        existing.maxStrength += row.maxStrength;
-      } else {
-        groups.set(key, {
-          key,
-          name: row.name,
-          type: row.type,
-          rows: [row],
-          count: row.count,
-          strength: row.strength,
-          maxStrength: row.maxStrength,
-        });
-      }
-    }
-    return Array.from(groups.values());
-  }, [unitRows]);
-  const expandedUnitGroupSet = useMemo(() => new Set(expandedUnitGroups), [expandedUnitGroups]);
-  const visibleUnitRows = useMemo(() => (
-    unitGroups.flatMap(group => {
-      if (group.rows.length <= 1 || expandedUnitGroupSet.has(group.key)) return group.rows;
-      return group.rows.filter(isInProgressUnitRow);
-    })
-  ), [expandedUnitGroupSet, unitGroups]);
+  const visibleUnitRows = useMemo(() => {
+    const unitRowById = new Map(unitRows.map(row => [row.id, row]));
+    const battleUnitIds = new Set(army.battleGroups.flatMap(group => group.unitIds));
+    const battleRows = army.battleGroups.flatMap(group => (
+      group.unitIds
+        .map(unitId => unitRowById.get(unitId))
+        .filter((row): row is ArmyUnitRow => Boolean(row))
+    ));
+    return [...battleRows, ...unitRows.filter(row => !battleUnitIds.has(row.id))];
+  }, [army.battleGroups, unitRows]);
   const selectableUnitRows = useMemo(() => visibleUnitRows.filter(row => row.selectable), [visibleUnitRows]);
   const selectableUnitIdSet = useMemo(() => new Set(selectableUnitRows.map(row => row.id)), [selectableUnitRows]);
   const selectedUnitIdSet = useMemo(() => new Set(selectedUnitIds), [selectedUnitIds]);
@@ -188,11 +164,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   }, [army.id, selectableUnitIdSet]);
 
   useEffect(() => {
-    const groupKeys = new Set(unitGroups.filter(group => group.rows.length > 1).map(group => group.key));
-    setExpandedUnitGroups(current => current.filter(key => groupKeys.has(key)));
-  }, [unitGroups]);
-
-  useEffect(() => {
     setConfirmDestructiveId(null);
   }, [army.id]);
 
@@ -230,12 +201,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     const next = new Set(baseSelectedIds);
     selected.forEach(id => next.add(id));
     return Array.from(next);
-  };
-
-  const toggleUnitGroup = (groupKey: string) => {
-    setExpandedUnitGroups(current => current.includes(groupKey)
-      ? current.filter(key => key !== groupKey)
-      : [...current, groupKey]);
   };
 
   const handleUnitRowMouseDown = (event: ReactMouseEvent<HTMLDivElement>, row: ArmyUnitRow) => {
@@ -1026,15 +991,13 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
             unitStatTiles={unitStatTiles}
             compositionSummary={compositionSummary}
             unitRows={unitRows}
-            unitGroups={unitGroups}
+            battleGroups={army.battleGroups}
             unitSelectionBox={unitSelectionBox}
             unitRosterRef={unitRosterRef}
             unitRowRefs={unitRowRefs}
             selectedUnitIdSet={selectedUnitIdSet}
-            expandedUnitGroupSet={expandedUnitGroupSet}
             maxStats={maxStats}
             handleUnitRowMouseDown={handleUnitRowMouseDown}
-            toggleUnitGroup={toggleUnitGroup}
           />
         )}
       </StyledScrollArea>

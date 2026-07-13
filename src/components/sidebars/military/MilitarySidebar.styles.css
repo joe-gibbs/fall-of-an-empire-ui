@@ -2199,35 +2199,84 @@
 }
 
 .mil-roster {
-  padding-top: 0.12rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.3rem 0.46rem 0.15rem;
   position: relative;
   user-select: none;
 }
 
-.mil-unit-group {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+.mil-roster > * + * {
+  margin-top: 0.42rem;
 }
 
-.mil-unit-group-summary {
-  width: 100%;
+.mil-battle-group {
+  display: flex;
+  flex-direction: column;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  border-width: 0.231rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  overflow: hidden;
+}
+
+.mil-battle-group-head {
   display: flex;
   align-items: center;
-  padding: 0.35rem 0;
+  min-height: 2rem;
+  padding: 0.25rem 0.4rem;
   border-bottom-width: 0.077rem;
   border-bottom-style: solid;
   border-bottom-color: var(--separator);
-  cursor: auto;
-  transition: background 120ms;
+  background-color: rgba(8, 12, 17, 0.38);
 }
 
-.mil-unit-group-summary:hover {
-  background-color: rgba(36, 42, 48, 0.42);
+.mil-battle-group-head > * + * {
+  margin-left: 0.38rem;
 }
 
-.mil-unit-group-summary.is-expanded {
-  border-bottom-color: rgba(201, 168, 76, 0.2);
+.mil-battle-group-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+}
+
+.mil-battle-group-title {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.mil-battle-group-count {
+  flex-shrink: 0;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.78rem;
+}
+
+.mil-battle-group-units,
+.mil-unit-loose-rows {
+  display: flex;
+  flex-direction: column;
 }
 
 .mil-unit-row {
@@ -2241,11 +2290,6 @@
   border-bottom-color: var(--separator);
   cursor: auto;
   transition: background 120ms;
-}
-
-.mil-unit-row--child {
-  padding-left: 1.85rem;
-  background-color: rgba(13, 18, 24, 0.18);
 }
 
 .mil-unit-row.is-selectable {
@@ -2291,43 +2335,16 @@
   z-index: 4;
 }
 
-.mil-unit-type-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+.mil-sidebar-unit-portrait {
+  width: 2rem;
+  height: 2rem;
   flex-shrink: 0;
-}
-
-.mil-unit-expand-button {
-  width: 1.35rem;
-  height: 1.35rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 1.35rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
+  object-fit: cover;
+  object-position: top center;
+  background-color: rgba(8, 12, 17, 0.35);
   border-width: 0.077rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.24);
-  background-image: none;
-  background-color: rgba(13, 18, 24, 0.44);
-  cursor: pointer;
-}
-
-.mil-unit-expand-button:hover {
-  border-color: rgba(201, 168, 76, 0.44);
-  background-color: rgba(201, 168, 76, 0.12);
-}
-
-.mil-unit-expand-button img {
-  width: 0.75rem;
-  height: 0.75rem;
-  transition: transform 120ms;
-}
-
-.mil-unit-expand-button.is-expanded img {
-  transform: rotate(90deg);
+  border-color: var(--gold-dark);
 }
 
 .mil-unit-info {
@@ -2511,8 +2528,7 @@
   margin-left: 0.5rem;
 }
 
-.mil-unit-row > * + *,
-.mil-unit-group-summary > * + * {
+.mil-unit-row > * + * {
   margin-left: 0.45rem;
 }
 
@@ -4539,8 +4555,7 @@
   width: 6.65rem;
 }
 
-.mil-unit-row,
-.mil-unit-group-summary {
+.mil-unit-row {
   box-sizing: border-box;
   padding-right: 0.28rem;
 }
@@ -4664,16 +4679,8 @@
   text-overflow: ellipsis;
 }
 
-.mil-unit-group-summary {
-  cursor: pointer;
-}
-
 .mil-unit-row .mil-unit-bar {
   width: 5.7rem;
-}
-
-.mil-unit-bar--summary {
-  width: 4.65rem;
 }
 
 .mil-unit-row .mil-unit-bar > .painted-bar-track {
@@ -4684,10 +4691,6 @@
   width: 5.7rem;
   min-width: 0;
   font-size: 0.62rem;
-}
-
-.mil-unit-row--child {
-  padding-left: 1.3rem;
 }
 
 .mil-header-text > .tooltip-wrapper.mil-header-status-tooltip {

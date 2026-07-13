@@ -2481,6 +2481,13 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     morale: profile.morale,
     units,
     unitRows,
+    battleGroups: [
+      {
+        id: 'battle_group_0',
+        role: 'melee',
+        unitIds: units.map(unit => unit.id),
+      },
+    ],
     commandRank: profile.commandRank,
     isNavy,
     currentOrder: profile.currentOrder,

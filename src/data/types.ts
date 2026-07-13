@@ -1083,6 +1083,12 @@ export interface ArmyUnitTypeStrength {
   count: number;
 }
 
+export interface ArmyBattleGroup {
+  id: string;
+  role: 'melee' | 'ranged';
+  unitIds: string[];
+}
+
 export interface ArmySubordinate {
   id?: string;
   debugShortId?: number;
@@ -1132,6 +1138,7 @@ export interface Army {
   morale: number;
   units: ArmyUnit[];
   unitRows: ArmyUnitRow[];
+  battleGroups: ArmyBattleGroup[];
   commandRank: string;
   isNavy: boolean;
   doctrine: string;

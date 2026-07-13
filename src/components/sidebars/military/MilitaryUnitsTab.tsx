@@ -3,7 +3,7 @@ import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent } from '../../common/tooltips/Tooltip';
-import type { ArmyUnitRow, ArmyUnitTypeStrength } from '../../../data/types';
+import type { ArmyBattleGroup, ArmyUnitRow, ArmyUnitTypeStrength } from '../../../data/types';
 import { TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber } from '../../../utils/numberFormat';
 import { webUIText } from '../../../localization/WebUITextContext';
@@ -17,7 +17,6 @@ import {
   resolveUnitStats,
   type CompositionSummaryRow,
   type UnitStatCaps,
-  type UnitRosterGroup,
   type UnitSelectionBox,
   unitRowSourceSummary,
   unitTypeIconPath,
@@ -35,15 +34,13 @@ type MilitaryUnitsTabProps = {
   unitStatTiles: UnitStatTile[];
   compositionSummary: CompositionSummaryRow[];
   unitRows: ArmyUnitRow[];
-  unitGroups: UnitRosterGroup[];
+  battleGroups: ArmyBattleGroup[];
   unitSelectionBox: UnitSelectionBox | null;
   unitRosterRef: React.RefObject<HTMLDivElement | null>;
   unitRowRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
   selectedUnitIdSet: Set<string>;
-  expandedUnitGroupSet: Set<string>;
   maxStats: UnitStatCaps;
   handleUnitRowMouseDown: (event: ReactMouseEvent<HTMLDivElement>, unit: ArmyUnitRow) => void;
-  toggleUnitGroup: (key: string) => void;
 };
 
 export function renderUnitTypeCounts(unitTypes: ArmyUnitTypeStrength[]): React.ReactNode {
@@ -82,28 +79,22 @@ export function renderUnitTypeStrengths(unitTypes: CompositionSummaryRow[]): Rea
   });
 }
 
-export function isInProgressUnitRow(row: ArmyUnitRow): boolean {
-  return row.rowType === 'beingBuilt' || row.rowType === 'inTransit';
-}
 export function MilitaryUnitsTab({
   unitStatTiles,
   compositionSummary,
   unitRows,
-  unitGroups,
+  battleGroups,
   unitSelectionBox,
   unitRosterRef,
   unitRowRefs,
   selectedUnitIdSet,
-  expandedUnitGroupSet,
   maxStats,
   handleUnitRowMouseDown,
-  toggleUnitGroup,
 }: MilitaryUnitsTabProps) {
   const renderUnitRow = (unit: ArmyUnitRow, extraClassName = '') => {
     const stats = resolveUnitStats(unit);
     const ratio = unit.maxStrength > 0 ? unit.strength / unit.maxStrength : 0;
     const typeLabel = formatUnitTypeName(unit.type);
-    const typeIcon = unitTypeIconPath(unit.type);
     const pending = unit.rowType !== 'existing';
     const barPercent = pending && (unit.rowType === 'beingBuilt' || unit.rowType === 'inTransit')
       ? unit.progress * 100
@@ -120,7 +111,7 @@ export function MilitaryUnitsTab({
           className={rowClass}
           onMouseDown={(event) => handleUnitRowMouseDown(event, unit)}
         >
-          <img src={typeIcon} alt="" className="mil-unit-type-icon" />
+          <img src={unit.portrait} alt="" className="mil-sidebar-unit-portrait" draggable={false} />
           <div className="mil-unit-info">
             <span className="mil-unit-name">
               <span className="mil-unit-name-text">{unit.name}</span>
@@ -138,71 +129,9 @@ export function MilitaryUnitsTab({
     );
   };
 
-  const renderUnitGroup = (group: UnitRosterGroup) => {
-    if (group.rows.length <= 1) {
-      return renderUnitRow(group.rows[0]);
-    }
-
-    const expanded = expandedUnitGroupSet.has(group.key);
-    const visibleRows = expanded ? group.rows : group.rows.filter(isInProgressUnitRow);
-    const ratio = group.maxStrength > 0 ? group.strength / group.maxStrength : 0;
-    const typeIcon = unitTypeIconPath(group.type);
-    const unitWord = webUIText(group.rows.length === 1 ? 'Common.Unit' : 'Common.Units');
-    const rowCountText = webUIText('Common.CountWithUnit', { Count: formatNumber(group.rows.length), Unit: unitWord });
-    const toggleLabel = expanded
-      ? webUIText("Auto.Fix.ExprTrue.componentssidebarsMilitarySidebar.1053.1")
-      : webUIText("Auto.Fix.ExprFalse.componentssidebarsMilitarySidebar.1053.1", { Value1: formatNumber(group.rows.length) });
-    const handleToggleGroup = (event: ReactMouseEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      toggleUnitGroup(group.key);
-    };
-
-    return (
-      <div key={group.key} className={`mil-unit-group${expanded ? ' is-expanded' : ''}`}>
-        <Tooltip
-          content={{
-            title: group.name,
-            lines: [
-              { label: webUIText('Economy.Type'), value: formatUnitTypeName(group.type) },
-              { label: webUIText('Auto.Attr.ComponentsSidebarsMilitarySidebar.1101.46'), value: rowCountText },
-              { label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.1033.43'), value: formatStrength(group.strength, group.maxStrength), valueColor: getStrengthColor(ratio) },
-            ],
-          }}
-          position="left"
-          delay={150}
-        >
-          <div
-            className={`mil-unit-group-summary${expanded ? ' is-expanded' : ''}`}
-            role="button"
-            aria-label={toggleLabel}
-            onMouseDown={handleToggleGroup}
-          >
-            <button
-              type="button"
-              className={`mil-unit-expand-button${expanded ? ' is-expanded' : ''}`}
-              aria-label={toggleLabel}
-              onMouseDown={handleToggleGroup}
-            >
-              <img src="/assets/icons/I_NavNext.png" alt="" draggable={false} />
-            </button>
-            <img src={typeIcon} alt="" className="mil-unit-type-icon" />
-            <div className="mil-unit-info">
-              <span className="mil-unit-name">
-                <span className="mil-unit-name-text">{group.name}</span>
-                <span className="mil-unit-count">{formatNumber(group.count)}</span>
-              </span>
-              <span className="mil-unit-type">{rowCountText}</span>
-            </div>
-            <div className="mil-unit-bar mil-unit-bar--summary">
-              <PaintedBar percent={ratio * 100} color={getStrengthBarColor(ratio)} />
-            </div>
-          </div>
-        </Tooltip>
-        {visibleRows.map(unit => renderUnitRow(unit, ' mil-unit-row--child'))}
-      </div>
-    );
-  };
+  const unitRowById = new Map(unitRows.map(unit => [unit.id, unit]));
+  const assignedUnitIds = new Set(battleGroups.flatMap(group => group.unitIds));
+  const unassignedRows = unitRows.filter(unit => !assignedUnitIds.has(unit.id));
 
   return (
     <div className="mil-units-tab">
@@ -256,7 +185,37 @@ export function MilitaryUnitsTab({
             }}
           />
         )}
-        {unitGroups.map(group => renderUnitGroup(group))}
+        {battleGroups.map((group, index) => {
+          const rows = group.unitIds
+            .map(unitId => unitRowById.get(unitId))
+            .filter((unit): unit is ArmyUnitRow => Boolean(unit));
+          const roleIcon = group.role === 'ranged'
+            ? '/assets/icons/UnitTypes/I_ArmyRanged.png'
+            : '/assets/icons/I_Swords.png';
+          const roleTitle = group.role === 'ranged'
+            ? webUIText('FormationTemplate.BattlePlan.RangedTitle')
+            : webUIText('FormationTemplate.BattlePlan.MeleeTitle');
+
+          return (
+            <div key={group.id} className="mil-battle-group">
+              <div className="mil-battle-group-head">
+                <img src={roleIcon} alt="" className="mil-battle-group-icon" draggable={false} />
+                <span className="mil-battle-group-title">
+                  {webUIText('FormationTemplate.BattlePlan.GroupTitle', { Role: roleTitle, Index: formatNumber(index + 1) })}
+                </span>
+                <span className="mil-battle-group-count">{formatNumber(rows.length)}</span>
+              </div>
+              <div className="mil-battle-group-units">
+                {rows.map(unit => renderUnitRow(unit))}
+              </div>
+            </div>
+          );
+        })}
+        {unassignedRows.length > 0 && (
+          <div className="mil-unit-loose-rows">
+            {unassignedRows.map(unit => renderUnitRow(unit))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -149,16 +149,6 @@ export interface CompositionSummaryRow {
   formations: number;
 }
 
-export interface UnitRosterGroup {
-  key: string;
-  name: string;
-  type: string;
-  rows: ArmyUnitRow[];
-  count: number;
-  strength: number;
-  maxStrength: number;
-}
-
 export interface UnitSelectionBox {
   left: number;
   top: number;

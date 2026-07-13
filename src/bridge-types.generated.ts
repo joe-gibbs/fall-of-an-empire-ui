@@ -4763,6 +4763,12 @@ export interface MilitaryUnitEntry {
   sources: MilitaryUnitSourceEntry[];
 }
 
+export interface MilitaryBattleGroupEntry {
+  id: string;
+  role: string;
+  unitIds: string[];
+}
+
 export interface MilitaryUnitTypeStrengthEntry {
   type: string;
   count: number;
@@ -4814,6 +4820,7 @@ export interface GetMilitaryDataResponse {
   morale: number;
   units: MilitaryUnitEntry[];
   unitRows: MilitaryUnitEntry[];
+  battleGroups: MilitaryBattleGroupEntry[];
   commandRank: string;
   isNavy: boolean;
   currentOrder: string;
