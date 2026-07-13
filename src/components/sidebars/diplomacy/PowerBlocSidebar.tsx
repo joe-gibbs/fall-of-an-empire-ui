@@ -758,7 +758,7 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
             headerRowClassName="powerbloc-member-table-head"
             bodyClassName="powerbloc-member-table-body"
             rowClassName="powerbloc-member-row"
-            virtualRowHeightRem={3.05}
+            virtualized={false}
             emptyLabel={<WebUIText textKey="Auto.ComponentsSidebarsPowerBlocSidebar.305.5" />}
           />
           {canShowMoreMembers ? (
