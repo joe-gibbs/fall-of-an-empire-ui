@@ -20,6 +20,7 @@ import {
   useEconomyResourceDetailsBridge,
 } from '../../../bridge/settlements-economy/useEconomyOverviewBridge';
 import type {
+  CommandUpkeepEntry,
   EconomyOverviewFoodRow,
   EconomyOverviewHistoryPoint,
   EconomyOverviewMilitaryRow,
@@ -30,7 +31,10 @@ import type {
   EconomyOverviewTaxRow,
   EconomyOverviewVassalRow,
   GetEconomyOverviewResponse,
+  GetIncomeBreakdownResponse,
+  IncomeEntry,
 } from '../../../bridge-types.generated.ts';
+import { useBridgeQuery } from '../../../bridge/core/useBridgeQuery';
 import type { CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import type { SortDirection } from '../../common/layout/tables/sortUtils';
@@ -59,8 +63,10 @@ type EconomyMetricKey =
   | 'eventExpense'
   | 'powerBlocExpense'
   | 'autoAssignCommanderExpense'
-  | 'otherExpense';
-type HistoryMetricKey = Exclude<EconomyMetricKey, never>;
+  | 'otherExpense'
+  | 'treasuryAdjustmentIncome'
+  | 'treasuryAdjustmentExpense';
+type HistoryMetricKey = Exclude<EconomyMetricKey, 'treasuryAdjustmentIncome' | 'treasuryAdjustmentExpense'>;
 
 interface MetricDef {
   key: EconomyMetricKey;
@@ -156,7 +162,18 @@ function tradeAmountFromEvent(event: MouseEvent<HTMLButtonElement>): number {
 }
 
 function metric(data: GetEconomyOverviewResponse | null, key: EconomyMetricKey): number {
+  if (key === 'treasuryAdjustmentIncome') return Math.max(0, data?.treasuryAdjustment ?? 0);
+  if (key === 'treasuryAdjustmentExpense') return Math.max(0, -(data?.treasuryAdjustment ?? 0));
   return Number(data?.[key] ?? 0);
+}
+
+function useIncomeBreakdown(enabled: boolean): GetIncomeBreakdownResponse | null {
+  return useBridgeQuery({
+    action: 'game.get_income_breakdown',
+    fetch: enabled,
+    cacheResponseMs: 1000,
+    map: data => data,
+  });
 }
 
 function historyMetric(point: EconomyOverviewHistoryPoint, key: HistoryMetricKey): number {
@@ -468,11 +485,15 @@ function BreakdownColumn({
   rows,
   data,
   tone,
+  selectedMetric,
+  onSelectMetric,
 }: {
   title: string;
   rows: MetricDef[];
   data: GetEconomyOverviewResponse | null;
   tone: 'income' | 'expense';
+  selectedMetric: EconomyMetricKey | null;
+  onSelectMetric: (metric: EconomyMetricKey) => void;
 }) {
   const t = useWebUIText();
   const entries = rows
@@ -480,9 +501,9 @@ function BreakdownColumn({
     .filter(row => row.value > 0);
   const adjustment = data?.treasuryAdjustment ?? 0;
   if (tone === 'income' && adjustment > 0) {
-    entries.push({ key: 'otherIncome', labelKey: 'Economy.DebtRelief', value: adjustment });
+    entries.push({ key: 'treasuryAdjustmentIncome', labelKey: 'Economy.DebtRelief', value: adjustment });
   } else if (tone === 'expense' && adjustment < 0) {
-    entries.push({ key: 'treasuryDampeningExpense', labelKey: 'Economy.TreasuryDampening', value: Math.abs(adjustment) });
+    entries.push({ key: 'treasuryAdjustmentExpense', labelKey: 'Economy.TreasuryDampening', value: Math.abs(adjustment) });
   }
   const total = tone === 'income' ? data?.incomeTotal ?? 0 : data?.expenseTotal ?? 0;
   const valueTone = tone === 'income' ? 'econ-positive' : 'econ-negative';
@@ -502,13 +523,220 @@ function BreakdownColumn({
             <span className="econ-breakdown-value">0</span>
           </div>
         ) : entries.map((row, index) => (
-          <div className="econ-breakdown-row" key={`${row.labelKey}:${index}`}>
+          <button
+            type="button"
+            className={`econ-breakdown-row econ-breakdown-row--button${selectedMetric === row.key ? ' is-selected' : ''}`}
+            key={`${row.labelKey}:${index}`}
+            aria-expanded={selectedMetric === row.key}
+            aria-controls="economy-flow-detail"
+            onPointerDown={(event) => {
+              event.preventDefault();
+              onSelectMetric(row.key);
+            }}
+          >
             <span className="econ-breakdown-label">
               {t(row.labelKey)}
             </span>
             <span className={`econ-breakdown-value ${valueTone}`}>
               <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{tone === 'expense' ? '-' : '+'}{fmt(row.value)}
+              <span className="econ-breakdown-caret" aria-hidden="true">&rsaquo;</span>
             </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface MoneyFlowDetailEntry {
+  name: string;
+  amount: number;
+}
+
+interface CommandCostTreeNode extends CommandUpkeepEntry {
+  children: CommandCostTreeNode[];
+  maintenanceTotal: number;
+}
+
+function incomeEntries(entries: IncomeEntry[]): MoneyFlowDetailEntry[] {
+  return entries.map(entry => ({ name: entry.name, amount: entry.amount }));
+}
+
+function buildCommandCostTree(entries: CommandUpkeepEntry[]): CommandCostTreeNode[] {
+  const nodes = entries.map(entry => ({
+    ...entry,
+    children: [] as CommandCostTreeNode[],
+    maintenanceTotal: entry.maintenance,
+  }));
+  const byId = new Map(nodes.map(node => [node.id, node]));
+  const roots: CommandCostTreeNode[] = [];
+
+  for (const node of nodes) {
+    const parent = node.parentId ? byId.get(node.parentId) : undefined;
+    if (parent && parent !== node) {
+      parent.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  const sumMaintenance = (node: CommandCostTreeNode): number => {
+    node.maintenanceTotal = node.maintenance
+      + node.children.reduce((sum, child) => sum + sumMaintenance(child), 0);
+    return node.maintenanceTotal;
+  };
+  roots.forEach(sumMaintenance);
+  return roots;
+}
+
+function CommandCostNode({
+  node,
+  mode,
+  expandedIds,
+  onToggle,
+}: {
+  node: CommandCostTreeNode;
+  mode: 'upkeep' | 'maintenance';
+  expandedIds: Set<string>;
+  onToggle: (id: string) => void;
+}) {
+  const hasChildren = node.children.length > 0;
+  const expanded = hasChildren && expandedIds.has(node.id);
+  const label = mode === 'maintenance' ? node.commandName || node.name : node.name || node.commandName;
+  const amount = mode === 'maintenance' ? node.maintenanceTotal : node.upkeep;
+  const content = (
+    <>
+      <span className="econ-command-cost__name">
+        {hasChildren && <span className="econ-command-cost__caret" aria-hidden="true">&rsaquo;</span>}
+        {label}
+      </span>
+      <strong className="econ-negative">
+        <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />-{fmt(amount)}
+      </strong>
+    </>
+  );
+
+  return (
+    <div className="econ-command-cost__branch">
+      {hasChildren ? (
+        <button
+          type="button"
+          className={`econ-command-cost__row${expanded ? ' is-expanded' : ''}`}
+          aria-expanded={expanded}
+          onPointerDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onToggle(node.id);
+          }}
+        >
+          {content}
+        </button>
+      ) : (
+        <div className="econ-command-cost__row">{content}</div>
+      )}
+      {expanded && (
+        <div className="econ-command-cost__children">
+          {node.children.map(child => (
+            <CommandCostNode
+              key={child.id}
+              node={child}
+              mode={mode}
+              expandedIds={expandedIds}
+              onToggle={onToggle}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CommandCostTree({ entries, mode }: { entries: CommandUpkeepEntry[]; mode: 'upkeep' | 'maintenance' }) {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const roots = useMemo(() => buildCommandCostTree(entries), [entries]);
+  const toggle = (id: string) => {
+    setExpandedIds(current => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <div className="econ-command-cost">
+      {roots.map(root => (
+        <CommandCostNode
+          key={root.id}
+          node={root}
+          mode={mode}
+          expandedIds={expandedIds}
+          onToggle={toggle}
+        />
+      ))}
+    </div>
+  );
+}
+
+function detailEntriesForMetric(
+  selectedMetric: EconomyMetricKey,
+  details: GetIncomeBreakdownResponse | null,
+  total: number,
+  label: string,
+): MoneyFlowDetailEntry[] {
+  if (!details) return [{ name: label, amount: total }];
+  let entries: MoneyFlowDetailEntry[] = [];
+  if (selectedMetric === 'settlementIncome') entries = incomeEntries(details.settlementTaxes);
+  if (selectedMetric === 'tradeIncome') entries = incomeEntries(details.settlementTrades);
+  if (selectedMetric === 'vassalTributeIncome') entries = incomeEntries(details.vassals);
+  if (entries.length > 0) return entries;
+  return [{ name: label, amount: total }];
+}
+
+function MoneyFlowDetail({
+  selectedMetric,
+  data,
+  details,
+}: {
+  selectedMetric: EconomyMetricKey;
+  data: GetEconomyOverviewResponse | null;
+  details: GetIncomeBreakdownResponse | null;
+}) {
+  const t = useWebUIText();
+  const definition = [...INCOME_ROWS, ...EXPENSE_ROWS].find(row => row.key === selectedMetric)
+    ?? (selectedMetric === 'treasuryAdjustmentIncome'
+      ? { key: selectedMetric, labelKey: 'Economy.DebtRelief' }
+      : { key: selectedMetric, labelKey: 'Economy.TreasuryDampening' });
+  const label = t(definition.labelKey);
+  const total = metric(data, selectedMetric);
+  const expense = selectedMetric === 'treasuryAdjustmentExpense'
+    || EXPENSE_ROWS.some(row => row.key === selectedMetric);
+  const commandCostMode = selectedMetric === 'armyExpense'
+    ? 'upkeep'
+    : selectedMetric === 'commandMaintenanceExpense' ? 'maintenance' : null;
+  const commandEntries = details?.armies ?? [];
+  const showCommandTree = commandCostMode !== null && commandEntries.length > 0;
+  const entries = detailEntriesForMetric(selectedMetric, details, total, label);
+
+  return (
+    <div className="econ-money-detail" id="economy-flow-detail">
+      <div className="econ-money-detail__header">
+        <span>{label}</span>
+        <strong className={expense ? 'econ-negative' : 'econ-positive'}>
+          <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />
+          {expense ? '-' : '+'}{fmt(total)}{t('Economy.PerMonth')}
+        </strong>
+      </div>
+      <div className={`econ-money-detail__grid${showCommandTree ? ' econ-money-detail__grid--tree' : ''}`}>
+        {showCommandTree && commandCostMode ? (
+          <CommandCostTree entries={commandEntries} mode={commandCostMode} />
+        ) : entries.map((entry, index) => (
+          <div className="econ-money-detail__row" key={`${entry.name}:${index}`}>
+            <span>{entry.name}</span>
+            <strong className={expense ? 'econ-negative' : 'econ-positive'}>
+              <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />
+              {expense ? '-' : '+'}{fmt(entry.amount)}
+            </strong>
           </div>
         ))}
       </div>
@@ -628,9 +856,9 @@ function ShortagesDashboard({ resources, onOpenResource }: { resources: EconomyO
           </div>
           {shortages.map(resource => {
             const months = resource.amount / Math.abs(resource.netPerMonth);
-            const coverage = resource.amount <= 0.0001
-              ? t('Economy.ShortNow')
-              : t('Economy.MonthsRemaining', { Count: formatNumber(months, { maximumFractionDigits: 1 }) });
+            const coverage = t('Economy.MonthsRemaining', {
+              Count: formatNumber(months, { maximumFractionDigits: 1 }),
+            });
             const expanded = expandedResourceId === resource.id;
             return (
               <div className="econ-shortage-entry" key={resource.id}>
@@ -1121,14 +1349,20 @@ function VassalDashboard({ rows }: { rows: EconomyOverviewVassalRow[] }) {
 
 function OverviewTab({ data, onOpenResource }: { data: GetEconomyOverviewResponse | null; onOpenResource: (resource: EconomyOverviewResourceRow) => void }) {
   const t = useWebUIText();
+  const [selectedMetric, setSelectedMetric] = useState<EconomyMetricKey | null>(null);
+  const incomeBreakdown = useIncomeBreakdown(selectedMetric !== null);
+  const selectMetric = (next: EconomyMetricKey) => {
+    setSelectedMetric(current => current === next ? null : next);
+  };
   return (
     <>
       <section className="econ-section">
         <SectionHeading variant="ornate" title={t('Economy.GoldFlow')} />
         <div className="econ-overview-top">
-          <BreakdownColumn title={t('Economy.Income')} rows={INCOME_ROWS} data={data} tone="income" />
-          <BreakdownColumn title={t('Economy.Expenses')} rows={EXPENSE_ROWS} data={data} tone="expense" />
+          <BreakdownColumn title={t('Economy.Income')} rows={INCOME_ROWS} data={data} tone="income" selectedMetric={selectedMetric} onSelectMetric={selectMetric} />
+          <BreakdownColumn title={t('Economy.Expenses')} rows={EXPENSE_ROWS} data={data} tone="expense" selectedMetric={selectedMetric} onSelectMetric={selectMetric} />
         </div>
+        {selectedMetric && <MoneyFlowDetail selectedMetric={selectedMetric} data={data} details={incomeBreakdown} />}
         <FlowFooter
           label={t('Economy.NetIncome')}
           value={<span className={valueClass(data?.netIncome)}><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{money(data?.netIncome, t)}</span>}

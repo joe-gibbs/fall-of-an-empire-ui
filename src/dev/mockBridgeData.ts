@@ -5441,10 +5441,10 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             { name: 'Cortalium', amount: 80 },
           ],
           armies: [
-            { id: MOCK_IDS.military, parentId: '', name: 'Legio II Ferrata', upkeep: 840 },
-            { id: 'mock-military-fidelis', parentId: '', name: 'Legio III Fidelis', upkeep: 620 },
-            { id: MOCK_IDS.navy, parentId: '', name: 'Classis Meridiana', upkeep: 420 },
-            { id: 'mock-military-auxilia-tamashek', parentId: '', name: 'Auxilia Tamashek', upkeep: 180 },
+            { id: MOCK_IDS.military, parentId: '', name: 'Legio II Ferrata', commandName: 'Eastern Field Command', upkeep: 1640, maintenance: 500 },
+            { id: 'mock-military-fidelis', parentId: MOCK_IDS.military, name: 'Legio III Fidelis', commandName: 'Western Field Command', upkeep: 800, maintenance: 500 },
+            { id: MOCK_IDS.navy, parentId: '', name: 'Classis Meridiana', commandName: 'Southern Fleet Command', upkeep: 420, maintenance: 300 },
+            { id: 'mock-military-auxilia-tamashek', parentId: 'mock-military-fidelis', name: 'Auxilia Tamashek', commandName: 'Frontier Command', upkeep: 180, maintenance: 200 },
           ],
           vassals: [
             { name: 'Ingalia', amount: 420 },

@@ -2394,7 +2394,9 @@ export interface CommandUpkeepEntry {
   id: string;
   parentId: string;
   name: string;
+  commandName: string;
   upkeep: number;
+  maintenance: number;
 }
 
 export interface GetIncomeBreakdownResponse {

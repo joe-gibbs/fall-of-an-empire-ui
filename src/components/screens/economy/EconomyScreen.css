@@ -250,6 +250,25 @@
   padding: 0.14rem 0.62rem;
 }
 
+.econ-breakdown-row--button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.econ-breakdown-row--button.is-selected {
+  background: rgba(201, 168, 76, 0.11);
+}
+
+.econ-breakdown-row--button:focus-visible {
+  outline: 0.077rem solid rgba(201, 168, 76, 0.72);
+  outline-offset: -0.077rem;
+}
+
 .econ-breakdown-list > .econ-breakdown-row {
   margin-top: 0.04rem;
 }
@@ -453,6 +472,138 @@
   align-items: center;
   gap: 0.35rem;
   margin-left: 1rem;
+}
+
+.econ-breakdown-caret {
+  display: inline-block;
+  width: 0.55rem;
+  margin-left: 0.28rem;
+  color: var(--gold);
+  font-size: 1rem;
+  line-height: 0.8;
+  transform: translateY(0.02rem);
+}
+
+.econ-breakdown-row--button.is-selected .econ-breakdown-caret {
+  transform: rotate(90deg);
+}
+
+.econ-money-detail {
+  margin: 0.18rem 0.55rem 0.4rem;
+  border: 0.077rem solid rgba(201, 168, 76, 0.3);
+  background: rgba(7, 11, 16, 0.42);
+}
+
+.econ-money-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.36rem 0.52rem;
+  border-bottom: 0.077rem solid rgba(201, 168, 76, 0.24);
+  color: var(--gold);
+  font-family: var(--font-header);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+}
+
+.econ-money-detail__header strong {
+  white-space: nowrap;
+}
+
+.econ-money-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.1rem;
+  padding: 0.3rem 0.52rem 0.36rem;
+}
+
+.econ-money-detail__grid--tree {
+  display: block;
+}
+
+.econ-money-detail__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 0.18rem 0;
+  border-bottom: 0.077rem solid rgba(201, 168, 76, 0.12);
+  font-size: 0.82rem;
+}
+
+.econ-money-detail__row > span {
+  overflow: hidden;
+  margin-right: 0.6rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.econ-money-detail__row strong {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.econ-command-cost__row {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 1.65rem;
+  padding: 0.18rem 0.34rem;
+  border: 0;
+  border-bottom: 0.077rem solid rgba(201, 168, 76, 0.12);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.econ-command-cost__row {
+  cursor: pointer;
+}
+
+button.econ-command-cost__row:hover,
+button.econ-command-cost__row.is-expanded {
+  background: rgba(201, 168, 76, 0.08);
+}
+
+button.econ-command-cost__row:focus-visible {
+  outline: 0.077rem solid rgba(201, 168, 76, 0.72);
+  outline-offset: -0.077rem;
+}
+
+.econ-command-cost__name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  margin-right: 0.6rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.econ-command-cost__caret {
+  flex: 0 0 auto;
+  width: 0.6rem;
+  margin-right: 0.18rem;
+  color: var(--gold);
+  font-size: 1rem;
+  line-height: 0.8;
+}
+
+.econ-command-cost__row.is-expanded .econ-command-cost__caret {
+  transform: rotate(90deg);
+}
+
+.econ-command-cost__row strong {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.econ-command-cost__children {
+  margin-left: 1rem;
+  padding-left: 0.28rem;
 }
 
 .econ-shortages-empty {
