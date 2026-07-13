@@ -90,9 +90,9 @@ export default function ProvinceCreationLeaderModal({
     : sortedCandidates[0]?.id ?? null;
   const selected = sortedCandidates.find(candidate => candidate.id === effectiveSelectedId) ?? sortedCandidates[0];
 
-  const handleCreate = useCallback(() => {
+  const handleCreate = useCallback((playAsProvince: boolean) => {
     if (!selected) return;
-    void createProvinceFromCandidateBridge(landId, selected.id);
+    void createProvinceFromCandidateBridge(landId, selected.id, playAsProvince);
     close();
   }, [landId, selected, close]);
 
@@ -212,7 +212,8 @@ export default function ProvinceCreationLeaderModal({
 
               <CandidateFooter prefix="cam">
                 <GameButton variant="outline" onClick={() => handleView(selected.id)}><WebUIText textKey="Auto.ComponentsModalsRegionGovernorAppointmentModal.245.2" /></GameButton>
-                <GameButton variant="burgundy" onClick={handleCreate}><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.651.9" /></GameButton>
+                <GameButton variant="outline" onClick={() => handleCreate(false)}><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.651.9" /></GameButton>
+                <GameButton variant="burgundy" onClick={() => handleCreate(true)}><WebUIText textKey="InternalPolitics.CreateAndPlayProvince" /></GameButton>
               </CandidateFooter>
             </>
           ) : (

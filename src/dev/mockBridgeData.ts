@@ -6392,7 +6392,6 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.toggle_foederati_callup':
       case 'game.set_province_build_focus':
       case 'game.adjust_subject_tax_rate':
-      case 'game.create_province_from_candidate':
       case 'game.handle_world_glance_input':
       case 'game.notification_events':
       case 'game.diplomatic_notification_events':
@@ -6401,6 +6400,14 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'ui.open_external_url':
       case 'ui.open_external_link':
       case 'ui.escape_pressed':
+        return undefined;
+      case 'game.create_province_from_candidate':
+        if (payloadBoolean(payload, 'playAsProvince') && !state.provinceMode) {
+          state.provinceMode = true;
+          state.playerGold = provincePlayerFaction.gold;
+          emitPlayerFaction(emit);
+          emitResources(emit);
+        }
         return undefined;
       case 'ui.ally_call_dialog': {
         const closeEvent = mockAllyCallDialog(false);

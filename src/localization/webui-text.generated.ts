@@ -1540,6 +1540,7 @@ export const WEBUI_TEXT_SOURCE = {
   "InternalPolitics.ProvinceCreationKicker": "Create province",
   "InternalPolitics.ProvinceCreationDescription": "Choose who will govern {Province}. The new province will include {Count} settlements.",
   "InternalPolitics.ProvinceCreationButtonBody": "Choose a courtier to lead the new province.",
+  "InternalPolitics.CreateAndPlayProvince": "Create and Play",
   "InternalPolitics.ProvinceLeaderPrimaryStatBody": "Governance is the main measure for leading a province.",
   "Auto.ComponentsScreensInternalPoliticsScreen.875.10": "Action",
   "Auto.ComponentsScreensInternalPoliticsScreen.879.11": "No foederati forces available.",

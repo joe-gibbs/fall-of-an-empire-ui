@@ -29,8 +29,8 @@ export function adjustSubjectTaxRateBridge(factionId: string, delta: number): Pr
   });
 }
 
-export function createProvinceFromCandidateBridge(landId: string, leaderPersonId: string): Promise<void> {
-  return bridgeCall('game.create_province_from_candidate', { landId, leaderPersonId }).then(() => {
+export function createProvinceFromCandidateBridge(landId: string, leaderPersonId: string, playAsProvince: boolean): Promise<void> {
+  return bridgeCall('game.create_province_from_candidate', { landId, leaderPersonId, playAsProvince }).then(() => {
     clearBridgeQueryCache('game.get_diplomacy_overview');
     return undefined;
   });

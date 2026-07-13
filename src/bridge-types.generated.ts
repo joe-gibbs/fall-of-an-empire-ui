@@ -4502,6 +4502,7 @@ export interface AdjustSubjectTaxRateRequest {
 export interface CreateProvinceFromCandidateRequest {
   landId: string;
   leaderPersonId: string;
+  playAsProvince: boolean;
 }
 
 export interface ModEntryDto {
