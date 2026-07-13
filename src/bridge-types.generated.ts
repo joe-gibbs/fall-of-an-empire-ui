@@ -1579,6 +1579,15 @@ export interface EventPersonNameInputData {
   targetFactionId: string;
 }
 
+export interface EventHistoryEntryData {
+  id: string;
+  title: string;
+  body: string;
+  imageId: string;
+  presentationStyle: string;
+  chosenOptionText: string;
+}
+
 export interface GetCurrentEventResponse {
   hasEvent: boolean;
   id: string;
@@ -1590,6 +1599,7 @@ export interface GetCurrentEventResponse {
   regnalNameInput: EventRegnalNameInputData;
   personNameInput: EventPersonNameInputData;
   options: EventOptionData[];
+  previousEvents: EventHistoryEntryData[];
 }
 
 export interface GetDiocesesRequest {

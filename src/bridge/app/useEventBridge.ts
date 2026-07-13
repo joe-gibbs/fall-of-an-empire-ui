@@ -117,6 +117,16 @@ function mapEvent(data: GetCurrentEventResponse): GameEvent | null {
           }))
         : undefined,
     })),
+    previousEvents: data.previousEvents.map(previousEvent => ({
+      id: previousEvent.id,
+      title: previousEvent.title,
+      body: previousEvent.body,
+      image: previousEvent.imageId
+        ? FoaeCefUIAssetPath(`/assets/events/${previousEvent.imageId}.png`) ?? null
+        : null,
+      presentationStyle: previousEvent.presentationStyle as GameEvent['presentationStyle'],
+      chosenOptionText: previousEvent.chosenOptionText,
+    })),
   };
 }
 

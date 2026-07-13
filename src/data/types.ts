@@ -1278,6 +1278,15 @@ export interface EventSender {
   portraitLayers?: PortraitLayerData;
 }
 
+export interface EventHistoryEntry {
+  id: string;
+  title: string;
+  body: string;
+  image: string | null;
+  presentationStyle: 'standard' | 'important';
+  chosenOptionText: string;
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -1288,6 +1297,7 @@ export interface Event {
   regnalNameInput?: EventRegnalNameInput;
   personNameInput?: EventPersonNameInput;
   options: EventOption[];
+  previousEvents: EventHistoryEntry[];
 }
 
 export interface DiplomaticRequestNotification {

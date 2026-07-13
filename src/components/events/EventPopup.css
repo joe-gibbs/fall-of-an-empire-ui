@@ -214,6 +214,60 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
   cursor: pointer;
 }
 
+.event-toolbar--navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+}
+
+.event-popup--important .event-toolbar--navigation {
+  height: 2rem;
+}
+
+.event-toolbar--navigation > * + * {
+  margin-left: 0.55rem;
+}
+
+.event-chain-nav {
+  display: flex;
+  width: 1.55rem;
+  height: 1.4rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  border: 0.077rem solid rgba(211, 178, 82, 0.55);
+  border-radius: 0;
+  background: rgba(12, 17, 22, 0.68);
+  cursor: pointer;
+}
+
+.event-chain-nav:hover:not(:disabled) {
+  border-color: var(--gold-light);
+  background: rgba(111, 31, 43, 0.72);
+}
+
+.event-chain-nav:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.event-chain-nav img {
+  width: 0.72rem;
+  height: 0.72rem;
+  object-fit: contain;
+}
+
+.event-chain-position {
+  min-width: 2.7rem;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.75rem;
+  line-height: 1;
+  text-align: center;
+  user-select: none;
+}
+
 /* ---- Hero Image (matches char-header pattern) ---- */
 .event-hero {
   position: relative;
@@ -983,4 +1037,11 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
 
 .event-popup--important .event-options-heading-rule {
   border-top-color: rgba(224, 200, 114, 0.42);
+}
+
+.event-option--history-choice {
+  min-height: 3.1rem;
+  cursor: default;
+  border-color: rgba(211, 178, 82, 0.58);
+  background: rgba(67, 27, 38, 0.62);
 }

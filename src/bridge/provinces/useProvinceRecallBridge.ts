@@ -28,6 +28,7 @@ export function useProvinceRecallBridge(enabled: boolean): {
       }),
       image: FoaeCefUIAssetPath('/assets/events/interaction-replace-governor.png') ?? null,
       presentationStyle: 'important',
+      previousEvents: [],
       options: [
         {
           text: webUIText('ProvinceMode.RecallEvent.Accept'),

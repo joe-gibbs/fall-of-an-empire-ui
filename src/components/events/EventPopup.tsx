@@ -150,6 +150,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [regnalName, setRegnalName] = useState(event.regnalNameInput?.value || '');
   const [personName, setPersonName] = useState(event.personNameInput?.value || '');
+  const [chainIndex, setChainIndex] = useState(event.previousEvents.length);
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const regnalNameCycleIndexRef = useRef(0);
   const personNameCycleIndexRef = useRef(0);
@@ -318,9 +319,13 @@ const EventPopup: React.FC<EventPopupProps> = ({
     });
   }, [onLinkClick]);
 
-  const paragraphs = splitEventParagraphs(event.body);
+  const isCurrentEvent = chainIndex === event.previousEvents.length;
+  const historyEntry = isCurrentEvent ? null : event.previousEvents[chainIndex];
+  const displayedEvent = historyEntry || event;
+  const paragraphs = splitEventParagraphs(displayedEvent.body);
   const regnalNumberText = getRegnalNumberText(event.regnalNameInput, regnalName);
-  const isImportant = event.presentationStyle === 'important';
+  const isImportant = displayedEvent.presentationStyle === 'important';
+  const hasChainHistory = event.previousEvents.length > 0;
   const overlayClassName = `modal-overlay event-overlay${isImportant ? ' event-overlay--important' : ''}${closing ? ' event-overlay--closing' : ''}`;
   const wipeClassName = `event-popup-wipe${isImportant ? ' event-popup-wipe--important' : ''}${closing ? ' event-popup-wipe--closing' : ''}`;
   const popupClassName = `modal event-popup${isImportant ? ' event-popup--important' : ''}${closing ? ' event-popup--closing' : ''}`;
@@ -336,24 +341,65 @@ const EventPopup: React.FC<EventPopupProps> = ({
           }}
           onMouseDown={handlePopupMouseDown}
         >
-          {/* Drag handle bar */}
-          <div className="event-toolbar" />
+          <div className={`event-toolbar${hasChainHistory ? ' event-toolbar--navigation' : ''}`}>
+            {hasChainHistory && (
+              <>
+                <Tooltip content={webUIText('MainMenu.WorkshopPrevious')} position="bottom" inline>
+                  <button
+                    type="button"
+                    className="event-chain-nav"
+                    disabled={chainIndex === 0}
+                    aria-label={webUIText('MainMenu.WorkshopPrevious')}
+                    onMouseDown={(mouseEvent) => {
+                      if (mouseEvent.button !== 0 || chainIndex === 0) return;
+                      mouseEvent.preventDefault();
+                      mouseEvent.stopPropagation();
+                      playSound('click');
+                      setChainIndex(index => index - 1);
+                    }}
+                  >
+                    <img src="/assets/icons/I_NavPrevious.png" alt="" draggable={false} />
+                  </button>
+                </Tooltip>
+                <span className="event-chain-position">
+                  {String(chainIndex + 1)} / {String(event.previousEvents.length + 1)}
+                </span>
+                <Tooltip content={webUIText('MainMenu.WorkshopNext')} position="bottom" inline>
+                  <button
+                    type="button"
+                    className="event-chain-nav"
+                    disabled={isCurrentEvent}
+                    aria-label={webUIText('MainMenu.WorkshopNext')}
+                    onMouseDown={(mouseEvent) => {
+                      if (mouseEvent.button !== 0 || isCurrentEvent) return;
+                      mouseEvent.preventDefault();
+                      mouseEvent.stopPropagation();
+                      playSound('click');
+                      setChainIndex(index => index + 1);
+                    }}
+                  >
+                    <img src="/assets/icons/I_NavNext.png" alt="" draggable={false} />
+                  </button>
+                </Tooltip>
+              </>
+            )}
+          </div>
 
           {/* Hero image with vignette + title scrim (matches char-header) */}
           <div className="event-hero">
-            {event.image ? (
-              <img src={event.image} alt={event.title} className="event-hero-img" draggable={false} />
+            {displayedEvent.image ? (
+              <img src={displayedEvent.image} alt={displayedEvent.title} className="event-hero-img" draggable={false} />
             ) : (
               <div className="event-hero-placeholder">
                 <span className="event-hero-placeholder-text"><WebUIText textKey="Auto.ComponentsEventsEventPopup.292.1" /></span>
               </div>
             )}
             <div className="event-hero-scrim">
-              <div className="event-hero-title">{event.title}</div>
+              <div className="event-hero-title">{displayedEvent.title}</div>
             </div>
           </div>
 
-          {event.sender && (
+          {isCurrentEvent && event.sender && (
             <div className="event-sender">
               <PersonTooltip characterId={event.sender.personId} position="right" delay={200}>
                 <Portrait
@@ -386,7 +432,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
           </StyledScrollArea>
 
           <div className="event-interaction-panel">
-            {event.regnalNameInput && (
+            {isCurrentEvent && event.regnalNameInput && (
               <div className="event-name-input">
                 <label className="event-name-input-label">
                   <span className="event-name-input-label-text">{event.regnalNameInput.label}</span>
@@ -415,7 +461,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
               </div>
             )}
 
-            {event.personNameInput && (
+            {isCurrentEvent && event.personNameInput && (
               <div className="event-name-input">
                 <label className="event-name-input-label">
                   <span className="event-name-input-label-text">{event.personNameInput.label}</span>
@@ -443,6 +489,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
               </div>
             )}
 
+            {isCurrentEvent ? (
             <div className="event-options">
               <div className="event-options-heading">
                 <span className="event-options-heading-label"><WebUIText textKey="Auto.ComponentsEventsEventPopup.341.2" /></span>
@@ -495,6 +542,19 @@ const EventPopup: React.FC<EventPopupProps> = ({
                 );
               })}
             </div>
+            ) : (
+              <div className="event-options event-options--history">
+                <div className="event-options-heading">
+                  <span className="event-options-heading-label"><WebUIText textKey="Auto.ComponentsEventsEventPopup.341.2" /></span>
+                  <div className="event-options-heading-rule" />
+                </div>
+                <div className="event-option event-option--history-choice">
+                  <div className="event-option-body">
+                    <div className="event-option-text">{historyEntry?.chosenOptionText}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

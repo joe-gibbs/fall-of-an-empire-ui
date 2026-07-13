@@ -2803,6 +2803,18 @@ function currentEvent(visible: boolean, kind: MockEventKind): BridgeResponse<'ga
       targetPersonId: '',
       targetFactionId: '',
     },
+    previousEvents: visible && important
+      ? [
+        {
+          id: 'mock-event-grain-warning',
+          title: 'The Empty Granaries',
+          body: 'The provincial granaries stand barred while hungry families gather in the market square. The governor asks whether imperial stores should be opened before the shortage spreads.',
+          imageId: 'granary-shortage',
+          presentationStyle: 'standard',
+          chosenOptionText: 'Open the provincial stores before the roads close.',
+        },
+      ]
+      : [],
     options: visible
       ? important
         ? [
