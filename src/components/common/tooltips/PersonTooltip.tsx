@@ -10,6 +10,7 @@ import glossary from '../../../data/glossary';
 import { getStatColor, getComplianceState } from '../../../utils/colorFormatters';
 import { STAT_ICONS } from '../../../utils/iconMaps';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
+import { characterStatEffectLines } from '../../../utils/characterStatEffects';
 import './PersonTooltip.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -377,6 +378,8 @@ function PersonTooltipContent({ character: c, initialAltHeld }: { character: Cha
                 lines.push(...contributions);
               }
               lines.push(...temporaryModifierTooltipLines(temporaryModifiers));
+              lines.push({ label: webUIText('CharacterStats.CurrentEffects'), isHeader: true });
+              lines.push(...characterStatEffectLines(s.key, val));
               return (
                 <Tooltip
                   key={s.key}

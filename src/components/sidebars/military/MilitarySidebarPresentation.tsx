@@ -4,6 +4,7 @@ import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip'
 import type { Army, ArmyUnit, ArmyUnitRow, Character, CharacterStatModifier, MilitaryDoctrine, MilitaryResource, StatKey } from '../../../data/types';
 import { STAT_ICONS, TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
+import { characterStatEffectLines } from '../../../utils/characterStatEffects';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import glossary from '../../../data/glossary';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -255,6 +256,8 @@ export function buildCommanderStatEntry(character: Character, statDef: typeof co
     lines.push(...contributions);
   }
   lines.push(...temporaryModifierTooltipLines(temporaryModifiers));
+  lines.push({ label: webUIText('CharacterStats.CurrentEffects'), isHeader: true });
+  lines.push(...characterStatEffectLines(statDef.key, value));
 
   return {
     id: statDef.key,

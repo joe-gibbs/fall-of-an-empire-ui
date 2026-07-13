@@ -23,6 +23,8 @@ import { StatCellGrid, StatCell } from '../components/sidebars/shared/StatCellGr
 import { FoaeCefUIAssetPath } from '../utils/assets';
 import { resolveFactionBorderVariant } from '../utils/factionBorder';
 import { formatNumber, formatSignedNumber } from '../utils/numberFormat';
+import { characterStatEffectLines } from '../utils/characterStatEffects';
+import type { StatKey } from '../data/types';
 import { useWebUIText, type WebUITextFormatter } from '../localization/WebUITextContext';
 import { MAP_MODE_ICONS } from '../components/bottombar/mapModeIcons';
 import { MAP_MODE_TOOLTIPS } from '../components/bottombar/mapModeTooltipContent';
@@ -687,6 +689,14 @@ function statBreakdownLines(stat: ScenarioMapStatDto): TooltipLine[] {
   }));
 }
 
+function leaderStatBreakdownLines(stat: ScenarioMapStatDto, t: WebUITextFormatter): TooltipLine[] {
+  return [
+    ...statBreakdownLines(stat),
+    { label: t('CharacterStats.CurrentEffects'), isHeader: true },
+    ...characterStatEffectLines(stat.id as StatKey, stat.value),
+  ];
+}
+
 function renderTraitIcon(trait: ScenarioMapTraitDto): React.ReactNode {
   return (
     <Tooltip
@@ -725,7 +735,7 @@ function renderLeaderStats(stats: ScenarioMapStatDto[], t: WebUITextFormatter): 
             content={{
               title: stat.label || t(meta.labelKey),
               body: stat.description || t(meta.descriptionKey),
-              lines: statBreakdownLines(stat),
+              lines: leaderStatBreakdownLines(stat, t),
             }}
             position="bottom"
             delay={150}

@@ -4724,6 +4724,19 @@ export const WEBUI_TEXT_SOURCE = {
   "Settings.ShowMilitaryGlances.Description": "Show army, navy, and battle labels on the map.",
   "Settings.ShowConvoyGlances.Label": "Convoy Glances",
   "Settings.ShowConvoyGlances.Description": "Show resource convoy labels in resource map mode.",
+  "CharacterStats.CurrentEffects": "Effects",
+  "CharacterStats.Effect.CommandDamage": "Damage while commanding",
+  "CharacterStats.Effect.GovernorLevyEffectiveness": "Local levy effectiveness while governing",
+  "CharacterStats.Effect.CommandUnitsInfluenced": "Units influenced in battle",
+  "CharacterStats.Effect.GovernorUnrest": "Unrest while governing",
+  "CharacterStats.Effect.IntrigueAptitude": "Intrigue aptitude",
+  "CharacterStats.Effect.GovernorCorruption": "Monthly corruption while governing",
+  "CharacterStats.Effect.GovernorTaxIncome": "Tax income while governing",
+  "CharacterStats.Effect.GovernedRegions": "Regions governed",
+  "CharacterStats.Effect.Compliance": "Compliance",
+  "CharacterStats.Effect.DiseaseInfectionChance": "Disease infection chance",
+  "CharacterStats.Effect.BattleSurvivalChance": "Battle survival chance",
+  "CharacterStats.PercentagePoints": "{Value} percentage points",
 } as const;
 
 export type WebUITextKey = keyof typeof WEBUI_TEXT_SOURCE;

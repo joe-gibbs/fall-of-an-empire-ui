@@ -19,6 +19,7 @@ import PersonInteractionInitiatorModal from '../../modals/people/PersonInteracti
 import PersonInteractionGiftModal from '../../modals/people/PersonInteractionGiftModal';
 import type { Character, CharacterRelationship, StatKey } from '../../../data/types';
 import { STAT_ICONS } from '../../../utils/iconMaps';
+import { characterStatEffectLines } from '../../../utils/characterStatEffects';
 import { useGameActions, useGameState } from '../../../context/GameContext';
 import { bridgeCall } from '../../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
@@ -641,6 +642,8 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
               tooltipLines.push(...contributions);
             }
             tooltipLines.push(...temporaryModifierTooltipLines(temporaryModifiers));
+            tooltipLines.push({ label: webUIText('CharacterStats.CurrentEffects'), isHeader: true });
+            tooltipLines.push(...characterStatEffectLines(stat.key, stat.value));
             return (
               <Tooltip key={stat.label} content={{ title: stat.label, body: stat.description, lines: tooltipLines }} position="bottom" delay={150}>
                 <StatCell
