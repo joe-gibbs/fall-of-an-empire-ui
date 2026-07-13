@@ -81,7 +81,7 @@ type DiplomaticRelationStatus =
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 2.4;
 const ZOOM_STEP = 1.15;
-const MAP_BORDER_CANVAS_SCALE = 2;
+const MAP_BORDER_CANVAS_MAX_DIMENSION = 1024;
 const FACTION_GEOMETRY_DEFER_MS = 150;
 const FACTION_SELECTION_MAP_MODES: FactionSelectionMapMode[] = [
   'political',
@@ -457,6 +457,14 @@ function applyFactionGeometry(
   };
 }
 
+function mapCanvasScale(data: GetNewGameMapFactionSelectionResponse): number {
+  return Math.min(1, MAP_BORDER_CANVAS_MAX_DIMENSION / Math.max(data.mapWidth, data.mapHeight));
+}
+
+function mapCanvasSize(sourceSize: number, scale: number): number {
+  return Math.max(1, Math.round(sourceSize * scale));
+}
+
 function translatedTextOrFallback(t: WebUITextFormatter, key: string, fallback: string): string {
   if (!fallback) return fallback;
   const translated = t(key);
@@ -780,6 +788,7 @@ function FactionBorderCanvas({
       .filter((path): path is string => path.length > 0),
     [factions],
   );
+  const canvasScale = mapCanvasScale(data);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -789,8 +798,8 @@ function FactionBorderCanvas({
 
     const sourceWidth = Math.max(1, data.mapWidth);
     const sourceHeight = Math.max(1, data.mapHeight);
-    const canvasWidth = sourceWidth * MAP_BORDER_CANVAS_SCALE;
-    const canvasHeight = sourceHeight * MAP_BORDER_CANVAS_SCALE;
+    const canvasWidth = mapCanvasSize(sourceWidth, canvasScale);
+    const canvasHeight = mapCanvasSize(sourceHeight, canvasScale);
     if (canvas.width !== canvasWidth) {
       canvas.width = canvasWidth;
     }
@@ -809,7 +818,7 @@ function FactionBorderCanvas({
     }
 
     context.save();
-    context.scale(MAP_BORDER_CANVAS_SCALE, MAP_BORDER_CANVAS_SCALE);
+    context.scale(canvasScale, canvasScale);
     context.lineJoin = 'round';
     context.lineCap = 'round';
 
@@ -825,34 +834,40 @@ function FactionBorderCanvas({
       context.stroke(new Path2D(borderPath));
     }
     context.restore();
-  }, [borderPaths, data.mapHeight, data.mapWidth]);
+  }, [borderPaths, canvasScale, data.mapHeight, data.mapWidth]);
 
   return (
     <canvas
       ref={canvasRef}
       className="fs-map-borders"
-      width={Math.max(1, data.mapWidth) * MAP_BORDER_CANVAS_SCALE}
-      height={Math.max(1, data.mapHeight) * MAP_BORDER_CANVAS_SCALE}
+      width={mapCanvasSize(data.mapWidth, mapCanvasScale(data))}
+      height={mapCanvasSize(data.mapHeight, mapCanvasScale(data))}
       aria-hidden="true"
     />
   );
 }
 
-function FactionHighlightCanvas({
+function FactionPathCanvas({
   data,
-  selected,
-  hovered,
+  fillPath,
+  fillStyle,
+  borderPath,
+  outerBorderStyle,
+  outerBorderWidth,
+  innerBorderStyle,
+  innerBorderWidth,
 }: {
   data: GetNewGameMapFactionSelectionResponse;
-  selected: ScenarioMapFactionDto;
-  hovered: ScenarioMapFactionDto | null;
+  fillPath: string;
+  fillStyle: string;
+  borderPath: string;
+  outerBorderStyle: string;
+  outerBorderWidth: number;
+  innerBorderStyle: string;
+  innerBorderWidth: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const selectedFillPath = selected.geometry.fillPath;
-  const selectedBorderPath = selected.geometry.borderPath;
-  const hoveredFillPath = hovered && hovered.baseName !== selected.baseName ? hovered.geometry.fillPath : '';
-  const hoveredBorderPath = hovered && hovered.baseName !== selected.baseName ? hovered.geometry.borderPath : '';
-  const hoveredPlayable = hovered?.playable ?? false;
+  const canvasScale = mapCanvasScale(data);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -862,8 +877,8 @@ function FactionHighlightCanvas({
 
     const sourceWidth = Math.max(1, data.mapWidth);
     const sourceHeight = Math.max(1, data.mapHeight);
-    const canvasWidth = sourceWidth * MAP_BORDER_CANVAS_SCALE;
-    const canvasHeight = sourceHeight * MAP_BORDER_CANVAS_SCALE;
+    const canvasWidth = mapCanvasSize(sourceWidth, canvasScale);
+    const canvasHeight = mapCanvasSize(sourceHeight, canvasScale);
     if (canvas.width !== canvasWidth) {
       canvas.width = canvasWidth;
     }
@@ -882,59 +897,84 @@ function FactionHighlightCanvas({
     }
 
     context.save();
-    context.scale(MAP_BORDER_CANVAS_SCALE, MAP_BORDER_CANVAS_SCALE);
+    context.scale(canvasScale, canvasScale);
     context.lineJoin = 'round';
     context.lineCap = 'round';
 
-    if (selectedFillPath) {
-      context.fillStyle = 'rgba(255, 231, 160, 0.42)';
-      context.fill(new Path2D(selectedFillPath));
+    if (fillPath) {
+      context.fillStyle = fillStyle;
+      context.fill(new Path2D(fillPath));
     }
 
-    if (selectedBorderPath) {
-      const selectedPath = new Path2D(selectedBorderPath);
-      context.strokeStyle = 'rgba(13, 18, 24, 0.96)';
-      context.lineWidth = 10;
-      context.stroke(selectedPath);
-      context.strokeStyle = 'rgba(255, 218, 96, 0.98)';
-      context.lineWidth = 5;
-      context.stroke(selectedPath);
-    }
-
-    if (hoveredFillPath) {
-      context.fillStyle = hoveredPlayable ? 'rgba(255, 246, 200, 0.30)' : 'rgba(194, 88, 88, 0.26)';
-      context.fill(new Path2D(hoveredFillPath));
-    }
-
-    if (hoveredBorderPath) {
-      const hoveredPath = new Path2D(hoveredBorderPath);
-      context.strokeStyle = hoveredPlayable ? 'rgba(13, 18, 24, 0.88)' : 'rgba(42, 10, 10, 0.9)';
-      context.lineWidth = 8;
-      context.stroke(hoveredPath);
-      context.strokeStyle = hoveredPlayable ? 'rgba(255, 231, 150, 0.9)' : 'rgba(219, 94, 94, 0.88)';
-      context.lineWidth = 4;
-      context.stroke(hoveredPath);
+    if (borderPath) {
+      const path = new Path2D(borderPath);
+      context.strokeStyle = outerBorderStyle;
+      context.lineWidth = outerBorderWidth;
+      context.stroke(path);
+      context.strokeStyle = innerBorderStyle;
+      context.lineWidth = innerBorderWidth;
+      context.stroke(path);
     }
 
     context.restore();
   }, [
+    borderPath,
+    canvasScale,
     data.mapHeight,
     data.mapWidth,
-    hoveredBorderPath,
-    hoveredFillPath,
-    hoveredPlayable,
-    selectedBorderPath,
-    selectedFillPath,
+    fillPath,
+    fillStyle,
+    innerBorderStyle,
+    innerBorderWidth,
+    outerBorderStyle,
+    outerBorderWidth,
   ]);
 
   return (
     <canvas
       ref={canvasRef}
       className="fs-map-overlay"
-      width={Math.max(1, data.mapWidth) * MAP_BORDER_CANVAS_SCALE}
-      height={Math.max(1, data.mapHeight) * MAP_BORDER_CANVAS_SCALE}
+      width={mapCanvasSize(data.mapWidth, mapCanvasScale(data))}
+      height={mapCanvasSize(data.mapHeight, mapCanvasScale(data))}
       aria-hidden="true"
     />
+  );
+}
+
+function FactionHighlightCanvas({
+  data,
+  selected,
+  hovered,
+}: {
+  data: GetNewGameMapFactionSelectionResponse;
+  selected: ScenarioMapFactionDto;
+  hovered: ScenarioMapFactionDto | null;
+}) {
+  const visibleHovered = hovered && hovered.baseName !== selected.baseName ? hovered : null;
+
+  return (
+    <>
+      <FactionPathCanvas
+        data={data}
+        fillPath={selected.geometry.fillPath}
+        fillStyle="rgba(255, 231, 160, 0.42)"
+        borderPath={selected.geometry.borderPath}
+        outerBorderStyle="rgba(13, 18, 24, 0.96)"
+        outerBorderWidth={10}
+        innerBorderStyle="rgba(255, 218, 96, 0.98)"
+        innerBorderWidth={5}
+      />
+      <FactionPathCanvas
+        data={data}
+        fillPath={visibleHovered?.geometry.fillPath ?? ''}
+        fillStyle={visibleHovered?.playable ? 'rgba(255, 246, 200, 0.30)' : 'rgba(194, 88, 88, 0.26)'}
+        borderPath={visibleHovered?.geometry.borderPath ?? ''}
+        outerBorderStyle={visibleHovered?.playable ? 'rgba(13, 18, 24, 0.88)' : 'rgba(42, 10, 10, 0.9)'}
+        outerBorderWidth={8}
+        innerBorderStyle={visibleHovered?.playable ? 'rgba(255, 231, 150, 0.9)' : 'rgba(219, 94, 94, 0.88)'}
+        innerBorderWidth={4}
+      />
+    </>
   );
 }
 
