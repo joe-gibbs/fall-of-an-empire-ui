@@ -71,7 +71,27 @@
   right: 0.87vw;
   width: 4.5vw;
   height: 4.5vw;
-  z-index: 4;
+  z-index: 102;
+}
+
+.topbar-portrait-frame {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40vw;
+  height: auto;
+  z-index: 103;
+  transform: scaleX(-1);
+  mask-image: radial-gradient(
+    circle at 3.23vw 3.23vw,
+    transparent 0,
+    transparent 2.4vw,
+    black 2.48vw,
+    black 3.28vw,
+    transparent 3.36vw
+  );
+  pointer-events: none;
+  user-select: none;
 }
 
 .topbar-portrait-slot > .tooltip-wrapper,

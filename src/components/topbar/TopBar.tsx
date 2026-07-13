@@ -148,14 +148,15 @@ const TopBar: React.FC<TopBarProps> = ({
   );
 
   return (
-    <header className="topbar">
-      {/* Left bar panel (Right asset mirrored) */}
-      <img
-        src="/assets/ui-shadowed/T_TopNavbar_Right.png"
-        className="topbar-bg-right"
-        alt=""
-        draggable={false}
-      />
+    <>
+      <header className="topbar">
+        {/* Left bar panel (Right asset mirrored) */}
+        <img
+          src="/assets/ui-shadowed/T_TopNavbar_Right.png"
+          className="topbar-bg-right"
+          alt=""
+          draggable={false}
+        />
 
       {/* Right panel with portrait circle (Left asset mirrored) */}
       <img
@@ -164,17 +165,6 @@ const TopBar: React.FC<TopBarProps> = ({
         alt=""
         draggable={false}
       />
-
-      {/* Player portrait in the circular frame (right side) */}
-      <div className="topbar-portrait-slot" data-tutorial-target="LeaderPortraitSlot">
-        {playerCharacterId ? (
-          <PersonTooltip characterId={playerCharacterId} position="left" delay={200}>
-            {portraitButton}
-          </PersonTooltip>
-        ) : (
-          portraitButton
-        )}
-      </div>
 
       {/* Left: screen buttons */}
       <div className="topbar-left" data-tutorial-target="ScreenButtonGroup">
@@ -257,7 +247,25 @@ const TopBar: React.FC<TopBarProps> = ({
         {!subjectMode && <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />}
         <ResourceDisplay />
       </div>
-    </header>
+      </header>
+
+      {/* Kept outside the topbar stacking context so it remains above sidebars. */}
+      <div className="topbar-portrait-slot" data-tutorial-target="LeaderPortraitSlot">
+        {playerCharacterId ? (
+          <PersonTooltip characterId={playerCharacterId} position="left" delay={200}>
+            {portraitButton}
+          </PersonTooltip>
+        ) : (
+          portraitButton
+        )}
+      </div>
+      <img
+        src="/assets/ui-shadowed/T_TopNavbar_Left.png"
+        className="topbar-portrait-frame"
+        alt=""
+        draggable={false}
+      />
+    </>
   );
 };
 

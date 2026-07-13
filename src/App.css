@@ -42,7 +42,7 @@
   top: calc(var(--topbar-height) + 1rem);
   right: 0;
   bottom: 0;
-  z-index: 60;
+  z-index: 101;
   pointer-events: auto;
 }
 
