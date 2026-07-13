@@ -1,4 +1,4 @@
-import { bridgeCall } from '../bridge-types.generated.ts';
+import { bridgeCall, onBridgeEvent, type GetContentPackWebUIManifestResponse } from '../bridge-types.generated.ts';
 import { registerModPoCatalogues } from '../localization/modPoText';
 import { registerAssetOverride, registerContentPackAssetPaths } from '../utils/assets';
 import { joinGameLocalResourceUrl } from '../utils/localResourceUrl';
@@ -74,10 +74,6 @@ interface ContentPackWebUIManifest {
 }
 
 const MANIFEST_URL = '/mods/manifest.json';
-const CONTENT_PACK_MANIFEST_RETRY_MS = 2500;
-const CONTENT_PACK_MANIFEST_RETRY_INTERVAL_MS = 100;
-const CONTENT_PACK_BACKGROUND_RETRY_COUNT = 30;
-const CONTENT_PACK_BACKGROUND_RETRY_INTERVAL_MS = 1000;
 const loadedModEntries = new Set<string>();
 
 function loadJson(url: string): Promise<unknown> {
@@ -120,30 +116,14 @@ function isContentPackManifest(value: unknown): value is ContentPackWebUIManifes
   return !!value && typeof value === 'object' && Array.isArray((value as ContentPackWebUIManifest).packs);
 }
 
-function contentPackManifestHasWebUISurface(value: ContentPackWebUIManifest): boolean {
-  return (value.packs ?? []).some(pack => (
-    (pack.styles?.length ?? 0) > 0
-    || !!pack.localization
-    || !!pack.localisation
-    || (pack.assetPaths?.length ?? 0) > 0
-    || Object.keys(pack.assetOverrides ?? {}).length > 0
-    || (pack.entries?.length ?? 0) > 0
-  ));
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => window.setTimeout(resolve, ms));
-}
-
 function pathBaseName(path: string | undefined): string {
   if (!path) return '';
   const parts = path.split(/[\\/]/).filter(Boolean);
   return parts.length ? parts[parts.length - 1] : '';
 }
 
-async function fetchContentPackManifestOnce(): Promise<ContentPackWebUIManifest | null> {
+function parseContentPackManifest(response: GetContentPackWebUIManifestResponse): ContentPackWebUIManifest | null {
   try {
-    const response = await bridgeCall('game.get_content_pack_webui_manifest');
     const parsed = JSON.parse(response.manifestJson) as unknown;
     return isContentPackManifest(parsed) ? parsed : null;
   } catch {
@@ -151,19 +131,7 @@ async function fetchContentPackManifestOnce(): Promise<ContentPackWebUIManifest 
   }
 }
 
-async function fetchContentPackManifest(): Promise<ModManifestEntry[]> {
-  const startedAt = Date.now();
-  let parsed: ContentPackWebUIManifest | null = null;
-  do {
-    parsed = await fetchContentPackManifestOnce();
-    if (parsed && contentPackManifestHasWebUISurface(parsed)) {
-      break;
-    }
-    await delay(CONTENT_PACK_MANIFEST_RETRY_INTERVAL_MS);
-  } while (Date.now() - startedAt < CONTENT_PACK_MANIFEST_RETRY_MS);
-
-  if (!parsed) return [];
-
+function contentPackManifestEntries(parsed: ContentPackWebUIManifest): ModManifestEntry[] {
   const entries: ModManifestEntry[] = [];
   for (const pack of parsed.packs ?? []) {
     const fallbackBase = pack.id
@@ -199,6 +167,16 @@ async function fetchContentPackManifest(): Promise<ModManifestEntry[]> {
     }
   }
   return entries;
+}
+
+async function fetchContentPackManifest(): Promise<ModManifestEntry[]> {
+  try {
+    const response = await bridgeCall('game.get_content_pack_webui_manifest');
+    const parsed = parseContentPackManifest(response);
+    return parsed ? contentPackManifestEntries(parsed) : [];
+  } catch {
+    return [];
+  }
 }
 
 function injectStyles(hrefs: string[]): void {
@@ -266,25 +244,6 @@ async function loadModManifestEntries(mods: ModManifestEntry[]): Promise<boolean
   return loaded.length > 0;
 }
 
-function scheduleContentPackManifestRetry(): void {
-  let attempts = 0;
-  const retry = async () => {
-    attempts += 1;
-    const entries = await fetchContentPackManifest();
-    const loadedAny = await loadModManifestEntries(entries);
-    if (loadedAny || attempts >= CONTENT_PACK_BACKGROUND_RETRY_COUNT) {
-      return;
-    }
-    window.setTimeout(() => {
-      void retry();
-    }, CONTENT_PACK_BACKGROUND_RETRY_INTERVAL_MS);
-  };
-
-  window.setTimeout(() => {
-    void retry();
-  }, CONTENT_PACK_BACKGROUND_RETRY_INTERVAL_MS);
-}
-
 async function loadMods(): Promise<void> {
   if (import.meta.env.DEV && (import.meta.env.MODE === 'mock' || new URLSearchParams(window.location.search).has('mock'))) {
     return;
@@ -292,9 +251,6 @@ async function loadMods(): Promise<void> {
 
   const manifest = await fetchManifest();
   const contentPackManifest = await fetchContentPackManifest();
-  if (contentPackManifest.length === 0) {
-    scheduleContentPackManifestRetry();
-  }
 
   const byEntry = new Map<string, ModManifestEntry>();
   [...manifest, ...contentPackManifest].forEach(mod => {
@@ -305,6 +261,13 @@ async function loadMods(): Promise<void> {
 
   await loadModManifestEntries(allMods);
 }
+
+onBridgeEvent('game.get_content_pack_webui_manifest', (response) => {
+  const parsed = parseContentPackManifest(response);
+  if (parsed) {
+    void loadModManifestEntries(contentPackManifestEntries(parsed));
+  }
+});
 
 /**
  * Promise that resolves once every mod the manifest listed has been
