@@ -974,8 +974,19 @@
   min-width: 7.5rem;
   min-height: 2.1818rem;
   padding: 0.3636rem 0.8182rem;
-  border: 0.0909rem solid rgba(201, 168, 76, 0.22);
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.0909rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(12, 16, 20, 0.72);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
   color: var(--text-muted);
   font-family: var(--font-header);
   font-size: 1rem;
@@ -985,9 +996,20 @@
 
 .mm-mod-tab:hover,
 .mm-mod-tab--active {
-  border-color: rgba(224, 200, 114, 0.62);
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
   background-color: rgba(93, 32, 47, 0.64);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
   color: var(--text-header);
+}
+
+.mm-mod-tab--active {
+  background-color: rgba(93, 32, 47, 0.64);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
+  border-image-source: url('/assets/gold-frame.png');
 }
 
 .mm-mod-entry {
@@ -996,6 +1018,10 @@
   justify-content: space-between;
   padding: 1.2727rem 1.4545rem;
   background-color: var(--bg-card);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
   border-width: 0.0909rem;
   border-style: solid;
   border-top-color: var(--border-dim);
@@ -1108,6 +1134,10 @@
   padding: 0.3636rem 0.7273rem;
   border: 0.0909rem solid rgba(201, 168, 76, 0.22);
   background-color: rgba(8, 12, 16, 0.78);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
   color: var(--text-header);
   font-family: var(--font-body);
   font-size: 1rem;
@@ -1132,6 +1162,10 @@
   border-width: 0.0909rem;
   border-color: rgba(201, 168, 76, 0.22);
   background-color: rgba(8, 12, 16, 0.78);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
   color: var(--text-header);
   font-size: 0.9091rem;
 }
@@ -1244,6 +1278,10 @@
   border-bottom-color: var(--border-dim);
   border-left-color: var(--border-dim);
   background-color: rgba(12, 16, 20, 0.72);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
 }
 
 .mm-toggle--on {
@@ -1252,6 +1290,10 @@
   border-bottom-color: var(--gold);
   border-left-color: var(--gold);
   background-color: rgba(108, 31, 36, 0.82);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
 }
 
 .mm-toggle-knob {
@@ -1469,6 +1511,10 @@
   justify-content: space-between;
   padding: 1rem 1.2727rem;
   background-color: rgba(108, 31, 36, 0.45);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
   border-width: 0.0909rem;
   border-style: solid;
   border-top-color: var(--gold-dark);
@@ -1489,6 +1535,10 @@
   margin-left: 1.0909rem;
   padding: 0.6364rem 1rem;
   background-color: var(--burgundy);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
   border-width: 0.0909rem;
   border-style: solid;
   border-top-color: var(--gold-dark);
@@ -1509,6 +1559,7 @@
   border-bottom-color: var(--gold);
   border-left-color: var(--gold);
   color: var(--gold);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
 }
 
 .mm-mod-version {
@@ -2220,6 +2271,70 @@
   min-width: 22rem;
   max-width: 22rem;
   border-color: rgba(201, 168, 76, 0.42);
+}
+
+/* Mods use the same painted interaction surfaces as the campaign UI. */
+.mm-mod-action-btn.btn--outline {
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.0909rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: transparent;
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
+  color: var(--gold);
+}
+
+.mm-mod-action-btn.btn--outline:hover {
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  background-color: rgba(201, 168, 76, 0.06);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+}
+
+.mm-mod-action-btn.btn--outline:active {
+  border-image-source: url('/assets/gold-frame.png');
+  background-color: rgba(201, 168, 76, 0.1);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+}
+
+.mm-mod-action-btn.btn--burgundy,
+.mm-mod-restart-btn {
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+}
+
+.mm-mod-entry,
+.mm-mod-restart-panel,
+.mm-workshop-search-input,
+.mm-workshop-category-trigger,
+.mm-workshop-thumb,
+.mm-workshop-category-menu {
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+}
+
+.mm-mod-entry:hover,
+.mm-mod-entry--enabled,
+.mm-workshop-search-input:focus,
+.mm-workshop-category-trigger:hover,
+.dropdown-select--open .mm-workshop-category-trigger {
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
 }
 
 @media (max-width: 65.4545rem) {

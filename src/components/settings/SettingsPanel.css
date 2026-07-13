@@ -281,6 +281,11 @@
   border-right-color: var(--border-dim);
   border-bottom-color: var(--border-dim);
   border-left-color: var(--border-dim);
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.077rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   overflow: hidden;
 }
 
@@ -293,6 +298,7 @@
   letter-spacing: 0.045em;
   color: var(--text-muted);
   background-color: transparent;
+  background-image: none;
   border: none;
   border-right-width: 0.077rem;
   border-right-style: solid;
@@ -311,6 +317,7 @@
 .settings-choice-btn:hover {
   color: var(--text-bright);
   background-color: rgba(201, 168, 76, 0.06);
+  background-image: none;
 }
 
 .settings-choice-btn--active {
@@ -1039,4 +1046,86 @@
   color: var(--gold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+/* Painted controls: keep settings on the same hand-rendered surface language as gameplay UI. */
+.settings-panel .btn--outline,
+.settings-footer .btn--outline {
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.077rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: transparent;
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
+  color: var(--gold);
+}
+
+.settings-panel .btn--outline:hover,
+.settings-footer .btn--outline:hover {
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  background-color: rgba(201, 168, 76, 0.06);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+}
+
+.settings-panel .btn--outline:active,
+.settings-footer .btn--outline:active {
+  border-image-source: url('/assets/gold-frame.png');
+  background-color: rgba(201, 168, 76, 0.1);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+}
+
+.settings-footer .btn--burgundy,
+.settings-display-confirm-actions .btn--burgundy {
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+}
+
+.settings-dropdown,
+.settings-key-badge,
+.settings-keybind-search-input {
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+}
+
+.settings-dropdown:hover,
+.settings-dropdown-select.dropdown-select--open .settings-dropdown,
+.settings-key-badge--clickable:hover,
+.settings-keybind-search-input:focus {
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+}
+
+.settings-event-card,
+.settings-rebind-modal,
+.settings-display-confirm-modal {
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+}
+
+.settings-event-card:hover,
+.settings-event-card--selected {
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
 }
