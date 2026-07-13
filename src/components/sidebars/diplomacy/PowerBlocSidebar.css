@@ -77,15 +77,26 @@
   margin-left: 0.95rem;
 }
 
+.powerbloc-hero-title-frame {
+  height: 1.63rem;
+  overflow: hidden;
+}
+
+.powerbloc-hero-title-tooltip {
+  width: 100%;
+  height: 100%;
+  justify-content: flex-end;
+}
+
 .powerbloc-hero-title {
   display: block;
+  width: 100%;
   font-size: 1.55rem;
   line-height: 1.05;
   text-transform: uppercase;
-  white-space: normal;
-  overflow: visible;
+  white-space: nowrap;
+  overflow: hidden;
   text-overflow: clip;
-  overflow-wrap: break-word;
 }
 
 .powerbloc-hero-meta {

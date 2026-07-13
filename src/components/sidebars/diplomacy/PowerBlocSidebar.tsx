@@ -69,6 +69,69 @@ const SUBJECT_FORM_PERSONAL_BLOC_ACTION: SubjectBlocAction = {
   bodyKey: 'PowerBlocs.SubjectAction.FormPersonalBlocBody',
 };
 
+const POWER_BLOC_TITLE_MIN_FONT_REM = 0.72;
+const POWER_BLOC_TITLE_MAX_FONT_REM = 1.55;
+
+function PowerBlocTitle({ name }: { name: string }) {
+  const frameRef = React.useRef<HTMLDivElement>(null);
+  const titleRef = React.useRef<HTMLSpanElement>(null);
+
+  React.useLayoutEffect(() => {
+    const frame = frameRef.current;
+    const title = titleRef.current;
+    if (!frame || !title) return undefined;
+
+    const fitTitle = () => {
+      const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const minFontSize = POWER_BLOC_TITLE_MIN_FONT_REM * rootFontSize;
+      const maxFontSize = POWER_BLOC_TITLE_MAX_FONT_REM * rootFontSize;
+      const fits = (fontSize: number) => {
+        title.style.fontSize = `${fontSize}px`;
+        return title.scrollHeight <= frame.clientHeight + 0.5
+          && title.scrollWidth <= frame.clientWidth + 0.5;
+      };
+
+      if (!fits(minFontSize)) return;
+
+      let low = minFontSize;
+      let high = maxFontSize;
+      for (let pass = 0; pass < 8; pass += 1) {
+        const candidate = (low + high) / 2;
+        if (fits(candidate)) low = candidate;
+        else high = candidate;
+      }
+      title.style.fontSize = `${low}px`;
+    };
+
+    fitTitle();
+    const observer = new ResizeObserver(fitTitle);
+    observer.observe(frame);
+
+    let active = true;
+    void document.fonts.ready.then(() => {
+      if (active) fitTitle();
+    });
+
+    return () => {
+      active = false;
+      observer.disconnect();
+    };
+  }, [name]);
+
+  return (
+    <div ref={frameRef} className="powerbloc-hero-title-frame">
+      <Tooltip
+        content={glossary['Power Bloc']}
+        position="right"
+        delay={200}
+        wrapperClassName="powerbloc-hero-title-tooltip"
+      >
+        <span ref={titleRef} className="sidebar-title powerbloc-hero-title">{name}</span>
+      </Tooltip>
+    </div>
+  );
+}
+
 function buildBlocInteractionTooltip(i: BlocInteractionView, blocId: string): TooltipContent {
   const lines: TooltipContent['lines'] = [];
 
@@ -608,9 +671,7 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
         {bloc.headerImage ? <div className="powerbloc-hero-bg" style={{ backgroundImage: `url(${bloc.headerImage})` }} /> : null}
         {bloc.iconKey ? <img src={bloc.iconKey} alt="" className="powerbloc-hero-icon" draggable={false} /> : null}
         <div className="powerbloc-hero-copy">
-          <Tooltip content={glossary['Power Bloc']} position="right" delay={200}>
-            <span className="sidebar-title powerbloc-hero-title">{bloc.name}</span>
-          </Tooltip>
+          <PowerBlocTitle name={bloc.name} />
           <div className="powerbloc-hero-meta">
             <span style={{ color: typeColour }}>{typeLabel}</span>
             <span className="powerbloc-hero-dot" />
