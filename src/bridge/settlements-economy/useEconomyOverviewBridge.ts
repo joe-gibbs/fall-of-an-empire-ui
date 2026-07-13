@@ -4,7 +4,7 @@ import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
 
 let economyOverviewCache: GetEconomyOverviewResponse | null = null;
 
-type EconomyOverviewScope = 'overview' | 'resources' | 'food' | 'settlements' | 'military' | 'provinces' | 'history';
+type EconomyOverviewScope = 'overview' | 'resources' | 'food' | 'settlements' | 'military' | 'provinces';
 
 export function clearEconomyOverviewCache(): void {
   economyOverviewCache = null;
@@ -28,7 +28,7 @@ function mergeEconomyOverview(value: GetEconomyOverviewResponse, scope: EconomyO
   if (scope === 'overview' || scope === 'resources' || scope === 'food') {
     merged.resources = value.resources;
   }
-  if (scope === 'overview' || scope === 'history') {
+  if (scope === 'overview') {
     merged.history = value.history;
   }
   if (scope === 'food') {

@@ -367,12 +367,6 @@
   border-top-color: var(--separator);
 }
 
-.econ-table-wrap > .styled-scroll-area__viewport {
-  width: 100%;
-  min-width: 0;
-  padding-right: 1.231rem;
-}
-
 .econ-table .data-table-body-scroll-frame {
   height: auto;
   min-height: 0;
@@ -422,6 +416,12 @@
   min-width: 48rem;
 }
 
+.econ-table-row--head,
+.econ-table-body .econ-table-row {
+  box-sizing: border-box;
+  padding-right: 1.231rem;
+}
+
 .econ-table-cell {
   box-sizing: border-box;
   flex-grow: 1;
@@ -442,13 +442,13 @@
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(1) {
-  flex-basis: 8.5%;
-  width: 8.5%;
+  flex-basis: 7.5%;
+  width: 7.5%;
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(2) {
-  flex-basis: 10.5%;
-  width: 10.5%;
+  flex-basis: 8%;
+  width: 8%;
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(3),
@@ -464,18 +464,18 @@
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(11) {
-  flex-basis: 8%;
-  width: 8%;
+  flex-basis: 10%;
+  width: 10%;
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(12) {
-  flex-basis: 12%;
-  width: 12%;
+  flex-basis: 18%;
+  width: 18%;
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(13) {
-  flex-basis: 17%;
-  width: 17%;
+  flex-basis: 12.5%;
+  width: 12.5%;
 }
 
 .econ-table--tax-losses .econ-table-row > .econ-table-cell:nth-child(1) {
@@ -867,75 +867,6 @@
   flex: 0 0 auto;
   margin-left: 0.55rem;
   white-space: nowrap;
-}
-
-.econ-history-empty {
-  height: 7rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  border-top-width: 0.077rem;
-  border-top-style: solid;
-  border-top-color: var(--separator);
-}
-
-.econ-history-chart {
-  display: flex;
-  min-height: 14rem;
-  padding: 0.55rem 0.35rem 0.25rem;
-  border-top-width: 0.077rem;
-  border-top-style: solid;
-  border-top-color: var(--separator);
-}
-
-.econ-history-col {
-  display: flex;
-  flex: 1 1 2.2rem;
-  flex-direction: column;
-  min-width: 0;
-  margin-left: 0.18rem;
-}
-
-.econ-history-col:first-child {
-  margin-left: 0;
-}
-
-.econ-history-track {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-height: 8rem;
-  background: rgba(8, 12, 17, 0.16);
-  border: 0.077rem solid rgba(63, 56, 47, 0.7);
-}
-
-.econ-history-bar {
-  width: 70%;
-  min-height: 0;
-  transition: opacity 0.12s;
-}
-
-.econ-history-col:hover .econ-history-bar {
-  opacity: 0.78;
-}
-
-.econ-history-bar--positive {
-  background: linear-gradient(180deg, rgba(92, 160, 64, 0.95), rgba(48, 95, 40, 0.95));
-}
-
-.econ-history-bar--negative {
-  background: linear-gradient(180deg, rgba(158, 61, 54, 0.95), rgba(95, 35, 33, 0.95));
-}
-
-.econ-history-label {
-  overflow: hidden;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  margin-top: 0.25rem;
 }
 
 .econ-positive {
@@ -1395,7 +1326,7 @@
 }
 
 .econ-table--resources {
-  min-width: 76rem;
+  min-width: 58rem;
 }
 
 .econ-table--stockpiles .econ-table-row,
@@ -1407,7 +1338,7 @@
 }
 
 .econ-table--resources .econ-table-row {
-  min-width: 76rem;
+  min-width: 58rem;
 }
 
 .econ-table--stockpiles .econ-table-cell,
@@ -1417,6 +1348,10 @@
 .econ-table--military .econ-table-cell,
 .econ-table--vassals .econ-table-cell {
   min-width: 5.4rem;
+}
+
+.econ-table--resources .econ-table-cell {
+  min-width: 0;
 }
 
 .econ-resource-cell {

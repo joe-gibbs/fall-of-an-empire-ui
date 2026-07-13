@@ -38,7 +38,7 @@ import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../local
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import './EconomyScreen.css';
 
-type EconomyTab = 'overview' | 'resources' | 'food' | 'settlements' | 'military' | 'provinces' | 'history';
+type EconomyTab = 'overview' | 'resources' | 'food' | 'settlements' | 'military' | 'provinces';
 type EconomyMetricKey =
   | 'settlementIncome'
   | 'tradeIncome'
@@ -103,20 +103,6 @@ const HISTORY_CHART_SEGMENTS: Array<{ key: HistoryMetricKey; labelKey: string; c
 ];
 
 const HISTORY_INCOME_KEYS: HistoryMetricKey[] = HISTORY_CHART_SEGMENTS.map(segment => segment.key);
-
-const HISTORY_EXPENSE_KEYS: HistoryMetricKey[] = [
-  'armyExpense',
-  'commandMaintenanceExpense',
-  'treasuryDampeningExpense',
-  'replenishmentExpense',
-  'buildingExpense',
-  'tributePaidToLiege',
-  'treatyTributePaid',
-  'eventExpense',
-  'powerBlocExpense',
-  'autoAssignCommanderExpense',
-  'otherExpense',
-];
 
 const TRADE_AMOUNT = 100;
 const AUTO_SELL_STEP = 500;
@@ -981,7 +967,6 @@ function SettlementDashboard({ rows }: { rows: EconomyOverviewSettlementRow[] })
         columns={columns}
         emptyLabel={t('Economy.NoSettlements')}
         rowKey={row => row.id}
-        wrapClassName="econ-table-wrap--dashboard"
         tableClassName="econ-table--settlements"
         virtualRowHeight={40}
       />
@@ -1322,44 +1307,6 @@ function FoodTab({ data }: { data: GetEconomyOverviewResponse | null }) {
   );
 }
 
-function HistoryTab({ data }: { data: GetEconomyOverviewResponse | null }) {
-  const t = useWebUIText();
-  const points = (data?.history ?? []).slice(-24);
-  const maxValue = Math.max(
-    1,
-    ...points.map(point => Math.abs(point.netIncome)),
-    ...points.map(point => historySum(point, HISTORY_INCOME_KEYS)),
-    ...points.map(point => historySum(point, HISTORY_EXPENSE_KEYS)),
-  );
-
-  return (
-    <section className="econ-section">
-      <SectionHeading variant="ornate" title={t('Economy.IncomeHistory')} />
-      {points.length === 0 ? (
-        <div className="econ-history-empty">{t('Economy.NoIncomeHistory')}</div>
-      ) : (
-        <div className="econ-history-chart">
-          {points.map((point, index) => {
-            const net = point.netIncome;
-            const height = Math.min(100, Math.abs(net) / maxValue * 100);
-            return (
-              <div
-                key={`${point.year}:${point.month}:${index}`}
-                className="econ-history-col"
-              >
-                <div className="econ-history-track">
-                  <div className={`econ-history-bar ${net >= 0 ? 'econ-history-bar--positive' : 'econ-history-bar--negative'}`} style={{ height: `${height}%` }} />
-                </div>
-                <span className="econ-history-label">{monthLabel(point)}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
-}
-
 function ProvinceTab({ data }: { data: GetEconomyOverviewResponse | null }) {
   const t = useWebUIText();
   const rows = data?.taxRows ?? [];
@@ -1437,7 +1384,6 @@ const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => 
     { id: 'settlements', label: t('Economy.TabSettlements') },
     { id: 'military', label: t('Economy.TabMilitary') },
     { id: 'provinces', label: t('Economy.TabProvinces') },
-    { id: 'history', label: t('Economy.TabHistory') },
   ];
 
   const content = (() => {
@@ -1446,7 +1392,6 @@ const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => 
     if (activeTab === 'settlements') return <SettlementsTab data={data} />;
     if (activeTab === 'military') return <MilitaryTab data={data} />;
     if (activeTab === 'provinces') return <ProvinceTab data={data} />;
-    if (activeTab === 'history') return <HistoryTab data={data} />;
     return <OverviewTab data={data} />;
   })();
   const officeStrip = economyOffice ? (

@@ -2622,7 +2622,7 @@ const mockHintSeeds: Record<string, MockHintSeed> = {
     hintKey: 'EconomyHint',
     title: 'Economy',
     paragraphs: [
-      'Use Economy to move between overview totals, resources, food, history, and the full income breakdown.',
+      'Use Economy to move between overview totals, resources, food, settlements, military, provinces, and the full income breakdown.',
       'Use Overview for the biggest gains and losses, Resources and Food for stockpile pressure, and Breakdown for income, upkeep, subject contributions, and tax losses.',
     ],
   },
