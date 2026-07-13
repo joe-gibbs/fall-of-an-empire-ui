@@ -48,6 +48,13 @@ type FoederatiSortKey = 'name' | 'ruler' | 'compliance' | 'ready' | 'active' | '
 type CommandSortKey = 'commander' | 'force' | 'type' | 'strength' | 'relation';
 type GovernorSortKey = 'region' | 'governor' | 'settlements' | 'corruption' | 'tax' | 'unrest' | 'military';
 
+interface CommandHeadSummary {
+  force: MilitaryForce;
+  subordinateCount: number;
+  totalStrength: number;
+  totalMaxStrength: number;
+}
+
 const TABS: Array<{ id: InternalPoliticsTab; label: string }> = [
   { id: 'provinces', get label() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.47.1'); } },
   { id: 'foederati', get label() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.48.2'); } },
@@ -205,10 +212,35 @@ function provinceLeaderCandidates(characters: CharacterListEntry[]): CharacterLi
     ));
 }
 
-function commandHeads(forces: MilitaryForce[] | undefined): MilitaryForce[] {
-  return (forces ?? [])
+function commandHeads(forces: MilitaryForce[] | undefined): CommandHeadSummary[] {
+  const allForces = forces ?? [];
+  const childrenByParent = new Map<string, MilitaryForce[]>();
+
+  for (const force of allForces) {
+    if (!force.parentId) continue;
+    const children = childrenByParent.get(force.parentId) ?? [];
+    children.push(force);
+    childrenByParent.set(force.parentId, children);
+  }
+
+  const summarise = (force: MilitaryForce): CommandHeadSummary => {
+    let subordinateCount = 0;
+    let totalStrength = force.strength;
+    let totalMaxStrength = force.maxStrength;
+
+    for (const child of childrenByParent.get(force.id) ?? []) {
+      const childSummary = summarise(child);
+      subordinateCount += childSummary.subordinateCount + 1;
+      totalStrength += childSummary.totalStrength;
+      totalMaxStrength += childSummary.totalMaxStrength;
+    }
+
+    return { force, subordinateCount, totalStrength, totalMaxStrength };
+  };
+
+  return allForces
     .filter(force => !force.parentId)
-    .sort((a, b) => b.strength - a.strength);
+    .map(summarise);
 }
 
 function toggleInternalSort<T extends string>(current: SortState<T>, key: T): SortState<T> {
@@ -264,22 +296,22 @@ function sortFoederatiRows(rows: MilitaryFoederatiEntry[], factions: Map<string,
   });
 }
 
-function sortCommandRows(rows: MilitaryForce[], characters: Map<string, CharacterListEntry>, sort: SortState<CommandSortKey>): MilitaryForce[] {
+function sortCommandRows(rows: CommandHeadSummary[], characters: Map<string, CharacterListEntry>, sort: SortState<CommandSortKey>): CommandHeadSummary[] {
   return [...rows].sort((a, b) => {
-    const characterA = a.commanderId ? characters.get(a.commanderId) : undefined;
-    const characterB = b.commanderId ? characters.get(b.commanderId) : undefined;
+    const characterA = a.force.commanderId ? characters.get(a.force.commanderId) : undefined;
+    const characterB = b.force.commanderId ? characters.get(b.force.commanderId) : undefined;
     const relationA = characterA?.hasCompliance ? characterA.complianceTowardPlayer : characterA?.stats.loyalty;
     const relationB = characterB?.hasCompliance ? characterB.complianceTowardPlayer : characterB?.stats.loyalty;
 
     switch (sort.key) {
       case 'commander':
-        return compareValues(a.commanderName, b.commanderName, sort.direction);
+        return compareValues(a.force.commanderName, b.force.commanderName, sort.direction);
       case 'force':
-        return compareValues(a.name, b.name, sort.direction);
+        return compareValues(a.force.name, b.force.name, sort.direction);
       case 'type':
-        return compareValues(a.isNavy ? 1 : 0, b.isNavy ? 1 : 0, sort.direction);
+        return compareValues(a.force.isNavy ? 1 : 0, b.force.isNavy ? 1 : 0, sort.direction);
       case 'strength':
-        return compareValues(a.strength, b.strength, sort.direction);
+        return compareValues(a.totalStrength, b.totalStrength, sort.direction);
       case 'relation':
         return compareValues(relationA, relationB, sort.direction);
       default:
@@ -309,10 +341,6 @@ function sortGovernorRows(rows: RegionalGovernor[], sort: SortState<GovernorSort
         return 0;
     }
   });
-}
-
-function forceValue(force: MilitaryForce): number {
-  return force.maxStrength > 0 ? Math.round(force.strength / force.maxStrength * 100) : 0;
 }
 
 function economyMap(rows: EconomyOverviewVassalRow[] | undefined): Map<string, EconomyOverviewVassalRow> {
@@ -744,15 +772,21 @@ function ProvinceCandidateCard({ row, leaderCandidates }: { row: ProvinceCandida
   );
 }
 
-function CommandHeadRow({ force, characters, blocs }: { force: MilitaryForce; characters: Map<string, CharacterListEntry>; blocs: PowerBloc[] }) {
+function CommandHeadRow({ summary, characters, blocs }: { summary: CommandHeadSummary; characters: Map<string, CharacterListEntry>; blocs: PowerBloc[] }) {
   const { openSidebar } = useGameActions();
+  const { force, subordinateCount, totalStrength, totalMaxStrength } = summary;
   const character = force.commanderId ? characters.get(force.commanderId) : undefined;
   const compliance = character?.hasCompliance ? character.complianceTowardPlayer : character?.stats.loyalty;
   const complianceTone = complianceColour(compliance);
   const relationshipIcon = compliance === undefined ? undefined : character?.hasCompliance ? getComplianceState(compliance).icon : STAT_ICONS.loyalty;
-  const strengthTone = forceValue(force) >= 80 ? 'var(--green)' : forceValue(force) >= 55 ? 'var(--yellow)' : 'var(--red-light)';
+  const totalStrengthPercent = totalMaxStrength > 0 ? Math.round(totalStrength / totalMaxStrength * 100) : 0;
+  const strengthTone = totalStrengthPercent >= 80 ? 'var(--green)' : totalStrengthPercent >= 55 ? 'var(--yellow)' : 'var(--red-light)';
   const relationshipLabel = character?.hasCompliance ? webUIText("Auto.Fix.VarExprTrue.componentsscreensInternalPoliticsScreen.666.1") : webUIText("Auto.Fix.VarExprFalse.componentsscreensInternalPoliticsScreen.666.1");
   const bloc = blocForPerson(force.commanderId, blocs);
+  const subordinateLabel = webUIText(
+    subordinateCount === 1 ? 'InternalPolitics.CommandSubordinateCountOne' : 'InternalPolitics.CommandSubordinateCountMany',
+    { Count: formatNumber(subordinateCount) },
+  );
 
   return (
     <div className="ips-command-row" onMouseDown={() => force.commanderId && openSidebar('character', force.commanderId)}>
@@ -765,13 +799,14 @@ function CommandHeadRow({ force, characters, blocs }: { force: MilitaryForce; ch
       </div>
       <div className="ips-command-cell ips-command-cell--force">
         <EntityLink type="military" id={force.id} className="ips-command-force ips-entity-link" fallbackClassName="ips-command-force">{force.name}</EntityLink>
+        <span className="ips-command-detail">{subordinateLabel}</span>
       </div>
       <div className="ips-command-cell ips-command-cell--type">
         <span>{force.isNavy ? webUIText("Auto.Fix.ExprTrue.componentsscreensInternalPoliticsScreen.682.1") : webUIText("Auto.Fix.ExprFalse.componentsscreensInternalPoliticsScreen.682.1")}</span>
       </div>
       <div className="ips-command-cell ips-command-cell--strength">
-        <span className="ips-command-strength">{formatNumber(force.strength)}</span>
-        <GameBar value={clampPercent(forceValue(force))} max={100} colour={strengthTone} size="sm" />
+        <span className="ips-command-strength">{formatNumber(totalStrength)}</span>
+        <GameBar value={clampPercent(totalStrengthPercent)} max={100} colour={strengthTone} size="sm" />
       </div>
       <div className="ips-command-cell ips-command-cell--relation">
         <span className="ips-command-relation-label">{relationshipLabel}</span>
@@ -1031,13 +1066,13 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
               <SortableHeader id="commander" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.895.24')} className="ips-command-header-cell ips-command-header-cell--commander" sort={commandSort} onSort={(key) => setCommandSort(value => toggleInternalSort(value, key))} />
               <SortableHeader id="force" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.896.25')} className="ips-command-header-cell ips-command-header-cell--force" sort={commandSort} onSort={(key) => setCommandSort(value => toggleInternalSort(value, key))} />
               <SortableHeader id="type" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.897.26')} className="ips-command-header-cell ips-command-header-cell--type" sort={commandSort} onSort={(key) => setCommandSort(value => toggleInternalSort(value, key))} />
-              <SortableHeader id="strength" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.898.27')} className="ips-command-header-cell ips-command-header-cell--strength" sort={commandSort} onSort={(key) => setCommandSort(value => toggleInternalSort(value, key))} />
+              <SortableHeader id="strength" label={webUIText('InternalPolitics.TotalCommandStrength')} className="ips-command-header-cell ips-command-header-cell--strength" sort={commandSort} onSort={(key) => setCommandSort(value => toggleInternalSort(value, key))} />
               <SortableHeader id="relation" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.899.28')} className="ips-command-header-cell ips-command-header-cell--relation" sort={commandSort} onSort={(key) => setCommandSort(value => toggleInternalSort(value, key))} />
             </div>
             <VirtualList
               items={sortedCommanders}
-              getKey={force => force.id}
-              renderItem={force => <CommandHeadRow force={force} characters={charactersById} blocs={blocs} />}
+              getKey={summary => summary.force.id}
+              renderItem={summary => <CommandHeadRow summary={summary} characters={charactersById} blocs={blocs} />}
               empty={<div className="ips-empty"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.902.12" /></div>}
               className="ips-row-scroll-frame"
               viewportClassName="ips-table-body ips-command-table-body ips-row-viewport"

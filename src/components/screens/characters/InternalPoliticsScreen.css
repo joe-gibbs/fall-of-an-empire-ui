@@ -449,6 +449,12 @@
   padding-left: 0.45rem;
 }
 
+.ips-command-cell--force {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .ips-command-cell--type,
 .ips-command-header-cell--type {
   width: 5.4rem;
