@@ -269,7 +269,7 @@ const SettingsLabel: React.FC<{
   const labelNode = <span className={`settings-row__label${tooltip ? ' settings-row__label--help' : ''}`}>{label}</span>;
   if (!tooltip) return labelNode;
   return (
-    <Tooltip content={tooltip} position="left" delay={180} inline>
+    <Tooltip content={tooltip} position="left" delay={180} bubbleClassName="tt-bubble--settings" inline>
       {labelNode}
     </Tooltip>
   );

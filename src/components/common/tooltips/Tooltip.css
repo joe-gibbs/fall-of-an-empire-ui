@@ -73,6 +73,12 @@
   max-width: 22rem;
 }
 
+.tt-bubble--settings {
+  width: 22rem;
+  min-width: 22rem;
+  max-width: 22rem;
+}
+
 .tt-bubble--map-mode .tt-simple {
   width: 100%;
   max-width: 100%;
