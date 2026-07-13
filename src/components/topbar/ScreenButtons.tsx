@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { bridgeCall } from '../../bridge-types.generated.ts';
+import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { playSound } from '../../hooks/useSound';
 import Tooltip from '../common/tooltips/Tooltip';
@@ -114,14 +114,18 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
 
   useEffect(() => {
     let cancelled = false;
+    const applyAchievementAvailability = (response: { steamAvailable: boolean }) => {
+      if (!cancelled) setSteamAchievementsAvailable(response.steamAvailable);
+    };
+    const unsubscribe = onBridgeEvent('game.achievement_events', applyAchievementAvailability);
+
     bridgeCall('game.achievement_events')
-      .then(response => {
-        if (!cancelled) setSteamAchievementsAvailable(response.steamAvailable);
-      })
+      .then(applyAchievementAvailability)
       .catch(acknowledgeBridgeFailure);
 
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, []);
 

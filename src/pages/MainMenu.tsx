@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import LitLogo from '../components/common/layout/content/LitLogo';
 import SettingsPanel from '../components/settings/SettingsPanel';
 import EncyclopediaScreen from '../components/screens/encyclopedia/EncyclopediaScreen';
+import AchievementsScreen from '../components/screens/system/AchievementsScreen';
 import LoadGameModal from '../components/screens/system/LoadGameModal';
 import FactionSelection from './FactionSelection';
 import LanguageSelector from '../components/mainmenu/LanguageSelector';
@@ -19,7 +20,7 @@ import type { ModEntry, SteamWorkshopItem } from '../bridge/app/useModsBridge';
 import { useEscapeStackEntry } from '../context/EscapeStack';
 
 import { useWebUILocale, webUIText, WebUIText } from '../localization/WebUITextContext';
-type MenuView = 'menu' | 'settings' | 'mods' | 'encyclopedia' | 'credits' | 'newgame';
+type MenuView = 'menu' | 'settings' | 'achievements' | 'mods' | 'encyclopedia' | 'credits' | 'newgame';
 type ModsPanelView = 'installed' | 'workshop' | 'subscribed';
 
 interface NewGameMapEntry {
@@ -78,6 +79,7 @@ const MainMenu: React.FC = () => {
   const [closing, setClosing] = useState(false);
   const [latestSave, setLatestSave] = useState<SaveEntry | null>(null);
   const [version, setVersion] = useState<string | null>(null);
+  const [steamAchievementsAvailable, setSteamAchievementsAvailable] = useState<boolean | null>(null);
   const [showLoad, setShowLoad] = useState(false);
   const [newGameMaps, setNewGameMaps] = useState<NewGameMapEntry[]>([]);
   const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
@@ -201,6 +203,25 @@ const MainMenu: React.FC = () => {
     })();
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const applyAchievementAvailability = (response: { steamAvailable: boolean }) => {
+      if (!cancelled) setSteamAchievementsAvailable(response.steamAvailable);
+    };
+    const unsubscribe = onBridgeEvent('game.achievement_events', applyAchievementAvailability);
+
+    bridgeCall('game.achievement_events')
+      .then(applyAchievementAvailability)
+      .catch(() => {
+        if (!cancelled) setSteamAchievementsAvailable(null);
+      });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
     };
   }, []);
 
@@ -745,6 +766,12 @@ const MainMenu: React.FC = () => {
     </div>
   );
 
+  const renderAchievements = () => (
+    <div className={`mm-achievements-overlay${closing ? ' mm-achievements-overlay--closing' : ''}`}>
+      <AchievementsScreen onClose={goBack} />
+    </div>
+  );
+
   const activeSelectedNewGameMap = selectedNewGameMap
     ? translatedNewGameMaps.find((map) => map.id === selectedNewGameMap.id) ?? selectedNewGameMap
     : null;
@@ -792,6 +819,9 @@ const MainMenu: React.FC = () => {
 
   const textMenuItems = [
     { label: webUIText('Auto.Prop.PagesMainMenu.436.2'), onClick: () => openSubView('settings') },
+    ...(steamAchievementsAvailable === false
+      ? [{ label: webUIText('Achievements.Title'), onClick: () => openSubView('achievements') }]
+      : []),
     { label: webUIText('Auto.Prop.PagesMainMenu.437.3'), onClick: () => openSubView('mods') },
     { label: webUIText('Auto.Prop.PagesMainMenu.438.4'), onClick: () => openSubView('encyclopedia') },
     { label: webUIText('Auto.Prop.PagesMainMenu.439.5'), onClick: () => openSubView('credits') },
@@ -967,6 +997,7 @@ const MainMenu: React.FC = () => {
         {view === 'credits' && renderCredits()}
       </div>
       {view === 'encyclopedia' && renderEncyclopedia()}
+      {view === 'achievements' && renderAchievements()}
       <LoadGameModal visible={showLoad} onClosed={() => setShowLoad(false)} />
       {view === 'newgame' && activeSelectedNewGameMap && (
         <FactionSelection

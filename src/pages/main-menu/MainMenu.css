@@ -1520,7 +1520,8 @@
 }
 
 /* Encyclopedia full-screen overlay */
-.mm-encyclopedia-overlay {
+.mm-encyclopedia-overlay,
+.mm-achievements-overlay {
   position: fixed;
   top: 0;
   right: 0;
@@ -1538,7 +1539,8 @@
   padding-top: 2.9091rem;
 }
 
-.mm-encyclopedia-overlay--closing {
+.mm-encyclopedia-overlay--closing,
+.mm-achievements-overlay--closing {
   animation-name: mm-fade-in;
   animation-duration: 0.18s;
   animation-timing-function: var(--ease-snap);
@@ -1547,7 +1549,8 @@
   pointer-events: none;
 }
 
-.mm-encyclopedia-overlay > * {
+.mm-encyclopedia-overlay > *,
+.mm-achievements-overlay > * {
   width: 100%;
   height: 100%;
 }
