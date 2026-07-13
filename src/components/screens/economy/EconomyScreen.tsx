@@ -17,6 +17,7 @@ import {
   setEconomyAutoBuyBridge,
   setResourcePriorityBridge,
   useEconomyOverviewBridge,
+  useEconomyResourceDetailsBridge,
 } from '../../../bridge/settlements-economy/useEconomyOverviewBridge';
 import type {
   EconomyOverviewFoodRow,
@@ -24,6 +25,7 @@ import type {
   EconomyOverviewMilitaryRow,
   EconomyOverviewResourceAmount,
   EconomyOverviewResourceRow,
+  EconomyResourceFlowDetail,
   EconomyOverviewSettlementRow,
   EconomyOverviewTaxRow,
   EconomyOverviewVassalRow,
@@ -566,8 +568,45 @@ function largestUseLabel(resource: EconomyOverviewResourceRow, t: WebUITextForma
   return uses[0]?.value > 0 ? uses[0].label : '-';
 }
 
+function shortageConsumerIcon(consumer: EconomyResourceFlowDetail): string | null {
+  if (consumer.kind === 'army') return '/assets/icons/I_Swords.png';
+  if (consumer.kind === 'navy') return '/assets/icons/I_Anchor.png';
+  if (consumer.kind === 'settlement') return '/assets/icons/I_City.png';
+  return null;
+}
+
+function ShortageUseBreakdown({ resourceId }: { resourceId: string }) {
+  const t = useWebUIText();
+  const details = useEconomyResourceDetailsBridge(resourceId);
+  if (!details) return null;
+
+  const consumers = details.consumers.filter(consumer => consumer.amount > 0.0001);
+  return (
+    <div className="econ-shortage-breakdown">
+      {consumers.length === 0 ? (
+        <span className="econ-muted">{t('Economy.NoConsumers')}</span>
+      ) : consumers.map(consumer => {
+        const icon = shortageConsumerIcon(consumer);
+        const name = consumer.linkId && consumer.linkType
+          ? <EntityLink type={consumer.linkType} id={consumer.linkId} inline>{consumer.name}</EntityLink>
+          : <span>{consumer.name}</span>;
+        return (
+          <div className="econ-shortage-consumer" key={`${consumer.kind}:${consumer.id}`}>
+            <span className="econ-shortage-consumer__name">
+              {icon && <img src={icon} alt="" draggable={false} />}
+              {name}
+            </span>
+            <strong className="econ-negative">-{fmt1(consumer.amount)}{t('Economy.PerMonth')}</strong>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function ShortagesDashboard({ resources, onOpenResource }: { resources: EconomyOverviewResourceRow[]; onOpenResource: (resource: EconomyOverviewResourceRow) => void }) {
   const t = useWebUIText();
+  const [expandedResourceId, setExpandedResourceId] = useState<string | null>(null);
   const shortages = resources
     .filter(resource => resource.netPerMonth < -0.0001)
     .sort((left, right) => left.netPerMonth - right.netPerMonth);
@@ -592,24 +631,40 @@ function ShortagesDashboard({ resources, onOpenResource }: { resources: EconomyO
             const coverage = resource.amount <= 0.0001
               ? t('Economy.ShortNow')
               : t('Economy.MonthsRemaining', { Count: formatNumber(months, { maximumFractionDigits: 1 }) });
+            const expanded = expandedResourceId === resource.id;
             return (
-              <div className="econ-shortage-row" key={resource.id}>
-                <ResourceName row={resource} onOpen={onOpenResource} />
-                <span>{fmt1(resource.amount)}</span>
-                <strong className="econ-negative">{signed(resource.netPerMonth)}</strong>
-                <span className={months < 2 ? 'econ-negative' : 'econ-warning'}>{coverage}</span>
-                <span>{largestUseLabel(resource, t)}</span>
-                <button
-                  type="button"
-                  className="econ-shortage-view"
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onOpenResource(resource);
-                  }}
-                >
-                  {t('Economy.ViewDetails')}
-                </button>
+              <div className="econ-shortage-entry" key={resource.id}>
+                <div className="econ-shortage-row">
+                  <ResourceName row={resource} onOpen={onOpenResource} />
+                  <span>{fmt1(resource.amount)}</span>
+                  <strong className="econ-negative">{signed(resource.netPerMonth)}</strong>
+                  <span className={months < 2 ? 'econ-negative' : 'econ-warning'}>{coverage}</span>
+                  <button
+                    type="button"
+                    className={`econ-shortage-use${expanded ? ' econ-shortage-use--expanded' : ''}`}
+                    aria-expanded={expanded}
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setExpandedResourceId(current => current === resource.id ? null : resource.id);
+                    }}
+                  >
+                    <span>{largestUseLabel(resource, t)}</span>
+                    <img src="/assets/icons/I_DropdownChevron.png" alt="" draggable={false} />
+                  </button>
+                  <button
+                    type="button"
+                    className="econ-shortage-view"
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onOpenResource(resource);
+                    }}
+                  >
+                    {t('Economy.ViewDetails')}
+                  </button>
+                </div>
+                {expanded && <ShortageUseBreakdown resourceId={resource.id} />}
               </div>
             );
           })}

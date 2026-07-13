@@ -19,6 +19,7 @@ import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import CloseButton from '../../common/buttons/CloseButton';
 import GameButton from '../../common/buttons/GameButton';
 import EntityLink from '../../common/entities/EntityLink';
+import Tooltip from '../../common/tooltips/Tooltip';
 import './ResourceDetailsModal.css';
 
 const TRADE_AMOUNT = 100;
@@ -277,12 +278,21 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
                 {t('Economy.AutoSell')}: {resource.autoSellEnabled ? t('Economy.Enabled') : t('Economy.Disabled')}
               </button>
               {resource.autoSellEnabled && (
-                <div className="erd-threshold">
-                  <button type="button" onMouseDown={() => setAutoSellThreshold(threshold - AUTO_SELL_STEP)}>-</button>
-                  <div><span style={{ width: `${Math.min(100, threshold / thresholdMax * 100)}%` }} /></div>
-                  <strong>{number(threshold)}</strong>
-                  <button type="button" onMouseDown={() => setAutoSellThreshold(threshold + AUTO_SELL_STEP)}>+</button>
-                </div>
+                <Tooltip
+                  content={{
+                    title: t('Economy.AutoSellReserve'),
+                    body: t('Economy.AutoSellReserveExplanation'),
+                  }}
+                  position="left"
+                  wrapperClassName="erd-threshold-tooltip"
+                >
+                  <div className="erd-threshold">
+                    <button type="button" onMouseDown={() => setAutoSellThreshold(threshold - AUTO_SELL_STEP)}>-</button>
+                    <div><span style={{ width: `${Math.min(100, threshold / thresholdMax * 100)}%` }} /></div>
+                    <strong><small>{t('Economy.AutoSellReserveShort')}</small>{number(threshold)}</strong>
+                    <button type="button" onMouseDown={() => setAutoSellThreshold(threshold + AUTO_SELL_STEP)}>+</button>
+                  </div>
+                </Tooltip>
               )}
             </div>
           </section>
