@@ -2,6 +2,7 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import type { FormationTemplateUnitEntry } from '../../../bridge-types.generated.ts';
 import { formatNumber } from '../../../utils/numberFormat';
+import { battleFormationDisplayName } from '../../../utils/battleFormationNaming';
 import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
 import {
   MAX_BATTLE_FORMATION_SIZE,
@@ -60,17 +61,29 @@ export function TemplateBattlePlanner({
             <img src="/assets/icons/UnitTypes/I_ArmyRanged.png" alt="" className="chart-template-battle-add-icon" draggable={false} />
           </button>
         </Tooltip>
+        <Tooltip content={webUIText('FormationTemplate.BattlePlan.NewSiegeGroup')}>
+          <button
+            type="button"
+            className="chart-template-battle-add chart-template-battle-add--icon"
+            onClick={() => onAddBattleGroup('siege')}
+            disabled={!editable}
+            aria-label={webUIText('FormationTemplate.BattlePlan.NewSiegeGroup')}
+          >
+            <img src={ADD_ICON} alt="" className="chart-template-battle-add-plus" draggable={false} />
+            <img src="/assets/icons/UnitTypes/I_ArmySiege.png" alt="" className="chart-template-battle-add-icon" draggable={false} />
+          </button>
+        </Tooltip>
       </div>
 
       <div className="chart-template-battle-groups">
         {draft.battleGroups.length === 0 ? (
           <div className="chart-template-empty-inline"><WebUIText textKey="FormationTemplate.BattlePlan.EmptyGroups" /></div>
-        ) : draft.battleGroups.map((group, index) => {
+        ) : draft.battleGroups.map((group) => {
           const groupCount = battleGroupUnitCount(group);
-          const roleIcon = group.role === 'ranged' ? '/assets/icons/UnitTypes/I_ArmyRanged.png' : SWORDS_ICON;
-          const roleTitle = group.role === 'ranged'
-            ? webUIText('FormationTemplate.BattlePlan.RangedTitle')
-            : webUIText('FormationTemplate.BattlePlan.MeleeTitle');
+          const groupName = battleFormationDisplayName(group, unitById, draft.type);
+          const roleIcon = group.role === 'siege'
+            ? '/assets/icons/UnitTypes/I_ArmySiege.png'
+            : group.role === 'ranged' ? '/assets/icons/UnitTypes/I_ArmyRanged.png' : SWORDS_ICON;
           const groupUnits = orderedBattleGroupUnitIds(group)
             .map(unitId => ({ unit: unitById.get(unitId), count: group.counts[unitId] ?? 0 }))
             .filter((entry): entry is { unit: FormationTemplateUnitEntry; count: number } => Boolean(entry.unit) && entry.count > 0);
@@ -79,9 +92,7 @@ export function TemplateBattlePlanner({
             <div key={group.id} className="chart-template-battle-group">
               <div className="chart-template-battle-group-head">
                 <img src={roleIcon} alt="" className="chart-template-battle-group-icon" draggable={false} />
-                <span className="chart-template-battle-group-title">
-                  {webUIText('FormationTemplate.BattlePlan.GroupTitle', { Role: roleTitle, Index: formatNumber(index + 1) })}
-                </span>
+                <span className="chart-template-battle-group-title">{groupName}</span>
                 <span className={`chart-template-battle-group-count${groupCount > MAX_BATTLE_FORMATION_SIZE ? ' chart-template-battle-group-count--bad' : ''}`}>
                   {formatNumber(groupCount)} / {formatNumber(MAX_BATTLE_FORMATION_SIZE)}
                 </span>

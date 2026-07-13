@@ -14,6 +14,7 @@ import type {
   SaveFormationTemplateUnitRequest,
 } from '../../../bridge-types.generated.ts';
 import { TIER_ICONS } from '../../../utils/iconMaps';
+import { battleFormationDisplayName } from '../../../utils/battleFormationNaming';
 import {
   battleFormationRole,
   battleGroupUnitCount,
@@ -456,6 +457,7 @@ export function CombatTab({
     .filter((entry): entry is { unit: FormationTemplateUnitEntry; count: number } => Boolean(entry.unit) && entry.count > 0);
   const hasUnassignedMelee = unassignedUnits.some(entry => battleFormationRole(entry.unit) === 'melee');
   const hasUnassignedRanged = unassignedUnits.some(entry => battleFormationRole(entry.unit) === 'ranged');
+  const hasUnassignedSiege = unassignedUnits.some(entry => battleFormationRole(entry.unit) === 'siege');
 
   return (
     <div className="tpl-combat">
@@ -485,16 +487,28 @@ export function CombatTab({
             <img src="/assets/icons/UnitTypes/I_ArmyRanged.png" alt="" className="tpl-battle-group-add-icon" />
           </button>
         </Tooltip>
+        <Tooltip content={webUIText('FormationTemplate.BattlePlan.NewSiegeGroup')}>
+          <button
+            type="button"
+            className="tpl-battle-group-add tpl-battle-group-add--icon"
+            onMouseDown={() => onAddBattleGroup('siege')}
+            disabled={!hasUnassignedSiege}
+            aria-label={webUIText('FormationTemplate.BattlePlan.NewSiegeGroup')}
+          >
+            <img src="/assets/icons/I_Plus.png" alt="" className="tpl-battle-group-add-icon" />
+            <img src="/assets/icons/UnitTypes/I_ArmySiege.png" alt="" className="tpl-battle-group-add-icon" />
+          </button>
+        </Tooltip>
       </div>
       <div className="tpl-battle-group-list">
         {draft.battleGroups.length === 0 ? (
           <div className="tpl-empty tpl-empty--plain"><WebUIText textKey="FormationTemplate.BattlePlan.EmptyGroups" /></div>
-        ) : draft.battleGroups.map((group, index) => {
+        ) : draft.battleGroups.map((group) => {
           const groupCount = battleGroupUnitCount(group);
-          const roleIcon = group.role === 'ranged' ? '/assets/icons/UnitTypes/I_ArmyRanged.png' : '/assets/icons/I_Swords.png';
-          const roleTitle = group.role === 'ranged'
-            ? webUIText('FormationTemplate.BattlePlan.RangedTitle')
-            : webUIText('FormationTemplate.BattlePlan.MeleeTitle');
+          const groupName = battleFormationDisplayName(group, unitById, draft.type);
+          const roleIcon = group.role === 'siege'
+            ? '/assets/icons/UnitTypes/I_ArmySiege.png'
+            : group.role === 'ranged' ? '/assets/icons/UnitTypes/I_ArmyRanged.png' : '/assets/icons/I_Swords.png';
           const compatibleUnassigned = unassignedUnits.filter(entry => battleFormationRole(entry.unit) === group.role);
           const groupUnits = orderedBattleGroupUnitIds(group)
             .map(unitId => ({ unit: unitById.get(unitId), count: group.counts[unitId] ?? 0 }))
@@ -504,7 +518,7 @@ export function CombatTab({
             <div key={group.id} className="tpl-battle-group">
               <div className="tpl-battle-group-head">
                 <img src={roleIcon} alt="" className="tpl-battle-group-icon" />
-                <span className="tpl-battle-group-title">{webUIText('FormationTemplate.BattlePlan.GroupTitle', { Role: roleTitle, Index: fmt(index + 1) })}</span>
+                <span className="tpl-battle-group-title">{groupName}</span>
                 <span className={`tpl-battle-group-count${groupCount > MAX_BATTLE_FORMATION_SIZE ? ' tpl-battle-group-count--bad' : ''}`}>{`${fmt(groupCount)} / ${fmt(MAX_BATTLE_FORMATION_SIZE)}`}</span>
                 <button type="button" className="tpl-unit-remove" onMouseDown={() => onRemoveBattleGroup(group.id)} aria-label={webUIText('FormationTemplate.BattlePlan.RemoveGroup')}>
                   <img src="/assets/icons/I_Trash.png" alt="" className="tpl-unit-action-icon" />

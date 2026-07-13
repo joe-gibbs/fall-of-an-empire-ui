@@ -263,6 +263,7 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     battleGroups: data.battleGroups.map(group => ({
       id: group.id,
       role: group.role as ArmyBattleGroup['role'],
+      name: group.name,
       unitIds: group.unitIds,
     })),
     commandRank: data.commandRank,

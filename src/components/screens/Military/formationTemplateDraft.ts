@@ -12,7 +12,7 @@ export const MAX_BATTLE_FORMATION_SIZE = 10;
 
 let nextBattleGroupId = 1;
 
-export type BattleFormationRole = 'melee' | 'ranged';
+export type BattleFormationRole = 'melee' | 'ranged' | 'siege';
 
 export interface TemplateDraft {
   templateId: string;
@@ -60,7 +60,8 @@ export function createBattleGroupId(): string {
 }
 
 export function normaliseBattleRole(role: string): BattleFormationRole {
-  return role === 'ranged' ? 'ranged' : 'melee';
+  if (role === 'ranged' || role === 'siege') return role;
+  return 'melee';
 }
 
 export function orderedBattleGroupUnitIds(group: DraftBattleGroup): string[] {
@@ -182,8 +183,8 @@ export function romanTier(tier: number): string {
   return ['-', 'I', 'II', 'III', 'IV', 'V', 'VI'][tier] ?? formatNumber(tier);
 }
 
-export function battleRoleForUnit(unit: FormationTemplateUnitEntry | undefined): 'melee' | 'ranged' {
-  return unit && unit.range > 0 ? 'ranged' : 'melee';
+export function battleRoleForUnit(unit: FormationTemplateUnitEntry | undefined): BattleFormationRole {
+  return unit ? normaliseBattleRole(unit.battleRole) : 'melee';
 }
 
 export function battleGroupsValid(draft: TemplateDraft, unitById: Map<string, FormationTemplateUnitEntry>): boolean {

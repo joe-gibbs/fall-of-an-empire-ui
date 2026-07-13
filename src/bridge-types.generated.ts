@@ -912,6 +912,7 @@ export interface FormationTemplateUnitEntry {
   type: string;
   unitTypeLabel: string;
   category: string;
+  battleRole: string;
   cultureId: string;
   cultureName: string;
   cultureColour: string;
@@ -4766,6 +4767,7 @@ export interface MilitaryUnitEntry {
 export interface MilitaryBattleGroupEntry {
   id: string;
   role: string;
+  name: string;
   unitIds: string[];
 }
 

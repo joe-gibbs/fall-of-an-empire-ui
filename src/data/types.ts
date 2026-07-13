@@ -1085,7 +1085,8 @@ export interface ArmyUnitTypeStrength {
 
 export interface ArmyBattleGroup {
   id: string;
-  role: 'melee' | 'ranged';
+  role: 'melee' | 'ranged' | 'siege';
+  name: string;
   unitIds: string[];
 }
 

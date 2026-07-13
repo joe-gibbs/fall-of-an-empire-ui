@@ -162,24 +162,20 @@ export function MilitaryUnitsTab({
             }}
           />
         )}
-        {battleGroups.map((group, index) => {
+        {battleGroups.map((group) => {
           const rows = group.unitIds
             .map(unitId => unitRowById.get(unitId))
             .filter((unit): unit is ArmyUnitRow => Boolean(unit));
-          const roleIcon = group.role === 'ranged'
-            ? '/assets/icons/UnitTypes/I_ArmyRanged.png'
-            : '/assets/icons/I_Swords.png';
-          const roleTitle = group.role === 'ranged'
-            ? webUIText('FormationTemplate.BattlePlan.RangedTitle')
-            : webUIText('FormationTemplate.BattlePlan.MeleeTitle');
-
+          const roleIcon = group.role === 'siege'
+            ? '/assets/icons/UnitTypes/I_ArmySiege.png'
+            : group.role === 'ranged'
+              ? '/assets/icons/UnitTypes/I_ArmyRanged.png'
+              : '/assets/icons/I_Swords.png';
           return (
             <div key={group.id} className="mil-battle-group">
               <div className="mil-battle-group-head">
                 <img src={roleIcon} alt="" className="mil-battle-group-icon" draggable={false} />
-                <span className="mil-battle-group-title">
-                  {webUIText('FormationTemplate.BattlePlan.GroupTitle', { Role: roleTitle, Index: formatNumber(index + 1) })}
-                </span>
+                <span className="mil-battle-group-title">{group.name}</span>
                 <span className="mil-battle-group-count">{formatNumber(rows.length)}</span>
               </div>
               <div className="mil-battle-group-units">

@@ -13,7 +13,7 @@ import { webUIText } from '../../../localization/WebUITextContext';
 
 export type TemplateType = 'land' | 'naval';
 export type TemplateTab = 'composition' | 'combat';
-export type BattleFormationRole = 'melee' | 'ranged';
+export type BattleFormationRole = 'melee' | 'ranged' | 'siege';
 
 export interface DraftTemplate {
   templateId: string;
@@ -273,7 +273,8 @@ export function createBattleGroupId(): string {
 }
 
 export function normaliseBattleRole(role: string): BattleFormationRole {
-  return role === 'ranged' ? 'ranged' : 'melee';
+  if (role === 'ranged' || role === 'siege') return role;
+  return 'melee';
 }
 
 export function buildBattleGroups(groups: FormationTemplateBattleGroupEntry[]): DraftBattleGroup[] {
@@ -464,7 +465,7 @@ export function computeDerived(draft: DraftTemplate, unitById: Map<string, Forma
 }
 
 export function battleFormationRole(unit: FormationTemplateUnitEntry): BattleFormationRole {
-  return unit.range > 0 ? 'ranged' : 'melee';
+  return normaliseBattleRole(unit.battleRole);
 }
 
 export function assignedBattleGroupCount(draft: DraftTemplate, unitId: string): number {
