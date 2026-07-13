@@ -170,6 +170,21 @@
   line-height: 1.28;
 }
 
+.btm-rush-detail {
+  margin-top: 0.12rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.24;
+}
+
+.btm-rush-detail--good {
+  color: var(--green);
+}
+
+.btm-rush-detail--bad {
+  color: var(--red);
+}
+
 .btm-rush-button {
   width: 100%;
   height: 1.72rem;

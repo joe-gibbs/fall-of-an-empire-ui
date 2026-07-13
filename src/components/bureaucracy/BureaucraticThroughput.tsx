@@ -124,6 +124,13 @@ function overloadPenaltyText(model: ThroughputModel): string {
   return `${formatSignedNumber(-model.overloadPenaltyPercent)}%`;
 }
 
+function projectedOverloadPenaltyPercent(currentLoad: number, capacity: number, addedLoad: number): number {
+  const overload = Math.max(0, currentLoad + addedLoad - capacity);
+  if (overload <= 0) return 0;
+  if (capacity <= 0) return 65;
+  return Math.min(65, Math.ceil((overload / capacity) * 35));
+}
+
 function overloadEffectLines(model: ThroughputModel): TooltipLine[] {
   const penalty = model.overloadPenaltyPercent;
   if (penalty <= 0) return [];
@@ -300,55 +307,6 @@ function headerLine(labelKey: string): TooltipLine {
   };
 }
 
-function loadSubTooltip(model: ThroughputModel): TooltipContent {
-  const loadLines = sourceLines(model.sources, source => source.kind === 'load');
-
-  return {
-    title: webUIText('BureaucracyMock.CurrentLoad'),
-    body: webUIText('BureaucracyMock.Explain.CurrentLoad'),
-    lines: loadLines.length > 0 ? loadLines : undefined,
-  };
-}
-
-function capacitySubTooltip(model: ThroughputModel): TooltipContent {
-  const capacityLines = sourceLines(model.sources, source => source.kind === 'capacity');
-
-  return {
-    title: webUIText('BureaucracyMock.HudCapacity'),
-    body: webUIText('BureaucracyMock.Explain.Capacity'),
-    lines: capacityLines.length > 0 ? capacityLines : undefined,
-  };
-}
-
-function overloadSubTooltip(model: ThroughputModel): TooltipContent {
-  const effectLines = overloadEffectLines(model);
-  return {
-    title: webUIText('BureaucracyMock.Stat.Overload'),
-    body: webUIText('BureaucracyMock.Explain.Overload'),
-    lines: [
-      {
-        label: webUIText('BureaucracyMock.Explain.CurrentLoadValue'),
-        value: formatNumber(model.currentLoad),
-        valueColor: loadValueColor(model.currentLoad),
-      },
-      {
-        label: webUIText('BureaucracyMock.Explain.CapacityValue'),
-        value: formatNumber(model.capacity),
-        valueColor: 'var(--green)',
-      },
-      {
-        label: webUIText('BureaucracyMock.Stat.Overload'),
-        value: formatNumber(model.overload),
-        valueColor: model.overload > 0 ? 'var(--red)' : 'var(--green)',
-      },
-      ...(effectLines.length > 0 ? [
-        headerLine('BureaucracyMock.HudOverloadEffects'),
-        ...effectLines,
-      ] : []),
-    ],
-  };
-}
-
 export function BureaucraticInlineValue({
   value,
   kind = 'load',
@@ -386,10 +344,18 @@ export function BureaucraticRushTooltipAction({
   overloadLoad: number;
 }) {
   useRushStoreVersion();
+  const throughput = useBureaucraticThroughputBridge();
   const [pending, setPending] = useState(false);
 
   const rushStoreKey = `${targetId ?? ''}:${targetFactionId ?? ''}:${actionId}`;
   const rushed = rushedActionIds.has(rushStoreKey);
+  const pressureDurationDays = Math.max(7, daysSaved * 4);
+  const projectedLoad = (throughput?.currentLoad ?? 0) + overloadLoad;
+  const capacity = throughput?.capacity ?? 0;
+  const projectedPenaltyPercent = throughput
+    ? projectedOverloadPenaltyPercent(throughput.currentLoad, throughput.capacity, overloadLoad)
+    : 0;
+  const projectedCombatPenalty = capacity > 0 && projectedLoad / capacity >= 1.1;
 
   const handleMouseDown = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.button !== 0 || rushed || pending) return;
@@ -417,12 +383,47 @@ export function BureaucraticRushTooltipAction({
       <div className="btm-rush-copy">
         <span className="btm-rush-title">{webUIText('BureaucracyMock.Rush.Title')}</span>
         <span className="btm-rush-body">
-          {webUIText('BureaucracyMock.Rush.Body', {
+          {webUIText('BureaucracyMock.Rush.TimeSaved', {
             Days: formatNumber(daysSaved),
             DayWord: dayWord(daysSaved),
-            Load: formatNumber(overloadLoad),
           })}
         </span>
+        <span className="btm-rush-detail">
+          {webUIText('BureaucracyMock.Rush.TemporaryLoad', {
+            Load: formatNumber(overloadLoad),
+            Days: formatNumber(pressureDurationDays),
+            DayWord: dayWord(pressureDurationDays),
+          })}
+        </span>
+        {throughput && (
+          <span className={`btm-rush-detail${projectedPenaltyPercent > 0 ? ' btm-rush-detail--bad' : ' btm-rush-detail--good'}`}>
+            {webUIText('BureaucracyMock.Rush.ProjectedCapacity', {
+              Used: formatNumber(projectedLoad),
+              Total: formatNumber(capacity),
+            })}
+          </span>
+        )}
+        {throughput && projectedPenaltyPercent === 0 && (
+          <span className="btm-rush-detail btm-rush-detail--good">
+            {webUIText('BureaucracyMock.Rush.NoPenalty')}
+          </span>
+        )}
+        {throughput && projectedPenaltyPercent > 0 && (
+          <>
+            <span className="btm-rush-detail btm-rush-detail--bad">
+              {webUIText('BureaucracyMock.Rush.EconomicPenalty', {
+                Penalty: formatNumber(projectedPenaltyPercent),
+              })}
+            </span>
+            {projectedCombatPenalty && (
+              <span className="btm-rush-detail btm-rush-detail--bad">
+                {webUIText('BureaucracyMock.Rush.CombatPenalty', {
+                  Penalty: formatNumber(projectedPenaltyPercent),
+                })}
+              </span>
+            )}
+          </>
+        )}
       </div>
       <button
         type="button"
@@ -494,24 +495,9 @@ export function BureaucraticThroughputHudValue({ onOpen }: { onOpen?: () => void
       ...capacitySourceLines,
       headerLine('BureaucracyMock.HudSummary'),
       {
-        label: webUIText('BureaucracyMock.CurrentLoad'),
-        value: formatNumber(model.currentLoad),
-        labelColor: model.currentLoad > 0 ? 'var(--orange)' : undefined,
-        valueColor: loadValueColor(model.currentLoad),
-        subTooltip: loadSubTooltip(model),
-      },
-      {
         label: webUIText('BureaucracyMock.HudCapacity'),
-        value: formatNumber(model.capacity),
-        labelColor: 'var(--green)',
-        valueColor: 'var(--green)',
-        subTooltip: capacitySubTooltip(model),
-      },
-      {
-        label: webUIText('BureaucracyMock.Stat.Overload'),
-        value: formatNumber(model.overload),
+        value: `${formatNumber(model.currentLoad)}/${formatNumber(model.capacity)}`,
         valueColor: model.overload > 0 ? 'var(--red)' : 'var(--green)',
-        subTooltip: overloadSubTooltip(model),
       },
       ...(effectLines.length > 0 ? [
         headerLine('BureaucracyMock.HudOverloadEffects'),
