@@ -15,6 +15,109 @@
   letter-spacing: 0.08rem;
 }
 
+.interaction-effects-tooltip__outcomes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.231rem;
+  margin-top: 0.308rem;
+}
+
+.interaction-effects-tooltip__outcome {
+  min-width: 0;
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: #151b20;
+  background-repeat: repeat, repeat;
+  background-size: auto, 17.4545rem 8.7273rem;
+}
+
+.interaction-effects-tooltip__outcome--success {
+  background-image:
+    linear-gradient(90deg, rgba(66, 100, 48, 0.12), rgba(22, 28, 31, 0.04) 58%),
+    url('/assets/baked/card-charcoal.png');
+}
+
+.interaction-effects-tooltip__outcome--failure {
+  background-image:
+    linear-gradient(90deg, rgba(105, 43, 43, 0.12), rgba(22, 28, 31, 0.04) 58%),
+    url('/assets/baked/card-charcoal.png');
+}
+
+.interaction-effects-tooltip__outcome-content {
+  min-width: 0;
+  padding: 0.308rem 0.462rem 0.346rem;
+}
+
+.interaction-effects-tooltip__outcome-label {
+  font-family: var(--font-header);
+  font-size: 0.66rem;
+  line-height: 1;
+  color: var(--gold-light);
+  text-transform: uppercase;
+  letter-spacing: 0.055rem;
+}
+
+.interaction-effects-tooltip__outcome-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.231rem;
+  margin-top: 0.231rem;
+  font-size: 0.82rem;
+  line-height: 1.15;
+}
+
+.interaction-effects-tooltip__effect {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.interaction-effects-tooltip__effect-icon {
+  display: flex;
+  flex: 0 0 1.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.385rem;
+  border-width: 0.115rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.115rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: rgba(4, 7, 10, 0.36);
+}
+
+.interaction-effects-tooltip__effect-icon img {
+  width: 1.32rem;
+  height: 1.32rem;
+  object-fit: contain;
+}
+
+.interaction-effects-tooltip__effect-marker {
+  width: 0.42rem;
+  height: 0.42rem;
+  background: var(--text);
+}
+
+.interaction-effects-tooltip__effect-copy {
+  min-width: 0;
+}
+
+.interaction-effects-tooltip__outcome-line.structured-text-tone--positive,
+.interaction-effects-tooltip__outcome-line.structured-text-tone--negative {
+  color: var(--text);
+}
+
 .interaction-effects-tooltip__lines {
   margin-top: 0.308rem;
   font-size: 0.86rem;

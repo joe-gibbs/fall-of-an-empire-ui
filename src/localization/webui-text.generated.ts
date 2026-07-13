@@ -427,6 +427,8 @@ export const WEBUI_TEXT_SOURCE = {
   "Common.Defender": "Defender",
   "Common.Duration": "Duration",
   "InteractionCard.Effects": "Effects",
+  "InteractionCard.OnSuccess": "On success",
+  "InteractionCard.OnFailure": "On failure",
   "Common.Fame": "Fame",
   "Common.Fleet": "Fleet",
   "Common.FleetLower": "fleet",
