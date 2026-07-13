@@ -1,5 +1,7 @@
-import React, { type CSSProperties } from 'react';
+import React from 'react';
 import { formatNumber } from '../../../../utils/numberFormat';
+import PaintedBar from './PaintedBar';
+import { paintedBarAppearance } from './paintedBarAppearance';
 
 interface GameBarProps {
   value: number;
@@ -19,7 +21,7 @@ const GameBar: React.FC<GameBarProps> = ({
   showValue,
 }) => {
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
-  const barColour = colour ?? 'var(--gold)';
+  const appearance = paintedBarAppearance(colour);
 
   return (
     <>
@@ -29,12 +31,12 @@ const GameBar: React.FC<GameBarProps> = ({
           {showValue && <span className="bar-value">{formatNumber(value)}/{formatNumber(max)}</span>}
         </div>
       )}
-      <div
+      <PaintedBar
+        percent={pct}
+        color={appearance.color}
+        tint={appearance.tint}
         className={`bar-track bar-track--${size}`}
-        style={{ '--bar-color': barColour } as CSSProperties}
-      >
-        <div className="bar-fill" style={{ width: '100%', transform: `scaleX(${pct / 100})` }} />
-      </div>
+      />
     </>
   );
 };

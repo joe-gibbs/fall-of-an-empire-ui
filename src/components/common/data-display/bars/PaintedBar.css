@@ -1,9 +1,10 @@
 .painted-bar-track {
+  --painted-bar-height: 0.7273rem;
   width: 100%;
-  height: 0.7273rem;
+  height: var(--painted-bar-height);
   background: url('/assets/bar-track.png') repeat-x;
-  background-size: auto 0.7273rem;
-  border-radius: 0.3636rem;
+  background-size: auto 100%;
+  border-radius: calc(var(--painted-bar-height) / 2);
   position: relative;
   overflow: hidden;
 }
@@ -14,21 +15,30 @@
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 0.3636rem;
+  border-radius: inherit;
+  background-size: auto 100%;
   transition: clip-path 0.4s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .painted-bar-fill--green {
   background: url('/assets/bar-green.png') repeat-x;
-  background-size: auto 0.7273rem;
+  background-size: auto 100%;
 }
 
 .painted-bar-fill--red {
   background: url('/assets/bar-red.png') repeat-x;
-  background-size: auto 0.7273rem;
+  background-size: auto 100%;
 }
 
 .painted-bar-fill--gold {
   background: url('/assets/bar-gold.png') repeat-x;
-  background-size: auto 0.7273rem;
+  background-size: auto 100%;
+}
+
+.painted-bar-fill--tinted {
+  background-color: var(--painted-bar-tint);
+  background-image: url('/assets/bar-gold.png');
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  background-blend-mode: luminosity;
 }

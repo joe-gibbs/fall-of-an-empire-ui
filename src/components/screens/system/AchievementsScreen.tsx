@@ -5,6 +5,7 @@ import { bridgeCall, type AchievementEntry, type GetAchievementsResponse } from 
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { formatNumber } from '../../../utils/numberFormat';
 import { webUIText, useWebUIText } from '../../../localization/WebUITextContext';
+import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import './AchievementsScreen.css';
 
 interface AchievementsScreenProps {
@@ -105,9 +106,12 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ onClose }) => {
                 total: formatNumber(data.totalAchievements),
               })}
             </div>
-            <div className="achievements-summary-bar" aria-label={t('Achievements.Completion')}>
-              <div className="achievements-summary-bar-fill" style={{ width: `${completionPercent}%` }} />
-            </div>
+            <PaintedBar
+              percent={completionPercent}
+              color="gold"
+              className="achievements-summary-bar"
+              ariaLabel={t('Achievements.Completion')}
+            />
           </div>
           <div className="achievements-summary-meta">
             <span>{t('Achievements.CompletionValue', { percent: formatNumber(completionPercent) })}</span>
@@ -146,9 +150,12 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ onClose }) => {
                         </div>
                         <div className="achievement-row-description">{entry.effectiveDescription}</div>
                         <div className="achievement-row-progress">
-                          <div className="achievement-row-progress-bar" aria-label={t('Achievements.Progress')}>
-                            <div className="achievement-row-progress-fill" style={{ width: `${percent}%` }} />
-                          </div>
+                          <PaintedBar
+                            percent={percent}
+                            color="gold"
+                            className="achievement-row-progress-bar"
+                            ariaLabel={t('Achievements.Progress')}
+                          />
                           <span className="achievement-row-progress-text">{entry.progressText}</span>
                         </div>
                       </div>

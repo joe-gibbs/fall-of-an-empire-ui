@@ -1,5 +1,7 @@
 import React from 'react';
 import { formatNumber } from '../../../../utils/numberFormat';
+import PaintedBar from '../bars/PaintedBar';
+import { paintedBarAppearance } from '../bars/paintedBarAppearance';
 import './StatBar.css';
 
 interface StatBarProps {
@@ -22,22 +24,13 @@ const StatBar: React.FC<StatBarProps> = ({
   layout = 'stacked',
 }) => {
   const pct = maxValue > 0 ? Math.min((value / maxValue) * 100, 100) : 0;
-  const barColour = colour || 'var(--gold)';
+  const appearance = paintedBarAppearance(colour);
 
   if (layout === 'inline') {
     return (
       <div className={`stat-bar stat-bar--${size} stat-bar--inline`}>
         <span className="stat-bar-label">{label}</span>
-        <div className="stat-bar-track">
-          <div
-            className="stat-bar-fill"
-            style={{
-              width: '100%',
-              transform: `scaleX(${pct / 100})`,
-              backgroundImage: `linear-gradient(to right, ${barColour}, ${barColour}cc)`,
-            }}
-          />
-        </div>
+        <PaintedBar percent={pct} color={appearance.color} tint={appearance.tint} className="stat-bar-track" />
         {showText && (
           <span className="stat-bar-value">
             {formatNumber(value)}/{formatNumber(maxValue)}
@@ -57,16 +50,7 @@ const StatBar: React.FC<StatBarProps> = ({
           </span>
         )}
       </div>
-      <div className="stat-bar-track">
-        <div
-          className="stat-bar-fill"
-          style={{
-            width: '100%',
-            transform: `scaleX(${pct / 100})`,
-            backgroundImage: `linear-gradient(to right, ${barColour}, ${barColour}cc)`,
-          }}
-        />
-      </div>
+      <PaintedBar percent={pct} color={appearance.color} tint={appearance.tint} className="stat-bar-track" />
     </div>
   );
 };
