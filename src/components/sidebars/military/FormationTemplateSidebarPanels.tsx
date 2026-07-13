@@ -6,6 +6,7 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
+import ResourceLink from '../../common/resources/ResourceLink';
 import { acknowledgeBridgeFailure, getRuntimeEngine } from '../../../bridge/core/runtimeEngine';
 import type {
   FormationTemplateAssignedForce,
@@ -61,10 +62,10 @@ export function ResourceStrip({ resources, title }: { resources: ResourceTotal[]
             ],
           }}
         >
-          <span className="tpl-resource-pill">
+          <ResourceLink resourceId={resource.name} className="tpl-resource-pill">
             <img src={resourceIcon(resource.name)} alt="" className="tpl-resource-icon" />
             <span className="tpl-resource-amt">{resourceAmount(resource.amount)}</span>
-          </span>
+          </ResourceLink>
         </Tooltip>
       ))}
     </div>

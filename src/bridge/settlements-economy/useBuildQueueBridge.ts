@@ -84,10 +84,12 @@ function mapResponse(data: GetBuildQueueResponse): BuildQueueState {
   };
 }
 
-export function useBuildQueueBridge(): BuildQueueState | null {
+export function useBuildQueueBridge(active = true): BuildQueueState | null {
   const [live, setLive] = useState<BuildQueueState | null>(() => buildQueueCache);
 
   useEffect(() => {
+    if (!active) return undefined;
+
     let cancelled = false;
 
     const applyResponse = (data: GetBuildQueueResponse) => {
@@ -107,7 +109,7 @@ export function useBuildQueueBridge(): BuildQueueState | null {
       unsubscribe();
       bridgeCall('game.get_build_queue', { subscribe: false }).catch(() => undefined);
     };
-  }, []);
+  }, [active]);
 
   return live;
 }

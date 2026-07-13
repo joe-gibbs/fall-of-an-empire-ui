@@ -1831,8 +1831,14 @@ export interface GetEconomyOverviewResponse {
   treasuryAdjustment: number;
   totalFood: number;
   foodProduction: number;
+  foodSubjectContribution: number;
+  foodTreatyIncome: number;
   settlementFoodConsumption: number;
   armyFoodConsumption: number;
+  foodQueuedConsumption: number;
+  foodDecayLoss: number;
+  foodIncomeTotal: number;
+  foodExpenseTotal: number;
   foodNet: number;
   autoBuyEnabled: boolean;
   resources: EconomyOverviewResourceRow[];
@@ -1842,6 +1848,59 @@ export interface GetEconomyOverviewResponse {
   settlements: EconomyOverviewSettlementRow[];
   militaries: EconomyOverviewMilitaryRow[];
   vassals: EconomyOverviewVassalRow[];
+}
+
+export interface GetEconomyResourceDetailsRequest {
+  resourceId: string;
+}
+
+export interface EconomyResourceDetailValue {
+  name: string;
+  value: number;
+}
+
+export interface EconomyResourceProducerDetail {
+  settlementId: string;
+  settlementName: string;
+  amount: number;
+  naturalAmount: number;
+  processedAmount: number;
+  buildings: EconomyResourceDetailValue[];
+  modifiers: EconomyResourceDetailValue[];
+}
+
+export interface EconomyResourceFlowDetail {
+  id: string;
+  name: string;
+  kind: string;
+  linkType: string;
+  linkId: string;
+  amount: number;
+}
+
+export interface EconomyResourceHistoryPoint {
+  dateText: string;
+  stockpile: number;
+  production: number;
+  consumption: number;
+  net: number;
+  marketMultiplier: number;
+}
+
+export interface GetEconomyResourceDetailsResponse {
+  resourceId: string;
+  name: string;
+  description: string;
+  effects: string;
+  category: string;
+  tier: string;
+  decayRate: number;
+  foodValue: number;
+  sharedFoodDemand: number;
+  producers: EconomyResourceProducerDetail[];
+  externalSources: EconomyResourceFlowDetail[];
+  consumers: EconomyResourceFlowDetail[];
+  history: EconomyResourceHistoryPoint[];
 }
 
 export interface EncyclopediaEntryDTO {
@@ -2363,6 +2422,8 @@ export interface GetIncomeBreakdownResponse {
   autoAssignCommanderExpense: number;
   otherExpense: number;
   settlements: IncomeEntry[];
+  settlementTaxes: IncomeEntry[];
+  settlementTrades: IncomeEntry[];
   armies: CommandUpkeepEntry[];
   vassals: IncomeEntry[];
 }
@@ -5889,6 +5950,7 @@ export interface BridgeActions {
   'game.get_diplomacy_overview': { request: GetDiplomacyOverviewRequest; response: GetDiplomacyOverviewResponse };
   'game.get_diplomatic_negotiation_state': { request: GetDiplomaticNegotiationStateRequest; response: GetDiplomaticNegotiationStateResponse };
   'game.get_economy_overview': { request: GetEconomyOverviewRequest; response: GetEconomyOverviewResponse };
+  'game.get_economy_resource_details': { request: GetEconomyResourceDetailsRequest; response: GetEconomyResourceDetailsResponse };
   'game.get_encyclopedia_entries': { request: void; response: GetEncyclopediaEntriesResponse };
   'game.get_faction_daily_data': { request: GetFactionDailyDataRequest; response: GetFactionDailyDataResponse };
   'game.get_faction_data': { request: GetFactionDataRequest; response: GetFactionDataResponse };

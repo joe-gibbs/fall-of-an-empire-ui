@@ -1,10 +1,10 @@
 import { memo, useMemo, useState, type Key, type MouseEvent, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
+import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
-import EntityLink from '../../common/entities/EntityLink';
-import { canOpenEntityLink } from '../../common/entities/entityLinkUtils';
 import Tooltip from '../../common/tooltips/Tooltip';
+import EntityLink from '../../common/entities/EntityLink';
 import CourtOfficeSummary from '../../common/entities/CourtOfficeSummary';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import CourtAppointmentModal from '../../modals/characters/CourtAppointmentModal';
@@ -15,7 +15,6 @@ import {
   buyEconomyResourceBridge,
   sellEconomyResourceBridge,
   setEconomyAutoBuyBridge,
-  setResourceAutoSellBridge,
   setResourcePriorityBridge,
   useEconomyOverviewBridge,
 } from '../../../bridge/settlements-economy/useEconomyOverviewBridge';
@@ -25,7 +24,6 @@ import type {
   EconomyOverviewMilitaryRow,
   EconomyOverviewResourceAmount,
   EconomyOverviewResourceRow,
-  EconomyOverviewResourceSource,
   EconomyOverviewSettlementRow,
   EconomyOverviewTaxRow,
   EconomyOverviewVassalRow,
@@ -36,6 +34,7 @@ import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import type { SortDirection } from '../../common/layout/tables/sortUtils';
 import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../localization/WebUITextContext';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
+import { useResourceDetails } from '../../../context/ResourceDetailsContext';
 import './EconomyScreen.css';
 
 type EconomyTab = 'overview' | 'resources' | 'food' | 'settlements' | 'military' | 'provinces';
@@ -105,7 +104,6 @@ const HISTORY_CHART_SEGMENTS: Array<{ key: HistoryMetricKey; labelKey: string; c
 const HISTORY_INCOME_KEYS: HistoryMetricKey[] = HISTORY_CHART_SEGMENTS.map(segment => segment.key);
 
 const TRADE_AMOUNT = 100;
-const AUTO_SELL_STEP = 500;
 
 function fmt(value: number | undefined): string {
   return formatNumber(value);
@@ -167,16 +165,6 @@ function historySum(point: EconomyOverviewHistoryPoint, keys: HistoryMetricKey[]
   return keys.reduce((sum, key) => sum + historyMetric(point, key), 0);
 }
 
-function resourceCategoryLabel(category: string, t: WebUITextFormatter): string {
-  const labels: Record<string, string> = {
-    food: t('Economy.ResourceCategoryFood'),
-    strategic: t('Economy.ResourceCategoryStrategic'),
-    luxury: t('Economy.ResourceCategoryLuxury'),
-    rawMaterials: t('Economy.ResourceCategoryRawMaterials'),
-  };
-  return labels[category] ?? category;
-}
-
 function militaryKindLabel(kind: string, t: WebUITextFormatter): string {
   return kind === 'navy' ? t('Economy.MilitaryKindFleet') : t('Economy.MilitaryKindArmy');
 }
@@ -203,58 +191,28 @@ function monthLabel(point: EconomyOverviewHistoryPoint): string {
   return point.dateText;
 }
 
-function ResourceName({ row }: { row: EconomyOverviewResourceRow }) {
+function ResourceName({ row, onOpen }: { row: EconomyOverviewResourceRow; onOpen?: (row: EconomyOverviewResourceRow) => void }) {
+  const label = <ResourceLabel resourceId={row.id} name={row.name} iconClassName="econ-resource-name__icon" />;
+  if (onOpen) {
+    return (
+      <button
+        type="button"
+        className="econ-resource-name econ-resource-name--button"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onOpen(row);
+        }}
+      >
+        {label}
+      </button>
+    );
+  }
   return (
     <span className="econ-resource-name">
-      <span>{row.name}</span>
+      {label}
     </span>
   );
-}
-
-function ProducerLinks({
-  producers,
-  onOpen,
-}: {
-  producers: EconomyOverviewResourceSource[];
-  onOpen?: () => void;
-}) {
-  const visible = producers.slice(0, 2);
-  if (visible.length === 0) return <span className="econ-muted">-</span>;
-
-  return (
-    <span className="econ-producers">
-      {visible.map((producer, index) => {
-        const label = webUIText("Auto.Var.componentsscreensEconomyScreen.222.1", { Name: producer.name, Value2: signed(producer.amount) });
-        return (
-          <span key={`${producer.linkType}:${producer.linkId}:${index}`} className="econ-producer">
-            {index > 0 && <span className="econ-producer-sep">, </span>}
-            {canOpenEntityLink(producer.linkType, producer.linkId) ? (
-              <EntityLink type={producer.linkType} id={producer.linkId} inline>
-                {label}
-              </EntityLink>
-            ) : label}
-          </span>
-        );
-      })}
-      {producers.length > visible.length && (
-        <button
-          type="button"
-          className="econ-detail-toggle"
-          onMouseDown={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onOpen?.();
-          }}
-        >
-          +{formatNumber(producers.length - visible.length)}
-        </button>
-      )}
-    </span>
-  );
-}
-
-function ProducerSourceLink({ producer }: { producer: EconomyOverviewResourceSource }) {
-  return <EntityLink type={producer.linkType} id={producer.linkId}>{producer.name}</EntityLink>;
 }
 
 function ResourceAmountTags({
@@ -298,25 +256,6 @@ function DetailPanel({
   );
 }
 
-function ResourceSourceDetail({ resource }: { resource: EconomyOverviewResourceRow }) {
-  return (
-    <div className="econ-detail-grid">
-      {resource.producers.length === 0 ? (
-        <span className="econ-muted">-</span>
-      ) : resource.producers.map((producer, index) => (
-        <div key={`${producer.linkType}:${producer.linkId}:${index}`} className="econ-detail-item">
-          <span className="econ-detail-name">
-            {canOpenEntityLink(producer.linkType, producer.linkId) ? (
-              <EntityLink type={producer.linkType} id={producer.linkId} inline>{producer.name}</EntityLink>
-            ) : producer.name}
-          </span>
-          <span className="econ-detail-value econ-positive">{signed(producer.amount)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function ResourceAmountDetail({ values, tone }: { values: EconomyOverviewResourceAmount[]; tone: 'positive' | 'negative' }) {
   const className = tone === 'positive' ? 'econ-positive' : 'econ-negative';
   const sign = tone === 'positive' ? '+' : '-';
@@ -334,18 +273,34 @@ function ResourceAmountDetail({ values, tone }: { values: EconomyOverviewResourc
   );
 }
 
-function TaxLossDetail({ row }: { row: EconomyOverviewTaxRow }) {
-  const t = useWebUIText();
-  const losses = [
+interface TaxLossEntry {
+  label: string;
+  value: number;
+}
+
+function taxLossEntries(row: EconomyOverviewTaxRow, t: WebUITextFormatter): TaxLossEntry[] {
+  return [
     { label: t('Economy.Blockade'), value: row.blockadeLoss },
     { label: t('Economy.Culture'), value: row.culturalLoss },
     { label: t('Economy.Corruption'), value: row.corruptionLoss },
     { label: t('Economy.Ungoverned'), value: row.ungovernedLoss },
     { label: t('Economy.Compliance'), value: row.complianceLoss },
-  ];
+  ].filter(loss => Math.round(loss.value) > 0);
+}
+
+function taxLossSummary(losses: TaxLossEntry[], t: WebUITextFormatter): string {
+  if (losses.length === 0) return t('Common.None');
+  return losses
+    .map(loss => t('Economy.LossEntry', { Name: loss.label, Value: fmt(loss.value) }))
+    .join(t('Economy.LossSeparator'));
+}
+
+function TaxLossDetail({ row }: { row: EconomyOverviewTaxRow }) {
+  const t = useWebUIText();
+  const losses = taxLossEntries(row, t);
   return (
     <div className="econ-detail-grid">
-      {losses.map(loss => (
+      {losses.length === 0 ? <span className="econ-muted">{t('Common.None')}</span> : losses.map(loss => (
         <div key={loss.label} className="econ-detail-item">
           <span className="econ-detail-name">{loss.label}</span>
           <span className="econ-detail-value econ-negative">-{fmt(loss.value)}</span>
@@ -481,16 +436,16 @@ function StatsBar({ data }: { data: GetEconomyOverviewResponse | null }) {
   return (
     <div className="econ-stats-grid">
       <div className="econ-stat-cell">
-        <span className="econ-stat-cell-val">{fmt(data?.gold)}</span>
+        <span className="econ-stat-cell-val"><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{fmt(data?.gold)}</span>
         <span className="econ-stat-cell-label">{t('Common.Treasury')}</span>
         <span className={`econ-stat-cell-sub ${valueClass(net)}`}>{money(net, t)}</span>
       </div>
       <div className="econ-stat-cell">
-        <span className="econ-stat-cell-val econ-positive">{fmt(data?.incomeTotal)}</span>
+        <span className="econ-stat-cell-val econ-positive"><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{fmt(data?.incomeTotal)}</span>
         <span className="econ-stat-cell-label">{t('Economy.IncomePerMonth')}</span>
       </div>
       <div className="econ-stat-cell">
-        <span className="econ-stat-cell-val econ-negative">-{fmt(data?.expenseTotal)}</span>
+        <span className="econ-stat-cell-val econ-negative"><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />-{fmt(data?.expenseTotal)}</span>
         <span className="econ-stat-cell-label">{t('Economy.ExpensesPerMonth')}</span>
       </div>
       <div className="econ-stat-cell">
@@ -535,7 +490,7 @@ function BreakdownColumn({
       <div className="econ-breakdown-header">
         <span className="econ-breakdown-title">{title}</span>
         <span className={`econ-breakdown-total-val ${valueTone}`}>
-          {tone === 'expense' ? '-' : '+'}{fmt(total)}{t('Economy.PerMonth')}
+          <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{tone === 'expense' ? '-' : '+'}{fmt(total)}{t('Economy.PerMonth')}
         </span>
       </div>
       <div className="econ-breakdown-list">
@@ -550,18 +505,117 @@ function BreakdownColumn({
               {t(row.labelKey)}
             </span>
             <span className={`econ-breakdown-value ${valueTone}`}>
-              {tone === 'expense' ? '-' : '+'}{fmt(row.value)}
+              <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{tone === 'expense' ? '-' : '+'}{fmt(row.value)}
             </span>
           </div>
         ))}
-        {tone === 'income' && (
-          <div className="econ-breakdown-net">
-            <span className="econ-breakdown-net-label">{t('Economy.NetIncome')}</span>
-            <span className={`econ-breakdown-net-value ${valueClass(data?.netIncome)}`}>{money(data?.netIncome, t)}</span>
-          </div>
-        )}
       </div>
     </div>
+  );
+}
+
+interface FlowEntry {
+  label: string;
+  value: number;
+}
+
+function FlowColumn({ title, total, entries, tone }: { title: string; total: number; entries: FlowEntry[]; tone: 'income' | 'expense' }) {
+  const t = useWebUIText();
+  const valueTone = tone === 'income' ? 'econ-positive' : 'econ-negative';
+  const visible = entries.filter(entry => entry.value > 0.0001);
+  return (
+    <div className="econ-breakdown-col">
+      <div className="econ-breakdown-header">
+        <span className="econ-breakdown-title">{title}</span>
+        <span className={`econ-breakdown-total-val ${valueTone}`}>
+          {tone === 'expense' ? '-' : '+'}{fmt1(total)}{t('Economy.PerMonth')}
+        </span>
+      </div>
+      <div className="econ-breakdown-list">
+        {visible.length === 0 ? (
+          <div className="econ-breakdown-row"><span className="econ-breakdown-label">{t('Common.None')}</span><span className="econ-breakdown-value">0</span></div>
+        ) : visible.map(entry => (
+          <div className="econ-breakdown-row" key={entry.label}>
+            <span className="econ-breakdown-label">{entry.label}</span>
+            <span className={`econ-breakdown-value ${valueTone}`}>{tone === 'expense' ? '-' : '+'}{fmt1(entry.value)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FlowFooter({ label, value, extra }: { label: string; value: ReactNode; extra?: ReactNode }) {
+  return (
+    <div className="econ-flow-footer">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {extra}
+    </div>
+  );
+}
+
+function largestUseLabel(resource: EconomyOverviewResourceRow, t: WebUITextFormatter): string {
+  const uses = [
+    { value: resource.settlementConsumption, label: t('Economy.UsedBySettlements') },
+    { value: resource.armyUsage, label: t('Economy.UsedByMilitary') },
+    { value: resource.queuedUsage, label: t('Economy.UsedByRecruitment') },
+    { value: resource.decayLoss, label: t('Economy.LostToDecay') },
+  ];
+  uses.sort((left, right) => right.value - left.value);
+  return uses[0]?.value > 0 ? uses[0].label : '-';
+}
+
+function ShortagesDashboard({ resources, onOpenResource }: { resources: EconomyOverviewResourceRow[]; onOpenResource: (resource: EconomyOverviewResourceRow) => void }) {
+  const t = useWebUIText();
+  const shortages = resources
+    .filter(resource => resource.netPerMonth < -0.0001)
+    .sort((left, right) => left.netPerMonth - right.netPerMonth);
+
+  return (
+    <section className="econ-section econ-shortages">
+      <SectionHeading variant="ornate" title={t('Economy.Shortages')} />
+      {shortages.length === 0 ? (
+        <div className="econ-shortages-empty">{t('Economy.NoShortages')}</div>
+      ) : (
+        <div className="econ-shortage-table">
+          <div className="econ-shortage-row econ-shortage-row--head">
+            <span>{t('Economy.Resource')}</span>
+            <span>{t('Economy.Stockpile')}</span>
+            <span>{t('Economy.NetPerMonth')}</span>
+            <span>{t('Economy.Coverage')}</span>
+            <span>{t('Economy.LargestUse')}</span>
+            <span />
+          </div>
+          {shortages.map(resource => {
+            const months = resource.amount / Math.abs(resource.netPerMonth);
+            const coverage = resource.amount <= 0.0001
+              ? t('Economy.ShortNow')
+              : t('Economy.MonthsRemaining', { Count: formatNumber(months, { maximumFractionDigits: 1 }) });
+            return (
+              <div className="econ-shortage-row" key={resource.id}>
+                <ResourceName row={resource} onOpen={onOpenResource} />
+                <span>{fmt1(resource.amount)}</span>
+                <strong className="econ-negative">{signed(resource.netPerMonth)}</strong>
+                <span className={months < 2 ? 'econ-negative' : 'econ-warning'}>{coverage}</span>
+                <span>{largestUseLabel(resource, t)}</span>
+                <button
+                  type="button"
+                  className="econ-shortage-view"
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onOpenResource(resource);
+                  }}
+                >
+                  {t('Economy.ViewDetails')}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -599,7 +653,7 @@ function percentOf(value: number, max: number): string {
   return `${Math.max(0, Math.min(100, (value / max) * 100)).toFixed(2)}%`;
 }
 
-function IncomeHistoryChart({ data }: { data: GetEconomyOverviewResponse | null }) {
+function IncomeHistoryChart({ data, compact = false }: { data: GetEconomyOverviewResponse | null; compact?: boolean }) {
   const t = useWebUIText();
   const points = (data?.history ?? []).slice(-12);
   const maxValue = Math.max(
@@ -608,7 +662,7 @@ function IncomeHistoryChart({ data }: { data: GetEconomyOverviewResponse | null 
   );
 
   return (
-    <section className="econ-section econ-chart-section">
+    <section className={`econ-section econ-chart-section${compact ? ' econ-chart-section--compact' : ''}`}>
       <SectionHeading variant="ornate" title={t('Economy.IncomeHistory12Month')} />
       <div className="econ-chart">
         <span className="econ-chart-gridline econ-chart-gridline--top" />
@@ -618,7 +672,11 @@ function IncomeHistoryChart({ data }: { data: GetEconomyOverviewResponse | null 
           <div className="econ-mini-empty">{t('Economy.NoIncomeHistory')}</div>
         ) : points.map((point, index) => {
           return (
-            <div className="econ-chart-bar-col" key={`${point.year}:${point.month}:${index}`}>
+            <div
+              className="econ-chart-bar-col"
+              key={`${point.year}:${point.month}:${index}`}
+              style={{ gridColumn: 12 - points.length + index + 1 }}
+            >
               <div className="econ-chart-bar-track">
                 <div className="econ-chart-bar-stack">
                   {HISTORY_CHART_SEGMENTS.map(segment => {
@@ -646,97 +704,6 @@ function IncomeHistoryChart({ data }: { data: GetEconomyOverviewResponse | null 
             {t(segment.labelKey)}
           </span>
         ))}
-      </div>
-    </section>
-  );
-}
-
-function ResourceProduction({ resources }: { resources: EconomyOverviewResourceRow[] }) {
-  const t = useWebUIText();
-  const maxProduction = Math.max(1, ...resources.flatMap(row => row.producers.map(producer => Math.abs(producer.amount))));
-
-  return (
-    <section className="econ-section">
-      <SectionHeading variant="ornate" title={t('Economy.ResourceProduction')} />
-      <div className="econ-prod-grid">
-        {resources.length === 0 ? (
-          <div className="econ-mini-empty">{t('Economy.NoResourceProduction')}</div>
-        ) : resources.map(resource => {
-          const totalProduction = resource.production + resource.vassalContribution + resource.treatyIncome;
-          const visibleProducers = resource.producers.slice(0, 4);
-          return (
-            <div className="econ-prod-widget" key={resource.id}>
-              <div className="econ-prod-widget-header">
-                <span className="econ-prod-widget-name">{resource.name}</span>
-                <span className="econ-prod-widget-total">+{fmt1(totalProduction)}{t('Economy.PerMonth')}</span>
-              </div>
-              {visibleProducers.map((producer, index) => (
-                <Tooltip
-                  key={`${resource.id}:${producer.linkId}:${index}`}
-                  content={{
-                    title: producer.name,
-                    lines: [{
-                      label: t('Economy.Production'),
-                      value: signed(producer.amount, t('Economy.PerMonth')),
-                      valueColor: producer.amount > 0 ? 'var(--green)' : producer.amount < 0 ? 'var(--red)' : 'var(--text-muted)',
-                    }],
-                  }}
-                  position="right"
-                >
-                  <div className="econ-prod-bar-row">
-                    <span className="econ-prod-bar-label"><ProducerSourceLink producer={producer} /></span>
-                    <div className="econ-prod-bar-stack">
-                      <div className="econ-prod-bar-track"><span style={{ width: percentOf(Math.abs(producer.amount), maxProduction) }} /></div>
-                    </div>
-                  </div>
-                </Tooltip>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function FoodBalanceDashboard({ data }: { data: GetEconomyOverviewResponse | null }) {
-  const t = useWebUIText();
-  const foodResources = (data?.resources ?? []).filter(resource => resource.category.toLowerCase() === 'food');
-  const max = Math.max(
-    1,
-    ...foodResources.map(resource => resource.production),
-    ...foodResources.map(resource => resource.armyUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss),
-  );
-
-  return (
-    <section className="econ-section">
-      <SectionHeading variant="ornate" title={t('Economy.FoodBalance')} />
-      <div className="econ-food-balance">
-        {foodResources.map(resource => {
-          const consumption = resource.armyUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss;
-          const net = resource.production - consumption;
-          return (
-            <div className="econ-food-balance-row" key={resource.id}>
-              <span className="econ-food-label"><ResourceName row={resource} /></span>
-              <div className="econ-food-bar-stack">
-                <div className="econ-food-bar-area">
-                  <span className="econ-food-bar econ-food-bar--positive" style={{ width: percentOf(resource.production, max) }} />
-                  <span className="econ-food-bar econ-food-bar--negative" style={{ width: percentOf(consumption, max) }} />
-                </div>
-              </div>
-              <div className="econ-food-values">
-                <span className="econ-food-val econ-food-val--production econ-positive">+{fmt1(resource.production)}</span>
-                <span className="econ-food-val econ-food-val--consumption econ-negative">-{fmt1(consumption)}</span>
-                <span className={`econ-food-val econ-food-val--net ${valueClass(net)}`}>{signed(net)}{t('Economy.PerMonth')}</span>
-              </div>
-            </div>
-          );
-        })}
-        <div className="econ-section-summary">
-          <SummaryRow label={t('Economy.NetChange')} value={`${signed(data?.foodNet)}${t('Economy.PerMonth')}`} tone={valueClass(data?.foodNet)} />
-          <SummaryRow label={t('Economy.FoodStores')} value={fmt1(data?.totalFood)} />
-          <SummaryRow label={t('Economy.AutoBuy')} value={<AutoBuyControl data={data} />} />
-        </div>
       </div>
     </section>
   );
@@ -784,133 +751,6 @@ function TradeControls({ resource, gold }: { resource: EconomyOverviewResourceRo
         <span>{fmt(sellReturn)}</span>
       </button>
     </div>
-  );
-}
-
-function AutoSellControl({ resource }: { resource: EconomyOverviewResourceRow }) {
-  const t = useWebUIText();
-  const enabled = resource.autoSellEnabled;
-  const threshold = Math.max(0, resource.autoSellThreshold);
-  const sliderMax = Math.max(1, resource.autoSellSliderMax);
-  const autoSellPercent = Math.max(0, Math.min(100, threshold / sliderMax * 100));
-  const setThreshold = (nextThreshold: number) => {
-    setResourceAutoSellBridge(resource.id, true, Math.max(0, Math.min(sliderMax, nextThreshold))).catch(() => undefined);
-  };
-
-  return (
-    <div className="econ-trade-cell">
-      <div className="econ-autosell">
-        <button
-          type="button"
-          className={`econ-autosell-check${enabled ? ' econ-autosell-check--active' : ''}`}
-          aria-label={t('Economy.AutoSell')}
-          onMouseDown={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            setResourceAutoSellBridge(resource.id, !enabled, threshold).catch(() => undefined);
-          }}
-        />
-        {enabled && (
-          <button
-            type="button"
-            className="econ-autosell-step"
-            onMouseDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setThreshold(threshold - AUTO_SELL_STEP);
-            }}
-          >
-            -
-          </button>
-        )}
-        <div className="econ-autosell-slider"><span style={{ width: `${autoSellPercent.toFixed(2)}%` }} /></div>
-        <span className="econ-autosell-val">{enabled ? fmt(threshold) : '-'}</span>
-        {enabled && (
-          <button
-            type="button"
-            className="econ-autosell-step"
-            onMouseDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setThreshold(threshold + AUTO_SELL_STEP);
-            }}
-          >
-            +
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function StockpileDashboard({ resources, gold }: { resources: EconomyOverviewResourceRow[]; gold: number }) {
-  const t = useWebUIText();
-  const maxAmount = Math.max(1, ...resources.map(row => row.amount));
-  const columns: EconomyColumn<EconomyOverviewResourceRow>[] = [
-    {
-      id: 'resource',
-      label: t('Economy.Resource'),
-      render: resource => (
-        <span className="econ-resource-cell">
-          <ResourceName row={resource} />
-          <span className="econ-resource-primary">{resourceCategoryLabel(resource.category, t)}</span>
-        </span>
-      ),
-      sortValue: resource => resource.name,
-    },
-    {
-      id: 'stockpile',
-      label: t('Economy.Stockpile'),
-      align: 'right',
-      render: resource => (
-        <div className="econ-stock-bar-wrap">
-          <span className="econ-painted-bar--stock" style={{ width: percentOf(resource.amount, maxAmount) }} />
-          <span className="econ-stock-bar-text">{fmt1(resource.amount)}</span>
-        </div>
-      ),
-      sortValue: resource => resource.amount,
-    },
-    {
-      id: 'production',
-      label: t('Economy.ProductionShort'),
-      align: 'right',
-      className: 'econ-positive',
-      render: resource => `+${fmt1(resource.production + resource.vassalContribution + resource.treatyIncome)}`,
-      sortValue: resource => resource.production + resource.vassalContribution + resource.treatyIncome,
-    },
-    {
-      id: 'consumption',
-      label: t('Economy.ConsumptionShort'),
-      align: 'right',
-      className: 'econ-negative',
-      render: resource => negativeFmt1(resource.armyUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss),
-      sortValue: resource => resource.armyUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss,
-    },
-    {
-      id: 'net',
-      label: t('Economy.NetPerMonth'),
-      align: 'right',
-      render: resource => <span className={valueClass(resource.netPerMonth)}>{signed(resource.netPerMonth)}</span>,
-      sortValue: resource => resource.netPerMonth,
-    },
-    { id: 'price', label: t('Economy.Price'), align: 'right', render: resource => `${fmt1(resource.marketMultiplier)}x`, sortValue: resource => resource.marketMultiplier },
-    { id: 'trade', label: t('Economy.Trade'), render: resource => <TradeControls resource={resource} gold={gold} />, sortValue: resource => resource.buyPrice },
-    { id: 'autosell', label: t('Economy.AutoSell'), render: resource => <AutoSellControl resource={resource} />, sortValue: resource => resource.autoSellEnabled ? resource.autoSellThreshold : -1 },
-  ];
-
-  return (
-    <section className="econ-section">
-      <SectionHeading variant="ornate" title={t('Economy.Stockpiles')} />
-      <EconomyDataTable
-        rows={resources}
-        columns={columns}
-        emptyLabel={t('Economy.NoResourceStockpiles')}
-        rowKey={row => row.id}
-        wrapClassName="econ-table-wrap--dashboard"
-        tableClassName="econ-table--stockpiles"
-        virtualRowHeight={54}
-      />
-    </section>
   );
 }
 
@@ -1052,31 +892,77 @@ function MilitaryDashboard({ rows }: { rows: EconomyOverviewMilitaryRow[] }) {
   const total = rows.reduce((sum, row) => sum + row.upkeep, 0);
   const detailRow = rows.find(row => row.id === detailId) ?? null;
   const columns: EconomyColumn<EconomyOverviewMilitaryRow>[] = [
-    { id: 'force', label: t('Economy.Force'), render: row => <EntityLink type="military" id={row.id}>{row.name}</EntityLink>, sortValue: row => row.name },
+    {
+      id: 'force',
+      label: t('Economy.Force'),
+      render: row => (
+        <span className="econ-force-name">
+          <img
+            className="econ-force-kind-icon"
+            src={row.kind === 'navy' ? '/assets/icons/I_Anchor.png' : '/assets/icons/I_Swords.png'}
+            alt=""
+            draggable={false}
+          />
+          <EntityLink type="military" id={row.id}>{row.name}</EntityLink>
+        </span>
+      ),
+      sortValue: row => row.name,
+    },
     { id: 'strength', label: t('Economy.Strength'), align: 'right', render: row => `${fmt(row.strength)} / ${fmt(row.maxStrength)}`, sortValue: row => row.strength },
-    { id: 'upkeep', label: t('Economy.UpkeepPerMonth'), align: 'right', className: 'econ-negative', render: row => negativeFmt(row.upkeep), sortValue: row => row.upkeep },
+    {
+      id: 'upkeep',
+      label: t('Economy.UpkeepPerMonth'),
+      align: 'right',
+      className: 'econ-negative',
+      render: row => (
+        <span className="econ-upkeep-value">
+          <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />
+          {negativeFmt(row.upkeep)}
+        </span>
+      ),
+      sortValue: row => row.upkeep,
+    },
     { id: 'food', label: t('Economy.FoodPerMonth'), align: 'right', className: 'econ-negative', render: row => negativeFmt1(row.foodConsumption), sortValue: row => row.foodConsumption },
     {
       id: 'resources',
       label: t('Common.Resources'),
-      render: row => (
-        <span className="econ-inline-detail-cell">
-          <ResourceAmountTags values={row.resourceUsage} tone="negative" limit={2} />
-          {row.resourceUsage.length > 2 && (
-            <button
-              type="button"
-              className="econ-detail-toggle"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setDetailId(current => current === row.id ? null : row.id);
+      render: row => {
+        const resourceUsage = row.resourceUsage.filter(resource => resource.amount > 0.0001);
+        return (
+          <span className="econ-inline-detail-cell">
+            <Tooltip
+              content={{
+                title: t('Economy.ResourceUse'),
+                lines: resourceUsage.map(resource => ({
+                  label: resource.name,
+                  labelIcon: `/assets/resources/${resource.id}.png`,
+                  value: `-${fmt1(resource.amount)}${t('Economy.PerMonth')}`,
+                  valueColor: 'var(--red-light)',
+                })),
               }}
+              position="left"
+              inline
+              disabled={resourceUsage.length === 0}
+              wrapperClassName="econ-military-resource-tooltip"
             >
-              {detailId === row.id ? '-' : '+'}
-            </button>
-          )}
-        </span>
-      ),
+              <ResourceAmountTags values={resourceUsage} tone="negative" limit={2} />
+            </Tooltip>
+            {resourceUsage.length > 2 && (
+              <button
+                type="button"
+                className="econ-detail-toggle"
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setDetailId(current => current === row.id ? null : row.id);
+                }}
+              >
+                {detailId === row.id ? '-' : '+'}
+              </button>
+            )}
+          </span>
+        );
+      },
       sortValue: row => row.resourceUsage.reduce((sum, value) => sum + value.amount, 0),
     },
     { id: 'location', label: t('Economy.Location'), render: row => <span className="econ-ellipsis">{row.location || '-'}</span>, sortValue: row => row.location },
@@ -1087,7 +973,11 @@ function MilitaryDashboard({ rows }: { rows: EconomyOverviewMilitaryRow[] }) {
     <section className="econ-section">
       <SectionHeading variant="ornate" title={t('Economy.MilitaryUpkeep')} />
       <div className="econ-section-summary">
-        <SummaryRow label={t('Economy.TotalCost')} value={negativeFmt(total)} tone="econ-negative" />
+        <SummaryRow
+          label={t('Economy.TotalCost')}
+          value={<span className="econ-upkeep-value"><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{negativeFmt(total)}</span>}
+          tone="econ-negative"
+        />
       </div>
       {detailRow && (
         <DetailPanel title={detailRow.name}>
@@ -1099,7 +989,7 @@ function MilitaryDashboard({ rows }: { rows: EconomyOverviewMilitaryRow[] }) {
         columns={columns}
         emptyLabel={t('Economy.NoForces')}
         rowKey={row => row.id}
-        wrapClassName="econ-table-wrap--dashboard"
+        wrapClassName="econ-table-wrap--dashboard econ-table-wrap--military-fill"
         tableClassName="econ-table--military"
         virtualRowHeight={40}
       />
@@ -1174,21 +1064,60 @@ function VassalDashboard({ rows }: { rows: EconomyOverviewVassalRow[] }) {
   );
 }
 
-function OverviewTab({ data }: { data: GetEconomyOverviewResponse | null }) {
+function OverviewTab({ data, onOpenResource }: { data: GetEconomyOverviewResponse | null; onOpenResource: (resource: EconomyOverviewResourceRow) => void }) {
   const t = useWebUIText();
   return (
     <>
       <section className="econ-section">
-        <SectionHeading variant="ornate" title={t('Economy.CashFlow')} />
+        <SectionHeading variant="ornate" title={t('Economy.GoldFlow')} />
         <div className="econ-overview-top">
           <BreakdownColumn title={t('Economy.Income')} rows={INCOME_ROWS} data={data} tone="income" />
           <BreakdownColumn title={t('Economy.Expenses')} rows={EXPENSE_ROWS} data={data} tone="expense" />
         </div>
+        <FlowFooter
+          label={t('Economy.NetIncome')}
+          value={<span className={valueClass(data?.netIncome)}><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{money(data?.netIncome, t)}</span>}
+          extra={<span className="econ-flow-footer__aside">{t('Common.Treasury')} <b><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{fmt(data?.gold)}</b></span>}
+        />
       </section>
-      <IncomeHistoryChart data={data} />
-      <ResourceProduction resources={data?.resources ?? []} />
-      <FoodBalanceDashboard data={data} />
-      <StockpileDashboard resources={data?.resources ?? []} gold={data?.gold ?? 0} />
+      <section className="econ-section">
+        <SectionHeading variant="ornate" title={t('Economy.FoodFlow')} />
+        <div className="econ-overview-top">
+          <FlowColumn
+            title={t('Economy.FoodIn')}
+            total={data?.foodIncomeTotal ?? 0}
+            tone="income"
+            entries={[
+              { label: t('Economy.SettlementHarvests'), value: data?.foodProduction ?? 0 },
+              { label: t('Economy.SubjectFood'), value: data?.foodSubjectContribution ?? 0 },
+              { label: t('Economy.TreatyFood'), value: data?.foodTreatyIncome ?? 0 },
+            ]}
+          />
+          <FlowColumn
+            title={t('Economy.FoodOut')}
+            total={data?.foodExpenseTotal ?? 0}
+            tone="expense"
+            entries={[
+              { label: t('Economy.SettlementUse'), value: data?.settlementFoodConsumption ?? 0 },
+              { label: t('Economy.ForceUse'), value: data?.armyFoodConsumption ?? 0 },
+              { label: t('Economy.QueuedFood'), value: data?.foodQueuedConsumption ?? 0 },
+              { label: t('Economy.Spoilage'), value: data?.foodDecayLoss ?? 0 },
+            ]}
+          />
+        </div>
+        <FlowFooter
+          label={t('Economy.NetFood')}
+          value={<span className={valueClass(data?.foodNet)}>{signed(data?.foodNet)}{t('Economy.PerMonth')}</span>}
+          extra={(
+            <span className="econ-flow-footer__aside">
+              {t('Economy.FoodStores')} <b>{fmt1(data?.totalFood)}</b>
+              <span className="econ-flow-footer__control">{t('Economy.AutoBuy')} <AutoBuyControl data={data} /></span>
+            </span>
+          )}
+        />
+      </section>
+      <ShortagesDashboard resources={data?.resources ?? []} onOpenResource={onOpenResource} />
+      <IncomeHistoryChart data={data} compact />
     </>
   );
 }
@@ -1201,42 +1130,40 @@ function MilitaryTab({ data }: { data: GetEconomyOverviewResponse | null }) {
   return <MilitaryDashboard rows={data?.militaries ?? []} />;
 }
 
-function ResourcesTab({ data }: { data: GetEconomyOverviewResponse | null }) {
+function ResourceTableHeader({ label, shortLabel }: { label: string; shortLabel: string }) {
+  return (
+    <Tooltip content={{ title: label }} position="bottom" inline wrapperClassName="econ-resource-table-header-tooltip">
+      <span className="econ-resource-table-header-label">{shortLabel}</span>
+    </Tooltip>
+  );
+}
+
+function ResourcesTab({ data, onOpenResource }: { data: GetEconomyOverviewResponse | null; onOpenResource: (resource: EconomyOverviewResourceRow) => void }) {
   const t = useWebUIText();
   const rows = data?.resources ?? [];
-  const [detailId, setDetailId] = useState<string | null>(null);
-  const detailRow = rows.find(row => row.id === detailId) ?? null;
   const columns: EconomyColumn<EconomyOverviewResourceRow>[] = [
-    { id: 'name', label: t('Economy.Resource'), render: row => <ResourceName row={row} />, sortValue: row => row.name },
-    { id: 'category', label: t('Economy.Category'), render: row => resourceCategoryLabel(row.category, t), sortValue: row => resourceCategoryLabel(row.category, t) },
-    { id: 'stockpile', label: t('Economy.Stockpile'), align: 'right', render: row => fmt1(row.amount), sortValue: row => row.amount },
-    { id: 'production', label: t('Economy.Produced'), align: 'right', className: 'econ-positive', render: row => `+${fmt1(row.production)}`, sortValue: row => row.production },
-    { id: 'vassals', label: t('Economy.Subjects'), align: 'right', render: row => `+${fmt1(row.vassalContribution)}`, sortValue: row => row.vassalContribution },
-    { id: 'treaties', label: t('Economy.Treaties'), align: 'right', render: row => `+${fmt1(row.treatyIncome)}`, sortValue: row => row.treatyIncome },
+    { id: 'name', label: <ResourceTableHeader label={t('Economy.Resource')} shortLabel={t('Economy.Resource')} />, render: row => <ResourceName row={row} onOpen={onOpenResource} />, sortValue: row => row.name },
+    { id: 'stockpile', label: <ResourceTableHeader label={t('Economy.Stockpile')} shortLabel={t('Economy.Stockpile')} />, align: 'right', render: row => fmt1(row.amount), sortValue: row => row.amount },
+    { id: 'production', label: <ResourceTableHeader label={t('Economy.Produced')} shortLabel={t('Economy.ProductionShort')} />, align: 'right', className: 'econ-positive', render: row => `+${fmt1(row.production)}`, sortValue: row => row.production },
+    { id: 'vassals', label: <ResourceTableHeader label={t('Economy.Subjects')} shortLabel={t('Economy.SubjectsShort')} />, align: 'right', render: row => `+${fmt1(row.vassalContribution)}`, sortValue: row => row.vassalContribution },
+    { id: 'treaties', label: <ResourceTableHeader label={t('Economy.Treaties')} shortLabel={t('Economy.TreatiesShort')} />, align: 'right', render: row => `+${fmt1(row.treatyIncome)}`, sortValue: row => row.treatyIncome },
     {
       id: 'use',
-      label: t('Economy.Use'),
+      label: <ResourceTableHeader label={t('Economy.Use')} shortLabel={t('Economy.Use')} />,
       align: 'right',
       className: 'econ-negative',
       render: row => negativeFmt1(row.armyUsage + row.queuedUsage + row.settlementConsumption),
       sortValue: row => row.armyUsage + row.queuedUsage + row.settlementConsumption,
     },
-    { id: 'decay', label: t('Economy.Decay'), align: 'right', className: 'econ-negative', render: row => row.decayLoss > 0 ? `-${fmt1(row.decayLoss)}` : '0', sortValue: row => row.decayLoss },
-    { id: 'net', label: t('Economy.NetPerMonth'), align: 'right', render: row => <span className={valueClass(row.netPerMonth)}>{signed(row.netPerMonth)}</span>, sortValue: row => row.netPerMonth },
-    { id: 'market', label: t('Economy.Market'), align: 'right', render: row => `${fmt1(row.marketMultiplier)}x`, sortValue: row => row.marketMultiplier },
-    { id: 'trade', label: t('Economy.Trade'), render: row => <TradeControls resource={row} gold={data?.gold ?? 0} /> },
-    { id: 'autosell', label: t('Economy.AutoSell'), render: row => <AutoSellControl resource={row} /> },
-    { id: 'producers', label: t('Economy.MainSources'), render: row => <ProducerLinks producers={row.producers} onOpen={() => setDetailId(current => current === row.id ? null : row.id)} />, sortValue: row => row.producers[0]?.name },
+    { id: 'decay', label: <ResourceTableHeader label={t('Economy.Decay')} shortLabel={t('Economy.Decay')} />, align: 'right', className: 'econ-negative', render: row => row.decayLoss > 0 ? `-${fmt1(row.decayLoss)}` : '0', sortValue: row => row.decayLoss },
+    { id: 'net', label: <ResourceTableHeader label={t('Economy.NetPerMonth')} shortLabel={t('Economy.NetPerMonth')} />, align: 'right', render: row => <span className={valueClass(row.netPerMonth)}>{signed(row.netPerMonth)}</span>, sortValue: row => row.netPerMonth },
+    { id: 'market', label: <ResourceTableHeader label={t('Economy.Market')} shortLabel={t('Economy.Price')} />, align: 'right', render: row => `${fmt1(row.marketMultiplier)}x`, sortValue: row => row.marketMultiplier },
+    { id: 'trade', label: <ResourceTableHeader label={t('Economy.Trade')} shortLabel={t('Economy.Trade')} />, render: row => <TradeControls resource={row} gold={data?.gold ?? 0} /> },
   ];
 
   return (
     <section className="econ-section">
       <SectionHeading variant="ornate" title={t('Economy.ResourceStockpiles')} />
-      {detailRow && (
-        <DetailPanel title={detailRow.name}>
-          <ResourceSourceDetail resource={detailRow} />
-        </DetailPanel>
-      )}
       <EconomyDataTable
         rows={rows}
         columns={columns}
@@ -1255,7 +1182,6 @@ function FoodTab({ data }: { data: GetEconomyOverviewResponse | null }) {
   const t = useWebUIText();
   const foodColumns: EconomyColumn<EconomyOverviewFoodRow>[] = [
     { id: 'settlement', label: t('Economy.Settlement'), render: row => <EntityLink type="settlement" id={row.settlementId}>{row.settlementName}</EntityLink>, sortValue: row => row.settlementName },
-    { id: 'faction', label: t('Economy.Faction'), render: row => <EntityLink type="diplomacy" id={row.factionId}>{row.factionName}</EntityLink>, sortValue: row => row.factionName },
     { id: 'stockpile', label: t('Economy.Stockpile'), align: 'right', render: row => fmt1(row.stockpile), sortValue: row => row.stockpile },
     { id: 'production', label: t('Economy.Production'), align: 'right', className: 'econ-positive', render: row => `+${fmt1(row.production)}`, sortValue: row => row.production },
     { id: 'use', label: t('Economy.Use'), align: 'right', className: 'econ-negative', render: row => negativeFmt1(row.consumption), sortValue: row => row.consumption },
@@ -1318,13 +1244,30 @@ function ProvinceTab({ data }: { data: GetEconomyOverviewResponse | null }) {
     { id: 'rate', label: t('Economy.Rate'), align: 'right', render: row => row.isVassal ? <SubjectTaxRateControls factionId={row.factionId} taxRate={row.effectiveRate} disabled={row.isFoederati} /> : displayRate(row.effectiveRate), sortValue: row => ratePercent(row.effectiveRate) },
     { id: 'current', label: t('Economy.Current'), align: 'right', className: 'econ-positive', render: row => `+${fmt(row.currentTax)}${t('Economy.PerMonth')}`, sortValue: row => row.currentTax },
     { id: 'potential', label: t('Economy.Potential'), align: 'right', render: row => fmt(row.potentialTax), sortValue: row => row.potentialTax },
-    { id: 'leakage', label: t('Economy.Leakage'), align: 'right', className: 'econ-negative', render: row => row.leakage > 0 ? `-${fmt(row.leakage)}${t('Economy.PerMonth')}` : `0${t('Economy.PerMonth')}`, sortValue: row => row.leakage },
+    { id: 'leakage', label: t('Economy.Leakage'), align: 'right', className: 'econ-negative', render: row => Math.round(row.leakage) > 0 ? `-${fmt(row.leakage)}${t('Economy.PerMonth')}` : `0${t('Economy.PerMonth')}`, sortValue: row => row.leakage },
     {
       id: 'losses',
       label: t('Economy.Losses'),
-      render: row => (
-        <span className="econ-inline-detail-cell">
-          <span className="econ-ellipsis">{t('Economy.LossesBreakdown', { Blockade: fmt(row.blockadeLoss), Culture: fmt(row.culturalLoss), Corruption: fmt(row.corruptionLoss), Ungoverned: fmt(row.ungovernedLoss), Compliance: fmt(row.complianceLoss) })}</span>
+      render: row => {
+        const losses = taxLossEntries(row, t);
+        return (
+          <span className="econ-inline-detail-cell">
+            <Tooltip
+              content={{
+                title: t('Economy.Losses'),
+                lines: losses.map(loss => ({
+                  label: loss.label,
+                  value: `-${fmt(loss.value)}`,
+                  valueColor: 'var(--red-light)',
+                })),
+              }}
+              position="left"
+              inline
+              disabled={losses.length === 0}
+              wrapperClassName="econ-loss-summary-tooltip"
+            >
+              <span className="econ-ellipsis">{taxLossSummary(losses, t)}</span>
+            </Tooltip>
           <button
             type="button"
             className="econ-detail-toggle"
@@ -1337,7 +1280,8 @@ function ProvinceTab({ data }: { data: GetEconomyOverviewResponse | null }) {
             {detailId === row.factionId ? '-' : '+'}
           </button>
         </span>
-      ),
+        );
+      },
       sortValue: row => row.blockadeLoss + row.culturalLoss + row.corruptionLoss + row.ungovernedLoss + row.complianceLoss,
     },
   ];
@@ -1372,6 +1316,7 @@ const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => 
   const data = useEconomyOverviewBridge(activeTab);
   const court = useCourtPositions(true);
   const [courtPosition, setCourtPosition] = useState<CourtPositionView | null>(null);
+  const { openResource } = useResourceDetails();
   const economyOffice = useMemo(
     () => court?.positions.find(position => position.key === 'MasterOfEconomy') ?? null,
     [court],
@@ -1387,12 +1332,12 @@ const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => 
   ];
 
   const content = (() => {
-    if (activeTab === 'resources') return <ResourcesTab data={data} />;
+    if (activeTab === 'resources') return <ResourcesTab data={data} onOpenResource={resource => openResource(resource.id)} />;
     if (activeTab === 'food') return <FoodTab data={data} />;
     if (activeTab === 'settlements') return <SettlementsTab data={data} />;
     if (activeTab === 'military') return <MilitaryTab data={data} />;
     if (activeTab === 'provinces') return <ProvinceTab data={data} />;
-    return <OverviewTab data={data} />;
+    return <OverviewTab data={data} onOpenResource={resource => openResource(resource.id)} />;
   })();
   const officeStrip = economyOffice ? (
     <div className="econ-office-strip econ-office-strip--top">

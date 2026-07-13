@@ -8,6 +8,7 @@ import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { useBuildQueueBridge, unqueueBuildQueueItem, type BuildQueueCostView, type BuildQueueItemView } from '../../../bridge/settlements-economy/useBuildQueueBridge';
 import { registerScreen } from '../../../registry/index';
 import { formatNumber } from '../../../utils/numberFormat';
+import ResourceLink from '../../common/resources/ResourceLink';
 import './BuildQueueScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -104,12 +105,13 @@ function ResourceCosts({ costs }: { costs: BuildQueueCostView[] }) {
   return (
     <>
       {costs.map(cost => (
-        <CostPart
-          key={cost.name}
-          icon={cost.icon}
-          label={cost.label || cost.name}
-          value={n(Math.ceil(cost.amount))}
-        />
+        <ResourceLink key={cost.name} resourceId={cost.name}>
+          <CostPart
+            icon={cost.icon}
+            label={cost.label || cost.name}
+            value={n(Math.ceil(cost.amount))}
+          />
+        </ResourceLink>
       ))}
     </>
   );

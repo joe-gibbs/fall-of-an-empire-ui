@@ -36,6 +36,7 @@ import { StatCellGrid, StatCell } from '../shared/StatCellGrid';
 import SettlementBuildingsPanel from './SettlementBuildingsPanel';
 import SettlementMilitaryPanel from './SettlementMilitaryPanel';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
+import ResourceLink from '../../common/resources/ResourceLink';
 import { successChanceColour } from '../../../utils/colorFormatters';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { TIER_ICONS } from '../../../utils/iconMaps';
@@ -1295,12 +1296,12 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                         const netStr = formatNumber(net, { maximumFractionDigits: 1 });
                         return (
                           <Tooltip key={r.id ?? r.name} content={buildResourceTooltip(r)} position="left" delay={200}>
-                            <div className={`settle-resource-row${(r.shortage ?? 0) > 0 ? ' settle-resource-row--shortage' : ''}`}>
+                            <ResourceLink resourceId={r.id ?? r.name} className={`settle-resource-row${(r.shortage ?? 0) > 0 ? ' settle-resource-row--shortage' : ''}`}>
                               <img src={FoaeCefUIAssetPath(r.icon || `/assets/resources/${r.id ?? r.name}.png`)} alt="" className="settle-resource-icon" />
                               <span className="settle-resource-name">{r.name}</span>
                               <span className="settle-resource-stock">{amountStr}</span>
                               <span className="settle-resource-net" style={{ color: netColor }}>{net >= 0 ? '+' : ''}{netStr}</span>
-                            </div>
+                            </ResourceLink>
                           </Tooltip>
                         );
                       })}

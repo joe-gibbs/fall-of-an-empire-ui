@@ -7,6 +7,7 @@ import { TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber } from '../../../utils/numberFormat';
 import type { BuildingResourceCost, CultureInfo } from '../../../data/types';
 import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
+import ResourceLink from '../resources/ResourceLink';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 
@@ -148,10 +149,10 @@ function ResourceList({ title, items, perContext }: { title: string; items: Buil
                 ],
               }}
             >
-              <span className="unit-tt-res">
+              <ResourceLink resourceId={r.name} className="unit-tt-res">
                 <img src={r.icon} alt="" className="unit-tt-res-icon" />
                 <span className="unit-tt-res-val">{valueLabel}</span>
-              </span>
+              </ResourceLink>
             </NestedTooltip>
           );
         })}

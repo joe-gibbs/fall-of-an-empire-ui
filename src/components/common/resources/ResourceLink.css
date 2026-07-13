@@ -1,0 +1,15 @@
+.resource-link {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: inherit;
+}
+
+.resource-link:hover {
+  color: var(--gold-light);
+}

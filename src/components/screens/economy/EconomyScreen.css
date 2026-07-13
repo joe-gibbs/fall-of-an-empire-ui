@@ -110,6 +110,44 @@
   margin-top: 0.05rem;
 }
 
+.econ-gold-icon {
+  width: 0.82rem;
+  height: 0.82rem;
+  margin-right: 0.24rem;
+  object-fit: contain;
+  vertical-align: -0.08rem;
+}
+
+.econ-upkeep-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.econ-force-name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.econ-force-kind-icon {
+  flex: 0 0 auto;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-right: 0.35rem;
+  object-fit: contain;
+}
+
+.econ-force-name .entity-link {
+  min-width: 0;
+}
+
+.econ-stat-cell-val .econ-gold-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
 .econ-stat-cell-label {
   display: block;
   font-size: 0.68rem;
@@ -373,6 +411,102 @@
   max-height: calc(100vh - 16rem);
 }
 
+.econ-flow-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.35rem;
+  padding: 0.32rem 0.7rem;
+  border-top: 0.077rem solid rgba(201, 168, 76, 0.32);
+  background: rgba(9, 14, 19, 0.38);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.econ-flow-footer > strong {
+  margin-left: 0.7rem;
+  font-family: var(--font-header);
+  font-size: 1.08rem;
+  font-weight: 500;
+  text-transform: none;
+}
+
+.econ-flow-footer__aside {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 2rem;
+  padding-left: 2rem;
+  border-left: 0.077rem solid rgba(201, 168, 76, 0.22);
+}
+
+.econ-flow-footer__aside b {
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.econ-flow-footer__control {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 1rem;
+}
+
+.econ-shortages-empty {
+  padding: 0.85rem;
+  border-top: 0.077rem solid var(--separator);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.econ-shortage-table {
+  border-top: 0.077rem solid var(--separator);
+}
+
+.econ-shortage-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1.5fr) 0.7fr 0.7fr 0.9fr 1.2fr 4rem;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 0.62rem;
+  border-bottom: 0.077rem solid rgba(91, 82, 69, 0.48);
+  font-size: 0.79rem;
+}
+
+.econ-shortage-row > span,
+.econ-shortage-row > strong {
+  min-width: 0;
+  padding-right: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.econ-shortage-row--head {
+  min-height: 1.75rem;
+  color: var(--text-muted);
+  background: rgba(6, 10, 14, 0.3);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.econ-shortage-view {
+  min-height: 1.4rem;
+  border: 0.077rem solid rgba(201, 168, 76, 0.38);
+  color: var(--gold-light);
+  background: rgba(63, 42, 20, 0.35);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+}
+
+.econ-warning {
+  color: var(--gold-light);
+}
+
 .econ-table-wrap--dashboard .econ-table .data-table-body-scroll-frame {
   max-height: 28rem;
 }
@@ -442,40 +576,41 @@
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(1) {
-  flex-basis: 7.5%;
-  width: 7.5%;
-}
-
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(2) {
-  flex-basis: 8%;
-  width: 8%;
-}
-
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(3),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(4),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(5),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(6),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(7),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(8),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(9),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(10) {
-  flex-basis: 5.5%;
-  width: 5.5%;
-}
-
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(11) {
-  flex-basis: 10%;
-  width: 10%;
-}
-
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(12) {
   flex-basis: 18%;
   width: 18%;
 }
 
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(13) {
-  flex-basis: 12.5%;
-  width: 12.5%;
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(2) {
+  flex-basis: 9%;
+  width: 9%;
+}
+
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(3) {
+  flex-basis: 9%;
+  width: 9%;
+}
+
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(4),
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(5),
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(6) {
+  flex-basis: 8%;
+  width: 8%;
+}
+
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(7),
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(9) {
+  flex-basis: 7%;
+  width: 7%;
+}
+
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(8) {
+  flex-basis: 9%;
+  width: 9%;
+}
+
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(10) {
+  flex-basis: 17%;
+  width: 17%;
 }
 
 .econ-table--tax-losses .econ-table-row > .econ-table-cell:nth-child(1) {
@@ -748,37 +883,49 @@
   min-width: 0;
 }
 
-.econ-producers {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
+.econ-resource-name--button {
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  color: var(--gold-light);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: rgba(201, 168, 76, 0.48);
+  text-underline-offset: 0.14rem;
 }
 
-.econ-producer {
-  display: block;
-  flex: 0 1 auto;
+.econ-resource-name__icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-right: 0.38rem;
+}
+
+.econ-resource-table-header-tooltip {
+  display: inline-flex;
+  max-width: 100%;
   min-width: 0;
+}
+
+.econ-resource-table-header-label {
+  display: block;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.econ-producers .entity-link--inline,
 .econ-detail-name .entity-link--inline {
   max-width: 100%;
 }
 
-.econ-producers .entity-link--inline .entity-link__label,
 .econ-detail-name .entity-link--inline .entity-link__label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.econ-producer-sep,
 .econ-muted {
   color: var(--text-muted);
 }
@@ -797,6 +944,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.econ-loss-summary-tooltip {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.econ-loss-summary-tooltip .econ-ellipsis {
+  width: 100%;
+}
+
+.econ-military-resource-tooltip {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .econ-detail-toggle {
@@ -914,7 +1078,8 @@
 
 .econ-chart {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   height: 9rem;
   min-height: 9rem;
   padding: 0.55rem 0.35rem 0;
@@ -927,7 +1092,6 @@
 .econ-chart-bar-col {
   position: relative;
   z-index: 1;
-  flex: 1 1 2.5rem;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -937,6 +1101,10 @@
 
 .econ-chart-bar-col:first-child {
   margin-left: 0;
+}
+
+.econ-chart > .econ-mini-empty {
+  grid-column: 1 / -1;
 }
 
 .econ-chart-gridline,
@@ -1105,8 +1273,6 @@
 .econ-prod-widget-header,
 .econ-prod-bar-row,
 .econ-food-balance-row,
-.econ-trade-cell,
-.econ-autosell,
 .econ-priority-controls,
 .econ-rate-controls {
   display: flex;
@@ -1245,6 +1411,19 @@
 
 .econ-food-balance {
   padding: 0.45rem 0.35rem;
+}
+
+.econ-chart-section--compact {
+  min-height: 8rem;
+}
+
+.econ-chart-section--compact .econ-chart {
+  height: 7rem;
+  min-height: 7rem;
+}
+
+.econ-chart-section--compact .econ-chart-bar-track {
+  min-height: 0;
 }
 
 .econ-food-balance-row {
@@ -1399,13 +1578,6 @@
   font-family: var(--font-header);
 }
 
-.econ-trade-cell {
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-}
-
 .econ-trade-btns {
   display: flex;
   align-items: center;
@@ -1475,79 +1647,6 @@
 
 .econ-trade-btn + .econ-trade-btn {
   margin-left: 0.18rem;
-}
-
-.econ-autosell {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  margin-top: 0.22rem;
-}
-
-.econ-autosell-check {
-  flex-grow: 0;
-  flex-shrink: 0;
-  width: 0.62rem;
-  height: 0.62rem;
-  margin-right: 0.25rem;
-  padding: 0;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
-  background-color: rgba(201, 168, 76, 0.26);
-}
-
-.econ-autosell-check--active {
-  background-color: var(--gold-dark);
-}
-
-.econ-autosell-step {
-  flex-grow: 0;
-  flex-shrink: 0;
-  width: 1.05rem;
-  min-height: 1.05rem;
-  padding: 0;
-  margin-right: 0.18rem;
-  margin-left: 0.18rem;
-  color: var(--gold-light);
-  background-color: rgba(8, 12, 17, 0.24);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.18);
-  font-size: 0.58rem;
-}
-
-.econ-autosell-slider {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-width: 2.8rem;
-  height: 0.32rem;
-  background-color: rgba(8, 12, 17, 0.42);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(63, 56, 47, 0.7);
-  overflow: hidden;
-}
-
-.econ-autosell-slider span {
-  display: block;
-  height: 100%;
-  background-color: var(--gold-dark);
-}
-
-.econ-autosell-val {
-  flex-grow: 0;
-  flex-shrink: 0;
-  min-width: 2.4rem;
-  margin-left: 0.25rem;
-  color: var(--text-muted);
-  font-size: 0.66rem;
-  text-align: right;
 }
 
 .econ-governor {
@@ -1703,4 +1802,17 @@
     flex-basis: 100%;
     margin-right: 0;
   }
+}
+
+.econ-table-wrap--dashboard.econ-table-wrap--military-fill {
+  max-height: none;
+}
+
+.econ-table-wrap--dashboard.econ-table-wrap--military-fill .econ-table .data-table-body-scroll-frame {
+  height: calc(100vh - 22rem);
+  max-height: calc(100vh - 22rem);
+}
+
+.econ-table-wrap--dashboard.econ-table-wrap--military-fill .econ-table-body {
+  max-height: none;
 }

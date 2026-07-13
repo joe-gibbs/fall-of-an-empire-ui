@@ -3157,8 +3157,14 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
     treasuryAdjustment: 0,
     totalFood: 1285,
     foodProduction: 148,
+    foodSubjectContribution: 104,
+    foodTreatyIncome: 0,
     settlementFoodConsumption: 180,
     armyFoodConsumption: 54,
+    foodQueuedConsumption: 0,
+    foodDecayLoss: 0,
+    foodIncomeTotal: 252,
+    foodExpenseTotal: 234,
     foodNet: 18,
     autoBuyEnabled: true,
     resources: [
@@ -3585,6 +3591,59 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         requirements: [{ id: 'Food', name: 'Food', amount: 280 }, { id: 'Iron', name: 'Iron', amount: 130 }],
       },
     ],
+  };
+}
+
+function economyResourceDetails(resourceId: string): BridgeResponse<'game.get_economy_resource_details'> {
+  const resource = economyOverview().resources.find(row => row.id === resourceId) ?? economyOverview().resources[0]!;
+  const consumption = resource.armyUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss;
+  return {
+    resourceId: resource.id,
+    name: resource.name,
+    description: `${resource.name} is stored and traded across your realm.`,
+    effects: resource.category === 'food' ? 'Contributes to the shared food supply.' : 'Used by settlements and military forces.',
+    category: resource.category,
+    tier: 'primary',
+    decayRate: resource.decayLoss > 0 && resource.amount > 0 ? resource.decayLoss / resource.amount : 0,
+    foodValue: resource.category === 'food' ? 1 : 0,
+    sharedFoodDemand: resource.category === 'food' ? 180 : 0,
+    producers: resource.producers.filter(producer => producer.linkType === 'settlement').map((producer, index) => ({
+      settlementId: producer.linkId,
+      settlementName: producer.name,
+      amount: producer.amount,
+      naturalAmount: index === 0 ? producer.amount * 0.65 : producer.amount,
+      processedAmount: index === 0 ? producer.amount * 0.35 : 0,
+      buildings: index === 0 ? [{ name: 'Granaries', value: producer.amount * 0.35 }] : [],
+      modifiers: index === 0 ? [{ name: 'Fertile land', value: 15 }] : [],
+    })),
+    externalSources: resource.vassalContribution > 0 ? [{
+      id: 'mock-subject-source',
+      name: 'Rephsian Province',
+      kind: 'subject',
+      linkType: 'faction',
+      linkId: 'mock-subject-source',
+      amount: resource.vassalContribution,
+    }] : [],
+    consumers: [
+      ...(resource.settlementConsumption > 0 ? [{ id: 'settlement-use', name: 'Settlements', kind: 'settlement', linkType: '', linkId: '', amount: resource.settlementConsumption }] : []),
+      ...(resource.armyUsage > 0 ? [{ id: 'army-use', name: 'Field Army', kind: 'army', linkType: 'military', linkId: MOCK_IDS.military, amount: resource.armyUsage }] : []),
+      ...(resource.queuedUsage > 0 ? [{ id: 'queued-use', name: 'Recruitment queues', kind: 'queued', linkType: '', linkId: '', amount: resource.queuedUsage }] : []),
+      ...(resource.decayLoss > 0 ? [{ id: 'decay-use', name: 'Spoilage and decay', kind: 'decay', linkType: '', linkId: '', amount: resource.decayLoss }] : []),
+    ],
+    history: Array.from({ length: 24 }, (_, index) => {
+      const age = 23 - index;
+      const wave = Math.sin(index * 0.65) * Math.max(2, Math.abs(resource.netPerMonth) * 0.35);
+      const production = Math.max(0, resource.production + wave);
+      const use = Math.max(0, consumption - wave * 0.3);
+      return {
+        dateText: `${(index % 12) + 1}/784`,
+        stockpile: Math.max(0, resource.amount - resource.netPerMonth * age),
+        production,
+        consumption: use,
+        net: production - use,
+        marketMultiplier: Math.max(0.2, resource.marketMultiplier + Math.sin(index * 0.4) * 0.12),
+      };
+    }),
   };
 }
 
@@ -5085,6 +5144,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         } satisfies BridgeResponse<'game.form_personal_power_bloc'>;
       case 'game.get_economy_overview':
         return clone(economyOverview());
+      case 'game.get_economy_resource_details':
+        return clone(economyResourceDetails(payloadString(payload, 'resourceId', 'Grain')));
       case 'game.get_diplomacy_overview':
         return clone(diplomacyOverview(state.autoAssignGovernorsEnabled));
       case 'game.get_ledger_overview':
@@ -5353,6 +5414,22 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             { name: 'Ara Salimba', amount: 690 },
             { name: 'Berginium', amount: 605 },
             { name: 'Cortalium', amount: 155 },
+          ],
+          settlementTaxes: [
+            { name: 'Rephsia', amount: 4700 },
+            { name: 'Vallis Regio', amount: 900 },
+            { name: 'Lacertum', amount: 600 },
+            { name: 'Ara Salimba', amount: 400 },
+            { name: 'Berginium', amount: 300 },
+            { name: 'Cortalium', amount: 160 },
+          ],
+          settlementTrades: [
+            { name: 'Rephsia', amount: 1770 },
+            { name: 'Vallis Regio', amount: 300 },
+            { name: 'Lacertum', amount: 250 },
+            { name: 'Ara Salimba', amount: 160 },
+            { name: 'Berginium', amount: 120 },
+            { name: 'Cortalium', amount: 80 },
           ],
           armies: [
             { id: MOCK_IDS.military, parentId: '', name: 'Legio II Ferrata', upkeep: 840 },

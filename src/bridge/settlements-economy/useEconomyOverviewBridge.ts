@@ -1,4 +1,4 @@
-import type { GetEconomyOverviewResponse } from '../../bridge-types.generated.ts';
+import type { GetEconomyOverviewResponse, GetEconomyResourceDetailsResponse } from '../../bridge-types.generated.ts';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
 
@@ -61,6 +61,15 @@ export function useEconomyOverviewBridge(scope: EconomyOverviewScope = 'overview
   });
 
   return live ?? economyOverviewCache;
+}
+
+export function useEconomyResourceDetailsBridge(resourceId: string | null): GetEconomyResourceDetailsResponse | null {
+  return useBridgeQuery({
+    action: 'game.get_economy_resource_details',
+    payload: resourceId ? { resourceId } : null,
+    cacheResponseMs: 1000,
+    map: data => data,
+  });
 }
 
 export function buyEconomyResourceBridge(resourceId: string, amount: number): Promise<void> {

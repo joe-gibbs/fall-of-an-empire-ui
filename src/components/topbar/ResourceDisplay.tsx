@@ -81,27 +81,34 @@ function commandEntriesToSubTooltip(title: string, entries: CommandUpkeepEntry[]
 function buildIncomeTooltip(data: GetIncomeBreakdownResponse): TooltipContent {
   const lines: TooltipLine[] = [];
 
-  // Settlement income with per-settlement sub-tooltip
-  const settlementTotal = data.settlementIncome + data.tradeIncome;
-  if (settlementTotal !== 0) {
+  if (data.settlementIncome !== 0) {
     lines.push({
-      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.87.1'),
-      value: formatSignedNumber(settlementTotal),
-      valueColor: settlementTotal >= 0 ? 'var(--green)' : 'var(--red)',
+      label: webUIText('Economy.SettlementTax'),
+      value: formatSignedNumber(data.settlementIncome),
+      valueColor: data.settlementIncome >= 0 ? 'var(--green)' : 'var(--red)',
       valueIcon: goldIcon,
-      subTooltip: entriesToSubTooltip('Settlement Income', data.settlements),
+      subTooltip: entriesToSubTooltip(webUIText('Economy.SettlementTax'), data.settlementTaxes),
     });
   }
+
+  if (data.tradeIncome !== 0)
+    lines.push({
+      label: webUIText('Economy.Trade'),
+      value: formatSignedNumber(data.tradeIncome),
+      valueColor: data.tradeIncome >= 0 ? 'var(--green)' : 'var(--red)',
+      valueIcon: goldIcon,
+      subTooltip: entriesToSubTooltip(webUIText('Economy.Trade'), data.settlementTrades),
+    });
 
   if (data.resourceSalesIncome !== 0)
     lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.96.2'), value: formatSignedNumber(data.resourceSalesIncome), valueColor: 'var(--green)', valueIcon: goldIcon });
   if (data.vassalTributeIncome !== 0)
     lines.push({
-      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.99.3'),
+      label: webUIText('Economy.SubjectTribute'),
       value: formatSignedNumber(data.vassalTributeIncome),
       valueColor: 'var(--green)',
       valueIcon: goldIcon,
-      subTooltip: entriesToSubTooltip('Tributary Income', data.vassals),
+      subTooltip: entriesToSubTooltip(webUIText('Economy.SubjectTribute'), data.vassals),
     });
   if (data.treatyTributeIncome !== 0)
     lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.106.4'), value: formatSignedNumber(data.treatyTributeIncome), valueColor: 'var(--green)', valueIcon: goldIcon });

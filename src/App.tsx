@@ -10,6 +10,7 @@ import { EscapeStackProvider } from './context/EscapeStackProvider';
 import { preloadWebUIAssets } from './preload/assets';
 import { acknowledgeBridgeFailure, getRuntimeEngine } from './bridge/core/runtimeEngine';
 import GameUIRoot from './components/app-shell/GameUIRoot';
+import ResourceDetailsProvider from './context/ResourceDetailsProvider';
 import './App.css';
 
 
@@ -71,8 +72,10 @@ function App() {
   } else if (appMode === 'ingame') {
     content = (
       <GameProvider>
-        <GameUIRoot />
-        <TooltipHost />
+        <ResourceDetailsProvider>
+          <GameUIRoot />
+          <TooltipHost />
+        </ResourceDetailsProvider>
       </GameProvider>
     );
   }
