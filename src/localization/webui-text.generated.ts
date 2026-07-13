@@ -1544,7 +1544,7 @@ export const WEBUI_TEXT_SOURCE = {
   "Auto.ComponentsScreensBattleBattleScreen.907.4": "Fit",
   "Auto.ComponentsScreensBattleBattleScreen.917.5": "Retreat",
   "Auto.ComponentsScreensBattleBattleScreen.938.6": "Multiple",
-  "Auto.ComponentsScreensBattleBattleScreen.945.7": "Formation",
+  "Auto.ComponentsScreensBattleBattleScreen.945.7": "Stance",
   "Battle.FormationWithdraw": "Withdraw",
   "Battle.FormationWithdrawTitle": "Order withdrawal",
   "Battle.FormationWithdrawBody": "Selected formations pull back to their own edge. Those that get clear leave without further losses.",

@@ -112,6 +112,7 @@ interface BattleAttackState {
 
 export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
   const { battle, pending: battlePending } = useBattleBridgeState(battleId);
+  const isNavalBattle = battle?.found === true && battle.battleType === 'naval';
   const [expanded, setExpanded] = useState(false);
   const [selectionState, setSelectionState] = useState<BattleSelectionState>({
     battleId: '',
@@ -672,21 +673,23 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
                         )}
                       </div>
                     </div>
-                    <div className="battle-stance-group">
-                      <div className="battle-stance-label"><WebUIText textKey="Auto.ComponentsScreensBattleBattleScreen.945.7" /></div>
-                      <div className="battle-stance-row">
-                        {STANCE_OPTIONS.map(stance => (
-                          <button
-                            key={stance.id}
-                            type="button"
-                            className={`battle-mode-btn${selectedCommandable.every(formation => formation.stance === stance.id) ? ' is-active' : ''}`}
-                            onMouseDown={() => setSelectedStance(stance.id)}
-                          >
-                            {stance.label}
-                          </button>
-                        ))}
+                    {!isNavalBattle && (
+                      <div className="battle-stance-group">
+                        <div className="battle-stance-label"><WebUIText textKey="Auto.ComponentsScreensBattleBattleScreen.945.7" /></div>
+                        <div className="battle-stance-row">
+                          {STANCE_OPTIONS.map(stance => (
+                            <button
+                              key={stance.id}
+                              type="button"
+                              className={`battle-mode-btn${selectedCommandable.every(formation => formation.stance === stance.id) ? ' is-active' : ''}`}
+                              onMouseDown={() => setSelectedStance(stance.id)}
+                            >
+                              {stance.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                     <div className="battle-command-group">
                       <div className="battle-command-label"><WebUIText textKey="Settlement.Siege.Commands" /></div>
                       <div className="battle-command-row">
@@ -811,6 +814,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
               onSelect={(additive) => handleFormationSelect(formation.id, additive)}
               onHoverChange={setHoveredFormationId}
               playerReferenceColour={playerReferenceColour}
+              showStance={!isNavalBattle}
             />
           ))}
           </ZoomPanCanvas>

@@ -512,6 +512,7 @@ export function FormationCounter({
   onSelect,
   onHoverChange,
   playerReferenceColour,
+  showStance,
 }: {
   formation: BattleFormationLive;
   selected: boolean;
@@ -523,6 +524,7 @@ export function FormationCounter({
   onSelect: (additive: boolean) => void;
   onHoverChange: (formationId: string | null) => void;
   playerReferenceColour: string | null;
+  showStance: boolean;
 }) {
   const typeKey = unitTypeKey(formation);
   const footprint = formationAgentFootprint(formation, typeKey);
@@ -545,7 +547,7 @@ export function FormationCounter({
     ? webUIText('Battle.FormationRouting')
     : formation.isWithdrawing
       ? webUIText('Battle.FormationWithdrawing')
-      : formation.activeActionName || formation.stanceLabel;
+      : formation.activeActionName || (showStance ? formation.stanceLabel : '');
   const rotation = Number.isFinite(formation.rotation) ? formation.rotation : 0;
   const counterRotation = normaliseDegrees(rotation + 90);
   const stateIcon = formation.isRouting
@@ -579,7 +581,7 @@ export function FormationCounter({
             { label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.414.7'), value: fmt(formation.losses), valueColor: 'var(--red)' },
             { label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.369.5'), value: formatPercent(morale) },
             { label: webUIText('Battle.UnitTooltip.Speed'), labelIcon: '/assets/icons/I_Speed.png', value: fmt(Math.round(formation.speed)) },
-            { label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.415.8'), value: formation.stanceLabel },
+            ...(showStance ? [{ label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.415.8'), value: formation.stanceLabel }] : []),
             ...(formation.activeActionName ? [{ label: webUIText('Battle.UnitTooltip.Action'), value: formation.activeActionName }] : []),
             ...(formation.attackRange > 0 ? [{ label: webUIText('Battle.UnitTooltip.Range'), value: fmt(Math.round(formation.attackRange)) }] : []),
             ...(formation.minimumAttackRange > 0 ? [{ label: webUIText('Battle.UnitTooltip.MinimumRange'), value: fmt(Math.round(formation.minimumAttackRange)) }] : []),
@@ -634,7 +636,7 @@ export function FormationCounter({
           </div>
           <span className="battle-counter-label">
             <span className="battle-counter-label-name">{formation.name}</span>
-            <span className="battle-counter-label-meta">{formatStrength(formation.strength)} - {active}</span>
+            <span className="battle-counter-label-meta">{formatStrength(formation.strength)}{active ? ` - ${active}` : ''}</span>
           </span>
         </button>
       </Tooltip>
