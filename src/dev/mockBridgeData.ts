@@ -4653,10 +4653,12 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         currentReligionName: currentReligion.name,
         currentReligionIconPath: mockReligionIcon(currentReligion),
         currentReligionColour: currentReligion.colour,
+        currentReligionInfo: currentReligion,
         targetReligionKey: state.religionConversionActive ? targetReligion.id : '',
         targetReligionName: state.religionConversionActive ? targetReligion.name : '',
         targetReligionIconPath: state.religionConversionActive ? mockReligionIcon(targetReligion) : '',
         targetReligionColour: state.religionConversionActive ? targetReligion.colour : '',
+        targetReligionInfo: targetReligion,
         currentStageIndex: state.religionConversionActive ? state.religionConversionStageIndex : -1,
         currentStageName: state.religionConversionActive ? currentStage.name : '',
         currentStageProgress: activeProgress,
@@ -4667,6 +4669,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       },
       options: [
         {
+          info: rivalReligion,
           key: rivalReligion.id,
           name: rivalReligion.name,
           description: rivalReligion.description,
@@ -6068,12 +6071,12 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         ] } satisfies BridgeResponse<'game.get_courtier_types'>;
       case 'game.get_dioceses': {
         const canManageReligion = !state.provinceMode;
-        return { religionKey: state.playerReligionKey, religionName: mockReligionByKey(state.playerReligionKey).name, description: mockReligionByKey(state.playerReligionKey).description, clergyTitle: 'High Priest', iconPath: mockReligionIcon(mockReligionByKey(state.playerReligionKey)), colour: mockReligionByKey(state.playerReligionKey).colour, canManage: canManageReligion, leadingFactionName: 'Rephsian Empire', autoAssignClergyEnabled: canManageReligion && state.autoAssignClergyEnabled, dioceses: [
+        return { religionInfo: mockReligionByKey(state.playerReligionKey), religionKey: state.playerReligionKey, religionName: mockReligionByKey(state.playerReligionKey).name, description: mockReligionByKey(state.playerReligionKey).description, clergyTitle: 'High Priest', iconPath: mockReligionIcon(mockReligionByKey(state.playerReligionKey)), colour: mockReligionByKey(state.playerReligionKey).colour, canManage: canManageReligion, leadingFactionName: 'Rephsian Empire', autoAssignClergyEnabled: canManageReligion && state.autoAssignClergyEnabled, dioceses: [
           { landKey: 'AurelionBasin', landName: 'Aurelion Basin', bishopId: MOCK_IDS.governor, bishopName: 'Marcia Vennor', authority: 72, religionShare: 0.76, followers: 292000, landPopulation: 384000 },
           { landKey: 'NamarisShore', landName: 'Namaris Shore', bishopId: MOCK_IDS.heir, bishopName: 'Cassian Arcastus', authority: 48, religionShare: 0.59, followers: 84000, landPopulation: 142000 },
         ], organisedReligions: [
-          { key: rephsianReligion.id, name: rephsianReligion.name, clergyTitle: 'High Priest', iconPath: mockReligionIcon(rephsianReligion), colour: rephsianReligion.colour, isPlayerReligion: state.playerReligionKey === rephsianReligion.id, canManage: canManageReligion && state.playerReligionKey === rephsianReligion.id, leadingFactionName: state.playerReligionKey === rephsianReligion.id ? 'Rephsian Empire' : 'Aurelian Synod' },
-          { key: rivalReligion.id, name: rivalReligion.name, clergyTitle: 'Sun Reader', iconPath: mockReligionIcon(rivalReligion), colour: rivalReligion.colour, isPlayerReligion: state.playerReligionKey === rivalReligion.id, canManage: canManageReligion && state.playerReligionKey === rivalReligion.id, leadingFactionName: state.playerReligionKey === rivalReligion.id ? 'Rephsian Empire' : 'Aurestian League' },
+          { info: rephsianReligion, key: rephsianReligion.id, name: rephsianReligion.name, clergyTitle: 'High Priest', iconPath: mockReligionIcon(rephsianReligion), colour: rephsianReligion.colour, isPlayerReligion: state.playerReligionKey === rephsianReligion.id, canManage: canManageReligion && state.playerReligionKey === rephsianReligion.id, leadingFactionName: state.playerReligionKey === rephsianReligion.id ? 'Rephsian Empire' : 'Aurelian Synod' },
+          { info: rivalReligion, key: rivalReligion.id, name: rivalReligion.name, clergyTitle: 'Sun Reader', iconPath: mockReligionIcon(rivalReligion), colour: rivalReligion.colour, isPlayerReligion: state.playerReligionKey === rivalReligion.id, canManage: canManageReligion && state.playerReligionKey === rivalReligion.id, leadingFactionName: state.playerReligionKey === rivalReligion.id ? 'Rephsian Empire' : 'Aurestian League' },
         ], religionDistribution: [
           { key: rephsianReligion.id, name: rephsianReligion.name, colour: rephsianReligion.colour, share: 0.76 },
           { key: rivalReligion.id, name: rivalReligion.name, colour: rivalReligion.colour, share: 0.18 },

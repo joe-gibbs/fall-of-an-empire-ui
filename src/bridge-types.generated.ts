@@ -1618,6 +1618,7 @@ export interface DioceseEntry {
 }
 
 export interface OrganisedReligionEntry {
+  info: ReligionInfo;
   key: string;
   name: string;
   clergyTitle: string;
@@ -1636,6 +1637,7 @@ export interface ReligionDistributionEntry {
 }
 
 export interface GetDiocesesResponse {
+  religionInfo: ReligionInfo;
   religionKey: string;
   religionName: string;
   description: string;
@@ -5254,6 +5256,7 @@ export interface RecruitCharacterForRoleResponse {
 }
 
 export interface ReligionConversionOptionEntry {
+  info: ReligionInfo;
   key: string;
   name: string;
   description: string;
@@ -5286,10 +5289,12 @@ export interface ReligionConversionStateEntry {
   currentReligionName: string;
   currentReligionIconPath: string;
   currentReligionColour: string;
+  currentReligionInfo: ReligionInfo;
   targetReligionKey: string;
   targetReligionName: string;
   targetReligionIconPath: string;
   targetReligionColour: string;
+  targetReligionInfo: ReligionInfo;
   currentStageIndex: number;
   currentStageName: string;
   currentStageProgress: number;

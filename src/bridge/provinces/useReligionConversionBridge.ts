@@ -4,6 +4,7 @@ import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import type {
   GetReligionConversionResponse,
+  ReligionInfo,
   ReligionConversionOptionEntry,
   ReligionConversionStageEntry,
   ReligionConversionStateEntry,
@@ -15,6 +16,7 @@ const RELIGION_FALLBACK_ICON = '/assets/icons/I_Religions.png';
 export type ReligionConversionStageState = 'locked' | 'ready' | 'active' | 'complete';
 
 export interface ReligionConversionOptionView {
+  info: ReligionInfo;
   key: string;
   name: string;
   description: string;
@@ -47,10 +49,12 @@ export interface ReligionConversionStateView {
   currentReligionName: string;
   currentReligionIconPath: string;
   currentReligionColour: string;
+  currentReligionInfo: ReligionInfo;
   targetReligionKey: string;
   targetReligionName: string;
   targetReligionIconPath: string;
   targetReligionColour: string;
+  targetReligionInfo: ReligionInfo;
   currentStageIndex: number;
   currentStageName: string;
   currentStageProgress: number;
@@ -72,6 +76,7 @@ function iconPath(path: string): string {
 
 function mapOption(option: ReligionConversionOptionEntry): ReligionConversionOptionView {
   return {
+    info: option.info,
     key: option.key,
     name: option.name,
     description: option.description,
@@ -108,10 +113,12 @@ function mapState(state: ReligionConversionStateEntry): ReligionConversionStateV
     currentReligionName: state.currentReligionName,
     currentReligionIconPath: iconPath(state.currentReligionIconPath),
     currentReligionColour: state.currentReligionColour,
+    currentReligionInfo: state.currentReligionInfo,
     targetReligionKey: state.targetReligionKey,
     targetReligionName: state.targetReligionName,
     targetReligionIconPath: iconPath(state.targetReligionIconPath),
     targetReligionColour: state.targetReligionColour,
+    targetReligionInfo: state.targetReligionInfo,
     currentStageIndex: state.currentStageIndex,
     currentStageName: state.currentStageName,
     currentStageProgress: state.currentStageProgress,

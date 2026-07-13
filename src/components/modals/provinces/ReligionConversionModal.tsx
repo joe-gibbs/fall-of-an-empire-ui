@@ -3,12 +3,12 @@ import CloseButton from '../../common/buttons/CloseButton';
 import GameButton from '../../common/buttons/GameButton';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import Tooltip from '../../common/tooltips/Tooltip';
+import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
 import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import {
   advanceReligionConversion,
   cancelReligionConversion,
   startReligionConversion,
-  type ReligionConversionOptionView,
   type ReligionConversionResult,
   type ReligionConversionStageView,
 } from '../../../bridge/provinces/useReligionConversionBridge';
@@ -86,20 +86,6 @@ function stageTooltip(stage: ReligionConversionStageView, includeActiveProgress 
   };
 }
 
-function religionOptionTooltip(option: ReligionConversionOptionView) {
-  return {
-    title: option.name,
-    body: option.description,
-    lines: [
-      {
-        label: webUIText('Auto.ComponentsScreensReligionScreen.179.3'),
-        value: formatPercent(option.realmShare * 100),
-        valueColor: 'var(--gold)',
-      },
-    ],
-  };
-}
-
 function defaultStageIndex(conversion: ReligionConversionResult | null): number {
   if (!conversion || conversion.stages.length === 0) return 0;
 
@@ -158,6 +144,9 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
   const targetIcon = conversion?.state.active
     ? conversion.state.targetReligionIconPath
     : selectedOption?.iconPath ?? RELIGION_FALLBACK_ICON;
+  const targetInfo = conversion?.state.active
+    ? conversion.state.targetReligionInfo
+    : selectedOption?.info;
 
   const canStart = Boolean(conversion && selectedKey && !conversion.state.active && conversion.stages.some(stage => stage.index === 0 && stage.canActivate));
   const showFooter = Boolean(conversion && (conversion.state.active || conversion.options.length > 0));
@@ -237,21 +226,25 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
         <StyledScrollArea className="rcm-scroll" viewportClassName="rcm-body">
           {conversion && (
             <div className="rcm-current">
-              <div className="rcm-current-faith">
-                <img src={conversion.state.currentReligionIconPath} alt="" className="rcm-religion-icon" draggable={false} />
-                <div>
-                  <span className="text-label"><WebUIText textKey="Auto.ComponentsModalsReligionConversionModal.75.2" /></span>
-                  <span className="rcm-current-name">{conversion.state.currentReligionName || webUIText('Common.None')}</span>
+              <ReligionTooltip info={conversion.state.currentReligionInfo} position="bottom" wrapperClassName="rcm-current-religion-tooltip">
+                <div className="rcm-current-faith">
+                  <img src={conversion.state.currentReligionIconPath} alt="" className="rcm-religion-icon" draggable={false} />
+                  <div>
+                    <span className="text-label"><WebUIText textKey="Auto.ComponentsModalsReligionConversionModal.75.2" /></span>
+                    <span className="rcm-current-name">{conversion.state.currentReligionName || webUIText('Common.None')}</span>
+                  </div>
                 </div>
-              </div>
+              </ReligionTooltip>
               <div className="rcm-current-arrow" />
-              <div className="rcm-current-faith">
-                <img src={targetIcon} alt="" className="rcm-religion-icon" draggable={false} />
-                <div>
-                  <span className="text-label"><WebUIText textKey="ReligionConversion.TargetReligion" /></span>
-                  <span className="rcm-current-name">{targetName || webUIText('ReligionConversion.SelectTarget')}</span>
+              <ReligionTooltip info={targetInfo} fallbackName={targetName} position="bottom" wrapperClassName="rcm-current-religion-tooltip" disabled={!targetName}>
+                <div className="rcm-current-faith">
+                  <img src={targetIcon} alt="" className="rcm-religion-icon" draggable={false} />
+                  <div>
+                    <span className="text-label"><WebUIText textKey="ReligionConversion.TargetReligion" /></span>
+                    <span className="rcm-current-name">{targetName || webUIText('ReligionConversion.SelectTarget')}</span>
+                  </div>
                 </div>
-              </div>
+              </ReligionTooltip>
             </div>
           )}
 
@@ -315,7 +308,17 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
                 {conversion.options.length === 0 ? (
                   <div className="rcm-empty"><WebUIText textKey="ReligionConversion.NoTargets" /></div>
                 ) : conversion.options.map(option => (
-                  <Tooltip key={option.key} content={religionOptionTooltip(option)} position="left" delay={200}>
+                  <ReligionTooltip
+                    key={option.key}
+                    info={option.info}
+                    position="left"
+                    delay={200}
+                    extraLines={[{
+                      label: webUIText('Auto.ComponentsScreensReligionScreen.179.3'),
+                      value: formatPercent(option.realmShare * 100),
+                      valueColor: 'var(--gold)',
+                    }]}
+                  >
                     <button
                       type="button"
                       className={`rcm-option${option.key === selectedKey ? ' rcm-option--selected' : ''}`}
@@ -328,7 +331,7 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
                       </span>
                       <span className="rcm-option-followers">{webUIText('Auto.Fix.Expr.componentsmodalsReligionConversionModal.94.1', { Value1: formatPercent(option.realmShare * 100) })}</span>
                     </button>
-                  </Tooltip>
+                  </ReligionTooltip>
                 ))}
               </div>
             </div>

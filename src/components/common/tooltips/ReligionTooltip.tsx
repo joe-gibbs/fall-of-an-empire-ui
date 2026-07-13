@@ -14,6 +14,9 @@ interface ReligionTooltipProps {
   fallbackId?: string;
   position?: 'top' | 'bottom' | 'left' | 'right';
   delay?: number;
+  extraLines?: TooltipLine[];
+  wrapperClassName?: string;
+  disabled?: boolean;
   children: React.ReactNode;
 }
 
@@ -25,6 +28,7 @@ interface EffectLine {
   label: string;
   value: number;
   format: 'integer' | 'percent';
+  inverted?: boolean;
 }
 
 /** Build the effects list from a ReligionInfo, filtering out zeroed modifiers. */
@@ -39,7 +43,7 @@ function collectReligionEffects(info: ReligionInfo): EffectLine[] {
     { label: webUIText('Auto.Prop.ComponentsCommonReligionTooltip.38.7'), value: info.developmentSpeedModifier, format: 'percent' },
     { label: webUIText('Auto.Prop.ComponentsCommonReligionTooltip.39.8'), value: info.recruitmentSpeedModifier, format: 'percent' },
     { label: webUIText('Auto.Prop.ComponentsCommonReligionTooltip.40.9'), value: info.settlementGrowthModifier, format: 'percent' },
-    { label: webUIText('Auto.Prop.ComponentsCommonReligionTooltip.41.10'), value: info.unrestModifier, format: 'percent' },
+    { label: webUIText('Auto.Prop.ComponentsCommonReligionTooltip.41.10'), value: info.unrestModifier, format: 'percent', inverted: true },
   ];
   return lines.filter(l => Math.abs(l.value) > 0.0001);
 }
@@ -51,12 +55,11 @@ function formatEffect(line: EffectLine): string {
 
 /** Unrest is inverted: positive unrest is bad. Morale / stat bonuses: positive is good. */
 function effectColor(line: EffectLine): string {
-  const inverted = line.label === 'Unrest';
-  const good = inverted ? line.value < 0 : line.value > 0;
+  const good = line.inverted ? line.value < 0 : line.value > 0;
   return good ? 'var(--green)' : 'var(--red)';
 }
 
-function religionTooltipContent({ info, fallbackName, fallbackId }: Omit<ReligionTooltipProps, 'children' | 'position' | 'delay'>): TooltipContent {
+function religionTooltipContent({ info, fallbackName, fallbackId, extraLines = [] }: Omit<ReligionTooltipProps, 'children' | 'position' | 'delay' | 'wrapperClassName' | 'disabled'>): TooltipContent {
   const id = info?.id ?? fallbackId;
   const name = info?.name ?? fallbackName ?? '';
   const iconUrl = religionIconUrl(id);
@@ -72,6 +75,7 @@ function religionTooltipContent({ info, fallbackName, fallbackId }: Omit<Religio
       value: webUIText(info.isOrganised ? 'Common.Yes' : 'Common.No'),
       valueColor: info.isOrganised ? 'var(--green)' : 'var(--text-muted)',
     }] : []),
+    ...extraLines,
   ];
 
   return {
@@ -86,12 +90,14 @@ function religionTooltipContent({ info, fallbackName, fallbackId }: Omit<Religio
   };
 }
 
-const ReligionTooltip: React.FC<ReligionTooltipProps> = ({ info, fallbackName, fallbackId, position = 'bottom', delay = 200, children }) => {
+const ReligionTooltip: React.FC<ReligionTooltipProps> = ({ info, fallbackName, fallbackId, position = 'bottom', delay = 200, extraLines, wrapperClassName, disabled, children }) => {
   return (
     <Tooltip
-      content={religionTooltipContent({ info, fallbackName, fallbackId })}
+      content={religionTooltipContent({ info, fallbackName, fallbackId, extraLines })}
       position={position}
       delay={delay}
+      wrapperClassName={wrapperClassName}
+      disabled={disabled}
     >
       {children}
     </Tooltip>

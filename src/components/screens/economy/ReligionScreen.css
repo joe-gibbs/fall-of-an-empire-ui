@@ -158,6 +158,13 @@
   flex-shrink: 0;
 }
 
+.rel-summary-title-row > .rel-summary-religion-tooltip {
+  min-width: 0;
+  margin-left: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
 .rel-summary-title {
   font-family: var(--font-header);
   font-size: 1.15rem;

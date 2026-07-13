@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type MouseEvent, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Portrait from '../../common/portraits/Portrait';
-import Tooltip from '../../common/tooltips/Tooltip';
+import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
 import GameCheckButton from '../../common/buttons/GameCheckButton';
 import GameButton from '../../common/buttons/GameButton';
 import GameBar from '../../common/data-display/bars/GameBar';
@@ -202,14 +202,16 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
       <div className="rel-wrap">
         <div className="rel-selector-row">
           {(dioceses?.organisedReligions ?? []).map(religion => (
-            <Tooltip key={religion.key} content={{
-              title: religion.name,
-              lines: [
+            <ReligionTooltip
+              key={religion.key}
+              info={religion.info}
+              delay={200}
+              extraLines={[
                 { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.134.10'), value: religion.clergyTitle },
                 { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.135.11'), get value() { return religion.leadingFactionName || webUIText("Auto.Fix.PropExprFallback.componentsscreensReligionScreen.135.1"); } },
                 { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.136.12'), get value() { return religion.canManage ? webUIText("Auto.Fix.PropExprTrue.componentsscreensReligionScreen.136.1") : webUIText("Auto.Fix.PropExprFalse.componentsscreensReligionScreen.136.1"); }, valueColor: religion.canManage ? 'var(--green)' : 'var(--text-muted)' },
-              ],
-            }} delay={200}>
+              ]}
+            >
               <button
                 type="button"
                 className={`rel-religion-button${religion.key === activeReligionKey ? ' rel-religion-button--active' : ''}${religion.isPlayerReligion ? ' rel-religion-button--state' : ''}`}
@@ -220,7 +222,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
                 </span>
                 <span className="rel-religion-name">{religion.name}</span>
               </button>
-            </Tooltip>
+            </ReligionTooltip>
           ))}
         </div>
 
@@ -230,11 +232,18 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
           </div>
           <div className="rel-summary-main">
             <div className="rel-summary-title-row">
-              <div className="rel-summary-title-main">
-                <img src={dioceses?.iconPath || RELIGION_FALLBACK_ICON} alt="" className="rel-cell-icon" draggable={false} />
-                <span className="rel-summary-title">{dioceses?.religionName || webUIText("Auto.Fix.ExprFallback.componentsscreensReligionScreen.161.1")}</span>
-                {dioceses?.canManage && <span className="rel-summary-state-mark"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.161.2" /></span>}
-              </div>
+              <ReligionTooltip
+                info={dioceses?.religionInfo}
+                fallbackName={dioceses?.religionName}
+                fallbackId={dioceses?.religionKey}
+                wrapperClassName="rel-summary-religion-tooltip"
+              >
+                <div className="rel-summary-title-main">
+                  <img src={dioceses?.iconPath || RELIGION_FALLBACK_ICON} alt="" className="rel-cell-icon" draggable={false} />
+                  <span className="rel-summary-title">{dioceses?.religionName || webUIText("Auto.Fix.ExprFallback.componentsscreensReligionScreen.161.1")}</span>
+                  {dioceses?.canManage && <span className="rel-summary-state-mark"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.161.2" /></span>}
+                </div>
+              </ReligionTooltip>
               {dioceses?.canManage && (
                 <GameCheckButton
                   checked={dioceses.autoAssignClergyEnabled}

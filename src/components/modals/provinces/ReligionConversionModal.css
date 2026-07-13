@@ -85,6 +85,17 @@
   flex-basis: 0;
 }
 
+.rcm-current-religion-tooltip {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.rcm-current-religion-tooltip .rcm-current-faith {
+  width: 100%;
+}
+
 .rcm-current-arrow {
   width: 2.2rem;
   height: 0.077rem;
@@ -112,6 +123,7 @@
 
 .rcm-section {
   margin-top: 1rem;
+  flex-shrink: 0;
 }
 
 .rcm-options-title {

@@ -6,6 +6,7 @@ import type {
   GetDiocesesResponse,
   GetBishopCandidatesResponse,
   BishopCandidate,
+  ReligionInfo,
 } from '../../bridge-types.generated.ts';
 import type { Character, PersonActivity } from '../../data/types';
 import { FoaeCefUIAssetPath } from '../../utils/assets';
@@ -27,6 +28,7 @@ export interface DioceseView {
 }
 
 export interface OrganisedReligionView {
+  info: ReligionInfo;
   key: string;
   name: string;
   clergyTitle: string;
@@ -46,6 +48,7 @@ export interface ReligionDistributionSegment {
 }
 
 export interface DiocesesResult {
+  religionInfo: ReligionInfo;
   religionKey: string;
   religionName: string;
   description: string;
@@ -63,6 +66,7 @@ export interface DiocesesResult {
 
 function mapResponse(data: GetDiocesesResponse): DiocesesResult {
   return {
+    religionInfo: data.religionInfo,
     religionKey: data.religionKey,
     religionName: data.religionName,
     description: data.description,
@@ -74,6 +78,7 @@ function mapResponse(data: GetDiocesesResponse): DiocesesResult {
     autoAssignClergyEnabled: data.autoAssignClergyEnabled,
     totalRealmPopulation: data.totalRealmPopulation,
     organisedReligions: data.organisedReligions.map(r => ({
+      info: r.info,
       key: r.key,
       name: r.name,
       clergyTitle: r.clergyTitle,
