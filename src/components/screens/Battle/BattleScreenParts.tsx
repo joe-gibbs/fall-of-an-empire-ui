@@ -53,6 +53,7 @@ export interface BattleVisualAgent {
   key: string;
   formationId: string;
   side: string;
+  markerKind: 'unit' | 'ship';
   typeKey: 'infantry' | 'ranged' | 'cavalry' | 'siege' | 'special';
   colour: string;
   formationName: string;
@@ -220,6 +221,7 @@ export function buildBattleVisualAgents(
   playerReferenceColour: string | null,
   battlefieldWidth: number,
   battlefieldHeight: number,
+  isNavalBattle: boolean,
 ): BattleVisualAgent[] {
   const agents: BattleVisualAgent[] = [];
   const agentScratch: BattleAgentFrameView = {
@@ -236,6 +238,7 @@ export function buildBattleVisualAgents(
     const colour = readableCounterColour(formation, playerReferenceColour);
     const formationRotation = Number.isFinite(formation.rotation) ? formation.rotation : 0;
     const agentCount = battleFrameAgentCount(formation);
+    const visualCount = isNavalBattle ? Math.max(0, Math.round(formation.shipCount)) : agentCount;
 
     for (let index = 0; index < agentCount; index++) {
       const agent = readBattleAgentFrame(formation, index, agentScratch);
@@ -259,31 +262,53 @@ export function buildBattleVisualAgents(
         rotation = Math.atan2(velocityY, velocityX) * 180 / Math.PI;
       }
 
-      agents.push({
-        key: `${formation.id}:${index}`,
-        formationId: formation.id,
-        side: formation.side,
-        typeKey,
-        colour,
-        formationName: formation.name || formation.unitTypeLabel,
-        unitTypeLabel: formation.unitTypeLabel,
-        strength: formation.strength,
-        maxStrength: formation.maxStrength,
-        healthPercent: formation.healthPercent,
-        x: state === 'routing' || state === 'withdrawing' ? agent.x : clamp(agent.x, 0, battlefieldWidth),
-        y: state === 'routing' || state === 'withdrawing' ? agent.y : clamp(agent.y, 0, battlefieldHeight),
-        rotation: normaliseDegrees(rotation),
-        state,
-        zIndex: (formation.zIndex || 2) + (state === 'engaged' ? 4 : 2),
-      });
+      const firstVisualIndex = isNavalBattle ? Math.floor(index * visualCount / agentCount) : index;
+      const nextVisualIndex = isNavalBattle ? Math.floor((index + 1) * visualCount / agentCount) : index + 1;
+      const sourceVisualCount = nextVisualIndex - firstVisualIndex;
+      const columns = Math.max(1, Math.ceil(Math.sqrt(sourceVisualCount * 1.5)));
+      const rows = Math.max(1, Math.ceil(sourceVisualCount / columns));
+      const rotationRadians = rotation * Math.PI / 180;
+      const facingX = Math.cos(rotationRadians);
+      const facingY = Math.sin(rotationRadians);
+      const sideX = -facingY;
+      const sideY = facingX;
+
+      for (let visualIndex = firstVisualIndex; visualIndex < nextVisualIndex; visualIndex++) {
+        const localIndex = visualIndex - firstVisualIndex;
+        const column = localIndex % columns;
+        const row = Math.floor(localIndex / columns);
+        const across = isNavalBattle ? (column - (columns - 1) * 0.5) * 20 : 0;
+        const deep = isNavalBattle ? ((rows - 1) * 0.5 - row) * 16 : 0;
+        const visualX = agent.x + sideX * across + facingX * deep;
+        const visualY = agent.y + sideY * across + facingY * deep;
+
+        agents.push({
+          key: `${formation.id}:${visualIndex}`,
+          formationId: formation.id,
+          side: formation.side,
+          markerKind: isNavalBattle ? 'ship' : 'unit',
+          typeKey,
+          colour,
+          formationName: formation.name || formation.unitTypeLabel,
+          unitTypeLabel: formation.unitTypeLabel,
+          strength: formation.strength,
+          maxStrength: formation.maxStrength,
+          healthPercent: formation.healthPercent,
+          x: state === 'routing' || state === 'withdrawing' ? visualX : clamp(visualX, 0, battlefieldWidth),
+          y: state === 'routing' || state === 'withdrawing' ? visualY : clamp(visualY, 0, battlefieldHeight),
+          rotation: normaliseDegrees(rotation),
+          state,
+          zIndex: (formation.zIndex || 2) + (state === 'engaged' ? 4 : 2),
+        });
+      }
     }
   }
 
   return agents;
 }
 
-export function formationAgentFootprint(formation: BattleFormationLive, typeKey: 'infantry' | 'ranged' | 'cavalry' | 'siege' | 'special'): { width: number; height: number } {
-  const count = Math.max(1, formation.agentCount || battleFrameAgentCount(formation) || Math.ceil(Math.max(formation.maxStrength, 1) / 180));
+export function formationAgentFootprint(formation: BattleFormationLive, typeKey: 'infantry' | 'ranged' | 'cavalry' | 'siege' | 'special', isNaval: boolean): { width: number; height: number } {
+  const count = Math.max(1, (isNaval ? formation.shipCount : 0) || formation.agentCount || battleFrameAgentCount(formation) || Math.ceil(Math.max(formation.maxStrength, 1) / 180));
   const widthBias = typeKey === 'cavalry' ? 1.8 : typeKey === 'ranged' || typeKey === 'siege' ? 1.35 : 1.55;
   const columns = clamp(Math.ceil(Math.sqrt(count) * widthBias), 1, count);
   const rows = Math.max(1, Math.ceil(count / columns));
@@ -297,7 +322,8 @@ export function formationAgentFootprint(formation: BattleFormationLive, typeKey:
   };
 }
 
-export function unitIcon(formation: BattleFormationLive): string {
+export function unitIcon(formation: BattleFormationLive, isNaval: boolean): string {
+  if (isNaval) return '/assets/icons/FormationTemplates/I_Formation_Warships.png';
   const key = unitTypeKey(formation);
   if (key === 'cavalry') return '/assets/icons/UnitTypes/I_ArmyCavalry.png';
   if (key === 'ranged') return '/assets/icons/UnitTypes/I_ArmyRanged.png';
@@ -513,6 +539,7 @@ export function FormationCounter({
   onHoverChange,
   playerReferenceColour,
   showStance,
+  isNaval,
 }: {
   formation: BattleFormationLive;
   selected: boolean;
@@ -525,9 +552,10 @@ export function FormationCounter({
   onHoverChange: (formationId: string | null) => void;
   playerReferenceColour: string | null;
   showStance: boolean;
+  isNaval: boolean;
 }) {
   const typeKey = unitTypeKey(formation);
-  const footprint = formationAgentFootprint(formation, typeKey);
+  const footprint = formationAgentFootprint(formation, typeKey, isNaval);
   const factionColour = readableCounterColour(formation, playerReferenceColour);
   const health = formation.maxStrength > 0 ? formation.strength / formation.maxStrength * 100 : formation.healthPercent * 100;
   const morale = clamp((Number.isFinite(formation.morale) ? formation.morale : 1) * 100, 0, 100);
@@ -586,7 +614,9 @@ export function FormationCounter({
             ...(formation.attackRange > 0 ? [{ label: webUIText('Battle.UnitTooltip.Range'), value: fmt(Math.round(formation.attackRange)) }] : []),
             ...(formation.minimumAttackRange > 0 ? [{ label: webUIText('Battle.UnitTooltip.MinimumRange'), value: fmt(Math.round(formation.minimumAttackRange)) }] : []),
             { label: webUIText('Battle.UnitTooltip.ChargeReady'), value: formatPercent(chargeReady) },
-            ...(agentCount > 0 ? [{ label: webUIText('Battle.UnitTooltip.UnitGroups'), value: fmt(agentCount) }] : []),
+            ...(isNaval
+              ? [{ label: webUIText('Battle.UnitTooltip.Ships'), value: fmt(formation.shipCount) }]
+              : agentCount > 0 ? [{ label: webUIText('Battle.UnitTooltip.UnitGroups'), value: fmt(agentCount) }] : []),
             { label: webUIText('Battle.UnitTooltip.Commandable'), value: webUIText(formation.isCommandable ? 'Common.Yes' : 'Common.No') },
             ...(formation.targetFormationName ? [{ label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.416.9'), value: formation.targetFormationName }] : []),
             ...(formation.hasManualTarget ? [{ label: webUIText('Battle.UnitTooltip.ManualTarget'), value: webUIText('Common.Yes') }] : []),
@@ -618,7 +648,7 @@ export function FormationCounter({
                 }}
               />
             </div>
-            <img className="battle-counter-typepip" src={unitIcon(formation)} alt="" />
+            <img className="battle-counter-typepip" src={unitIcon(formation, isNaval)} alt="" />
             {stateIcon && <img className={`battle-counter-state-icon${stateIconClass}`} src={stateIcon} alt="" draggable={false} />}
             <span className={`battle-counter-hp ${health < 35 ? 'battle-counter-hp--critical' : health < 70 ? 'battle-counter-hp--wounded' : 'battle-counter-hp--healthy'}`}>
               {Math.round(health)}
@@ -695,7 +725,7 @@ export function BattleUnitAgentMarker({
   showTooltip: boolean;
 }) {
   const markerRef = useRef<HTMLSpanElement>(null);
-  const classes = `battle-unit-agent battle-unit-agent--${agent.typeKey} battle-unit-agent--${agent.state} battle-unit-agent--${agent.side}`;
+  const classes = `battle-unit-agent battle-unit-agent--${agent.markerKind} battle-unit-agent--${agent.typeKey} battle-unit-agent--${agent.state} battle-unit-agent--${agent.side}`;
   const positionStyle: CSSProperties = {
     left: coordinatePercentUnclamped(agent.x, battlefieldWidth, agent.side === 'attacker' ? 32 : 68),
     top: coordinatePercentUnclamped(agent.y, battlefieldHeight, agent.side === 'attacker' ? 65 : 35),

@@ -1561,6 +1561,7 @@ export const WEBUI_TEXT_SOURCE = {
   "Battle.UnitTooltip.MinimumRange": "Minimum range",
   "Battle.UnitTooltip.ChargeReady": "Charge ready",
   "Battle.UnitTooltip.UnitGroups": "Unit groups",
+  "Battle.UnitTooltip.Ships": "Ships",
   "Battle.UnitTooltip.Commandable": "Commandable",
   "Battle.UnitTooltip.ManualTarget": "Manual target",
   "Battle.UnitTooltip.OrderPoints": "Order points",

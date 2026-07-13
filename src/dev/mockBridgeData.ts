@@ -4270,6 +4270,7 @@ function battleFormationDetail(
     isRouting,
     isWithdrawing: false,
     agentCount: agents.length,
+    shipCount: 0,
     targetFormationId,
     targetFormationName,
     activeActionId: isPlayerControlled && unitType === 'infantry' ? 'shield-wall' : '',

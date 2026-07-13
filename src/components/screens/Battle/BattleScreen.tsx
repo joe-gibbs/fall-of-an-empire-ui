@@ -361,8 +361,8 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
   const liveFormationIds = useMemo(() => new Set(formations.map(formation => formation.id)), [formations]);
   const formationsById = useMemo(() => new Map(formations.map(formation => [formation.id, formation])), [formations]);
   const visualAgents = useMemo(
-    () => buildBattleVisualAgents(formations, formationsById, playerReferenceColour, battlefieldWidth, battlefieldHeight),
-    [battlefieldHeight, battlefieldWidth, formations, formationsById, playerReferenceColour],
+    () => buildBattleVisualAgents(formations, formationsById, playerReferenceColour, battlefieldWidth, battlefieldHeight, isNavalBattle),
+    [battlefieldHeight, battlefieldWidth, formations, formationsById, isNavalBattle, playerReferenceColour],
   );
 
   const meleeEngagementTargets = useMemo(() => {
@@ -815,6 +815,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
               onHoverChange={setHoveredFormationId}
               playerReferenceColour={playerReferenceColour}
               showStance={!isNavalBattle}
+              isNaval={isNavalBattle}
             />
           ))}
           </ZoomPanCanvas>

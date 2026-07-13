@@ -232,6 +232,7 @@ export interface BattleFormationDetail {
   isRouting: boolean;
   isWithdrawing: boolean;
   agentCount: number;
+  shipCount: number;
   targetFormationId: string;
   targetFormationName: string;
   activeActionId: string;
@@ -255,6 +256,7 @@ export interface BattleFormationFrame {
   zIndex: number;
   attackChargePercent: number;
   attackSequence: number;
+  shipCount: number;
   hasManualTarget: boolean;
   isRouting: boolean;
   isWithdrawing: boolean;

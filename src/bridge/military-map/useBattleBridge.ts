@@ -13,7 +13,7 @@ import { getruntimeEngine } from '../core/runtimeEngine';
 import { useBridgeQueryState } from '../core/useBridgeQuery';
 
 const PACKED_BATTLE_FRAME = 'battleFrame';
-const BATTLE_FRAME_FORMATION_NUMBER_STRIDE = 11;
+const BATTLE_FRAME_FORMATION_NUMBER_STRIDE = 12;
 const BATTLE_FRAME_AGENT_NUMBER_STRIDE = 4;
 const BATTLE_FRAME_FORMATION_MANUAL_TARGET_FLAG = 1 << 0;
 const BATTLE_FRAME_FORMATION_ROUTING_FLAG = 1 << 1;
@@ -228,6 +228,7 @@ function applyBattleFrame(
         zIndex: frame.formationNumbers[numberOffset + 8] ?? 0,
         attackChargePercent: frame.formationNumbers[numberOffset + 9] ?? 0,
         attackSequence: frame.formationNumbers[numberOffset + 10] ?? formation.attackSequence,
+        shipCount: frame.formationNumbers[numberOffset + 11] ?? formation.shipCount,
         hasManualTarget: (flags & BATTLE_FRAME_FORMATION_MANUAL_TARGET_FLAG) !== 0,
         isRouting,
         isWithdrawing,
@@ -265,6 +266,7 @@ function applyBattleFrame(
       zIndex: next.zIndex,
       attackChargePercent: next.attackChargePercent,
       attackSequence: next.attackSequence,
+      shipCount: next.shipCount,
       hasManualTarget: next.hasManualTarget,
       isRouting,
       isWithdrawing,
