@@ -5,6 +5,7 @@ import PersonTooltip from '../../common/tooltips/PersonTooltip';
 import FactionRoundel from '../../common/entities/FactionRoundel';
 import FactionTooltip from '../../common/tooltips/FactionTooltip';
 import GameBar from '../../common/data-display/bars/GameBar';
+import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import GameCheckButton from '../../common/buttons/GameCheckButton';
 import SortableHeader from '../../common/layout/tables/SortableHeader';
 import Tooltip from '../../common/tooltips/Tooltip';
@@ -680,7 +681,11 @@ function ProvinceCandidateCard({ row, leaderCandidates }: { row: ProvinceCandida
                 <span><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.618.8" /></span>
                 <span style={{ color: controlTone }}>{`${formatNumber(row.controlPercent)}%`}</span>
               </div>
-              <GameBar value={clampPercent(row.controlPercent)} max={100} colour={controlTone} size="sm" />
+              <PaintedBar
+                percent={clampPercent(row.controlPercent)}
+                color={row.controlPercent >= 100 ? 'green' : row.controlPercent >= 75 ? 'gold' : 'red'}
+                className="ips-province-control-bar"
+              />
             </div>
             {!row.canCreate && row.blockedReason ? (
               <div className="ips-province-reason">{row.blockedReason}</div>

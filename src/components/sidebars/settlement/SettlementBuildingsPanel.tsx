@@ -628,57 +628,47 @@ function BuildingManagementActions({
   return (
     <div className="bld-tooltip-actions">
       <div className="bld-tooltip-actions-title">{webUIText('SettlementBuildings.ManageBuilding')}</div>
-      <div className="bld-tooltip-action-row">
-        <div className="bld-tooltip-action-copy">
-          <span className="bld-tooltip-action-name">{webUIText('SettlementBuildings.Downgrade')}</span>
-          <span className="bld-tooltip-action-detail">
-            {building.canDowngrade && building.downgradeTargetName && building.downgradeTargetLevel !== undefined
-              ? webUIText('SettlementBuildings.DowngradeTo', { Name: building.downgradeTargetName, Level: n(building.downgradeTargetLevel) })
-              : building.downgradeReason}
+      <button
+        type="button"
+        className={`bld-tooltip-action-btn${confirmingAction === 'downgrade' ? ' bld-tooltip-action-btn--confirm' : ''}`}
+        disabled={downgradeDisabled}
+        onMouseDown={event => onAction('downgrade', event)}
+      >
+        <span className="bld-tooltip-action-name">{downgradeLabel}</span>
+        <span className="bld-tooltip-action-detail">
+          {building.canDowngrade && building.downgradeTargetName && building.downgradeTargetLevel !== undefined
+            ? webUIText('SettlementBuildings.DowngradeTo', { Name: building.downgradeTargetName, Level: n(building.downgradeTargetLevel) })
+            : building.downgradeReason}
+        </span>
+      </button>
+      <button
+        type="button"
+        className={`bld-tooltip-action-btn bld-tooltip-action-btn--danger${confirmingAction === 'demolish' ? ' bld-tooltip-action-btn--confirm' : ''}`}
+        disabled={demolishDisabled}
+        onMouseDown={event => onAction('demolish', event)}
+      >
+        <span className="bld-tooltip-action-name">{demolishLabel}</span>
+        <span className="bld-tooltip-action-detail">
+          {building.canDemolish ? webUIText('SettlementBuildings.DismantleBody') : building.demolishReason}
+        </span>
+        {building.canDemolish && (
+          <span className="bld-tooltip-spoils">
+            <span className="bld-tooltip-spoils-label">{webUIText('SettlementBuildings.DismantleSpoils')}</span>
+            {(building.dismantleSpoils ?? []).length > 0 ? (
+              <span className="bld-tooltip-spoils-list">
+                {building.dismantleSpoils!.map(spoil => (
+                  <span key={spoil.name} className="bld-tooltip-spoil">
+                    <img src={spoil.icon} alt="" className="bld-tooltip-spoil-icon" draggable={false} />
+                    {n(spoil.amount)}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className="bld-tooltip-spoils-empty">{webUIText('SettlementBuildings.NoSpoils')}</span>
+            )}
           </span>
-        </div>
-        <button
-          type="button"
-          className={`bld-tooltip-action-btn${confirmingAction === 'downgrade' ? ' bld-tooltip-action-btn--confirm' : ''}`}
-          disabled={downgradeDisabled}
-          onMouseDown={event => onAction('downgrade', event)}
-        >
-          {downgradeLabel}
-        </button>
-      </div>
-      <div className="bld-tooltip-action-row bld-tooltip-action-row--danger">
-        <div className="bld-tooltip-action-copy">
-          <span className="bld-tooltip-action-name">{webUIText('SettlementBuildings.Dismantle')}</span>
-          <span className="bld-tooltip-action-detail">
-            {building.canDemolish ? webUIText('SettlementBuildings.DismantleBody') : building.demolishReason}
-          </span>
-          {building.canDemolish && (
-            <span className="bld-tooltip-spoils">
-              <span className="bld-tooltip-spoils-label">{webUIText('SettlementBuildings.DismantleSpoils')}</span>
-              {(building.dismantleSpoils ?? []).length > 0 ? (
-                <span className="bld-tooltip-spoils-list">
-                  {building.dismantleSpoils!.map(spoil => (
-                    <span key={spoil.name} className="bld-tooltip-spoil">
-                      <img src={spoil.icon} alt="" className="bld-tooltip-spoil-icon" draggable={false} />
-                      {n(spoil.amount)}
-                    </span>
-                  ))}
-                </span>
-              ) : (
-                <span className="bld-tooltip-spoils-empty">{webUIText('SettlementBuildings.NoSpoils')}</span>
-              )}
-            </span>
-          )}
-        </div>
-        <button
-          type="button"
-          className={`bld-tooltip-action-btn bld-tooltip-action-btn--danger${confirmingAction === 'demolish' ? ' bld-tooltip-action-btn--confirm' : ''}`}
-          disabled={demolishDisabled}
-          onMouseDown={event => onAction('demolish', event)}
-        >
-          {demolishLabel}
-        </button>
-      </div>
+        )}
+      </button>
       {confirmingAction && !pendingAction && (
         <div className="bld-tooltip-confirm-note">{webUIText('SettlementBuildings.PressAgain')}</div>
       )}

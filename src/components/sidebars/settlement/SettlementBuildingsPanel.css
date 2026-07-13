@@ -999,31 +999,11 @@
   color: var(--text-header);
 }
 
-.bld-tooltip-action-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.bld-tooltip-action-row > * + * {
-  margin-left: 0.55rem;
-}
-
-.bld-tooltip-action-copy {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  flex-direction: column;
-}
-
-.bld-tooltip-action-copy > * + * {
-  margin-top: 0.12rem;
-}
-
 .bld-tooltip-action-name {
   font-family: var(--font-header);
   font-size: 0.76rem;
-  color: var(--text-bright);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .bld-tooltip-action-detail {
@@ -1032,51 +1012,72 @@
   color: var(--text-muted);
 }
 
-.bld-tooltip-action-row--danger .bld-tooltip-action-name {
-  color: var(--red-light);
-}
-
 .bld-tooltip-action-btn {
-  flex-shrink: 0;
-  min-width: 6.4rem;
-  min-height: 1.8rem;
-  padding: 0.22rem 0.55rem;
-  border-width: 0.0909rem;
+  display: flex;
+  width: 100%;
+  min-height: 2.8rem;
+  padding: 0.36rem 0.55rem 0.4rem;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  border-width: 0.231rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
-  background-color: rgba(13, 18, 24, 0.86);
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: #20272d;
   background-image:
-    linear-gradient(180deg, rgba(80, 67, 35, 0.35), rgba(18, 23, 29, 0.92)),
-    url('/assets/baked/texture-overlay-heavy.png');
-  background-repeat: repeat, repeat;
-  background-size: auto, 4.923rem 4.923rem;
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
   color: var(--gold-light);
-  font-family: var(--font-header);
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1), transform 0.15s ease-out;
 }
 
-.bld-tooltip-action-btn:hover:not(:disabled),
-.bld-tooltip-action-btn--confirm:not(:disabled) {
-  background-color: rgba(70, 45, 36, 0.92);
+.bld-tooltip-action-btn > * + * {
+  margin-top: 0.12rem;
+}
+
+.bld-tooltip-action-btn:hover:not(:disabled) {
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
   color: var(--text-bright);
+  transform: translateY(-0.0909rem);
+}
+
+.bld-tooltip-action-btn--confirm:not(:disabled),
+.bld-tooltip-action-btn:active:not(:disabled) {
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-active.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  color: var(--text-bright);
+  transform: translateY(0.0909rem) scale(0.98);
+  transition: transform 0s;
 }
 
 .bld-tooltip-action-btn--danger {
-  border-top-color: var(--red-dark);
-  border-right-color: var(--red-dark);
-  border-bottom-color: var(--red-dark);
-  border-left-color: var(--red-dark);
   color: var(--red-light);
 }
 
 .bld-tooltip-action-btn--danger:hover:not(:disabled),
 .bld-tooltip-action-btn--danger.bld-tooltip-action-btn--confirm:not(:disabled) {
-  background-color: rgba(72, 24, 24, 0.92);
   color: var(--text-bright);
 }
 

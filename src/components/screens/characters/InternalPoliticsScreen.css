@@ -7,8 +7,26 @@
   max-height: calc(100vh - var(--topbar-height) - var(--bottombar-height) - 1.55rem);
   margin: 0;
   padding-top: 0;
-  border-top: 0.154rem solid rgba(80, 85, 100, 0.35);
   pointer-events: auto;
+}
+
+.screen--internal-politics .screen-header {
+  border-bottom-width: 0;
+}
+
+.screen--internal-politics .screen-header::after {
+  content: '';
+  position: absolute;
+  right: 0.9rem;
+  bottom: -0.18rem;
+  left: 0.9rem;
+  height: 0.3636rem;
+  background-image: url('/assets/gold-line.png');
+  background-position: center;
+  background-repeat: repeat-x;
+  background-size: auto 0.3636rem;
+  opacity: 0.58;
+  pointer-events: none;
 }
 
 .screen--internal-politics .screen-content--internal-politics {
@@ -36,9 +54,14 @@
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
-  border-width: 0.077rem;
+  border-width: 0.231rem;
   border-style: solid;
-  border-color: #3f382f;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(13, 14, 16, 0.54);
   background-image: url('/assets/baked/panel-dark.png');
   background-repeat: repeat;
@@ -113,9 +136,8 @@
   min-height: 1.85rem;
   flex-shrink: 0;
   padding: 0 0.55rem;
-  border-bottom-width: 0.154rem;
-  border-bottom-style: solid;
-  border-bottom-color: var(--border);
+  position: relative;
+  border-bottom-width: 0;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
     url('/assets/baked/texture-overlay-heavy.png'),
@@ -123,6 +145,24 @@
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, auto;
   background-color: #11171d;
+}
+
+.ips-faction-header::after,
+.ips-governor-header::after,
+.ips-foederati-header::after,
+.ips-command-header::after {
+  content: '';
+  position: absolute;
+  right: 0.45rem;
+  bottom: -0.16rem;
+  left: 0.45rem;
+  height: 0.32rem;
+  background-image: url('/assets/gold-line.png');
+  background-position: center;
+  background-repeat: repeat-x;
+  background-size: auto 0.32rem;
+  opacity: 0.52;
+  pointer-events: none;
 }
 
 .ips-faction-header-cell,
@@ -158,10 +198,8 @@
 .ips-faction-row {
   min-height: 4.35rem;
   padding: 0.42rem 0.55rem;
+  position: relative;
   border-width: 0;
-  border-bottom-width: 0.077rem;
-  border-bottom-style: solid;
-  border-bottom-color: rgba(121, 103, 76, 0.24);
   background-color: rgba(17, 17, 18, 0.44);
   color: var(--text);
   text-align: left;
@@ -173,14 +211,30 @@
 .ips-command-row {
   min-height: 3.45rem;
   padding: 0.38rem 0.55rem;
+  position: relative;
   border-width: 0;
-  border-bottom-width: 0.077rem;
-  border-bottom-style: solid;
-  border-bottom-color: rgba(121, 103, 76, 0.24);
   background-color: rgba(17, 17, 18, 0.44);
   color: var(--text);
   text-align: left;
   cursor: var(--cursor-pointer);
+}
+
+.ips-faction-row::after,
+.ips-governor-row::after,
+.ips-foederati-row::after,
+.ips-command-row::after {
+  content: '';
+  position: absolute;
+  right: 0.55rem;
+  bottom: -0.14rem;
+  left: 0.55rem;
+  height: 0.28rem;
+  background-image: url('/assets/gold-line.png');
+  background-position: center;
+  background-repeat: repeat-x;
+  background-size: auto 0.28rem;
+  opacity: 0.28;
+  pointer-events: none;
 }
 
 .ips-faction-row--foederati {
@@ -745,9 +799,14 @@
   min-width: 0;
   margin-bottom: 0.42rem;
   padding: 0.45rem;
-  border-width: 0.077rem;
+  border-width: 0.231rem;
   border-style: solid;
-  border-color: rgba(121, 103, 76, 0.26);
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(17, 17, 18, 0.52);
   color: var(--text);
   text-align: left;
@@ -809,9 +868,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-width: 0.077rem;
+  border-width: 0.231rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.32);
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(11, 13, 15, 0.62);
   background-image: url('/assets/baked/icon-button.png');
   background-repeat: repeat;
@@ -901,9 +965,14 @@
   margin-right: 0.42rem;
   margin-bottom: 0.32rem;
   padding: 0.28rem 0.36rem;
-  border-width: 0.077rem;
+  border-width: 0.154rem;
   border-style: solid;
-  border-color: rgba(121, 103, 76, 0.24);
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(6, 7, 8, 0.32);
 }
 
@@ -963,10 +1032,18 @@
   align-items: center;
   justify-content: center;
   padding: 0.28rem 0.44rem;
-  border-width: 0.077rem;
+  border-width: 0.231rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.38);
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
   background-color: rgba(82, 20, 28, 0.72);
+  background-image: url('/assets/baked/button-burgundy.png');
+  background-repeat: repeat;
+  background-size: 11.6364rem 5.8182rem;
   color: var(--gold-light);
   font-family: var(--font-header);
   font-size: 0.76rem;
@@ -983,18 +1060,12 @@
 }
 
 .ips-create-province-button:hover {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
+  background-image: url('/assets/baked/button-burgundy-hover.png');
 }
 
 .ips-create-province-button--disabled {
-  border-top-color: rgba(121, 103, 76, 0.18);
-  border-right-color: rgba(121, 103, 76, 0.18);
-  border-bottom-color: rgba(121, 103, 76, 0.18);
-  border-left-color: rgba(121, 103, 76, 0.18);
   background-color: rgba(17, 17, 18, 0.72);
+  background-image: url('/assets/baked/card-charcoal.png');
   color: var(--text-dark);
   cursor: default;
 }
