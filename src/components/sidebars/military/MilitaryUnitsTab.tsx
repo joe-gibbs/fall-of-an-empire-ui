@@ -2,7 +2,6 @@ import React, { type MouseEvent as ReactMouseEvent } from 'react';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Tooltip from '../../common/tooltips/Tooltip';
-import type { TooltipContent } from '../../common/tooltips/Tooltip';
 import type { ArmyBattleGroup, ArmyUnitRow, ArmyUnitTypeStrength } from '../../../data/types';
 import { TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber } from '../../../utils/numberFormat';
@@ -22,16 +21,7 @@ import {
   unitTypeIconPath,
 } from './MilitarySidebarPresentation';
 
-type UnitStatTile = {
-  id: string;
-  label: string;
-  icon: string;
-  value: string;
-  tooltip: TooltipContent;
-};
-
 type MilitaryUnitsTabProps = {
-  unitStatTiles: UnitStatTile[];
   compositionSummary: CompositionSummaryRow[];
   unitRows: ArmyUnitRow[];
   battleGroups: ArmyBattleGroup[];
@@ -80,7 +70,6 @@ export function renderUnitTypeStrengths(unitTypes: CompositionSummaryRow[]): Rea
 }
 
 export function MilitaryUnitsTab({
-  unitStatTiles,
   compositionSummary,
   unitRows,
   battleGroups,
@@ -135,18 +124,6 @@ export function MilitaryUnitsTab({
 
   return (
     <div className="mil-units-tab">
-      <SectionHeading variant="ornate" title={webUIText('Common.Stats')} />
-      <div className="mil-unit-stat-summary">
-        {unitStatTiles.map((tile) => (
-          <Tooltip key={tile.id} content={tile.tooltip} position="bottom" delay={150}>
-            <div className="mil-unit-stat-tile">
-              <img src={tile.icon} alt="" className="mil-unit-stat-tile-icon" />
-              <span className="mil-unit-stat-tile-label">{tile.label}</span>
-              <strong>{tile.value}</strong>
-            </div>
-          </Tooltip>
-        ))}
-      </div>
       <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsMilitarySidebar.1080.45')} />
       <div className="mil-composition">
         {compositionSummary.map((row) => {

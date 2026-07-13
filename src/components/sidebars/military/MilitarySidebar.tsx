@@ -526,7 +526,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
         : { title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.650.25'), body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.650.26') },
     },
     { id: 'upkeep', label: webUIText('Auto.ComponentsSidebarsMilitarySidebar.311.2'), icon: '/assets/icons/I_Coins.png', value: formatNumber(derived.upkeep), tooltip: { title: webUIText('Auto.ComponentsSidebarsMilitarySidebar.311.2') } },
-    { id: 'food', label: webUIText('Auto.ComponentsSidebarsMilitarySidebar.315.4'), icon: '/assets/icons/I_Food.png', value: formatNumber(derived.food), tooltip: { title: webUIText('Auto.ComponentsSidebarsMilitarySidebar.315.4') } },
     { id: 'slashDmg', label: webUIText('Auto.TopProp.DataGlossary.285.137'), icon: '/assets/icons/I_Damage_Slash.png', value: formatNumber(derived.slashDmg), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.285.137'), body: webUIText('Auto.TopProp.DataGlossary.286.138') } },
     { id: 'pierceDmg', label: webUIText('Auto.TopProp.DataGlossary.277.133'), icon: '/assets/icons/I_Damage_Pierce.png', value: formatNumber(derived.pierceDmg), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.277.133'), body: webUIText('Auto.TopProp.DataGlossary.278.134') } },
     { id: 'crushDmg', label: webUIText('Auto.TopProp.DataGlossary.281.135'), icon: '/assets/icons/I_Damage_Crush.png', value: formatNumber(derived.crushDmg), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.281.135'), body: webUIText('Auto.TopProp.DataGlossary.282.136') } },
@@ -888,6 +887,19 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       <StyledScrollArea className="sidebar-content sidebar-content--textured mil-content">
         {activeTab === 'overview' && (
           <div className="mil-overview">
+            <SectionHeading variant="ornate" title={webUIText('Common.Stats')} />
+            <div className="mil-unit-stat-summary">
+              {unitStatTiles.map((tile) => (
+                <Tooltip key={tile.id} content={tile.tooltip} position="bottom" delay={150}>
+                  <div className="mil-unit-stat-tile">
+                    <img src={tile.icon} alt="" className="mil-unit-stat-tile-icon" />
+                    <span className="mil-unit-stat-tile-label">{tile.label}</span>
+                    <strong>{tile.value}</strong>
+                  </div>
+                </Tooltip>
+              ))}
+            </div>
+
             {renderSubordinates()}
             {renderEmbarkedArmies()}
 
@@ -988,7 +1000,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
 
         {activeTab === 'units' && (
           <MilitaryUnitsTab
-            unitStatTiles={unitStatTiles}
             compositionSummary={compositionSummary}
             unitRows={unitRows}
             battleGroups={army.battleGroups}
