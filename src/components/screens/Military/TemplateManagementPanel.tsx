@@ -1043,17 +1043,9 @@ function TemplateEditor({
                   disabled={!editable}
                 />
               ) : (
-                <button
-                  type="button"
-                  className="chart-template-title-label"
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    beginRename();
-                  }}
-                  disabled={!editable}
-                >
+                <div className="chart-template-title-label">
                   {draft.name || createTitle}
-                </button>
+                </div>
               )}
               <button
                 type="button"
