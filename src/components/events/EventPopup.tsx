@@ -542,7 +542,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
                 );
               })}
             </div>
-            ) : (
+            ) : historyEntry?.chosenOptionText ? (
               <div className="event-options event-options--history">
                 <div className="event-options-heading">
                   <span className="event-options-heading-label"><WebUIText textKey="Auto.ComponentsEventsEventPopup.341.2" /></span>
@@ -554,7 +554,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
