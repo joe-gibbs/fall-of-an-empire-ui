@@ -114,9 +114,6 @@
   background-repeat: repeat, repeat;
   background-size: auto, 93.0909rem 93.0909rem;
   background-color: rgba(9, 13, 18, 0.45);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.18);
 }
 
 .vc-tier-summary-list > * + * {
@@ -127,14 +124,10 @@
   display: flex;
   flex-direction: column;
   padding: 0.28rem 0.35rem 0.35rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(80, 85, 100, 0.22);
   background-color: rgba(18, 22, 27, 0.48);
 }
 
 .vc-tier-summary--achieved {
-  border-color: rgba(92, 160, 64, 0.22);
   background-color: rgba(48, 74, 40, 0.16);
 }
 
@@ -181,12 +174,6 @@
 /* --- Tier section --- */
 .vc-tier {
   margin-top: 0.55rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--separator);
-  border-right-color: var(--separator);
-  border-bottom-color: var(--separator);
-  border-left-color: var(--separator);
   background-color: rgba(8, 12, 17, 0.18);
 }
 
@@ -272,12 +259,6 @@
 /* --- Condition row --- */
 .vc-condition {
   padding: 0.35rem 0.4rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--separator);
-  border-right-color: var(--separator);
-  border-bottom-color: var(--separator);
-  border-left-color: var(--separator);
   background: rgba(8, 12, 17, 0.22);
   transition: background 0.12s;
 }
@@ -287,7 +268,6 @@
 }
 
 .vc-condition--met {
-  border-color: rgba(92, 160, 64, 0.2);
   background: rgba(48, 74, 40, 0.12);
 }
 
