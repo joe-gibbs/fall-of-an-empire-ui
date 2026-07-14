@@ -1197,22 +1197,31 @@ button.econ-command-cost__row:focus-visible {
   overflow: hidden;
 }
 
-.econ-detail-toggle {
-  flex: 0 0 auto;
-  min-width: 1.45rem;
-  height: 1.25rem;
+.econ-inline-detail-cell > .econ-detail-toggle {
+  flex: 0 0 1.55rem;
+  width: 1.55rem;
+  min-width: 1.55rem;
+  height: 1.55rem;
   margin-left: 0.35rem;
-  padding: 0 0.22rem;
+  padding: 0;
   color: var(--gold-light);
-  background-color: rgba(8, 12, 17, 0.32);
-  border: 0.077rem solid rgba(201, 168, 76, 0.34);
-  font-size: 0.7rem;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: url('/assets/baked/icon-button.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  font-size: 0.78rem;
   font-weight: 700;
   line-height: 1;
 }
 
-.econ-detail-toggle:hover {
-  border-color: rgba(201, 168, 76, 0.7);
+.econ-inline-detail-cell > .econ-detail-toggle:hover {
+  color: var(--text-bright);
+  border: 0;
+  background-color: transparent;
+  background-image: url('/assets/baked/icon-button-hover.png');
 }
 
 .econ-detail-panel {

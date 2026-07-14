@@ -1557,18 +1557,20 @@ function ProvinceTab({ data }: { data: GetEconomyOverviewResponse | null }) {
             >
               <span className="econ-ellipsis">{taxLossSummary(losses, t)}</span>
             </Tooltip>
-          <button
-            type="button"
-            className="econ-detail-toggle"
-            onMouseDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setDetailId(current => current === row.factionId ? null : row.factionId);
-            }}
-          >
-            {detailId === row.factionId ? '-' : '+'}
-          </button>
-        </span>
+            {losses.length > 0 && (
+              <button
+                type="button"
+                className="econ-detail-toggle"
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setDetailId(current => current === row.factionId ? null : row.factionId);
+                }}
+              >
+                {detailId === row.factionId ? '-' : '+'}
+              </button>
+            )}
+          </span>
         );
       },
       sortValue: row => row.blockadeLoss + row.culturalLoss + row.corruptionLoss + row.ungovernedLoss + row.complianceLoss,
