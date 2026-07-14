@@ -10,7 +10,7 @@ function pushEventTextNodes(nodes: ReactNode[], text: string, nextKey: () => str
 
   const flushSpace = () => {
     if (!pendingSpace) return;
-    nodes.push(<span key={nextKey()} className="event-space" />);
+    nodes.push(<span key={nextKey()} className="event-space"> </span>);
     pendingSpace = false;
   };
 
