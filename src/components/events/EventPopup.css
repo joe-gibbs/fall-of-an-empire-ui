@@ -925,8 +925,9 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
 }
 
 .event-option-tooltip {
-  padding: 0.3rem 0.5rem;
-  max-width: 22rem;
+  width: 22rem;
+  max-width: 100%;
+  padding: 0.46rem 0.62rem 0.62rem;
 }
 
 .event-option-tooltip-title {
@@ -935,13 +936,15 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
   color: var(--gold);
   font-weight: 600;
   letter-spacing: 0.03em;
-  margin-bottom: 0.3rem;
+  line-height: 1.2;
+  margin-bottom: 0.38rem;
 }
 
 .event-option-tooltip-body {
   font-size: 0.85rem;
   color: var(--text);
   line-height: 1.35;
+  overflow-wrap: break-word;
 }
 
 /* ---- Option card internals ---- */
