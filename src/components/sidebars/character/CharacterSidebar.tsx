@@ -566,7 +566,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
                 cultureGroup={character.factionCultureGroup}
                 name={factionName}
                 size="lg"
-                showRing={false}
+                showRing
                 resolveFaction={false}
                 onClick={() => openSidebar('diplomacy', character.factionId!)}
               />
