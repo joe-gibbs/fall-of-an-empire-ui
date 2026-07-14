@@ -2049,12 +2049,8 @@
 
 .chart-template-battle-group {
   background-color: rgba(8, 12, 17, 0.2);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(255, 255, 255, 0.06);
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-  border-left-color: rgba(255, 255, 255, 0.06);
+  border-width: 0;
+  border-image: none;
   margin-bottom: 0.55rem;
 }
 
@@ -2330,6 +2326,11 @@
   flex-basis: auto;
   display: flex;
   flex-direction: column;
+}
+
+.chart-template-rail-section--forces > .chart-template-empty-inline {
+  border-width: 0;
+  border-image: none;
 }
 
 .chart-template-rail-section + .chart-template-rail-section {
@@ -5919,5 +5920,20 @@
   width: 1.05rem;
   height: 1.05rem;
   margin-top: -0.08rem;
+}
+
+/* Let localised template labels keep their authored casing. */
+.chart-screen--templates .chart-template-list-head,
+.chart-screen--templates .chart-template-title-input,
+.chart-screen--templates .chart-template-title-label,
+.chart-screen--templates .chart-template-battle-add,
+.chart-screen--templates .chart-template-battle-group-title,
+.chart-screen--templates .chart-template-battle-pick-unit,
+.chart-screen--templates .chart-template-battle-board h4,
+.chart-screen--templates .chart-template-rail-section h4,
+.chart-screen--templates .chart-template-battle-label,
+.chart-screen--templates .chart-template-total-label,
+.chart-screen--templates .chart-template-action-button.btn--burgundy {
+  text-transform: none;
 }
 

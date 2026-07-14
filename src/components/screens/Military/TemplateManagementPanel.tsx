@@ -12,6 +12,7 @@ import { setMilitaryFormationTemplateBridge } from '../../../bridge/military-map
 import {
   applyFormationTemplateBridge,
   deleteFormationTemplateBridge,
+  generateFormationTemplateNameBridge,
   saveFormationTemplateBridge,
   useFormationTemplateCatalogueBridge,
 } from '../../../bridge/military-map/useFormationTemplatesBridge';
@@ -20,6 +21,7 @@ import type {
   FormationTemplateAssignedForce,
   FormationTemplateEntry,
   FormationTemplateUnitEntry,
+  SaveFormationTemplateUnitRequest,
 } from '../../../bridge-types.generated.ts';
 import type { Army } from '../../../data/types';
 import { useEscapeStackEntry } from '../../../context/EscapeStack';
@@ -738,7 +740,9 @@ function TemplateEditor({
   const [catalogueGroupId, setCatalogueGroupId] = useState<string | null>(null);
   const [actionActive, setActionActive] = useState(false);
   const [renamingTitle, setRenamingTitle] = useState(!template);
+  const [nameEdited, setNameEdited] = useState(Boolean(template));
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const automaticNameRequestRef = useRef(0);
   const gameActions = useGameActions();
   const unitById = useMemo(() => {
     const map = new Map<string, FormationTemplateUnitEntry>();
@@ -754,6 +758,7 @@ function TemplateEditor({
       .map(request => ({ unit: unitById.get(request.unitId), count: request.count }))
       .filter((entry): entry is { unit: FormationTemplateUnitEntry; count: number } => Boolean(entry.unit) && entry.count > 0)
   ), [draft, unitById]);
+  const automaticNameSignature = JSON.stringify(draftCompositionRequests(draft));
   const catalogueGroup = catalogueGroupId
     ? draft.battleGroups.find(group => group.id === catalogueGroupId) ?? null
     : null;
@@ -807,6 +812,28 @@ function TemplateEditor({
     onNeedCatalogue();
     setCatalogueGroupId(groupId);
   };
+
+  useEffect(() => {
+    if (template || nameEdited) return;
+
+    const requestId = automaticNameRequestRef.current + 1;
+    automaticNameRequestRef.current = requestId;
+    let cancelled = false;
+    const units = JSON.parse(automaticNameSignature) as SaveFormationTemplateUnitRequest[];
+
+    void generateFormationTemplateNameBridge(draft.type, units)
+      .then(response => {
+        if (cancelled || automaticNameRequestRef.current !== requestId) return;
+        setDraft(current => current.templateId || current.name === response.name
+          ? current
+          : { ...current, name: response.name });
+      })
+      .catch(acknowledgeBridgeFailure);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [automaticNameSignature, draft.type, nameEdited, template]);
 
   const removeBattleGroup = (groupId: string) => {
     if (!editable) return;
@@ -956,6 +983,8 @@ function TemplateEditor({
                   data-tutorial-target="FormationNameInput"
                   value={draft.name}
                   onChange={event => {
+                    automaticNameRequestRef.current += 1;
+                    setNameEdited(true);
                     setDraft(current => ({ ...current, name: event.target.value }));
                   }}
                   onBlur={() => {

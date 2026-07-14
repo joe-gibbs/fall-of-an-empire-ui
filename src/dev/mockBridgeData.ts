@@ -1639,9 +1639,12 @@ function personById(id: string): BridgeResponse<'game.get_person_data'> {
     commanderKind: profile.activity === 'CommandingArmy' ? 'Land' : '',
     isAlive: profile.alive,
     faction: 'Rephsian Empire',
+    factionId: MOCK_IDS.playerFaction,
     rulerFactionName: isRuler ? 'the Rephsian Empire' : '',
     factionColour: PLAYER_COLOUR,
     factionSecondaryColour: PLAYER_SECONDARY,
+    factionEmblem: 'Rephsian_1',
+    factionCultureGroup: 'Rephsian',
     cultureId: rephsianCulture.id,
     culture: rephsianCulture.name,
     religionId: rephsianReligion.id,
@@ -6262,6 +6265,10 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           landUnitCatalogue: [formationUnit('limitanei', 'Limitanei', 'infantry', 'land', 6, 4200), formationUnit('clibanarii', 'Clibanarii', 'cavalry', 'land', 3, 1900, false, aurestianCulture)],
           navalUnitCatalogue: [formationUnit('dromons', 'Dromons', 'navy', 'naval', 10, 1200), formationUnit('supply-galleys', 'Supply Galleys', 'navy', 'naval', 6, 700)],
         } satisfies BridgeResponse<'game.get_formation_template_catalogue'>;
+      case 'game.generate_formation_template_name':
+        return {
+          name: payloadString(payload, 'type') === 'naval' ? 'Fleet' : 'Legion',
+        } satisfies BridgeResponse<'game.generate_formation_template_name'>;
       case 'game.get_peace_negotiation_state':
         return peaceState();
       case 'game.start_peace_settlement_selection': {

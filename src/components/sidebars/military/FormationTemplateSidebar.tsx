@@ -6,6 +6,7 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import {
   applyFormationTemplateBridge,
   deleteFormationTemplateBridge,
+  generateFormationTemplateNameBridge,
   saveFormationTemplateBridge,
   useFormationTemplateCatalogueBridge,
   useFormationTemplatesBridge,
@@ -87,6 +88,8 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
   const [baseline, setBaseline] = useState<DraftTemplate | null>(null);
   const [activeTab, setActiveTab] = useState<TemplateTab>('composition');
   const [renaming, setRenaming] = useState(false);
+  const [nameEdited, setNameEdited] = useState(false);
+  const automaticNameRequestRef = React.useRef(0);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [catalogueRequested, setCatalogueRequested] = useState(false);
   const [message, setMessage] = useState('');
@@ -110,6 +113,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
         setDraft(emptyDraft(newTemplateType));
         setBaseline(null);
         setRenaming(true);
+        setNameEdited(false);
         setPickerOpen(false);
         setMessage('');
         setConfirmDeleteId(null);
@@ -130,6 +134,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
           setDraft(emptyDraft(assignmentTemplateType));
           setBaseline(null);
           setRenaming(true);
+          setNameEdited(false);
           setPickerOpen(false);
           setMessage('');
           setConfirmDeleteId(null);
@@ -156,6 +161,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
       setDraft(nextDraft);
       setBaseline(nextDraft);
       setRenaming(shouldStartRenaming);
+      setNameEdited(true);
       setPickerOpen(false);
       setMessage('');
       setConfirmDeleteId(null);
@@ -199,6 +205,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
       }))
       .filter((entry): entry is { request: SaveFormationTemplateUnitRequest; unit: FormationTemplateUnitEntry; includesCore: boolean } => Boolean(entry.unit))
   ), [draft, unitById]);
+  const automaticNameSignature = JSON.stringify(compositionRequests(draft));
 
   const derived = useMemo(() => computeDerived(draft, unitById), [draft, unitById]);
   const iconProfile = useMemo(() => getFormationTemplateIcon(
@@ -221,12 +228,35 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
     ? webUIText('FormationTemplate.AssignButton', { Name: assignmentTarget.name })
     : webUIText('Common.Assign');
 
+  useEffect(() => {
+    if (draft.templateId || nameEdited) return;
+
+    const requestId = automaticNameRequestRef.current + 1;
+    automaticNameRequestRef.current = requestId;
+    let cancelled = false;
+    const units = JSON.parse(automaticNameSignature) as SaveFormationTemplateUnitRequest[];
+
+    void generateFormationTemplateNameBridge(draft.type, units)
+      .then(response => {
+        if (cancelled || automaticNameRequestRef.current !== requestId) return;
+        setDraft(current => current.templateId || current.name === response.name
+          ? current
+          : { ...current, name: response.name });
+      })
+      .catch(acknowledgeBridgeFailure);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [automaticNameSignature, draft.templateId, draft.type, nameEdited]);
+
   const loadTemplate = (template: FormationTemplateEntry) => {
     const nextDraft = buildDraft(template);
     setSelectedId(template.id);
     setDraft(nextDraft);
     setBaseline(nextDraft);
     setRenaming(false);
+    setNameEdited(true);
     setPickerOpen(false);
     setMessage('');
     setConfirmDeleteId(null);
@@ -237,6 +267,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
     setDraft(emptyDraft(assignmentTemplateType ?? draft.type));
     setBaseline(null);
     setRenaming(true);
+    setNameEdited(false);
     setPickerOpen(false);
     setMessage('');
     setConfirmDeleteId(null);
@@ -376,6 +407,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
         openSidebar('template', response.templateId);
       }
       setRenaming(false);
+      setNameEdited(true);
       setPickerOpen(false);
       setConfirmDeleteId(null);
     });
@@ -400,6 +432,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
       setDraft(nextDraft);
       setBaseline(nextDraft);
       setSelectedId(response.templateId);
+      setNameEdited(true);
       setConfirmDeleteId(null);
     });
   };
@@ -426,6 +459,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
         setSelectedId(null);
         setDraft(emptyDraft(draft.type));
         setBaseline(null);
+        setNameEdited(false);
       }
     });
   };
@@ -496,7 +530,11 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
                   className="tpl-header-name-input"
                   autoFocus
                   value={draft.name}
-                  onChange={event => setDraft(current => ({ ...current, name: event.target.value }))}
+                  onChange={event => {
+                    automaticNameRequestRef.current += 1;
+                    setNameEdited(true);
+                    setDraft(current => ({ ...current, name: event.target.value }));
+                  }}
                   onBlur={() => {
                     setDraft(current => ({ ...current, name: current.name.trim() }));
                     setRenaming(false);

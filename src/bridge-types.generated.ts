@@ -1046,6 +1046,15 @@ export interface SaveFormationTemplateUnitRequest {
   count: number;
 }
 
+export interface GenerateFormationTemplateNameRequest {
+  type: string;
+  units: SaveFormationTemplateUnitRequest[];
+}
+
+export interface GenerateFormationTemplateNameResponse {
+  name: string;
+}
+
 export interface SaveFormationTemplateBattleGroupUnitRequest {
   unitId: string;
   count: number;
@@ -2967,9 +2976,12 @@ export interface GetPersonDataResponse {
   commanderKind: string;
   isAlive: boolean;
   faction: string;
+  factionId: string;
   rulerFactionName: string;
   factionColour: string;
   factionSecondaryColour: string;
+  factionEmblem: string;
+  factionCultureGroup: string;
   cultureId: string;
   culture: string;
   religionId: string;
@@ -6037,6 +6049,7 @@ export interface BridgeActions {
   'game.end_peace_settlement_selection': { request: void; response: void };
   'game.enter_court_appointment_contest': { request: EnterCourtAppointmentContestRequest; response: EnterCourtAppointmentContestResponse };
   'game.form_personal_power_bloc': { request: void; response: FormPersonalPowerBlocResponse };
+  'game.generate_formation_template_name': { request: GenerateFormationTemplateNameRequest; response: GenerateFormationTemplateNameResponse };
   'game.get_achievements': { request: void; response: GetAchievementsResponse };
   'game.get_agent_candidates': { request: GetAgentCandidatesRequest; response: GetAgentCandidatesResponse };
   'game.get_app_mode': { request: void; response: GetAppModeResponse };

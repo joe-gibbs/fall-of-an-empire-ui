@@ -2,10 +2,12 @@ import { bridgeCall } from '../../bridge-types.generated.ts';
 import type {
   ApplyFormationTemplateResponse,
   DeleteFormationTemplateResponse,
+  GenerateFormationTemplateNameResponse,
   GetFormationTemplateCatalogueResponse,
   GetFormationTemplatesResponse,
   SaveFormationTemplateRequest,
   SaveFormationTemplateResponse,
+  SaveFormationTemplateUnitRequest,
 } from '../../bridge-types.generated.ts';
 import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
 
@@ -74,6 +76,13 @@ export function saveFormationTemplateBridge(
     clearFormationTemplateCatalogueCache();
     return response;
   });
+}
+
+export function generateFormationTemplateNameBridge(
+  type: string,
+  units: SaveFormationTemplateUnitRequest[],
+): Promise<GenerateFormationTemplateNameResponse> {
+  return bridgeCall('game.generate_formation_template_name', { type, units });
 }
 
 export function deleteFormationTemplateBridge(templateId: string): Promise<DeleteFormationTemplateResponse> {

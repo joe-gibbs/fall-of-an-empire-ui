@@ -9,7 +9,6 @@ import type {
 } from '../../../bridge-types.generated.ts';
 import { formatNumber } from '../../../utils/numberFormat';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
-import { webUIText } from '../../../localization/WebUITextContext';
 
 export type TemplateType = 'land' | 'naval';
 export type TemplateTab = 'composition' | 'combat';
@@ -253,14 +252,10 @@ export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number)
   };
 }
 
-export function defaultTemplateName(type: TemplateType): string {
-  return webUIText(type === 'naval' ? 'MilitaryScreen.NewFleetTemplate' : 'MilitaryScreen.NewArmyTemplate');
-}
-
 export function emptyDraft(type: TemplateType): DraftTemplate {
   return {
     templateId: '',
-    name: defaultTemplateName(type),
+    name: '',
     iconId: '',
     type,
     counts: {},
