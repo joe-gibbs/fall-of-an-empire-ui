@@ -117,9 +117,10 @@ function mapSettlement(entry: GetWorldGlancesResponse['settlements'][number]): S
     independent: entry.independent ?? false,
     overlordName: entry.overlordName ?? '',
     bishopName: entry.bishopName ?? '',
-    building: entry.hasBuilding ? {
-      label: entry.building?.label ?? '',
-      progress: entry.building?.progress ?? 0,
+    buildItem: entry.hasBuildItem ? {
+      label: entry.buildItem.label,
+      icon: entry.buildItem.icon,
+      progress: entry.buildItem.progress,
     } : undefined,
     warWithPlayer: entry.warWithPlayer ?? false,
   };
@@ -610,17 +611,17 @@ function applySettlementProgressFrame(node: HTMLDivElement, entry: WorldGlanceFr
   const buildFill = node.querySelector<HTMLElement>('.gset-build-bar-fill');
   const buildStatus = node.querySelector<HTMLElement>('.gset-build-status');
   const buildStatusValue = node.querySelector<HTMLElement>('.gset-build-status-value');
-  if (!buildBar || !buildFill || !buildStatus || !buildStatusValue || typeof entry.hasBuilding !== 'boolean') {
+  if (!buildBar || !buildFill || !buildStatus || !buildStatusValue || typeof entry.hasBuildItem !== 'boolean') {
     return;
   }
 
-  const showBuildBar = entry.hasBuilding && entry.besieged !== true;
-  buildStatus.style.display = entry.hasBuilding ? '' : 'none';
-  buildStatusValue.textContent = entry.hasBuilding
-    ? formatPercent(Math.max(0, Math.min(1, entry.buildProgress ?? 0)) * 100)
+  const showBuildBar = entry.hasBuildItem && entry.besieged !== true;
+  buildStatus.style.display = entry.hasBuildItem ? '' : 'none';
+  buildStatusValue.textContent = entry.hasBuildItem
+    ? formatPercent(Math.max(0, Math.min(1, entry.buildItemProgress!)) * 100)
     : '';
   buildBar.style.display = showBuildBar ? '' : 'none';
-  buildFill.style.width = formatFrameProgressWidth(entry.buildProgress);
+  buildFill.style.width = formatFrameProgressWidth(entry.buildItemProgress!);
 }
 
 function applyNodeFrame(

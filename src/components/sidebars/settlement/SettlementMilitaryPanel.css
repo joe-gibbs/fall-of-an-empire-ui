@@ -214,6 +214,177 @@
   overflow: hidden;
 }
 
+/* ============ Formation being raised ============ */
+
+.mil-pending-formation {
+  display: flex;
+  flex-direction: column;
+  background-color: #20272d;
+  background-image: url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-repeat: round;
+}
+
+.mil-pending-header {
+  display: flex;
+  align-items: center;
+  padding: 0.45rem 0.5rem 0.35rem;
+  background-image: url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat;
+  background-size: 5.538rem 5.538rem;
+  border-bottom: 0.0909rem solid var(--gold-muted);
+}
+
+.mil-pending-formation-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+.mil-pending-heading {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.mil-pending-kicker {
+  color: var(--gold);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mil-pending-name {
+  overflow: hidden;
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mil-pending-percent {
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.82rem;
+}
+
+.mil-pending-summary {
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem 0.5rem;
+  color: var(--text);
+  font-size: 0.72rem;
+}
+
+.mil-pending-progress,
+.mil-pending-unit-progress {
+  position: relative;
+  overflow: hidden;
+  height: 0.28rem;
+  background-image: url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat;
+  background-size: 4.923rem 4.923rem;
+  border: 0.077rem solid var(--gold-dark);
+}
+
+.mil-pending-progress-fill,
+.mil-pending-unit-progress-fill {
+  position: absolute;
+  inset: 0;
+  background-color: var(--burgundy-light);
+  transform-origin: left center;
+  transition: transform 0.2s ease-out;
+}
+
+.mil-pending-units {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.5rem 0.45rem;
+}
+
+.mil-pending-unit {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.25rem;
+  background-image: url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat;
+  background-size: 4.923rem 4.923rem;
+  border: 0.077rem solid var(--gold-dark);
+}
+
+.mil-pending-unit-portrait-wrap {
+  position: relative;
+  display: block;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex-shrink: 0;
+  border: 0.077rem solid var(--gold-dark);
+}
+
+.mil-pending-unit-portrait {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mil-pending-unit-count {
+  position: absolute;
+  right: -0.077rem;
+  bottom: -0.077rem;
+  padding: 0 0.12rem;
+  background-color: var(--burgundy);
+  color: var(--text-bright);
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1.15;
+  border: 0.077rem solid var(--gold-dark);
+}
+
+.mil-pending-unit-body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.mil-pending-unit-line {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+}
+
+.mil-pending-unit-name {
+  overflow: hidden;
+  flex: 1;
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mil-pending-unit-percent {
+  color: var(--gold-light);
+  font-size: 0.68rem;
+}
+
+.mil-pending-unit-location {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mil-formation:focus-visible {
   outline: 0.154rem solid var(--gold);
   outline-offset: 0.077rem;
@@ -875,6 +1046,22 @@
 .mil-queue-next-list > * {
   margin-right: 0.3rem;
   margin-bottom: 0.3rem;
+}
+
+.mil-pending-formation > * + *,
+.mil-pending-summary > * + *,
+.mil-pending-unit-body > * + * {
+  margin-top: 0.25rem;
+}
+
+.mil-pending-header > * + *,
+.mil-pending-unit > * + *,
+.mil-pending-unit-line > * + * {
+  margin-left: 0.4rem;
+}
+
+.mil-pending-units > * + * {
+  margin-top: 0.25rem;
 }
 
 /* ============ Formation list ============ */

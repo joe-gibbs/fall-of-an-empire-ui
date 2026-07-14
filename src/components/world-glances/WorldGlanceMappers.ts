@@ -87,9 +87,10 @@ export function mapSettlement(entry: GetWorldGlancesResponse['settlements'][numb
     independent: entry.independent ?? false,
     overlordName: entry.overlordName ?? '',
     bishopName: entry.bishopName ?? '',
-    building: entry.hasBuilding ? {
-      label: entry.building?.label ?? '',
-      progress: entry.building?.progress ?? 0,
+    buildItem: entry.hasBuildItem ? {
+      label: entry.buildItem.label,
+      icon: entry.buildItem.icon,
+      progress: entry.buildItem.progress,
     } : undefined,
     warWithPlayer: entry.warWithPlayer ?? false,
   };

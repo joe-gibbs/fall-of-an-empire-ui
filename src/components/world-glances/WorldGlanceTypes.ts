@@ -118,9 +118,7 @@ export interface SettlementGlanceData {
   independent?: boolean;
   overlordName?: string;
   bishopName?: string;
-  building?: { label: string; progress: number };
-  armyRecruit?: { label: string; progress: number };
-  navyRecruit?: { label: string; progress: number };
+  buildItem?: { label: string; icon: string; progress: number };
   warWithPlayer?: boolean;
 }
 

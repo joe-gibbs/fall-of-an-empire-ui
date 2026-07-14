@@ -74,8 +74,8 @@ const SETTLEMENT_ANCHOR_Y_REM = 2.1364;
 type AtlasSection = WorldGlanceFrameSection | 'notification';
 const ATLAS_SECTIONS: readonly AtlasSection[] = [...WORLD_GLANCE_FRAME_SECTIONS, 'notification'];
 
-interface SettlementConstructionFrame {
-  hasBuilding: boolean;
+interface SettlementBuildItemFrame {
+  hasBuildItem: boolean;
   progress: number;
 }
 
@@ -146,7 +146,7 @@ function reserveSizeForSection(section: AtlasSection, remPx: number, settlementB
   return undefined;
 }
 
-const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, construction, remPx, plateRef }: {
+const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, buildItemFrame, remPx, plateRef }: {
   section: AtlasSection;
   id: string;
   entry: unknown;
@@ -154,7 +154,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   selected: boolean;
   targeted: boolean;
   hovered: boolean;
-  construction?: SettlementConstructionFrame;
+  buildItemFrame?: SettlementBuildItemFrame;
   remPx: number;
   plateRef: (key: string, node: HTMLDivElement | null) => void;
 }) {
@@ -212,9 +212,13 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   let content: ReactNode = null;
   if (section === 'settlement') {
     const settlementData = mapSettlement(entry as GetWorldGlancesResponse['settlements'][number]);
-    if (construction) {
-      settlementData.building = construction.hasBuilding
-        ? { label: settlementData.building?.label ?? '', progress: construction.progress }
+    if (buildItemFrame) {
+      settlementData.buildItem = buildItemFrame.hasBuildItem && settlementData.buildItem
+        ? {
+            label: settlementData.buildItem.label,
+            icon: settlementData.buildItem.icon,
+            progress: buildItemFrame.progress,
+          }
         : undefined;
     }
     content = <SettlementGlance data={settlementData} />;
@@ -251,7 +255,7 @@ export default function GlanceAtlasRoot() {
 
   const detailByKeyRef = useRef<Map<string, WorldGlanceDetailClass>>(new Map());
   const flagsByKeyRef = useRef<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
-  const constructionByKeyRef = useRef<Map<string, SettlementConstructionFrame>>(new Map());
+  const buildItemFrameByKeyRef = useRef<Map<string, SettlementBuildItemFrame>>(new Map());
   const plateNodesRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const visibleAtlasKeysRef = useRef<Set<string>>(new Set());
   const notificationContentSignatureRef = useRef('');
@@ -261,7 +265,7 @@ export default function GlanceAtlasRoot() {
 
   const [detailByKey, setDetailByKey] = useState<Map<string, WorldGlanceDetailClass>>(new Map());
   const [flagsByKey, setFlagsByKey] = useState<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
-  const [constructionByKey, setConstructionByKey] = useState<Map<string, SettlementConstructionFrame>>(new Map());
+  const [buildItemFrameByKey, setBuildItemFrameByKey] = useState<Map<string, SettlementBuildItemFrame>>(new Map());
   const [hoveredKeys, setHoveredKeys] = useState<Set<string>>(new Set());
   const [entryCache, setEntryCache] = useState<Map<AtlasSection, Map<string, { id: string }>>>(new Map());
   const [notificationEntries, setNotificationEntries] = useState<Notification[]>([]);
@@ -400,20 +404,20 @@ export default function GlanceAtlasRoot() {
             }
           }
 
-          if (section === 'settlement' && typeof entry.hasBuilding === 'boolean') {
-            const nextConstruction = {
-              hasBuilding: entry.hasBuilding,
-              progress: Math.max(0, Math.min(1, entry.buildProgress ?? 0)),
+          if (section === 'settlement' && typeof entry.hasBuildItem === 'boolean') {
+            const nextBuildItemFrame = {
+              hasBuildItem: entry.hasBuildItem,
+              progress: Math.max(0, Math.min(1, entry.buildItemProgress!)),
             };
-            const construction = constructionByKeyRef.current.get(key);
-            if (!construction
-              || construction.hasBuilding !== nextConstruction.hasBuilding
-              || construction.progress !== nextConstruction.progress) {
+            const buildItemFrame = buildItemFrameByKeyRef.current.get(key);
+            if (!buildItemFrame
+              || buildItemFrame.hasBuildItem !== nextBuildItemFrame.hasBuildItem
+              || buildItemFrame.progress !== nextBuildItemFrame.progress) {
               const node = plateNodesRef.current.get(key);
               if (node && atlasVisible) {
                 prepareWorldAnchorContentChange(node);
               }
-              constructionByKeyRef.current.set(key, nextConstruction);
+              buildItemFrameByKeyRef.current.set(key, nextBuildItemFrame);
               constructionChanged = true;
             }
           }
@@ -454,7 +458,7 @@ export default function GlanceAtlasRoot() {
         setFlagsByKey(new Map(flagsByKeyRef.current));
       }
       if (constructionChanged) {
-        setConstructionByKey(new Map(constructionByKeyRef.current));
+        setBuildItemFrameByKey(new Map(buildItemFrameByKeyRef.current));
       }
     });
   }, []);
@@ -492,7 +496,7 @@ export default function GlanceAtlasRoot() {
               selected={flags?.selected === true}
               targeted={flags?.targeted === true}
               hovered={hoveredKeys.has(key)}
-              construction={section === 'settlement' ? constructionByKey.get(key) : undefined}
+              buildItemFrame={section === 'settlement' ? buildItemFrameByKey.get(key) : undefined}
               remPx={remPx}
               plateRef={plateRef}
             />

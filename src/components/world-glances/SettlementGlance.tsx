@@ -242,11 +242,11 @@ function renderGoldInfo(data: SettlementGlanceData) {
   );
 }
 
-function renderConstructionInfo(data: SettlementGlanceData) {
-  if (data.building) {
+function renderBuildInfo(data: SettlementGlanceData) {
+  if (data.buildItem) {
     return renderInfoRow(
-      '/assets/icons/I_BuildingsQuickButton.png',
-      `${data.building.label} ${formatPercent(data.building.progress * 100)}`,
+      data.buildItem.icon,
+      `${data.buildItem.label} ${formatPercent(data.buildItem.progress * 100)}`,
       '#d6a83a',
     );
   }
@@ -299,7 +299,7 @@ function renderInfo(data: SettlementGlanceData) {
       return renderInfoRow(settlementTypeIcon(data.settlementType), formatSettlementType(data.settlementType));
     case 'economicProsperity':
     case 'economy':
-      return renderConstructionInfo(data);
+      return renderBuildInfo(data);
     case 'adminRegion':
       return renderGeographicInfo('/assets/icons/I_Region.png', data.regionName);
     case 'adminLand':
@@ -336,7 +336,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
   const controller = data.occupier ?? data.faction;
   const factionColour = tintFactionColourForSettlementType(controller.colour, data.settlementType);
   const siegeProgress = clampUnitFraction(data.siegeProgress);
-  const buildProgress = data.building ? clampUnitFraction(data.building.progress) : 0;
+  const buildItemProgress = data.buildItem ? clampUnitFraction(data.buildItem.progress) : 0;
   const besieged = data.besieged === true;
   const displayedSiegeProgress = useAnimatedProgress(siegeProgress, besieged, `${data.name}:siege`);
   const badgeShadow = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'shadow'));
@@ -426,15 +426,17 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
             <span
               className="gset-build-status"
               aria-hidden="true"
-              style={{ display: data.building ? undefined : 'none' }}
+              style={{ display: data.buildItem ? undefined : 'none' }}
             >
-              <img
-                className="gset-build-status-icon"
-                src={FoaeCefUIAssetPath('/assets/icons/I_BuildingsQuickButton.png')}
-                alt=""
-              />
+              {data.buildItem && (
+                <img
+                  className="gset-build-status-icon"
+                  src={FoaeCefUIAssetPath(data.buildItem.icon)}
+                  alt=""
+                />
+              )}
               <span className="gset-build-status-value">
-                {data.building ? formatPercent(buildProgress * 100) : ''}
+                {data.buildItem ? formatPercent(buildItemProgress * 100) : ''}
               </span>
             </span>
           </div>
@@ -446,9 +448,9 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
           <div
             className="gset-build-bar"
             aria-hidden="true"
-            style={{ display: !besieged && data.building ? undefined : 'none' }}
+            style={{ display: !besieged && data.buildItem ? undefined : 'none' }}
           >
-            <div className="gset-build-bar-fill" style={{ width: percentWidth(buildProgress) }} />
+            <div className="gset-build-bar-fill" style={{ width: percentWidth(buildItemProgress) }} />
           </div>
         </div>
       </div>

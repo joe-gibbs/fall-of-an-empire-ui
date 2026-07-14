@@ -13,6 +13,8 @@ import type {
   FormationTemplateEntry,
   FormationTemplateResourceCost,
   FormationTemplateUnitEntry,
+  PendingFormationEntry,
+  PendingFormationUnitEntry,
 } from '../../../bridge-types.generated';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Tooltip from '../../common/tooltips/Tooltip';
@@ -25,7 +27,7 @@ import {
   useFormationTemplatesBridge,
 } from '../../../bridge/military-map/useFormationTemplatesBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
-import { useGameActions } from '../../../context/GameContext';
+import { useGameActions, useGameState } from '../../../context/GameContext';
 import { getFormationTemplateIcon } from '../../../utils/formationTemplatePresentation';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { formatNumber } from '../../../utils/numberFormat';
@@ -247,6 +249,113 @@ function TrainingQueue({
   );
 }
 
+function projectedPendingUnitProgress(unit: PendingFormationUnitEntry, gameDay: number): number {
+  const elapsedDays = unit.snapshotDate > 0 ? Math.max(0, gameDay - unit.snapshotDate) : 0;
+  return Math.max(0, Math.min(1, unit.progressAtSnapshot + elapsedDays * unit.dailyProgress));
+}
+
+function PendingFormationProgress({
+  formation,
+  unitByKey,
+  gameDay,
+}: {
+  formation: PendingFormationEntry;
+  unitByKey: Map<string, RecruitableUnit>;
+  gameDay: number;
+}) {
+  const templateUnits = formation.units.map(unit => ({
+    unit,
+    definition: unitByKey.get(unit.unitId)!,
+    progress: projectedPendingUnitProgress(unit, gameDay),
+  }));
+  const queuedProgress = templateUnits.reduce((total, entry) => total + entry.progress, 0);
+  const overallProgress = formation.totalUnits > 0
+    ? Math.max(0, Math.min(1, (formation.readyUnits + queuedProgress) / formation.totalUnits))
+    : 0;
+  const unitGroups = Array.from(templateUnits.reduce((groups, entry) => {
+    const key = `${entry.unit.unitId}:${entry.unit.settlementId}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.count += 1;
+      existing.progressTotal += entry.progress;
+      if (entry.unit.dailyProgress > 0) existing.locationLabel = entry.unit.locationLabel;
+    } else {
+      groups.set(key, {
+        key,
+        definition: entry.definition,
+        locationLabel: entry.unit.locationLabel,
+        count: 1,
+        progressTotal: entry.progress,
+      });
+    }
+    return groups;
+  }, new Map<string, {
+    key: string;
+    definition: RecruitableUnit;
+    locationLabel: string;
+    count: number;
+    progressTotal: number;
+  }>()).values());
+  const formationTemplate = formation.type === 'naval' ? 'naval' : 'land';
+  const composition = unitGroups.map(group => ({
+    unitAssetKey: group.definition.assetKey,
+    unitName: group.definition.name,
+    portrait: group.definition.portrait,
+    type: group.definition.type,
+    tier: group.definition.tier,
+    count: group.count,
+  }));
+  const icon = getFormationTemplateIcon(formationTemplate, composition).icon;
+
+  return (
+    <section className="mil-pending-formation">
+      <header className="mil-pending-header">
+        <img src={asset(icon)} alt="" className="mil-pending-formation-icon" />
+        <div className="mil-pending-heading">
+          <span className="mil-pending-kicker">{formation.heading}</span>
+          <span className="mil-pending-name">{formation.templateName}</span>
+        </div>
+        <span className="mil-pending-percent">{Math.round(overallProgress * 100)}%</span>
+      </header>
+
+      <div className="mil-pending-summary">
+        <span>{formation.statusLabel}</span>
+        <div className="mil-pending-progress" aria-hidden="true">
+          <span className="mil-pending-progress-fill" style={{ transform: `scaleX(${overallProgress})` }} />
+        </div>
+      </div>
+
+      <div className="mil-pending-units">
+        {unitGroups.map(group => {
+          const progress = group.progressTotal / group.count;
+          return (
+            <div className="mil-pending-unit" key={group.key}>
+              <Tooltip content={{ afterLines: <UnitTooltip data={unitTooltipData(group.definition)} /> }} position="left" delay={150}>
+                <span className="mil-pending-unit-portrait-wrap">
+                  <img src={asset(group.definition.portrait)} alt="" className="mil-pending-unit-portrait" />
+                  <span className="mil-pending-unit-count">
+                    <WebUIText textKey="Auto.ComponentsSidebarsSettlementMilitaryPanel.260.5" />{n(group.count)}
+                  </span>
+                </span>
+              </Tooltip>
+              <div className="mil-pending-unit-body">
+                <div className="mil-pending-unit-line">
+                  <span className="mil-pending-unit-name">{group.definition.name}</span>
+                  <span className="mil-pending-unit-percent">{Math.round(progress * 100)}%</span>
+                </div>
+                <span className="mil-pending-unit-location">{group.locationLabel}</span>
+                <div className="mil-pending-unit-progress" aria-hidden="true">
+                  <span className="mil-pending-unit-progress-fill" style={{ transform: `scaleX(${progress})` }} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Formation card - shows composition + raise CTA
 // ---------------------------------------------------------------------------
@@ -390,6 +499,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
   const r = settlement.recruitment;
   const templateData = useFormationTemplatesBridge();
   const { openScreen } = useGameActions();
+  const { gameDay } = useGameState();
   const [formationMessage, setFormationMessage] = React.useState<{ text: string; applied: boolean } | null>(null);
 
   // Group recruits by unit type, preserving TYPE_ORDER. Hook runs
@@ -438,6 +548,11 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
     return !canRaiseLand && canRaiseNaval ? 'naval' : 'land';
   }, [r, settlement.hasPort]);
 
+  const pendingFormation = React.useMemo(
+    () => templateData?.pendingFormations.find(formation => formation.targetSettlementId === settlement.id) ?? null,
+    [settlement.id, templateData],
+  );
+
   const raiseFormation = React.useCallback((templateId: string) => {
     setFormationMessage(null);
     void applyFormationTemplateBridge(templateId, settlement.id)
@@ -460,6 +575,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
   const blockedReason = settlement.canBuild === false
     ? (settlement.cannotBuildReason || 'Recruitment is not available right now.')
     : '';
+  const formationBlockedReason = blockedReason || pendingFormation?.blockReason || '';
 
   return (
     <div className={`mil-panel${blockedReason ? ' mil-panel--blocked' : ''}`}>
@@ -478,6 +594,14 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
 
       {r && <TrainingQueue items={r.trainingQueue} unitByKey={unitByKey} />}
 
+      {pendingFormation && (
+        <PendingFormationProgress
+          formation={pendingFormation}
+          unitByKey={unitByKey}
+          gameDay={gameDay}
+        />
+      )}
+
       <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsSettlementMilitaryPanel.318.8')} />
       <div className="mil-formation-list">
         <button type="button" className="mil-new-template-btn" onMouseDown={openNewTemplate}>
@@ -487,9 +611,9 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
         {formations.map(f => (
           <FormationCard
             key={f.id}
-            f={f}
-            unitByKey={unitByKey}
-            blockedReason={blockedReason}
+              f={f}
+              unitByKey={unitByKey}
+              blockedReason={formationBlockedReason}
             onRaise={raiseFormation}
             onOpen={openTemplate}
           />

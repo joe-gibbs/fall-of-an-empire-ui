@@ -996,6 +996,32 @@ export interface FormationTemplateAssignedForce {
   location: string;
 }
 
+export interface PendingFormationUnitEntry {
+  unitId: string;
+  settlementId: string;
+  settlementName: string;
+  locationLabel: string;
+  progressAtSnapshot: number;
+  dailyProgress: number;
+  snapshotDate: number;
+  expiresOnDate: number;
+}
+
+export interface PendingFormationEntry {
+  id: string;
+  templateId: string;
+  templateName: string;
+  type: string;
+  targetSettlementId: string;
+  targetSettlementName: string;
+  heading: string;
+  statusLabel: string;
+  blockReason: string;
+  readyUnits: number;
+  totalUnits: number;
+  units: PendingFormationUnitEntry[];
+}
+
 export interface FormationTemplateBattleGroupUnitEntry {
   unitId: string;
   count: number;
@@ -1032,6 +1058,7 @@ export interface FormationTemplateEntry {
 
 export interface GetFormationTemplatesResponse {
   templates: FormationTemplateEntry[];
+  pendingFormations: PendingFormationEntry[];
   activeBuildTemplateId: string;
   playerGold: number;
 }
@@ -4315,6 +4342,7 @@ export interface WorldConvoyCargo {
 
 export interface WorldGlanceBuildProgress {
   label: string;
+  icon: string;
   progress: number;
 }
 
@@ -4370,8 +4398,8 @@ export interface WorldSettlementGlance {
   independent: boolean;
   overlordName: string;
   bishopName: string;
-  hasBuilding: boolean;
-  building: WorldGlanceBuildProgress;
+  hasBuildItem: boolean;
+  buildItem: WorldGlanceBuildProgress;
   warWithPlayer: boolean;
 }
 
@@ -4464,8 +4492,8 @@ export interface WorldGlanceFrameEntry {
   targeted: boolean;
   besieged: boolean;
   siegeProgress: number;
-  hasBuilding: boolean;
-  buildProgress: number;
+  hasBuildItem: boolean;
+  buildItemProgress: number;
   attackerStrength: number;
   attackerMorale: number;
   attackerLastLosses: number;
