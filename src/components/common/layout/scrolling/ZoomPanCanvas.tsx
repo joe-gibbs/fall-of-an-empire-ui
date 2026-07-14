@@ -3,7 +3,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type ComponentType,
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   type Ref,
@@ -54,6 +53,14 @@ export interface ZoomPanCanvasApi {
   zoomFromCenter: (factor: number) => void;
 }
 
+interface ZoomPanCanvasControlsProps extends ZoomPanCanvasApi {
+  render: (api: ZoomPanCanvasApi) => ReactNode;
+}
+
+function ZoomPanCanvasControls({ render, zoom, zoomIn, zoomOut, resetView, zoomFromCenter }: ZoomPanCanvasControlsProps) {
+  return render({ zoom, zoomIn, zoomOut, resetView, zoomFromCenter });
+}
+
 interface ZoomPanCanvasProps {
   children: ReactNode;
   className?: string;
@@ -77,7 +84,7 @@ interface ZoomPanCanvasProps {
   onContentMouseLeave?: () => void;
   onPanDragStart?: () => void;
   onViewChange?: (view: ZoomPanView) => void;
-  controls?: ComponentType<ZoomPanCanvasApi>;
+  controls?: (api: ZoomPanCanvasApi) => ReactNode;
   leftDragMode?: 'pan' | 'select';
   ignoreLeftDragFrom?: (target: HTMLElement) => boolean;
   resetViewOnResize?: boolean;
@@ -711,27 +718,30 @@ export default function ZoomPanCanvas({
     }
   }, [onContentRightClick, onContentRightDrag, onContentRightDragUpdate]);
 
-  const Controls = controls;
-
   return (
     <div
       ref={bindViewportRef}
       className={`zoom-pan-canvas${isPanning ? ' zoom-pan-canvas--panning' : ''}${isRightDragging ? ' zoom-pan-canvas--right-dragging' : ''}${isLeftSelecting ? ' zoom-pan-canvas--left-selecting' : ''}${className ? ` ${className}` : ''}`}
       style={style}
-      onMouseDown={handleMouseDown}
-      onWheel={handleWheel}
-      onContextMenu={handleContextMenu}
     >
       <div
-        ref={contentRef}
-        className={`zoom-pan-canvas__content${contentClassName ? ` ${contentClassName}` : ''}`}
-        style={buildContentStyle(view, contentStyle)}
-        onMouseLeave={() => onContentMouseLeave?.()}
+        className="zoom-pan-canvas__interaction-surface"
+        onMouseDown={handleMouseDown}
+        onWheel={handleWheel}
+        onContextMenu={handleContextMenu}
       >
-        {children}
+        <div
+          ref={contentRef}
+          className={`zoom-pan-canvas__content${contentClassName ? ` ${contentClassName}` : ''}`}
+          style={buildContentStyle(view, contentStyle)}
+          onMouseLeave={() => onContentMouseLeave?.()}
+        >
+          {children}
+        </div>
       </div>
-      {Controls ? (
-        <Controls
+      {controls ? (
+        <ZoomPanCanvasControls
+          render={controls}
           zoom={view.zoom}
           zoomIn={zoomIn}
           zoomOut={zoomOut}

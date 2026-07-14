@@ -11,6 +11,7 @@ import { formatNumber, formatPercent } from '../../../utils/numberFormat';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { buildHeightMapDataUrl } from './heightMapImage';
 import { buildWaypointSplinePath, coordinatePercent, coordinatePercentUnclamped, coordinatePercentValue, normaliseDegrees, normaliseSelectionBox, radiusPercent, sizePercent, stableObstacleNoise, type SelectionBox } from './battleGeometry';
+import { battleStancePresentation } from './battleStances';
 import { webUIText } from '../../../localization/WebUITextContext';
 
 const TERRAIN_ICONS: Record<string, string> = {
@@ -626,11 +627,12 @@ export function FormationCounter({
   const casualtyPressure = clamp((formation.recentCasualtyPressure ?? 0) * 100, 0, 100);
   const routingRisk = morale < 18 && casualtyPressure > 7.5;
   const agentCount = formation.agentCount || battleFrameAgentCount(formation);
+  const stance = showStance ? battleStancePresentation(formation.stance) : null;
   const active = formation.isRouting
     ? webUIText('Battle.FormationRouting')
     : formation.isWithdrawing
       ? webUIText('Battle.FormationWithdrawing')
-      : formation.activeActionName || (showStance ? formation.stanceLabel : '');
+      : formation.activeActionName || stance?.label || '';
   const rotation = Number.isFinite(formation.rotation) ? formation.rotation : 0;
   const counterRotation = normaliseDegrees(rotation + 90);
   const stateIcon = formation.isRouting
@@ -676,7 +678,7 @@ export function FormationCounter({
               valueColor: 'var(--red)',
             }] : []),
             { label: webUIText('Battle.UnitTooltip.Speed'), labelIcon: '/assets/icons/I_Speed.png', value: fmt(Math.round(formation.speed)) },
-            ...(showStance ? [{ label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.415.8'), value: formation.stanceLabel }] : []),
+            ...(stance ? [{ label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.415.8'), labelIcon: stance.icon, value: stance.label }] : []),
             ...(formation.activeActionName ? [{ label: webUIText('Battle.UnitTooltip.Action'), value: formation.activeActionName }] : []),
             ...(formation.attackRange > 0 ? [{ label: webUIText('Battle.UnitTooltip.Range'), value: fmt(Math.round(formation.attackRange)) }] : []),
             ...(formation.minimumAttackRange > 0 ? [{ label: webUIText('Battle.UnitTooltip.MinimumRange'), value: fmt(Math.round(formation.minimumAttackRange)) }] : []),
@@ -721,6 +723,7 @@ export function FormationCounter({
                 {webUIText(incomingAttackPosition === 'rear' ? 'Battle.RearAttackedShort' : 'Battle.FlankedShort')}
               </span>
             )}
+            {stance && <img className="battle-counter-stance-icon" src={stance.icon} alt="" draggable={false} />}
             {stateIcon && <img className={`battle-counter-state-icon${stateIconClass}`} src={stateIcon} alt="" draggable={false} />}
             <span className={`battle-counter-hp ${health < 35 ? 'battle-counter-hp--critical' : health < 70 ? 'battle-counter-hp--wounded' : 'battle-counter-hp--healthy'}`}>
               {Math.round(health)}
@@ -788,6 +791,7 @@ function BattleFormationUnitCard({ unit, side }: { unit: BattleFormationUnitDeta
       }}
       position={side === 'attacker' ? 'right' : 'left'}
       delay={100}
+      bubbleClassName="tt-bubble--battle-formation-unit"
     >
       <div
         className={`battle-formation-unit-card${unit.strength <= 0 ? ' battle-formation-unit-card--destroyed' : ''}`}
@@ -808,9 +812,15 @@ function BattleFormationUnitCard({ unit, side }: { unit: BattleFormationUnitDeta
   );
 }
 
-export function BattleFormationUnitRail({ formation }: { formation: BattleFormationLive }) {
+export function BattleFormationUnitRail({
+  formation,
+  dockToCommandBar,
+}: {
+  formation: BattleFormationLive;
+  dockToCommandBar: boolean;
+}) {
   return (
-    <div className={`battle-formation-unit-rail battle-formation-unit-rail--${formation.side}`}>
+    <div className={`battle-formation-unit-rail battle-formation-unit-rail--${formation.side}${dockToCommandBar ? ' battle-formation-unit-rail--with-command-bar' : ''}`}>
       <div className="battle-formation-unit-grid">
         {formation.units.map(unit => (
           <BattleFormationUnitCard key={unit.id} unit={unit} side={formation.side} />
@@ -1286,6 +1296,8 @@ export function BattleActionButton({
   return (
     <Tooltip
       position="top"
+      delay={100}
+      wrapperClassName="battle-action-tooltip"
       content={{
         title: action.name,
         body: action.description,
@@ -1299,6 +1311,7 @@ export function BattleActionButton({
       <button
         type="button"
         className={`battle-action-btn${action.isActive ? ' is-active' : ''}${actionUnavailable ? ' is-disabled' : ''}`}
+        aria-label={action.name}
         aria-disabled={actionUnavailable ? 'true' : 'false'}
         onMouseDown={() => {
           if (actionUnavailable) return;

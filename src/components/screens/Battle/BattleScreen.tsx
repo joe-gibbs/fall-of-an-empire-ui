@@ -28,6 +28,7 @@ import {
   BattleActionButton,
   BattleHeightLayer,
   BattleObstacleLayer,
+  BattleFormationUnitRail,
   BattleUnitAgentLayer,
   BattleZoomIndicator,
   buildBattleVisualAgents,
@@ -45,6 +46,7 @@ import {
   WaypointLines,
   AttackEffect,
 } from './BattleScreenParts';
+import { BATTLE_STANCES } from './battleStances';
 import './BattleScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -62,14 +64,6 @@ const EMPTY_SELECTED_IDS: string[] = [];
 const EMPTY_DAMAGE_INDICATORS: BattleDamageIndicator[] = [];
 const EMPTY_ATTACK_EFFECTS: BattleAttackEffect[] = [];
 const BATTLE_HEADER_MEASURE_FRAMES = 18;
-
-const STANCE_OPTIONS = [
-  { id: 'neutral', get label() { return webUIText('Auto.TopProp.ComponentsScreensBattleBattleScreen.42.1'); } },
-  { id: 'hold', get label() { return webUIText('Auto.TopProp.ComponentsScreensBattleBattleScreen.43.2'); } },
-  { id: 'aggressive', get label() { return webUIText('Auto.TopProp.ComponentsScreensBattleBattleScreen.44.3'); } },
-  { id: 'defensive', get label() { return webUIText('Auto.TopProp.ComponentsScreensBattleBattleScreen.45.4'); } },
-  { id: 'charge', get label() { return webUIText('Auto.TopProp.ComponentsScreensBattleBattleScreen.46.5'); } },
-];
 
 type AttackPosition = 'flank' | 'rear';
 
@@ -685,6 +679,13 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
               <>
                 <BattleZoomIndicator zoom={zoom} />
 
+                {selectedFormations.length === 1 && selectedFormations[0].units.length > 0 && (
+                  <BattleFormationUnitRail
+                    formation={selectedFormations[0]}
+                    dockToCommandBar={selectedCommandable.length > 0}
+                  />
+                )}
+
                 {selectedCommandable.length > 0 && (
                   <div className={`battle-actions-panel${selectedCommandable.length > 1 ? ' battle-actions-panel--multi' : ''}`}>
                     <div className="battle-actions-info">
@@ -709,15 +710,23 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
                       <div className="battle-stance-group">
                         <div className="battle-stance-label"><WebUIText textKey="Auto.ComponentsScreensBattleBattleScreen.945.7" /></div>
                         <div className="battle-stance-row">
-                          {STANCE_OPTIONS.map(stance => (
-                            <button
+                          {BATTLE_STANCES.map(stance => (
+                            <Tooltip
                               key={stance.id}
-                              type="button"
-                              className={`battle-mode-btn${selectedCommandable.every(formation => formation.stance === stance.id) ? ' is-active' : ''}`}
-                              onMouseDown={() => setSelectedStance(stance.id)}
+                              content={{ title: stance.label, body: stance.description }}
+                              position="top"
+                              delay={150}
+                              wrapperClassName="battle-stance-tooltip"
                             >
-                              {stance.label}
-                            </button>
+                              <button
+                                type="button"
+                                className={`battle-mode-btn${selectedCommandable.every(formation => formation.stance === stance.id) ? ' is-active' : ''}`}
+                                onMouseDown={() => setSelectedStance(stance.id)}
+                              >
+                                <img className="battle-mode-btn-icon" src={stance.icon} alt="" draggable={false} />
+                                <span>{stance.label}</span>
+                              </button>
+                            </Tooltip>
                           ))}
                         </div>
                       </div>
