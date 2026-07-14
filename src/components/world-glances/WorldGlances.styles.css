@@ -4540,10 +4540,8 @@
 }
 
 .world-glance-node.detail-flag .gconv-route-pip,
-.world-glance-node.detail-flag .gconv-cargo-strip,
 .world-glance-node.detail-flag .gconv-faction-label,
 .mock-production-glance.detail-flag .gconv-route-pip,
-.mock-production-glance.detail-flag .gconv-cargo-strip,
 .mock-production-glance.detail-flag .gconv-faction-label {
   display: none;
 }
@@ -4733,10 +4731,8 @@
 }
 
 .world-glance-node.detail-flag .gconv-route-pip,
-.world-glance-node.detail-flag .gconv-cargo-strip,
 .world-glance-node.detail-flag .gconv-faction-label,
 .mock-production-glance.detail-flag .gconv-route-pip,
-.mock-production-glance.detail-flag .gconv-cargo-strip,
 .mock-production-glance.detail-flag .gconv-faction-label {
   display: none;
 }

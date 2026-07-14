@@ -22,7 +22,7 @@ import ArmyGlance, { NativeMilitaryGlanceTooltip } from '../../world-glances/Arm
 import NavyGlance from '../../world-glances/NavyGlance';
 import BattleGlance from '../../world-glances/BattleGlance';
 import SettlementGlance from '../../world-glances/SettlementGlance';
-import ConvoyGlance from '../../world-glances/ConvoyGlance';
+import ConvoyGlance, { NativeConvoyGlanceTooltip } from '../../world-glances/ConvoyGlance';
 import PortGlance from '../../world-glances/PortGlance';
 import ModWorldGlanceLayer from '../../world-glances/ModWorldGlanceLayer';
 import SelectedMilitaryConnectors from './SelectedMilitaryConnectors';
@@ -1014,7 +1014,7 @@ function NativeWorldGlanceInputOverlay() {
   const data = useWorldGlancesBridge(true);
   const dataRef = useRef(data);
   const latestFrameRef = useRef<WorldGlancesFrameResponse | null>(null);
-  const [hovered, setHovered] = useState<{ kind: 'army' | 'navy'; id: string } | null>(null);
+  const [hovered, setHovered] = useState<{ kind: 'army' | 'navy' | 'convoy'; id: string } | null>(null);
   const hoveredRef = useRef(hovered);
   const [anchor, setAnchor] = useState<ScreenPosition | null>(null);
 
@@ -1058,12 +1058,12 @@ function NativeWorldGlanceInputOverlay() {
       const kind = args?.[0];
       const id = args?.[1];
       const isHovered = args?.[2];
-      if ((kind !== 'army' && kind !== 'navy') || typeof id !== 'string' || typeof isHovered !== 'boolean') {
+      if ((kind !== 'army' && kind !== 'navy' && kind !== 'convoy') || typeof id !== 'string' || typeof isHovered !== 'boolean') {
         return;
       }
 
       if (isHovered) {
-        const target: { kind: 'army' | 'navy'; id: string } = { kind, id };
+        const target: { kind: 'army' | 'navy' | 'convoy'; id: string } = { kind, id };
         hoveredRef.current = target;
         setHovered(target);
         updateAnchor(latestFrameRef.current, target);
@@ -1079,6 +1079,11 @@ function NativeWorldGlanceInputOverlay() {
   }, [updateAnchor]);
 
   if (!data || !hovered || !anchor) return null;
+
+  if (hovered.kind === 'convoy') {
+    const entry = data.convoys.find(candidate => candidate.id === hovered.id);
+    return entry ? <NativeConvoyGlanceTooltip data={mapConvoy(entry)} anchor={anchor} /> : null;
+  }
 
   const entry = hovered.kind === 'navy'
     ? data.navies.find(candidate => candidate.id === hovered.id)

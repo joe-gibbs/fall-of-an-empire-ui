@@ -115,6 +115,36 @@ interface ConvoyGlanceProps {
   data: ConvoyGlanceData;
 }
 
+export function NativeConvoyGlanceTooltip({
+  data,
+  anchor,
+}: ConvoyGlanceProps & { anchor: { x: number; y: number } }) {
+  const { debugMode } = useGameState();
+  const { detail, request } = useWorldGlanceTooltip('convoy', data.id);
+
+  return (
+    <Tooltip
+      content={detail ? convoyTooltip(data, detail, debugMode) : null}
+      open
+      position="top"
+      delay={520}
+      bubbleClassName="tt-bubble--glance tt-bubble--passive"
+      onShowIntent={request}
+      wrapperStyle={{
+        position: 'fixed',
+        left: anchor.x,
+        top: anchor.y,
+        width: '5rem',
+        height: '5rem',
+        transform: 'translate(-50%, -50%)',
+        pointerEvents: 'none',
+      }}
+    >
+      <span aria-hidden="true" />
+    </Tooltip>
+  );
+}
+
 export default function ConvoyGlance({ data }: ConvoyGlanceProps) {
   const { debugMode } = useGameState();
   const { detail, request } = useWorldGlanceTooltip('convoy', data.id);
