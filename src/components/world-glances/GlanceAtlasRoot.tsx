@@ -74,6 +74,11 @@ const SETTLEMENT_ANCHOR_Y_REM = 2.1364;
 type AtlasSection = WorldGlanceFrameSection | 'notification';
 const ATLAS_SECTIONS: readonly AtlasSection[] = [...WORLD_GLANCE_FRAME_SECTIONS, 'notification'];
 
+interface SettlementConstructionFrame {
+  hasBuilding: boolean;
+  progress: number;
+}
+
 // Anchor keys are the modder-facing contract with the engine compositor: an engine placement
 // source must emit the same key for the element to be drawn.
 function worldAnchorKey(section: AtlasSection, id: string): string {
@@ -141,7 +146,7 @@ function reserveSizeForSection(section: AtlasSection, remPx: number, settlementB
   return undefined;
 }
 
-const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, remPx, plateRef }: {
+const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, construction, remPx, plateRef }: {
   section: AtlasSection;
   id: string;
   entry: unknown;
@@ -149,6 +154,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   selected: boolean;
   targeted: boolean;
   hovered: boolean;
+  construction?: SettlementConstructionFrame;
   remPx: number;
   plateRef: (key: string, node: HTMLDivElement | null) => void;
 }) {
@@ -204,7 +210,15 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   }
 
   let content: ReactNode = null;
-  if (section === 'settlement') content = <SettlementGlance data={mapSettlement(entry as GetWorldGlancesResponse['settlements'][number])} />;
+  if (section === 'settlement') {
+    const settlementData = mapSettlement(entry as GetWorldGlancesResponse['settlements'][number]);
+    if (construction) {
+      settlementData.building = construction.hasBuilding
+        ? { label: settlementData.building?.label ?? '', progress: construction.progress }
+        : undefined;
+    }
+    content = <SettlementGlance data={settlementData} />;
+  }
   else if (section === 'port') content = <PortGlance data={mapPort(entry as GetWorldGlancesResponse['ports'][number])} />;
   else if (section === 'convoy') content = <ConvoyGlance data={mapConvoy(entry as GetWorldGlancesResponse['convoys'][number])} />;
   else if (section === 'army') content = <ArmyGlance data={mapMilitary(entry as GetWorldGlancesResponse['armies'][number])} />;
@@ -237,6 +251,7 @@ export default function GlanceAtlasRoot() {
 
   const detailByKeyRef = useRef<Map<string, WorldGlanceDetailClass>>(new Map());
   const flagsByKeyRef = useRef<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
+  const constructionByKeyRef = useRef<Map<string, SettlementConstructionFrame>>(new Map());
   const plateNodesRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const visibleAtlasKeysRef = useRef<Set<string>>(new Set());
   const notificationContentSignatureRef = useRef('');
@@ -246,6 +261,7 @@ export default function GlanceAtlasRoot() {
 
   const [detailByKey, setDetailByKey] = useState<Map<string, WorldGlanceDetailClass>>(new Map());
   const [flagsByKey, setFlagsByKey] = useState<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
+  const [constructionByKey, setConstructionByKey] = useState<Map<string, SettlementConstructionFrame>>(new Map());
   const [hoveredKeys, setHoveredKeys] = useState<Set<string>>(new Set());
   const [entryCache, setEntryCache] = useState<Map<AtlasSection, Map<string, { id: string }>>>(new Map());
   const [notificationEntries, setNotificationEntries] = useState<Notification[]>([]);
@@ -358,6 +374,7 @@ export default function GlanceAtlasRoot() {
     return onWorldGlancesFrame((frame) => {
       let detailChanged = false;
       let flagsChanged = false;
+      let constructionChanged = false;
       const now = Date.now();
       const previousVisibleKeys = visibleAtlasKeysRef.current;
       const nextVisibleKeys = new Set<string>();
@@ -380,6 +397,24 @@ export default function GlanceAtlasRoot() {
               if (node.dataset.worldAnchorDemand !== 'visible') {
                 node.dataset.worldAnchorDemand = 'visible';
               }
+            }
+          }
+
+          if (section === 'settlement' && typeof entry.hasBuilding === 'boolean') {
+            const nextConstruction = {
+              hasBuilding: entry.hasBuilding,
+              progress: Math.max(0, Math.min(1, entry.buildProgress ?? 0)),
+            };
+            const construction = constructionByKeyRef.current.get(key);
+            if (!construction
+              || construction.hasBuilding !== nextConstruction.hasBuilding
+              || construction.progress !== nextConstruction.progress) {
+              const node = plateNodesRef.current.get(key);
+              if (node && atlasVisible) {
+                prepareWorldAnchorContentChange(node);
+              }
+              constructionByKeyRef.current.set(key, nextConstruction);
+              constructionChanged = true;
             }
           }
 
@@ -418,6 +453,9 @@ export default function GlanceAtlasRoot() {
       if (flagsChanged) {
         setFlagsByKey(new Map(flagsByKeyRef.current));
       }
+      if (constructionChanged) {
+        setConstructionByKey(new Map(constructionByKeyRef.current));
+      }
     });
   }, []);
 
@@ -454,6 +492,7 @@ export default function GlanceAtlasRoot() {
               selected={flags?.selected === true}
               targeted={flags?.targeted === true}
               hovered={hoveredKeys.has(key)}
+              construction={section === 'settlement' ? constructionByKey.get(key) : undefined}
               remPx={remPx}
               plateRef={plateRef}
             />

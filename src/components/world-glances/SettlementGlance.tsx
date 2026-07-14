@@ -423,6 +423,20 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
         <div className="gset-main">
           <div className="gset-head">
             <SettlementName name={data.name} />
+            <span
+              className="gset-build-status"
+              aria-hidden="true"
+              style={{ display: data.building ? undefined : 'none' }}
+            >
+              <img
+                className="gset-build-status-icon"
+                src={FoaeCefUIAssetPath('/assets/icons/I_BuildingsQuickButton.png')}
+                alt=""
+              />
+              <span className="gset-build-status-value">
+                {data.building ? formatPercent(buildProgress * 100) : ''}
+              </span>
+            </span>
           </div>
 
           <div className="gset-info">

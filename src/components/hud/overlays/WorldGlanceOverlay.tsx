@@ -26,6 +26,7 @@ import ConvoyGlance from '../../world-glances/ConvoyGlance';
 import PortGlance from '../../world-glances/PortGlance';
 import ModWorldGlanceLayer from '../../world-glances/ModWorldGlanceLayer';
 import SelectedMilitaryConnectors from './SelectedMilitaryConnectors';
+import { formatPercent } from '../../../utils/numberFormat';
 import type {
   ArmyGlanceData,
   BattleGlanceData,
@@ -607,11 +608,17 @@ function applySettlementProgressFrame(node: HTMLDivElement, entry: WorldGlanceFr
 
   const buildBar = node.querySelector<HTMLElement>('.gset-build-bar');
   const buildFill = node.querySelector<HTMLElement>('.gset-build-bar-fill');
-  if (!buildBar || !buildFill || typeof entry.hasBuilding !== 'boolean') {
+  const buildStatus = node.querySelector<HTMLElement>('.gset-build-status');
+  const buildStatusValue = node.querySelector<HTMLElement>('.gset-build-status-value');
+  if (!buildBar || !buildFill || !buildStatus || !buildStatusValue || typeof entry.hasBuilding !== 'boolean') {
     return;
   }
 
   const showBuildBar = entry.hasBuilding && entry.besieged !== true;
+  buildStatus.style.display = entry.hasBuilding ? '' : 'none';
+  buildStatusValue.textContent = entry.hasBuilding
+    ? formatPercent(Math.max(0, Math.min(1, entry.buildProgress ?? 0)) * 100)
+    : '';
   buildBar.style.display = showBuildBar ? '' : 'none';
   buildFill.style.width = formatFrameProgressWidth(entry.buildProgress);
 }
