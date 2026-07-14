@@ -4498,33 +4498,33 @@ function mockDefeatOutcomeSummary(cause: MockDefeatCause) {
   const rulers = mockOutcomeRulers(true);
   const causes = {
     extinction: {
-      title: 'No Successor Remains',
-      subtitle: 'No heir remains',
-      description: 'Valen Arcastus died on 17 Summer 784 without an heir. With no successor to take power, the Rephsian Empire breaks apart as rivals make their claims.',
+      title: 'No Heir Remains',
+      subtitle: 'Your dynasty has ended',
+      description: 'After Valen Arcastus died without an heir on 17 Summer 784, rivals tore the Rephsian Empire apart in their struggle for power.',
       crestIcon: '/assets/icons/I_Dread.png',
     },
     conquest: {
       title: 'Total Defeat',
-      subtitle: 'The last territory has fallen',
-      description: 'The last territory of the Rephsian Empire has fallen. On 17 Summer 784, it was wiped from the map.',
+      subtitle: 'Your last territory has fallen',
+      description: 'On 17 Summer 784, the Rephsian Empire lost its last territory and was wiped from the map.',
       crestIcon: '/assets/icons/I_War.png',
     },
     subjugation: {
       title: 'Subjugated',
-      subtitle: 'Sovereignty extinguished',
-      description: 'On 17 Summer 784, the Rephsian Empire was forced to submit to another power.',
+      subtitle: 'You have lost your independence',
+      description: 'On 17 Summer 784, the Rephsian Empire was forced to submit to another power and lost its independence.',
       crestIcon: '/assets/icons/Diplomacy/I_ForceVassalisation.png',
     },
     rebellion: {
       title: 'Overthrown',
-      subtitle: 'The ruler has lost power',
-      description: 'On 17 Summer 784, rebels seized control of the Rephsian Empire. Valen Arcastus was deposed and imprisoned as a new regime took power, ending the dynasty\'s rule.',
+      subtitle: 'You have lost power',
+      description: 'On 17 Summer 784, rebels seized control of the Rephsian Empire. Valen Arcastus was deposed and imprisoned, ending the dynasty\'s rule.',
       crestIcon: '/assets/icons/I_Mutiny.png',
     },
     governorship: {
       title: 'Governorship Lost',
-      subtitle: 'Another governor has taken office',
-      description: 'On 17 Summer 784, Valen Arcastus no longer governed the Rephsian Empire. With the province in another governor\'s hands, the campaign ends.',
+      subtitle: 'You have been removed from office',
+      description: 'On 17 Summer 784, Valen Arcastus was removed as governor of the Rephsian Empire. The province passed into another governor\'s hands.',
       crestIcon: '/assets/icons/AssignGovernor.png',
     },
   };
