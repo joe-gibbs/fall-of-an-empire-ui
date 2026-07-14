@@ -101,6 +101,7 @@
   display: block;
   border-radius: 0;
   background-image: url('/assets/portraits/borders/portrait-border-square-gold.png');
+  background-size: 105% 105%;
 }
 
 .portrait--rect.portrait--tier-silver::after {
