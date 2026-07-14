@@ -1750,6 +1750,9 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     [factions],
   );
   const selected = factionsByBase.get(selectedBaseName) ?? factions[0] ?? null;
+  const showPurchaseForSelected = Boolean(
+    selected && showPurchaseForLocked && selected.fullGamePlayable,
+  );
   const selectedLeader = getLeader(selected);
   const selectedSubjects = selected
     ? factions
@@ -2168,12 +2171,12 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
           <div className="fs-detail-footer">
             <button
               type="button"
-              className={`fs-begin-btn${selected.playable || showPurchaseForLocked ? '' : ' fs-begin-btn--disabled'}`}
-              disabled={!selected.playable && !showPurchaseForLocked}
+              className={`fs-begin-btn${selected.playable || showPurchaseForSelected ? '' : ' fs-begin-btn--disabled'}`}
+              disabled={!selected.playable && !showPurchaseForSelected}
               onClick={() => {
                 if (selected.playable) {
                   onConfirm({ baseName: selected.baseName, displayName: selected.displayName });
-                } else {
+                } else if (showPurchaseForSelected) {
                   onPurchaseFullGame?.();
                 }
               }}
@@ -2184,14 +2187,14 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
                 )}
                 <span>{selected.playable
                   ? t('MainMenu.BeginCampaign')
-                  : showPurchaseForLocked
+                  : showPurchaseForSelected
                     ? t('Demo.BuyFullGame')
                     : t('MainMenu.Locked')}</span>
               </span>
               <span className="fs-begin-btn-sub">
                 {selected.playable
                   ? t('MainMenu.AsFaction', { Faction: selected.displayName })
-                  : showPurchaseForLocked
+                  : showPurchaseForSelected
                     ? t('Demo.PlayFaction', { Faction: selected.displayName })
                   : t('MainMenu.FactionPlayableLater')}
               </span>

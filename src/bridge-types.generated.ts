@@ -2411,6 +2411,9 @@ export interface GetGameStateResponse {
   climateTrend: number;
   climateDescription: string;
   saveSerial: number;
+  hasDemoTimeLimit: boolean;
+  demoDaysRemaining: number;
+  demoEndDateText: string;
 }
 
 export interface GetGameVersionResponse {
@@ -2810,6 +2813,7 @@ export interface ScenarioMapFactionDto {
   cultureGroup: string;
   cultureInfo: CultureInfo;
   playable: boolean;
+  fullGamePlayable: boolean;
   isRebel: boolean;
   religion: string;
   religionDisplayName: string;

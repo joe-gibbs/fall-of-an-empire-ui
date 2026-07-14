@@ -79,7 +79,15 @@ const buildTooltip = (
 };
 
 const DateDisplay: React.FC = () => {
-  const { date, dateText, isPaused, speed, season: seasonLabel, climateTrend, climateDescription } = useGameState();
+  const {
+    date,
+    dateText,
+    isPaused,
+    speed,
+    season: seasonLabel,
+    climateTrend,
+    climateDescription,
+  } = useGameState();
   const { month } = date;
   const displayMonth = Math.round(month);
   const season = seasonFromLabel(seasonLabel, displayMonth);
@@ -91,7 +99,13 @@ const DateDisplay: React.FC = () => {
     : trendDirection === 'cooling'
       ? webUIText('Topbar.ClimateCooling')
       : '';
-  const tooltip = buildTooltip(dateText, seasonLabel, season, climateDescription, trendDirection);
+  const tooltip = buildTooltip(
+    dateText,
+    seasonLabel,
+    season,
+    climateDescription,
+    trendDirection,
+  );
 
   return (
     <Tooltip content={tooltip} position="bottom" delay={200}>

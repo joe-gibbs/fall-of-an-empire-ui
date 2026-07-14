@@ -13,6 +13,7 @@ interface Props {
   summary?: CampaignOutcomeSummary;
   onLoadSave?: () => void;
   onMainMenu?: () => void;
+  onPurchaseFullGame?: () => void;
 }
 
 export default function GameOverScreen({
@@ -21,6 +22,7 @@ export default function GameOverScreen({
   summary,
   onLoadSave,
   onMainMenu,
+  onPurchaseFullGame,
 }: Props) {
   return (
     <CampaignOutcomeScreen
@@ -29,6 +31,7 @@ export default function GameOverScreen({
       onClose={onClose}
       onLoadSave={onLoadSave}
       onMainMenu={onMainMenu}
+      onPurchaseFullGame={cause === 'demo_expired' ? onPurchaseFullGame : undefined}
     />
   );
 }

@@ -21,6 +21,7 @@ interface CampaignOutcomeScreenProps {
   onContinuePlaying?: () => void;
   onMainMenu?: () => void;
   onLoadSave?: () => void;
+  onPurchaseFullGame?: () => void;
 }
 
 const CLOSE_MS = 240;
@@ -179,6 +180,7 @@ export default function CampaignOutcomeScreen({
   onContinuePlaying,
   onMainMenu,
   onLoadSave,
+  onPurchaseFullGame,
 }: CampaignOutcomeScreenProps) {
   const resolved = useMemo(() => resolveCampaignOutcomeSummary(kind, summary), [kind, summary]);
   const displayedPreviousRulers = useMemo(() => [...resolved.previousRulers].reverse(), [resolved.previousRulers]);
@@ -292,7 +294,12 @@ export default function CampaignOutcomeScreen({
         </div>
 
         <div className="outcome-actions">
-          <GameButton variant="burgundy" onClick={handlePrimaryAction}>
+          {onPurchaseFullGame && (
+            <GameButton variant="burgundy" onClick={onPurchaseFullGame}>
+              {webUIText('Demo.BuyFullGame')}
+            </GameButton>
+          )}
+          <GameButton variant={onPurchaseFullGame ? 'outline' : 'burgundy'} onClick={handlePrimaryAction}>
             {resolved.primaryAction}
           </GameButton>
           <GameButton variant="outline" onClick={handleSecondaryAction}>

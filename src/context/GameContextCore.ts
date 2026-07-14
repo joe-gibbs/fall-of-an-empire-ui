@@ -48,6 +48,9 @@ export interface GameState {
   climateTrend: number;
   climateDescription: string;
   saveSerial: number;
+  hasDemoTimeLimit: boolean;
+  demoDaysRemaining: number;
+  demoEndDateText: string;
   gold: number;
   goldDelta: number;
   population: number;
@@ -83,6 +86,9 @@ export function createInitialGameState(): GameState {
     climateTrend: 0,
     climateDescription: '',
     saveSerial: 0,
+    hasDemoTimeLimit: false,
+    demoDaysRemaining: 0,
+    demoEndDateText: '',
     gold: 0,
     goldDelta: 0,
     population: 0,

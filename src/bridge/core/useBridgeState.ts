@@ -15,6 +15,9 @@ export interface BridgeGameState {
   climateTrend?: number;
   climateDescription?: string;
   saveSerial?: number;
+  hasDemoTimeLimit?: boolean;
+  demoDaysRemaining?: number;
+  demoEndDateText?: string;
   gold?: number;
   goldDelta?: number;
   population?: number;
@@ -33,6 +36,9 @@ function mapGameState(gs: GetGameStateResponse): Partial<BridgeGameState> {
     climateTrend: gs.climateTrend,
     climateDescription: gs.climateDescription,
     saveSerial: gs.saveSerial,
+    hasDemoTimeLimit: gs.hasDemoTimeLimit,
+    demoDaysRemaining: gs.demoDaysRemaining,
+    demoEndDateText: gs.demoEndDateText,
   };
 }
 

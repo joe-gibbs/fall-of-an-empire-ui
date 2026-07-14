@@ -249,6 +249,10 @@ export default function GameUIRoot() {
     setShowOutcomeLoad(true);
   }, []);
 
+  const handlePurchaseFullGame = useCallback(() => {
+    bridgeCall('ui.open_external_link', { linkId: 'full_game' }).catch(acknowledgeBridgeFailure);
+  }, []);
+
   useEffect(() => {
     const victoryHandler = (event: Event) => {
       beginUIPerfInteraction('screen:victory');
@@ -488,6 +492,7 @@ export default function GameUIRoot() {
           onClose={() => setShowGameOver(false)}
           onLoadSave={handleCampaignOutcomeLoadSave}
           onMainMenu={handleCampaignOutcomeMainMenu}
+          onPurchaseFullGame={handlePurchaseFullGame}
         />
       )}
       <LoadGameModal

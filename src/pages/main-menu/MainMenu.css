@@ -178,6 +178,33 @@
   background: transparent;
 }
 
+.mm-demo-edition-mark {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 0.25rem;
+  z-index: 2;
+  padding: 0.3rem 0.82rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.0909rem;
+  border-image-repeat: round;
+  background-color: rgba(12, 15, 19, 0.94);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
+  color: var(--gold);
+  font-family: var(--font-header);
+  font-size: 1.05rem;
+  letter-spacing: 0.18rem;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
 /* Illustrated buttons */
 .mm-illustrated-btns {
   display: flex;

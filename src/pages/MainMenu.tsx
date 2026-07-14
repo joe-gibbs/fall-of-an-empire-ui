@@ -932,6 +932,9 @@ const MainMenu: React.FC = () => {
               colorSrc="/assets/main-menu-logo.png"
               normalSrc="/assets/main-menu-logo-normals.png"
             />
+            {isDemo && (
+              <span className="mm-demo-edition-mark">{webUIText('Demo.TimerLabel')}</span>
+            )}
           </div>
 
           {/* Hero Continue card + illustrated buttons */}

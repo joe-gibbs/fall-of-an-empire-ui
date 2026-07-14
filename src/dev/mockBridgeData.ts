@@ -5079,7 +5079,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.get_app_mode':
         return { mode: state.appMode } satisfies BridgeResponse<'game.get_app_mode'>;
       case 'game.get_game_state':
-        return { day: 17, month: 6, year: 742, gameDay: state.gameDay, dateText: '17/6/742', season: 'Summer', isPaused: state.isPaused, speedLevel: state.speedLevel, debugMode: state.debugMode, climateTrend: state.climateTrend, climateDescription: state.climateDescription, saveSerial: state.saveSerial } satisfies BridgeResponse<'game.get_game_state'>;
+        return { day: 17, month: 6, year: 742, gameDay: state.gameDay, dateText: '17/6/742', season: 'Summer', isPaused: state.isPaused, speedLevel: state.speedLevel, debugMode: state.debugMode, climateTrend: state.climateTrend, climateDescription: state.climateDescription, saveSerial: state.saveSerial, hasDemoTimeLimit: false, demoDaysRemaining: 0, demoEndDateText: '' } satisfies BridgeResponse<'game.get_game_state'>;
       case 'game.get_game_version':
         return { version: 'Mock UI Dev', isDemo: false } satisfies BridgeResponse<'game.get_game_version'>;
       case 'game.get_resources':
@@ -5960,6 +5960,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
               cultureGroup: 'Rephsian',
               cultureInfo: rephsianCulture,
               playable: true,
+              fullGamePlayable: true,
               isRebel: false,
               religion: rephsianReligion.id,
               religionDisplayName: rephsianReligion.name,
@@ -6024,6 +6025,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
               cultureGroup: 'Aurestian',
               cultureInfo: aurestianCulture,
               playable: true,
+              fullGamePlayable: true,
               isRebel: false,
               religion: rivalReligion.id,
               religionDisplayName: rivalReligion.name,

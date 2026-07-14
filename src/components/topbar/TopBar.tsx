@@ -2,6 +2,7 @@ import React from 'react';
 import ScreenButtons, { type ScreenId } from './ScreenButtons';
 import { ScreenButtonTooltipBody } from './ScreenButtonTooltip';
 import DateDisplay from './DateDisplay';
+import DemoTimer from './DemoTimer';
 import SpeedControls from './SpeedControls';
 import ResourceDisplay from './ResourceDisplay';
 import ImperialStandingIndicator from './ImperialStandingIndicator';
@@ -265,6 +266,7 @@ const TopBar: React.FC<TopBarProps> = ({
         alt=""
         draggable={false}
       />
+      <DemoTimer />
     </>
   );
 };
