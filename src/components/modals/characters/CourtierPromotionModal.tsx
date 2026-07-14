@@ -62,12 +62,12 @@ function statTint(mid: number): string {
 }
 
 const STAT_SEGMENTS = [
+  { min: -15, max: -10, colour: 'red' },
   { min: -10, max: -5, colour: 'red' },
   { min: -5, max: 0, colour: 'red' },
   { min: 0, max: 5, colour: 'green' },
   { min: 5, max: 10, colour: 'green' },
   { min: 10, max: 15, colour: 'green' },
-  { min: 15, max: 20, colour: 'green' },
 ] as const;
 
 export default function CourtierPromotionModal({
