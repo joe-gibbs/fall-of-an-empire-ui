@@ -486,9 +486,9 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
     { id: 'settlements', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.196.1'), icon: '/assets/icons/I_City.png', count: summaryCounts?.settlementCount ?? data?.settlementCount ?? settlements.length },
     { id: 'militaries', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.197.2'), icon: '/assets/icons/I_Swords.png', count: summaryCounts?.militaryCount ?? data?.militaryCount ?? militaries.length },
     { id: 'factions', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.198.3'), icon: '/assets/icons/I_IndependentFactions.png', count: summaryCounts?.factionCount ?? data?.factionCount ?? factions.length },
-    { id: 'resources', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.199.4'), icon: '/assets/icons/I_Resources.png', count: summaryCounts?.resourceCount ?? data?.resourceCount ?? resources.length },
-    { id: 'buildings', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.200.5'), icon: '/assets/icons/I_BuildingsQuickButton.png', count: summaryCounts?.buildingCount ?? data?.buildingCount ?? buildings.length },
-    { id: 'notifications', label: webUIText('Ledger.Tab.Notifications'), icon: '/assets/icons/I_Warning.png', count: summaryCounts?.notificationCount ?? data?.notificationCount ?? notifications.length },
+    { id: 'resources', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.199.4'), icon: '/assets/icons/I_Resources.png' },
+    { id: 'buildings', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.200.5'), icon: '/assets/icons/I_BuildingsQuickButton.png' },
+    { id: 'notifications', label: webUIText('Ledger.Tab.Notifications'), icon: '/assets/icons/I_Warning.png' },
   ];
 
   const activeRowCount = activeTab === 'settlements'

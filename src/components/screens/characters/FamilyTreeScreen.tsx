@@ -1039,8 +1039,8 @@ export default function FamilyTreeScreen({ screenId, onClose }: { screenId: stri
   }, [openScreen]);
 
   const tabs = [
-    { id: 'tree', label: webUIText('Auto.Prop.ComponentsScreensFamilyTreeScreen.895.1'), count: lineageData?.nodes.length ?? 0 },
-    { id: 'patronage', label: webUIText('Auto.Prop.ComponentsScreensFamilyTreeScreen.896.2'), count: data?.patronageLinks.length ?? 0 },
+    { id: 'tree', label: webUIText('Auto.Prop.ComponentsScreensFamilyTreeScreen.895.1') },
+    { id: 'patronage', label: webUIText('Auto.Prop.ComponentsScreensFamilyTreeScreen.896.2') },
   ];
   const focusName = familyTreeFocusName(data);
   const screenTitle = focusName
