@@ -2868,10 +2868,10 @@ export interface PersonRoleTiersData {
   intrigue: WebUIRoleTierData;
 }
 
-export interface PersonGovernedEntry {
+export interface PersonGovernedRegionEntry {
   id: string;
   name: string;
-  type: string;
+  focusSettlementId: string;
 }
 
 export interface PersonCourtPositionEntry {
@@ -2970,7 +2970,7 @@ export interface GetPersonDataResponse {
   imprisonmentSettlement: string;
   roleExperience: PersonRoleExperienceData;
   roleTiers: PersonRoleTiersData;
-  governedSettlements: PersonGovernedEntry[];
+  governedRegions: PersonGovernedRegionEntry[];
   courtPosition: PersonCourtPositionEntry;
   commandedMilitary: PersonCommandedMilitaryEntry;
   relationships: PersonRelationshipEntry[];

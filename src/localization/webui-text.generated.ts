@@ -544,6 +544,8 @@ export const WEBUI_TEXT_SOURCE = {
   "CharacterSidebar.PlayerRelation": "Your {Relation}",
   "CharacterSidebar.RulerFactionSuffix": "of {Faction}",
   "CharacterSidebar.ZoomToGovernedRegion": "Zoom to Region",
+  "CharacterSidebar.RegionLabel": "Region",
+  "CharacterSidebar.GovernedRegionTooltip": "Region governed by this character.",
   "CharacterSidebar.CourtPosition": "Court Position",
   "CharacterSidebar.CourtSubordinate": "Subordinate",
   "CharacterSidebar.CourtSubordinateTooltip": "This character serves beneath a senior court office holder.",

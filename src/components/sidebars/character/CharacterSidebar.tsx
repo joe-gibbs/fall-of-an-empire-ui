@@ -52,7 +52,6 @@ import {
   buildHeaderAgeTooltip,
   buildInteractionTooltip,
   compareInteractions,
-  formatSettlementTierLabel,
   getHeaderAgeValue,
   getHonourDreadColor,
   getHonourDreadLabel,
@@ -66,7 +65,6 @@ import {
   lowerRelationDisplay,
   modifierTooltipLines,
   modifierValueColor,
-  regionIcons,
   roleIcons,
   socialRelationshipGroups,
   temporaryModifierTooltipLines,
@@ -740,18 +738,18 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
           <>
             <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsCharacterSidebar.1284.54')} />
             <div className="char-duty-list">
-              {character.governedRegions.map((s) => (
+              {character.governedRegions.map((region) => (
                 <CharacterDutyRow
-                  key={s.id || s.name}
-                  icon={regionIcons[s.type] || regionIcons.town}
-                  label={formatSettlementTierLabel(s.type)}
-                  value={s.name}
+                  key={region.id}
+                  icon="/assets/icons/I_Region.png"
+                  label={webUIText('CharacterSidebar.RegionLabel')}
+                  value={region.name}
                   tooltip={{
-                    title: s.name,
-                    get body() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1289.1", { Value1: formatSettlementTierLabel(s.type) }); },
+                    title: region.name,
+                    get body() { return webUIText('CharacterSidebar.GovernedRegionTooltip'); },
                     footer: webUIText('CharacterSidebar.ZoomToGovernedRegion'),
                   }}
-                  onOpen={() => zoomToBridge('settlement', s.id)}
+                  onOpen={() => zoomToBridge('settlement', region.focusSettlementId)}
                 />
               ))}
             </div>

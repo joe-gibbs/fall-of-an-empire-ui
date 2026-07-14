@@ -1,23 +1,7 @@
 import { useBridgeQuery } from '../core/useBridgeQuery';
 import { mapPortraitLayers, mapPortraitPath } from './portraitMapping';
 import type { GetPersonDataResponse } from '../../bridge-types.generated.ts';
-import type { ActivitySegment, Character, CharacterGovernedRegion, CharacterStatModifier, PersonActivity, SettlementTier, StatKey } from '../../data/types';
-
-function normaliseSettlementTier(raw: string): SettlementTier | null {
-  switch (raw) {
-    case 'city':
-    case 'town':
-    case 'village':
-    case 'metropolis':
-    case 'fortress':
-    case 'monastery':
-    case 'port':
-    case 'mining':
-      return raw;
-    default:
-      return null;
-  }
-}
+import type { ActivitySegment, Character, CharacterStatModifier, PersonActivity, StatKey } from '../../data/types';
 
 function normaliseStatKey(raw: string): StatKey | null {
   switch (raw) {
@@ -158,9 +142,11 @@ function mapPerson(data: GetPersonDataResponse): Character {
     opinionTowardPlayer: data.opinionBreakdown.length ? data.opinionTowardPlayer : undefined,
     opinionBreakdown: data.opinionBreakdown.length ? data.opinionBreakdown : undefined,
     honourDreadBreakdown: data.honourDreadBreakdown.length ? data.honourDreadBreakdown : undefined,
-    governedRegions: data.governedSettlements
-      .map(s => ({ id: s.id, name: s.name, type: normaliseSettlementTier(s.type) }))
-      .filter((s): s is CharacterGovernedRegion => s.type !== null),
+    governedRegions: data.governedRegions.map(region => ({
+      id: region.id,
+      name: region.name,
+      focusSettlementId: region.focusSettlementId,
+    })),
     courtPosition: data.courtPosition.key
       ? {
         key: data.courtPosition.key,

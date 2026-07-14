@@ -1695,9 +1695,9 @@ function personById(id: string): BridgeResponse<'game.get_person_data'> {
       diplomatic: mockRoleTier(profile.diplomatic),
       intrigue: mockRoleTier(profile.intrigue),
     },
-    governedSettlements: isGovernor ? [
-      { id: MOCK_IDS.settlement, name: 'Aurelion', type: 'metropolis' },
-      { id: MOCK_IDS.portSettlement, name: 'Namaris', type: 'port' },
+    governedRegions: isGovernor ? [
+      { id: 'aurelion-heartland', name: 'Aurelion Heartland', focusSettlementId: MOCK_IDS.settlement },
+      { id: 'naramis-coast', name: 'Namaris Coast', focusSettlementId: MOCK_IDS.portSettlement },
     ] : [],
     courtPosition: profile.id === MOCK_IDS.courtier ? {
       key: 'MasterOfReligion',

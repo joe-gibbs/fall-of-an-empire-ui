@@ -85,7 +85,7 @@ export type SettlementTier = 'city' | 'town' | 'village' | 'metropolis' | 'fortr
 export interface CharacterGovernedRegion {
   id: string;
   name: string;
-  type: SettlementTier;
+  focusSettlementId: string;
 }
 
 export interface CharacterCourtPosition {
