@@ -125,6 +125,13 @@
   white-space: nowrap;
 }
 
+.econ-market-price {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
 .econ-force-name {
   display: flex;
   align-items: center;

@@ -3683,13 +3683,14 @@ function economyResourceDetails(resourceId: string): BridgeResponse<'game.get_ec
       const wave = Math.sin(index * 0.65) * Math.max(2, Math.abs(resource.netPerMonth) * 0.35);
       const production = Math.max(0, resource.production + wave);
       const use = Math.max(0, consumption - wave * 0.3);
+      const marketMultiplier = Math.max(0.2, resource.marketMultiplier + Math.sin(index * 0.4) * 0.12);
       return {
         dateText: `${(index % 12) + 1}/784`,
         stockpile: Math.max(0, resource.amount - resource.netPerMonth * age),
         production,
         consumption: use,
         net: production - use,
-        marketMultiplier: Math.max(0.2, resource.marketMultiplier + Math.sin(index * 0.4) * 0.12),
+        marketPrice: Math.ceil(100 * resource.buyPrice / resource.marketMultiplier * marketMultiplier),
       };
     }),
   };

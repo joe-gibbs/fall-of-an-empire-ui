@@ -1898,7 +1898,7 @@ export interface EconomyResourceHistoryPoint {
   production: number;
   consumption: number;
   net: number;
-  marketMultiplier: number;
+  marketPrice: number;
 }
 
 export interface GetEconomyResourceDetailsResponse {

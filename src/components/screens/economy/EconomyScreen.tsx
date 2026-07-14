@@ -121,6 +121,10 @@ function fmt1(value: number | undefined): string {
   return formatNumber(value, { maximumFractionDigits: 1 });
 }
 
+function price(value: number | undefined): string {
+  return formatNumber(value, { maximumFractionDigits: 0 });
+}
+
 function negativeFmt(value: number | undefined): string {
   const formatted = fmt(value);
   return formatted === '0' ? '0' : `-${formatted}`;
@@ -1446,7 +1450,13 @@ function ResourcesTab({ data, onOpenResource }: { data: GetEconomyOverviewRespon
     },
     { id: 'decay', label: <ResourceTableHeader label={t('Economy.Decay')} shortLabel={t('Economy.Decay')} />, align: 'right', className: 'econ-negative', render: row => row.decayLoss > 0 ? `-${fmt1(row.decayLoss)}` : '0', sortValue: row => row.decayLoss },
     { id: 'net', label: <ResourceTableHeader label={t('Economy.NetPerMonth')} shortLabel={t('Economy.NetPerMonth')} />, align: 'right', render: row => <span className={valueClass(row.netPerMonth)}>{signed(row.netPerMonth)}</span>, sortValue: row => row.netPerMonth },
-    { id: 'market', label: <ResourceTableHeader label={t('Economy.Market')} shortLabel={t('Economy.Price')} />, align: 'right', render: row => `${fmt1(row.marketMultiplier)}x`, sortValue: row => row.marketMultiplier },
+    {
+      id: 'market',
+      label: <ResourceTableHeader label={t('Economy.Market')} shortLabel={t('Economy.Price')} />,
+      align: 'right',
+      render: row => <span className="econ-market-price"><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{price(Math.ceil(TRADE_AMOUNT * row.buyPrice))}</span>,
+      sortValue: row => Math.ceil(TRADE_AMOUNT * row.buyPrice),
+    },
     { id: 'trade', label: <ResourceTableHeader label={t('Economy.Trade')} shortLabel={t('Economy.Trade')} />, render: row => <TradeControls resource={row} gold={data?.gold ?? 0} /> },
   ];
 

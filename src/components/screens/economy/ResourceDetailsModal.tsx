@@ -19,6 +19,9 @@ import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import CloseButton from '../../common/buttons/CloseButton';
 import GameButton from '../../common/buttons/GameButton';
 import EntityLink from '../../common/entities/EntityLink';
+import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
+import SortableHeader from '../../common/layout/tables/SortableHeader';
+import { compareSortValuesWithDirection, toggleSortState, type SortState } from '../../common/layout/tables/sortUtils';
 import Tooltip from '../../common/tooltips/Tooltip';
 import './ResourceDetailsModal.css';
 
@@ -26,6 +29,7 @@ const TRADE_AMOUNT = 100;
 const AUTO_SELL_STEP = 500;
 
 type HistoryRange = '12' | '24' | 'all';
+type LedgerSortKey = 'name' | 'amount';
 
 interface Props {
   resource: EconomyOverviewResourceRow | null;
@@ -38,6 +42,10 @@ function number(value: number | null | undefined): string {
   return formatNumber(value, { maximumFractionDigits: 1 });
 }
 
+function price(value: number | null | undefined): string {
+  return formatNumber(value, { maximumFractionDigits: 0 });
+}
+
 function signed(value: number | null | undefined): string {
   return formatSignedNumber(value, { maximumFractionDigits: 1 });
 }
@@ -46,6 +54,15 @@ function valueClass(value: number): string {
   if (value > 0.0001) return 'erd-positive';
   if (value < -0.0001) return 'erd-negative';
   return 'erd-neutral';
+}
+
+function sortLedgerRows<T extends { name: string; amount: number }>(rows: T[], sort: SortState<LedgerSortKey>): T[] {
+  return [...rows].sort((a, b) => {
+    const aValue = sort.key === 'name' ? a.name : a.amount;
+    const bValue = sort.key === 'name' ? b.name : b.amount;
+    const result = compareSortValuesWithDirection(aValue, bValue, sort.direction);
+    return result || a.name.localeCompare(b.name);
+  });
 }
 
 function categoryLabel(category: string, t: ReturnType<typeof useWebUIText>): string {
@@ -71,36 +88,99 @@ function Metric({ label, value, tone, icon }: { label: string; value: string; to
   );
 }
 
-function LineChart({
-  series,
-}: {
-  series: Array<{ className: string; values: number[] }>;
-}) {
+interface ChartSeries {
+  className: string;
+  label: string;
+  values: number[];
+  formatValue: (value: number) => string;
+  colour: string;
+}
+
+function LineChart({ series, dates }: { series: ChartSeries[]; dates: string[] }) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const values = series.flatMap(item => item.values);
   const min = Math.min(0, ...values);
-  const max = Math.max(1, ...values);
-  const range = Math.max(1, max - min);
+  const max = Math.max(0, ...values);
+  const range = Math.max(0.0001, max - min);
+  const pointCount = Math.max(0, ...series.map(item => item.values.length));
+  const xForIndex = (index: number, count: number) => count <= 1 ? 50 : index / (count - 1) * 100;
+  const yForValue = (value: number) => 44 - (value - min) / range * 38;
   const points = (items: number[]) => {
     if (items.length === 1) {
-      const y = 44 - (items[0] - min) / range * 38;
+      const y = yForValue(items[0]);
       return `0,${y.toFixed(2)} 100,${y.toFixed(2)}`;
     }
     return items.map((value, index) => {
-    const x = items.length <= 1 ? 50 : index / (items.length - 1) * 100;
-    const y = 44 - (value - min) / range * 38;
-    return `${x.toFixed(2)},${y.toFixed(2)}`;
+      const x = xForIndex(index, items.length);
+      const y = yForValue(value);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
     }).join(' ');
   };
 
+  const updateHoveredPoint = (clientX: number, bounds: DOMRect) => {
+    if (pointCount === 0 || bounds.width <= 0) return;
+    const ratio = Math.max(0, Math.min(1, (clientX - bounds.left) / bounds.width));
+    setHoveredIndex(Math.round(ratio * Math.max(0, pointCount - 1)));
+  };
+
+  const hoverX = hoveredIndex === null ? 0 : xForIndex(hoveredIndex, pointCount);
+
   return (
-    <svg className="erd-chart__svg" viewBox="0 0 100 48" preserveAspectRatio="none" aria-hidden="true">
-      <line className="erd-chart__grid" x1="0" y1="6" x2="100" y2="6" />
-      <line className="erd-chart__grid" x1="0" y1="25" x2="100" y2="25" />
-      <line className="erd-chart__grid" x1="0" y1="44" x2="100" y2="44" />
-      {series.map(item => item.values.length > 0 && (
-        <polyline key={item.className} className={`erd-chart__line erd-chart__line--${item.className}`} points={points(item.values)} />
-      ))}
-    </svg>
+    <div className="erd-chart__plot">
+      <svg
+        className="erd-chart__svg"
+        viewBox="0 0 100 48"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <line className="erd-chart__grid" x1="0" y1="6" x2="100" y2="6" />
+        <line className="erd-chart__grid" x1="0" y1="25" x2="100" y2="25" />
+        <line className="erd-chart__grid" x1="0" y1="44" x2="100" y2="44" />
+        {series.map(item => item.values.length > 0 && (
+          <polyline key={item.className} className={`erd-chart__line erd-chart__line--${item.className}`} points={points(item.values)} />
+        ))}
+        {hoveredIndex !== null && (
+          <>
+            <line
+              className="erd-chart__hover-line"
+              x1={xForIndex(hoveredIndex, pointCount)}
+              y1="6"
+              x2={xForIndex(hoveredIndex, pointCount)}
+              y2="44"
+            />
+            {series.map(item => item.values[hoveredIndex] !== undefined && (
+              <circle
+                key={item.className}
+                className={`erd-chart__hover-point erd-chart__hover-point--${item.className}`}
+                cx={xForIndex(hoveredIndex, item.values.length)}
+                cy={yForValue(item.values[hoveredIndex])}
+                r="1.15"
+              />
+            ))}
+          </>
+        )}
+      </svg>
+      <div
+        className="erd-chart__hit-area"
+        onMouseMove={event => updateHoveredPoint(event.clientX, event.currentTarget.getBoundingClientRect())}
+        onMouseLeave={() => setHoveredIndex(null)}
+      />
+      {hoveredIndex !== null && (
+        <div
+          className={`erd-chart__value-card${hoverX > 50 ? ' erd-chart__value-card--left' : ''}`}
+          style={{ left: `${hoverX}%` }}
+        >
+          <strong>{dates[hoveredIndex]}</strong>
+          {series.map(item => (
+            <span key={item.className}>
+              <i style={{ backgroundColor: item.colour }} />
+              <em>{item.label}</em>
+              <b>{item.formatValue(item.values[hoveredIndex])}</b>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -119,17 +199,41 @@ function HistoryCharts({ history }: { history: EconomyResourceHistoryPoint[] }) 
           <span>{t('Economy.StockpileHistory')}</span>
           <strong>{number(last.stockpile)}</strong>
         </div>
-        <LineChart series={[{ className: 'stock', values: history.map(point => point.stockpile) }]} />
+        <LineChart
+          dates={history.map(point => point.dateText)}
+          series={[{
+            className: 'stock',
+            label: t('Economy.StockpileHistory'),
+            values: history.map(point => point.stockpile),
+            formatValue: number,
+            colour: '#d6ad52',
+          }]}
+        />
       </div>
       <div className="erd-chart">
         <div className="erd-chart__header">
           <span>{t('Economy.ProductionAndUse')}</span>
           <strong className={valueClass(last.net)}>{signed(last.net)}</strong>
         </div>
-        <LineChart series={[
-          { className: 'production', values: history.map(point => point.production) },
-          { className: 'use', values: history.map(point => point.consumption) },
-        ]} />
+        <LineChart
+          dates={history.map(point => point.dateText)}
+          series={[
+            {
+              className: 'production',
+              label: t('Economy.Production'),
+              values: history.map(point => point.production),
+              formatValue: value => `+${number(value)}`,
+              colour: '#63a94d',
+            },
+            {
+              className: 'use',
+              label: t('Economy.Use'),
+              values: history.map(point => point.consumption),
+              formatValue: value => `-${number(value)}`,
+              colour: '#b64d45',
+            },
+          ]}
+        />
         <div className="erd-chart__legend">
           <span><i className="erd-chart__key erd-chart__key--production" />{t('Economy.Production')}</span>
           <span><i className="erd-chart__key erd-chart__key--use" />{t('Economy.Use')}</span>
@@ -137,10 +241,19 @@ function HistoryCharts({ history }: { history: EconomyResourceHistoryPoint[] }) 
       </div>
       <div className="erd-chart">
         <div className="erd-chart__header">
-          <span>{t('Economy.MarketValueHistory')}</span>
-          <strong>{t('Economy.Multiplier', { Value: number(last.marketMultiplier) })}</strong>
+          <span>{t('Economy.MarketPrice')}</span>
+          <strong><img className="erd-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{price(last.marketPrice)}</strong>
         </div>
-        <LineChart series={[{ className: 'market', values: history.map(point => point.marketMultiplier) }]} />
+        <LineChart
+          dates={history.map(point => point.dateText)}
+          series={[{
+            className: 'market',
+            label: t('Economy.MarketPrice'),
+            values: history.map(point => point.marketPrice),
+            formatValue: price,
+            colour: '#5b91bd',
+          }]}
+        />
       </div>
       <div className="erd-history-dates"><span>{first.dateText}</span><span>{last.dateText}</span></div>
     </div>
@@ -152,6 +265,8 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
   const details = useEconomyResourceDetailsBridge(resource?.id ?? null);
   const buildQueue = useBuildQueueBridge(!!resource);
   const [historyRange, setHistoryRange] = useState<HistoryRange>('12');
+  const [producerSort, setProducerSort] = useState<SortState<LedgerSortKey>>({ key: 'amount', direction: 'desc' });
+  const [consumerSort, setConsumerSort] = useState<SortState<LedgerSortKey>>({ key: 'amount', direction: 'desc' });
   const { mounted, closing, close, stopPropagation } = useModalPresence({
     open: !!resource,
     onClose,
@@ -168,7 +283,7 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
         production: resource.production + resource.vassalContribution + resource.treatyIncome,
         consumption: resource.armyUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss,
         net: resource.netPerMonth,
-        marketMultiplier: resource.marketMultiplier,
+        marketPrice: Math.ceil(TRADE_AMOUNT * resource.buyPrice),
       }];
     }
     if (historyRange === 'all') return points;
@@ -190,9 +305,56 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
     });
   }, [buildQueue?.items, resource]);
 
+  const isFood = resource?.category.toLowerCase() === 'food';
+  const producerRows = useMemo(() => sortLedgerRows([
+    ...(details?.producers ?? []).map(producer => ({
+      id: `producer:${producer.settlementId}`,
+      name: producer.settlementName,
+      amount: producer.amount,
+      kind: 'producer' as const,
+      producer,
+    })),
+    ...(details?.externalSources ?? []).map(flow => ({
+      id: `external:${flow.id}`,
+      name: flow.name,
+      amount: flow.amount,
+      kind: 'flow' as const,
+      flow,
+    })),
+  ], producerSort), [details?.externalSources, details?.producers, producerSort]);
+
+  const consumerRows = useMemo(() => sortLedgerRows([
+    ...requirements.map(requirement => ({
+      id: `requirement:${requirement.id}`,
+      name: requirement.item.itemName,
+      amount: requirement.required,
+      kind: 'requirement' as const,
+      requirement,
+    })),
+    ...(isFood && (details?.sharedFoodDemand ?? 0) > 0 ? [{
+      id: 'shared-food-demand',
+      name: t('Economy.SharedFoodDemand'),
+      amount: details?.sharedFoodDemand ?? 0,
+      kind: 'shared' as const,
+    }] : []),
+    ...(details?.consumers ?? []).map(flow => ({
+      id: `consumer:${flow.id}`,
+      name: flow.name,
+      amount: flow.amount,
+      kind: 'flow' as const,
+      flow,
+    })),
+  ], consumerSort), [consumerSort, details?.consumers, details?.sharedFoodDemand, isFood, requirements, t]);
+
+  const toggleProducerSort = (key: LedgerSortKey) => {
+    setProducerSort(current => toggleSortState(current, key, key === 'amount' ? 'desc' : 'asc'));
+  };
+  const toggleConsumerSort = (key: LedgerSortKey) => {
+    setConsumerSort(current => toggleSortState(current, key, key === 'amount' ? 'desc' : 'asc'));
+  };
+
   if (!mounted || !resource) return null;
 
-  const isFood = resource.category.toLowerCase() === 'food';
   const buyCost = Math.ceil(TRADE_AMOUNT * resource.buyPrice);
   const sellAmount = Math.min(TRADE_AMOUNT, resource.amount);
   const sellReturn = Math.floor(sellAmount * resource.sellPrice);
@@ -222,7 +384,7 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
           <CloseButton size="md" onClick={close} />
         </header>
 
-        <div className="erd-body">
+        <StyledScrollArea className="erd-scroll" viewportClassName="erd-body">
           <section className="erd-summary">
             <div className="erd-summary__description">
               <p>{details?.description || resource.name}</p>
@@ -233,7 +395,7 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
               <Metric label={t('Economy.Production')} value={`+${number(totalIn)}${t('Economy.PerMonth')}`} tone="erd-positive" />
               <Metric label={t('Economy.Use')} value={`-${number(totalOut)}${t('Economy.PerMonth')}`} tone="erd-negative" />
               <Metric label={t('Economy.NetPerMonth')} value={signed(resource.netPerMonth)} tone={valueClass(resource.netPerMonth)} />
-              <Metric label={t('Economy.MarketPrice')} value={t('Economy.Multiplier', { Value: number(resource.marketMultiplier) })} icon="/assets/icons/I_Coins.png" />
+              <Metric label={t('Economy.MarketPrice')} value={price(buyCost)} icon="/assets/icons/I_Coins.png" />
               {isFood && <Metric label={t('Economy.FoodValue')} value={number(details?.foodValue)} />}
               {(details?.decayRate ?? 0) > 0 && <Metric label={t('Economy.DecayRate')} value={`${number((details?.decayRate ?? 0) * 100)}%`} />}
             </div>
@@ -319,83 +481,87 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
           <div className="erd-ledgers">
             <section className="erd-ledger">
               <h2>{t('Economy.WhereProduced')}</h2>
-              {(details?.producers ?? []).length === 0 && (details?.externalSources ?? []).length === 0 ? (
+              {producerRows.length === 0 ? (
                 <div className="erd-empty">{t('Economy.NoProducers')}</div>
               ) : (
-                <>
-                  {(details?.producers ?? []).map(producer => (
-                    <div className="erd-source" key={producer.settlementId}>
+                <div className="erd-ledger-table" role="table">
+                  <div className="erd-ledger-table__header" role="row">
+                    <SortableHeader id="name" label={t('Economy.Source')} sort={producerSort} onSort={toggleProducerSort} />
+                    <SortableHeader id="amount" label={t('Economy.Production')} sort={producerSort} onSort={toggleProducerSort} className="erd-ledger-table__amount-header" />
+                  </div>
+                  {producerRows.map(row => row.kind === 'producer' ? (
+                    <div className="erd-source" role="row" key={row.id}>
                       <div className="erd-source__main">
-                        <EntityLink type="settlement" id={producer.settlementId} inline>{producer.settlementName}</EntityLink>
-                        <strong className="erd-positive">+{number(producer.amount)}</strong>
+                        <EntityLink type="settlement" id={row.producer.settlementId} inline>{row.producer.settlementName}</EntityLink>
+                        <strong className="erd-positive">+{number(row.amount)}</strong>
                       </div>
                       <div className="erd-source__parts">
-                        {producer.naturalAmount > 0 && <span>{t('Economy.NaturalProduction')} <b>+{number(producer.naturalAmount)}</b></span>}
-                        {producer.processedAmount > 0 && <span>{t('Economy.Processing')} <b>+{number(producer.processedAmount)}</b></span>}
+                        {row.producer.naturalAmount > 0 && <span>{t('Economy.NaturalProduction')} <b>+{number(row.producer.naturalAmount)}</b></span>}
+                        {row.producer.processedAmount > 0 && <span>{t('Economy.Processing')} <b>+{number(row.producer.processedAmount)}</b></span>}
                       </div>
-                      {producer.buildings.length > 0 && (
+                      {row.producer.buildings.length > 0 && (
                         <div className="erd-detail-list">
-                          {producer.buildings.map((building, index) => <span key={`${building.name}:${index}`}>{building.name} <b>+{number(building.value)}</b></span>)}
+                          {row.producer.buildings.map((building, index) => <span key={`${building.name}:${index}`}>{building.name} <b>+{number(building.value)}</b></span>)}
                         </div>
                       )}
-                      {producer.modifiers.length > 0 && (
+                      {row.producer.modifiers.length > 0 && (
                         <div className="erd-modifiers">
                           <em>{t('Economy.Modifiers')}</em>
-                          {producer.modifiers.map((modifier, index) => (
+                          {row.producer.modifiers.map((modifier, index) => (
                             <span className={valueClass(modifier.value)} key={`${modifier.name}:${index}`}>{modifier.name} {signed(modifier.value)}%</span>
                           ))}
                         </div>
                       )}
                     </div>
-                  ))}
-                  {(details?.externalSources ?? []).length > 0 && (
-                    <div className="erd-flow-group">
-                      <h3>{t('Economy.ExternalSources')}</h3>
-                      {details?.externalSources.map(flow => (
-                        <div className="erd-flow-row" key={flow.id}><FlowName flow={flow} /><strong className="erd-positive">+{number(flow.amount)}</strong></div>
-                      ))}
+                  ) : (
+                    <div className="erd-flow-row" role="row" key={row.id}>
+                      <FlowName flow={row.flow} />
+                      <strong className="erd-positive">+{number(row.amount)}</strong>
                     </div>
-                  )}
-                </>
+                  ))}
+                </div>
               )}
             </section>
 
             <section className="erd-ledger">
               <h2>{t('Economy.WhereUsed')}</h2>
-              {requirements.length === 0 && (details?.consumers ?? []).length === 0 && !(isFood && (details?.sharedFoodDemand ?? 0) > 0) ? (
+              {consumerRows.length === 0 ? (
                 <div className="erd-empty">{t('Economy.NoConsumers')}</div>
               ) : (
-                <>
-                  {requirements.length > 0 && (
-                    <div className="erd-flow-group erd-requirements">
-                      <h3>{t('Economy.CommittedDemand')}</h3>
-                      {requirements.map(requirement => (
-                        <div className="erd-requirement" key={requirement.id}>
+                <div className="erd-ledger-table" role="table">
+                  <div className="erd-ledger-table__header" role="row">
+                    <SortableHeader id="name" label={t('Economy.Source')} sort={consumerSort} onSort={toggleConsumerSort} />
+                    <SortableHeader id="amount" label={t('Economy.Use')} sort={consumerSort} onSort={toggleConsumerSort} className="erd-ledger-table__amount-header" />
+                  </div>
+                  {consumerRows.map(row => row.kind === 'requirement' ? (
+                        <div className="erd-requirement" role="row" key={row.id}>
                           <div className="erd-requirement__main">
-                            <strong>{requirement.item.itemName}</strong>
-                            <span className="erd-negative">{t('Economy.AmountRequired', { Amount: number(requirement.required) })}</span>
+                            <strong>{row.requirement.item.itemName}</strong>
+                            <span className="erd-negative">-{number(row.amount)}</span>
                           </div>
                           <div className="erd-requirement__place">
-                            <EntityLink type="settlement" id={requirement.item.settlementId} inline>{requirement.item.settlementName}</EntityLink>
-                            <span>{requirement.item.statusLabel}</span>
-                            {requirement.missing > 0 && <b className="erd-negative">{t('Economy.AmountStillNeeded', { Amount: number(requirement.missing) })}</b>}
+                            <EntityLink type="settlement" id={row.requirement.item.settlementId} inline>{row.requirement.item.settlementName}</EntityLink>
+                            <span>{row.requirement.item.statusLabel}</span>
+                            {row.requirement.missing > 0 && <b className="erd-negative">{t('Economy.AmountStillNeeded', { Amount: number(row.requirement.missing) })}</b>}
                           </div>
                         </div>
-                      ))}
+                  ) : row.kind === 'shared' ? (
+                    <div className="erd-flow-row" role="row" key={row.id}>
+                      <span>{row.name}</span>
+                      <strong className="erd-negative">-{number(row.amount)}</strong>
                     </div>
-                  )}
-                  {isFood && (details?.sharedFoodDemand ?? 0) > 0 && (
-                    <div className="erd-flow-row"><span>{t('Economy.SharedFoodDemand')}</span><strong className="erd-negative">-{number(details?.sharedFoodDemand)}</strong></div>
-                  )}
-                  {(details?.consumers ?? []).map(flow => (
-                    <div className="erd-flow-row" key={flow.id}><FlowName flow={flow} /><strong className="erd-negative">-{number(flow.amount)}</strong></div>
+                  ) : (
+                    <div className="erd-flow-row" role="row" key={row.id}>
+                      <FlowName flow={row.flow} />
+                      <strong className="erd-negative">-{number(row.amount)}</strong>
+                    </div>
                   ))}
-                </>
+                </div>
               )}
             </section>
           </div>
 
-        </div>
+        </StyledScrollArea>
       </article>
     </div>,
     document.body,

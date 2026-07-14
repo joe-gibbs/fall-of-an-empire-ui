@@ -49,6 +49,7 @@ const WORLD_INPUT_BLOCKING_CLASSES = [
   'modal-overlay',
   'settings-modal-overlay',
   'event-overlay',
+  'erd-overlay',
   'pinned-dropdown',
   'vc-dropdown',
   'warning-icon-strip',
