@@ -64,7 +64,7 @@ export function useProvinceEmperorTakeoverBridge(enabled: boolean): ProvinceEmpe
   });
 }
 
-async function refreshProvinceEmperorTakeover(): Promise<void> {
+export async function refreshProvinceEmperorTakeover(): Promise<void> {
   const fresh = await bridgeCall('game.province_emperor_takeover', { command: 'state', personId: '' });
   window.dispatchEvent(new CustomEvent('bridge:game.province_emperor_takeover', { detail: fresh }));
 }

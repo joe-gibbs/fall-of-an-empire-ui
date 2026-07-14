@@ -32,7 +32,10 @@ import { usePinnedItemsBridge } from '../../bridge/app/usePinnedItemsBridge';
 import { useCourtierPromotionBridge } from '../../bridge/characters/useCourtierPromotionBridge';
 import { useAllyCallDialogBridge } from '../../bridge/diplomacy/useAllyCallDialogBridge';
 import { useFactionBorderHighlightBridge } from '../../bridge/diplomacy/useFactionBorderHighlightBridge';
-import { useProvinceEmperorTakeoverBridge } from '../../bridge/provinces/useProvinceEmperorTakeoverBridge';
+import {
+  refreshProvinceEmperorTakeover,
+  useProvinceEmperorTakeoverBridge,
+} from '../../bridge/provinces/useProvinceEmperorTakeoverBridge';
 import { useProvinceRecallBridge } from '../../bridge/provinces/useProvinceRecallBridge';
 import { isEscapeTextEntryTarget, useEscapeStack, useEscapeStackEntry } from '../../context/EscapeStack';
 import { bridgeCall } from '../../bridge-types.generated.ts';
@@ -221,6 +224,7 @@ export default function GameUIRoot() {
     const handler = () => {
       beginUIPerfInteraction('modal:province-emperor-takeover');
       setProvinceEmperorTakeoverDismissed(false);
+      void refreshProvinceEmperorTakeover().catch(acknowledgeBridgeFailure);
     };
     window.addEventListener('bridge:ui.open_province_emperor_takeover_picker', handler);
     return () => window.removeEventListener('bridge:ui.open_province_emperor_takeover_picker', handler);
