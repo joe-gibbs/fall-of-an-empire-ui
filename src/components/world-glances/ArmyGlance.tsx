@@ -7,8 +7,6 @@ import { militaryRingStackStyle } from './ringAssets';
 import { formatNumber, formatPercent } from '../../utils/numberFormat';
 import { FoaeCefUIAssetPath } from '../../utils/assets';
 import { useGameState } from '../../context/GameContext';
-import FactionRoundel from '../common/entities/FactionRoundel';
-import { emblemAssetPath } from '../../utils/factionEmblem';
 import { readableFactionTextColour, relationDisplayLabel } from './WorldGlancePresentation';
 
 import { webUIText } from '../../localization/WebUITextContext';
@@ -169,7 +167,6 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   const militaryTypeIcon = isNavy ? '/assets/icons/I_Port.png' : '/assets/icons/I_Swords.png';
   const statusIcon = blockading ? '/assets/icons/I_Siege.png' : data.raiding ? '/assets/icons/I_RaidingTorch.png' : '';
   const attritionIcon = FoaeCefUIAssetPath(data.attritionIcon || '/assets/icons/Terrain/I_Attrition.png');
-  const selectedSymbol = FoaeCefUIAssetPath(emblemAssetPath(data.faction.emblem, data.faction.cultureGroup));
   const visibleStatusCount = (statusIcon ? 1 : 0) + (data.attrition ? 1 : 0);
   const crownCount = 1 + visibleStatusCount;
   const requestTooltipDetail = useCallback(() => {
@@ -210,22 +207,10 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
         <span className="glance-military-target-indicator" aria-hidden="true" />
 
         <div className="glance-military-core">
-          <FactionRoundel
-            colour={data.faction.colour}
-            secondaryColour={data.faction.secondaryColour}
-            emblem={data.faction.emblem}
-            cultureGroup={data.faction.cultureGroup}
-            name={data.faction.name}
-            size="md"
-            resolveFaction={false}
-            showRing={false}
-            className="glance-military-faction-roundel"
-          />
-          <img className="glance-military-selected-symbol" src={selectedSymbol} alt="" />
-        </div>
-
-        <div className="glance-military-kind glance-military-kind-socket glance-military-icon-socket">
-          <img className={`glance-military-type-mark${isNavy ? ' glance-military-type-mark--navy' : ' glance-military-type-mark--army'}`} src={militaryTypeIcon} alt="" />
+          <span className="glance-military-faction-field" aria-hidden="true" />
+          <div className={`glance-military-kind${isNavy ? ' glance-military-kind--navy' : ' glance-military-kind--army'}`}>
+            <img className={`glance-military-type-mark${isNavy ? ' glance-military-type-mark--navy' : ' glance-military-type-mark--army'}`} src={militaryTypeIcon} alt="" />
+          </div>
         </div>
         <div className={`glance-military-crown glance-military-crown--count-${String(crownCount)}`}>
           <img className="glance-military-tier glance-military-icon-socket" src={tierTexture(data.tier)} alt="" />

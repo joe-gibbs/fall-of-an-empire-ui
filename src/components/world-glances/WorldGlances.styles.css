@@ -1388,20 +1388,10 @@
   background-color: var(--gold);
 }
 
-.world-glance-node.is-selected .glance--military .glance-military-faction-roundel,
-.glance--military.is-selected .glance-military-faction-roundel {
+.world-glance-node.is-selected .glance--military .glance-military-faction-field,
+.glance--military.is-selected .glance-military-faction-field {
   background-color: var(--gold);
   background-image: radial-gradient(circle at 40% 35%, #f4efe2, #d6a83a 70%, #7a5a1f 100%);
-}
-
-.world-glance-node.is-selected .glance--military .glance-military-faction-roundel .faction-roundel-fill,
-.glance--military.is-selected .glance-military-faction-roundel .faction-roundel-fill {
-  opacity: 0;
-}
-
-.world-glance-node.is-selected .glance--military .glance-military-faction-roundel .faction-roundel-symbol,
-.glance--military.is-selected .glance-military-faction-roundel .faction-roundel-symbol {
-  opacity: 0;
 }
 
 .world-glance-node.is-selected .glance--military .glance-military-icon-socket,
@@ -1481,12 +1471,24 @@
   z-index: 3;
 }
 
-.glance-military-faction-roundel {
+.glance-military-faction-field {
+  position: relative;
+  display: block;
   width: 3rem;
   height: 3rem;
+  overflow: hidden;
+  background-color: var(--faction-colour);
+  background-image:
+    radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 48%),
+    radial-gradient(circle at 55% 60%, rgba(18, 20, 22, 0) 42%, rgba(18, 20, 22, 0.44) 100%),
+    url('/assets/baked/texture-overlay-dark.png');
+  background-position: center, center, 0 0;
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-size: 100% 100%, 100% 100%, 5.8182rem 5.8182rem;
+  border-radius: 50%;
 }
 
-.glance-military-faction-roundel::before {
+.glance-military-faction-field::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1501,29 +1503,10 @@
   transition: opacity 100ms linear;
 }
 
-.world-glance-node:not(.is-selected):hover .glance-military-faction-roundel::before,
-.world-glance-node:not(.is-selected).is-hovered .glance-military-faction-roundel::before,
-.glance--military:not(.is-selected):hover .glance-military-faction-roundel::before {
+.world-glance-node:not(.is-selected):hover .glance-military-faction-field::before,
+.world-glance-node:not(.is-selected).is-hovered .glance-military-faction-field::before,
+.glance--military:not(.is-selected):hover .glance-military-faction-field::before {
   opacity: 0.72;
-}
-
-.glance-military-selected-symbol {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 4;
-  display: block;
-  width: 1.92rem;
-  height: 1.92rem;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  object-fit: contain;
-}
-
-.world-glance-node.is-selected .glance--military .glance-military-selected-symbol,
-.glance--military.is-selected .glance-military-selected-symbol {
-  opacity: 0.92;
 }
 
 .glance-military-type-mark {
@@ -1580,16 +1563,27 @@
 
 .glance-military-kind {
   position: absolute;
-  top: -1.2546rem;
-  left: 1.7455rem;
+  top: 50%;
+  left: 50%;
   z-index: 6;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 2.1818rem;
+  height: 2.1818rem;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
-.glance-military-kind-socket {
-  transition: opacity 80ms linear;
+.glance-military-kind .glance-military-type-mark {
+  width: 1.7273rem;
+  height: 1.7273rem;
+  object-fit: contain;
+}
+
+.glance-military-kind .glance-military-type-mark--navy {
+  width: 2.0909rem;
+  height: 2.0909rem;
 }
 
 .glance-military-crown--count-1 .glance-military-icon-socket:first-child {
@@ -1649,24 +1643,12 @@
   padding: 0.0909rem;
 }
 
-.detail-flag .glance-military-kind img,
-.detail-name .glance-military-kind img {
-  width: 0.6364rem;
-  height: 0.6364rem;
-}
-
 .detail-flag .glance-military-icon-socket,
 .detail-name .glance-military-icon-socket,
 .detail-flag .glance-military-tier,
 .detail-name .glance-military-tier {
   visibility: hidden;
   opacity: 0;
-}
-
-.detail-flag .glance-military-kind-socket,
-.detail-name .glance-military-kind-socket {
-  visibility: visible;
-  opacity: 1;
 }
 
 .detail-flag .glance-military-status,
@@ -1719,34 +1701,28 @@
   height: 2.45rem;
 }
 
-.detail-flag .glance-military-faction-roundel,
-.detail-name .glance-military-faction-roundel {
+.detail-flag .glance-military-faction-field,
+.detail-name .glance-military-faction-field {
   width: 2.45rem;
   height: 2.45rem;
 }
 
-.detail-flag .glance-military-selected-symbol,
-.detail-name .glance-military-selected-symbol {
-  width: 1.568rem;
-  height: 1.568rem;
-}
-
 .detail-flag .glance-military-kind,
 .detail-name .glance-military-kind {
-  top: -1.0273rem;
-  left: 1.25rem;
+  width: 1.8182rem;
+  height: 1.8182rem;
 }
 
-.detail-flag .glance-military-type-mark,
-.detail-name .glance-military-type-mark {
-  width: 0.7727rem;
-  height: 0.7727rem;
+.detail-flag .glance-military-kind .glance-military-type-mark,
+.detail-name .glance-military-kind .glance-military-type-mark {
+  width: 1.4545rem;
+  height: 1.4545rem;
 }
 
-.detail-flag .glance-military-type-mark--navy,
-.detail-name .glance-military-type-mark--navy {
-  width: 0.8182rem;
-  height: 0.8182rem;
+.detail-flag .glance-military-kind .glance-military-type-mark--navy,
+.detail-name .glance-military-kind .glance-military-type-mark--navy {
+  width: 1.7727rem;
+  height: 1.7727rem;
 }
 
 .detail-flag .glance-military-strength,
