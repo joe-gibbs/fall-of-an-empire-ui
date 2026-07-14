@@ -343,7 +343,7 @@ function policyPercentForValue(policy: FactionPolicy, value: number): number {
 
 function policyIcon(policy: FactionPolicy): string {
   const key = policy.key || policy.id;
-  return FoaeCefUIAssetPath(`/assets/policies/${key}.png`) ?? '/assets/icons/I_Chart.png';
+  return FoaeCefUIAssetPath(policy.iconId || `/assets/policies/${key}.png`) ?? '/assets/icons/I_Chart.png';
 }
 
 function TooltipEffectLines({ lines }: { lines?: FactionPolicyLevel['effectLines'] }) {

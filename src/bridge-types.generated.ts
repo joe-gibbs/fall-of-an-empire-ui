@@ -2152,6 +2152,7 @@ export interface FactionPolicyLevelEntry {
 export interface FactionPolicyEntry {
   id: string;
   key: string;
+  iconId: string;
   name: string;
   description: string;
   effectDescription: string;

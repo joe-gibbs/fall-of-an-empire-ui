@@ -305,6 +305,7 @@ export interface FactionWarPartner {
 export interface FactionPolicy {
   id: string;
   key: string;
+  iconId: string;
   name: string;
   description: string;
   effectDescription: string;

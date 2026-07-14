@@ -108,6 +108,7 @@ function mapFaction(data: GetFactionDataResponse): Faction {
     policies: data.policies.map<FactionPolicy>(p => ({
       id: p.id,
       key: p.key,
+      iconId: p.iconId,
       name: p.name,
       description: p.description,
       effectDescription: p.effectDescription,

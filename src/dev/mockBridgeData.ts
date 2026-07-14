@@ -866,6 +866,7 @@ function mockPolicy(id: string, name: string, value: number) {
   return {
     id,
     key: id,
+    iconId: '',
     name,
     description: `Current ${name.toLowerCase()} posture for the realm.`,
     effectDescription,
