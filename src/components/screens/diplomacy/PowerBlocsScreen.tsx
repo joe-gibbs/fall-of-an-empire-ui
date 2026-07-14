@@ -183,8 +183,16 @@ function ProgressRow({ label, value, colour }: { label: string; value: number; c
   );
 }
 
-function PowerBlocRichText({ text, onLinkClick }: { text: string; onLinkClick?: (type: string, id: string) => void }) {
-  return <>{renderRichText(text, { onLinkClick, keepLinksWithPreviousWord: true })}</>;
+function PowerBlocRichText({
+  text,
+  onLinkClick,
+  blockBullets = false,
+}: {
+  text: string;
+  onLinkClick?: (type: string, id: string) => void;
+  blockBullets?: boolean;
+}) {
+  return <>{renderRichText(text, { onLinkClick, keepLinksWithPreviousWord: true, blockBullets })}</>;
 }
 
 function DemandRows({ demand, currentGameDay }: { demand: PowerBlocDemand; currentGameDay: number }) {
@@ -265,7 +273,11 @@ function DemandCard({
           <div className="pbs-demand-title-box">
             <span className="pbs-demand-title">{demand.title}</span>
             <span className="pbs-demand-description"><PowerBlocRichText text={demand.description} onLinkClick={onLinkClick} /></span>
-            {demand.progressLabel ? <span className="pbs-demand-progress-hint"><PowerBlocRichText text={demand.progressLabel} onLinkClick={onLinkClick} /></span> : null}
+            {demand.progressLabel ? (
+              <div className="pbs-demand-progress-hint">
+                <PowerBlocRichText text={demand.progressLabel} onLinkClick={onLinkClick} blockBullets />
+              </div>
+            ) : null}
           </div>
           <div className="pbs-demand-days" style={{ color: urgencyColour }}>
             <span className="pbs-demand-days-value">{formatNumber(daysRemaining)}</span>

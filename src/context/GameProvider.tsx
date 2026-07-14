@@ -337,31 +337,42 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const openScreen = useCallback((type: ScreenType, id?: string) => {
-    preloadScreenAssets(type);
-    beginUIPerfInteraction(`screen:${type ?? 'unknown'}`, id);
-    playSound('open');
-    setState(s => ({ ...s, activeScreen: type, activeScreenId: id ?? null }));
-  }, []);
-
-  const closeScreen = useCallback(() => {
-    playSound('close');
-    setState(s => ({ ...s, activeScreen: null, activeScreenId: null }));
-  }, []);
-
-  const toggleScreen = useCallback((type: ScreenType, id?: string) => {
+  const openScreenFromBridge = useCallback((type: ScreenType, id?: string) => {
     preloadScreenAssets(type);
     setState(s => {
-      const closing = s.activeScreen === type && (s.activeScreenId ?? null) === (id ?? null);
-      if (!closing) beginUIPerfInteraction(`screen:${type ?? 'unknown'}`, id);
-      playSound(closing ? 'close' : 'open');
-      return {
-        ...s,
-        activeScreen: closing ? null : type,
-        activeScreenId: closing ? null : (id ?? null),
-      };
+      const nextId = id ?? null;
+      if (s.activeScreen === type && s.activeScreenId === nextId) return s;
+      beginUIPerfInteraction(`screen:${type ?? 'unknown'}`, id);
+      playSound('open');
+      return { ...s, activeScreen: type, activeScreenId: nextId };
     });
   }, []);
+
+  const closeScreenFromBridge = useCallback(() => {
+    setState(s => {
+      if (!s.activeScreen) return s;
+      playSound('close');
+      return { ...s, activeScreen: null, activeScreenId: null };
+    });
+  }, []);
+
+  const openScreen = useCallback((type: ScreenType, id?: string) => {
+    if (!type) return;
+    openScreenFromBridge(type, id);
+    const screen = id ? `${type}:${id}` : type;
+    bridgeCall('ui.show_screen', { screen }).catch(acknowledgeBridgeFailure);
+  }, [openScreenFromBridge]);
+
+  const closeScreen = useCallback(() => {
+    closeScreenFromBridge();
+    bridgeCall('ui.show_screen', { screen: '' }).catch(acknowledgeBridgeFailure);
+  }, [closeScreenFromBridge]);
+
+  const toggleScreen = useCallback((type: ScreenType, id?: string) => {
+    const closing = visibleState.activeScreen === type && (visibleState.activeScreenId ?? null) === (id ?? null);
+    if (closing) closeScreen();
+    else openScreen(type, id);
+  }, [closeScreen, openScreen, visibleState.activeScreen, visibleState.activeScreenId]);
 
   const showAdvisor = useCallback((topic: AdvisorTopicId, options?: { force?: boolean }) => {
     bridgeCall('game.hint_events', {
@@ -464,6 +475,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     closeSidebarEntityFromBridge,
     openScreen,
     closeScreen,
+    openScreenFromBridge,
+    closeScreenFromBridge,
     toggleScreen,
     showAdvisor,
     dismissAdvisor,
@@ -480,7 +493,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     togglePause, setSpeed,
     openLeftSidebar, closeLeftSidebar, openRightSidebar, closeRightSidebar,
     openSidebar, navigateSidebarHistory, closeSidebar, closeSidebarFromBridge, closeSidebarEntityFromBridge,
-    openScreen, closeScreen, toggleScreen,
+    openScreen, closeScreen, openScreenFromBridge, closeScreenFromBridge, toggleScreen,
     showAdvisor, dismissAdvisor, nextAdvisorPage, previousAdvisorPage, resetAdvisorHints,
     dismissWarning, dismissNotification, addWarning, addNotification,
     openAgentSelect, closeAgentSelect,

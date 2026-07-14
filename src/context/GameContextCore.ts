@@ -117,6 +117,8 @@ export interface GameActions {
   closeSidebarEntityFromBridge: (type: SidebarType, id?: string) => void;
   openScreen: (type: ScreenType, id?: string) => void;
   closeScreen: () => void;
+  openScreenFromBridge: (type: ScreenType, id?: string) => void;
+  closeScreenFromBridge: () => void;
   toggleScreen: (type: ScreenType, id?: string) => void;
   showAdvisor: (topic: AdvisorTopicId, options?: { force?: boolean }) => void;
   dismissAdvisor: () => void;

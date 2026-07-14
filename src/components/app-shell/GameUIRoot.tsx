@@ -56,16 +56,23 @@ export default function GameUIRoot() {
     agentSelect,
     closeLeftSidebar, closeRightSidebar, closeSidebarFromBridge, closeSidebarEntityFromBridge, closeScreen,
     dismissWarning, dismissNotification,
-    toggleScreen, openSidebar, openScreen,
+    toggleScreen, openSidebar, openScreen, openScreenFromBridge, closeScreenFromBridge,
     showAdvisor, dismissAdvisor, nextAdvisorPage, previousAdvisorPage,
     closeAgentSelect,
   } = useGame();
   const playerFaction = usePlayerFactionSummary();
   const subjectMode = playerFaction?.diplomaticStatus === 'subject';
 
-  // Listen for sidebar open/close + screen-open events from the game
-  // (close path must bypass bridge round-trip).
-  useBridgeSidebarEvents(openSidebar, closeSidebarFromBridge, closeSidebarEntityFromBridge, openScreen, closeScreen, subjectMode);
+  // Bridge-received navigation uses local-only handlers to avoid echoing the
+  // game event back through the bridge.
+  useBridgeSidebarEvents(
+    openSidebar,
+    closeSidebarFromBridge,
+    closeSidebarEntityFromBridge,
+    openScreenFromBridge,
+    closeScreenFromBridge,
+    subjectMode,
+  );
   useFactionBorderHighlightBridge(leftSidebar === 'diplomacy' ? leftSidebarId : null);
 
   useEffect(() => {
