@@ -245,7 +245,7 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   return (
     <MilitaryTooltip data={data} isNavy={isNavy}>
       <div
-        className={`glance glance--military${isNavy ? ' glance--navy' : ''}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
+        className={`glance glance--military${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
         style={{
           '--faction-colour': data.faction.colour,
           '--relation-bg': relationBackgroundColour(data.faction.relation),

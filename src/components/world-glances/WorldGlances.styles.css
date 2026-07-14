@@ -1625,6 +1625,10 @@
   height: 2.0909rem;
 }
 
+.glance--enemy .glance-military-type-mark,
+.glance--military-garrison.glance--enemy .glance-garrison-kind img {
+  filter: brightness(0) saturate(100%) invert(45%) sepia(41%) saturate(1738%) hue-rotate(316deg) brightness(96%) contrast(83%);
+}
 .glance-military-crown--count-1 .glance-military-icon-socket:first-child {
   top: -0.1rem;
   right: -0.6546rem;
