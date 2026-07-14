@@ -16,6 +16,7 @@ interface TooltipLine {
   valueIcon?: string;
   subTooltip?: TooltipContent;
   isHeader?: boolean;
+  stacked?: boolean;
 }
 
 interface TooltipContent {
@@ -507,7 +508,7 @@ function TooltipLineItem({
   return (
     <div
       ref={lineRef}
-      className={`tt-line ${line.subTooltip ? 'tt-line--has-sub' : ''}${hasValue ? '' : ' tt-line--label-only'}`}
+      className={`tt-line ${line.subTooltip ? 'tt-line--has-sub' : ''}${hasValue ? '' : ' tt-line--label-only'}${line.stacked ? ' tt-line--stacked' : ''}`}
       onMouseEnter={showSub}
       onMouseLeave={hideSub}
     >

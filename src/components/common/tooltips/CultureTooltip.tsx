@@ -41,6 +41,7 @@ function cultureTooltipContent({ info, fallbackName, fallbackId }: Omit<CultureT
       label: webUIText('CultureTooltip.ForeignAdministrationLabel'),
       value: webUIText('CultureTooltip.RephsianForeignAdministration'),
       valueColor: 'var(--red)',
+      stacked: true,
     });
   }
 
