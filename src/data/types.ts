@@ -1021,6 +1021,7 @@ export interface SiegeInfo {
   hostileFactionEmblem?: string;
   hostileFactionCultureGroup?: string;
   besiegingArmies: BesiegingArmyInfo[];
+  defendingMilitaries: BesiegingArmyInfo[];
 }
 
 export interface ArmyUnit {

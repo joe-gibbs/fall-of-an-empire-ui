@@ -4000,6 +4000,7 @@ export interface GetSettlementDataResponse {
   hostileFactionEmblem: string;
   hostileFactionCultureGroup: string;
   besiegingArmies: SettlementBesiegingArmy[];
+  defendingMilitaries: SettlementBesiegingArmy[];
   canBuild: boolean;
   cannotBuildReason: string;
 }
@@ -4081,6 +4082,7 @@ export interface GetSettlementSiegeDataResponse {
   hostileFactionEmblem: string;
   hostileFactionCultureGroup: string;
   besiegingArmies: SettlementBesiegingArmy[];
+  defendingMilitaries: SettlementBesiegingArmy[];
   canBuild: boolean;
   cannotBuildReason: string;
 }

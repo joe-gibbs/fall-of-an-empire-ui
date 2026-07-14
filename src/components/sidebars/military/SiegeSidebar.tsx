@@ -27,7 +27,7 @@ type PlayerRole = 'attacker' | 'defender' | 'observer';
 
 interface SiegeForceRow {
   key: string;
-  kind?: 'army' | 'navy';
+  kind?: 'army' | 'navy' | 'garrison';
   name: string;
   commanderName: string;
   commanderId?: string;
@@ -147,30 +147,43 @@ function armyRow(army: BesiegingArmyInfo, index: number): SiegeForceRow {
   };
 }
 
-function defenderRows(settlement: Settlement): SiegeForceRow[] {
-  const armies = settlement.garrisonedArmies.map((army, index) => ({
-    key: `defender-army-${army.debugShortId ?? index}`,
-    name: army.name,
-    commanderName: army.commanderName || webUIText('Settlement.Siege.NoCommander'),
-    commanderId: army.commanderId,
-    strength: army.strength,
-    maxStrength: army.maxStrength,
-    morale: army.morale,
-    unitCount: army.unitCount,
-    isLead: index === 0,
+function defenderRows(settlement: Settlement, siege: SiegeInfo): SiegeForceRow[] {
+  const militaries = siege.defendingMilitaries.map((military, index) => ({
+    key: `defender-${military.kind}-${military.debugShortId ?? index}`,
+    kind: military.kind,
+    name: military.name,
+    commanderName: military.commanderName || webUIText('Settlement.Siege.NoCommander'),
+    commanderId: military.commanderId,
+    strength: military.strength,
+    maxStrength: military.maxStrength,
+    morale: military.morale,
+    unitCount: military.unitCount,
   }));
 
-  const units = settlement.garrison.slice(0, 4).map((unit, index) => ({
-    key: `garrison-${index}`,
-    name: unit.name,
-    commanderName: unit.type,
-    strength: unit.strength,
-    maxStrength: unit.maxStrength,
-    unitCount: 1,
-    icon: unit.typeIcon || '/assets/icons/Doctrines/I_Doctrine_Garrison.png',
-  }));
+  const groupedGarrison = new Map<string, SiegeForceRow>();
+  settlement.garrison.forEach((unit, index) => {
+    const groupKey = `${unit.name}\u0000${unit.type}\u0000${unit.portrait}`;
+    const existing = groupedGarrison.get(groupKey);
+    if (existing) {
+      existing.strength += unit.strength;
+      existing.maxStrength += unit.maxStrength;
+      existing.unitCount += 1;
+      return;
+    }
 
-  return [...armies, ...units];
+    groupedGarrison.set(groupKey, {
+      key: `garrison-${index}`,
+      kind: 'garrison',
+      name: unit.name,
+      commanderName: unit.type,
+      strength: unit.strength,
+      maxStrength: unit.maxStrength,
+      unitCount: 1,
+      icon: unit.typeIcon || '/assets/icons/Doctrines/I_Doctrine_Garrison.png',
+    });
+  });
+
+  return [...militaries, ...groupedGarrison.values()];
 }
 
 function sumStrength(rows: SiegeForceRow[]): number {
@@ -217,8 +230,8 @@ function buildViewModel(settlement: Settlement): SiegeViewModel | null {
   const state: SiegeStateKind = siege.state;
   const meta = STATE_META[state];
   const attackers = siege.besiegingArmies.map(armyRow);
-  const defenders = defenderRows(settlement);
-  const defenderStrength = siege.totalDefenderStrength;
+  const defenders = defenderRows(settlement, siege);
+  const defenderStrength = sumStrength(defenders);
   const attackerStrength = sumStrength(attackers);
   const attackerMorale = averageMorale(attackers);
 
@@ -318,9 +331,11 @@ function SiegeOverview({ view, daysValue }: { view: SiegeViewModel; daysValue: s
   return (
     <div className="siege-overview">
       <div className="siege-overview-lead">
-        <img src="/assets/icons/I_Siege.png" alt="" className="siege-overview-lead-icon" />
+        <img src={view.titleIcon} alt="" className="siege-overview-lead-icon" />
         <div className="siege-overview-lead-copy">
-          <span className="siege-overview-label"><WebUIText textKey="Settlement.Siege.BesiegingForce" /></span>
+          <span className="siege-overview-label">
+            <WebUIText textKey={view.state === 'blockade' ? 'Settlement.Siege.BlockadingForce' : 'Settlement.Siege.BesiegingForce'} />
+          </span>
           <span className="siege-overview-title">{lead?.name ?? view.hostileFaction}</span>
           <span className="siege-overview-meta">
             {leadCommander || view.hostileFaction}
@@ -356,12 +371,27 @@ function SiegeOverview({ view, daysValue }: { view: SiegeViewModel; daysValue: s
       <div className="siege-factor-list">
         <div className="siege-compact-heading"><WebUIText textKey="Settlement.Siege.ProgressFactors" /></div>
         {visibleFactors.length > 0
-          ? visibleFactors.map((factor, index) => (
-            <div key={`${factor.name}-${index}`} className={`siege-factor-row${factor.helpsProgress ? ' siege-factor-row--helps' : ' siege-factor-row--holds'}`}>
-              <span className="siege-factor-name">{factor.name}</span>
-              <span className="siege-factor-value">{formatFactorValue(factor)}</span>
-            </div>
-          ))
+          ? visibleFactors.map((factor, index) => {
+            const row = (
+              <div className="siege-factor-row">
+                <span className="siege-factor-name">{factor.name}</span>
+                <span className="siege-factor-value">{formatFactorValue(factor)}</span>
+              </div>
+            );
+            return view.state === 'blockade' && factor.kind === 'percent'
+              ? (
+                <Tooltip
+                  key={`${factor.name}-${index}`}
+                  content={{ title: factor.name, body: webUIText('Settlement.Siege.BlockadePressureBody') }}
+                  position="bottom"
+                  delay={150}
+                  wrapperClassName="siege-factor-tooltip"
+                >
+                  {row}
+                </Tooltip>
+              )
+              : <React.Fragment key={`${factor.name}-${index}`}>{row}</React.Fragment>;
+          })
           : <div className="siege-empty-row"><WebUIText textKey="Settlement.Siege.NoProgressFactors" /></div>}
       </div>
     </div>
@@ -520,22 +550,24 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
           </div>
           <div className="siege-header-state-row">
             <img src={view.titleIcon} alt="" className="siege-header-state-icon" />
-            <span className="siege-header-state-label">{view.stateLabel}</span>
-            <span className="siege-header-state-by">{view.subtitlePrefix}</span>
-            <FactionTooltip factionId={view.hostileFactionId} factionName={view.hostileFaction} position="bottom" delay={200}>
-              <FactionRoundel
-                factionId={view.hostileFactionId}
-                colour={view.hostileFactionColour}
-                secondaryColour={view.hostileFactionSecondaryColour}
-                emblem={view.hostileFactionEmblem}
-                cultureGroup={view.hostileFactionCultureGroup}
-                name={view.hostileFaction}
-                size="xs"
-                className="siege-header-hostile-roundel"
-                onClick={view.hostileFactionId ? () => openSidebar('diplomacy', view.hostileFactionId!) : undefined}
-              />
-            </FactionTooltip>
-            <span className="siege-header-hostile-name">{view.hostileFaction}</span>
+            <div className="siege-header-state-copy">
+              <span className="siege-header-state-label">{view.stateLabel}</span>
+              <span className="siege-header-state-by">{view.subtitlePrefix}</span>
+              <FactionTooltip factionId={view.hostileFactionId} factionName={view.hostileFaction} position="bottom" delay={200}>
+                <FactionRoundel
+                  factionId={view.hostileFactionId}
+                  colour={view.hostileFactionColour}
+                  secondaryColour={view.hostileFactionSecondaryColour}
+                  emblem={view.hostileFactionEmblem}
+                  cultureGroup={view.hostileFactionCultureGroup}
+                  name={view.hostileFaction}
+                  size="xs"
+                  className="siege-header-hostile-roundel"
+                  onClick={view.hostileFactionId ? () => openSidebar('diplomacy', view.hostileFactionId!) : undefined}
+                />
+              </FactionTooltip>
+              <span className="siege-header-hostile-name">{view.hostileFaction}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -546,7 +578,7 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
             <span className="siege-progress-label">
               <WebUIText textKey={hasCapitalDeadline
                 ? 'Settlement.Siege.RebelTakeoverProgress'
-                : 'Settlement.Siege.Progress'} />
+                : view.state === 'blockade' ? 'Settlement.Siege.BlockadeProgress' : 'Settlement.Siege.Progress'} />
             </span>
             {!isOccupied && <span className="siege-progress-value">{formatPercent(view.progress)}</span>}
             <span className={`siege-progress-days${isOccupied ? ' siege-progress-days--fallen' : ''}`}>{daysValue}</span>
@@ -592,7 +624,7 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
           <>
             {view.attackers.length > 1 && (
               <ForceGroup
-                titleKey="Settlement.Siege.BesiegingForce"
+                titleKey={view.state === 'blockade' ? 'Settlement.Siege.BlockadingForce' : 'Settlement.Siege.BesiegingForce'}
                 totalStrength={sumStrength(view.attackers)}
                 rows={view.attackers}
                 emptyKey="Settlement.Siege.NoBesiegingArmies"
