@@ -520,7 +520,6 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
       <div className={`char-header${!isAlive ? ' char-header--dead' : ''}`} onMouseMove={handleHeaderMouseMove}>
         <div className={`char-header-portrait${spouseRel ? ' char-header-portrait--with-spouse' : ''}`}>
           <Portrait ref={headerBackdropPortraitRef} className="char-header-selected-backdrop" name={character.name} src={character.portrait} layers={character.portraitLayers} isAlive={isAlive} isImprisoned={isImprisoned} size="hero" shape="rect" showBorder={false} />
-          <div className="char-header-background-mask" />
           {spouseRel && (
             <div className="char-header-spouse-wrap">
               <PersonTooltip character={spouse ?? undefined} characterId={spouse ? undefined : spouseId} position="left" delay={200}>

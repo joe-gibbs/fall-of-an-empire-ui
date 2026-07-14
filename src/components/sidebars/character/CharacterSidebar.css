@@ -108,18 +108,6 @@
   pointer-events: none;
 }
 
-.char-header-background-mask {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  height: 5rem;
-  background-image: linear-gradient(180deg, transparent 0%, #000 100%);
-  background-color: transparent;
-  pointer-events: none;
-}
-
 .char-header-selected-foreground {
   z-index: 2;
   pointer-events: none;
@@ -193,7 +181,7 @@
   left: 0;
   right: 0;
   padding: 1rem 0.6rem 0.35rem;
-  background-image: linear-gradient(transparent, rgba(12, 17, 22, 0.72) 58%, rgba(9, 13, 18, 0.96));
+  background-image: linear-gradient(180deg, transparent 0, #000 1rem);
   background-color: transparent;
   z-index: 2;
 }
