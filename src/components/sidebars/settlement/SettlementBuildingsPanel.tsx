@@ -23,6 +23,7 @@ import {
 import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBottomBarOperationsBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import HtmlContent from '../../common/layout/content/HtmlContent';
+import ResourceLink from '../../common/resources/ResourceLink';
 import { formatNumber } from '../../../utils/numberFormat';
 import { toRootRem } from '../../../utils/cssUnits';
 import './SettlementBuildingsPanel.css';
@@ -283,7 +284,11 @@ function queueTooltipLines(summary?: BuildingQueueSummary): TooltipLine[] {
 
   for (const missing of item.missingResources ?? []) {
     lines.push({
-      label: missing.displayName || missing.name,
+      label: (
+        <ResourceLink resourceId={missing.name}>
+          {missing.displayName || missing.name}
+        </ResourceLink>
+      ),
       get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.223.1", { Value1: n(missing.amount) }); },
       valueIcon: missing.icon,
       valueColor: 'var(--red)',
@@ -314,7 +319,11 @@ function addResourceCostLines(lines: TooltipLine[], resourceCost?: BuildingResou
   lines.push({ label: webUIText('Common.Resources'), isHeader: true });
   for (const cost of resourceCost) {
     lines.push({
-      label: cost.displayName || cost.name,
+      label: (
+        <ResourceLink resourceId={cost.name}>
+          {cost.displayName || cost.name}
+        </ResourceLink>
+      ),
       labelIcon: cost.icon,
       value: n(cost.amount),
       valueColor: 'var(--gold-light)',
@@ -511,10 +520,13 @@ function ResourceRow({
           position="bottom"
           delay={150}
         >
-          <span className={`bld-res${mode === 'missing' ? ' bld-res--missing' : ''}`}>
+          <ResourceLink
+            resourceId={r.name}
+            className={`bld-res${mode === 'missing' ? ' bld-res--missing' : ''}`}
+          >
             <img src={r.icon} alt="" className="bld-res-icon" />
             <span className="bld-res-amt">{n(r.amount)}</span>
-          </span>
+          </ResourceLink>
         </Tooltip>
       ))}
     </div>
