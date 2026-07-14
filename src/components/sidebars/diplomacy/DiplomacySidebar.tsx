@@ -214,6 +214,8 @@ const treatyIcons: Record<string, string> = {
   Peace: '/assets/icons/I_Peace.png',
 };
 
+const ALLIANCE_TREATY_TYPES = new Set(['MilitaryAlliance', 'DefensiveAlliance']);
+
 const FOCUS_OPTIONS: Array<{ id: BuildFocusId; label: string; icon: string; body: string }> = [
   {
     id: 'balanced',
@@ -492,7 +494,8 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
     onClose();
   }, [cancelFactionInteractionSelection, factionInteractionSelection, onClose]);
 
-  // Relations with OTHER factions (wars, treaties). Wars come from the bridge.
+  // Relations with other factions. Player alliances remain visible here so the
+  // viewed faction's complete set of allies is represented by roundels.
   const warFactions = faction.wars ?? [];
   // Group treaties by type, collecting all partner factions per type so a
   // faction with ten subjects shows one subject pact row, not ten.
@@ -508,7 +511,9 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
   }
   const treatyRelations = useMemo(() => {
     const grouped = new Map<string, TreatyPartner[]>();
-    for (const t of faction.treaties.filter(treaty => !treaty.isWithPlayer)) {
+    for (const t of faction.treaties.filter(treaty => (
+      !treaty.isWithPlayer || ALLIANCE_TREATY_TYPES.has(treaty.type)
+    ))) {
       const partner: TreatyPartner = {
         id: t.withFactionId ?? t.withFaction,
         name: t.withFaction,

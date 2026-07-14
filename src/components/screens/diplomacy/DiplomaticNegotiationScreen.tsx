@@ -129,7 +129,12 @@ function isResourceTransfer(type: string): boolean {
 }
 
 function hasDuration(type: string, durationDays: number | undefined): boolean {
-  return Boolean(durationDays && durationDays > 0) || type === 'non_aggression' || type === 'passage_rights' || type === 'trade' || type === 'merchant_rights';
+  return Boolean(durationDays && durationDays > 0)
+    || type === 'non_aggression'
+    || type === 'passage_rights'
+    || type === 'trade'
+    || type === 'merchant_rights'
+    || type === 'tribute';
 }
 
 function amountFromText(value: string): number {
@@ -400,7 +405,7 @@ function ProposalColumn({
   selected: DiplomaticProposalDraft[];
   stateProposals: TreatyEntry[];
   resourceOptions: ResourceOption[];
-  side: 'offer' | 'request' | 'mutual';
+  side: 'offer' | 'request';
   onRemove: (proposalId: string) => void;
   onChange: (proposalId: string, patch: Partial<DiplomaticProposalDraft>) => void;
 }) {
@@ -415,11 +420,9 @@ function ProposalColumn({
       </div>
       <div className="panel-body">
         <div className="pns-section-head">
-          <span>{side === 'mutual'
-            ? webUIText('TreatyNegotiation.BothAgree')
-            : side === 'offer'
-              ? webUIText('TreatyNegotiation.WeGive')
-              : webUIText('TreatyNegotiation.WeAsk')}</span>
+          <span>{side === 'offer'
+            ? webUIText('TreatyNegotiation.WeGive')
+            : webUIText('TreatyNegotiation.WeAsk')}</span>
         </div>
         <div className="pns-draft-list">
           {selected.length > 0 ? selected.map(proposal => {
@@ -472,9 +475,8 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
   const selectedIds = useMemo(() => new Set(proposals.map(proposal => proposal.proposalId || proposalKey(proposal))), [proposals]);
   const availableOffers = (state?.availableOffers ?? []).filter(option => !option.isSelected && !selectedIds.has(option.optionId));
   const availableRequests = (state?.availableRequests ?? []).filter(option => !option.isSelected && !selectedIds.has(option.optionId));
-  const selectedMutual = proposals.filter(isMutual);
-  const selectedOffers = proposals.filter(proposal => proposal.side === 'offer');
-  const selectedRequests = proposals.filter(isRequest);
+  const selectedOffers = proposals.filter(proposal => proposal.side === 'offer' || isMutual(proposal));
+  const selectedRequests = proposals.filter(proposal => isRequest(proposal) || isMutual(proposal));
   const ourResources = state?.ourResources ?? [];
   const theirResources = state?.theirResources ?? [];
   const acceptTone = acceptanceTone(preview?.acceptanceScore);
@@ -649,17 +651,6 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
     <div className="pns-board tns-board">
       <OptionsPanel title={webUIText('TreatyNegotiation.WeCanOffer')} options={availableOffers} onAdd={addProposal} />
       <div className="pns-middle">
-        {selectedMutual.length > 0 ? (
-          <ProposalColumn
-            title={webUIText('TreatyNegotiation.MutualAgreements')}
-            selected={selectedMutual}
-            stateProposals={liveProposals}
-            resourceOptions={[]}
-            side="mutual"
-            onRemove={removeProposal}
-            onChange={updateProposal}
-          />
-        ) : null}
         <div className="pns-selected-columns">
           <ProposalColumn
             title={webUIText('TreatyNegotiation.Offers')}
