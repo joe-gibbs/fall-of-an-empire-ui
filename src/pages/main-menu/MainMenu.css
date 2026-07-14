@@ -291,6 +291,11 @@
   height: 100%;
 }
 
+.mm-continue-hero-badge > .faction-roundel .faction-roundel-symbol {
+  width: 66%;
+  height: 66%;
+}
+
 .mm-continue-hero-copy {
   display: flex;
   flex-direction: column;
