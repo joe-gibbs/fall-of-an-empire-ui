@@ -132,6 +132,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const isPlayerControlled = army.isPlayerControlled ?? (playerFactionId == null || army.factionId == null || army.factionId === playerFactionId);
   const resourceRows = buildResourceRows(army);
   const subordinateRows = army.subordinates ?? [];
+  const attritionSources = army.attritionSources ?? [];
   const embarkedRows = army.embarkedArmies ?? [];
   const militaryIds = useMemo(
     () => militaryOverview?.forces.map((force) => force.id) ?? [],
@@ -587,11 +588,32 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       <>
         <SectionHeading variant="ornate" title={webUIText('Auto.ComponentsSidebarsMilitarySidebar.934.15')} />
         <div className="mil-subordinates">
+          {canHaveSubordinates && (
+            <div className="mil-command-stats">
+              <div>
+                <span>{webUIText('Military.Command.SubordinateCapacity')}</span>
+                <strong>{formatNumber(army.commandSubordinateCount ?? 0)} / {formatNumber(army.commandSubordinateCapacity ?? 0)}</strong>
+              </div>
+              <div>
+                <span>{webUIText('Military.Command.BuffRadius')}</span>
+                <strong>{formatNumber(army.commandBuffRadius ?? 0)}</strong>
+              </div>
+              <div>
+                <span>{webUIText('Military.Command.Maintenance')}</span>
+                <strong>{formatNumber(army.commandMaintenance ?? 0)}</strong>
+              </div>
+            </div>
+          )}
           {army.parentCommand && (
             <Tooltip
               content={{
                 title: army.parentCommand,
                 get body() { return webUIText("Auto.Fix.ExprTrue.componentssidebarsMilitarySidebar.930.1", { ParentCommand: army.parentCommand }); },
+                lines: [
+                  { label: webUIText('Military.Command.TacticsBonus'), value: formatPercent((army.hierarchyTacticsBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
+                  { label: webUIText('Military.Command.MoraleBonus'), value: formatPercent((army.hierarchyMoraleBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
+                  { label: webUIText('Military.Command.SpeedBonus'), value: formatPercent((army.hierarchySpeedBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
+                ],
               }}
               position="right"
               delay={150}
@@ -690,13 +712,18 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                       { label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.598.14'), value: formatPercent(force.morale), valueColor: getMoraleColor(force.morale) },
                       { label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.615.19'), value: formatSupplyWindow(force.supplyDays), valueColor: force.supplyDays > 30 ? 'var(--green)' : 'var(--red)' },
                     ] : []),
+                    { label: webUIText('Military.Command.RangeStatus'), value: webUIText(sub.withinCommandRange ? 'Military.Command.InRange' : 'Military.Command.OutOfRange'), valueColor: sub.withinCommandRange ? 'var(--green)' : 'var(--red)' },
+                    { label: webUIText('Military.Command.Distance'), value: `${formatNumber(sub.distanceToSuperior)} / ${formatNumber(sub.superiorCommandRadius)}` },
+                    { label: webUIText('Military.Command.TacticsBonus'), value: formatPercent(sub.hierarchyTacticsBonus * 100, 1), valueColor: sub.withinCommandRange ? 'var(--green)' : 'var(--text-muted)' },
+                    { label: webUIText('Military.Command.MoraleBonus'), value: formatPercent(sub.hierarchyMoraleBonus * 100, 1), valueColor: sub.withinCommandRange ? 'var(--green)' : 'var(--text-muted)' },
+                    { label: webUIText('Military.Command.SpeedBonus'), value: formatPercent(sub.hierarchySpeedBonus * 100, 1), valueColor: sub.withinCommandRange ? 'var(--green)' : 'var(--text-muted)' },
                     ...subUnitTypes.map((entry) => ({ label: formatUnitTypeName(entry.type), value: formatNumber(entry.count) })),
                   ],
                 }}
                 position="right"
                 delay={200}
               >
-                <div className={`mil-sub-row${sub.depth > 0 ? ' mil-sub-row--nested' : ''}${sub.id ? ' is-clickable' : ''}`} onClick={sub.id ? () => openSidebar('military', sub.id) : undefined}>
+                <div className={`mil-sub-row${sub.depth > 0 ? ' mil-sub-row--nested' : ''}${sub.withinCommandRange ? '' : ' mil-sub-row--out-of-range'}${sub.id ? ' is-clickable' : ''}`} onClick={sub.id ? () => openSidebar('military', sub.id) : undefined}>
                   <img src={army.isNavy ? "/assets/icons/I_NaviesQuickButton.png" : "/assets/icons/I_ArmiesQuickButton.png"} alt="" className="mil-sub-icon" />
                   <div className="mil-sub-info">
                     <span className="mil-sub-name">{sub.name}</span>
@@ -899,6 +926,55 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 </Tooltip>
               ))}
             </div>
+
+            {attritionSources.length > 0 && (
+              <>
+                <SectionHeading variant="ornate" title={webUIText('Military.Attrition.Title')} />
+                <div className="mil-attrition-list">
+                  {attritionSources.map(source => {
+                    const projectedLosses = Math.ceil(army.strength * source.strengthLossRate);
+                    const icon = source.id === 'snow'
+                      ? '/assets/icons/Terrain/I_SnowAttrition.png'
+                      : source.id === 'desert'
+                        ? '/assets/icons/Terrain/I_DesertAttrition.png'
+                        : source.id === 'overcrowding'
+                          ? '/assets/icons/I_ArmiesQuickButton.png'
+                          : source.id === 'forcedMarch'
+                            ? '/assets/icons/I_Speed.png'
+                            : '/assets/icons/Terrain/I_Attrition.png';
+                    return (
+                      <div key={source.id} className="mil-attrition-row">
+                        <img src={icon} alt="" />
+                        <div className="mil-attrition-copy">
+                          <strong>{source.name}</strong>
+                          <span>
+                            {webUIText(source.id === 'forcedMarch' ? 'Military.Attrition.ExhaustionLoss' : 'Military.Attrition.ProjectedLoss', {
+                              Count: formatNumber(projectedLosses),
+                              Percent: formatPercent(source.strengthLossRate * 100, 1),
+                            })}
+                          </span>
+                          {source.moraleLossRate > 0 && (
+                            <span>{webUIText('Military.Attrition.MoraleLoss', { Percent: formatPercent(source.moraleLossRate * 100, 1) })}</span>
+                          )}
+                          {source.id === 'supply' && (
+                            <span>{webUIText('Military.Attrition.ShortageSeverity', { Percent: formatPercent(source.severity * 100, 0) })}</span>
+                          )}
+                          {source.id === 'overcrowding' && (
+                            <span>{webUIText('Military.Attrition.NearbyStrength', {
+                              Current: formatNumber(source.nearbyStrength),
+                              Threshold: formatNumber(source.strengthThreshold),
+                            })}</span>
+                          )}
+                          {source.id === 'forcedMarch' && (
+                            <span>{webUIText('Military.Attrition.ExhaustionProgress', { Percent: formatPercent(source.progress * 100, 0) })}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
             {renderSubordinates()}
             {renderEmbarkedArmies()}

@@ -499,3 +499,72 @@
 .cam-action-error {
   border-image-source: url('/assets/gold-frame.png');
 }
+
+.cam-consequence-duration {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-bottom: 0.45rem;
+}
+
+.cam-consequence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cam-consequence-row,
+.cam-consequence-card {
+  border: 0.077rem solid rgba(201, 168, 76, 0.24);
+  background: rgba(15, 20, 26, 0.42);
+  padding: 0.45rem 0.55rem;
+}
+
+.cam-consequence-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.cam-consequence-row--positive strong {
+  color: var(--green);
+}
+
+.cam-consequence-card--previous {
+  border-color: rgba(176, 55, 48, 0.55);
+}
+
+.cam-consequence-name,
+.cam-consequence-values,
+.cam-consequence-values span {
+  display: flex;
+  align-items: center;
+}
+
+.cam-consequence-name {
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: var(--text-primary);
+}
+
+.cam-consequence-name em {
+  color: var(--red);
+  font-size: 0.72rem;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.cam-consequence-values {
+  gap: 0.9rem;
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.cam-consequence-values span {
+  gap: 0.3rem;
+}
+
+.cam-consequence-values strong {
+  color: var(--red);
+}

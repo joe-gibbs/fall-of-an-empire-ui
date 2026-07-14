@@ -974,6 +974,15 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
 
       <StyledScrollArea className="sidebar-content sidebar-content--textured settle-content">
         {activeTab === 'general' && <>
+          {siege?.capitalOccupationDaysRemaining !== undefined && (
+            <div className="game-notice game-notice--danger game-notice--compact">
+              <strong>{webUIText('Settlement.CapitalOccupationDeadline', {
+                Days: formatNumber(siege.capitalOccupationDaysRemaining),
+              })}</strong>
+              <span>{webUIText('Settlement.CapitalOccupationDeadlineBody')}</span>
+            </div>
+          )}
+
           {/* Stats row */}
           <StatCellGrid>
             <Tooltip content={buildPopulationGrowthTooltip(settlement)} position="bottom" delay={150}>

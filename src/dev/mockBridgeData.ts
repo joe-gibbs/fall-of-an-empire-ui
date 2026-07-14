@@ -2184,6 +2184,8 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     ] : [],
     canBuild: !isSiegeMock,
     cannotBuildReason: isSiegeMock ? 'Under siege' : '',
+    hasCapitalOccupationDeadline: false,
+    capitalOccupationDaysRemaining: 0,
   };
 }
 
@@ -2498,9 +2500,16 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     delegated: false,
     autoSquashRebels: true,
     subordinates: isNavy || profile.parentCommandId ? [] : [
-      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), depth: 0, name: 'Aurelion Detachment', commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, unitTypes: [{ type: 'Infantry', count: 7 }, { type: 'Cavalry', count: 2 }] },
-      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), depth: 1, name: 'Western Scouts', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, unitTypes: [{ type: 'Ranged', count: 2 }, { type: 'Cavalry', count: 1 }] },
+      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), depth: 0, name: 'Aurelion Detachment', commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, unitTypes: [{ type: 'Infantry', count: 7 }, { type: 'Cavalry', count: 2 }], withinCommandRange: true, distanceToSuperior: 42, superiorCommandRadius: 100, hierarchyTacticsBonus: 0.08, hierarchyMoraleBonus: 0.06, hierarchySpeedBonus: 0.04 },
+      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), depth: 1, name: 'Western Scouts', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, unitTypes: [{ type: 'Ranged', count: 2 }, { type: 'Cavalry', count: 1 }], withinCommandRange: false, distanceToSuperior: 126, superiorCommandRadius: 80, hierarchyTacticsBonus: 0, hierarchyMoraleBonus: 0, hierarchySpeedBonus: 0 },
     ],
+    commandSubordinateCount: isNavy || profile.parentCommandId ? 0 : 2,
+    commandSubordinateCapacity: isNavy ? 0 : 4,
+    commandMaintenance: isNavy ? 0 : 36,
+    commandBuffRadius: isNavy ? 0 : 100,
+    hierarchyTacticsBonus: profile.parentCommandId ? 0.08 : 0,
+    hierarchyMoraleBonus: profile.parentCommandId ? 0.06 : 0,
+    hierarchySpeedBonus: profile.parentCommandId ? 0.04 : 0,
     parentCommand: profile.parentCommand,
     parentCommandId: profile.parentCommandId,
     parentCommandDebugShortId: profile.parentCommandId ? mockDebugShortId(profile.parentCommandId) : 0,
@@ -2519,6 +2528,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
       { id: 'Weapons', name: 'Weapons', amount: isScouts ? 9 : isDetachment ? 22 : 46, capacity: isScouts ? 12 : isDetachment ? 32 : 60, monthlyUsage: isScouts ? 1.2 : isDetachment ? 3.4 : 5.5, daysRemaining: isScouts ? 225 : isDetachment ? 194 : 251 },
       { id: 'Horses', name: 'Horses', amount: isScouts ? 18 : isDetachment ? 36 : 64, capacity: isScouts ? 24 : isDetachment ? 48 : 80, monthlyUsage: isScouts ? 1.5 : isDetachment ? 2.5 : 3, daysRemaining: isScouts ? 360 : isDetachment ? 432 : 640 },
     ],
+    attritionSources: [],
     supplyDays: profile.supplyDays,
     isForcedMarching: false,
     isRaiding: false,
@@ -3124,6 +3134,16 @@ function heirCandidates(): BridgeResponse<'game.get_heir_candidates'> {
         governance: person.stats.governance,
         loyalty: person.stats.loyalty,
         constitution: person.stats.constitution,
+        appointerOpinionOfHeirChange: id === MOCK_IDS.heir ? 40 : 50,
+        heirOpinionOfAppointerChange: id === MOCK_IDS.heir ? 40 : 50,
+        consequenceDurationDays: 1800,
+        passedOverConsequences: id === MOCK_IDS.heir ? [] : [{
+          personId: MOCK_IDS.heir,
+          name: 'Cassian Arcastus',
+          isPreviousHeir: true,
+          opinionOfAppointerChange: -40,
+          opinionOfHeirChange: -25,
+        }],
         traits: person.traits.map(trait => ({
           id: trait.id,
           name: trait.name,
@@ -3692,6 +3712,11 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
         ourParticipants: [player, subjectFactionReference()],
         theirParticipants: [rival, { id: 'mock-faction-salt-league', name: 'Salt League', colour: '#8A6930', secondaryColour: '#CFC4AA', cultureGroup: 'Aurestian', emblem: 'Aurestian_2' }],
         warScore: 18,
+        warScoreBreakdown: [
+          { label: 'Battles', score: 12, eventCount: 3, isOurs: true, depth: 0 },
+          { label: 'Battle of the Western Pass', score: 12, eventCount: 1, isOurs: true, depth: 1 },
+          { label: 'Occupied settlements', score: 6, eventCount: 1, isOurs: true, depth: 0 },
+        ],
         durationDays: 142,
         battlesFought: 3,
         settlementsCaptured: 1,
@@ -3709,6 +3734,9 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
           rival,
         ],
         warScore: -6,
+        warScoreBreakdown: [
+          { label: 'Battles', score: -6, eventCount: 1, isOurs: false, depth: 0 },
+        ],
         durationDays: 51,
         battlesFought: 1,
         settlementsCaptured: 0,
@@ -4064,7 +4092,10 @@ function peaceState(): BridgeResponse<'game.get_peace_negotiation_state'> {
       { optionId: 'concession:release_vassal:mock-faction-player:mock-faction-subject', type: 'release_vassal', direction: 'concession', label: 'Release: Meridian Prefecture', description: 'Release one of your subjects as part of the treaty.', targetFactionId: MOCK_IDS.playerFaction, targetFactionName: 'Rephsian Empire', vassalFactionId: MOCK_IDS.subjectFaction, vassalFactionName: 'Meridian Prefecture', defaultTributeAmount: 0, defaultTributeDurationDays: 0, isSelected: false, ...NO_PEACE_SETTLEMENT_TARGET },
       { optionId: 'white-peace', type: 'white_peace', direction: 'neutral', label: 'White peace', description: 'End the war without concessions.', targetFactionId: MOCK_IDS.rivalFaction, targetFactionName: 'Aurestian League', vassalFactionId: '', vassalFactionName: '', defaultTributeAmount: 0, defaultTributeDurationDays: 0, isSelected: false, ...NO_PEACE_SETTLEMENT_TARGET },
     ],
-    preview: { currentWarScore: 18, demandCost: 0, concessionCost: 0, netCostForPlayer: 0, acceptanceScore: 12, verdict: 'possible', verdictLabel: 'Possible', canSubmit: true, blockedReason: '', breakdown: 'War score and treasury pressure make a modest settlement possible.' },
+    preview: { currentWarScore: 18, demandCost: 0, concessionCost: 0, netCostForPlayer: 0, acceptanceScore: 12, verdict: 'possible', verdictLabel: 'Possible', canSubmit: true, blockedReason: '', breakdown: 'War score and treasury pressure make a modest settlement possible.', warScoreBreakdown: [
+      { label: 'Battles', score: 12, eventCount: 3, isOurs: true, depth: 0 },
+      { label: 'Occupied settlements', score: 6, eventCount: 1, isOurs: true, depth: 0 },
+    ] },
     emptyReason: '',
   };
 }
@@ -4254,6 +4285,7 @@ function battleFormationDetail(
     losses: maxStrength - strength,
     healthPercent,
     morale,
+    recentCasualtyPressure: side === 'attacker' ? 0.084 : 0.032,
     stance,
     stanceLabel,
     positionX,

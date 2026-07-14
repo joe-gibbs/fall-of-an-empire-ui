@@ -13,7 +13,7 @@ import { getruntimeEngine } from '../core/runtimeEngine';
 import { useBridgeQueryState } from '../core/useBridgeQuery';
 
 const PACKED_BATTLE_FRAME = 'battleFrame';
-const BATTLE_FRAME_FORMATION_NUMBER_STRIDE = 12;
+const BATTLE_FRAME_FORMATION_NUMBER_STRIDE = 13;
 const BATTLE_FRAME_AGENT_NUMBER_STRIDE = 4;
 const BATTLE_FRAME_FORMATION_MANUAL_TARGET_FLAG = 1 << 0;
 const BATTLE_FRAME_FORMATION_ROUTING_FLAG = 1 << 1;
@@ -222,13 +222,14 @@ function applyBattleFrame(
         losses: frame.formationNumbers[numberOffset + 2] ?? 0,
         healthPercent: frame.formationNumbers[numberOffset + 3] ?? 0,
         morale: frame.formationNumbers[numberOffset + 4] ?? formation.morale,
-        positionX: frame.formationNumbers[numberOffset + 5] ?? 0,
-        positionY: frame.formationNumbers[numberOffset + 6] ?? 0,
-        rotation: frame.formationNumbers[numberOffset + 7] ?? 0,
-        zIndex: frame.formationNumbers[numberOffset + 8] ?? 0,
-        attackChargePercent: frame.formationNumbers[numberOffset + 9] ?? 0,
-        attackSequence: frame.formationNumbers[numberOffset + 10] ?? formation.attackSequence,
-        shipCount: frame.formationNumbers[numberOffset + 11] ?? formation.shipCount,
+        recentCasualtyPressure: frame.formationNumbers[numberOffset + 5] ?? formation.recentCasualtyPressure,
+        positionX: frame.formationNumbers[numberOffset + 6] ?? 0,
+        positionY: frame.formationNumbers[numberOffset + 7] ?? 0,
+        rotation: frame.formationNumbers[numberOffset + 8] ?? 0,
+        zIndex: frame.formationNumbers[numberOffset + 9] ?? 0,
+        attackChargePercent: frame.formationNumbers[numberOffset + 10] ?? 0,
+        attackSequence: frame.formationNumbers[numberOffset + 11] ?? formation.attackSequence,
+        shipCount: frame.formationNumbers[numberOffset + 12] ?? formation.shipCount,
         hasManualTarget: (flags & BATTLE_FRAME_FORMATION_MANUAL_TARGET_FLAG) !== 0,
         isRouting,
         isWithdrawing,
@@ -260,6 +261,9 @@ function applyBattleFrame(
       losses: next.losses,
       healthPercent: next.healthPercent,
       morale: Number.isFinite(next.morale) ? next.morale : formation.morale,
+      recentCasualtyPressure: Number.isFinite(next.recentCasualtyPressure)
+        ? next.recentCasualtyPressure
+        : formation.recentCasualtyPressure,
       positionX: next.positionX,
       positionY: next.positionY,
       rotation: next.rotation,

@@ -4,6 +4,7 @@ import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import Panel from '../../common/layout/shell/Panel';
 import FactionRoundel from '../../common/entities/FactionRoundel';
 import FactionTooltip from '../../common/tooltips/FactionTooltip';
+import Tooltip from '../../common/tooltips/Tooltip';
 import CourtOfficeSummary from '../../common/entities/CourtOfficeSummary';
 import VirtualList from '../../common/layout/scrolling/VirtualList';
 import CourtAppointmentModal from '../../modals/characters/CourtAppointmentModal';
@@ -32,6 +33,18 @@ type FactionRef = ActiveWar['ourParticipants'][number];
 type ForeignSortKey = 'faction' | 'status' | 'opinion' | 'strength' | 'settlements' | 'treaties';
 type TreatySortKey = 'faction' | 'type' | 'duration';
 type WarSortKey = 'name' | 'ours' | 'theirs' | 'warScore' | 'duration' | 'battles';
+
+function warScoreTooltip(row: ActiveWar) {
+  return {
+    title: webUIText('Diplomacy.WarScoreBreakdown'),
+    body: webUIText('Diplomacy.WarScoreBreakdownBody'),
+    lines: row.warScoreBreakdown.map(entry => ({
+      label: `${entry.depth > 0 ? '· ' : ''}${entry.label}${entry.eventCount > 1 ? ` (${formatNumber(entry.eventCount)})` : ''}`,
+      value: formatSignedNumber(entry.score, { maximumFractionDigits: 1 }),
+      valueColor: entry.score >= 0 ? 'var(--green)' : 'var(--red)',
+    })),
+  };
+}
 
 const TABS = [
   { id: 'foreign', get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.28.1'); } },
@@ -666,7 +679,9 @@ function ActiveWars({ rows }: { rows: ActiveWar[] }) {
             </div>
           </TableCell>
           <TableCell className={cellClass('dps-table-col--short', signedValueClass(row.warScore))}>
-            {fmtSigned(row.warScore)}
+            <Tooltip content={warScoreTooltip(row)} position="left" delay={150}>
+              <span className="dps-war-score-value">{fmtSigned(row.warScore)}</span>
+            </Tooltip>
           </TableCell>
           <TableCell className="dps-table-col--short">{fmtDuration(row.durationDays)}</TableCell>
           <TableCell className="dps-table-col--short">{fmt(row.battlesFought)}</TableCell>

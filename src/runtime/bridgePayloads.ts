@@ -260,6 +260,7 @@ function normaliseBattleFormationFrame(payload: unknown) {
     losses: bridgeNumber(bridgeProperty(payload, 'losses')),
     healthPercent: bridgeNumber(bridgeProperty(payload, 'healthPercent')),
     morale: bridgeNumber(bridgeProperty(payload, 'morale')),
+    recentCasualtyPressure: bridgeNumber(bridgeProperty(payload, 'recentCasualtyPressure')),
     positionX: bridgeNumber(bridgeProperty(payload, 'positionX')),
     positionY: bridgeNumber(bridgeProperty(payload, 'positionY')),
     rotation: bridgeNumber(bridgeProperty(payload, 'rotation')),
@@ -289,7 +290,7 @@ const NATIVE_BATTLE_PARTICIPANT_STRING_STRIDE = 11;
 const NATIVE_BATTLE_PARTICIPANT_NUMBER_STRIDE = 6;
 const NATIVE_BATTLE_SIDE_NUMBER_STRIDE = 6;
 const NATIVE_BATTLE_FORMATION_STRING_STRIDE = 19;
-const NATIVE_BATTLE_FORMATION_DETAIL_NUMBER_STRIDE = 17;
+const NATIVE_BATTLE_FORMATION_DETAIL_NUMBER_STRIDE = 18;
 const NATIVE_BATTLE_ACTION_STRING_STRIDE = 5;
 const NATIVE_BATTLE_ACTION_NUMBER_STRIDE = 7;
 const NATIVE_BATTLE_OBSTACLE_STRING_STRIDE = 2;
@@ -519,23 +520,24 @@ export function nativeBattleDataPayload(
       losses: formationNumbers[numberOffset + 2] ?? 0,
       healthPercent: formationNumbers[numberOffset + 3] ?? 0,
       morale: formationNumbers[numberOffset + 4] ?? 0,
+      recentCasualtyPressure: formationNumbers[numberOffset + 5] ?? 0,
       stance: formationStrings[stringOffset + 13] ?? '',
       stanceLabel: formationStrings[stringOffset + 14] ?? '',
-      positionX: formationNumbers[numberOffset + 5] ?? 0,
-      positionY: formationNumbers[numberOffset + 6] ?? 0,
-      rotation: formationNumbers[numberOffset + 7] ?? 0,
-      zIndex: formationNumbers[numberOffset + 8] ?? 0,
-      speed: formationNumbers[numberOffset + 9] ?? 0,
-      attackRange: formationNumbers[numberOffset + 10] ?? 0,
-      minimumAttackRange: formationNumbers[numberOffset + 11] ?? 0,
-      collisionRadius: formationNumbers[numberOffset + 12] ?? 0,
-      attackChargePercent: formationNumbers[numberOffset + 13] ?? 0,
+      positionX: formationNumbers[numberOffset + 6] ?? 0,
+      positionY: formationNumbers[numberOffset + 7] ?? 0,
+      rotation: formationNumbers[numberOffset + 8] ?? 0,
+      zIndex: formationNumbers[numberOffset + 9] ?? 0,
+      speed: formationNumbers[numberOffset + 10] ?? 0,
+      attackRange: formationNumbers[numberOffset + 11] ?? 0,
+      minimumAttackRange: formationNumbers[numberOffset + 12] ?? 0,
+      collisionRadius: formationNumbers[numberOffset + 13] ?? 0,
+      attackChargePercent: formationNumbers[numberOffset + 14] ?? 0,
       hasManualTarget: (flags & NATIVE_BATTLE_FORMATION_MANUAL_TARGET_FLAG) !== 0,
       isRouting: (flags & NATIVE_BATTLE_FORMATION_ROUTING_FLAG) !== 0,
       isWithdrawing: (flags & NATIVE_BATTLE_FORMATION_WITHDRAWING_FLAG) !== 0,
-      agentCount: formationNumbers[numberOffset + 14] ?? 0,
-      attackSequence: formationNumbers[numberOffset + 15] ?? 0,
-      shipCount: formationNumbers[numberOffset + 16] ?? 0,
+      agentCount: formationNumbers[numberOffset + 15] ?? 0,
+      attackSequence: formationNumbers[numberOffset + 16] ?? 0,
+      shipCount: formationNumbers[numberOffset + 17] ?? 0,
       targetFormationId: formationStrings[stringOffset + 15] ?? '',
       targetFormationName: formationStrings[stringOffset + 16] ?? '',
       activeActionId: formationStrings[stringOffset + 17] ?? '',

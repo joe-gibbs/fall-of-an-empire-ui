@@ -71,6 +71,21 @@ const STANCE_OPTIONS = [
   { id: 'charge', get label() { return webUIText('Auto.TopProp.ComponentsScreensBattleBattleScreen.46.5'); } },
 ];
 
+type AttackPosition = 'flank' | 'rear';
+
+function calculateAttackPosition(attacker: BattleFormationLive, defender: BattleFormationLive): AttackPosition | null {
+  const dx = attacker.positionX - defender.positionX;
+  const dy = attacker.positionY - defender.positionY;
+  const distance = Math.hypot(dx, dy);
+  if (distance < 0.001) return null;
+
+  const facingRadians = defender.rotation * Math.PI / 180;
+  const dot = Math.cos(facingRadians) * (dx / distance) + Math.sin(facingRadians) * (dy / distance);
+  if (dot < -0.25) return 'rear';
+  if (dot < 0.5) return 'flank';
+  return null;
+}
+
 
 interface BattleDamageIndicator {
   key: string;
@@ -378,6 +393,21 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
       }
     }
     return targets;
+  }, [formations, formationsById]);
+  const combatFeedback = useMemo(() => {
+    const feedback = new Map<string, { outgoing?: AttackPosition; incoming?: AttackPosition }>();
+    for (const attacker of formations) {
+      const defender = attacker.targetFormationId ? formationsById.get(attacker.targetFormationId) : null;
+      if (!defender || !formationsAreInMeleeContact(attacker, defender)) continue;
+      const position = calculateAttackPosition(attacker, defender);
+      if (!position) continue;
+
+      feedback.set(attacker.id, { ...feedback.get(attacker.id), outgoing: position });
+      const currentIncoming = feedback.get(defender.id)?.incoming;
+      const incoming = currentIncoming === 'rear' || position === 'rear' ? 'rear' : 'flank';
+      feedback.set(defender.id, { ...feedback.get(defender.id), incoming });
+    }
+    return feedback;
   }, [formations, formationsById]);
   const rawSelectedIds = selectionState.battleId === activeBattleId ? selectionState.selectedIds : EMPTY_SELECTED_IDS;
   const selectedIds = useMemo(
@@ -799,6 +829,8 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
               takingDamage={damagedFormationIds.has(formation.id)}
               damagePulseKey={damagePulseKeys.get(formation.id) ?? ''}
               engaged={meleeEngagementTargets.has(formation.id)}
+              outgoingAttackPosition={combatFeedback.get(formation.id)?.outgoing}
+              incomingAttackPosition={combatFeedback.get(formation.id)?.incoming}
               battlefieldWidth={battlefieldWidth}
               battlefieldHeight={battlefieldHeight}
               onSelect={(additive) => handleFormationSelect(formation.id, additive)}

@@ -1027,26 +1027,37 @@ function PeaceNegotiationScreenContent({
   const warScoreScale = Math.min(1, Math.abs(warScore) / 100).toFixed(3);
   const canSubmit = (!sourceOfferSelector || sourceOfferHydrated) && Boolean(preview?.canSubmit);
   const screenTitle = state?.found ? (state.warName || webUIText("Auto.Fix.VarExprTrueFallback.componentsscreensPeaceNegotiationScreen.756.1")) : webUIText("Auto.Fix.VarExprFalse.componentsscreensPeaceNegotiationScreen.756.1");
+  const warScoreBreakdown: TooltipContent = {
+    title: webUIText('Diplomacy.WarScoreBreakdown'),
+    body: webUIText('Diplomacy.WarScoreBreakdownBody'),
+    lines: (preview?.warScoreBreakdown ?? []).map(entry => ({
+      label: `${entry.depth > 0 ? '· ' : ''}${entry.label}${entry.eventCount > 1 ? ` (${formatNumber(entry.eventCount)})` : ''}`,
+      value: formatSignedNumber(entry.score, { maximumFractionDigits: 1 }),
+      valueColor: entry.score >= 0 ? 'var(--green)' : 'var(--red)',
+    })),
+  };
   const titleExtra = state?.found ? (
-    <div className="pns-title-progress">
-      <div className="pns-title-progress-track pns-warscore-track">
-        <div className="pns-warscore-center" />
-        {warScore > 0 ? (
-          <div
-            className="pns-warscore-fill pns-warscore-fill--ours"
-            style={{ transform: `scaleX(${warScoreScale})` }}
-          />
-        ) : null}
-        {warScore < 0 ? (
-          <div
-            className="pns-warscore-fill pns-warscore-fill--theirs"
-            style={{ transform: `scaleX(${warScoreScale})` }}
-          />
-        ) : null}
+    <Tooltip content={warScoreBreakdown} position="bottom" delay={150}>
+      <div className="pns-title-progress">
+        <div className="pns-title-progress-track pns-warscore-track">
+          <div className="pns-warscore-center" />
+          {warScore > 0 ? (
+            <div
+              className="pns-warscore-fill pns-warscore-fill--ours"
+              style={{ transform: `scaleX(${warScoreScale})` }}
+            />
+          ) : null}
+          {warScore < 0 ? (
+            <div
+              className="pns-warscore-fill pns-warscore-fill--theirs"
+              style={{ transform: `scaleX(${warScoreScale})` }}
+            />
+          ) : null}
+        </div>
+        <span className="pns-title-progress-value">{fmtWarScore(warScore)}</span>
+        <span className="pns-title-progress-summary">{buildWarSummary(state)}</span>
       </div>
-      <span className="pns-title-progress-value">{fmtWarScore(warScore)}</span>
-      <span className="pns-title-progress-summary">{buildWarSummary(state)}</span>
-    </div>
+    </Tooltip>
   ) : undefined;
 
   useEffect(() => {

@@ -1003,6 +1003,8 @@ export interface SiegeInfo {
   progress: number;
   /** Days until the siege concludes. 0 if unknown / not applicable. */
   estimatedDays: number;
+  /** Days until rebel victory while this capital remains occupied. */
+  capitalOccupationDaysRemaining?: number;
   totalSiegePower: number;
   totalDefenderStrength: number;
   pillageGold: number;
@@ -1101,6 +1103,12 @@ export interface ArmySubordinate {
   strength: number;
   maxStrength: number;
   unitTypes: ArmyUnitTypeStrength[];
+  withinCommandRange: boolean;
+  distanceToSuperior: number;
+  superiorCommandRadius: number;
+  hierarchyTacticsBonus: number;
+  hierarchyMoraleBonus: number;
+  hierarchySpeedBonus: number;
 }
 
 export interface EmbarkedArmy {
@@ -1117,6 +1125,17 @@ export interface MilitaryResource {
   capacity: number;
   monthlyUsage: number;
   daysRemaining: number;
+}
+
+export interface MilitaryAttritionSource {
+  id: string;
+  name: string;
+  strengthLossRate: number;
+  moraleLossRate: number;
+  severity: number;
+  progress: number;
+  nearbyStrength: number;
+  strengthThreshold: number;
 }
 
 export type MilitaryRank = 'Dux' | 'Praefectus' | 'Legatus';
@@ -1158,6 +1177,13 @@ export interface Army {
   autoSquashRebels?: boolean;
   /** Subordinate formations under this command */
   subordinates?: ArmySubordinate[];
+  commandSubordinateCount?: number;
+  commandSubordinateCapacity?: number;
+  commandMaintenance?: number;
+  commandBuffRadius?: number;
+  hierarchyTacticsBonus?: number;
+  hierarchyMoraleBonus?: number;
+  hierarchySpeedBonus?: number;
   /** Parent command name (if subordinate) */
   parentCommand?: string;
   /** Parent command ID (if subordinate) */
@@ -1171,6 +1197,7 @@ export interface Army {
   embarkedArmies?: EmbarkedArmy[];
   /** Resource stockpiles carried by the force, with monthly consumption. */
   resources?: MilitaryResource[];
+  attritionSources?: MilitaryAttritionSource[];
   supplyDays?: number;
   isForcedMarching?: boolean;
   isRaiding?: boolean;

@@ -62,6 +62,7 @@ interface SiegeViewModel {
   hostileFactionCultureGroup?: string;
   progress: number;
   estimatedDays: number;
+  capitalOccupationDaysRemaining?: number;
   progressPerDay: number;
   progressFactors: SiegeProgressFactor[];
   siegePower: number;
@@ -245,6 +246,7 @@ function buildViewModel(settlement: Settlement): SiegeViewModel | null {
     hostileFactionCultureGroup: siege.hostileFactionCultureGroup,
     progress: siege.progress,
     estimatedDays: siege.estimatedDays,
+    capitalOccupationDaysRemaining: siege.capitalOccupationDaysRemaining,
     progressPerDay: siege.progressPerDay,
     progressFactors: siege.progressFactors,
     siegePower: siege.totalSiegePower,
@@ -447,10 +449,15 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
   const role = determinePlayerRole(view, playerFactionId);
   const commands = commandsForRole(role, view.state);
   const isOccupied = view.state === 'occupation';
-  const daysValue = isOccupied
-    ? webUIText('Settlement.Siege.Fallen')
+  const hasCapitalDeadline = isOccupied && view.capitalOccupationDaysRemaining !== undefined;
+  const daysValue = hasCapitalDeadline
+    ? formatDayCount(view.capitalOccupationDaysRemaining ?? 0)
+    : isOccupied
+      ? webUIText('Settlement.Siege.Fallen')
     : formatDayCount(view.estimatedDays);
-  const progressPercent = isOccupied ? 100 : view.progress;
+  const progressPercent = hasCapitalDeadline
+    ? Math.max(0, Math.min(100, (365 - (view.capitalOccupationDaysRemaining ?? 365)) / 365 * 100))
+    : isOccupied ? 100 : view.progress;
   const showForceDetails = !isOccupied && (view.attackers.length > 1 || view.defenders.length > 0);
   const handleCommand = (command: SiegeCommandId) => {
     if (pendingCommand !== null) return;
@@ -536,12 +543,24 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
       <StyledScrollArea className="sidebar-content sidebar-content--textured siege-content" variant="inline">
         <div className="siege-progress-strip">
           <div className="siege-progress-head">
-            <span className="siege-progress-label"><WebUIText textKey="Settlement.Siege.Progress" /></span>
+            <span className="siege-progress-label">
+              <WebUIText textKey={hasCapitalDeadline
+                ? 'Settlement.Siege.RebelTakeoverProgress'
+                : 'Settlement.Siege.Progress'} />
+            </span>
             {!isOccupied && <span className="siege-progress-value">{formatPercent(view.progress)}</span>}
             <span className={`siege-progress-days${isOccupied ? ' siege-progress-days--fallen' : ''}`}>{daysValue}</span>
           </div>
           <PaintedBar percent={progressPercent} color={isOccupied ? 'gold' : 'red'} />
         </div>
+
+        {hasCapitalDeadline && (
+          <div className="game-notice game-notice--danger game-notice--compact">
+            {webUIText('Settlement.Siege.CapitalDeadlineBody', {
+              Days: formatNumber(view.capitalOccupationDaysRemaining ?? 0),
+            })}
+          </div>
+        )}
 
         <SiegeOverview view={view} daysValue={daysValue} />
 

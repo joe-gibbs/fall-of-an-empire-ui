@@ -21,6 +21,7 @@ import type {
   MilitaryDoctrine,
   MilitaryForce,
   MilitaryFoederatiEntry,
+  MilitaryAttritionSource,
   MilitaryOverview,
   MilitaryResource,
   PortraitLayerData,
@@ -289,7 +290,20 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
         type: entry.type,
         count: entry.count,
       })),
+      withinCommandRange: sub.withinCommandRange,
+      distanceToSuperior: sub.distanceToSuperior,
+      superiorCommandRadius: sub.superiorCommandRadius,
+      hierarchyTacticsBonus: sub.hierarchyTacticsBonus,
+      hierarchyMoraleBonus: sub.hierarchyMoraleBonus,
+      hierarchySpeedBonus: sub.hierarchySpeedBonus,
     })),
+    commandSubordinateCount: data.commandSubordinateCapacity > 0 ? data.commandSubordinateCount : undefined,
+    commandSubordinateCapacity: data.commandSubordinateCapacity > 0 ? data.commandSubordinateCapacity : undefined,
+    commandMaintenance: data.commandMaintenance > 0 ? data.commandMaintenance : undefined,
+    commandBuffRadius: data.commandBuffRadius > 0 ? data.commandBuffRadius : undefined,
+    hierarchyTacticsBonus: data.hierarchyTacticsBonus,
+    hierarchyMoraleBonus: data.hierarchyMoraleBonus,
+    hierarchySpeedBonus: data.hierarchySpeedBonus,
     parentCommand: data.parentCommand || undefined,
     parentCommandId: data.parentCommandId || undefined,
     parentCommandDebugShortId: data.parentCommandDebugShortId || undefined,
@@ -302,6 +316,7 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
       strength: army.strength,
     })),
     resources: data.resources.map(mapResource),
+    attritionSources: data.attritionSources.map(mapAttritionSource),
     supplyDays: data.supplyDays,
     isForcedMarching: data.isForcedMarching,
     isRaiding: data.isRaiding,
@@ -374,6 +389,19 @@ export function useMilitaryBridge(militaryId: string | null | undefined): Army |
         sources,
       };
     }),
+  };
+}
+
+function mapAttritionSource(source: GetMilitaryDataResponse['attritionSources'][number]): MilitaryAttritionSource {
+  return {
+    id: source.id,
+    name: source.name,
+    strengthLossRate: source.strengthLossRate,
+    moraleLossRate: source.moraleLossRate,
+    severity: source.severity,
+    progress: source.progress,
+    nearbyStrength: source.nearbyStrength,
+    strengthThreshold: source.strengthThreshold,
   };
 }
 

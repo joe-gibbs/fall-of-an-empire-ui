@@ -280,6 +280,9 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
           canSack: data.canSack,
           progress: data.siegeProgress,
           estimatedDays: data.estimatedSiegeDays,
+          capitalOccupationDaysRemaining: data.hasCapitalOccupationDeadline
+            ? data.capitalOccupationDaysRemaining
+            : undefined,
           totalSiegePower: data.totalSiegePower,
           totalDefenderStrength: data.totalDefenderStrength,
           pillageGold: data.pillageGold,
@@ -333,6 +336,9 @@ function mapSiegePatch(data: GetSettlementSiegeDataResponse): Settlement['siege'
     canSack: data.canSack,
     progress: data.siegeProgress,
     estimatedDays: data.estimatedSiegeDays,
+    capitalOccupationDaysRemaining: data.hasCapitalOccupationDeadline
+      ? data.capitalOccupationDaysRemaining
+      : undefined,
     totalSiegePower: data.totalSiegePower,
     totalDefenderStrength: data.totalDefenderStrength,
     pillageGold: data.pillageGold,

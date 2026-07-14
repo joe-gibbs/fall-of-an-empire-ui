@@ -20,7 +20,7 @@ import {
 import { setDesignatedHeir, useTargetedHeirCandidates } from '../../../bridge/characters/useHeirBridge';
 import type { HeirCandidateEntry } from '../../../bridge-types.generated.ts';
 import { useModalPresence } from '../../../hooks/useModalPresence';
-import { formatNumber } from '../../../utils/numberFormat';
+import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { useWebUIText } from '../../../localization/WebUITextContext';
 import type { CharacterTrait, StatKey } from '../../../data/types';
 import {
@@ -202,6 +202,47 @@ export default function HeirAssignmentModal({
                     }))}
                   />
                 </CandidateSection>
+
+                {selected.consequenceDurationDays > 0 && (
+                  <CandidateSection prefix="cam" title={t('FactionOverview.DesignationEffects')}>
+                    <div className="cam-consequence-duration">
+                      {t('FactionOverview.DesignationEffectsDuration', {
+                        Days: formatNumber(selected.consequenceDurationDays),
+                      })}
+                    </div>
+                    <div className="cam-consequence-list">
+                      <div className="cam-consequence-row cam-consequence-row--positive">
+                        <span>{t('FactionOverview.YourOpinionOfHeir', { Name: selected.name })}</span>
+                        <strong>{formatSignedNumber(selected.appointerOpinionOfHeirChange)}</strong>
+                      </div>
+                      <div className="cam-consequence-row cam-consequence-row--positive">
+                        <span>{t('FactionOverview.HeirOpinionOfYou', { Name: selected.name })}</span>
+                        <strong>{formatSignedNumber(selected.heirOpinionOfAppointerChange)}</strong>
+                      </div>
+                      {selected.passedOverConsequences.map(consequence => (
+                        <div
+                          key={consequence.personId}
+                          className={`cam-consequence-card${consequence.isPreviousHeir ? ' cam-consequence-card--previous' : ''}`}
+                        >
+                          <div className="cam-consequence-name">
+                            <span>{consequence.name}</span>
+                            {consequence.isPreviousHeir && <em>{t('FactionOverview.PreviousHeir')}</em>}
+                          </div>
+                          <div className="cam-consequence-values">
+                            <span>
+                              {t('FactionOverview.OpinionOfYou')}
+                              <strong>{formatSignedNumber(consequence.opinionOfAppointerChange)}</strong>
+                            </span>
+                            <span>
+                              {t('FactionOverview.OpinionOfChosenHeir')}
+                              <strong>{formatSignedNumber(consequence.opinionOfHeirChange)}</strong>
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CandidateSection>
+                )}
 
                 <CandidateTraits prefix="cam" traits={selectedTraits} />
               </div>

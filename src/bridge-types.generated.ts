@@ -216,6 +216,7 @@ export interface BattleFormationDetail {
   losses: number;
   healthPercent: number;
   morale: number;
+  recentCasualtyPressure: number;
   stance: string;
   stanceLabel: string;
   positionX: number;
@@ -250,6 +251,7 @@ export interface BattleFormationFrame {
   losses: number;
   healthPercent: number;
   morale: number;
+  recentCasualtyPressure: number;
   positionX: number;
   positionY: number;
   rotation: number;
@@ -654,6 +656,14 @@ export interface DiplomacyRegionalGovernor {
   canManageGovernor: boolean;
 }
 
+export interface DiplomacyWarScoreEntry {
+  label: string;
+  score: number;
+  eventCount: number;
+  isOurs: boolean;
+  depth: number;
+}
+
 export interface DiplomacyWarEntry {
   id: string;
   name: string;
@@ -662,6 +672,7 @@ export interface DiplomacyWarEntry {
   ourParticipants: DiplomacyFactionReference[];
   theirParticipants: DiplomacyFactionReference[];
   warScore: number;
+  warScoreBreakdown: DiplomacyWarScoreEntry[];
   durationDays: number;
   battlesFought: number;
   settlementsCaptured: number;
@@ -2363,6 +2374,14 @@ export interface GetHeirCandidatesRequest {
   factionId: string;
 }
 
+export interface HeirDesignationConsequenceEntry {
+  personId: string;
+  name: string;
+  isPreviousHeir: boolean;
+  opinionOfAppointerChange: number;
+  opinionOfHeirChange: number;
+}
+
 export interface HeirCandidateEntry {
   id: string;
   name: string;
@@ -2380,6 +2399,10 @@ export interface HeirCandidateEntry {
   governance: number;
   loyalty: number;
   constitution: number;
+  appointerOpinionOfHeirChange: number;
+  heirOpinionOfAppointerChange: number;
+  consequenceDurationDays: number;
+  passedOverConsequences: HeirDesignationConsequenceEntry[];
 }
 
 export interface GetHeirCandidatesResponse {
@@ -3961,6 +3984,8 @@ export interface GetSettlementDataResponse {
   canSack: boolean;
   siegeProgress: number;
   estimatedSiegeDays: number;
+  hasCapitalOccupationDeadline: boolean;
+  capitalOccupationDaysRemaining: number;
   totalSiegePower: number;
   totalDefenderStrength: number;
   pillageGold: number;
@@ -4040,6 +4065,8 @@ export interface GetSettlementSiegeDataResponse {
   canSack: boolean;
   siegeProgress: number;
   estimatedSiegeDays: number;
+  hasCapitalOccupationDeadline: boolean;
+  capitalOccupationDaysRemaining: number;
   totalSiegePower: number;
   totalDefenderStrength: number;
   pillageGold: number;
@@ -4791,6 +4818,12 @@ export interface MilitarySubordinateEntry {
   strength: number;
   maxStrength: number;
   unitTypes: MilitaryUnitTypeStrengthEntry[];
+  withinCommandRange: boolean;
+  distanceToSuperior: number;
+  superiorCommandRadius: number;
+  hierarchyTacticsBonus: number;
+  hierarchyMoraleBonus: number;
+  hierarchySpeedBonus: number;
 }
 
 export interface EmbarkedArmyEntry {
@@ -4807,6 +4840,17 @@ export interface MilitaryResourceEntry {
   capacity: number;
   monthlyUsage: number;
   daysRemaining: number;
+}
+
+export interface MilitaryAttritionEntry {
+  id: string;
+  name: string;
+  strengthLossRate: number;
+  moraleLossRate: number;
+  severity: number;
+  progress: number;
+  nearbyStrength: number;
+  strengthThreshold: number;
 }
 
 export interface GetMilitaryDataResponse {
@@ -4836,6 +4880,13 @@ export interface GetMilitaryDataResponse {
   delegated: boolean;
   autoSquashRebels: boolean;
   subordinates: MilitarySubordinateEntry[];
+  commandSubordinateCount: number;
+  commandSubordinateCapacity: number;
+  commandMaintenance: number;
+  commandBuffRadius: number;
+  hierarchyTacticsBonus: number;
+  hierarchyMoraleBonus: number;
+  hierarchySpeedBonus: number;
   parentCommand: string;
   parentCommandId: string;
   parentCommandDebugShortId: number;
@@ -4843,6 +4894,7 @@ export interface GetMilitaryDataResponse {
   usedCapacity: number;
   embarkedArmies: EmbarkedArmyEntry[];
   resources: MilitaryResourceEntry[];
+  attritionSources: MilitaryAttritionEntry[];
   supplyDays: number;
   isForcedMarching: boolean;
   isRaiding: boolean;
@@ -5145,6 +5197,7 @@ export interface PeaceNegotiationTermOption {
 
 export interface PeaceNegotiationPreview {
   currentWarScore: number;
+  warScoreBreakdown: DiplomacyWarScoreEntry[];
   demandCost: number;
   concessionCost: number;
   netCostForPlayer: number;

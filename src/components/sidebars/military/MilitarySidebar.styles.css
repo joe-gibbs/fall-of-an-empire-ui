@@ -2055,6 +2055,102 @@
   border-bottom-color: var(--separator);
 }
 
+.mil-attrition-list,
+.mil-command-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+}
+
+.mil-attrition-list {
+  margin: 0.462rem;
+}
+
+.mil-attrition-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.5rem 0.6rem;
+  border-width: 0.231rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: #201414;
+  background-image: url('/assets/baked/card-red.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+  overflow: hidden;
+}
+
+.mil-attrition-row > img {
+  width: 1.7rem;
+  height: 1.7rem;
+  object-fit: contain;
+}
+
+.mil-attrition-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.mil-attrition-copy strong {
+  color: var(--red);
+  font-family: var(--font-header);
+}
+
+.mil-attrition-copy span {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.mil-command-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mil-command-stats > div {
+  min-width: 0;
+  padding: 0.42rem;
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/modifier-frame.png');
+  border-image-slice: 3;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+  text-align: center;
+}
+
+.mil-command-stats span,
+.mil-command-stats strong {
+  display: block;
+}
+
+.mil-command-stats span {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.mil-command-stats strong {
+  margin-top: 0.16rem;
+  color: var(--gold);
+}
+
+.mil-sub-row--out-of-range {
+  opacity: 0.62;
+}
+
 .mil-comp-row {
   width: 100%;
   display: flex;
