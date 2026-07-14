@@ -64,8 +64,6 @@ interface FactionListRow {
   faction: ScenarioMapFactionDto;
   kind: 'sovereign' | 'subject';
   groupKey: string;
-  firstInGroup: boolean;
-  lastInGroup: boolean;
   hasMembers: boolean;
 }
 
@@ -367,18 +365,14 @@ function flattenFactionGroups(groups: FactionGroup[]): FactionListRow[] {
       faction: group.sovereign,
       kind: 'sovereign',
       groupKey: group.sovereign.baseName,
-      firstInGroup: true,
-      lastInGroup: !hasMembers,
       hasMembers,
     });
 
-    members.forEach((member, index) => {
+    members.forEach((member) => {
       rows.push({
         faction: member,
         kind: 'subject',
         groupKey: group.sovereign.baseName,
-        firstInGroup: false,
-        lastInGroup: index === members.length - 1,
         hasMembers,
       });
     });
@@ -1365,8 +1359,6 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
           className={`fs-faction-row fs-faction-row--${row.kind}${
             active ? ' fs-faction-row--active' : ''
           }${!faction.playable ? ' fs-faction-row--locked' : ''}${
-            row.firstInGroup ? ' fs-faction-row--group-first' : ''
-          }${row.lastInGroup ? ' fs-faction-row--group-last' : ''}${
             row.hasMembers ? ' fs-faction-row--grouped' : ''
           }`}
           onClick={() => onSelectBaseName(faction.baseName)}
