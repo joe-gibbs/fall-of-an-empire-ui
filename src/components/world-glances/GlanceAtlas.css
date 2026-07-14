@@ -87,7 +87,7 @@
   padding: var(--military-atlas-bleed, 0);
 }
 
-/* Convoy labels and cargo strips are deliberately much wider than their diamond marker. Keep
+/* Convoy labels and cargo strips are deliberately much wider than their relation frame. Keep
    that overflow inside the convoy's own sampled cell so it cannot paint into adjacent plates. */
 .glance-atlas-plate.world-glance-node--convoy {
   box-sizing: content-box;

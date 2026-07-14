@@ -7,16 +7,11 @@ import { useGameState } from '../../context/GameContext';
 import { FoaeCefUIAssetPath } from '../../utils/assets';
 import FactionRoundel from '../common/entities/FactionRoundel';
 import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel } from './WorldGlancePresentation';
+import GlanceRelationFrame from './GlanceRelationFrame';
 
 import { webUIText } from '../../localization/WebUITextContext';
 import type { GetWorldGlanceTooltipResponse } from '../../bridge-types.generated';
 import { useWorldGlanceTooltip } from '../../bridge/app/useWorldGlanceTooltip';
-function relationBorderColour(relation: ConvoyGlanceData['faction']['relation']): string {
-  if (relation === 'ally') return 'rgba(112, 170, 106, 0.72)';
-  if (relation === 'enemy') return 'rgba(204, 75, 55, 0.82)';
-  if (relation === 'own') return 'rgba(224, 200, 114, 0.7)';
-  return 'rgba(166, 150, 102, 0.42)';
-}
 
 function routeIcon(routeType: ConvoyGlanceData['routeType']): string {
   return routeType === 'sea' ? '/assets/icons/I_Port.png' : '/assets/icons/I_Resources.png';
@@ -137,33 +132,33 @@ export default function ConvoyGlance({ data }: ConvoyGlanceProps) {
       <div
         className={`glance glance--convoy glance--convoy-${data.routeType}`}
         style={{
-          '--convoy-border': relationBorderColour(data.faction.relation),
           '--faction-colour': data.faction.colour,
         } as CSSProperties}
       >
-        <div className="gconv-dmd-border" aria-hidden="true" />
-        <div className="gconv-dmd-face" aria-hidden="true" />
+        <div className="gconv-marker" aria-hidden="true">
+          <div className="gconv-faction-mark">
+            <FactionRoundel
+              factionId={data.faction.id}
+              colour={data.faction.colour}
+              secondaryColour={data.faction.secondaryColour}
+              cultureGroup={data.faction.cultureGroup}
+              emblem={data.faction.emblem}
+              name={data.faction.name}
+              size="xs"
+              showRing={false}
+              resolveFaction={false}
+            />
+          </div>
 
-        <div className="gconv-faction-mark" aria-hidden="true">
-          <FactionRoundel
-            factionId={data.faction.id}
-            colour={data.faction.colour}
-            secondaryColour={data.faction.secondaryColour}
-            cultureGroup={data.faction.cultureGroup}
-            emblem={data.faction.emblem}
-            name={data.faction.name}
-            size="xs"
-            showRing
-            resolveFaction={false}
-          />
+          <GlanceRelationFrame relation={data.faction.relation} />
+
+          <div className="gconv-route-pip">
+            <img src={route} alt="" />
+          </div>
         </div>
 
         <div className="gconv-faction-label">
           {data.faction.name}
-        </div>
-
-        <div className="gconv-route-pip" aria-hidden="true">
-          <img src={route} alt="" />
         </div>
 
         {visibleCargo.length > 0 && (

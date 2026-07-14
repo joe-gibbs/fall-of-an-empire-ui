@@ -62,9 +62,9 @@ const CONVOY_ATLAS_LEFT_BLEED_REM = 0.75;
 const CONVOY_ATLAS_RIGHT_BLEED_REM = 8.75;
 const CONVOY_ATLAS_TOP_BLEED_REM = 0.75;
 const CONVOY_ATLAS_BOTTOM_BLEED_REM = 1.75;
-const CONVOY_DETAILED_SIZE_REM = 3.8182;
-const CONVOY_NAME_SIZE_REM = 3.2727;
-const CONVOY_FLAG_SIZE_REM = 2.7273;
+const CONVOY_DETAILED_SIZE_REM = 4.9091;
+const CONVOY_NAME_SIZE_REM = 4.1364;
+const CONVOY_FLAG_SIZE_REM = 4.1364;
 
 // Anchor constants mirror the DOM overlay's settlement transform offset (negated); every other
 // world kind is centre-anchored, notifications bottom-centre.

@@ -1425,8 +1425,22 @@
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 2;
   width: 100%;
   height: 100%;
+}
+
+.glance-relation-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .glance-military-target-indicator {
@@ -1523,6 +1537,7 @@
 .glance-military-type-mark--navy {
   width: 1rem;
   height: 1rem;
+  filter: brightness(1.1) sepia(0.18) saturate(1.25) hue-rotate(165deg);
 }
 
 .glance-military-crown {
@@ -4132,7 +4147,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CONVOY: diamond trade marker
+   CONVOY: relationship-framed trade marker
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .glance--convoy,
@@ -4163,33 +4178,6 @@
 .mock-production-glance.detail-name .glance--convoy::before,
 .mock-production-glance.detail-flag .glance--convoy::before {
   display: none;
-}
-
-/* Two-layer diamond: outer border, inner faction fill */
-.gconv-dmd-border,
-.gconv-dmd-face {
-  position: absolute;
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-  pointer-events: none;
-}
-
-.gconv-dmd-border {
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-color: var(--convoy-border);
-}
-
-.gconv-dmd-face {
-  top: 0.1364rem;
-  right: 0.1364rem;
-  bottom: 0.1364rem;
-  left: 0.1364rem;
-  background-color: var(--faction-colour);
-  background-image: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.03) 58%, rgba(18, 20, 22, 0.35) 100%);
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
 }
 
 .gconv-faction-mark {
@@ -4467,6 +4455,133 @@
   color: var(--gold-light);
   line-height: 1;
   white-space: nowrap;
+}
+
+/* Convoys use the same generated relationship frames and dimensions as military glances. */
+.glance--convoy,
+.world-glance-node.detail-name .glance--convoy,
+.world-glance-node.detail-flag .glance--convoy,
+.mock-production-glance.detail-name .glance--convoy,
+.mock-production-glance.detail-flag .glance--convoy {
+  position: relative;
+  display: block;
+  width: 4.9091rem;
+  height: 4.9091rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  background-color: transparent;
+  background-image: none;
+  border-width: 0;
+}
+
+.gconv-marker {
+  position: absolute;
+  top: 0.1818rem;
+  left: 0.1818rem;
+  z-index: 1;
+  width: 4.5455rem;
+  height: 4.5455rem;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.gconv-marker .glance-relation-frame {
+  z-index: 3;
+}
+
+.gconv-faction-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.gconv-faction-mark .faction-roundel {
+  width: 3rem;
+  height: 3rem;
+}
+
+.gconv-route-pip {
+  position: absolute;
+  top: 0.1818rem;
+  right: 0.1818rem;
+  left: auto;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.0909rem;
+  height: 1.0909rem;
+  padding: 0.1818rem;
+  transform: none;
+  background-color: rgba(18, 16, 16, 0.94);
+  border: 0.0909rem solid rgba(224, 200, 114, 0.72);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.gconv-route-pip img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.gconv-faction-label {
+  top: 50%;
+  left: calc(50% + 2.3636rem);
+  z-index: 5;
+  transform: translateY(-50%);
+}
+
+.gconv-cargo-strip {
+  bottom: -1.1818rem;
+  z-index: 5;
+}
+
+.world-glance-node.detail-name .glance--convoy,
+.world-glance-node.detail-flag .glance--convoy,
+.mock-production-glance.detail-name .glance--convoy,
+.mock-production-glance.detail-flag .glance--convoy {
+  width: 4.1364rem;
+  height: 4.1364rem;
+  min-height: 0;
+}
+
+.world-glance-node.detail-name .gconv-marker,
+.world-glance-node.detail-flag .gconv-marker,
+.mock-production-glance.detail-name .gconv-marker,
+.mock-production-glance.detail-flag .gconv-marker {
+  width: 3.7727rem;
+  height: 3.7727rem;
+}
+
+.world-glance-node.detail-name .gconv-faction-mark .faction-roundel,
+.world-glance-node.detail-flag .gconv-faction-mark .faction-roundel,
+.mock-production-glance.detail-name .gconv-faction-mark .faction-roundel,
+.mock-production-glance.detail-flag .gconv-faction-mark .faction-roundel {
+  width: 2.45rem;
+  height: 2.45rem;
+}
+
+.world-glance-node.detail-name .gconv-faction-label,
+.mock-production-glance.detail-name .gconv-faction-label {
+  left: calc(50% + 2rem);
+}
+
+.world-glance-node.detail-flag .gconv-route-pip,
+.world-glance-node.detail-flag .gconv-cargo-strip,
+.world-glance-node.detail-flag .gconv-faction-label,
+.mock-production-glance.detail-flag .gconv-route-pip,
+.mock-production-glance.detail-flag .gconv-cargo-strip,
+.mock-production-glance.detail-flag .gconv-faction-label {
+  display: none;
 }
 
 /* Final battle marker: compact map token for an active clash. */

@@ -8,6 +8,7 @@ import { formatNumber, formatPercent } from '../../utils/numberFormat';
 import { FoaeCefUIAssetPath } from '../../utils/assets';
 import { useGameState } from '../../context/GameContext';
 import { readableFactionTextColour, relationDisplayLabel } from './WorldGlancePresentation';
+import GlanceRelationFrame from './GlanceRelationFrame';
 
 import { webUIText } from '../../localization/WebUITextContext';
 function moraleColour(m: number): string {
@@ -173,7 +174,7 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   const strengthPct = strengthFraction(data);
   const moralePct = clampUnitFraction(data.morale);
   const blockading = isNavy && (data as NavyGlanceData).blockading;
-  const militaryTypeIcon = isNavy ? '/assets/icons/I_Port.png' : '/assets/icons/I_Swords.png';
+  const militaryTypeIcon = FoaeCefUIAssetPath(isNavy ? '/assets/icons/I_Anchor.png' : '/assets/icons/I_Swords.png');
   const statusIcon = blockading ? '/assets/icons/I_Siege.png' : data.raiding ? '/assets/icons/I_RaidingTorch.png' : '';
   const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
   const attritionIcon = FoaeCefUIAssetPath(data.attritionIcon || '/assets/icons/Terrain/I_Attrition.png');
@@ -213,6 +214,7 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
       >
         <div className="glance-military-rings" aria-hidden="true">
           <div className="glance-ring-sprite glance-military-ring-stack" style={militaryRingStackStyle(data.faction.relation, strengthPct, moralePct)} />
+          <GlanceRelationFrame relation={data.faction.relation} />
         </div>
         <span className="glance-military-target-indicator" aria-hidden="true" />
 
