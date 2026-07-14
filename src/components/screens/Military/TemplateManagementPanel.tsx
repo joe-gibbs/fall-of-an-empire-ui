@@ -655,7 +655,12 @@ function TemplateUnitSelectorModal({
           />
         </div>
         <div className="chart-unit-picker-foot">
-          <GameButton variant="burgundy" className="chart-unit-picker-done" onClick={requestClose}>
+          <GameButton
+            variant="burgundy"
+            className="chart-unit-picker-done"
+            tutorialTarget="CloseUnitCatalogueButton"
+            onClick={requestClose}
+          >
             <WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" />
           </GameButton>
         </div>
@@ -948,6 +953,7 @@ function TemplateEditor({
                 <input
                   ref={titleInputRef}
                   className="chart-template-title-input"
+                  data-tutorial-target="FormationNameInput"
                   value={draft.name}
                   onChange={event => {
                     setDraft(current => ({ ...current, name: event.target.value }));
@@ -1063,6 +1069,7 @@ function TemplateEditor({
             variant="burgundy"
             icon={RAISE_ICON}
             className="chart-template-action-button"
+            tutorialTarget="RaiseFormationButton"
             disabled={!canRaise}
             onClick={() => {
               if (template) onRaiseTemplate(template.id);
@@ -1079,6 +1086,7 @@ function TemplateEditor({
           variant="burgundy"
           icon={SAVE_ICON}
           className="chart-template-action-button chart-template-action-button--save"
+          tutorialTarget="SaveFormationButton"
           disabled={!canSave}
           onClick={() => {
             saveDraft(draft);

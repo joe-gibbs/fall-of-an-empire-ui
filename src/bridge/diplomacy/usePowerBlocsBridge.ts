@@ -124,6 +124,7 @@ function mapBloc(entry: PowerBlocOverviewEntry): PowerBloc {
     debugShortId: entry.debugShortId,
     name: entry.name,
     type: entry.type,
+    definitionKey: entry.iconKey || undefined,
     subtype: entry.subtype || undefined,
     iconKey: iconUrl(entry.iconKey),
     headerImage: headerImageUrl(entry.iconKey),

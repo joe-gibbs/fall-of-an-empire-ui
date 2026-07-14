@@ -57,6 +57,12 @@ const TARGET_ALIASES: Record<string, string[]> = {
   PinnedItemsToggleButton: ['PinnedItemsToggleButton'],
   MapModeButtonGroup: ['MapModeButtonGroup'],
   NewFormationButton: ['NewFormationButton'],
+  FormationNameInput: ['FormationNameInput'],
+  AddMeleeBattleGroupButton: ['AddMeleeBattleGroupButton'],
+  AddSiegeBattleGroupButton: ['AddSiegeBattleGroupButton'],
+  CloseUnitCatalogueButton: ['CloseUnitCatalogueButton'],
+  SaveFormationButton: ['SaveFormationButton'],
+  RaiseFormationButton: ['RaiseFormationButton'],
   SettlementDiplomacyButton: ['SettlementDiplomacyButton'],
   DiplomacyTabButton: ['DiplomacyTabButton', 'DiplomacySidebar', 'ScreenContent'],
   GovernorTabButton: ['GovernorTabButton', 'SidebarTab:governors'],
@@ -71,7 +77,7 @@ const TARGET_ALIASES: Record<string, string[]> = {
   DiplomatPortrait: ['DiplomatPortrait'],
   SubornFoederatiButton: ['SubornFoederatiButton', 'Interaction:SubornFoederatiInteraction'],
   InviteFoederatiButton: ['InviteFoederatiButton', 'Interaction:InviteFoederatiInteraction'],
-  MakePromiseButton: ['MakePromiseButton', 'Interaction:MakePromiseInteraction'],
+  LoyalistMakePromiseButton: ['LoyalistMakePromiseButton'],
   TaxRateIncreaseButton: ['TaxRateIncreaseButton', 'Policy:TaxRate'],
   GrandFestivalButton: ['GrandFestivalButton', 'Interaction:GrandFestival'],
   TutorialProgress: ['TutorialProgress'],
@@ -331,6 +337,18 @@ export default function TutorialSpotlightOverlay({
 
   useEffect(() => {
     if (!spotlight.isVisible || !eventId) return undefined;
+
+    if (spotlight.target === 'FormationNameInput') {
+      const inputHandler = (event: Event) => {
+        const target = targetElementRef.current;
+        if (!(target instanceof HTMLInputElement) || event.target !== target) return;
+        if (target.value.trim().length === 0) return;
+        onResolve(eventId);
+      };
+
+      document.addEventListener('input', inputHandler, true);
+      return () => document.removeEventListener('input', inputHandler, true);
+    }
 
     const handler = (event: MouseEvent) => {
       const target = targetElementRef.current;

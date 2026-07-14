@@ -447,6 +447,7 @@ function BlocTable({
                   <GameButton
                     variant="outline"
                     className="pbs-join-button"
+                    tutorialTarget={bloc.definitionKey === 'TutorialPatronageBloc' ? 'TutorialPatronageBlocJoinButton' : undefined}
                     disabled
                   >
                     {webUIText('PowerBlocs.SubjectJoin')}
@@ -461,6 +462,7 @@ function BlocTable({
               <GameButton
                 variant={joined ? 'outline' : 'burgundy'}
                 className="pbs-join-button"
+                tutorialTarget={!joined && bloc.definitionKey === 'TutorialPatronageBloc' ? 'TutorialPatronageBlocJoinButton' : undefined}
                 onClick={() => setPowerBlocMembershipAndRefresh(bloc.id, !joined)}
               >
                 {joined ? webUIText('PowerBlocs.SubjectAction.Leave') : webUIText('PowerBlocs.SubjectJoin')}
@@ -559,7 +561,11 @@ function SubjectPlayerBlocPanel({
   return (
     <div className="pbs-subject-current">
       <SectionHeading title={webUIText('PowerBlocs.SubjectCurrentBloc')} />
-      <div className="pbs-subject-hero" onMouseDown={() => onOpen(bloc.id)}>
+      <div
+        className="pbs-subject-hero"
+        data-tutorial-target="PlayerPowerBloc"
+        onMouseDown={() => onOpen(bloc.id)}
+      >
         <div className="pbs-subject-hero-main">
           <BlocIdentity bloc={bloc} />
           <p className="pbs-subject-description">{bloc.description}</p>
@@ -631,7 +637,7 @@ function SubjectPowerBlocsView({
 
 function PowerBlocsScreen({ onClose }: PowerBlocsScreenProps) {
   const { openRightSidebar, openScreen, openSidebar } = useGameActions();
-  const { gameDay } = useGameState();
+  const { gameDay, rightSidebar } = useGameState();
   const playerFactionId = usePlayerFactionId();
   const playerFaction = useFaction(playerFactionId);
   const fetchedBlocs = usePowerBlocsBridge();
@@ -684,10 +690,10 @@ function PowerBlocsScreen({ onClose }: PowerBlocsScreenProps) {
   }, [openScreen, openSidebar, subjectMode]);
 
   useEffect(() => {
-    if (subjectMode || autoOpenedRef.current || !strongestBlocId) return;
+    if (subjectMode || autoOpenedRef.current || !strongestBlocId || rightSidebar === 'powerbloc') return;
     autoOpenedRef.current = true;
     openRightSidebar('powerbloc', strongestBlocId);
-  }, [openRightSidebar, strongestBlocId, subjectMode]);
+  }, [openRightSidebar, rightSidebar, strongestBlocId, subjectMode]);
 
   if (subjectMode) {
     return (

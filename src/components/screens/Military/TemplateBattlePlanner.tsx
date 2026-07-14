@@ -48,6 +48,7 @@ export function TemplateBattlePlanner({
           <button
             type="button"
             className="chart-template-battle-add chart-template-battle-add--icon"
+            data-tutorial-target="AddMeleeBattleGroupButton"
             onClick={() => onAddBattleGroup('melee')}
             disabled={!editable}
             aria-label={meleeTooltip.title}
@@ -72,6 +73,7 @@ export function TemplateBattlePlanner({
           <button
             type="button"
             className="chart-template-battle-add chart-template-battle-add--icon"
+            data-tutorial-target="AddSiegeBattleGroupButton"
             onClick={() => onAddBattleGroup('siege')}
             disabled={!editable}
             aria-label={siegeTooltip.title}

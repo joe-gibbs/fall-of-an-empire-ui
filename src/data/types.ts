@@ -1463,6 +1463,8 @@ export interface PowerBloc {
   debugShortId?: number;
   name: string;
   type: string;
+  /** Stable authored key used to identify the bloc definition. */
+  definitionKey?: string;
   leaderName: string;
   /** Optional title for the leader (e.g. "Magister Militum"). */
   leaderTitle?: string;
