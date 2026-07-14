@@ -214,7 +214,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
 
   return (
     <div ref={setNode} className={classes.join(' ')} style={style} {...anchorAttributes}>
-      <div className="glance-tip world-glance-tip">{content}</div>
+      <div className="glance-tip world-glance-tip" data-world-anchor-hit-target>{content}</div>
     </div>
   );
 });
@@ -365,7 +365,7 @@ export default function GlanceAtlasRoot() {
           const nextDetail = detailClass(entry.detailLevel);
           if (detailByKeyRef.current.get(key) !== nextDetail) {
             const node = plateNodesRef.current.get(key);
-            if (node && atlasVisible && section !== 'settlement') {
+            if (node && atlasVisible) {
               prepareWorldAnchorContentChange(node);
             }
             detailByKeyRef.current.set(key, nextDetail);

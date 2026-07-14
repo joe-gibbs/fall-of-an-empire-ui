@@ -69,6 +69,10 @@ interface ReportCell {
   ax: number;
   ay: number;
   rs: number;
+  hx?: number;
+  hy?: number;
+  hw?: number;
+  hh?: number;
 }
 
 function parseRasterScale(element: HTMLElement): number {
@@ -503,7 +507,8 @@ class WorldAnchorHostController {
           const layoutWidth = element.offsetWidth;
           const layoutHeight = element.offsetHeight;
           const anchorPoint = parseAnchorPoint(element, layoutWidth, layoutHeight);
-          cells.push({
+          const hitTarget = element.querySelector<HTMLElement>('[data-world-anchor-hit-target]');
+          const cell: ReportCell = {
             k: state.key,
             x: state.slot.x,
             y: state.slot.y,
@@ -512,7 +517,16 @@ class WorldAnchorHostController {
             ax: anchorPoint.x * rasterScale,
             ay: anchorPoint.y * rasterScale,
             rs: rasterScale,
-          });
+          };
+          if (hitTarget) {
+            const elementRect = element.getBoundingClientRect();
+            const hitRect = hitTarget.getBoundingClientRect();
+            cell.hx = hitRect.left - elementRect.left;
+            cell.hy = hitRect.top - elementRect.top;
+            cell.hw = hitRect.width;
+            cell.hh = hitRect.height;
+          }
+          cells.push(cell);
         }
 
         void Promise.resolve(engine.call('WorldAnchorLayout', {
