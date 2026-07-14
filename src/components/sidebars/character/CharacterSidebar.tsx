@@ -117,19 +117,32 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
   const [initiatorModalInteraction, setInitiatorModalInteraction] = React.useState<PersonInteractionView | null>(null);
   const [giftModalInteraction, setGiftModalInteraction] = React.useState<PersonInteractionView | null>(null);
   const lastDayRefreshRef = React.useRef<{ personId: string; gameDay: number } | null>(null);
+  const fullDetailsPersonRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
-    if (!character.id || gameDay <= 0) return;
+    if (activeTab === 'general' || fullDetailsPersonRef.current === character.id) return;
+
+    fullDetailsPersonRef.current = character.id;
+    bridgeCall('game.get_person_data', { personId: character.id, scope: 'full' })
+      .then(dispatchPersonData)
+      .catch((error) => {
+        fullDetailsPersonRef.current = null;
+        acknowledgeBridgeFailure(error);
+      });
+  }, [activeTab, character.id]);
+
+  React.useEffect(() => {
+    if (!character.id || gameDay <= 0 || activeTab !== 'general') return;
 
     const previous = lastDayRefreshRef.current;
     lastDayRefreshRef.current = { personId: character.id, gameDay };
 
     if (!previous || previous.personId !== character.id || previous.gameDay === gameDay) return;
 
-    bridgeCall('game.get_person_data', { personId: character.id, scope: 'full' })
+    bridgeCall('game.get_person_data', { personId: character.id, scope: 'summary' })
       .then(dispatchPersonData)
       .catch(acknowledgeBridgeFailure);
-  }, [character.id, gameDay]);
+  }, [activeTab, character.id, gameDay]);
 
   // Derive spouse from relationships
   const spouseRel = character.relationships.find(r => r.type === 'Husband' || r.type === 'Wife' || r.type === 'Spouse' || r.type === 'Consort');

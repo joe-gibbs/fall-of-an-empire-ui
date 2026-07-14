@@ -204,12 +204,12 @@ export function dispatchPersonData(data: GetPersonDataResponse): void {
   window.dispatchEvent(new CustomEvent('bridge:game.get_person_data', { detail: data }));
 }
 
-type PersonBridgeScope = 'full' | 'tooltip';
+type PersonBridgeScope = 'full' | 'summary' | 'tooltip';
 
 /**
  * Fetches a person's full record from the game bridge by PersonID.
  */
-export function usePersonBridge(personId: string | null | undefined, scope: PersonBridgeScope = 'full'): Character | null {
+export function usePersonBridge(personId: string | null | undefined, scope: PersonBridgeScope = 'summary'): Character | null {
   const live = useBridgeQuery({
     action: 'game.get_person_data',
     payload: personId ? { personId, scope } : null,

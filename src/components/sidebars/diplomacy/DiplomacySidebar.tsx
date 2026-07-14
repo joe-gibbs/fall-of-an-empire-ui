@@ -921,6 +921,13 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                   <Portrait
                     personId={faction.rulerId}
                     name={faction.rulerName}
+                    src={rulerCharacter?.portrait ?? faction.rulerPortrait}
+                    layers={rulerCharacter?.portraitLayers ?? faction.rulerPortraitLayers}
+                    isAlive={rulerCharacter?.isAlive}
+                    isImprisoned={rulerCharacter?.isImprisoned}
+                    activity={rulerCharacter?.activity}
+                    isPlayerCharacter={rulerCharacter?.isPlayerCharacter}
+                    isRuler={rulerCharacter?.isRuler}
                     size="lg"
                     showBorder
                   />
