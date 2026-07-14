@@ -14,6 +14,7 @@
 
 .econ-content--settlements .econ-wrap,
 .econ-content--settlements .econ-section,
+.econ-content--settlements .data-table-block,
 .econ-content--settlements .econ-table-wrap,
 .econ-content--settlements .econ-table {
   flex: 1 1 auto;
@@ -21,7 +22,9 @@
 }
 
 .econ-content--settlements .econ-wrap,
-.econ-content--settlements .econ-section {
+.econ-content--settlements .econ-section,
+.econ-content--settlements .data-table-block,
+.econ-content--settlements .econ-table-wrap {
   display: flex;
   flex-direction: column;
 }

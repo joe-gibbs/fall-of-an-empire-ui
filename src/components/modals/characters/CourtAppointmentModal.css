@@ -478,8 +478,27 @@
 }
 
 .cam-person-selection-modal .cam-list-sort-btn {
-  padding: 0 0.54rem;
-  font-size: 0.68rem;
+  flex-shrink: 1;
+  min-width: 0;
+  padding: 0 0.34rem;
+  font-size: 0.64rem;
+}
+
+.cam-person-selection-modal .cam-list-count {
+  padding: 0 0.65rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+.cam-person-selection-modal .cam-hero-title,
+.cam-person-selection-modal .cam-hero-name {
+  box-sizing: border-box;
+  width: 48%;
+}
+
+.cam-person-selection-modal .cam-hero-title {
+  line-height: 1.15;
 }
 
 .cam-person-selection-note,
