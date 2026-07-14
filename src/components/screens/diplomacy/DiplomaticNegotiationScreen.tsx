@@ -13,6 +13,7 @@ import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { formatTreatyType } from '../../../utils/displayLabels';
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { registerScreen } from '../../../registry/index';
+import { renderAcceptabilityBreakdown } from './acceptabilityBreakdown';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 import './PeaceNegotiationScreen.css';
 import './DiplomaticNegotiationScreen.css';
@@ -374,7 +375,7 @@ function OptionsPanel({ title, options, onAdd }: { title: string; options: Treat
         {options.length > 0 ? options.map(option => (
           <AvailableTreatyRow key={option.optionId} option={option} onAdd={() => onAdd(option)} />
         )) : (
-          <div className="pns-empty-state"><WebUIText textKey="TreatyNegotiation.NoOptions" /></div>
+          <div className="pns-empty-state pns-empty-state--quiet"><WebUIText textKey="TreatyNegotiation.NoOptions" /></div>
         )}
       </div>
     </Panel>
@@ -426,7 +427,7 @@ function ProposalColumn({
               />
             );
           }) : (
-            <div className="pns-empty-state"><WebUIText textKey="TreatyNegotiation.NoSelected" /></div>
+            <div className="pns-empty-state pns-empty-state--quiet"><WebUIText textKey="TreatyNegotiation.NoSelected" /></div>
           )}
         </div>
       </div>
@@ -454,9 +455,11 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
   const [acceptedClosing, setAcceptedClosing] = useState(false);
   const acceptedHoldTimerRef = useRef<number | null>(null);
   const bridge = useDiplomaticNegotiationBridge(targetFactionId, proposals);
-  const state = bridge.state ?? submitState;
+  const state = submitState ?? bridge.state;
   const statePending = bridge.statePending && !submitState;
-  const preview = state?.preview;
+  const draftPreview = bridge.draftPreview?.found ? bridge.draftPreview : null;
+  const preview = draftPreview?.preview ?? state?.preview;
+  const liveProposals = draftPreview?.proposals ?? state?.proposals ?? [];
   const selectedIds = useMemo(() => new Set(proposals.map(proposal => proposal.proposalId || proposalKey(proposal))), [proposals]);
   const availableOffers = (state?.availableOffers ?? []).filter(option => !option.isSelected && !selectedIds.has(option.optionId));
   const availableRequests = (state?.availableRequests ?? []).filter(option => !option.isSelected && !selectedIds.has(option.optionId));
@@ -517,11 +520,25 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
 
   const acceptabilityBreakdown: TooltipContent = useMemo(() => ({
     title: webUIText('TreatyNegotiation.Acceptance'),
-    body: preview?.breakdown || webUIText('TreatyNegotiation.AcceptanceEmpty'),
+    body: renderAcceptabilityBreakdown(preview?.breakdown || webUIText('TreatyNegotiation.AcceptanceEmpty')),
+  }), [preview]);
+
+  const opinionBreakdown: TooltipContent = useMemo(() => ({
+    title: webUIText('FactionOverview.OpinionOfYou'),
     lines: [
-      { label: webUIText('TreatyNegotiation.AcceptanceScore'), value: fmtSigned(preview?.acceptanceScore), valueColor: acceptTone === 'green' ? 'var(--green)' : acceptTone === 'gold' ? 'var(--gold)' : 'var(--red)', isHeader: true },
+      {
+        label: webUIText('FactionOverview.ModifierTotal'),
+        value: fmtSigned(state?.opinion),
+        valueColor: (state?.opinion ?? 0) > 0 ? 'var(--green)' : (state?.opinion ?? 0) < 0 ? 'var(--red)' : 'var(--gold)',
+        isHeader: true,
+      },
+      ...(state?.opinionBreakdown ?? []).map(modifier => ({
+        label: modifier.label,
+        value: fmtSigned(modifier.value),
+        valueColor: modifier.value > 0 ? 'var(--green)' : modifier.value < 0 ? 'var(--red)' : 'var(--gold)',
+      })),
     ],
-  }), [acceptTone, preview]);
+  }), [state?.opinion, state?.opinionBreakdown]);
 
   const addProposal = (option: TreatyOption) => {
     if (option.isSelected || selectedIds.has(option.optionId)) return;
@@ -597,7 +614,9 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
           <FactionRoundel factionId={state.targetFaction.id} colour={state.targetFaction.colour} secondaryColour={state.targetFaction.secondaryColour} cultureGroup={state.targetFaction.cultureGroup} emblem={state.targetFaction.emblem} name={state.targetFaction.name} size="sm" showRing />
         </FactionTooltip>
       </div>
-      <span className="tns-opinion">{fmtSigned(state.opinion)}</span>
+      <Tooltip content={opinionBreakdown} position="bottom" delay={150} variant="sidebar" inline wrapperClassName="tns-opinion-tooltip">
+        <span className="tns-opinion">{fmtSigned(state.opinion)}</span>
+      </Tooltip>
     </div>
   ) : undefined;
 
@@ -624,7 +643,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
           <ProposalColumn
             title={webUIText('TreatyNegotiation.Offers')}
             selected={selectedOffers}
-            stateProposals={state.proposals}
+            stateProposals={liveProposals}
             resourceOptions={ourResources}
             side="offer"
             onRemove={removeProposal}
@@ -633,7 +652,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
           <ProposalColumn
             title={webUIText('TreatyNegotiation.Requests')}
             selected={selectedRequests}
-            stateProposals={state.proposals}
+            stateProposals={liveProposals}
             resourceOptions={theirResources}
             side="request"
             onRemove={removeProposal}
@@ -643,7 +662,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
         <div className="pns-decision-block pns-decision-block--middle">
           <div className="pns-acceptance-meter">
             <div className="pns-acceptance-header">
-              <Tooltip content={acceptabilityBreakdown} position="left" delay={200} variant="sidebar">
+              <Tooltip content={acceptabilityBreakdown} position="left" delay={200} variant="sidebar" bubbleClassName="pns-acceptability-tooltip">
                 <span className={`pns-acceptance-label pns-acceptance-label--${acceptTone}`}>
                   {preview?.verdictLabel || webUIText('TreatyNegotiation.Acceptance')}
                 </span>
@@ -653,19 +672,19 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
                 <span><WebUIText textKey="Common.Clear" /></span>
               </button>
             </div>
-            <Tooltip content={acceptabilityBreakdown} position="left" delay={200} variant="sidebar">
+            <Tooltip content={acceptabilityBreakdown} position="left" delay={200} variant="sidebar" bubbleClassName="pns-acceptability-tooltip">
               <div className="pns-pivot-track painted-bar-track">
                 {proposalScoreClamped < 0 ? (
                   <div className="painted-bar-fill painted-bar-fill--red" style={{ width: '50%', right: '50%', left: 'auto', borderRadius: 0, transformOrigin: 'right', transform: `scaleX(${acceptanceScale})` }} />
                 ) : null}
                 {proposalScoreClamped > 0 ? (
-                  <div className="painted-bar-fill painted-bar-fill--green" style={{ width: '50%', left: '50%', borderRadius: 0, transform: `scaleX(${acceptanceScale})` }} />
+                  <div className="painted-bar-fill painted-bar-fill--green" style={{ width: '50%', left: '50%', borderRadius: 0, transformOrigin: 'left', transform: `scaleX(${acceptanceScale})` }} />
                 ) : null}
                 <div className="pns-pivot-center" />
               </div>
             </Tooltip>
           </div>
-          {preview?.blockedReason ? <div className="pns-empty-state">{preview.blockedReason}</div> : null}
+          {preview?.blockedReason ? <div className="pns-empty-state pns-empty-state--quiet">{preview.blockedReason}</div> : null}
           {outcome ? <div className="pns-outcome">{outcome}</div> : null}
           <button type="button" className={`btn--burgundy btn--full pns-propose-button${canSubmit ? '' : ' pns-propose-button--disabled'}`} disabled={!canSubmit} onMouseDown={handleSubmit}>
             <WebUIText textKey="TreatyNegotiation.Propose" />
@@ -681,7 +700,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
   );
 
   return (
-    <div className={`pns-stage${acceptedClosing ? ' tns-stage--closing' : ''}`} onAnimationEnd={handleAcceptedCloseAnimationEnd}>
+    <div className={`pns-stage pns-stage--treaty${acceptedClosing ? ' tns-stage--closing' : ''}`} onAnimationEnd={handleAcceptedCloseAnimationEnd}>
       <ScreenShell
         title={screenTitle}
         onClose={onClose}

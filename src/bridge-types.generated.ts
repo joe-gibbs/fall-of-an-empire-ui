@@ -760,6 +760,11 @@ export interface DiplomaticNegotiationResourceOption {
   amount: number;
 }
 
+export interface DiplomaticNegotiationOpinionModifier {
+  label: string;
+  value: number;
+}
+
 export interface DiplomaticNegotiationPreview {
   acceptanceScore: number;
   verdict: string;
@@ -781,11 +786,25 @@ export interface GetDiplomaticNegotiationStateResponse {
   targetFaction: DiplomacyFactionReference;
   diplomaticStatus: string;
   opinion: number;
+  opinionBreakdown: DiplomaticNegotiationOpinionModifier[];
   proposals: DiplomaticNegotiationProposalEntry[];
   availableOffers: DiplomaticNegotiationOption[];
   availableRequests: DiplomaticNegotiationOption[];
   ourResources: DiplomaticNegotiationResourceOption[];
   theirResources: DiplomaticNegotiationResourceOption[];
+  preview: DiplomaticNegotiationPreview;
+  emptyReason: string;
+}
+
+export interface GetDiplomaticNegotiationPreviewRequest {
+  targetFactionId: string;
+  proposals: DiplomaticNegotiationProposalDraft[];
+}
+
+export interface GetDiplomaticNegotiationPreviewResponse {
+  found: boolean;
+  targetFactionId: string;
+  proposals: DiplomaticNegotiationProposalEntry[];
   preview: DiplomaticNegotiationPreview;
   emptyReason: string;
 }
@@ -6023,6 +6042,7 @@ export interface BridgeActions {
   'game.get_current_event': { request: void; response: GetCurrentEventResponse };
   'game.get_dioceses': { request: GetDiocesesRequest; response: GetDiocesesResponse };
   'game.get_diplomacy_overview': { request: GetDiplomacyOverviewRequest; response: GetDiplomacyOverviewResponse };
+  'game.get_diplomatic_negotiation_preview': { request: GetDiplomaticNegotiationPreviewRequest; response: GetDiplomaticNegotiationPreviewResponse };
   'game.get_diplomatic_negotiation_state': { request: GetDiplomaticNegotiationStateRequest; response: GetDiplomaticNegotiationStateResponse };
   'game.get_economy_overview': { request: GetEconomyOverviewRequest; response: GetEconomyOverviewResponse };
   'game.get_economy_resource_details': { request: GetEconomyResourceDetailsRequest; response: GetEconomyResourceDetailsResponse };

@@ -14,6 +14,10 @@
   padding-bottom: 0.7rem;
 }
 
+.screen-overlay--diplomacy > .pns-stage.pns-stage--treaty {
+  padding-bottom: 0;
+}
+
 .tns-board > * + * {
   margin-left: 0.42rem;
 }
@@ -106,22 +110,166 @@
   flex-basis: 6.4rem;
 }
 
-.screen--treaty-negotiation .pns-term-row {
-  border-width: 0.154rem;
-  border-color: transparent;
-  border-image-source: url('/assets/modifier-frame.png');
-  border-image-slice: 3;
-  border-image-width: 0.154rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+.screen--treaty-negotiation .pns-term-row,
+.screen--treaty-negotiation .pns-draft-chip {
+  border: 0;
+  background-color: #181d22;
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, 17.4545rem 8.7273rem;
 }
 
-.screen--treaty-negotiation .pns-term-row--concession {
-  border-image-source: url('/assets/modifier-frame-positive.png');
+.screen--treaty-negotiation .pns-term-row:hover,
+.screen--treaty-negotiation .pns-draft-chip:hover {
+  border: 0;
+  background-color: #242b32;
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
 }
 
-.screen--treaty-negotiation .pns-term-row--demand {
-  border-image-source: url('/assets/modifier-frame-negative.png');
+.screen--treaty-negotiation .pns-term-row:active {
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-active.png');
+}
+
+.screen--treaty-negotiation .pns-draft-chip {
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr) auto 1rem;
+  align-items: start;
+  column-gap: 0.38rem;
+}
+
+.screen--treaty-negotiation .pns-draft-chip > * + * {
+  margin-left: 0;
+}
+
+.screen--treaty-negotiation .pns-draft-chip:active {
+  transform: none;
+}
+
+.screen--treaty-negotiation .pns-draft-chip > .pns-term-icon,
+.screen--treaty-negotiation .pns-draft-chip > .pns-term-score,
+.screen--treaty-negotiation .pns-draft-chip > .pns-draft-chip-close {
+  margin-top: 0.12rem;
+}
+
+.screen--treaty-negotiation .pns-draft-copy,
+.screen--treaty-negotiation .pns-term-controls,
+.screen--treaty-negotiation .pns-term-field {
+  min-width: 0;
+}
+
+.screen--treaty-negotiation .pns-term-field--gold,
+.screen--treaty-negotiation .pns-term-field--years {
+  width: 100%;
+}
+
+.screen--treaty-negotiation .pns-term-control-label {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.screen--treaty-negotiation .pns-amount-control > * + *,
+.screen--treaty-negotiation .pns-duration-options > * + * {
+  margin-left: 0.1rem;
+}
+
+.screen--treaty-negotiation .pns-duration-options {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.screen--treaty-negotiation .pns-duration-button {
+  min-width: 1.35rem;
+  padding-right: 0.18rem;
+  padding-left: 0.18rem;
+  border: 0;
+  background-color: #181d22;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.screen--treaty-negotiation .pns-duration-button:hover {
+  background-color: #242b32;
+  background-image: url('/assets/baked/card-charcoal-hover.png');
+}
+
+.screen--treaty-negotiation .pns-duration-button--active,
+.screen--treaty-negotiation .pns-duration-button--active:hover {
+  border: 0;
+  background-color: #2a2316;
+  background-image: url('/assets/baked/button-gold-subtle.png');
+  background-repeat: repeat;
+  background-size: 11.6364rem 5.8182rem;
+}
+
+.screen--treaty-negotiation .pns-amount-control input {
+  border: 0;
+  background-color: #0d1218;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+}
+
+.screen--treaty-negotiation .pns-step-btn {
+  border: 0;
+  background-color: #161b20;
+  background-image: url('/assets/baked/icon-button.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.screen--treaty-negotiation .pns-step-btn:hover {
+  background-color: #a07a2c;
+  background-image: url('/assets/baked/icon-button-gold-hover.png');
+}
+
+.screen--treaty-negotiation .pns-draft-chip-close {
+  border: 0;
+  background-color: #35191d;
+  background-image: url('/assets/baked/button-close-red.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.screen--treaty-negotiation .pns-term-action {
+  border: 0;
+  background-color: transparent;
+}
+
+.screen--treaty-negotiation .pns-empty-state--quiet {
+  min-height: 1.35rem;
+  padding: 0.2rem 0.1rem;
+  border: 0;
+  background-color: transparent;
+  background-image: none;
+}
+
+.screen--treaty-negotiation .pns-decision-block {
+  padding-right: 0.2rem;
+  padding-left: 0.2rem;
+  border: 0;
+  background-color: transparent;
+  background-image: none;
+}
+
+.screen--treaty-negotiation .pns-acceptance-meter {
+  padding-right: 0.2rem;
+  padding-left: 0.2rem;
+  border: 0;
+  background-color: transparent;
+  background-image: none;
 }
 
 .tns-term-score--positive {
@@ -184,16 +332,20 @@
   opacity: 0.82;
 }
 
-.tns-opinion {
+.tns-opinion-tooltip {
   position: absolute;
   top: 50%;
   right: 8.7rem;
+  transform: translateY(-50%);
+}
+
+.tns-opinion {
   min-width: 3rem;
   color: var(--gold);
   font-family: var(--font-header);
   font-size: 0.95rem;
   text-align: right;
-  transform: translateY(-50%);
+  cursor: help;
 }
 
 .tns-header > * + * {
@@ -201,7 +353,7 @@
 }
 
 .tns-header > .tns-faction-pair,
-.tns-header > .tns-opinion {
+.tns-header > .tns-opinion-tooltip {
   margin-left: 0;
 }
 

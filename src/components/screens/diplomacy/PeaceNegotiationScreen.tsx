@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Panel from '../../common/layout/shell/Panel';
+import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import FactionRoundel from '../../common/entities/FactionRoundel';
 import FactionTooltip from '../../common/tooltips/FactionTooltip';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
@@ -818,7 +819,7 @@ function TermsColumn({
             {fmtSigned(direction === 'concession' ? total : -total)}
           </span>
         </div>
-        <div className="pns-draft-list">
+        <StyledScrollArea className="pns-draft-scroll" viewportClassName="pns-draft-list">
           {selectedTerms.length > 0 ? selectedTerms.map(term => {
             const id = term.termId || termKey(term);
             return (
@@ -832,9 +833,9 @@ function TermsColumn({
               />
             );
           }) : (
-            <div className="pns-empty-state"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.588.6" /></div>
+            <div className="pns-empty-state pns-empty-state--quiet"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.588.6" /></div>
           )}
-        </div>
+        </StyledScrollArea>
       </div>
     </div>
   );
@@ -880,7 +881,7 @@ function OptionsPanel({
 
   return (
     <Panel title={title} className="pns-panel pns-panel--options">
-      <div className="pns-option-list">
+      <StyledScrollArea className="pns-option-scroll" viewportClassName="pns-option-list">
         {groupedOptions.length > 0 ? groupedOptions.map(group => (
           group.grouped ? (
             <AvailableTermGroup
@@ -901,9 +902,9 @@ function OptionsPanel({
             />
           )
         )) : (
-          <div className="pns-empty-state"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.653.7" /></div>
+          <div className="pns-empty-state pns-empty-state--quiet"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.653.7" /></div>
         )}
-      </div>
+      </StyledScrollArea>
     </Panel>
   );
 }
@@ -926,7 +927,7 @@ function ParticipantsHeaderGroup({
       <div className="pns-header-faction-title">
         <span>{title}</span>
       </div>
-      <div className="pns-header-faction-list">
+      <StyledScrollArea className="pns-header-faction-scroll" viewportClassName="pns-header-faction-list">
         {participants.length > 0 ? orderParticipants(participants).map(participant => {
           const faction = participant.faction;
           const selectable = true;
@@ -946,9 +947,9 @@ function ParticipantsHeaderGroup({
             />
           );
         }) : (
-          <div className="pns-empty-state"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.699.8" /></div>
+          <div className="pns-empty-state pns-empty-state--quiet"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.699.8" /></div>
         )}
-      </div>
+      </StyledScrollArea>
     </div>
   );
 }
@@ -1291,7 +1292,7 @@ function PeaceNegotiationScreenContent({
                 {proposalScoreClamped > 0 ? (
                   <div
                     className="painted-bar-fill painted-bar-fill--green"
-                    style={{ width: '50%', left: '50%', borderRadius: 0, transform: `scaleX(${acceptanceScale})` }}
+                    style={{ width: '50%', left: '50%', borderRadius: 0, transformOrigin: 'left', transform: `scaleX(${acceptanceScale})` }}
                   />
                 ) : null}
                 <div className="pns-pivot-center" />

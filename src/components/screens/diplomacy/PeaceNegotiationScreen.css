@@ -49,7 +49,7 @@
 }
 
 .screen--negotiation .screen-title-area > .pns-title-progress {
-  margin-left: 0;
+  margin-left: 1rem;
 }
 
 .screen--negotiation .screen-title {
@@ -383,14 +383,13 @@
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  position: absolute;
-  left: 50%;
-  width: 44rem;
-  max-width: 58%;
-  transform: translateX(-50%);
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
+  position: static;
+  width: auto;
+  max-width: none;
+  transform: none;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
 }
 
 .pns-title-progress > * + * {
@@ -468,14 +467,18 @@
   color: var(--text-muted);
 }
 
-.pns-header-faction-list {
+.pns-header-faction-scroll {
   min-height: 0;
+  height: 8.15rem;
   max-height: 8.15rem;
+  margin-top: 0.22rem;
+}
+
+.pns-header-faction-list {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  padding-right: 0;
-  margin-top: 0.22rem;
+  padding-right: 1.15rem;
 }
 
 .pns-header-faction-list > * + * {
@@ -566,17 +569,16 @@
   flex-basis: 0;
 }
 
-.pns-panel .panel-body > .pns-draft-list {
+.pns-panel .panel-body > .pns-draft-scroll {
   margin-top: 0.4rem;
 }
 
 .pns-option-list,
 .pns-draft-list {
-  min-height: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  padding-right: 0.08rem;
+  padding-right: 1.15rem;
 }
 
 .pns-option-list > * + *,
@@ -584,8 +586,9 @@
   margin-top: 0.25rem;
 }
 
-.pns-panel--terms .pns-draft-list,
-.pns-panel--options .pns-option-list {
+.pns-panel--terms .pns-draft-scroll,
+.pns-panel--options .pns-option-scroll {
+  min-height: 0;
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
@@ -1743,6 +1746,61 @@
 .pns-outcome {
   border-color: rgba(201, 168, 76, 0.32);
   color: var(--text);
+}
+
+.pns-stage--peace .pns-participant-row,
+.pns-stage--peace .pns-draft-chip,
+.pns-stage--peace .pns-term-row,
+.pns-stage--peace .pns-option-group {
+  border: 0;
+  background-color: #181d22;
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+}
+
+.pns-stage--peace .pns-participant-row:hover,
+.pns-stage--peace .pns-draft-chip:hover,
+.pns-stage--peace .pns-term-row:hover,
+.pns-stage--peace .pns-option-group-toggle:hover {
+  border: 0;
+  background-color: #242b32;
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+}
+
+.pns-stage--peace .pns-participant-row:active,
+.pns-stage--peace .pns-term-row:active {
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-active.png');
+}
+
+.pns-stage--peace .pns-participant-row.is-selected,
+.pns-stage--peace .pns-option-group--selection-active,
+.pns-stage--peace .pns-term-row--selection-active {
+  border: 0;
+  background-color: #2b251b;
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-active.png');
+}
+
+.pns-stage--peace .pns-term-action,
+.pns-stage--peace .pns-option-group-count {
+  border: 0;
+  background-color: transparent;
+}
+
+.pns-stage--peace .pns-empty-state--quiet {
+  min-height: 1.35rem;
+  padding: 0.2rem 0.1rem;
+  border: 0;
+  background-color: transparent;
+  background-image: none;
 }
 
 @media (max-width: 74rem) {

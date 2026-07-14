@@ -74,6 +74,8 @@ interface UseBridgeQueryOptions<A extends BridgeActionName, T> {
   cacheResponseMs?: number;
   /** Re-fetch while mounted for visible data that can change without a push event. */
   refreshMs?: number;
+  /** Keep the last response visible while a changed payload is being resolved. */
+  keepPreviousData?: boolean;
   /**
    * Optional filter for push updates so an unrelated push (e.g. a different
    * settlement) doesn't overwrite our current data.
@@ -98,7 +100,7 @@ export interface BridgeQueryState<T> {
 export function useBridgeQueryState<A extends BridgeActionName, T>(
   options: UseBridgeQueryOptions<A, T>,
 ): BridgeQueryState<T> {
-  const { action, payload, map, matchPush, mergePush, fetch = true } = options;
+  const { action, payload, map, matchPush, mergePush, fetch = true, keepPreviousData = false } = options;
   const cacheResponse = options.cacheResponse === true;
   const cacheResponseMs = options.cacheResponseMs ?? 0;
   const refreshMs = options.refreshMs ?? 0;
@@ -117,7 +119,9 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
   // Serialise payload so a fresh-but-equal object doesn't refire the effect.
   const payloadKey = payload === undefined ? '__void__' : JSON.stringify(payload);
   const requestKey = `${action}:${payloadKey}`;
-  const currentValue = data?.requestKey === requestKey ? data.value : null;
+  const currentValue = payload !== null && (data?.requestKey === requestKey || keepPreviousData)
+    ? data?.value ?? null
+    : null;
   const pending = payload !== null && data?.requestKey !== requestKey;
 
   useEffect(() => {
