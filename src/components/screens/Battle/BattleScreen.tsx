@@ -39,6 +39,7 @@ import {
   RangeIndicator,
   SelectionBoxOverlay,
   SideBlock,
+  terrainDescription,
   terrainIcon,
   TargetAttackLine,
   WaypointLines,
@@ -586,8 +587,9 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
           position="bottom"
           content={{
             title: battle.terrain || battle.battleType,
-            get body() { return webUIText("Auto.Prop.componentsscreensBattleBattleScreen.838.1", { Location: battle.location }); },
+            body: terrainDescription(battle.terrain),
             lines: [
+              { label: webUIText('Battle.Terrain.Battlefield'), value: battle.location },
               ...(battle.hasSnowAttrition ? [{ label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.846.13'), get value() { return webUIText("Auto.Prop.componentsscreensBattleBattleScreen.840.1"); }, valueColor: 'var(--red)' }] : []),
               ...(battle.hasDesertAttrition ? [{ label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.847.14'), get value() { return webUIText("Auto.Prop.componentsscreensBattleBattleScreen.841.1"); }, valueColor: 'var(--red)' }] : []),
             ],

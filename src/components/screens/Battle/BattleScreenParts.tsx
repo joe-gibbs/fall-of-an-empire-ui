@@ -21,6 +21,26 @@ const TERRAIN_ICONS: Record<string, string> = {
   snow: '/assets/icons/Terrain/_0004_I_Snow.png',
   swamp: '/assets/icons/Terrain/_0005_I_Swamp.png',
   grassland: '/assets/icons/Terrain/_0000_I_Grassland.png',
+  ocean: '/assets/icons/Terrain/I_Ocean.png',
+  tundra: '/assets/icons/Terrain/_0000_I_SnowyRocks.png',
+  snowygrassland: '/assets/icons/Terrain/_0000_I_SnowyGrassland.png',
+  snowyforest: '/assets/icons/Terrain/_0000_I_SnowyForest.png',
+  snowyrocky: '/assets/icons/Terrain/_0000_I_SnowyRocks.png',
+};
+
+const TERRAIN_DESCRIPTION_KEYS: Record<string, string> = {
+  grassland: 'Battle.Terrain.Description.Grassland',
+  forest: 'Battle.Terrain.Description.Forest',
+  hills: 'Battle.Terrain.Description.Hills',
+  rocky: 'Battle.Terrain.Description.Rocky',
+  desert: 'Battle.Terrain.Description.Desert',
+  snow: 'Battle.Terrain.Description.Snow',
+  ocean: 'Battle.Terrain.Description.Ocean',
+  swamp: 'Battle.Terrain.Description.Swamp',
+  tundra: 'Battle.Terrain.Description.Tundra',
+  snowygrassland: 'Battle.Terrain.Description.SnowyGrassland',
+  snowyforest: 'Battle.Terrain.Description.SnowyForest',
+  snowyrocky: 'Battle.Terrain.Description.SnowyRocky',
 };
 
 interface BattleDamageIndicator {
@@ -361,6 +381,11 @@ export function actionIcon(action: BattleActionOption): string {
 export function terrainIcon(terrain: string): string {
   const key = terrain.toLowerCase();
   return TERRAIN_ICONS[key] ?? TERRAIN_ICONS.grassland;
+}
+
+export function terrainDescription(terrain: string): string {
+  const key = terrain.toLowerCase();
+  return webUIText(TERRAIN_DESCRIPTION_KEYS[key] ?? 'Battle.Terrain.Description.Default');
 }
 
 export function sideCommander(side: BattleSideDetail): BattleParticipantDetail | null {

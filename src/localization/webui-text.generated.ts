@@ -4858,6 +4858,20 @@ export const WEBUI_TEXT_SOURCE = {
   "CharacterStats.Effect.DiseaseInfectionChance": "Disease infection chance",
   "CharacterStats.Effect.BattleSurvivalChance": "Battle survival chance",
   "CharacterStats.PercentagePoints": "{Value} percentage points",
+  "Battle.Terrain.Battlefield": "Battlefield",
+  "Battle.Terrain.Description.Default": "The ground and battlefield conditions at this location.",
+  "Battle.Terrain.Description.Grassland": "Open, level ground with few natural obstacles.",
+  "Battle.Terrain.Description.Forest": "Dense woodland provides cover and breaks up lines of sight.",
+  "Battle.Terrain.Description.Hills": "Raised, uneven ground that favours control of the high ground.",
+  "Battle.Terrain.Description.Rocky": "Broken, stony ground creates uneven approaches and rocky obstacles.",
+  "Battle.Terrain.Description.Desert": "Dry, exposed ground where unprotected armies may suffer desert attrition.",
+  "Battle.Terrain.Description.Snow": "Snow-covered ground where unprotected armies may suffer winter attrition.",
+  "Battle.Terrain.Description.Ocean": "Open water where fleets manoeuvre and naval battles are fought.",
+  "Battle.Terrain.Description.Swamp": "Wet, unstable ground crossed by pools and marshy obstacles.",
+  "Battle.Terrain.Description.Tundra": "Frozen, treeless ground with severe exposure to snow and cold.",
+  "Battle.Terrain.Description.SnowyGrassland": "Open grassland buried under snow where armies may suffer winter attrition.",
+  "Battle.Terrain.Description.SnowyForest": "Snow-covered woodland combines dense cover with winter exposure.",
+  "Battle.Terrain.Description.SnowyRocky": "Snow-covered broken ground combines rocky obstacles with winter exposure.",
 } as const;
 
 export type WebUITextKey = keyof typeof WEBUI_TEXT_SOURCE;
