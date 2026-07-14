@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import FactionRoundel from '../common/entities/FactionRoundel';
 import type { SettlementGlanceData } from './WorldGlanceTypes';
 import { clampUnitFraction, percentWidth } from './glanceMath';
@@ -13,6 +13,44 @@ type SettlementType = SettlementGlanceData['settlementType'];
 
 const PROGRESS_EPSILON = 0.001;
 const PROGRESS_RATE_PER_SECOND = 1.55;
+const SETTLEMENT_NAME_MIN_FONT_REM = 0.5;
+const SETTLEMENT_NAME_MAX_FONT_REM = 0.8182;
+
+function SettlementName({ name }: { name: string }) {
+  const nameRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const element = nameRef.current;
+    if (!element) return undefined;
+
+    const fitName = () => {
+      const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const minFontSize = SETTLEMENT_NAME_MIN_FONT_REM * rootFontSize;
+      const maxFontSize = SETTLEMENT_NAME_MAX_FONT_REM * rootFontSize;
+      element.style.fontSize = `${maxFontSize}px`;
+
+      const availableWidth = element.clientWidth;
+      const requiredWidth = element.scrollWidth;
+      if (requiredWidth <= availableWidth + 0.5) return;
+
+      const fittedFontSize = Math.max(minFontSize, maxFontSize * ((availableWidth - 1) / requiredWidth));
+      element.style.fontSize = `${fittedFontSize}px`;
+    };
+
+    fitName();
+
+    let active = true;
+    void document.fonts.ready.then(() => {
+      if (active) fitName();
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [name]);
+
+  return <span ref={nameRef} className="gset-name">{name}</span>;
+}
 
 function useAnimatedProgress(target: number, enabled: boolean, resetKey: string): number {
   const [displayedProgress, setDisplayedProgress] = useState(target);
@@ -384,7 +422,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
 
         <div className="gset-main">
           <div className="gset-head">
-            <span className="gset-name">{data.name}</span>
+            <SettlementName name={data.name} />
           </div>
 
           <div className="gset-info">

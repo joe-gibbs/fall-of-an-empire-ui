@@ -3099,9 +3099,6 @@
   text-overflow: clip;
   white-space: nowrap;
   text-align: left;
-  game-ui-font-fit-mode: shrink;
-  game-ui-font-fit-min-size: 0.5rem;
-  game-ui-font-fit-max-size: 0.8182rem;
 }
 
 .gset-info,
