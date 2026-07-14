@@ -17,6 +17,7 @@ export default function GlanceRelationFrame({ relation }: GlanceRelationFramePro
     <img
       className="glance-relation-frame"
       src={FoaeCefUIAssetPath(RELATION_FRAME_PATH[relation])}
+      style={relation === 'enemy' ? { transform: 'scale(1.18)' } : undefined}
       alt=""
       aria-hidden="true"
     />
