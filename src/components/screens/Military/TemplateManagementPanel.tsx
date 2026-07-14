@@ -318,11 +318,13 @@ function TemplateUnitSelectorModal({
   units,
   currentCounts,
   onAdd,
+  onRemove,
   onClose,
 }: {
   units: FormationTemplateUnitEntry[];
   currentCounts: Record<string, number>;
   onAdd: (unitId: string) => void;
+  onRemove: (unitId: string) => void;
   onClose: () => void;
 }) {
   const [query, setQuery] = useState('');
@@ -532,25 +534,46 @@ function TemplateUnitSelectorModal({
       sortable: false,
       className: 'chart-unit-picker-cell chart-unit-picker-cell--add',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--add',
-      render: unit => (
-        <Tooltip
-          inline
-          position="left"
-          content={{ title: unit.name, body: webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.616.2') }}
-        >
-          <button
-            type="button"
-            className="chart-unit-picker-add"
-            onMouseDown={event => event.stopPropagation()}
-            onClick={() => onAdd(unit.id)}
-            aria-label={webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.616.2')}
-          >
-            <img src="/assets/icons/I_Plus.png" alt="" className="chart-unit-picker-add-icon" draggable={false} />
-          </button>
-        </Tooltip>
-      ),
+      render: unit => {
+        const count = currentCounts[unit.id] ?? 0;
+        return (
+          <span className="chart-unit-picker-actions">
+            <Tooltip
+              inline
+              position="left"
+              content={{ title: unit.name, body: webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25') }}
+            >
+              <button
+                type="button"
+                className="chart-unit-picker-add"
+                disabled={count <= 0}
+                onMouseDown={event => event.stopPropagation()}
+                onClick={() => onRemove(unit.id)}
+                aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25')}
+              >
+                <img src="/assets/icons/I_Minus.png" alt="" className="chart-unit-picker-add-icon" draggable={false} />
+              </button>
+            </Tooltip>
+            <Tooltip
+              inline
+              position="left"
+              content={{ title: unit.name, body: webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.616.2') }}
+            >
+              <button
+                type="button"
+                className="chart-unit-picker-add"
+                onMouseDown={event => event.stopPropagation()}
+                onClick={() => onAdd(unit.id)}
+                aria-label={webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.616.2')}
+              >
+                <img src="/assets/icons/I_Plus.png" alt="" className="chart-unit-picker-add-icon" draggable={false} />
+              </button>
+            </Tooltip>
+          </span>
+        );
+      },
     },
-  ], [currentCounts, onAdd]);
+  ], [currentCounts, onAdd, onRemove]);
   const filterUnit = (unit: FormationTemplateUnitEntry) => {
     const unitType = unit.type || unit.category;
     const unitCulture = unit.cultureId || unit.cultureName;
@@ -1070,6 +1093,7 @@ function TemplateEditor({
           units={catalogueUnits}
           currentCounts={catalogueGroup.counts}
           onAdd={(unitId) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, 1)}
+          onRemove={(unitId) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, -1)}
           onClose={() => setCatalogueGroupId(null)}
         />
       )}

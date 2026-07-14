@@ -3781,15 +3781,26 @@
   cursor: var(--cursor-pointer);
 }
 
-.chart-unit-picker-cell--add > .tooltip-wrapper {
+.chart-unit-picker-actions {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.25rem;
 }
 
 .chart-unit-picker-add:hover {
   background-color: #4c1230;
   border-top-color: var(--gold);
+}
+
+.chart-unit-picker-add:disabled {
+  opacity: 0.36;
+  cursor: var(--cursor-default);
+}
+
+.chart-unit-picker-add:disabled:hover {
+  background-color: #3a0d25;
+  border-top-color: rgba(201, 168, 76, 0.52);
 }
 
 .chart-unit-picker-add-icon {
