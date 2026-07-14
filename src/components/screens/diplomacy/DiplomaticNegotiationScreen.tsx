@@ -116,6 +116,10 @@ function isRequest(proposal: Pick<DiplomaticProposalDraft, 'side'> | Pick<Treaty
   return proposal.side === 'request';
 }
 
+function isMutual(proposal: Pick<DiplomaticProposalDraft, 'side'> | Pick<TreatyOption, 'side'> | Pick<TreatyEntry, 'side'>): boolean {
+  return proposal.side === 'mutual';
+}
+
 function isTribute(type: string): boolean {
   return type === 'tribute' || type === 'tribute_one_off';
 }
@@ -161,6 +165,7 @@ function scoreTone(score: number | undefined | null): 'positive' | 'neutral' | '
 }
 
 function proposalFallbackLabel(proposal: DiplomaticProposalDraft): string {
+  if (isMutual(proposal)) return webUIText('TreatyNegotiation.MutualFallback');
   if (isRequest(proposal)) return webUIText('TreatyNegotiation.RequestFallback');
   return webUIText('TreatyNegotiation.OfferFallback');
 }
@@ -248,7 +253,7 @@ function ProposalChip({
   onRemove: () => void;
   onChange: (patch: Partial<DiplomaticProposalDraft>) => void;
 }) {
-  const side = isRequest(proposal) ? 'demand' : 'concession';
+  const side = isMutual(proposal) ? 'mutual' : isRequest(proposal) ? 'demand' : 'concession';
   const label = proposalTypeLabel(proposal.type) || live?.label || proposalFallbackLabel(proposal);
   const amount = Math.max(0, Math.round(proposal.tributeAmount ?? live?.tributeAmount ?? 0));
   const resourceName = proposal.resourceName || live?.resourceName || '';
@@ -344,7 +349,7 @@ function ProposalChip({
 }
 
 function AvailableTreatyRow({ option, onAdd }: { option: TreatyOption; onAdd: () => void }) {
-  const side = option.side === 'request' ? 'demand' : 'concession';
+  const side = isMutual(option) ? 'mutual' : option.side === 'request' ? 'demand' : 'concession';
   const lines: TooltipLine[] = [
     ...(option.defaultResourceLabel ? [{ label: webUIText('TreatyNegotiation.Tooltip.Resource'), value: option.defaultResourceLabel }] : []),
   ];
@@ -395,7 +400,7 @@ function ProposalColumn({
   selected: DiplomaticProposalDraft[];
   stateProposals: TreatyEntry[];
   resourceOptions: ResourceOption[];
-  side: 'offer' | 'request';
+  side: 'offer' | 'request' | 'mutual';
   onRemove: (proposalId: string) => void;
   onChange: (proposalId: string, patch: Partial<DiplomaticProposalDraft>) => void;
 }) {
@@ -410,7 +415,11 @@ function ProposalColumn({
       </div>
       <div className="panel-body">
         <div className="pns-section-head">
-          <span>{side === 'offer' ? webUIText('TreatyNegotiation.WeGive') : webUIText('TreatyNegotiation.WeAsk')}</span>
+          <span>{side === 'mutual'
+            ? webUIText('TreatyNegotiation.BothAgree')
+            : side === 'offer'
+              ? webUIText('TreatyNegotiation.WeGive')
+              : webUIText('TreatyNegotiation.WeAsk')}</span>
         </div>
         <div className="pns-draft-list">
           {selected.length > 0 ? selected.map(proposal => {
@@ -463,7 +472,8 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
   const selectedIds = useMemo(() => new Set(proposals.map(proposal => proposal.proposalId || proposalKey(proposal))), [proposals]);
   const availableOffers = (state?.availableOffers ?? []).filter(option => !option.isSelected && !selectedIds.has(option.optionId));
   const availableRequests = (state?.availableRequests ?? []).filter(option => !option.isSelected && !selectedIds.has(option.optionId));
-  const selectedOffers = proposals.filter(proposal => !isRequest(proposal));
+  const selectedMutual = proposals.filter(isMutual);
+  const selectedOffers = proposals.filter(proposal => proposal.side === 'offer');
   const selectedRequests = proposals.filter(isRequest);
   const ourResources = state?.ourResources ?? [];
   const theirResources = state?.theirResources ?? [];
@@ -639,6 +649,17 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
     <div className="pns-board tns-board">
       <OptionsPanel title={webUIText('TreatyNegotiation.WeCanOffer')} options={availableOffers} onAdd={addProposal} />
       <div className="pns-middle">
+        {selectedMutual.length > 0 ? (
+          <ProposalColumn
+            title={webUIText('TreatyNegotiation.MutualAgreements')}
+            selected={selectedMutual}
+            stateProposals={liveProposals}
+            resourceOptions={[]}
+            side="mutual"
+            onRemove={removeProposal}
+            onChange={updateProposal}
+          />
+        ) : null}
         <div className="pns-selected-columns">
           <ProposalColumn
             title={webUIText('TreatyNegotiation.Offers')}
