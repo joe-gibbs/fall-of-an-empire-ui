@@ -183,8 +183,11 @@ export interface Character {
   portrait: string;
   portraitLayers?: PortraitLayerData;
   faction: string;
+  factionId?: string;
   factionColour?: string;
   factionSecondaryColour?: string;
+  factionEmblem?: string;
+  factionCultureGroup?: string;
   culture: string;
   religion: string;
   /** Full culture data for tooltip (description + flags). */
