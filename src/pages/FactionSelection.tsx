@@ -954,16 +954,30 @@ function FactionPathCanvas({
 function FactionHighlightCanvas({
   data,
   selected,
+  subjects,
   hovered,
 }: {
   data: GetNewGameMapFactionSelectionResponse;
   selected: ScenarioMapFactionDto;
+  subjects: ScenarioMapFactionDto[];
   hovered: ScenarioMapFactionDto | null;
 }) {
   const visibleHovered = hovered && hovered.baseName !== selected.baseName ? hovered : null;
+  const subjectFillPath = subjects.map((subject) => subject.geometry.fillPath).filter(Boolean).join(' ');
+  const subjectBorderPath = subjects.map((subject) => subject.geometry.borderPath).filter(Boolean).join(' ');
 
   return (
     <>
+      <FactionPathCanvas
+        data={data}
+        fillPath={subjectFillPath}
+        fillStyle="rgba(255, 231, 160, 0.20)"
+        borderPath={subjectBorderPath}
+        outerBorderStyle="rgba(13, 18, 24, 0.56)"
+        outerBorderWidth={10}
+        innerBorderStyle="rgba(255, 218, 96, 0.52)"
+        innerBorderWidth={5}
+      />
       <FactionPathCanvas
         data={data}
         fillPath={selected.geometry.fillPath}
@@ -1289,6 +1303,10 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
       [factions],
     );
     const hovered = hoveredBaseName ? factionsByBase.get(hoveredBaseName) ?? null : null;
+    const selectedSubjects = useMemo(
+      () => factions.filter((faction) => faction.overlordBaseName === selected.baseName),
+      [factions, selected.baseName],
+    );
     const searchQuery = search.trim().toLowerCase();
 
     const visibleFactions = useMemo(
@@ -1469,13 +1487,44 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
               <FactionBorderCanvas data={data} factions={factions} />
 
               {data.politicalMapUrl ? (
-                <FactionHighlightCanvas data={data} selected={selected} hovered={hovered} />
+                <FactionHighlightCanvas
+                  data={data}
+                  selected={selected}
+                  subjects={selectedSubjects}
+                  hovered={hovered}
+                />
               ) : (
                 <svg
                   viewBox={`0 0 ${data.mapWidth} ${data.mapHeight}`}
                   className="fs-map-overlay"
                   preserveAspectRatio="none"
                 >
+                    {selectedSubjects.map((subject) => subject.geometry.fillPath).filter(Boolean).length > 0 && (
+                      <path
+                        d={selectedSubjects.map((subject) => subject.geometry.fillPath).filter(Boolean).join(' ')}
+                        fill="rgba(255, 231, 160, 0.20)"
+                      />
+                    )}
+                    {selectedSubjects.map((subject) => subject.geometry.borderPath).filter(Boolean).length > 0 && (
+                      <g>
+                        <path
+                          d={selectedSubjects.map((subject) => subject.geometry.borderPath).filter(Boolean).join(' ')}
+                          fill="none"
+                          stroke="rgba(13, 18, 24, 0.56)"
+                          strokeWidth={10}
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d={selectedSubjects.map((subject) => subject.geometry.borderPath).filter(Boolean).join(' ')}
+                          fill="none"
+                          stroke="rgba(255, 218, 96, 0.52)"
+                          strokeWidth={5}
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+                      </g>
+                    )}
                     {selected.geometry.fillPath && (
                       <path d={selected.geometry.fillPath} fill="rgba(255, 231, 160, 0.42)" />
                     )}
