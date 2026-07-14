@@ -118,6 +118,8 @@ export function mapMilitary(entry: GetWorldGlancesResponse['armies'][number]): A
     attritionIcon: entry.attritionIcon,
     selected: false,
     targeted: false,
+    garrisoned: entry.garrisoned ?? false,
+    garrisonIndex: entry.garrisonIndex ?? 0,
   };
 }
 
@@ -168,7 +170,7 @@ export function mapConvoy(entry: GetWorldGlancesResponse['convoys'][number]): Co
   };
 }
 
-export type WorldGlanceDetailLevel = 'flag' | 'name' | 'detailed' | 0 | 1 | 2;
+export type WorldGlanceDetailLevel = 'flag' | 'name' | 'detailed' | 0 | 1 | 2 | 3;
 
 export function detailClass(detailLevel: WorldGlanceDetailLevel | string | number): WorldGlanceDetailClass {
   switch (detailLevel) {
@@ -180,6 +182,10 @@ export function detailClass(detailLevel: WorldGlanceDetailLevel | string | numbe
       return 'detail-name';
     case 'detailed':
     case 2:
-    default: return 'detail-detailed';
+      return 'detail-detailed';
+    case 3:
+      return 'detail-location-faded';
+    default:
+      return 'detail-detailed';
   }
 }

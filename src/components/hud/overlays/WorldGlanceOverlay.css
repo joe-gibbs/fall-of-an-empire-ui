@@ -65,6 +65,17 @@
   display: none;
 }
 
+.world-glance-overlay .glance--military-garrison {
+  display: flex;
+  width: 5.7273rem;
+  height: 1.3636rem;
+  min-width: 5.7273rem;
+  min-height: 1.3636rem;
+  background-image:
+    url('/assets/glance/glance-chip.png'),
+    url('/assets/glance/glance-metal-panel.png');
+}
+
 .world-glance-overlay .glance::before,
 .world-glance-overlay .glance::after,
 .world-glance-overlay .battle-side::before,

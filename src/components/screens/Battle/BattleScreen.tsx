@@ -80,7 +80,6 @@ function calculateAttackPosition(attacker: BattleFormationLive, defender: Battle
   return null;
 }
 
-
 interface BattleDamageIndicator {
   key: string;
   formationId: string;
@@ -579,7 +578,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
           {retreatablePlayerParticipants.length > 0 && (
             <Tooltip content={{ title: webUIText('Battle.SurrenderTitle'), body: webUIText('Battle.SurrenderBody') }} position="bottom">
               <GameButton
-                variant="outline"
+                variant="burgundy"
                 icon="/assets/icons/I_Retreat.png"
                 className="battle-surrender"
                 onClick={() => void surrenderBattle()}

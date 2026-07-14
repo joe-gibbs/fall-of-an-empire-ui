@@ -485,8 +485,7 @@ function InternalFactionRow({
     ? FOCUS_OPTIONS
     : FOCUS_OPTIONS.filter(option => option.id === focusKey);
   const buildFocusBlockedReason = row.buildFocusBlockedReason
-    || (row.isAtWar ? 'Cannot change build focus while this province is at war with you.' : 'Build focus cannot be changed here.');
-  const buildFocusLockedFooter = row.isAtWar ? webUIText("Auto.Fix.VarExprTrue.componentsscreensInternalPoliticsScreen.416.1") : webUIText("Auto.Fix.VarExprFalse.componentsscreensInternalPoliticsScreen.416.1");
+    || (row.isAtWar ? webUIText("Auto.Fix.VarExprTrue.componentsscreensInternalPoliticsScreen.416.1") : webUIText("Auto.Fix.VarExprFalse.componentsscreensInternalPoliticsScreen.416.1"));
   const taxRate = normalisedRate(economy?.taxRate ?? tax?.effectiveRate ?? row.taxRate);
   const showTaxControls = !row.isRebel;
   const canLowerTax = showTaxControls && taxRate !== undefined && taxRate > 0.1001;
@@ -554,8 +553,8 @@ function InternalFactionRow({
               position="bottom"
               content={{
                 title: option.label,
-                body: canSetBuildFocus ? option.body : buildFocusBlockedReason,
-                get footer() { return canSetBuildFocus ? option.id === focusKey ? webUIText("Auto.Fix.PropExprTrueTrue.componentsscreensInternalPoliticsScreen.483.1") : webUIText("Auto.Fix.PropExprTrueFalse.componentsscreensInternalPoliticsScreen.483.1") : buildFocusLockedFooter; },
+                body: option.body,
+                get footer() { return canSetBuildFocus ? option.id === focusKey ? webUIText("Auto.Fix.PropExprTrueTrue.componentsscreensInternalPoliticsScreen.483.1") : webUIText("Auto.Fix.PropExprTrueFalse.componentsscreensInternalPoliticsScreen.483.1") : buildFocusBlockedReason; },
               }}
             >
               <button

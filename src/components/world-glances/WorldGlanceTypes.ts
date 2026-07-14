@@ -1,5 +1,5 @@
 export type FactionRelation = 'own' | 'ally' | 'neutral' | 'enemy';
-export type WorldGlanceDetailClass = 'detail-flag' | 'detail-name' | 'detail-detailed';
+export type WorldGlanceDetailClass = 'detail-flag' | 'detail-name' | 'detail-detailed' | 'detail-location-faded';
 
 export interface GlanceFactionStub {
   id?: string;
@@ -24,6 +24,8 @@ export interface ArmyGlanceData {
   attritionIcon?: string;
   selected?: boolean;
   targeted?: boolean;
+  garrisoned?: boolean;
+  garrisonIndex?: number;
 }
 
 export interface NavyGlanceData extends ArmyGlanceData {

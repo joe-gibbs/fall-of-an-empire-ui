@@ -841,7 +841,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 className="mil-header-portrait-button"
                 onMouseDown={() => { if (army.commanderId) openSidebar('character', army.commanderId); }}
               >
-                <Portrait personId={army.commanderId} name={army.commanderName} size="xl" shape="rect" showBorder borderTier="gold" className="mil-header-portrait" />
+                <Portrait personId={army.commanderId} name={army.commanderName} size="xl" shape="circle" showBorder borderTier="gold" className="mil-header-portrait" />
               </button>
             </PersonTooltip>
             <div className="mil-header-text">

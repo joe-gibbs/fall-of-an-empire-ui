@@ -1624,139 +1624,6 @@
   cursor: pointer;
 }
 
-.fov-diplomacy-board {
-  display: flex;
-  align-items: stretch;
-  margin-bottom: 0.8rem;
-}
-
-.fov-diplomacy-panel {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-width: 0;
-  padding: 0.55rem;
-  background-color: rgba(9, 10, 12, 0.55);
-  background-image: url('/assets/baked/panel-charcoal.png');
-  background-repeat: repeat;
-  background-size: 93.0909rem 93.0909rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(201, 168, 76, 0.12);
-  border-bottom-color: rgba(8, 12, 17, 0.45);
-  border-left-color: rgba(201, 168, 76, 0.12);
-}
-
-.fov-diplomacy-panel + .fov-diplomacy-panel {
-  margin-left: 0.65rem;
-}
-
-.fov-diplomacy-panel--war {
-  border-color: rgba(196, 64, 64, 0.38);
-}
-
-.fov-diplomacy-panel-title {
-  font-family: var(--font-header);
-  font-size: 0.88rem;
-  color: var(--text-header);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-bottom: 0.4rem;
-}
-
-.fov-diplomacy-roundel-list {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  padding-top: 0.04rem;
-}
-
-.fov-diplomacy-roundel-list > * {
-  margin-right: 0.28rem;
-  margin-bottom: 0.28rem;
-}
-
-.fov-diplomacy-roundel-btn {
-  width: 2.1rem;
-  height: 2.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background-color: rgba(21, 27, 32, 0.42);
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.16);
-  border-right-color: rgba(201, 168, 76, 0.1);
-  border-bottom-color: rgba(13, 18, 24, 0.55);
-  border-left-color: rgba(201, 168, 76, 0.1);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.fov-diplomacy-roundel-btn:hover {
-  background-color: rgba(74, 21, 48, 0.28);
-  border-top-color: rgba(201, 168, 76, 0.45);
-  border-right-color: rgba(201, 168, 76, 0.36);
-  border-bottom-color: rgba(201, 168, 76, 0.26);
-  border-left-color: rgba(201, 168, 76, 0.36);
-}
-
-.fov-diplomacy-roundel-btn .faction-roundel--sm {
-  width: 1.62rem;
-  height: 1.62rem;
-}
-
-.fov-diplomacy-treaty-groups {
-  display: flex;
-  flex-direction: column;
-}
-
-.fov-diplomacy-treaty-group {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-.fov-diplomacy-treaty-group + .fov-diplomacy-treaty-group {
-  margin-top: 0.38rem;
-}
-
-.fov-diplomacy-treaty-label {
-  width: 9.2rem;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  margin-right: 0.5rem;
-  font-size: 0.72rem;
-  color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.fov-diplomacy-treaty-icon {
-  width: 0.95rem;
-  height: 0.95rem;
-  flex-shrink: 0;
-  margin-right: 0.25rem;
-  opacity: 0.86;
-}
-
-.fov-diplomacy-treaty-label span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fov-diplomacy-treaty-group > .fov-diplomacy-roundel-list {
-  min-width: 0;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-}
-
 /* ─── Vassal Table ─────────────────────────────────────────────────────── */
 
 .fov-vassal-table {
@@ -2025,31 +1892,6 @@
   margin-top: 0.18rem;
 }
 
-.fov-treaty-chip {
-  display: flex;
-  align-items: center;
-  padding: 0.25rem 0.45rem;
-  background: rgba(8, 12, 17, 0.22);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: #3f382f;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.fov-treaty-chip:hover {
-  background: rgba(8, 12, 17, 0.34);
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: var(--gold-muted);
-  border-left-color: var(--gold-muted);
-}
-
-.fov-treaty-type {
-  color: var(--text-dark);
-  font-size: 0.75rem;
-}
-
 .fov-court-slot {
   cursor: pointer;
 }
@@ -2085,10 +1927,6 @@
 .fov-policy-val,
 .fov-court-right {
   margin-left: 0.45rem;
-}
-
-.fov-treaty-type {
-  margin-left: 0.35rem;
 }
 
 .fov-edicts-list > .tooltip-wrapper,
@@ -2169,13 +2007,6 @@
   .fov-capital-summary {
     flex-basis: 100%;
     width: 100%;
-  }
-  .fov-diplomacy-board {
-    flex-direction: column;
-  }
-  .fov-diplomacy-panel + .fov-diplomacy-panel {
-    margin-left: 0;
-    margin-top: 0.65rem;
   }
   .fov-court-right {
     width: 10rem;

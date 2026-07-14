@@ -748,6 +748,43 @@ function MoneyFlowDetail({
   );
 }
 
+function SettlementResourceTooltip({ row, children }: { row: EconomyOverviewSettlementRow; children: ReactNode }) {
+  const t = useWebUIText();
+  const hasFlow = row.productionResources.length > 0 || row.consumptionResources.length > 0;
+  const lines = hasFlow
+    ? [
+        ...row.productionResources.map(resource => ({
+          label: resource.name,
+          labelIcon: `/assets/resources/${resource.id}.png`,
+          value: `+${fmt1(resource.amount)}${t('Economy.PerMonth')}`,
+          valueColor: 'var(--green-light)',
+        })),
+        ...row.consumptionResources.map(resource => ({
+          label: resource.name,
+          labelIcon: `/assets/resources/${resource.id}.png`,
+          value: `-${fmt1(resource.amount)}${t('Economy.PerMonth')}`,
+          valueColor: 'var(--red-light)',
+        })),
+      ]
+    : row.stockpileResources.map(resource => ({
+        label: resource.name,
+        labelIcon: `/assets/resources/${resource.id}.png`,
+        value: fmt1(resource.amount),
+      }));
+
+  return (
+    <Tooltip
+      content={{ title: t('Common.Resources'), lines }}
+      position="left"
+      inline
+      disabled={lines.length === 0}
+      wrapperClassName="econ-resource-summary-tooltip"
+    >
+      {children}
+    </Tooltip>
+  );
+}
+
 interface FlowEntry {
   label: string;
   value: number;
@@ -1005,38 +1042,52 @@ function TradeControls({ resource, gold }: { resource: EconomyOverviewResourceRo
 
   return (
     <div className="econ-trade-btns">
-      <button
-        type="button"
-        className="econ-trade-btn econ-trade-btn--buy"
-        disabled={!canBuy}
-        aria-label={t('Economy.Buy')}
-        onMouseDown={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (!canBuy) return;
-          buyEconomyResourceBridge(resource.id, tradeAmountFromEvent(event)).catch(() => undefined);
-        }}
+      <Tooltip
+        content={{ title: t('Economy.Buy'), body: t('Economy.BuyTradeTooltip') }}
+        position="top"
+        delay={150}
+        wrapperClassName="econ-trade-btn-tooltip"
       >
-        <img className="econ-trade-btn-mark" src="/assets/icons/I_Minus.png" alt="" />
-        <img className="econ-trade-btn-coin" src="/assets/icons/I_Coins.png" alt="" />
-        <span>{fmt(buyCost)}</span>
-      </button>
-      <button
-        type="button"
-        className="econ-trade-btn econ-trade-btn--sell"
-        disabled={!canSell}
-        aria-label={t('Economy.Sell')}
-        onMouseDown={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (!canSell) return;
-          sellEconomyResourceBridge(resource.id, tradeAmountFromEvent(event)).catch(() => undefined);
-        }}
+        <button
+          type="button"
+          className="econ-trade-btn econ-trade-btn--buy"
+          disabled={!canBuy}
+          aria-label={t('Economy.Buy')}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!canBuy) return;
+            buyEconomyResourceBridge(resource.id, tradeAmountFromEvent(event)).catch(() => undefined);
+          }}
+        >
+          <img className="econ-trade-btn-mark" src="/assets/icons/I_Minus.png" alt="" />
+          <img className="econ-trade-btn-coin" src="/assets/icons/I_Coins.png" alt="" />
+          <span>{fmt(buyCost)}</span>
+        </button>
+      </Tooltip>
+      <Tooltip
+        content={{ title: t('Economy.Sell'), body: t('Economy.SellTradeTooltip') }}
+        position="top"
+        delay={150}
+        wrapperClassName="econ-trade-btn-tooltip"
       >
-        <img className="econ-trade-btn-mark" src="/assets/icons/I_Plus.png" alt="" />
-        <img className="econ-trade-btn-coin" src="/assets/icons/I_Coins.png" alt="" />
-        <span>{fmt(sellReturn)}</span>
-      </button>
+        <button
+          type="button"
+          className="econ-trade-btn econ-trade-btn--sell"
+          disabled={!canSell}
+          aria-label={t('Economy.Sell')}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!canSell) return;
+            sellEconomyResourceBridge(resource.id, tradeAmountFromEvent(event)).catch(() => undefined);
+          }}
+        >
+          <img className="econ-trade-btn-mark" src="/assets/icons/I_Plus.png" alt="" />
+          <img className="econ-trade-btn-coin" src="/assets/icons/I_Coins.png" alt="" />
+          <span>{fmt(sellReturn)}</span>
+        </button>
+      </Tooltip>
     </div>
   );
 }
@@ -1058,7 +1109,9 @@ function SettlementDashboard({ rows }: { rows: EconomyOverviewSettlementRow[] })
       label: t('Common.Resources'),
       render: row => (
         <span className="econ-inline-detail-cell">
-          <SettlementResourceTags row={row} />
+          <SettlementResourceTooltip row={row}>
+            <SettlementResourceTags row={row} />
+          </SettlementResourceTooltip>
           {(row.productionResources.length + row.consumptionResources.length + row.stockpileResources.length) > 2 && (
             <button
               type="button"
@@ -1230,7 +1283,7 @@ function MilitaryDashboard({ rows }: { rows: EconomyOverviewMilitaryRow[] }) {
               position="left"
               inline
               disabled={resourceUsage.length === 0}
-              wrapperClassName="econ-military-resource-tooltip"
+              wrapperClassName="econ-resource-summary-tooltip"
             >
               <ResourceAmountTags values={resourceUsage} tone="negative" limit={2} />
             </Tooltip>
@@ -1495,7 +1548,7 @@ function FoodTab({ data }: { data: GetEconomyOverviewResponse | null }) {
     { id: 'use', label: t('Economy.FoodUse'), align: 'right', className: 'econ-negative', render: row => `${negativeFmt1(row.foodConsumption)}${t('Economy.PerMonth')}`, sortValue: row => row.foodConsumption },
     { id: 'strength', label: t('Economy.Strength'), align: 'right', render: row => `${fmt(row.strength)} / ${fmt(row.maxStrength)}`, sortValue: row => row.strength },
     { id: 'priority', label: t('Economy.Priority'), render: row => <PriorityControls targetType="military" targetId={row.id} priority={row.priority} />, sortValue: row => priorityLabel(row.priority, t) },
-    { id: 'location', label: t('Economy.Location'), render: row => row.location || '-', sortValue: row => row.location },
+    { id: 'location', label: t('Economy.Location'), render: row => <span className="econ-ellipsis">{row.location || '-'}</span>, sortValue: row => row.location },
   ];
 
   return (
@@ -1657,7 +1710,7 @@ const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => 
       className="screen--economy"
       tabs={<SidebarTabBar tabs={tabs} activeTab={activeTab} onTabChange={(id) => setActiveTab(id as EconomyTab)} />}
       headerExtra={<StatsBar data={data} />}
-      contentClassName="econ-content"
+      contentClassName={`econ-content${activeTab === 'settlements' ? ' econ-content--settlements' : ''}`}
       styledScrollContent
     >
       {officeStrip}

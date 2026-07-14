@@ -78,24 +78,9 @@
   height: 1.8rem;
   min-width: 6.2rem;
   padding: 0.18rem 0.55rem !important;
-  color: var(--red-light) !important;
-  font-size: 0.66rem !important;
+  font-size: 0.72rem !important;
   letter-spacing: 0.08em;
   line-height: 1;
-  text-transform: uppercase;
-  border-top-color: rgba(178, 58, 48, 0.68) !important;
-  border-right-color: rgba(178, 58, 48, 0.68) !important;
-  border-bottom-color: rgba(178, 58, 48, 0.68) !important;
-  border-left-color: rgba(178, 58, 48, 0.68) !important;
-}
-
-.battle-surrender:hover {
-  color: var(--text-bright) !important;
-  background-color: rgba(140, 30, 30, 0.5) !important;
-  border-top-color: var(--red) !important;
-  border-right-color: var(--red) !important;
-  border-bottom-color: var(--red) !important;
-  border-left-color: var(--red) !important;
 }
 
 .battle-surrender .btn-icon {

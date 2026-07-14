@@ -283,6 +283,9 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     actionStrings,
     actionNumbers,
     actionFlags,
+    unitCounts,
+    unitStrings,
+    unitNumbers,
     obstacleStrings,
     obstacleNumbers,
     obstacleFlags,
@@ -308,6 +311,9 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
       actionStrings,
       actionNumbers,
       actionFlags,
+      unitCounts,
+      unitStrings,
+      unitNumbers,
       obstacleStrings,
       obstacleNumbers,
       obstacleFlags,
@@ -330,6 +336,8 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     agentNumbers,
     agentFlags,
     agentTargetIndices,
+    unitCounts,
+    unitStrengths,
   ) => {
     const startedAtMs = Date.now();
     const data = nativeBattleFramePayload(
@@ -344,6 +352,8 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
       agentNumbers,
       agentFlags,
       agentTargetIndices,
+      unitCounts,
+      unitStrengths,
     );
     dispatchBridgeEvent('game.get_battle_frame', data);
     recordUIPerfBridgeEvent('game.get_battle_frame', startedAtMs, Date.now());

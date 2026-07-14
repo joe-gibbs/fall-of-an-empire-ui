@@ -167,9 +167,10 @@
 }
 
 .diplo-header-strength-labels {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 0.85rem minmax(0, 1fr);
+  column-gap: 0.3rem;
   align-items: center;
-  justify-content: center;
 
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -178,7 +179,7 @@
 
 .diplo-header-strength-value {
   display: block;
-  width: 3.2rem;
+  min-width: 0;
   font-size: 0.95rem;
   game-ui-font-fit-mode: shrink;
   game-ui-font-fit-min-size: 0.68rem;
@@ -1195,10 +1196,6 @@
 
 .diplo-header-capital > * + * {
   margin-left: 0.25rem;
-}
-
-.diplo-header-strength-labels > * + * {
-  margin-left: 0.3rem;
 }
 
 /* --- Opinion row with bar --- */

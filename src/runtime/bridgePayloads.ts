@@ -271,6 +271,7 @@ function normaliseBattleFormationFrame(payload: unknown) {
     hasManualTarget: bridgeBoolean(bridgeProperty(payload, 'hasManualTarget')),
     isRouting: bridgeBoolean(bridgeProperty(payload, 'isRouting')),
     isWithdrawing: bridgeBoolean(bridgeProperty(payload, 'isWithdrawing')),
+    unitStrengths: bridgeArrayElements(bridgeProperty(payload, 'unitStrengths')).map(value => bridgeNumber(value)),
     agents: bridgeArrayElements(bridgeProperty(payload, 'agents')).map(normaliseBattleFormationAgentFrame),
     targetFormationId: bridgeString(bridgeProperty(payload, 'targetFormationId')),
     targetFormationName: bridgeString(bridgeProperty(payload, 'targetFormationName')),
@@ -293,6 +294,8 @@ const NATIVE_BATTLE_FORMATION_STRING_STRIDE = 19;
 const NATIVE_BATTLE_FORMATION_DETAIL_NUMBER_STRIDE = 18;
 const NATIVE_BATTLE_ACTION_STRING_STRIDE = 5;
 const NATIVE_BATTLE_ACTION_NUMBER_STRIDE = 7;
+const NATIVE_BATTLE_UNIT_STRING_STRIDE = 4;
+const NATIVE_BATTLE_UNIT_NUMBER_STRIDE = 2;
 const NATIVE_BATTLE_OBSTACLE_STRING_STRIDE = 2;
 const NATIVE_BATTLE_OBSTACLE_NUMBER_STRIDE = 10;
 const NATIVE_BATTLE_FORMATION_MANUAL_TARGET_FLAG = 1 << 0;
@@ -334,6 +337,8 @@ export function nativeBattleFramePayload(
   agentNumbersValue: unknown,
   agentFlagsValue: unknown,
   agentTargetIndicesValue: unknown,
+  unitCountsValue: unknown,
+  unitStrengthsValue: unknown,
 ) {
   const formationIds = nativeStringArray(formationIdsValue);
   const formationNumbers = nativeNumberArray(formationNumbersValue);
@@ -345,6 +350,8 @@ export function nativeBattleFramePayload(
   const agentNumbers = nativeNumberArray(agentNumbersValue);
   const agentFlags = nativeIntegerArray(agentFlagsValue);
   const agentTargetIndices = nativeIntegerArray(agentTargetIndicesValue);
+  const unitCounts = nativeIntegerArray(unitCountsValue);
+  const unitStrengths = nativeIntegerArray(unitStrengthsValue);
 
   return {
     packed: 'battleFrame',
@@ -360,6 +367,8 @@ export function nativeBattleFramePayload(
     agentNumbers,
     agentFlags,
     agentTargetIndices,
+    unitCounts,
+    unitStrengths,
   };
 }
 
@@ -392,6 +401,9 @@ export function nativeBattleDataPayload(
   actionStringsValue: unknown,
   actionNumbersValue: unknown,
   actionFlagsValue: unknown,
+  unitCountsValue: unknown,
+  unitStringsValue: unknown,
+  unitNumbersValue: unknown,
   obstacleStringsValue: unknown,
   obstacleNumbersValue: unknown,
   obstacleFlagsValue: unknown,
@@ -415,6 +427,9 @@ export function nativeBattleDataPayload(
   const actionStrings = nativeStringArray(actionStringsValue);
   const actionNumbers = nativeNumberArray(actionNumbersValue);
   const actionFlags = nativeIntegerArray(actionFlagsValue);
+  const unitCounts = nativeIntegerArray(unitCountsValue);
+  const unitStrings = nativeStringArray(unitStringsValue);
+  const unitNumbers = nativeNumberArray(unitNumbersValue);
   const obstacleStrings = nativeStringArray(obstacleStringsValue);
   const obstacleNumbers = nativeNumberArray(obstacleNumbersValue);
   const obstacleFlags = nativeIntegerArray(obstacleFlagsValue);
@@ -465,6 +480,7 @@ export function nativeBattleDataPayload(
 
   let waypointOffset = 0;
   let actionIndex = 0;
+  let unitIndex = 0;
   const formationCount = Math.floor(formationStrings.length / NATIVE_BATTLE_FORMATION_STRING_STRIDE);
   const formations = [];
   for (let formationIndex = 0; formationIndex < formationCount; formationIndex += 1) {
@@ -473,6 +489,7 @@ export function nativeBattleDataPayload(
     const flags = formationFlags[formationIndex] ?? 0;
     const waypointCount = Math.max(waypointCounts[formationIndex] ?? 0, 0);
     const actionCount = Math.max(actionCounts[formationIndex] ?? 0, 0);
+    const unitCount = Math.max(unitCounts[formationIndex] ?? 0, 0);
     const waypoints = [];
     for (let index = 0; index < waypointCount; index += 1) {
       waypoints.push({
@@ -503,6 +520,21 @@ export function nativeBattleDataPayload(
         canActivate: (actionStateFlags & (1 << 0)) !== 0,
         isActive: (actionStateFlags & (1 << 1)) !== 0,
         disabledReason: actionStrings[actionStringOffset + 4] ?? '',
+      });
+    }
+
+    const units = [];
+    for (let index = 0; index < unitCount; index += 1) {
+      const unitStringOffset = unitIndex * NATIVE_BATTLE_UNIT_STRING_STRIDE;
+      const unitNumberOffset = unitIndex * NATIVE_BATTLE_UNIT_NUMBER_STRIDE;
+      unitIndex += 1;
+      units.push({
+        id: unitStrings[unitStringOffset] ?? '',
+        name: unitStrings[unitStringOffset + 1] ?? '',
+        description: unitStrings[unitStringOffset + 2] ?? '',
+        portrait: unitStrings[unitStringOffset + 3] ?? '',
+        strength: unitNumbers[unitNumberOffset] ?? 0,
+        maxStrength: unitNumbers[unitNumberOffset + 1] ?? 0,
       });
     }
 
@@ -544,6 +576,7 @@ export function nativeBattleDataPayload(
       activeActionName: formationStrings[stringOffset + 18] ?? '',
       isPlayerControlled: (flags & NATIVE_BATTLE_FORMATION_PLAYER_CONTROLLED_FLAG) !== 0,
       isCommandable: (flags & NATIVE_BATTLE_FORMATION_COMMANDABLE_FLAG) !== 0,
+      units,
       waypoints,
       actions,
     });

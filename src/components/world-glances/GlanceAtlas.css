@@ -63,6 +63,16 @@
   align-items: flex-start;
 }
 
+.glance-atlas-plate .glance--military-garrison {
+  transform: translateY(calc(5rem + var(--garrison-stack-offset, 0rem)));
+}
+
+/* The military plate includes atlas bleed around its content. Once the location has faded,
+   this offset places the garrison tab's centre exactly on its former projected anchor. */
+.glance-atlas-plate.detail-location-faded .glance--military-garrison {
+  transform: translateY(calc(2.2273rem + var(--garrison-stack-offset, 0rem)));
+}
+
 .glance-atlas-plate .glance-military-core {
   margin-top: 0.9545rem;
 }

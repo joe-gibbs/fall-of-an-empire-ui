@@ -866,7 +866,7 @@ const MainMenu: React.FC = () => {
     return (
       <Tooltip
         key={key}
-        content={{ title: btn.label, body: btn.description, footer: showKicker ? btn.kicker : undefined }}
+        content={{ title: btn.label, body: btn.description }}
         position="top"
         delay={450}
         bubbleClassName="tt-bubble--main-menu-scenario"

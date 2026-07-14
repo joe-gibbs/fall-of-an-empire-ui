@@ -548,7 +548,7 @@ export interface WorldGlanceFrameEntry {
   scale: number;
   opacity: number;
   zOrder: number;
-  detailLevel: 'flag' | 'name' | 'detailed' | 0 | 1 | 2;
+  detailLevel: 'flag' | 'name' | 'detailed' | 0 | 1 | 2 | 3;
   selected?: boolean;
   targeted?: boolean;
   besieged?: boolean;

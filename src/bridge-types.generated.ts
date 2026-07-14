@@ -202,6 +202,15 @@ export interface BattleFormationAgentState {
   targetFormationId: string;
 }
 
+export interface BattleFormationUnitDetail {
+  id: string;
+  name: string;
+  description: string;
+  portrait: string;
+  strength: number;
+  maxStrength: number;
+}
+
 export interface BattleFormationDetail {
   id: string;
   name: string;
@@ -240,6 +249,7 @@ export interface BattleFormationDetail {
   activeActionName: string;
   isPlayerControlled: boolean;
   isCommandable: boolean;
+  units: BattleFormationUnitDetail[];
   waypoints: BattlePoint[];
   actions: BattleActionOption[];
 }
@@ -262,6 +272,7 @@ export interface BattleFormationFrame {
   hasManualTarget: boolean;
   isRouting: boolean;
   isWithdrawing: boolean;
+  unitStrengths: number[];
   agents: BattleFormationAgentState[];
   targetFormationId: string;
   targetFormationName: string;
@@ -4386,6 +4397,8 @@ export interface WorldMilitaryGlance {
   embarkedArmyCount: number;
   attrition: boolean;
   attritionIcon: string;
+  garrisoned: boolean;
+  garrisonIndex: number;
 }
 
 export interface WorldBattleParticipant {
@@ -6015,8 +6028,8 @@ export interface BridgeActions {
   'game.delete_save': { request: DeleteSaveRequest; response: DeleteSaveResponse };
   'game.demolish_settlement_building': { request: DemolishSettlementBuildingRequest; response: void };
   'game.diplomatic_notification_events': { request: DiplomaticNotificationEventsRequest; response: void };
-  'game.disembark_military': { request: MilitaryTargetingRequest; response: void };
   'game.disband_military': { request: DisbandMilitaryRequest; response: void };
+  'game.disembark_military': { request: MilitaryTargetingRequest; response: void };
   'game.dismiss_campaign_outcome': { request: void; response: void };
   'game.downgrade_settlement_building': { request: DowngradeSettlementBuildingRequest; response: void };
   'game.download_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
@@ -6163,8 +6176,8 @@ export interface BridgeActions {
   'game.set_resource_priority': { request: SetResourcePriorityRequest; response: void };
   'game.set_settlement_capital': { request: SetSettlementCapitalRequest; response: SetSettlementCapitalResponse };
   'game.set_settlement_sidebar_ambient': { request: SetSettlementSidebarAmbientRequest; response: void };
-  'game.show_military_sidebar': { request: MilitaryTargetingRequest; response: void };
   'game.set_speed': { request: SetSpeedRequest; response: void };
+  'game.show_military_sidebar': { request: MilitaryTargetingRequest; response: void };
   'game.start_battle_action': { request: StartBattleActionRequest; response: StartBattleActionResponse };
   'game.start_bloc_interaction': { request: StartBlocInteractionRequest; response: StartBlocInteractionResponse };
   'game.start_faction_interaction': { request: StartFactionInteractionRequest; response: StartFactionInteractionResponse };

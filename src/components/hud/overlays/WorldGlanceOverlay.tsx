@@ -147,6 +147,8 @@ function mapMilitary(entry: GetWorldGlancesResponse['armies'][number]): ArmyGlan
     attritionIcon: entry.attritionIcon,
     selected: false,
     targeted: false,
+    garrisoned: entry.garrisoned ?? false,
+    garrisonIndex: entry.garrisonIndex ?? 0,
   };
 }
 
@@ -196,7 +198,7 @@ function mapConvoy(entry: GetWorldGlancesResponse['convoys'][number]): ConvoyGla
   };
 }
 
-type WorldGlanceDetailLevel = 'flag' | 'name' | 'detailed' | 0 | 1 | 2;
+type WorldGlanceDetailLevel = 'flag' | 'name' | 'detailed' | 0 | 1 | 2 | 3;
 
 function detailClass(detailLevel: WorldGlanceDetailLevel | string | number): WorldGlanceDetailClass {
   switch (detailLevel) {
@@ -208,7 +210,11 @@ function detailClass(detailLevel: WorldGlanceDetailLevel | string | number): Wor
       return 'detail-name';
     case 'detailed':
     case 2:
-    default: return 'detail-detailed';
+      return 'detail-detailed';
+    case 3:
+      return 'detail-location-faded';
+    default:
+      return 'detail-detailed';
   }
 }
 
@@ -488,7 +494,9 @@ function makeNodeState(node: HTMLDivElement, attached = false): WorldGlanceNodeS
       ? 'detail-name'
       : node.classList.contains('detail-detailed')
         ? 'detail-detailed'
-        : undefined;
+        : node.classList.contains('detail-location-faded')
+          ? 'detail-location-faded'
+          : undefined;
 
   return {
     node,
@@ -538,7 +546,7 @@ function applyDetailClass(state: WorldGlanceNodeState, nextClass: WorldGlanceDet
   if (state.detailClass) {
     node.classList.remove(state.detailClass);
   } else {
-    node.classList.remove('detail-flag', 'detail-name', 'detail-detailed');
+    node.classList.remove('detail-flag', 'detail-name', 'detail-detailed', 'detail-location-faded');
   }
   node.classList.add(nextClass);
   state.detailClass = nextClass;

@@ -812,7 +812,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                     position="bottom"
                     content={{
                       title: option.label,
-                      body: canSetBuildFocus ? option.body : buildFocusBlockedReason,
+                      body: option.body,
                       get footer() { return canSetBuildFocus ? option.id === focusKey ? webUIText("Auto.Fix.PropExprTrueTrue.componentsscreensInternalPoliticsScreen.483.1") : webUIText("Auto.Fix.PropExprTrueFalse.componentsscreensInternalPoliticsScreen.483.1") : buildFocusBlockedReason; },
                     }}
                   >

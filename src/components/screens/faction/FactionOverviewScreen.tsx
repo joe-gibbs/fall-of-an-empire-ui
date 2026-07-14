@@ -26,8 +26,7 @@ import { useFamilyTreeBridgeState, type FamilyTreeData, type FamilyTreePerson } 
 import { useBridgeQuery } from '../../../bridge/core/useBridgeQuery';
 import type { GetIncomeBreakdownResponse } from '../../../bridge-types.generated.ts';
 import type { Faction } from '../../../data/types';
-import { formatPersonActivity, formatTreatyType } from '../../../utils/displayLabels';
-import { treatyIconPath } from '../../../utils/iconMaps';
+import { formatPersonActivity } from '../../../utils/displayLabels';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { displayTextToPlain } from '../../../utils/displayText';
 import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../localization/WebUITextContext';
@@ -308,123 +307,6 @@ function SuccessionStrip({
   );
 }
 
-function DiplomacyOverview({ faction, onOpenFaction }: { faction: Faction; onOpenFaction: (id: string) => void }) {
-  const t = useWebUIText();
-  const wars = faction.wars ?? [];
-  const treaties = faction.treaties ?? [];
-  const treatyGroups = treaties.reduce<Array<{ key: string; type: string; label: string; treaties: typeof treaties }>>((groups, treaty) => {
-    const label = treaty.displayName || formatTreatyType(treaty.type);
-    const key = `${treaty.type}:${label}`;
-    const existing = groups.find(group => group.key === key);
-    if (existing) {
-      existing.treaties.push(treaty);
-      return groups;
-    }
-    groups.push({ key, type: treaty.type, label, treaties: [treaty] });
-    return groups;
-  }, []);
-  if (wars.length === 0 && treaties.length === 0) return null;
-
-  return (
-    <>
-      <SectionHeading variant="ornate" title={t('FactionOverview.Diplomacy')} />
-      <div className="fov-diplomacy-board">
-        {wars.length > 0 && (
-          <div className="fov-diplomacy-panel fov-diplomacy-panel--war">
-            <div className="fov-diplomacy-panel-title">{t('FactionOverview.AtWar')}</div>
-            <div className="fov-diplomacy-roundel-list">
-              {wars.map(war => (
-                <FactionTooltip
-                  key={war.id}
-                  factionId={war.id}
-                  factionName={war.name}
-                  data={{
-                    id: war.id,
-                    debugShortId: war.debugShortId,
-                    name: war.name,
-                    statusLabel: t('FactionOverview.AtWar'),
-                    statusColor: 'var(--red)',
-                  }}
-                  position="bottom"
-                  delay={150}
-                >
-                  <button
-                    type="button"
-                    className="fov-diplomacy-roundel-btn"
-                    aria-label={war.name}
-                    onMouseDown={() => war.id && onOpenFaction(war.id)}
-                  >
-                    <FactionRoundel
-                      factionId={war.id}
-                      colour={war.colour}
-                      secondaryColour={war.secondaryColour}
-                      cultureGroup={war.cultureGroup}
-                      emblem={war.emblem}
-                      name={war.name}
-                      size="sm"
-                    />
-                  </button>
-                </FactionTooltip>
-              ))}
-            </div>
-          </div>
-        )}
-        {treaties.length > 0 && (
-          <div className="fov-diplomacy-panel">
-            <div className="fov-diplomacy-panel-title">{t('FactionOverview.Treaties')}</div>
-            <div className="fov-diplomacy-treaty-groups">
-              {treatyGroups.map(group => (
-                <div key={group.key} className="fov-diplomacy-treaty-group">
-                  <div className="fov-diplomacy-treaty-label">
-                    <img className="fov-diplomacy-treaty-icon" src={treatyIconPath(group.type)} alt="" draggable={false} />
-                    <span>{group.label}</span>
-                  </div>
-                  <div className="fov-diplomacy-roundel-list">
-                    {group.treaties.map(treaty => (
-                      <FactionTooltip
-                        key={`${treaty.withFactionId}:${treaty.type}`}
-                        factionId={treaty.withFactionId}
-                        factionName={treaty.withFaction}
-                        data={{
-                          id: treaty.withFactionId,
-                          debugShortId: treaty.withFactionDebugShortId,
-                          name: treaty.withFaction,
-                          culture: treaty.withFactionCulture,
-                          statusLabel: group.label,
-                          statusColor: 'var(--gold)',
-                        }}
-                        position="bottom"
-                        delay={150}
-                      >
-                        <button
-                          type="button"
-                          className="fov-diplomacy-roundel-btn"
-                          aria-label={treaty.withFaction}
-                          onMouseDown={() => treaty.withFactionId && onOpenFaction(treaty.withFactionId)}
-                        >
-                          <FactionRoundel
-                            factionId={treaty.withFactionId}
-                            colour={treaty.withFactionColour}
-                            secondaryColour={treaty.withFactionSecondaryColour}
-                            cultureGroup={treaty.withFactionCultureGroup}
-                            emblem={treaty.withFactionEmblem}
-                            name={treaty.withFaction}
-                            size="sm"
-                          />
-                        </button>
-                      </FactionTooltip>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-
 function OverviewTab({
   faction,
   totals,
@@ -436,7 +318,6 @@ function OverviewTab({
   onStartEdict,
   onCancelEdict,
   onOpenCharacter,
-  onOpenFaction,
   onAssignHeir,
 }: {
   faction: Faction;
@@ -449,7 +330,6 @@ function OverviewTab({
   onStartEdict: (id: string) => void;
   onCancelEdict: () => void;
   onOpenCharacter: (id: string) => void;
-  onOpenFaction: (id: string) => void;
   onAssignHeir: () => void;
 }) {
   const t = useWebUIText();
@@ -555,8 +435,6 @@ function OverviewTab({
           </div>
         </div>
       </div>
-
-      <DiplomacyOverview faction={faction} onOpenFaction={onOpenFaction} />
     </div>
   );
 }
@@ -703,10 +581,6 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
     if (id) openSidebar('character', id);
   }, [openSidebar]);
 
-  const openFaction = useCallback((id: string) => {
-    if (id) openSidebar('diplomacy', id);
-  }, [openSidebar]);
-
   const startEdict = useCallback((id: string) => {
     interactions.start(id);
   }, [interactions]);
@@ -730,7 +604,6 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
             onStartEdict={startEdict}
             onCancelEdict={cancelEdict}
             onOpenCharacter={openCharacter}
-            onOpenFaction={openFaction}
             onAssignHeir={() => setHeirModalOpen(true)}
           />
         );

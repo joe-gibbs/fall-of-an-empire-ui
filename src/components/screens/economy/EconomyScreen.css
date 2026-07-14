@@ -6,6 +6,46 @@
   padding: 0 1.231rem 1.8rem 0;
 }
 
+.econ-content--settlements.styled-scroll-area > .styled-scroll-area__viewport {
+  display: flex;
+  flex-direction: column;
+  overflow-y: hidden;
+}
+
+.econ-content--settlements .econ-wrap,
+.econ-content--settlements .econ-section,
+.econ-content--settlements .econ-table-wrap,
+.econ-content--settlements .econ-table {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.econ-content--settlements .econ-wrap,
+.econ-content--settlements .econ-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.econ-content--settlements .econ-table-wrap {
+  overflow-y: hidden;
+}
+
+.econ-content--settlements .econ-table .data-table-body-scroll-frame {
+  flex: 1 1 auto;
+  height: auto;
+  max-height: none;
+}
+
+.econ-content--settlements .econ-table .data-table-body-scroll-frame > .styled-scroll-area__viewport {
+  position: absolute;
+  top: 0;
+  right: -1.385rem;
+  bottom: 0;
+  left: 0;
+  max-height: none;
+  margin-right: 0;
+}
+
 .screen--economy.screen {
   max-width: 60rem;
 }
@@ -1197,7 +1237,7 @@ button.econ-command-cost__row:focus-visible {
   width: 100%;
 }
 
-.econ-military-resource-tooltip {
+.econ-resource-summary-tooltip {
   display: flex;
   flex: 1 1 0;
   min-width: 0;
@@ -1835,13 +1875,20 @@ button.econ-command-cost__row:focus-visible {
   min-width: 0;
 }
 
+.econ-trade-btn-tooltip {
+  flex: 1 1 0;
+  min-width: 2.25rem;
+}
+
+.econ-trade-btn-tooltip + .econ-trade-btn-tooltip {
+  margin-left: 0.18rem;
+}
+
 .econ-trade-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
+  width: 100%;
   min-width: 2.25rem;
   min-height: 1.25rem;
   padding: 0 0.18rem;
@@ -1893,10 +1940,6 @@ button.econ-command-cost__row:focus-visible {
 .econ-trade-btn[disabled],
 .econ-rate-controls button[disabled] {
   opacity: 0.42;
-}
-
-.econ-trade-btn + .econ-trade-btn {
-  margin-left: 0.18rem;
 }
 
 .econ-governor {

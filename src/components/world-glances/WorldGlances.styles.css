@@ -1721,6 +1721,136 @@
   transition: opacity 80ms linear;
 }
 
+.glance--military-garrison {
+  width: 5.7273rem;
+  min-width: 5.7273rem;
+  height: 1.3636rem;
+  min-height: 1.3636rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0.1364rem 0.2273rem;
+  overflow: visible;
+  background-color: transparent;
+  background-image:
+    url('/assets/glance/glance-chip.png'),
+    url('/assets/glance/glance-metal-panel.png');
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 100% 100%, 100% 100%;
+  border-width: 0;
+  transform: translateY(calc(3rem + var(--garrison-stack-offset, 0rem)));
+  transform-origin: center center;
+  color: #f4efe2;
+}
+
+/* Once the location glance is no longer painted, move its attached tab onto the shared
+   projected centre. While the location remains visible or is fading, keep the tab below it. */
+.detail-location-faded .glance--military-garrison {
+  transform: translateY(var(--garrison-stack-offset, 0rem));
+}
+
+.glance--military-garrison > * {
+  margin-left: 0.1818rem;
+}
+
+.glance--military-garrison > :first-child,
+.glance--military-garrison > :nth-child(2),
+.glance--military-garrison > :nth-child(3) {
+  margin-left: 0;
+}
+
+.glance-garrison-kind {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  padding: 0.0909rem;
+  box-sizing: border-box;
+  background-color: var(--faction-colour);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 5.8182rem 5.8182rem;
+  border: 0.0455rem solid var(--relation-border-top);
+}
+
+.glance-garrison-kind img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.glance--military-garrison.glance--navy .glance-garrison-kind img {
+  width: 1.0909rem;
+  height: 1.0909rem;
+}
+
+.glance-garrison-tier {
+  position: relative;
+  z-index: 3;
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  object-fit: contain;
+}
+
+.glance-garrison-strength {
+  position: relative;
+  z-index: 3;
+  min-width: 2.1818rem;
+  flex: 1 1 auto;
+  font-family: var(--font-header);
+  font-size: 0.7273rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #f4efe2;
+  text-align: right;
+  white-space: nowrap;
+  text-shadow: 0 0.0455rem 0 rgba(0, 0, 0, 0.82);
+}
+
+.glance-garrison-selection,
+.glance-garrison-target {
+  position: absolute;
+  top: -0.0909rem;
+  right: -0.0909rem;
+  bottom: -0.0909rem;
+  left: -0.0909rem;
+  z-index: 2;
+  display: block;
+  margin-left: 0;
+  background-image: url('/assets/glance/glance-chip.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.world-glance-node:not(.is-selected):hover .glance--military-garrison .glance-garrison-selection,
+.world-glance-node:not(.is-selected).is-hovered .glance--military-garrison .glance-garrison-selection,
+.glance--military-garrison:not(.is-selected):hover .glance-garrison-selection {
+  opacity: 0.58;
+}
+
+.world-glance-node.is-selected .glance--military-garrison .glance-garrison-selection,
+.glance--military-garrison.is-selected .glance-garrison-selection {
+  opacity: 0.92;
+}
+
+.world-glance-node.is-targeted .glance--military-garrison .glance-garrison-target,
+.glance--military-garrison.is-targeted .glance-garrison-target {
+  opacity: 1;
+  animation: world-glance-target-glow-pulse 0.9s ease-in-out infinite;
+}
+
 .detail-flag .glance--military,
 .detail-name .glance--military {
   width: 4.1364rem;
@@ -4071,52 +4201,45 @@
   z-index: 4;
 }
 
-.gport-selected-indicator,
 .gport-target-indicator {
   position: absolute;
-  top: 0.1818rem;
-  left: 0.1818rem;
+  top: -0.7273rem;
+  left: -0.7273rem;
+  z-index: 3;
   display: block;
-  width: 3.9091rem;
-  height: 3.9091rem;
-  box-sizing: border-box;
-  border-radius: 0.5rem;
+  width: 5.7273rem;
+  height: 5.7273rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(244, 239, 226, 0.42) 0%,
+    rgba(214, 168, 58, 0.38) 38%,
+    rgba(214, 168, 58, 0.2) 55%,
+    rgba(214, 168, 58, 0) 74%
+  );
   opacity: 0;
   pointer-events: none;
-}
-
-.gport-selected-indicator {
-  z-index: 5;
-  border-width: 0.1364rem;
-  border-style: solid;
-  border-top-color: #f4efe2;
-  border-right-color: #d6a83a;
-  border-bottom-color: #d6a83a;
-  border-left-color: #d6a83a;
-}
-
-.gport-target-indicator {
-  z-index: 7;
-  border-width: 0.0455rem;
-  border-style: solid;
-  border-top-color: #f4efe2;
-  border-right-color: #d6a83a;
-  border-bottom-color: #d6a83a;
-  border-left-color: #d6a83a;
-}
-
-.world-glance-node.is-selected .glance--port .gport-selected-indicator,
-.glance--port.is-selected .gport-selected-indicator {
-  opacity: 1;
+  transform-origin: center center;
 }
 
 .world-glance-node.is-targeted .glance--port .gport-target-indicator,
 .glance--port.is-targeted .gport-target-indicator {
   opacity: 1;
-  animation-name: world-glance-target-roundel-pulse;
-  animation-duration: 0.9s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
+  transform: scale(1.08);
+  animation: world-glance-target-glow-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes world-glance-target-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(1.02);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }
 
 .gport-blockade-badge {

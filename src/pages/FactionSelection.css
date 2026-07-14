@@ -747,6 +747,7 @@
     overflow: hidden;
     border: 0.12rem solid transparent;
     --fs-roundel-radius: 50%;
+    --fs-roundel-mask: url('/assets/factions/borders/faction-border-round-mask.png');
     --fs-roundel-transform: none;
     --fs-roundel-symbol-transform: none;
     --fs-roundel-primary: #4a1530;
@@ -767,6 +768,10 @@
     border-top-right-radius: var(--fs-roundel-radius);
     border-bottom-right-radius: var(--fs-roundel-radius);
     border-bottom-left-radius: var(--fs-roundel-radius);
+    mask-image: var(--fs-roundel-mask);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: 100% 100%;
     transform: var(--fs-roundel-transform);
     transform-origin: center;
   }
@@ -796,6 +801,7 @@
 
   .fs-roundel--border-foederati {
     --fs-roundel-radius: 26%;
+    --fs-roundel-mask: url('/assets/factions/borders/faction-border-foederati-mask.png');
     --fs-roundel-transform: rotate(22.5deg) scale(0.94);
     --fs-roundel-symbol-transform: rotate(-22.5deg);
   }
@@ -806,6 +812,7 @@
 
   .fs-roundel--border-external {
     --fs-roundel-radius: 18%;
+    --fs-roundel-mask: url('/assets/factions/borders/faction-border-external-mask.png');
     --fs-roundel-transform: rotate(45deg) scale(0.88);
     --fs-roundel-symbol-transform: rotate(-45deg);
   }

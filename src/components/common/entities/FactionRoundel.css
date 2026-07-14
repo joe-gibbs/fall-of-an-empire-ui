@@ -12,8 +12,13 @@
   --roundel-ring-color: rgba(201, 168, 76, 0.6);
   --roundel-ring-hover-color: rgba(224, 200, 114, 0.8);
   --roundel-radius: 50%;
+  --roundel-mask: url('/assets/factions/borders/faction-border-round-mask.png');
   --roundel-transform: none;
   --roundel-symbol-transform: none;
+  mask-image: var(--roundel-mask);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
   transform: var(--roundel-transform);
   transform-origin: center;
 }
@@ -126,6 +131,7 @@
 
 .faction-roundel--border-foederati {
   --roundel-radius: 26%;
+  --roundel-mask: url('/assets/factions/borders/faction-border-foederati-mask.png');
   --roundel-transform: rotate(22.5deg) scale(0.94);
   --roundel-symbol-transform: rotate(-22.5deg);
   --roundel-ring-color: rgba(213, 142, 63, 0.94);
@@ -138,6 +144,7 @@
 
 .faction-roundel--border-external {
   --roundel-radius: 18%;
+  --roundel-mask: url('/assets/factions/borders/faction-border-external-mask.png');
   --roundel-transform: rotate(45deg) scale(0.88);
   --roundel-symbol-transform: rotate(-45deg);
   --roundel-ring-color: rgba(184, 194, 209, 0.84);

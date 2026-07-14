@@ -35,6 +35,8 @@ export interface PackedBattleFrameResponse {
   agentNumbers: number[];
   agentFlags: number[];
   agentTargetIndices: number[];
+  unitCounts: number[];
+  unitStrengths: number[];
 }
 
 export type BattleFrameLive = GetBattleFrameResponse | PackedBattleFrameResponse;
@@ -71,7 +73,9 @@ export function isPackedBattleFrame(value: unknown): value is PackedBattleFrameR
     && Array.isArray((value as Partial<PackedBattleFrameResponse>).formationIds)
     && Array.isArray((value as Partial<PackedBattleFrameResponse>).formationNumbers)
     && Array.isArray((value as Partial<PackedBattleFrameResponse>).agentCounts)
-    && Array.isArray((value as Partial<PackedBattleFrameResponse>).agentNumbers);
+    && Array.isArray((value as Partial<PackedBattleFrameResponse>).agentNumbers)
+    && Array.isArray((value as Partial<PackedBattleFrameResponse>).unitCounts)
+    && Array.isArray((value as Partial<PackedBattleFrameResponse>).unitStrengths);
 }
 
 export function battleFrameAgentCount(formation: BattleFormationLive): number {
@@ -149,6 +153,7 @@ function normaliseBattleData(data: GetBattleDataResponse): BattleDataLive {
     formations: arrayOrEmpty(data.formations).map(formation => ({
       ...formation,
       agents: [],
+      units: arrayOrEmpty(formation.units),
       waypoints: arrayOrEmpty(formation.waypoints),
       actions: arrayOrEmpty(formation.actions),
     })),
@@ -188,6 +193,7 @@ function applyBattleFrame(
   if (isPackedBattleFrame(frame)) {
     let waypointOffset = 0;
     let agentOffset = 0;
+    let unitOffset = 0;
     for (let formationIndex = 0; formationIndex < frame.formationIds.length; formationIndex += 1) {
       const formationId = frame.formationIds[formationIndex];
       const formation = existingFormations.get(formationId);
@@ -196,6 +202,9 @@ function applyBattleFrame(
       waypointOffset += waypointCount * 2;
       const currentAgentOffset = agentOffset;
       agentOffset += Math.max(frame.agentCounts[formationIndex] ?? 0, 0);
+      const unitCount = Math.max(frame.unitCounts[formationIndex] ?? 0, 0);
+      const currentUnitOffset = unitOffset;
+      unitOffset += unitCount;
       if (!formation) continue;
 
       const numberOffset = formationIndex * BATTLE_FRAME_FORMATION_NUMBER_STRIDE;
@@ -233,6 +242,12 @@ function applyBattleFrame(
         hasManualTarget: (flags & BATTLE_FRAME_FORMATION_MANUAL_TARGET_FLAG) !== 0,
         isRouting,
         isWithdrawing,
+        units: formation.units.map((unit, index) => ({
+          ...unit,
+          strength: index < unitCount
+            ? frame.unitStrengths[currentUnitOffset + index] ?? unit.strength
+            : unit.strength,
+        })),
         agents: [],
         liveFrame: frame,
         liveFrameFormationIndex: formationIndex,
@@ -274,6 +289,10 @@ function applyBattleFrame(
       hasManualTarget: next.hasManualTarget,
       isRouting,
       isWithdrawing,
+      units: formation.units.map((unit, index) => ({
+        ...unit,
+        strength: next.unitStrengths[index] ?? unit.strength,
+      })),
       agents: next.agents,
       isCommandable: formation.isPlayerControlled && !isRouting && !isWithdrawing,
       targetFormationId: next.targetFormationId,

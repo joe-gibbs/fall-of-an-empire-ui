@@ -162,6 +162,31 @@ const settingsTooltip = (title: string, bodyKey: string): TooltipContent => ({
   body: webUIText(bodyKey),
 });
 
+const SLIDER_MINOR_SNAP_INTERVAL = 5;
+const SLIDER_MAJOR_SNAP_INTERVAL = 10;
+const SLIDER_MINOR_SNAP_RADIUS = 0.75;
+const SLIDER_MAJOR_SNAP_RADIUS = 1.5;
+const SLIDER_MINOR_SNAP_STRENGTH = 0.2;
+const SLIDER_MAJOR_SNAP_STRENGTH = 0.35;
+
+function pullSliderValueTowards(value: number, target: number, strength: number): number {
+  return value + (target - value) * strength;
+}
+
+function applySliderMagnet(value: number, min: number, max: number): number {
+  const majorTarget = Math.round(value / SLIDER_MAJOR_SNAP_INTERVAL) * SLIDER_MAJOR_SNAP_INTERVAL;
+  if (majorTarget >= min && majorTarget <= max && Math.abs(value - majorTarget) <= SLIDER_MAJOR_SNAP_RADIUS) {
+    return pullSliderValueTowards(value, majorTarget, SLIDER_MAJOR_SNAP_STRENGTH);
+  }
+
+  const minorTarget = Math.round(value / SLIDER_MINOR_SNAP_INTERVAL) * SLIDER_MINOR_SNAP_INTERVAL;
+  if (minorTarget >= min && minorTarget <= max && Math.abs(value - minorTarget) <= SLIDER_MINOR_SNAP_RADIUS) {
+    return pullSliderValueTowards(value, minorTarget, SLIDER_MINOR_SNAP_STRENGTH);
+  }
+
+  return value;
+}
+
 function applyGameplayCssVariables(gameplay: ApplyPayload['gameplay']) {
   if (Number.isFinite(gameplay.uiScale) && gameplay.uiScale > 0) {
     document.documentElement.style.setProperty('--ui-scale', String(gameplay.uiScale));
@@ -200,6 +225,16 @@ function sanitiseAudioSettings(audio: ApplyPayload['audio']): ApplyPayload['audi
     effects: finiteNumber(audio.effects, DEFAULT_AUDIO_VALUES.effects),
     ui: finiteNumber(audio.ui, DEFAULT_AUDIO_VALUES.ui),
     ambience: finiteNumber(audio.ambience, DEFAULT_AUDIO_VALUES.ambience),
+  };
+}
+
+function makeLivePreviewPayload(next: ApplyPayload, applied: ApplyPayload): ApplyPayload {
+  return {
+    ...next,
+    gameplay: {
+      ...next.gameplay,
+      uiScale: applied.gameplay.uiScale,
+    },
   };
 }
 
@@ -354,7 +389,8 @@ const SettingsSlider: React.FC<{ label: string; desc?: string; tooltip?: Tooltip
   const applyFromClientX = (clientX: number, track: HTMLDivElement) => {
     const rect = track.getBoundingClientRect();
     const ratio = rect.width > 0 ? Math.min(1, Math.max(0, (clientX - rect.left) / rect.width)) : 0;
-    onChange(Math.round(min + (max - min) * ratio));
+    const rawValue = min + (max - min) * ratio;
+    onChange(Math.round(applySliderMagnet(rawValue, min, max)));
   };
   const handleTrackMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const track = e.currentTarget;
@@ -1043,51 +1079,54 @@ const SettingsPanel: React.FC = () => {
   // doesn't hammer the bridge with every slider tick.
   const applyLiveAudio = (patch: Partial<typeof audio>) => {
     const previousApplied = appliedSnapshot;
-    const next = sanitiseApplyPayload({ ...working, audio: { ...working.audio, ...patch } });
-    setWorking(next);
-    setAppliedSnapshot(next);
-    pendingLivePreview.current = next;
+    const nextWorking = sanitiseApplyPayload({ ...working, audio: { ...working.audio, ...patch } });
+    const nextApplied = makeLivePreviewPayload(nextWorking, previousApplied);
+    setWorking(nextWorking);
+    setAppliedSnapshot(nextApplied);
+    pendingLivePreview.current = nextApplied;
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
     livePreviewTimer.current = setTimeout(() => {
-      void apply(next).catch((error) => {
+      void apply(nextApplied).catch((error) => {
         acknowledgeBridgeFailure(error);
-        setAppliedSnapshot(current => (current === next ? previousApplied : current));
+        setAppliedSnapshot(current => (current === nextApplied ? previousApplied : current));
       }).finally(() => {
-        if (pendingLivePreview.current === next) pendingLivePreview.current = null;
+        if (pendingLivePreview.current === nextApplied) pendingLivePreview.current = null;
       });
     }, 150);
   };
   const applyLiveVideo = (patch: Partial<typeof video>) => {
     const previousApplied = appliedSnapshot;
-    const next = sanitiseApplyPayload({ ...working, video: { ...working.video, ...patch } });
-    setWorking(next);
-    setAppliedSnapshot(next);
-    pendingLivePreview.current = next;
+    const nextWorking = sanitiseApplyPayload({ ...working, video: { ...working.video, ...patch } });
+    const nextApplied = makeLivePreviewPayload(nextWorking, previousApplied);
+    setWorking(nextWorking);
+    setAppliedSnapshot(nextApplied);
+    pendingLivePreview.current = nextApplied;
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
     livePreviewTimer.current = setTimeout(() => {
-      void apply(next).catch((error) => {
+      void apply(nextApplied).catch((error) => {
         acknowledgeBridgeFailure(error);
-        setAppliedSnapshot(current => (current === next ? previousApplied : current));
+        setAppliedSnapshot(current => (current === nextApplied ? previousApplied : current));
       }).finally(() => {
-        if (pendingLivePreview.current === next) pendingLivePreview.current = null;
+        if (pendingLivePreview.current === nextApplied) pendingLivePreview.current = null;
       });
     }, 150);
   };
   const applyLiveGameplay = (patch: Partial<typeof gameplay>) => {
     const previousApplied = appliedSnapshot;
-    const next = sanitiseApplyPayload({ ...working, gameplay: { ...working.gameplay, ...patch } });
-    applyGameplayCssVariables(next.gameplay);
-    setWorking(next);
-    setAppliedSnapshot(next);
-    pendingLivePreview.current = next;
+    const nextWorking = sanitiseApplyPayload({ ...working, gameplay: { ...working.gameplay, ...patch } });
+    const nextApplied = makeLivePreviewPayload(nextWorking, previousApplied);
+    applyGameplayCssVariables(nextApplied.gameplay);
+    setWorking(nextWorking);
+    setAppliedSnapshot(nextApplied);
+    pendingLivePreview.current = nextApplied;
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
     livePreviewTimer.current = setTimeout(() => {
-      void apply(next).catch((error) => {
+      void apply(nextApplied).catch((error) => {
         acknowledgeBridgeFailure(error);
         applyGameplayCssVariables(previousApplied.gameplay);
-        setAppliedSnapshot(current => (current === next ? previousApplied : current));
+        setAppliedSnapshot(current => (current === nextApplied ? previousApplied : current));
       }).finally(() => {
-        if (pendingLivePreview.current === next) pendingLivePreview.current = null;
+        if (pendingLivePreview.current === nextApplied) pendingLivePreview.current = null;
       });
     }, 150);
   };
@@ -1219,7 +1258,7 @@ const SettingsPanel: React.FC = () => {
             <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.748.31')} value={toPercent(gameplay.cameraRotationSpeed)} max={200} suffix="%" onChange={v => setGameplay({ cameraRotationSpeed: fromPercent(v) })} />
             <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.749.32')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.749.10')} value={toPercent(gameplay.advisorFrequency)} max={200} suffix="%" onChange={v => setGameplay({ advisorFrequency: fromPercent(v) })} />
             <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.750.33')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.750.11')} value={toPercent(gameplay.cursorScale)} min={50} max={300} suffix="%" onChange={v => applyLiveGameplay({ cursorScale: fromPercent(v) })} />
-            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.751.34')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.751.12')} value={toPercent(gameplay.uiScale)} min={50} max={200} suffix="%" onChange={v => applyLiveGameplay({ uiScale: fromPercent(v) })} />
+            <SettingsSlider label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.751.34')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.751.12')} value={toPercent(gameplay.uiScale)} min={50} max={200} suffix="%" onChange={v => setGameplay({ uiScale: fromPercent(v) })} />
             <SettingsSlider label={webUIText('Settings.GlanceScale.Label')} desc={webUIText('Settings.GlanceScale.Description')} tooltip={settingsTooltip(webUIText('Settings.GlanceScale.Label'), 'Settings.Tooltip.GlanceScale.Body')} value={toPercent(gameplay.glanceScale)} min={50} max={200} suffix="%" onChange={v => setGameplay({ glanceScale: fromPercent(v) })} />
             <SettingsSlider label={webUIText('Settings.UIScrollSpeed.Label')} desc={webUIText('Settings.UIScrollSpeed.Description')} value={toPercent(gameplay.uiScrollSpeed)} min={25} max={300} suffix="%" onChange={v => applyLiveGameplay({ uiScrollSpeed: fromPercent(v) })} />
             <SettingsSlider label={webUIText('Settings.TooltipDelay.Label')} desc={webUIText('Settings.TooltipDelay.Description')} value={Math.round(gameplay.tooltipDelaySeconds * 1000)} min={0} max={2000} suffix="" display={webUIText('Settings.Milliseconds', { Value: Math.round(gameplay.tooltipDelaySeconds * 1000) })} onChange={v => applyLiveGameplay({ tooltipDelaySeconds: v / 1000 })} />

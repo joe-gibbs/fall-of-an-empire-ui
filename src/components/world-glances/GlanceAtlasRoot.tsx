@@ -111,6 +111,10 @@ function anchorPointFor(section: AtlasSection, detail: WorldGlanceDetailClass, r
   if (section === 'notification') {
     return '50% 100%';
   }
+  if (section === 'army' || section === 'navy') {
+    const anchor = (MILITARY_ATLAS_CAPACITY_REM * 0.5 * remPx).toFixed(2);
+    return `${anchor},${anchor}`;
+  }
   return 'center';
 }
 
@@ -118,15 +122,16 @@ function rasterScaleForSection(): number {
   return 1;
 }
 
-function reserveSizeForSection(section: AtlasSection, remPx: number, settlementBleedRem: number): string | undefined {
+function reserveSizeForSection(section: AtlasSection, remPx: number, settlementBleedRem: number, garrisonIndex: number): string | undefined {
   if (section === 'settlement') {
     const widthRem = SETTLEMENT_NAMED_ATLAS_CAPACITY_WIDTH_REM + settlementBleedRem * 2;
     const heightRem = SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM + settlementBleedRem * 2;
     return `${(widthRem * remPx).toFixed(2)},${(heightRem * remPx).toFixed(2)}`;
   }
   if (section === 'army' || section === 'navy') {
-    const extent = (MILITARY_ATLAS_CAPACITY_REM * remPx).toFixed(2);
-    return `${extent},${extent}`;
+    const width = (MILITARY_ATLAS_CAPACITY_REM * remPx).toFixed(2);
+    const heightRem = MILITARY_ATLAS_CAPACITY_REM + Math.max(0, garrisonIndex) * 1.3636;
+    return `${width},${(heightRem * remPx).toFixed(2)}`;
   }
   if (section === 'convoy') {
     const widthRem = CONVOY_ATLAS_LEFT_BLEED_REM + CONVOY_DETAILED_SIZE_REM + CONVOY_ATLAS_RIGHT_BLEED_REM;
@@ -157,7 +162,11 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
         : 0),
     )
     : 0;
-  const reserveSize = reserveSizeForSection(section, remPx, settlementBleedRem);
+  const militaryEntry = section === 'army' || section === 'navy'
+    ? entry as GetWorldGlancesResponse['armies'][number]
+    : null;
+  const garrisonIndex = militaryEntry?.garrisoned ? militaryEntry.garrisonIndex ?? 0 : 0;
+  const reserveSize = reserveSizeForSection(section, remPx, settlementBleedRem, garrisonIndex);
   const anchorAttributes = {
     'data-world-anchor': anchorKey,
     'data-world-anchor-point': anchorPointFor(section, detail, remPx, settlementBleedRem),
@@ -171,6 +180,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
     '--glance-atlas-raster-scale': rasterScale,
     '--settlement-atlas-bleed': `${settlementBleedRem}rem`,
     '--military-atlas-bleed': `${section === 'army' || section === 'navy' ? MILITARY_ATLAS_BLEED_REM : 0}rem`,
+    '--garrison-stack-offset': `${garrisonIndex * 1.3636}rem`,
     '--convoy-atlas-left-bleed': `${CONVOY_ATLAS_LEFT_BLEED_REM}rem`,
     '--convoy-atlas-right-bleed': `${CONVOY_ATLAS_RIGHT_BLEED_REM}rem`,
     '--convoy-atlas-top-bleed': `${CONVOY_ATLAS_TOP_BLEED_REM}rem`,
@@ -211,10 +221,12 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   if (selected) classes.push('is-selected');
   if (targeted) classes.push('is-targeted');
   if (hovered) classes.push('is-hovered');
+  if (militaryEntry?.garrisoned) classes.push('is-garrisoned');
+  const wrapperIsHitTarget = section !== 'army' && section !== 'navy';
 
   return (
     <div ref={setNode} className={classes.join(' ')} style={style} {...anchorAttributes}>
-      <div className="glance-tip world-glance-tip" data-world-anchor-hit-target>{content}</div>
+      <div className="glance-tip world-glance-tip" data-world-anchor-hit-target={wrapperIsHitTarget || undefined}>{content}</div>
     </div>
   );
 });

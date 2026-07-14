@@ -140,7 +140,6 @@ export default function PortGlance({ data }: PortGlanceProps) {
       >
         {levelLabel && <div className="gport-level-label" aria-hidden="true">{levelLabel}</div>}
         <div className="gport-badge" aria-hidden="true">
-          <span className="gport-selected-indicator" />
           <span className="gport-target-indicator" />
           <span className="gport-badge-core">
             <img className="gport-badge-layer gport-badge-layer--shadow" src={badgeShadow} alt="" />

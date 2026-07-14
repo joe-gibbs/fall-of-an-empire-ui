@@ -816,6 +816,8 @@ export const WEBUI_TEXT_SOURCE = {
   "Economy.AutoBuy": "Auto-buy",
   "Economy.Buy": "Buy",
   "Economy.Sell": "Sell",
+  "Economy.BuyTradeTooltip": "Buy 100 units. Hold Shift to buy 500 units.",
+  "Economy.SellTradeTooltip": "Sell 100 units. Hold Shift to sell 500 units.",
   "Economy.AutoSell": "Auto-sell",
   "Economy.AutoSellReserve": "Auto-sell reserve",
   "Economy.AutoSellReserveShort": "Reserve",

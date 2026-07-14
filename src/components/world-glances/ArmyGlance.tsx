@@ -242,10 +242,36 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   const visibleStatusCount = (statusIcon ? 1 : 0) + (data.attrition ? 1 : 0) + (embarkedArmyCount > 0 ? 1 : 0);
   const crownCount = 1 + visibleStatusCount;
 
+  if (data.garrisoned) {
+    return (
+      <MilitaryTooltip data={data} isNavy={isNavy}>
+        <div
+          className={`glance glance--military-garrison${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
+          data-world-anchor-hit-target
+          style={{
+            '--faction-colour': data.faction.colour,
+            '--relation-label-bg': relationLabelBackgroundColour(data.faction.relation),
+            '--relation-border-top': relationBorderTopColour(data.faction.relation),
+            '--garrison-stack-offset': `${(data.garrisonIndex ?? 0) * 1.3636}rem`,
+          } as CSSProperties}
+        >
+          <span className="glance-garrison-selection" aria-hidden="true" />
+          <span className="glance-garrison-target" aria-hidden="true" />
+          <span className="glance-garrison-kind" aria-hidden="true">
+            <img src={militaryTypeIcon} alt="" />
+          </span>
+          <img className="glance-garrison-tier" src={tierTexture(data.tier)} alt="" />
+          <span className="glance-garrison-strength">{formatNumber(data.strength)}</span>
+        </div>
+      </MilitaryTooltip>
+    );
+  }
+
   return (
     <MilitaryTooltip data={data} isNavy={isNavy}>
       <div
         className={`glance glance--military${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
+        data-world-anchor-hit-target
         style={{
           '--faction-colour': data.faction.colour,
           '--relation-bg': relationBackgroundColour(data.faction.relation),
@@ -277,14 +303,14 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
           {data.attrition && (
             <img className="glance-military-status glance-military-status--attrition glance-military-icon-socket" src={attritionIcon} alt="" />
           )}
-        </div>
-        <div className="glance-military-strength">{formatNumber(data.strength)}</div>
           {embarkedArmyCount > 0 && (
             <span className="glance-military-status glance-military-status--embarked glance-military-icon-socket" aria-label={webUIText('Military.EmbarkedArmies')}>
               <img className="glance-military-embarked-icon" src={FoaeCefUIAssetPath('/assets/icons/I_ArmiesQuickButton.png')} alt="" />
               <span className="glance-military-embarked-count">{formatNumber(embarkedArmyCount)}</span>
             </span>
           )}
+        </div>
+        <div className="glance-military-strength">{formatNumber(data.strength)}</div>
       </div>
     </MilitaryTooltip>
   );
