@@ -36,6 +36,14 @@ function cultureTooltipContent({ info, fallbackName, fallbackId }: Omit<CultureT
     },
   ] : [];
 
+  if (info?.group === 'Rephsian') {
+    lines.push({
+      label: webUIText('CultureTooltip.ForeignAdministrationLabel'),
+      value: webUIText('CultureTooltip.RephsianForeignAdministration'),
+      valueColor: 'var(--red)',
+    });
+  }
+
   return {
     header: (
       <div className="tt-identity-header">

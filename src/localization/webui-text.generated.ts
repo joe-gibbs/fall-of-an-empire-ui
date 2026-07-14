@@ -1451,6 +1451,8 @@ export const WEBUI_TEXT_SOURCE = {
   "Auto.ComponentsCommonCultureTooltip.36.1": "Levy system",
   "Auto.ComponentsCommonCultureTooltip.42.2": "Can raid settlements",
   "Auto.ComponentsCommonCultureTooltip.48.3": "Recruitable as auxiliaries",
+  "CultureTooltip.ForeignAdministrationLabel": "Foreign administration",
+  "CultureTooltip.RephsianForeignAdministration": "Each directly ruled settlement outside the Rephsian culture group adds up to +3 bureaucratic load.",
   "Auto.ComponentsCommonFactionTooltip.165.1": "Capital",
   "Auto.ComponentsCommonFactionTooltip.177.2": "Opinion",
   "Auto.ComponentsCommonFactionTooltip.186.3": "Compliance",
