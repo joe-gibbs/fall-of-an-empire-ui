@@ -2271,6 +2271,55 @@
   background-color: rgba(48, 14, 30, 0.88);
 }
 
+.mm-locked-mark {
+  position: absolute;
+  top: 0.4545rem;
+  right: 0.4545rem;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.2727rem;
+  padding: 0.1818rem 0.4545rem;
+  border-width: 0.0909rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.0909rem;
+  border-image-repeat: round;
+  background-color: rgba(9, 11, 14, 0.92);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
+  color: var(--gold);
+  font-family: var(--font-header);
+  font-size: 0.7273rem;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.mm-locked-mark img,
+.mm-text-btn--locked img {
+  width: 0.9091rem;
+  height: 0.9091rem;
+  object-fit: contain;
+}
+
+.mm-root--mockup-2 .mm-illust-btn--locked .mm-illust-img,
+.mm-root--mockup-2 .mm-illust-btn--locked:hover .mm-illust-img,
+.mm-root--mockup-2 .mm-illust-btn--locked:focus .mm-illust-img {
+  opacity: 0.48;
+}
+
+.mm-text-btn--locked {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3636rem;
+  color: var(--gold-dark);
+}
+
 .tt-bubble--main-menu-scenario {
   width: 22rem;
   min-width: 22rem;

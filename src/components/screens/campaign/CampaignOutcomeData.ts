@@ -1,7 +1,7 @@
 import type { PortraitLayerData } from '../../../data/types';
 
 import { webUIText } from '../../../localization/WebUITextContext';
-export type GameOverCause = 'extinction' | 'conquest' | 'subjugation' | 'rebellion' | 'governorship' | 'failed_rebellion';
+export type GameOverCause = 'extinction' | 'conquest' | 'subjugation' | 'rebellion' | 'governorship' | 'failed_rebellion' | 'demo_expired';
 export type CampaignOutcomeKind = 'victory' | 'defeat';
 
 export interface CampaignOutcomeRuler {
@@ -191,6 +191,12 @@ const DEFEAT_TEXT: Record<GameOverCause, Pick<ResolvedCampaignOutcomeSummary, 't
     get subtitle() { return webUIText('GameOver.GovernorshipLostSubtitle'); },
     get description() { return webUIText('GameOver.GovernorshipLostDescription'); },
     crestIcon: '/assets/icons/AssignGovernor.png',
+  },
+  demo_expired: {
+    get title() { return webUIText('GameOver.DemoExpiredHeader'); },
+    get subtitle() { return webUIText('GameOver.DemoExpiredSubtitle'); },
+    get description() { return webUIText('GameOver.DemoExpiredDescription'); },
+    crestIcon: '/assets/icons/I_Fame.png',
   },
 };
 

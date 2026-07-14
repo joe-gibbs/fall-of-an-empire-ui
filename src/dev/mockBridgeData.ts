@@ -16,7 +16,7 @@ interface MockHintSeed {
 
 export type MockAppMode = 'mainmenu' | 'ingame' | 'loading';
 export type MockOutcome = 'victory' | 'defeat';
-export type MockDefeatCause = 'extinction' | 'conquest' | 'subjugation' | 'rebellion' | 'governorship';
+export type MockDefeatCause = 'extinction' | 'conquest' | 'subjugation' | 'rebellion' | 'governorship' | 'demo_expired';
 type MockEventKind = 'court' | 'recall' | 'important';
 
 export interface MockBridgeEventEmitter {
@@ -4610,10 +4610,16 @@ function mockDefeatOutcomeSummary(cause: MockDefeatCause) {
       description: 'On 17 Summer 784, Valen Arcastus was removed as governor of the Rephsian Empire. The province passed into another governor\'s hands.',
       crestIcon: '/assets/icons/AssignGovernor.png',
     },
+    demo_expired: {
+      title: 'Twenty Years Have Passed',
+      subtitle: 'Your demo campaign has ended',
+      description: 'Twenty years have passed. Your demo campaign ended on 4 Vindemis 804. Continue your reign in the full game.',
+      crestIcon: '/assets/icons/I_Fame.png',
+    },
   };
 
   return {
-    kicker: 'Defeat',
+    kicker: cause === 'demo_expired' ? 'Demo Complete' : 'Defeat',
     cause,
     factionName: 'Rephsian Empire',
     endDate: '17 Summer 784',
@@ -4621,7 +4627,11 @@ function mockDefeatOutcomeSummary(cause: MockDefeatCause) {
     totalBattlesWon: 31,
     totalBattlesLost: 18,
     history: mockOutcomeHistory(true),
-    headerImage: cause === 'rebellion' ? '/assets/events/usurper-crowned.png' : '/assets/events/sacked-city.png',
+    headerImage: cause === 'rebellion'
+      ? '/assets/events/usurper-crowned.png'
+      : cause === 'demo_expired'
+        ? '/assets/events/throne-room.png'
+        : '/assets/events/sacked-city.png',
     primaryAction: 'Load Save',
     secondaryAction: 'Main Menu',
     ...causes[cause],
@@ -5071,7 +5081,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.get_game_state':
         return { day: 17, month: 6, year: 742, gameDay: state.gameDay, dateText: '17/6/742', season: 'Summer', isPaused: state.isPaused, speedLevel: state.speedLevel, debugMode: state.debugMode, climateTrend: state.climateTrend, climateDescription: state.climateDescription, saveSerial: state.saveSerial } satisfies BridgeResponse<'game.get_game_state'>;
       case 'game.get_game_version':
-        return { version: 'Mock UI Dev' } satisfies BridgeResponse<'game.get_game_version'>;
+        return { version: 'Mock UI Dev', isDemo: false } satisfies BridgeResponse<'game.get_game_version'>;
       case 'game.get_resources':
         return { gold: state.playerGold, goldDelta: state.provinceMode ? 32 : 7670, population: state.provinceMode ? provincePlayerFaction.population : 272390, populationDelta: state.provinceMode ? 24 : 180 } satisfies BridgeResponse<'game.get_resources'>;
       case 'game.get_bureaucratic_throughput':
@@ -5925,8 +5935,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         ] } satisfies BridgeResponse<'game.list_saves'>;
       case 'game.list_new_game_maps':
         return { maps: [
-          { id: 'Campaign', displayName: 'Grand Campaign', menuKicker: 'Year 784 - Fractured Dominion', menuDescription: GRAND_CAMPAIGN_MENU_DESCRIPTION, menuImageUrl: '/assets/events/foreign-invasion.png', menuOrder: 0, requiresFactionSelection: true },
-          { id: 'Tutorial', displayName: 'Tutorial', menuKicker: 'Guided Start', menuDescription: TUTORIAL_MENU_DESCRIPTION, menuImageUrl: '/assets/events/military-chain-of-command.png', menuOrder: 10, requiresFactionSelection: false },
+          { id: 'Campaign', displayName: 'Grand Campaign', menuKicker: 'Year 784 - Fractured Dominion', menuDescription: GRAND_CAMPAIGN_MENU_DESCRIPTION, menuImageUrl: '/assets/events/foreign-invasion.png', menuOrder: 0, requiresFactionSelection: true, isLocked: false },
+          { id: 'Tutorial', displayName: 'Tutorial', menuKicker: 'Guided Start', menuDescription: TUTORIAL_MENU_DESCRIPTION, menuImageUrl: '/assets/events/military-chain-of-command.png', menuOrder: 10, requiresFactionSelection: false, isLocked: false },
         ] } satisfies BridgeResponse<'game.list_new_game_maps'>;
       case 'game.get_new_game_map_faction_selection':
         return {

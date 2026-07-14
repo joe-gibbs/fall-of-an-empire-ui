@@ -261,7 +261,7 @@ export default function GameUIRoot() {
       beginUIPerfInteraction('screen:game-over');
       const data = (event as CustomEvent).detail as CampaignOutcomeSummary & { cause?: string } | undefined;
       const cause = data?.cause;
-      if (cause === 'extinction' || cause === 'conquest' || cause === 'subjugation' || cause === 'rebellion' || cause === 'governorship' || cause === 'failed_rebellion') {
+      if (cause === 'extinction' || cause === 'conquest' || cause === 'subjugation' || cause === 'rebellion' || cause === 'governorship' || cause === 'failed_rebellion' || cause === 'demo_expired') {
         setGameOverCause(cause);
       } else {
         setGameOverCause('rebellion');

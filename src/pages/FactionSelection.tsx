@@ -58,6 +58,8 @@ interface FactionSelectionProps {
   };
   closing?: boolean;
   onClose: () => void;
+  showPurchaseForLocked?: boolean;
+  onPurchaseFullGame?: () => void;
   onConfirm: (faction: { baseName: string; displayName: string }) => void;
 }
 
@@ -1632,6 +1634,8 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
   scenario,
   closing = false,
   onClose,
+  showPurchaseForLocked = false,
+  onPurchaseFullGame,
   onConfirm,
 }) => {
   const t = useWebUIText();
@@ -1641,7 +1645,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '',
   );
   const [search, setSearch] = useState('');
-  const [showForeign, setShowForeign] = useState(false);
+  const [showForeign, setShowForeign] = useState(showPurchaseForLocked);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [resetForMapId, setResetForMapId] = useState(mapId);
 
@@ -1653,7 +1657,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     setData(initialSelectionData);
     setLoadError(null);
     setSearch('');
-    setShowForeign(false);
+    setShowForeign(showPurchaseForLocked);
     setSelectedBaseName(initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '');
   }
 
@@ -2164,21 +2168,31 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
           <div className="fs-detail-footer">
             <button
               type="button"
-              className={`fs-begin-btn${selected.playable ? '' : ' fs-begin-btn--disabled'}`}
-              disabled={!selected.playable}
-              onClick={() =>
-                onConfirm({ baseName: selected.baseName, displayName: selected.displayName })
-              }
+              className={`fs-begin-btn${selected.playable || showPurchaseForLocked ? '' : ' fs-begin-btn--disabled'}`}
+              disabled={!selected.playable && !showPurchaseForLocked}
+              onClick={() => {
+                if (selected.playable) {
+                  onConfirm({ baseName: selected.baseName, displayName: selected.displayName });
+                } else {
+                  onPurchaseFullGame?.();
+                }
+              }}
             >
               <span className="fs-begin-btn-main">
                 {!selected.playable && (
                   <img src="/assets/icons/I_Locked.png" alt="" className="fs-begin-btn-lock-icon" draggable={false} />
                 )}
-                <span>{selected.playable ? t('MainMenu.BeginCampaign') : t('MainMenu.Locked')}</span>
+                <span>{selected.playable
+                  ? t('MainMenu.BeginCampaign')
+                  : showPurchaseForLocked
+                    ? t('Demo.BuyFullGame')
+                    : t('MainMenu.Locked')}</span>
               </span>
               <span className="fs-begin-btn-sub">
                 {selected.playable
                   ? t('MainMenu.AsFaction', { Faction: selected.displayName })
+                  : showPurchaseForLocked
+                    ? t('Demo.PlayFaction', { Faction: selected.displayName })
                   : t('MainMenu.FactionPlayableLater')}
               </span>
             </button>

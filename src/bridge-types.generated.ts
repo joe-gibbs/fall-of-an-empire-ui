@@ -2415,6 +2415,7 @@ export interface GetGameStateResponse {
 
 export interface GetGameVersionResponse {
   version: string;
+  isDemo: boolean;
 }
 
 export interface GetGeographicSummaryRequest {
@@ -4703,6 +4704,7 @@ export interface NewGameMapDto {
   menuImageUrl: string;
   menuOrder: number;
   requiresFactionSelection: boolean;
+  isLocked: boolean;
 }
 
 export interface ListNewGameMapsResponse {

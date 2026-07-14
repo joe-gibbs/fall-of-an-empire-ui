@@ -9,6 +9,7 @@ import LanguageSelector from '../components/mainmenu/LanguageSelector';
 import Tooltip from '../components/common/tooltips/Tooltip';
 import GameButton from '../components/common/buttons/GameButton';
 import DropdownSelect, { type DropdownSelectOption } from '../components/common/forms/DropdownSelect';
+import ConfirmDialog from '../components/common/forms/ConfirmDialog';
 import ContinueHeroCard from './main-menu/ContinueHeroCard';
 import CreditsRoll from './main-menu/CreditsRoll';
 import './main-menu/MainMenu.css';
@@ -31,6 +32,7 @@ interface NewGameMapEntry {
   menuImageUrl: string;
   menuOrder: number;
   requiresFactionSelection: boolean;
+  isLocked: boolean;
 }
 
 const LOAD_GAME_CARD_IMAGE = '/assets/events/library-archive.png';
@@ -56,6 +58,13 @@ interface MainMenuIllustratedButtonData {
   kicker?: string;
   description?: string;
   img?: string;
+  locked?: boolean;
+  onClick: () => void;
+}
+
+interface MainMenuTextItem {
+  label: string;
+  locked?: boolean;
   onClick: () => void;
 }
 
@@ -79,8 +88,10 @@ const MainMenu: React.FC = () => {
   const [closing, setClosing] = useState(false);
   const [latestSave, setLatestSave] = useState<SaveEntry | null>(null);
   const [version, setVersion] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState<boolean | null>(null);
   const [steamAchievementsAvailable, setSteamAchievementsAvailable] = useState<boolean | null>(null);
   const [showLoad, setShowLoad] = useState(false);
+  const [showFullGamePrompt, setShowFullGamePrompt] = useState(false);
   const [newGameMaps, setNewGameMaps] = useState<NewGameMapEntry[]>([]);
   const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
   const [menuError, setMenuError] = useState<string | null>(null);
@@ -119,7 +130,7 @@ const MainMenu: React.FC = () => {
     subscribeWorkshopItem,
     unsubscribeWorkshopItem,
     downloadWorkshopItem,
-  } = useModsBridge(view === 'mods');
+  } = useModsBridge(view === 'mods' && isDemo === false);
 
   const modsNeedRestart = modChangesRequireRestart || workshopChangesRequireRestart;
   const activeModsPanelView: ModsPanelView = steamWorkshopAvailable ? modsPanelView : 'installed';
@@ -196,9 +207,15 @@ const MainMenu: React.FC = () => {
     (async () => {
       try {
         const res = await bridgeCall('game.get_game_version');
-        if (!cancelled) setVersion(res.version ?? null);
+        if (!cancelled) {
+          setVersion(res.version ?? null);
+          setIsDemo(res.isDemo);
+        }
       } catch {
-        if (!cancelled) setVersion(null);
+        if (!cancelled) {
+          setVersion(null);
+          setIsDemo(null);
+        }
       }
     })();
     return () => {
@@ -234,7 +251,7 @@ const MainMenu: React.FC = () => {
           const maps = res.maps ?? [];
           setNewGameMaps(maps);
           maps
-            .filter((map) => map.requiresFactionSelection)
+            .filter((map) => map.requiresFactionSelection && !map.isLocked)
             .forEach((map) => {
               void preloadFactionSelection(map.id).catch((error) => {
                 console.error('[MainMenu] preloading faction selection failed', error);
@@ -276,6 +293,11 @@ const MainMenu: React.FC = () => {
   };
 
   const handleSelectScenarioMap = (map: NewGameMapEntry) => {
+    if (map.isLocked) {
+      setShowFullGamePrompt(true);
+      return;
+    }
+
     if (map.requiresFactionSelection) {
       setSelectedNewGameMap(map);
       void preloadFactionSelection(map.id).catch((error) => {
@@ -521,6 +543,10 @@ const MainMenu: React.FC = () => {
         </div>
       </div>
     );
+  };
+
+  const handlePurchaseFullGame = async () => {
+    await openExternalLink('full_game');
   };
 
   const renderMods = () => (
@@ -796,6 +822,7 @@ const MainMenu: React.FC = () => {
       kicker: map.menuKicker,
       description: map.menuDescription,
       img: map.menuImageUrl,
+      locked: map.isLocked,
       onClick: () => handleSelectScenarioMap(map),
     }));
   const scenarioStripWidth = `${
@@ -817,12 +844,18 @@ const MainMenu: React.FC = () => {
     { kind: 'scenarios', key: 'scenarios', buttons: scenarioButtons },
   );
 
-  const textMenuItems = [
+  const textMenuItems: MainMenuTextItem[] = [
     { label: webUIText('Auto.Prop.PagesMainMenu.436.2'), onClick: () => openSubView('settings') },
     ...(steamAchievementsAvailable === false
       ? [{ label: webUIText('Achievements.Title'), onClick: () => openSubView('achievements') }]
       : []),
-    { label: webUIText('Auto.Prop.PagesMainMenu.437.3'), onClick: () => openSubView('mods') },
+    ...(isDemo !== null
+      ? [{
+          label: webUIText('Auto.Prop.PagesMainMenu.437.3'),
+          locked: isDemo,
+          onClick: () => isDemo ? setShowFullGamePrompt(true) : openSubView('mods'),
+        }]
+      : []),
     { label: webUIText('Auto.Prop.PagesMainMenu.438.4'), onClick: () => openSubView('encyclopedia') },
     { label: webUIText('Auto.Prop.PagesMainMenu.439.5'), onClick: () => openSubView('credits') },
     { label: webUIText('Auto.Prop.PagesMainMenu.440.6'), onClick: handleQuit },
@@ -837,7 +870,7 @@ const MainMenu: React.FC = () => {
     const cardImage = btn.img;
     const scenarioButton = (
       <button
-        className={`mm-illust-btn mm-illust-btn--${btn.variant}`}
+        className={`mm-illust-btn mm-illust-btn--${btn.variant}${btn.locked ? ' mm-illust-btn--locked' : ''}`}
         onPointerDown={(event) => {
           if (event.button !== 0) {
             return;
@@ -856,6 +889,12 @@ const MainMenu: React.FC = () => {
       >
         {cardImage && <img src={cardImage} alt="" className="mm-illust-img" />}
         <div className="mm-illust-scrim" />
+        {btn.locked && (
+          <span className="mm-locked-mark">
+            <img src="/assets/icons/I_Locked.png" alt="" draggable={false} />
+            <span>{webUIText('MainMenu.Locked')}</span>
+          </span>
+        )}
         <div className="mm-illust-copy">
           {showKicker && <span className="mm-illust-kicker">{btn.kicker}</span>}
           <span className="mm-illust-label">{btn.label}</span>
@@ -866,7 +905,10 @@ const MainMenu: React.FC = () => {
     return (
       <Tooltip
         key={key}
-        content={{ title: btn.label, body: btn.description }}
+        content={{
+          title: btn.label,
+          body: btn.locked ? webUIText('Demo.CampaignLocked') : btn.description,
+        }}
         position="top"
         delay={450}
         bubbleClassName="tt-bubble--main-menu-scenario"
@@ -935,9 +977,10 @@ const MainMenu: React.FC = () => {
             {textMenuItems.map(item => (
               <button
                 key={item.label}
-                className="mm-text-btn"
+                className={`mm-text-btn${item.locked ? ' mm-text-btn--locked' : ''}`}
                 onClick={item.onClick}
               >
+                {item.locked && <img src="/assets/icons/I_Locked.png" alt="" draggable={false} />}
                 {item.label}
               </button>
             ))}
@@ -999,6 +1042,15 @@ const MainMenu: React.FC = () => {
       {view === 'encyclopedia' && renderEncyclopedia()}
       {view === 'achievements' && renderAchievements()}
       <LoadGameModal visible={showLoad} onClosed={() => setShowLoad(false)} />
+      <ConfirmDialog
+        visible={showFullGamePrompt}
+        title={webUIText('Demo.UnlockTitle')}
+        message={webUIText('Demo.UnlockDescription')}
+        confirmText={webUIText('Demo.BuyFullGame')}
+        cancelText={webUIText('Demo.NotNow')}
+        onConfirm={() => { void handlePurchaseFullGame(); }}
+        onClosed={() => setShowFullGamePrompt(false)}
+      />
       {view === 'newgame' && activeSelectedNewGameMap && (
         <FactionSelection
           mapId={activeSelectedNewGameMap.id}
@@ -1009,6 +1061,8 @@ const MainMenu: React.FC = () => {
             displayName: activeSelectedNewGameMap.displayName,
           }}
           onClose={goBack}
+          showPurchaseForLocked={isDemo === true}
+          onPurchaseFullGame={() => setShowFullGamePrompt(true)}
           onConfirm={(faction) => { void handleStartScenarioMap(activeSelectedNewGameMap.id, faction.baseName); }}
         />
       )}

@@ -99,7 +99,7 @@ function parseOutcome(params: URLSearchParams): MockOutcome | undefined {
 }
 
 function parseDefeatCause(value: string | null): MockDefeatCause | undefined {
-  if (value === 'extinction' || value === 'conquest' || value === 'subjugation' || value === 'rebellion' || value === 'governorship') return value;
+  if (value === 'extinction' || value === 'conquest' || value === 'subjugation' || value === 'rebellion' || value === 'governorship' || value === 'demo_expired') return value;
   return undefined;
 }
 
