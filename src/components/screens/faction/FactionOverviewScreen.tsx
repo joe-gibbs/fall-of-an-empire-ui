@@ -684,7 +684,7 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
   const factionState = useFactionBridgeState(playerFactionId, 'overview');
   const faction = factionState.faction;
   const income = useIncomeBreakdown();
-  const familyTreeState = useFamilyTreeBridgeState(undefined, 'lineage');
+  const familyTreeState = useFamilyTreeBridgeState(undefined, activeTab === 'rulers' ? 'history' : 'succession');
   const familyTree = familyTreeState.familyTree;
   const interactions = useFactionInteractionsBridge(playerFactionId);
   const { openSidebar } = useGameActions();

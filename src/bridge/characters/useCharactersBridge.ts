@@ -125,7 +125,7 @@ export interface FamilyTreeData {
 
 const familyTreeCache = new Map<string, FamilyTreeData>();
 const DEFAULT_FAMILY_TREE_KEY = '';
-export type FamilyTreeScope = 'lineage' | 'patronage';
+export type FamilyTreeScope = 'lineage' | 'patronage' | 'succession' | 'history';
 export type CharacterListScope = 'faction' | 'realm';
 export type CharacterListRequestScope = CharacterListScope | 'default';
 
@@ -261,7 +261,9 @@ function familyTreeCacheKey(personId: string | null | undefined, scope: FamilyTr
 function normaliseFamilyTree(value: Omit<FamilyTreeData, 'scope'> & { scope: string }, scope: FamilyTreeScope): FamilyTreeData {
   return {
     ...value,
-    scope: value.scope === 'patronage' ? 'patronage' : scope,
+    scope: value.scope === 'patronage' || value.scope === 'succession' || value.scope === 'history'
+      ? value.scope
+      : scope,
   };
 }
 

@@ -5216,9 +5216,19 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         ));
       case 'game.get_family_tree': {
         const focusPersonId = payloadString(payload, 'personId', MOCK_IDS.character) || MOCK_IDS.character;
-        const scope = payloadString(payload, 'scope', 'lineage') === 'patronage' ? 'patronage' : 'lineage';
+        const requestedScope = payloadString(payload, 'scope', 'lineage');
+        const scope = requestedScope === 'patronage' || requestedScope === 'succession' || requestedScope === 'history'
+          ? requestedScope
+          : 'lineage';
         const familyNodeIds = MOCK_FAMILY_PERSON_IDS.filter(id => id !== MOCK_IDS.governor);
         if (!familyNodeIds.includes(focusPersonId)) familyNodeIds.push(focusPersonId);
+        const responseNodeIds = scope === 'lineage'
+          ? familyNodeIds
+          : scope === 'succession'
+            ? [MOCK_IDS.character, MOCK_IDS.heir]
+            : scope === 'history'
+              ? [MOCK_IDS.character, 'mock-person-previous-ruler']
+              : [];
         const patronageNodeIds = [
           MOCK_IDS.character,
           MOCK_IDS.governor,
@@ -5240,7 +5250,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           heirId: MOCK_IDS.heir,
           designatedHeirId: MOCK_IDS.heir,
           patronageRootId: MOCK_IDS.character,
-          nodes: scope === 'lineage' ? familyNodeIds.map(id => familyTreePerson(id, focusPersonId)) : [],
+          nodes: responseNodeIds.map(id => familyTreePerson(id, focusPersonId)),
           edges: scope === 'lineage' ? [
             { fromId: 'mock-person-previous-ruler', toId: MOCK_IDS.character, type: 'parent' },
             { fromId: 'mock-person-previous-ruler', toId: 'mock-person-brother', type: 'parent' },
@@ -5263,14 +5273,14 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             { patronId: 'mock-person-tribune', clientId: 'mock-person-advocate', linkHealth: 0.69, favourBalance: 0, daysSinceLastInteraction: 32, isInherited: false },
           ] : [],
           groups: {
-            parents: ['mock-person-previous-ruler'],
-            spouses: ['mock-person-spouse'],
-            children: [MOCK_IDS.heir, 'mock-person-daughter'],
-            siblings: ['mock-person-brother'],
-            grandchildren: ['mock-person-grandchild'],
-            succession: [MOCK_IDS.heir, 'mock-person-daughter', 'mock-person-grandchild'],
-            previousRulers: ['mock-person-previous-ruler'],
-            otherRelatives: ['mock-person-brother', 'mock-person-spouse', 'mock-person-daughter'],
+            parents: scope === 'lineage' ? ['mock-person-previous-ruler'] : [],
+            spouses: scope === 'lineage' ? ['mock-person-spouse'] : [],
+            children: scope === 'lineage' ? [MOCK_IDS.heir, 'mock-person-daughter'] : [],
+            siblings: scope === 'lineage' ? ['mock-person-brother'] : [],
+            grandchildren: scope === 'lineage' ? ['mock-person-grandchild'] : [],
+            succession: scope === 'lineage' || scope === 'succession' ? [MOCK_IDS.heir] : [],
+            previousRulers: scope === 'lineage' || scope === 'history' ? ['mock-person-previous-ruler'] : [],
+            otherRelatives: [],
           },
         } satisfies BridgeResponse<'game.get_family_tree'>;
       }
