@@ -411,7 +411,10 @@ class WorldAnchorHostController {
     this.pruneReleasedGhosts();
 
     // Measure and pack, highest priority first so overflow only ever drops elements their
-    // consumer marked as least recently relevant.
+    // consumer marked as least recently relevant. Within a priority tier, pack tallest first:
+    // shelf rows waste the height difference between their tallest and shortest cell, and the
+    // wasted rows were enough to overflow the region on full-map zoom-outs (evicting still
+    // visible plates for the several hundred milliseconds a readmission round-trip takes).
     const pending: { element: HTMLElement; state: AnchoredElementState; width: number; height: number; priority: number }[] = [];
     for (const [element, state] of this.elements) {
       if (!isPackingDemanded(element)) {
@@ -430,7 +433,7 @@ class WorldAnchorHostController {
       }
       pending.push({ element, state, width, height, priority: parsePriority(element) });
     }
-    pending.sort((a, b) => b.priority - a.priority);
+    pending.sort((a, b) => (b.priority - a.priority) || (b.height - a.height) || (b.width - a.width));
 
     let cursorX = CELL_GAP;
     let cursorY = originY + CELL_GAP;

@@ -354,7 +354,10 @@ export default function GlanceAtlasRoot() {
           if (atlasVisible) {
             nextVisibleKeys.add(key);
             const node = plateNodesRef.current.get(key);
-            if (node && !previousVisibleKeys.has(key)) {
+            if (node) {
+              // Restamp every visible frame, not just on the hidden->visible transition: atlas
+              // overflow evicts lowest priority first, and a plate the player is currently seeing
+              // must outrank every plate that left the screen earlier in the zoom.
               node.dataset.worldAnchorPriority = String(now);
               if (node.dataset.worldAnchorDemand !== 'visible') {
                 node.dataset.worldAnchorDemand = 'visible';
