@@ -303,7 +303,7 @@ export function buildInteractionTooltip(interaction: PersonInteractionView, targ
         colour: 'var(--text-muted)',
       };
       lines.push({
-        label: reason.reason,
+        label: <span className="char-interaction-requirement-text">{reason.reason}</span>,
         labelColor: meta.colour,
         value: meta.label,
         valueColor: meta.colour,

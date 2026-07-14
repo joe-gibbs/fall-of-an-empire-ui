@@ -1620,3 +1620,6 @@
 .char-luxury-row > * + * {
   margin-left: 0.3rem;
 }
+.char-interaction-requirement-text {
+  white-space: pre-line;
+}
