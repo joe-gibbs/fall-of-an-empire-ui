@@ -1,0 +1,268 @@
+/*
+ * Authored chrome shared by older feature styles.
+ * Component styles own layout; this final theme layer owns visible surfaces.
+ */
+
+/* Large framed surfaces. */
+.fs-faction-group,
+.econ-detail-panel,
+.fov-overlord,
+.fov-metric-panel,
+.gfov-empire-finance-summary,
+.gfov-appointment-progress-panel,
+.pns-option-group,
+.diplo-selection-panel {
+  border-width: 0.231rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image: url('/assets/gold-frame.png') 6 / 0.231rem / 0 round;
+  border-radius: 0;
+  background-color: #151b20;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+}
+
+/* Compact contained surfaces and list objects. */
+.fs-toggle-box,
+.fs-faction-row,
+.battle-aar-unit-card,
+.battle-aar-unit-card-portrait-frame,
+.vc-tier-summary,
+.vc-condition,
+.ftt-treaty-row,
+.cam-consequence-row,
+.cam-consequence-card,
+.acd-row,
+.acd-empty,
+.fii-selected-faction__main,
+.pig-option__stat,
+.pig-list__empty,
+.rcm-option,
+.battle-empty,
+.pns-participant-row,
+.pns-draft-chip,
+.pns-term-row,
+.pns-replacement-row,
+.pns-resource-select-button,
+.pns-resource-select-option,
+.pns-empty-state,
+.pns-outcome,
+.econ-summary-row,
+.enc-front-card,
+.enc-unit-card,
+.gfov-court-action-empty,
+.gfov-empire-stat,
+.gfov-appointment-empty,
+.gfov-appointment-role-status-cell,
+.gfov-court-current-stats > div,
+.gfov-court-summary-list .info-row,
+.gfov-transition-stat-grid div,
+.chart-template-status,
+.chart-template-unit-row,
+.chart-template-stat,
+.chart-template-empty-inline,
+.chart-template-battle-group,
+.chart-template-battle-row,
+.chart-template-catalogue-row,
+.chart-empire-stats-mod,
+.chart-detail-rows,
+.chart-detail-auto-row,
+.chart-detail-cmd-row,
+.chart-template-total-row,
+.diplo-agent-portrait-slot,
+.diplo-successor-slot,
+.tpl-status,
+.tpl-core-badge,
+.tpl-picker-row-icon,
+.tpl-picker-empty,
+.tpl-battle-group,
+.tpl-battle-group-add-unit,
+.siege-summary-item,
+.siege-force-row,
+.siege-empty-row,
+.bld-queue-card-progress-block,
+.glance-expanded-chip,
+.glance-badge-tier,
+.glance-badge-icon,
+.gconv-cargo-item,
+.gport-blockade-badge,
+.gconv-faction-label,
+.gconv-cargo-strip,
+.battle-side-tier,
+.battle-participant-tier,
+.icon-button-marker,
+.icon-button-badge,
+.portrait-badge,
+.asm-stat-chip,
+.cam-stat-chip,
+.cam-person-selection-note,
+.bam-stat-chip,
+.battle-damage-chip,
+.pns-resource-label--static,
+.pns-option-group-count,
+.pns-amount-control input,
+.pbs-subject-stat,
+.fov-stat,
+.tts-node-card,
+.tts-node-status-mark,
+.tts-stat-box,
+.tpl-picker-row-count,
+.bld-cat-tab-count,
+.sidebar-tab-count {
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image: url('/assets/modifier-frame.png') 3 / 0.154rem / 0 round;
+  border-radius: 0;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+}
+
+.chart-detail-cmd-row--toggle:hover {
+  border-color: transparent;
+  background-color: #242a30;
+  background-image: url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+}
+
+/* Positive and negative states keep their meaning through authored variants. */
+.vc-tier-summary--achieved,
+.pns-accepted-card {
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image: url('/assets/modifier-frame-positive.png') 3 / 0.154rem / 0 round;
+  border-radius: 0;
+  background-color: #162018;
+  background-image: url('/assets/baked/card-green.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+}
+
+.cam-action-error,
+.pig-error,
+.mm-load-error,
+.battle-counter-combat-warning,
+.char-rel-state-badge--imprisoned {
+  border-width: 0.154rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image: url('/assets/modifier-frame-negative.png') 3 / 0.154rem / 0 round;
+  border-radius: 0;
+  background-color: #201414;
+  background-image: url('/assets/baked/card-red.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+}
+
+/* Text and mixed-content controls use the painted bronze nine-slice. */
+.notification-decision-btn,
+.cam-list-sort-btn,
+.pns-step-btn,
+.pns-duration-button,
+.pns-term-action,
+.econ-toggle-btn,
+.econ-detail-toggle,
+.econ-trade-btn,
+.econ-priority-btn,
+.econ-rate-controls button,
+.enc-back-btn,
+.enc-bldg-place-btn,
+.fov-policy-btn,
+.fov-court-replace-btn,
+.chart-template-footer-button,
+.chart-template-catalogue-tab,
+.chart-template-catalogue-row-add,
+.diplo-build-focus-button,
+.diplo-successor-action,
+.tpl-header-rename-btn,
+.tpl-picker-row-add,
+.tpl-footer-btn--danger,
+.mil-selection-action,
+.bld-map-place-btn,
+.settle-header-rename-btn,
+.settle-rename-icon-btn,
+.mm-social-btn,
+.battle-window-button,
+.chs-sort-btn,
+.ips-focus-button,
+.ips-tax-button,
+.ips-foederati-action,
+.buildq-sort-btn,
+.rel-religion-button,
+.erd-toggle,
+.erd-threshold button,
+.erd-range-tab,
+.bld-queue-card-action {
+  border-width: 0.538rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image: url('/assets/baked/button-bronze-9slice.png') 32 fill / 0.538rem / 0 stretch;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: none;
+}
+
+.notification-decision-btn:hover,
+.cam-list-sort-btn:hover,
+.pns-step-btn:hover,
+.pns-duration-button:hover,
+.pns-term-action:hover,
+.econ-toggle-btn:hover,
+.econ-detail-toggle:hover,
+.econ-trade-btn:hover,
+.econ-priority-btn:hover,
+.econ-rate-controls button:hover,
+.enc-back-btn:hover,
+.enc-bldg-place-btn:hover,
+.fov-policy-btn:hover,
+.fov-court-replace-btn:hover,
+.chart-template-footer-button:hover,
+.chart-template-catalogue-tab:hover,
+.chart-template-catalogue-row-add:hover,
+.diplo-build-focus-button:hover,
+.diplo-successor-action:hover,
+.tpl-header-rename-btn:hover,
+.tpl-picker-row-add:hover,
+.tpl-footer-btn--danger:hover,
+.mil-selection-action:hover,
+.bld-map-place-btn:hover,
+.settle-header-rename-btn:hover,
+.settle-rename-icon-btn:hover,
+.mm-social-btn:hover,
+.battle-window-button:hover,
+.chs-sort-btn:hover,
+.ips-focus-button:hover,
+.ips-tax-button:hover,
+.ips-foederati-action:hover,
+.buildq-sort-btn:hover,
+.rel-religion-button:hover,
+.erd-toggle:hover,
+.erd-threshold button:hover,
+.erd-range-tab:hover,
+.bld-queue-card-action:hover {
+  border-image-source: url('/assets/baked/button-bronze-9slice-hover.png');
+  background-color: transparent;
+  background-image: none;
+}
+
+/* Small icon-only actions use the authored square button surface. */
+.pns-draft-chip-close,
+.interaction-card-cancel {
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: url('/assets/baked/icon-button.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+}
+
+.pns-draft-chip-close:hover,
+.interaction-card-cancel:hover {
+  background-image: url('/assets/baked/icon-button-hover.png');
+}

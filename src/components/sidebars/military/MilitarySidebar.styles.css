@@ -407,10 +407,18 @@
   display: flex;
   align-items: center;
   padding: 0.12rem 0.28rem;
-  border-width: 0.077rem;
+  border-width: 0.154rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.18);
-  background-color: rgba(13, 18, 24, 0.55);
+  border-color: transparent;
+  border-image-source: url('/assets/modifier-frame.png');
+  border-image-slice: 3;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   color: var(--text-bright);
   font-size: 0.76rem;
   font-weight: 700;
@@ -1154,10 +1162,18 @@
   align-items: center;
   margin: 0 0.462rem 0.462rem;
   padding: 0.45rem;
-  border-width: 0.077rem;
+  border-width: 0.231rem;
   border-style: solid;
-  border-color: rgba(98, 169, 108, 0.28);
-  background-color: rgba(20, 36, 28, 0.48);
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: #162018;
+  background-image: url('/assets/baked/card-green.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
 }
 
 .mil-orders-banner img {
@@ -1634,11 +1650,17 @@
 }
 
 .mil-doctrine-summary-action {
-  padding: 0.16rem 0.42rem;
-  background-color: rgba(201, 168, 76, 0.12);
-  border-width: 0.077rem;
+  padding: 0.08rem 0.3rem;
+  background-color: transparent;
+  background-image: none;
+  border-width: 0.538rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.25);
+  border-color: transparent;
+  border-image-source: url('/assets/baked/button-bronze-9slice.png');
+  border-image-slice: 32 fill;
+  border-image-width: 0.538rem;
+  border-image-outset: 0;
+  border-image-repeat: stretch;
   color: var(--gold-light);
   font-family: var(--font-body);
   font-size: 0.72rem;
@@ -3560,10 +3582,18 @@
   justify-content: center;
   min-height: 1.45rem;
   padding: 0 0.18rem;
-  border-width: 0.077rem;
+  border-width: 0.154rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.28);
-  background-color: rgba(9, 13, 17, 0.42);
+  border-color: transparent;
+  border-image-source: url('/assets/modifier-frame.png');
+  border-image-slice: 3;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
 }
 
 .mil-header-commander-stat img {
@@ -3707,12 +3737,9 @@
   padding: 0.34rem 0.45rem;
   margin-bottom: 0.35rem;
   border-width: 0;
-  background-image:
-    linear-gradient(180deg, rgba(45, 34, 23, 0.32) 0%, rgba(15, 20, 25, 0.78) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   background-color: #151b20;
 }
 
@@ -3721,12 +3748,9 @@
 }
 
 .mil-parent-command-row.is-clickable:hover {
-  background-image:
-    linear-gradient(180deg, rgba(62, 45, 27, 0.34) 0%, rgba(22, 28, 34, 0.78) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal-hover.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  background-image: url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   background-color: #20272d;
 }
 
@@ -3791,16 +3815,15 @@
   padding: 0.36rem 0.45rem;
   border-width: 0.154rem;
   border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(80, 92, 104, 0.3);
-  border-bottom-color: rgba(80, 92, 104, 0.34);
-  border-left-color: rgba(80, 92, 104, 0.3);
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.16) 0%, rgba(36, 42, 48, 0.16) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  border-color: transparent;
+  border-image-source: url('/assets/modifier-frame.png');
+  border-image-slice: 3;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   background-color: #151b20;
 }
 
@@ -3992,16 +4015,15 @@
   margin-bottom: 0.25rem;
   border-width: 0.154rem;
   border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(80, 92, 104, 0.3);
-  border-bottom-color: rgba(80, 92, 104, 0.34);
-  border-left-color: rgba(80, 92, 104, 0.3);
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.16) 0%, rgba(36, 42, 48, 0.16) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  border-color: transparent;
+  border-image-source: url('/assets/modifier-frame.png');
+  border-image-slice: 3;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   background-color: #151b20;
 }
 

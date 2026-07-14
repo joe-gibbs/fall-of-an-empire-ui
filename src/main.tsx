@@ -18,6 +18,7 @@ import './mods/sandbox'
 import { modsReady } from './mods/index'
 
 import App from './App.tsx'
+import './styles/raster-surfaces.css'
 import { acknowledgeBridgeFailure, getRuntimeEngine } from './bridge/core/runtimeEngine'
 import { cacheBridgeEvent } from './bridge/core/bridgeEventCache'
 import { bindUIPerfCommands, recordUIPerfBridgeEvent } from './perf/uiPerfProfiler'

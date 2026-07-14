@@ -23,13 +23,15 @@
   justify-content: space-between;
   min-width: 7.5rem;
   max-width: 12rem;
-  height: 1.85rem;
-  padding: 0 0.45rem;
+  min-height: 1.85rem;
+  padding: 0 0.28rem;
   color: var(--text);
-  background-color: rgba(8, 12, 17, 0.28);
-  border-width: 0.077rem;
+  background-color: transparent;
+  background-image: none;
+  border-width: 0.538rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.2);
+  border-color: transparent;
+  border-image: url('/assets/baked/button-bronze-9slice.png') 32 fill / 0.538rem / 0 stretch;
   font-family: var(--font-body);
   font-size: 0.78rem;
   text-align: left;
@@ -38,10 +40,7 @@
 
 .dropdown-select__trigger--active {
   color: var(--gold-light);
-  border-top-color: rgba(201, 168, 76, 0.45);
-  border-right-color: rgba(201, 168, 76, 0.45);
-  border-bottom-color: rgba(201, 168, 76, 0.45);
-  border-left-color: rgba(201, 168, 76, 0.45);
+  border-image-source: url('/assets/baked/button-bronze-9slice-active.png');
 }
 
 .dropdown-select__icon,

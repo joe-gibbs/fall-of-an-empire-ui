@@ -1,11 +1,13 @@
 .game-check-button {
   display: flex;
   align-items: center;
-  padding: 0.18rem 0.5rem;
-  background-color: rgba(8, 12, 17, 0.3);
-  border-width: 0.077rem;
+  padding: 0.08rem 0.35rem;
+  background-color: transparent;
+  background-image: none;
+  border-width: 0.538rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.18);
+  border-color: transparent;
+  border-image: url('/assets/baked/button-bronze-9slice.png') 32 fill / 0.538rem / 0 stretch;
   font-size: 0.74rem;
   cursor: var(--cursor-pointer);
   transition: background-color 120ms ease, border-color 120ms ease;
@@ -20,7 +22,8 @@
 }
 
 .game-check-button:hover {
-  background-color: rgba(201, 168, 76, 0.12);
+  background-color: transparent;
+  border-image-source: url('/assets/baked/button-bronze-9slice-hover.png');
 }
 
 .game-check-button--disabled {
@@ -29,7 +32,8 @@
 }
 
 .game-check-button--disabled:hover {
-  background-color: rgba(8, 12, 17, 0.3);
+  background-color: transparent;
+  border-image-source: url('/assets/baked/button-bronze-9slice.png');
 }
 
 .game-check-button__box {
@@ -38,13 +42,14 @@
   margin: 0;
   flex-shrink: 0;
   position: relative;
-  border-width: 0.0909rem;
+  border-width: 0.154rem;
   border-style: solid;
-  border-top-color: var(--border-dim);
-  border-right-color: var(--border-dim);
-  border-bottom-color: var(--border-dim);
-  border-left-color: var(--border-dim);
-  background-color: rgba(8, 12, 17, 0.35);
+  border-color: transparent;
+  border-image: url('/assets/modifier-frame.png') 3 / 0.154rem / 0 round;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   cursor: var(--cursor-pointer);
 }
 
@@ -72,16 +77,13 @@
 }
 
 .game-check-button--active {
-  border-left-color: var(--gold-muted);
-  background-color: rgba(201, 168, 76, 0.08);
+  background-color: transparent;
+  border-image-source: url('/assets/baked/button-bronze-9slice-active.png');
 }
 
 .game-check-button--active .game-check-button__box {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  background-color: rgba(201, 168, 76, 0.22);
+  border-image-source: url('/assets/modifier-frame-positive.png');
+  background-color: #151b20;
 }
 
 .game-check-button--active .game-check-button__box::after {

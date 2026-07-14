@@ -205,9 +205,13 @@
   min-width: 13.8rem;
   height: 3.65rem;
   padding: 0.308rem;
-  border: 1px solid rgba(191, 160, 96, 0.28);
-  border-radius: 2px;
-  background-color: rgba(32, 30, 28, 0.88);
+  border: 0.231rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6 / 0.231rem / 0 round;
+  border-radius: 0;
+  background-color: #20272d;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   color: var(--text);
   font-family: var(--font-body);
   text-align: left;
@@ -242,7 +246,8 @@
   border-right-color: rgba(224, 190, 116, 0.68);
   border-bottom-color: rgba(224, 190, 116, 0.68);
   border-left-color: rgba(224, 190, 116, 0.68);
-  background-color: rgba(52, 45, 38, 0.92);
+  background-color: #242a30;
+  background-image: url('/assets/baked/card-charcoal-hover.png');
   transform: translateY(-0.08rem);
 }
 
@@ -251,7 +256,8 @@
   border-right-color: var(--gold);
   border-bottom-color: var(--gold);
   border-left-color: var(--gold);
-  background-color: rgba(82, 61, 31, 0.92);
+  background-color: #0d1218;
+  background-image: url('/assets/baked/card-charcoal-active.png');
   animation: operation-governor-selected 0.18s ease-out;
 }
 
@@ -399,9 +405,13 @@
   width: 2.35rem;
   height: 2.35rem;
   padding: 0;
-  border: 1px solid rgba(191, 160, 96, 0.34);
-  border-radius: 2px;
-  background-color: rgba(32, 30, 28, 0.88);
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: url('/assets/baked/icon-button.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
   cursor: pointer;
   transition: border-color 0.12s, background-color 0.12s, transform 0.12s ease-out, opacity 0.12s;
 }
@@ -411,7 +421,8 @@
   border-right-color: rgba(224, 190, 116, 0.68);
   border-bottom-color: rgba(224, 190, 116, 0.68);
   border-left-color: rgba(224, 190, 116, 0.68);
-  background-color: rgba(52, 45, 38, 0.92);
+  background-color: transparent;
+  background-image: url('/assets/baked/icon-button-hover.png');
   transform: translateY(-0.08rem);
 }
 
@@ -447,6 +458,7 @@
   border-bottom-color: rgba(191, 160, 96, 0.34);
   border-left-color: rgba(191, 160, 96, 0.34);
   background-color: rgba(32, 30, 28, 0.88);
+  background-image: url('/assets/baked/icon-button.png');
   transform: none;
 }
 
@@ -458,9 +470,13 @@
   margin-right: 0.462rem;
   margin-bottom: 0.308rem;
   padding: 0.615rem;
-  background-color: rgba(17, 22, 28, 0.94);
-  border: 1px solid rgba(191, 160, 96, 0.34);
-  border-radius: 2px;
+  background-color: #151b20;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+  border: 0.231rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6 / 0.231rem / 0 round;
+  border-radius: 0;
   color: var(--text);
 }
 
@@ -528,9 +544,13 @@
   height: 1.85rem;
   box-sizing: border-box;
   padding: 0 0.462rem;
-  border: 1px solid rgba(191, 160, 96, 0.28);
-  border-radius: 2px;
-  background-color: rgba(10, 15, 20, 0.66);
+  border: 0.154rem solid transparent;
+  border-image: url('/assets/modifier-frame.png') 3 / 0.154rem / 0 round;
+  border-radius: 0;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
 }
 
 .map-filter-search img {
@@ -568,9 +588,13 @@
 
 .map-filter-preset,
 .map-filter-row {
-  border: 1px solid rgba(191, 160, 96, 0.28);
-  border-radius: 2px;
-  background-color: rgba(24, 30, 37, 0.88);
+  border: 0.154rem solid transparent;
+  border-image: url('/assets/modifier-frame.png') 3 / 0.154rem / 0 round;
+  border-radius: 0;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   color: var(--text);
   font-family: var(--font-body);
   cursor: pointer;
@@ -582,7 +606,8 @@
   border-right-color: rgba(224, 190, 116, 0.68);
   border-bottom-color: rgba(224, 190, 116, 0.68);
   border-left-color: rgba(224, 190, 116, 0.68);
-  background-color: rgba(36, 45, 54, 0.92);
+  background-color: #242a30;
+  background-image: url('/assets/baked/card-charcoal-hover.png');
 }
 
 .map-filter-preset {
@@ -637,9 +662,13 @@
   width: 0.92rem;
   height: 0.92rem;
   flex-shrink: 0;
-  border: 1px solid rgba(191, 160, 96, 0.46);
-  background-color: rgba(8, 11, 15, 0.72);
-  border-radius: 1px;
+  border: 0.154rem solid transparent;
+  border-image: url('/assets/modifier-frame.png') 3 / 0.154rem / 0 round;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+  border-radius: 0;
 }
 
 .map-filter-check span {
@@ -715,9 +744,13 @@
   margin-right: 0.462rem;
   margin-bottom: 0.308rem;
   padding: 0.615rem;
-  background-color: rgba(15, 16, 18, 0.94);
-  border: 1px solid rgba(191, 160, 96, 0.34);
-  border-radius: 2px;
+  background-color: #151b20;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+  border: 0.231rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6 / 0.231rem / 0 round;
+  border-radius: 0;
   color: var(--text);
 }
 
@@ -777,9 +810,13 @@
 .convoy-filter-master,
 .convoy-filter-preset,
 .convoy-filter-row {
-  border: 1px solid rgba(191, 160, 96, 0.28);
-  border-radius: 2px;
-  background-color: rgba(32, 30, 28, 0.88);
+  border: 0.154rem solid transparent;
+  border-image: url('/assets/modifier-frame.png') 3 / 0.154rem / 0 round;
+  border-radius: 0;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   color: var(--text);
   font-family: var(--font-body);
   cursor: pointer;
@@ -792,7 +829,8 @@
   border-right-color: rgba(224, 190, 116, 0.68);
   border-bottom-color: rgba(224, 190, 116, 0.68);
   border-left-color: rgba(224, 190, 116, 0.68);
-  background-color: rgba(52, 45, 38, 0.92);
+  background-color: #242a30;
+  background-image: url('/assets/baked/card-charcoal-hover.png');
 }
 
 .convoy-filter-master {
@@ -816,9 +854,13 @@
   height: 0.86rem;
   padding: 0.1rem;
   box-sizing: border-box;
-  background-color: rgba(8, 8, 9, 0.82);
-  border: 1px solid rgba(115, 104, 82, 0.72);
-  border-radius: 0.65rem;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+  border: 0.154rem solid transparent;
+  border-image: url('/assets/modifier-frame.png') 3 / 0.154rem / 0 round;
+  border-radius: 0;
 }
 
 .convoy-filter-switch span {
@@ -885,9 +927,13 @@
   width: 0.92rem;
   height: 0.92rem;
   flex-shrink: 0;
-  border: 1px solid rgba(191, 160, 96, 0.46);
-  background-color: rgba(6, 7, 8, 0.72);
-  border-radius: 1px;
+  border: 0.154rem solid transparent;
+  border-image: url('/assets/modifier-frame.png') 3 / 0.154rem / 0 round;
+  background-color: #151b20;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+  border-radius: 0;
 }
 
 .convoy-filter-check span {
