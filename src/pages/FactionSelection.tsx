@@ -27,6 +27,7 @@ import VirtualList from '../components/common/layout/scrolling/VirtualList';
 import { StatCellGrid, StatCell } from '../components/sidebars/shared/StatCellGrid';
 import { FoaeCefUIAssetPath } from '../utils/assets';
 import { resolveFactionBorderVariant } from '../utils/factionBorder';
+import { emblemAssetPath } from '../utils/factionEmblem';
 import { formatNumber, formatSignedNumber } from '../utils/numberFormat';
 import { characterStatEffectLines } from '../utils/characterStatEffects';
 import type { StatKey } from '../data/types';
@@ -549,15 +550,17 @@ function roundelSymbolStyle(emblemAssetPath: string): React.CSSProperties {
   };
 }
 
-function renderRoundelSymbol(emblemAssetPath: string): React.ReactNode {
-  if (!emblemAssetPath) {
+function renderRoundelSymbol(faction: ScenarioMapFactionDto): React.ReactNode {
+  if (!faction.emblemRowName) {
     return null;
   }
+
+  const symbolAssetPath = emblemAssetPath(faction.emblemRowName);
 
   return (
     <span
       className="fs-roundel-symbol"
-      style={roundelSymbolStyle(emblemAssetPath)}
+      style={roundelSymbolStyle(symbolAssetPath)}
     />
   );
 }
@@ -1188,7 +1191,7 @@ function FactionSelectionMapControls({
       {mapLabelFaction && (
         <div className="fs-map-hover-label">
           <span className={roundelClassName(mapLabelFaction, 'xs')} style={roundelStyle(mapLabelFaction)}>
-            {renderRoundelSymbol(mapLabelFaction.emblemAssetPath)}
+            {renderRoundelSymbol(mapLabelFaction)}
           </span>
           <span>{mapLabelFaction.displayName}</span>
           {!mapLabelFaction.playable && (
@@ -1379,7 +1382,7 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
           onMouseLeave={() => setHoveredBaseName('')}
         >
           <span className={roundelClassName(faction, 'xs')} style={roundelStyle(faction)}>
-            {renderRoundelSymbol(faction.emblemAssetPath)}
+            {renderRoundelSymbol(faction)}
           </span>
           <span className="fs-faction-copy">
             <span className="fs-faction-name">{row.kind === 'sovereign' ? factionListHeaderName(faction) : faction.displayName}</span>
@@ -1809,7 +1812,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
             onMouseLeave={handleFactionHoverEnd}
           >
             <span className={roundelClassName(subject, 'sm')} style={roundelStyle(subject)}>
-              {renderRoundelSymbol(subject.emblemAssetPath)}
+              {renderRoundelSymbol(subject)}
             </span>
           </button>
         </Tooltip>
@@ -1827,7 +1830,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
       <>
         {leader && (
           <span className={roundelClassName(leader, 'sm')} style={roundelStyle(leader)}>
-            {renderRoundelSymbol(leader.emblemAssetPath)}
+            {renderRoundelSymbol(leader)}
           </span>
         )}
         <div className="fs-war-side-meta">
@@ -1948,7 +1951,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
 
             <div className="fs-detail-hero-scrim">
               <span className={roundelClassName(selected, 'lg')} style={roundelStyle(selected)}>
-                {renderRoundelSymbol(selected.emblemAssetPath)}
+                {renderRoundelSymbol(selected)}
               </span>
               <div className="fs-detail-hero-info">
                 <div className="fs-detail-hero-faction-name">{selected.displayName}</div>
