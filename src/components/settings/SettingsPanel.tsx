@@ -1067,7 +1067,7 @@ const SettingsPanel: React.FC = () => {
   const audioEffects = finiteNumber(audio.effects, appliedSnapshot.audio.effects);
   const audioUi = finiteNumber(audio.ui, appliedSnapshot.audio.ui);
   const audioAmbience = finiteNumber(audio.ambience, appliedSnapshot.audio.ambience);
-  const canSelectResolution = video.windowMode === 'Fullscreen';
+  const canSelectResolution = video.windowMode !== 'WindowedFullscreen';
   const dlssActive = settings.dlssSupported && video.dlssMode !== 'Off';
 
   const setVideo = (patch: Partial<typeof video>) => setWorking(w => w && { ...w, video: { ...w.video, ...patch } });
