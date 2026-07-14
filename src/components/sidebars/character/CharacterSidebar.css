@@ -136,15 +136,14 @@
   height: 13.16rem;
   bottom: auto;
   top: 0.45rem;
-  /* Keep the face clear of the roundel while staying near the right edge. */
-  right: 3vw;
+  right: 1.5rem;
 }
 
 .char-header-portrait .portrait-layer-stack {
   width: 13.16rem;
   height: 13.16rem;
   top: 0.45rem;
-  right: 3vw;
+  right: 1.5rem;
   bottom: auto;
 }
 
@@ -1359,7 +1358,7 @@
   top: 2.2rem;
   right: auto;
   bottom: auto;
-  left: 5.8rem;
+  left: 4.4rem;
   z-index: 2;
   width: 11.6rem;
   height: 11.6rem;
