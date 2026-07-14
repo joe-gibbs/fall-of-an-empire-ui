@@ -17,7 +17,12 @@ import CultureTooltip from '../components/common/tooltips/CultureTooltip';
 import GovernmentTooltip from '../components/common/tooltips/GovernmentTooltip';
 import ReligionTooltip from '../components/common/tooltips/ReligionTooltip';
 import StyledScrollArea from '../components/common/layout/scrolling/StyledScrollArea';
-import ZoomPanCanvas, { type ZoomPanCanvasApi, type ZoomPanPoint } from '../components/common/layout/scrolling/ZoomPanCanvas';
+import ZoomPanCanvas, {
+  type ZoomPanCanvasApi,
+  type ZoomPanMetrics,
+  type ZoomPanPoint,
+  type ZoomPanView,
+} from '../components/common/layout/scrolling/ZoomPanCanvas';
 import VirtualList from '../components/common/layout/scrolling/VirtualList';
 import { StatCellGrid, StatCell } from '../components/sidebars/shared/StatCellGrid';
 import { FoaeCefUIAssetPath } from '../utils/assets';
@@ -95,6 +100,14 @@ const MAP_MODE_LABEL_KEYS: Record<FactionSelectionMapMode, string> = {
   culture: 'MapModeTooltip.Culture.Title',
   religion: 'MapModeTooltip.Religion.Title',
 };
+
+function centredMapView({ viewportWidth, viewportHeight, contentWidth, contentHeight }: ZoomPanMetrics): ZoomPanView {
+  return {
+    zoom: MIN_ZOOM,
+    panX: (viewportWidth - contentWidth * MIN_ZOOM) * 0.5,
+    panY: (viewportHeight - contentHeight * MIN_ZOOM) * 0.5,
+  };
+}
 
 const STAT_META: Record<string, { labelKey: string; icon: string; descriptionKey: string }> = {
   tactics: {
@@ -1427,9 +1440,11 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
               className="fs-map-frame"
               contentClassName="fs-map-stage"
               contentStyle={mapStageStyle(data)}
+              initialView={centredMapView}
               minZoom={MIN_ZOOM}
               maxZoom={MAX_ZOOM}
               zoomStep={ZOOM_STEP}
+              resetViewOnResize
               onContentLeftClick={handleMapPick}
               onContentMouseLeave={() => setHoveredBaseName('')}
               onPanDragStart={() => setHoveredBaseName('')}
