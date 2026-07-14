@@ -1036,9 +1036,52 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
   border-top-color: rgba(224, 200, 114, 0.42);
 }
 
-.event-option--history-choice {
+.event-options--history .event-options-heading-label {
+  color: rgba(190, 194, 194, 0.58);
+}
+
+.event-options--history .event-options-heading-rule {
+  border-top-color: rgba(149, 155, 157, 0.3);
+}
+
+.event-option.event-option--history-choice,
+.event-popup--important .event-option.event-option--history-choice {
   min-height: 3.1rem;
   cursor: default;
-  border-color: rgba(211, 178, 82, 0.58);
-  background: rgba(67, 27, 38, 0.62);
+  opacity: 0.58;
+  border-top-color: rgba(164, 169, 169, 0.38);
+  border-right-color: rgba(104, 112, 116, 0.42);
+  border-bottom-color: rgba(75, 82, 87, 0.52);
+  border-left-color: rgba(164, 169, 169, 0.38);
+  background-color: #252c31;
+  background-image:
+    linear-gradient(180deg, rgba(96, 102, 103, 0.2) 0%, rgba(24, 29, 33, 0.62) 100%),
+    url('/assets/baked/panel-charcoal.png'),
+    url('/assets/baked/texture-overlay-dark.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 93.0909rem 93.0909rem, 7.385rem 7.385rem;
+  transform: none;
+}
+
+.event-option.event-option--history-choice:hover,
+.event-option.event-option--history-choice:active,
+.event-popup--important .event-option.event-option--history-choice:hover,
+.event-popup--important .event-option.event-option--history-choice:active {
+  border-top-color: rgba(164, 169, 169, 0.38);
+  border-right-color: rgba(104, 112, 116, 0.42);
+  border-bottom-color: rgba(75, 82, 87, 0.52);
+  border-left-color: rgba(164, 169, 169, 0.38);
+  background-color: #252c31;
+  background-image:
+    linear-gradient(180deg, rgba(96, 102, 103, 0.2) 0%, rgba(24, 29, 33, 0.62) 100%),
+    url('/assets/baked/panel-charcoal.png'),
+    url('/assets/baked/texture-overlay-dark.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 93.0909rem 93.0909rem, 7.385rem 7.385rem;
+  transform: none;
+}
+
+.event-option.event-option--history-choice .event-option-text,
+.event-option.event-option--history-choice:hover .event-option-text {
+  color: rgba(211, 214, 212, 0.68);
 }

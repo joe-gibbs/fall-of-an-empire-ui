@@ -56,6 +56,7 @@ const TARGET_ALIASES: Record<string, string[]> = {
   VictoryConditionsButton: ['VictoryConditionsButton'],
   PinnedItemsToggleButton: ['PinnedItemsToggleButton'],
   MapModeButtonGroup: ['MapModeButtonGroup'],
+  MilitaryTemplatesTab: ['MilitaryTemplatesTab', 'SidebarTab:templates'],
   NewFormationButton: ['NewFormationButton'],
   FormationNameInput: ['FormationNameInput'],
   AddMeleeBattleGroupButton: ['AddMeleeBattleGroupButton'],
@@ -111,6 +112,16 @@ function findByTutorialToken(tokens: string[]): HTMLElement | null {
     if (found instanceof HTMLElement) return found;
   }
   return null;
+}
+
+function findRenderedByTutorialToken(token: string): HTMLElement | null {
+  const candidates = Array.from(document.querySelectorAll('[data-tutorial-target]'));
+  const found = candidates.find(element => {
+    if (!targetTokens(element).includes(token)) return false;
+    const rect = element.getBoundingClientRect();
+    return rect.width > 1 && rect.height > 1;
+  });
+  return found instanceof HTMLElement ? found : null;
 }
 
 function findByDetail(attributeName: string, detail: string): HTMLElement | null {
@@ -305,7 +316,16 @@ export default function TutorialSpotlightOverlay({
     }
 
     let frameId = 0;
+    let revealedTarget = false;
     const tick = () => {
+      if (!revealedTarget && !spotlight.isBuildingTarget && !spotlight.isUnitTarget) {
+        const renderedTarget = findRenderedByTutorialToken(spotlight.target);
+        if (renderedTarget) {
+          renderedTarget.scrollIntoView({ block: 'center', inline: 'nearest' });
+          revealedTarget = true;
+        }
+      }
+
       const element = findSpotlightTarget(spotlight);
       targetElementRef.current = element;
       const nextRect = rectForElement(element);

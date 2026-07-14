@@ -1046,6 +1046,7 @@ function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceMode
               remainingDays={activeRole.remainingDays}
               inProgress={playerEntered}
               onClick={canSubmitPlayer ? submitPlayer : undefined}
+              tutorialTarget={canSubmitPlayer ? 'EnterImperialCouncilContestButton' : undefined}
             />
           </div>
 

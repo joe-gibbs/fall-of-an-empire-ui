@@ -548,11 +548,15 @@ const EventPopup: React.FC<EventPopupProps> = ({
                   <span className="event-options-heading-label"><WebUIText textKey="Auto.ComponentsEventsEventPopup.341.2" /></span>
                   <div className="event-options-heading-rule" />
                 </div>
-                <div className="event-option event-option--history-choice">
+                <button
+                  type="button"
+                  className="event-option event-option--history-choice"
+                  disabled
+                >
                   <div className="event-option-body">
                     <div className="event-option-text">{historyEntry?.chosenOptionText}</div>
                   </div>
-                </div>
+                </button>
               </div>
             ) : null}
           </div>
