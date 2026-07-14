@@ -171,7 +171,7 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   const crownCount = 1 + visibleStatusCount;
   const requestTooltipDetail = useCallback(() => {
     setTooltipDetail(null);
-    bridgeCall('game.get_military_data', { militaryId: data.id })
+    bridgeCall('game.get_military_data', { militaryId: data.id, subscriptionId: '', subscribe: false })
       .then((response) => {
         if (response.found) {
           setTooltipDetail(response);

@@ -4748,6 +4748,8 @@ export interface GetMilitaryOverviewResponse {
 
 export interface GetMilitaryDataRequest {
   militaryId: string;
+  subscriptionId: string;
+  subscribe: boolean;
 }
 
 export interface MilitaryUnitSourceEntry {
@@ -4858,6 +4860,7 @@ export interface MilitaryAttritionEntry {
 export interface GetMilitaryDataResponse {
   found: boolean;
   id: string;
+  updateKind: string;
   debugShortId: number;
   name: string;
   faction: string;

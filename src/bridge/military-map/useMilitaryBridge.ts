@@ -1,3 +1,4 @@
+import { useEffect, useId } from 'react';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import type {
   GetMilitaryDataResponse,
@@ -8,6 +9,7 @@ import type {
   FoederatiOverviewEntry,
 } from '../../bridge-types.generated.ts';
 import { useBridgeQuery } from '../core/useBridgeQuery';
+import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import { useGameState } from '../../context/GameContext';
 import { mapPortraitLayers, mapPortraitPath } from '../characters/portraitMapping';
 import type {
@@ -345,18 +347,53 @@ function mapOverview(data: GetMilitaryOverviewResponse): MilitaryOverview {
   };
 }
 
+function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse): Army | null {
+  if (data.updateKind === 'resources') {
+    if (!current) return null;
+
+    const updated: Army = {
+      ...current,
+      resources: data.resources.map(mapResource),
+      supplyDays: data.supplyDays,
+      isReplenishing: data.isReplenishing,
+      replenishCost: data.replenishCost > 0 ? data.replenishCost : undefined,
+      canReplenish: data.canReplenish,
+    };
+    militaryCache.set(updated.id, updated);
+    return updated;
+  }
+
+  const mapped = mapMilitary(data);
+  if (mapped) militaryCache.set(mapped.id, mapped);
+  return mapped;
+}
+
 export function useMilitaryBridge(militaryId: string | null | undefined): Army | null {
   const { gameDay } = useGameState();
+  const subscriptionId = useId();
   const live = useBridgeQuery({
     action: 'game.get_military_data',
-    payload: militaryId ? { militaryId } : null,
+    payload: militaryId ? { militaryId, subscriptionId: '', subscribe: false } : null,
     map: (data) => {
       const mapped = mapMilitary(data);
       if (mapped) militaryCache.set(mapped.id, mapped);
       return mapped;
     },
     matchPush: (data) => data.id === militaryId,
+    mergePush: mergeMilitaryPush,
   });
+
+  useEffect(() => {
+    if (!militaryId) return;
+
+    void bridgeCall('game.get_military_data', { militaryId, subscriptionId, subscribe: true })
+      .catch(acknowledgeBridgeFailure);
+
+    return () => {
+      void bridgeCall('game.get_military_data', { militaryId, subscriptionId, subscribe: false })
+        .catch(acknowledgeBridgeFailure);
+    };
+  }, [militaryId, subscriptionId]);
 
   const army = live ?? (militaryId ? militaryCache.get(militaryId) ?? null : null);
   if (!army) return null;

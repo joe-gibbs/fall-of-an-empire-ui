@@ -2485,6 +2485,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
   return {
     found: true,
     id: profile.id,
+    updateKind: '',
     debugShortId: mockDebugShortId(profile.id),
     name: profile.name,
     faction: 'Rephsian Empire',
