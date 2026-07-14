@@ -3810,6 +3810,71 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
 function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
   const playerVisual = { colour: PLAYER_COLOUR, secondaryColour: PLAYER_SECONDARY, cultureGroup: 'Rephsian', emblem: 'Rephsian_1' };
   const rivalVisual = { colour: RIVAL_COLOUR, secondaryColour: RIVAL_SECONDARY, cultureGroup: 'Aurestian', emblem: 'Aurestian_1' };
+  const emptyBattleReport = {
+    available: false,
+    battleName: '',
+    outcome: '',
+    location: '',
+    summary: '',
+    headerImage: '',
+    spoils: '',
+    spoilsList: [],
+    unitDamage: [],
+    ourSide: {
+      label: '', names: '', commanders: '', commanderDetails: [], unitLabel: '',
+      factionId: '', factionName: '', factionColour: '', factionSecondaryColour: '', factionCultureGroup: '', factionEmblem: '',
+      initialStrength: 0, remainingStrength: 0, losses: 0, lossPercent: 0, won: false,
+    },
+    enemySide: {
+      label: '', names: '', commanders: '', commanderDetails: [], unitLabel: '',
+      factionId: '', factionName: '', factionColour: '', factionSecondaryColour: '', factionCultureGroup: '', factionEmblem: '',
+      initialStrength: 0, remainingStrength: 0, losses: 0, lossPercent: 0, won: false,
+    },
+  };
+  const ledgerBattleReport = {
+    ...emptyBattleReport,
+    available: true,
+    battleName: 'Battle of Berginium',
+    outcome: 'Victory',
+    location: 'Berginium',
+    summary: 'I Field Army broke the rebel line and held the field.',
+    headerImage: '/assets/events/military-victory.png',
+    ourSide: {
+      ...emptyBattleReport.ourSide,
+      label: 'Our forces',
+      names: 'I Field Army',
+      commanders: 'Valen Arcastus',
+      unitLabel: 'Manpower',
+      factionId: MOCK_IDS.playerFaction,
+      factionName: 'Rephsian Empire',
+      factionColour: PLAYER_COLOUR,
+      factionSecondaryColour: PLAYER_SECONDARY,
+      factionCultureGroup: 'Rephsian',
+      factionEmblem: 'Rephsian_1',
+      initialStrength: 6800,
+      remainingStrength: 6040,
+      losses: 760,
+      lossPercent: 11.2,
+      won: true,
+    },
+    enemySide: {
+      ...emptyBattleReport.enemySide,
+      label: 'Enemy forces',
+      names: 'Berginian Rebellion',
+      unitLabel: 'Manpower',
+      factionId: MOCK_IDS.rivalFaction,
+      factionName: 'Berginian Rebellion',
+      factionColour: RIVAL_COLOUR,
+      factionSecondaryColour: RIVAL_SECONDARY,
+      factionCultureGroup: 'Aurestian',
+      factionEmblem: 'Aurestian_1',
+      initialStrength: 5100,
+      remainingStrength: 2670,
+      losses: 2430,
+      lossPercent: 47.6,
+      won: false,
+    },
+  };
   return {
     settlementCount: 2,
     militaryCount: 4,
@@ -3844,9 +3909,9 @@ function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
       { id: 'mock-building-docks', name: 'Docks', category: 'Naval', level: 2, maxLevel: 4, settlementId: MOCK_IDS.portSettlement, settlementName: 'Namaris', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, upkeep: 18, condition: 88 },
     ],
     notifications: [
-      { id: 'mock-ledger-food-shortage', gameDate: 286212, date: '18 Harvest 784', category: 'settlement', categoryLabel: 'Settlement', icon: '/assets/icons/I_Food.png', titleHtml: 'Stores run low in Namaris', bodyHtml: 'Food consumption has overtaken local production. The settlement will draw from realm stores unless supply improves.', decision: '', hasDecision: false, isAccepted: false },
-      { id: 'mock-ledger-frontier-battle', gameDate: 286204, date: '10 Harvest 784', category: 'military', categoryLabel: 'Military', icon: '/assets/icons/I_Swords.png', titleHtml: 'Battle joined near Berginium', bodyHtml: 'I Field Army has engaged the Berginian Rebellion on open ground.', decision: 'Held the line', hasDecision: true, isAccepted: true },
-      { id: 'mock-ledger-court-demand', gameDate: 286188, date: '24 Highsun 784', category: 'political', categoryLabel: 'Political', icon: '/assets/icons/I_PowerBlocs.png', titleHtml: 'Court faction presses for concessions', bodyHtml: 'Marcia Vennor backed a demand for lower extraordinary taxes.', decision: 'Refused', hasDecision: true, isAccepted: false },
+      { id: 'mock-ledger-food-shortage', gameDate: 286212, date: '18 Harvest 784', category: 'settlement', categoryLabel: 'Settlement', icon: '/assets/icons/I_Food.png', titleHtml: 'Stores run low in Namaris', bodyHtml: 'Food consumption has overtaken local production. The settlement will draw from realm stores unless supply improves.', decision: '', hasDecision: false, isAccepted: false, battleAfterActionReport: emptyBattleReport },
+      { id: 'mock-ledger-frontier-battle', gameDate: 286204, date: '10 Harvest 784', category: 'military', categoryLabel: 'Military', icon: '/assets/icons/I_Swords.png', titleHtml: 'Victory at Berginium', bodyHtml: 'I Field Army broke the rebel line and held the field.', decision: '', hasDecision: false, isAccepted: false, battleAfterActionReport: ledgerBattleReport },
+      { id: 'mock-ledger-court-demand', gameDate: 286188, date: '24 Highsun 784', category: 'political', categoryLabel: 'Political', icon: '/assets/icons/I_PowerBlocs.png', titleHtml: 'Court faction presses for concessions', bodyHtml: 'Marcia Vennor backed a demand for lower extraordinary taxes.', decision: 'Refused', hasDecision: true, isAccepted: false, battleAfterActionReport: emptyBattleReport },
     ],
   };
 }

@@ -2621,6 +2621,7 @@ export interface LedgerNotificationHistoryRow {
   decision: string;
   hasDecision: boolean;
   isAccepted: boolean;
+  battleAfterActionReport: BattleAfterActionReportPayload;
 }
 
 export interface GetLedgerOverviewResponse {

@@ -7,6 +7,7 @@ import FactionRoundel from '../../common/entities/FactionRoundel';
 import GameButton from '../../common/buttons/GameButton';
 import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
 import Tooltip from '../../common/tooltips/Tooltip';
+import BattleAfterActionModal, { type BattleAfterActionNotification } from '../../notifications/BattleAfterActionModal';
 import { sidebarTypeForEntity } from '../../common/entities/entityLinkUtils';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import { compareSortValues, normaliseSortText, type SortDirection, type SortState } from '../../common/layout/tables/sortUtils';
@@ -25,6 +26,7 @@ import type {
 import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { renderRichText } from '../../../utils/richText';
+import { normaliseBattleAfterActionReport } from '../../../utils/battleAfterActionReport';
 import './LedgerScreen.css';
 
 import { webUIText } from '../../../localization/WebUITextContext';
@@ -380,6 +382,7 @@ function BulkTable<T>({
 
 export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   const { openSidebar } = useGameActions();
+  const [selectedBattleResultId, setSelectedBattleResultId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<LedgerTab>('settlements');
   const [rowOffset, setRowOffset] = useState(0);
   const [sortByTab, setSortByTab] = useState<Record<LedgerTab, LedgerSortState>>(DEFAULT_LEDGER_SORTS);
@@ -415,6 +418,18 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   const resources = data?.resources ?? EMPTY_RESOURCES;
   const buildings = data?.buildings ?? EMPTY_BUILDINGS;
   const notifications = data?.notifications ?? EMPTY_NOTIFICATIONS;
+
+  const battleResultNotification = useMemo<BattleAfterActionNotification | null>(() => {
+    const row = notifications.find(notification => notification.id === selectedBattleResultId);
+    if (!row) return null;
+    const report = normaliseBattleAfterActionReport(row.battleAfterActionReport);
+    if (!report) return null;
+    return {
+      title: row.titleHtml,
+      description: row.bodyHtml,
+      battleAfterActionReport: report,
+    };
+  }, [notifications, selectedBattleResultId]);
 
   useEffect(() => {
     if (!data) return;
@@ -692,6 +707,23 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
         : '-',
       sortValue: row => row.decision,
     },
+    {
+      id: 'details',
+      label: webUIText('Common.View'),
+      align: 'centre',
+      sortable: false,
+      render: row => row.battleAfterActionReport.available
+        ? (
+          <GameButton
+            variant="outline"
+            className="ledger-battle-result-button"
+            onClick={() => setSelectedBattleResultId(row.id)}
+          >
+            {webUIText('Common.View')}
+          </GameButton>
+        )
+        : '-',
+    },
   ];
 
   const table = (() => {
@@ -717,16 +749,24 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   })();
 
   return (
-    <ScreenShell
-      title={webUIText('Auto.Attr.ComponentsScreensLedgerScreen.285.47')}
-      onClose={onClose}
-      advisorTopic="ledgerScreen"
-      tabs={<SidebarTabBar tabs={tabs} activeTab={activeTab} onTabChange={(id) => { const nextTab = id as LedgerTab; setActiveTab(nextTab); setSearch(''); setRowOffset(0); }} />}
-      className="screen--ledger"
-      contentClassName="ledger-content"
-    >
-      <div className="ledger-wrap">{table}</div>
-    </ScreenShell>
+    <>
+      <ScreenShell
+        title={webUIText('Auto.Attr.ComponentsScreensLedgerScreen.285.47')}
+        onClose={onClose}
+        advisorTopic="ledgerScreen"
+        tabs={<SidebarTabBar tabs={tabs} activeTab={activeTab} onTabChange={(id) => { const nextTab = id as LedgerTab; setActiveTab(nextTab); setSearch(''); setRowOffset(0); }} />}
+        className="screen--ledger"
+        contentClassName="ledger-content"
+      >
+        <div className="ledger-wrap">{table}</div>
+      </ScreenShell>
+      <BattleAfterActionModal
+        notification={battleResultNotification}
+        open={battleResultNotification !== null}
+        onClose={() => setSelectedBattleResultId(null)}
+        onLinkClick={handleRichLinkClick}
+      />
+    </>
   );
 }
 

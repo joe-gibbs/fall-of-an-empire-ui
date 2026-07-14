@@ -306,6 +306,7 @@
 .ledger-cell--buildings,
 .ledger-cell--date,
 .ledger-cell--decision,
+.ledger-cell--details,
 .ledger-cell--strength,
 .ledger-cell--morale,
 .ledger-cell--upkeep,
@@ -543,6 +544,12 @@
 
 .ledger-notification-decision--declined {
   color: var(--red);
+}
+
+.ledger-battle-result-button {
+  min-width: 4.75rem;
+  padding: 0.16rem 0.45rem;
+  font-size: 0.68rem;
 }
 
 @media (max-width: 81.8182rem) {

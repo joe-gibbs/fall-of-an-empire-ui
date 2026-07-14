@@ -4,6 +4,7 @@ import type { BattleAfterActionReportPayload, PortraitLayerData } from '../../br
 import type { Notification, Warning, WarningSeverity } from '../../data/types';
 import { webUIText } from '../../localization/WebUITextContext';
 import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { normaliseBattleAfterActionReport } from '../../utils/battleAfterActionReport';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import { getCachedBridgeEventByName } from '../core/bridgeEventCache';
 
@@ -129,7 +130,7 @@ export function mapNotificationShown(data: NotificationShown): Notification {
     settlementScreenY: data.settlementScreenY,
     settlementViewportWidth: data.settlementViewportWidth,
     settlementViewportHeight: data.settlementViewportHeight,
-    battleAfterActionReport: mapBattleAfterActionReport(data.battleAfterActionReport),
+    battleAfterActionReport: normaliseBattleAfterActionReport(data.battleAfterActionReport),
   };
 }
 
@@ -150,22 +151,6 @@ function mapWarning(data: WarningEvent): Warning {
     screenTab: data.screenTab || undefined,
     powerBlocId: data.powerBlocId || undefined,
     targetLabels: data.targetLabels ?? [],
-  };
-}
-
-function mapBattleAfterActionReport(report?: BattleAfterActionReportPayload): BattleAfterActionReportPayload | undefined {
-  if (!report?.available) return undefined;
-  return {
-    ...report,
-    headerImage: FoaeCefUIAssetPath(report.headerImage) ?? '',
-    spoilsList: (report.spoilsList ?? []).map(spoil => ({
-      ...spoil,
-      iconPath: FoaeCefUIAssetPath(spoil.iconPath) ?? '',
-    })),
-    unitDamage: (report.unitDamage ?? []).map(unit => ({
-      ...unit,
-      iconPath: FoaeCefUIAssetPath(unit.iconPath) ?? '',
-    })),
   };
 }
 

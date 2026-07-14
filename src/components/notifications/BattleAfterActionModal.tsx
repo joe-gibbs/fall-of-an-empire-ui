@@ -18,8 +18,10 @@ import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import './BattleAfterActionModal.css';
 
 import { webUIText, WebUIText } from '../../localization/WebUITextContext';
+export type BattleAfterActionNotification = Pick<Notification, 'title' | 'description' | 'battleAfterActionReport'>;
+
 interface BattleAfterActionModalProps {
-  notification: Notification | null;
+  notification: BattleAfterActionNotification | null;
   open: boolean;
   onClose: () => void;
   onNavigate?: () => void;
