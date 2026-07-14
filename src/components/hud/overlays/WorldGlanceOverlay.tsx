@@ -1,6 +1,7 @@
 ﻿import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { memo } from 'react';
 import type { GetWorldGlancesResponse } from '../../../bridge-types.generated.ts';
+import { useGlanceScale } from '../../../bridge/core/useGlanceScale';
 import {
   handleWorldGlanceHover,
   handleWorldGlanceInput,
@@ -370,13 +371,14 @@ function nodeTransform(
   overlaySize: OverlaySize,
   viewportWidth: number,
   viewportHeight: number,
+  glanceScale: number,
 ): string {
   const positionScaleX = viewportWidth > 0 && overlaySize.width > 0 ? overlaySize.width / viewportWidth : 1;
   const positionScaleY = viewportHeight > 0 && overlaySize.height > 0 ? overlaySize.height / viewportHeight : 1;
   const translateX = entry.screenX * positionScaleX;
   const translateY = entry.screenY * positionScaleY;
   const position = `${formatPx(translateX)}, ${formatPx(translateY)}`;
-  const scale = formatScale(entry.scale);
+  const scale = formatScale(entry.scale * glanceScale);
 
   return kind === 'settlement'
     ? `translate3d(${position}, 0) scale(${scale}) translate3d(${SETTLEMENT_GLANCE_OFFSET_X}, ${SETTLEMENT_GLANCE_OFFSET_Y}, 0)`
@@ -613,6 +615,7 @@ function applyNodeFrame(
   overlaySize: OverlaySize,
   viewportWidth: number,
   viewportHeight: number,
+  glanceScale: number,
   hasMilitarySelection: boolean,
   applyDetailImmediately: boolean,
   queueVisibilityPop: (kind: string, state: WorldGlanceNodeState) => void,
@@ -621,7 +624,7 @@ function applyNodeFrame(
   const localZIndex = localGlanceZIndex(kind, entry.zOrder);
   const zIndex = String(localZIndex);
   const opacity = formatOpacity(entry.opacity);
-  const transform = nodeTransform(kind, entry, overlaySize, viewportWidth, viewportHeight);
+  const transform = nodeTransform(kind, entry, overlaySize, viewportWidth, viewportHeight, glanceScale);
   const wasHidden = !state.visible;
   const wasPrewarmed = state.prewarmed;
   const previousOpacity = parseOpacity(state.opacity);
@@ -722,6 +725,7 @@ function applyFrameEntries(
   overlaySize: OverlaySize,
   viewportWidth: number,
   viewportHeight: number,
+  glanceScale: number,
   hasMilitarySelection: boolean,
   seenFrame: number,
   applyDetailImmediately: boolean,
@@ -750,7 +754,7 @@ function applyFrameEntries(
 
     state.seenFrame = seenFrame;
     currentFrameKeys.add(key);
-    if (applyNodeFrame(kind, state, entry, overlaySize, viewportWidth, viewportHeight, hasMilitarySelection, applyDetailImmediately, queueVisibilityPop)) {
+    if (applyNodeFrame(kind, state, entry, overlaySize, viewportWidth, viewportHeight, glanceScale, hasMilitarySelection, applyDetailImmediately, queueVisibilityPop)) {
       visibleNodeKeys.add(key);
     } else {
       visibleNodeKeys.delete(key);
@@ -1072,6 +1076,7 @@ function NativeWorldGlanceInputOverlay() {
 
 function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) {
   const data = useWorldGlancesBridge(true);
+  const glanceScale = useGlanceScale();
   const hasData = data !== null;
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const nodeStates = useRef<WorldGlanceNodeStateMap>({});
@@ -1210,12 +1215,12 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
       scheduleDetailFlush(DETAIL_FLUSH_DELAY_MS);
     }
 
-    applyFrameEntries('settlement', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
-    applyFrameEntries('port', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
-    applyFrameEntries('convoy', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
-    applyFrameEntries('army', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
-    applyFrameEntries('navy', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
-    applyFrameEntries('battle', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
+    applyFrameEntries('settlement', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, glanceScale, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
+    applyFrameEntries('port', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, glanceScale, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
+    applyFrameEntries('convoy', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, glanceScale, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
+    applyFrameEntries('army', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, glanceScale, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
+    applyFrameEntries('navy', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, glanceScale, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
+    applyFrameEntries('battle', currentData, frame, currentNodeStates, currentOverlaySize, viewportWidth, viewportHeight, glanceScale, hasMilitarySelection, seenFrame, applyDetailImmediately, queueVisibilityPop, currentFrameKeys, visibleNodeKeys);
 
     const previouslyVisibleKeys = Array.from(visibleNodeKeys);
     for (const key of previouslyVisibleKeys) {
@@ -1289,6 +1294,10 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
   useEffect(() => {
     applyFrameSnapshotRef.current = applyFrameSnapshot;
   });
+
+  useEffect(() => {
+    applyFrameSnapshotRef.current(latestFrameRef.current);
+  }, [glanceScale]);
 
   useEffect(() => {
     const handler = (event: Event) => {

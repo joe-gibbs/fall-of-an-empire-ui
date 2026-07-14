@@ -4,6 +4,7 @@ import {
   type ModWorldGlanceEntry,
   type WorldGlanceRegistration,
 } from '../../registry/worldGlances';
+import { useGlanceScale } from '../../bridge/core/useGlanceScale';
 import './ModWorldGlanceLayer.css';
 
 const MOD_FRAME_HEADER_NUMBER_COUNT = 2;
@@ -117,10 +118,11 @@ function overlayOffset(anchorPoint: string): string {
   return `${resolve(parts[0])}, ${resolve(parts[1])}`;
 }
 
-function ModWorldGlanceNode({ registration, entry, atlas }: {
+function ModWorldGlanceNode({ registration, entry, atlas, glanceScale }: {
   registration: WorldGlanceRegistration;
   entry: AtlasModWorldGlanceEntry;
   atlas: boolean;
+  glanceScale: number;
 }) {
   const content: ReactNode = registration.render(entry);
   const anchorPoint = registration.anchorPoint ?? 'center';
@@ -162,7 +164,7 @@ function ModWorldGlanceNode({ registration, entry, atlas }: {
     top: `${(entry.screenY / viewportHeight) * 100}%`,
     zIndex: entry.zOrder,
     opacity: entry.opacity,
-    transform: `translate(${overlayOffset(anchorPoint)}) scale(${entry.scale})`,
+    transform: `translate(${overlayOffset(anchorPoint)}) scale(${entry.scale * glanceScale})`,
     pointerEvents: registration.onInput ? 'auto' : 'none',
   } as CSSProperties;
 
@@ -192,6 +194,7 @@ function ModWorldGlanceNode({ registration, entry, atlas }: {
 }
 
 export default function ModWorldGlanceLayer({ atlas = false }: { atlas?: boolean }) {
+  const glanceScale = useGlanceScale();
   const registrations = useWorldGlanceRegistrations();
   const frames = useModWorldGlanceFrames(atlas);
   const nodes = useMemo(() => registrations.flatMap((registration) => (
@@ -204,6 +207,7 @@ export default function ModWorldGlanceLayer({ atlas = false }: { atlas?: boolean
       registration={registration}
       entry={entry}
       atlas={atlas}
+      glanceScale={glanceScale}
     />
   ));
 

@@ -3551,6 +3551,7 @@ export interface SettingsGameplayDTO {
   includeSaveInCrashReport: boolean;
   cursorScale: number;
   uiScale: number;
+  glanceScale: number;
   uiScrollSpeed: number;
   tooltipDelaySeconds: number;
   notificationDurationMultiplier: number;
