@@ -2024,12 +2024,7 @@
   margin-top: 0.3rem;
 }
 
-.battle-command-row > .tooltip-wrapper + .tooltip-wrapper {
-  margin-left: 0.3rem;
-}
-
-.battle-withdraw,
-.battle-retreat {
+.battle-withdraw {
   width: 5rem;
   height: 2.4rem;
   display: flex !important;
@@ -2040,11 +2035,6 @@
   letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
-}
-
-.battle-retreat-icon {
-  width: 0.95rem;
-  height: 0.95rem;
 }
 
 .battle-actions-buttons {

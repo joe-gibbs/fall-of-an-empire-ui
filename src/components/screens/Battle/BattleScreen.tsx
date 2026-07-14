@@ -702,18 +702,6 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
                             <WebUIText textKey="Battle.FormationWithdraw" />
                           </GameButton>
                         </Tooltip>
-                        {retreatablePlayerParticipants.length > 0 && (
-                          <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.911.15'), body: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.911.16') }} position="top">
-                            <GameButton
-                              variant="outline"
-                              className="battle-retreat"
-                              onClick={() => void surrenderBattle()}
-                            >
-                              <img src="/assets/icons/I_Retreat.png" alt="" className="battle-retreat-icon" />
-                              <WebUIText textKey="Auto.ComponentsScreensBattleBattleScreen.917.5" />
-                            </GameButton>
-                          </Tooltip>
-                        )}
                       </div>
                     </div>
                     {selectedActionFormation && (
