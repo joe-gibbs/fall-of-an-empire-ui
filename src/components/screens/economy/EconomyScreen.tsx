@@ -1672,7 +1672,7 @@ const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => 
   const [courtPosition, setCourtPosition] = useState<CourtPositionView | null>(null);
   const { openResource } = useResourceDetails();
   const economyOffice = useMemo(
-    () => court?.positions.find(position => position.key === 'MasterOfEconomy') ?? null,
+    () => court?.positions.find(position => position.key === 'masterofeconomy') ?? null,
     [court],
   );
 

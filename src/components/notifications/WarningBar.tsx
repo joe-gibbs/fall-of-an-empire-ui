@@ -23,21 +23,21 @@ const severityFrames: Record<WarningSeverity, string> = {
 
 // Maps game warning icon keys to packaged WebUI assets.
 const iconKeyToAsset: Record<string, string> = {
-  FoodShortage: '/assets/icons/I_Food.png',
-  TreasuryDeficit: '/assets/icons/I_Coins.png',
-  PowerBlocUnhappy: '/assets/icons/I_Intrigue.png',
-  HighUnrest: '/assets/icons/I_Unrest.png',
-  NoHeir: '/assets/icons/Relations/I_Heir.png',
-  RebellionImminent: '/assets/icons/I_PowerBlocUnrest.png',
-  SettlementUnderSiege: '/assets/icons/I_Siege.png',
-  UnassignedGovernor: '/assets/icons/I_Region.png',
-  VacantCourtPosition: '/assets/icons/I_VacantCourt.png',
-  CapitalOccupied: '/assets/icons/I_RaidingTorch.png',
-  PowerBlocDemand: '/assets/icons/I_Compliance.png',
-  GovernorMissionDeadline: GOVERNOR_MISSION_ICON,
-  ArmyAttrition: '/assets/icons/Terrain/I_Attrition.png',
-  ArmyDamaged: '/assets/icons/I_War.png',
-  Crisis: '/assets/icons/I_ExclamationWarning.png',
+  foodshortage: '/assets/icons/I_Food.png',
+  treasurydeficit: '/assets/icons/I_Coins.png',
+  powerblocunhappy: '/assets/icons/I_Intrigue.png',
+  highunrest: '/assets/icons/I_Unrest.png',
+  noheir: '/assets/icons/Relations/I_Heir.png',
+  rebellionimminent: '/assets/icons/I_PowerBlocUnrest.png',
+  settlementundersiege: '/assets/icons/I_Siege.png',
+  unassignedgovernor: '/assets/icons/I_Region.png',
+  vacantcourtposition: '/assets/icons/I_VacantCourt.png',
+  capitaloccupied: '/assets/icons/I_RaidingTorch.png',
+  powerblocdemand: '/assets/icons/I_Compliance.png',
+  governormissiondeadline: GOVERNOR_MISSION_ICON,
+  armyattrition: '/assets/icons/Terrain/I_Attrition.png',
+  armydamaged: '/assets/icons/I_War.png',
+  crisis: '/assets/icons/I_ExclamationWarning.png',
 };
 
 const fallbackIcon = '/assets/icons/I_GoalNotMet.png';
@@ -82,7 +82,7 @@ const WarningBar: React.FC<WarningBarProps> = ({ warnings, onDismiss, hidden }) 
     if (e.button !== 0) return;
     e.stopPropagation();
     playSound('click');
-    if (w.iconKey === 'UnassignedGovernor' || w.id === 'UnassignedGovernor') {
+    if (w.iconKey === 'unassignedgovernor' || w.id === 'unassignedgovernor') {
       startGovernorAssignmentBridge().catch(acknowledgeBridgeFailure);
       return;
     }

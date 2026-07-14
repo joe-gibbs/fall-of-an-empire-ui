@@ -187,7 +187,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
 
   const activeReligionKey = dioceses?.religionKey ?? selectedReligion;
   const religionOffice = useMemo(
-    () => court?.positions.find(position => position.key === 'MasterOfReligion') ?? null,
+    () => court?.positions.find(position => position.key === 'masterofreligion') ?? null,
     [court],
   );
 

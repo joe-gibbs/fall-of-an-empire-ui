@@ -244,10 +244,10 @@ function primaryStatIcon(primaryStat: string): string {
 }
 
 function appointmentContestIcon(positionKey: string): string {
-  if (positionKey === 'MagisterMilitum' || positionKey === 'MagisterNauticum') return '/assets/icons/I_ArmiesQuickButton.png';
-  if (positionKey === 'MasterOfEconomy') return '/assets/icons/I_Coins.png';
-  if (positionKey === 'MasterOfDiplomacy') return '/assets/icons/I_Diplomacy.png';
-  if (positionKey === 'MasterOfReligion') return '/assets/icons/I_Religions.png';
+  if (positionKey === 'magistermilitum' || positionKey === 'magisternauticum') return '/assets/icons/I_ArmiesQuickButton.png';
+  if (positionKey === 'masterofeconomy') return '/assets/icons/I_Coins.png';
+  if (positionKey === 'masterofdiplomacy') return '/assets/icons/I_Diplomacy.png';
+  if (positionKey === 'masterofreligion') return '/assets/icons/I_Religions.png';
   return '/assets/icons/I_Fame.png';
 }
 
@@ -304,7 +304,7 @@ function appointmentRoleFromPosition(position: CourtPositionView, t: ReturnType<
     icon: appointmentContestIcon(position.key),
     title: position.name,
     body: position.description,
-    category: t(position.key === 'MagisterMilitum' || position.key === 'MagisterNauticum'
+    category: t(position.key === 'magistermilitum' || position.key === 'magisternauticum'
       ? 'ProvinceMode.Appointment.Category.Army'
       : 'ProvinceMode.Appointment.Category.Court'),
     primaryStatLabel: t(primaryStatLabelKey(position.primaryStat)),

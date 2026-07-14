@@ -164,7 +164,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
   );
   const militaryCourtPositions = useMemo(() => {
     const positions = court?.positions ?? [];
-    return ['MagisterMilitum', 'MagisterNauticum']
+    return ['magistermilitum', 'magisternauticum']
       .map(key => positions.find(position => position.key === key))
       .filter((position): position is CourtPositionView => !!position);
   }, [court]);

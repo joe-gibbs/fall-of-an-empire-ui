@@ -19,6 +19,7 @@ export function registerAssetOverride(sourcePath: string, targetPath: string): v
   if (!sourcePath || !targetPath) return;
   if (!isGameLocalResourceUrl(targetPath)) return;
   assetOverrides.set(sourcePath, targetPath);
+  assetOverrides.set(sourcePath.toLowerCase(), targetPath);
 }
 
 function normaliseContentPackAssetPath(path: string): string | undefined {
@@ -59,13 +60,13 @@ function baseAssetPathFromUrl(path: string): string | undefined {
 }
 
 function assetOverrideForPath(path: string): string | undefined {
-  const override = assetOverrides.get(path);
+  const override = assetOverrides.get(path) ?? assetOverrides.get(path.toLowerCase());
   if (override) return override;
 
   const baseAssetPath = baseAssetPathFromUrl(path);
   if (!baseAssetPath) return undefined;
 
-  return assetOverrides.get(baseAssetPath);
+  return assetOverrides.get(baseAssetPath) ?? assetOverrides.get(baseAssetPath.toLowerCase());
 }
 
 function splitQuery(path: string): { base: string; query: string } {

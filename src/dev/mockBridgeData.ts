@@ -484,27 +484,27 @@ function mockPortraitLayers(portrait: string, isImprisoned = false): PortraitLay
 }
 
 const rephsianCulture: CultureInfo = {
-  id: 'Rephsian',
+  id: 'rephsian',
   name: 'Rephsian',
   description: 'A courtly imperial culture with a strong written tradition and disciplined public life.',
   colour: '#C9A85A',
-  group: 'Rephsian',
+  group: 'rephsian',
   groupDisplayName: 'Rephsian',
   canRecruitAsAuxiliaries: true,
 };
 
 const aurestianCulture: CultureInfo = {
-  id: 'Aurestian',
+  id: 'aurestian',
   name: 'Aurestian',
   description: 'A frontier culture shaped by hill towns, local assemblies, and veteran households.',
   colour: '#74A0AA',
-  group: 'Rephsian',
+  group: 'rephsian',
   groupDisplayName: 'Rephsian',
   canRecruitAsAuxiliaries: true,
 };
 
 const rephsianReligion: ReligionInfo = {
-  id: 'RephsianPantheon',
+  id: 'rephsianpantheon',
   name: 'Rephsian Pantheon',
   description: 'An organised temple tradition that binds legitimacy to public rites and civic patronage.',
   colour: '#C9A85A',
@@ -522,7 +522,7 @@ const rephsianReligion: ReligionInfo = {
 };
 
 const rivalReligion: ReligionInfo = {
-  id: 'Aurelianism',
+  id: 'aurelianism',
   name: 'Aurelianism',
   description: 'A solar reform faith favoured by officers, magistrates, and ambitious frontier patrons.',
   colour: '#D8B35A',
@@ -739,32 +739,32 @@ function mapModeFilters(state: MockBridgeState): BridgeResponse<'game.get_map_mo
   if (modeId === 'resources' || modeId === 'stockpiles') {
     response.modeLabel = modeId === 'stockpiles' ? 'Stockpiles' : 'Resources';
     response.entries = [
-      mapModeFilterEntry(state, 'Grain', 'Grain', '#CDB76A', '/assets/icons/Resources/I_Grain.png', 420),
-      mapModeFilterEntry(state, 'Iron', 'Iron', '#8A98A6', '/assets/icons/Resources/I_Iron.png', 82),
-      mapModeFilterEntry(state, 'Wood', 'Wood', '#7A5B3D', '/assets/icons/Resources/I_Wood.png', 146),
-      mapModeFilterEntry(state, 'Weapons', 'Weapons', '#A96348', '/assets/icons/Resources/I_Weapons.png', 34),
-      mapModeFilterEntry(state, 'Oil', 'Oil', '#6D8160', '/assets/icons/Resources/I_Oil.png', 18),
+      mapModeFilterEntry(state, 'grain', 'Grain', '#CDB76A', '/assets/icons/Resources/I_Grain.png', 420),
+      mapModeFilterEntry(state, 'iron', 'Iron', '#8A98A6', '/assets/icons/Resources/I_Iron.png', 82),
+      mapModeFilterEntry(state, 'wood', 'Wood', '#7A5B3D', '/assets/icons/Resources/I_Wood.png', 146),
+      mapModeFilterEntry(state, 'weapons', 'Weapons', '#A96348', '/assets/icons/Resources/I_Weapons.png', 34),
+      mapModeFilterEntry(state, 'oil', 'Oil', '#6D8160', '/assets/icons/Resources/I_Oil.png', 18),
     ];
   } else if (modeId === 'religion') {
     response.modeLabel = 'Religion';
     response.entries = [
       mapModeFilterEntry(state, rephsianReligion.id, rephsianReligion.name, rephsianReligion.colour, `/assets/religions/${rephsianReligion.id}.png`),
       mapModeFilterEntry(state, rivalReligion.id, rivalReligion.name, rivalReligion.colour, `/assets/religions/${rivalReligion.id}.png`),
-      mapModeFilterEntry(state, 'Tanaism', 'Tanaism', '#6EA9B2', '/assets/religions/Tanaism.png'),
+      mapModeFilterEntry(state, 'tanaism', 'Tanaism', '#6EA9B2', '/assets/religions/Tanaism.png'),
     ];
   } else if (modeId === 'culture') {
     response.modeLabel = 'Culture';
     response.entries = [
       mapModeFilterEntry(state, rephsianCulture.id, rephsianCulture.name, rephsianCulture.colour, `/assets/cultures/${rephsianCulture.id}.png`),
       mapModeFilterEntry(state, aurestianCulture.id, aurestianCulture.name, aurestianCulture.colour, `/assets/cultures/${aurestianCulture.id}.png`),
-      mapModeFilterEntry(state, 'Hervati', 'Hervati', '#A07655', '/assets/cultures/Hervati.png'),
+      mapModeFilterEntry(state, 'hervati', 'Hervati', '#A07655', '/assets/cultures/Hervati.png'),
     ];
   } else if (modeId === 'disease') {
     response.modeLabel = 'Disease Outbreaks';
     response.entries = [
-      mapModeFilterEntry(state, 'Languor', 'The Languor', '#769A68', '/assets/icons/I_Skull.png'),
-      mapModeFilterEntry(state, 'Ague', 'The Ague', '#8E9E4B', '/assets/icons/I_Skull.png'),
-      mapModeFilterEntry(state, 'Flux', 'The Flux', '#A66F45', '/assets/icons/I_Skull.png'),
+      mapModeFilterEntry(state, 'languor', 'The Languor', '#769A68', '/assets/icons/I_Skull.png'),
+      mapModeFilterEntry(state, 'ague', 'The Ague', '#8E9E4B', '/assets/icons/I_Skull.png'),
+      mapModeFilterEntry(state, 'flux', 'The Flux', '#A66F45', '/assets/icons/I_Skull.png'),
     ];
   } else if (modeId === 'militaries') {
     response.modeLabel = 'Military Recruitment';
@@ -858,7 +858,7 @@ function mockWorldConvoys(state: MockBridgeState): BridgeResponse<'game.get_worl
 }
 
 function mockPolicy(id: string, name: string, value: number) {
-  const inProgress = id === 'TaxRate';
+  const inProgress = id === 'taxrate';
   const currentLoad = inProgress ? 24 : 0;
   const effectDescription = value >= 0 ? '+5% stability' : '-5% unrest control';
   const increaseEffectDescription = 'Higher investment improves local compliance.';
@@ -1047,9 +1047,9 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
     },
   ],
   policies: [
-    mockPolicy('TaxRate', 'Grain Doles', 1),
-    mockPolicy('ArmyFunding', 'Frontier Levies', 0),
-    mockPolicy('PublicGames', 'Court Patronage', -1),
+    mockPolicy('taxrate', 'Grain Doles', 1),
+    mockPolicy('armyfunding', 'Frontier Levies', 0),
+    mockPolicy('publicgames', 'Court Patronage', -1),
   ],
   modifiers: [
     mockFactionModifier('TaxIncomeMultiplier', 'Tax Income Multiplier', 'Changes gold collected from settlements.', '/assets/icons/I_ModTax.png', 1.18, {
@@ -2082,7 +2082,7 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     ],
     resources: [
       {
-        id: 'Food',
+        id: 'food',
         name: 'Food',
         category: 'food',
         categoryName: 'Food',
@@ -2105,7 +2105,7 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
         bottlenecks: isPort ? [{ name: 'Granary', details: 'Grain 12.0/24.0' }] : [],
       },
       {
-        id: 'Stone',
+        id: 'stone',
         name: 'Stone',
         category: 'rawMaterials',
         categoryName: 'Raw Materials',
@@ -2543,13 +2543,13 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
       { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), name: 'Aurelion Detachment', strength: 520 },
     ] : [],
     resources: isNavy ? [
-      { id: 'Food', name: 'Food', amount: isRiverwatch ? 72 : 214, capacity: isRiverwatch ? 96 : 260, monthlyUsage: isRiverwatch ? 36 : 73, daysRemaining: profile.supplyDays },
-      { id: 'Pitch', name: 'Pitch', amount: isRiverwatch ? 16 : 48, capacity: isRiverwatch ? 24 : 64, monthlyUsage: isRiverwatch ? 3 : 8, daysRemaining: isRiverwatch ? 160 : 180 },
-      { id: 'Sails', name: 'Sails', amount: isRiverwatch ? 8 : 24, capacity: isRiverwatch ? 12 : 32, monthlyUsage: isRiverwatch ? 1 : 2, daysRemaining: isRiverwatch ? 240 : 360 },
+      { id: 'food', name: 'Food', amount: isRiverwatch ? 72 : 214, capacity: isRiverwatch ? 96 : 260, monthlyUsage: isRiverwatch ? 36 : 73, daysRemaining: profile.supplyDays },
+      { id: 'pitch', name: 'Pitch', amount: isRiverwatch ? 16 : 48, capacity: isRiverwatch ? 24 : 64, monthlyUsage: isRiverwatch ? 3 : 8, daysRemaining: isRiverwatch ? 160 : 180 },
+      { id: 'sails', name: 'Sails', amount: isRiverwatch ? 8 : 24, capacity: isRiverwatch ? 12 : 32, monthlyUsage: isRiverwatch ? 1 : 2, daysRemaining: isRiverwatch ? 240 : 360 },
     ] : [
-      { id: 'Food', name: 'Food', amount: isScouts ? 34 : isDetachment ? 118 : 148, capacity: isScouts ? 48 : isDetachment ? 150 : 180, monthlyUsage: isScouts ? 32 : isDetachment ? 82 : 82, daysRemaining: profile.supplyDays },
-      { id: 'Weapons', name: 'Weapons', amount: isScouts ? 9 : isDetachment ? 22 : 46, capacity: isScouts ? 12 : isDetachment ? 32 : 60, monthlyUsage: isScouts ? 1.2 : isDetachment ? 3.4 : 5.5, daysRemaining: isScouts ? 225 : isDetachment ? 194 : 251 },
-      { id: 'Horses', name: 'Horses', amount: isScouts ? 18 : isDetachment ? 36 : 64, capacity: isScouts ? 24 : isDetachment ? 48 : 80, monthlyUsage: isScouts ? 1.5 : isDetachment ? 2.5 : 3, daysRemaining: isScouts ? 360 : isDetachment ? 432 : 640 },
+      { id: 'food', name: 'Food', amount: isScouts ? 34 : isDetachment ? 118 : 148, capacity: isScouts ? 48 : isDetachment ? 150 : 180, monthlyUsage: isScouts ? 32 : isDetachment ? 82 : 82, daysRemaining: profile.supplyDays },
+      { id: 'weapons', name: 'Weapons', amount: isScouts ? 9 : isDetachment ? 22 : 46, capacity: isScouts ? 12 : isDetachment ? 32 : 60, monthlyUsage: isScouts ? 1.2 : isDetachment ? 3.4 : 5.5, daysRemaining: isScouts ? 225 : isDetachment ? 194 : 251 },
+      { id: 'horses', name: 'Horses', amount: isScouts ? 18 : isDetachment ? 36 : 64, capacity: isScouts ? 24 : isDetachment ? 48 : 80, monthlyUsage: isScouts ? 1.5 : isDetachment ? 2.5 : 3, daysRemaining: isScouts ? 360 : isDetachment ? 432 : 640 },
     ],
     attritionSources: [],
     supplyDays: profile.supplyDays,
@@ -3836,8 +3836,8 @@ function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
       { id: MOCK_IDS.rivalFaction, name: 'Aurestian League', visual: rivalVisual, rulerId: 'mock-person-rival', rulerName: 'Soran Velk', diplomaticStatus: 'War', settlementCount: 7, population: 642000, gold: 1130, income: 58, strength: 9100, armyCount: 2, navyCount: 0, vassalCount: 0, isPlayer: false, isRebel: false },
     ],
     resources: [
-      { id: 'Food', name: 'Food', category: 'Food', stockpile: 1630, production: 1520, consumption: 1898, netPerMonth: -378, settlementCount: 14, isFood: true },
-      { id: 'Stone', name: 'Stone', category: 'Construction', stockpile: 260, production: 30, consumption: 16, netPerMonth: 14, settlementCount: 5, isFood: false },
+      { id: 'food', name: 'Food', category: 'Food', stockpile: 1630, production: 1520, consumption: 1898, netPerMonth: -378, settlementCount: 14, isFood: true },
+      { id: 'stone', name: 'Stone', category: 'Construction', stockpile: 260, production: 30, consumption: 16, netPerMonth: 14, settlementCount: 5, isFood: false },
     ],
     buildings: [
       { id: 'mock-building-forum', name: 'Forum', category: 'Administrative', level: 3, maxLevel: 4, settlementId: MOCK_IDS.settlement, settlementName: 'Aurelion', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, upkeep: 12, condition: 92 },
@@ -4589,7 +4589,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     tutorialSpotlightVisible: searchParams.has('tutorialSpotlight'),
     autoAssignGovernorsEnabled: true,
     autoAssignCourtEnabled: true,
-    enteredCourtContestKeys: ['MasterOfEconomy'],
+    enteredCourtContestKeys: ['masterofeconomy'],
     autoAssignClergyEnabled: true,
     bureaucraticRushPressure: 0,
     playerGold: initialProvinceMode ? provincePlayerFaction.gold : 22748,
@@ -5205,7 +5205,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return { warnings: [
           { id: 'mock-warning-food', title: 'Food stores falling', description: 'Several settlements are consuming more food than they produce.', severity: 'warning', iconKey: 'I_Caution', targetCount: 2, screenToOpen: 'economy', screenTab: '', powerBlocId: '', targetLabels: ['Namaris', 'West Gate'] },
           { id: 'mock-warning-unrest', title: 'Unrest rising', description: 'Namaris is close to open resistance.', severity: 'danger', iconKey: 'I_Caution', targetCount: 1, screenToOpen: 'ledger', screenTab: '', powerBlocId: '', targetLabels: [] },
-          { id: 'UnassignedGovernor', title: 'Region needs a governor', description: 'One of your regions has no governor assigned.', severity: 'caution', iconKey: 'UnassignedGovernor', targetCount: 1, screenToOpen: '', screenTab: '', powerBlocId: '', targetLabels: [] },
+          { id: 'unassignedgovernor', title: 'Region needs a governor', description: 'One of your regions has no governor assigned.', severity: 'caution', iconKey: 'unassignedgovernor', targetCount: 1, screenToOpen: '', screenTab: '', powerBlocId: '', targetLabels: [] },
         ] } satisfies BridgeResponse<'game.get_warnings'>;
       case 'game.get_power_blocs':
         return clone(powerBlocs(state.gameDay));
@@ -6165,15 +6165,15 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       }
       case 'game.get_court_positions':
         return { autoAssignCourtEnabled: state.autoAssignCourtEnabled, courtFactionId: MOCK_IDS.playerFaction, courtFactionName: 'Rephsian Empire', positions: [
-          { key: 'MasterOfEconomy', name: 'Master of Economy', description: 'Coordinates decrees and provincial records.', primaryStat: 'governance', bonusLabel: 'Resource Throughput', bonusMultiplier: 1, bonusDecimals: 0, bonusSuffix: '%', bonusIsNegative: false, holderId: MOCK_IDS.governor, holderName: 'Marcia Vennor', holderStatValue: 9, holderIsPlayerCharacter: state.provinceMode, statTotal: 15, bonusValue: 15, bonusText: '+15%', bureaucraticCapacity: 15, ...mockCourtTerm(88), canPlayerEnterContest: state.provinceMode && !state.enteredCourtContestKeys.includes('MasterOfEconomy'), playerEnteredContest: state.enteredCourtContestKeys.includes('MasterOfEconomy'), playerContestScore: 68, playerContestRank: 2, contestCandidateCount: 3, leadingContestCandidateName: 'Caelia Moren', leadingContestCandidateScore: 82, subordinates: [mockCourtSubordinate(MOCK_IDS.heir, 'Cassian Arcastus', 214, 4, 2, false), mockCourtSubordinate(MOCK_IDS.character, 'Valen Arcastus', 61, 8, 4, !state.provinceMode)] },
-          { key: 'MagisterMilitum', name: 'Magister Militum', description: 'Keeps field commands supplied and disciplined.', primaryStat: 'tactics', bonusLabel: 'Army morale', bonusMultiplier: 1, bonusDecimals: 0, bonusSuffix: '%', bonusIsNegative: false, holderId: MOCK_IDS.character, holderName: 'Valen Arcastus', holderStatValue: 9, holderIsPlayerCharacter: !state.provinceMode, statTotal: 15, bonusValue: 15, bonusText: '+15%', bureaucraticCapacity: 0, ...mockCourtTerm(142), canPlayerEnterContest: state.provinceMode && !state.enteredCourtContestKeys.includes('MagisterMilitum'), playerEnteredContest: state.enteredCourtContestKeys.includes('MagisterMilitum'), playerContestScore: 71, playerContestRank: state.enteredCourtContestKeys.includes('MagisterMilitum') ? 2 : 0, contestCandidateCount: state.enteredCourtContestKeys.includes('MagisterMilitum') ? 3 : 2, leadingContestCandidateName: 'Doran Althar', leadingContestCandidateScore: 77, subordinates: [mockCourtSubordinate(MOCK_IDS.heir, 'Cassian Arcastus', 310, 6, 3, false), mockCourtSubordinate(MOCK_IDS.governor, 'Marcia Vennor', 38, 7, 3, state.provinceMode)] },
+          { key: 'masterofeconomy', name: 'Master of Economy', description: 'Coordinates decrees and provincial records.', primaryStat: 'governance', bonusLabel: 'Resource Throughput', bonusMultiplier: 1, bonusDecimals: 0, bonusSuffix: '%', bonusIsNegative: false, holderId: MOCK_IDS.governor, holderName: 'Marcia Vennor', holderStatValue: 9, holderIsPlayerCharacter: state.provinceMode, statTotal: 15, bonusValue: 15, bonusText: '+15%', bureaucraticCapacity: 15, ...mockCourtTerm(88), canPlayerEnterContest: state.provinceMode && !state.enteredCourtContestKeys.includes('masterofeconomy'), playerEnteredContest: state.enteredCourtContestKeys.includes('masterofeconomy'), playerContestScore: 68, playerContestRank: 2, contestCandidateCount: 3, leadingContestCandidateName: 'Caelia Moren', leadingContestCandidateScore: 82, subordinates: [mockCourtSubordinate(MOCK_IDS.heir, 'Cassian Arcastus', 214, 4, 2, false), mockCourtSubordinate(MOCK_IDS.character, 'Valen Arcastus', 61, 8, 4, !state.provinceMode)] },
+          { key: 'magistermilitum', name: 'Magister Militum', description: 'Keeps field commands supplied and disciplined.', primaryStat: 'tactics', bonusLabel: 'Army morale', bonusMultiplier: 1, bonusDecimals: 0, bonusSuffix: '%', bonusIsNegative: false, holderId: MOCK_IDS.character, holderName: 'Valen Arcastus', holderStatValue: 9, holderIsPlayerCharacter: !state.provinceMode, statTotal: 15, bonusValue: 15, bonusText: '+15%', bureaucraticCapacity: 0, ...mockCourtTerm(142), canPlayerEnterContest: state.provinceMode && !state.enteredCourtContestKeys.includes('magistermilitum'), playerEnteredContest: state.enteredCourtContestKeys.includes('magistermilitum'), playerContestScore: 71, playerContestRank: state.enteredCourtContestKeys.includes('magistermilitum') ? 2 : 0, contestCandidateCount: state.enteredCourtContestKeys.includes('magistermilitum') ? 3 : 2, leadingContestCandidateName: 'Doran Althar', leadingContestCandidateScore: 77, subordinates: [mockCourtSubordinate(MOCK_IDS.heir, 'Cassian Arcastus', 310, 6, 3, false), mockCourtSubordinate(MOCK_IDS.governor, 'Marcia Vennor', 38, 7, 3, state.provinceMode)] },
         ], maxSubordinates: 2 } satisfies BridgeResponse<'game.get_court_positions'>;
       case 'game.get_court_appointment_contests': {
-        const frontierEntered = state.enteredCourtContestKeys.includes('MagisterMilitum');
-        const economyEntered = state.enteredCourtContestKeys.includes('MasterOfEconomy');
+        const frontierEntered = state.enteredCourtContestKeys.includes('magistermilitum');
+        const economyEntered = state.enteredCourtContestKeys.includes('masterofeconomy');
         return { courtFactionId: MOCK_IDS.playerFaction, courtFactionName: 'Rephsian Empire', candidateDetailsIncluded: true, contests: [
           {
-            positionKey: 'MagisterMilitum',
+            positionKey: 'magistermilitum',
             title: 'Magister Militum',
             description: 'High command of the land armies. The emperor weighs tactics, loyalty, patronage, and political danger.',
             category: 'Army',
@@ -6197,7 +6197,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             ],
           },
           {
-            positionKey: 'MasterOfEconomy',
+            positionKey: 'masterofeconomy',
             title: 'Master of Economy',
             description: 'Control of finance, tribute pressure, and treasury access.',
             category: 'Court',

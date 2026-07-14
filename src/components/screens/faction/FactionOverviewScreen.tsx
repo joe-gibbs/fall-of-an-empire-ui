@@ -424,7 +424,7 @@ function OverviewTab({
                     outcome={outcome}
                     outcomeText={matchesOutcome ? interactionsState!.lastInteractionOutcomeText : undefined}
                     outcomeKey={outcomeKey}
-                    tutorialTarget={`Interaction:${edict.id}${edict.id === 'GrandFestival' ? ' GrandFestivalButton' : ''}`}
+                    tutorialTarget={`Interaction:${edict.id}${edict.id === 'grandfestival' ? ' GrandFestivalButton' : ''}`}
                     meta={<BureaucraticInlineValue value={edict.bureaucraticLoad} compact />}
                     onClick={canStart ? () => onStartEdict(edict.id) : undefined}
                     onCancel={edict.inProgress ? onCancelEdict : undefined}

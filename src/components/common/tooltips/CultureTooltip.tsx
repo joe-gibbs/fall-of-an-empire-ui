@@ -36,7 +36,7 @@ function cultureTooltipContent({ info, fallbackName, fallbackId }: Omit<CultureT
     },
   ] : [];
 
-  if (info?.group === 'Rephsian') {
+  if (info?.group === 'rephsian') {
     lines.push({
       label: webUIText('CultureTooltip.ForeignAdministrationLabel'),
       value: webUIText('CultureTooltip.RephsianForeignAdministration'),

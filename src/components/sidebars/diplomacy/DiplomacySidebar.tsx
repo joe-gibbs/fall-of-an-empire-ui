@@ -384,7 +384,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
   const showOpinion = !faction.isPlayer && !isSubject;
   const complianceVal = faction.compliance ?? 0;
   const complianceState = !faction.isPlayer && isSubject ? getComplianceState(complianceVal) : null;
-  const isSeizeTerritorySelection = factionInteractionSelection?.interactionId === 'SeizeTerritoryInteraction';
+  const isSeizeTerritorySelection = factionInteractionSelection?.interactionId === 'seizeterritoryinteraction';
   const showSeizeTerritoryBreakdown = Boolean(
     isSeizeTerritorySelection && factionInteractionSelection && factionInteractionSelection.selectedSettlementCount > 0,
   );
@@ -1179,7 +1179,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                     outcomeKey={outcomeKey}
                     cooldownDays={i.cooldownDays}
                     cooldownRemainingDays={i.cooldownRemainingDays}
-                    tutorialTarget={`Interaction:${i.id}${i.id === 'SubornFoederatiInteraction' ? ' SubornFoederatiButton' : ''}${i.id === 'InviteFoederatiInteraction' ? ' InviteFoederatiButton' : ''}`}
+                    tutorialTarget={`Interaction:${i.id}${i.id === 'subornfoederatiinteraction' ? ' SubornFoederatiButton' : ''}${i.id === 'invitefoederatiinteraction' ? ' InviteFoederatiButton' : ''}`}
                     onClick={canClick ? () => startInteraction(i.id) : undefined}
                     onCancel={i.inProgress ? cancelFactionInteraction : undefined}
                     meta={unavailableReason ? <span className="diplo-action-reason">{unavailableReason}</span> : undefined}

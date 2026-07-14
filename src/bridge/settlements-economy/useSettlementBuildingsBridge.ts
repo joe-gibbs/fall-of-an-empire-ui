@@ -41,14 +41,18 @@ export interface SettlementBuildingsBridgeState {
 }
 
 function toKebabCase(value: string): string {
-  if (value === 'RoadsDirt') {
+  const id = value.toLowerCase();
+  if (id === 'roadsdirt') {
     return 'dirt-roads';
   }
-  if (value === 'RoadsPaved') {
+  if (id === 'roadspaved') {
     return 'paved-roads';
   }
-  if (value === 'RoadsMetropolitan') {
+  if (id === 'roadsmetropolitan') {
     return 'metropolitan-roads';
+  }
+  if (id === 'shabarimdyeworks') {
+    return 'dye-works';
   }
   return value
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
@@ -61,7 +65,7 @@ export function buildingPortrait(assetKey: string): string | undefined {
 }
 
 function resourceIcon(name: string): string {
-  if (name === 'Gold') {
+  if (name.toLowerCase() === 'gold') {
     return FoaeCefUIAssetPath('/assets/icons/I_Coins.png');
   }
   return FoaeCefUIAssetPath(`/assets/resources/${name}.png`);

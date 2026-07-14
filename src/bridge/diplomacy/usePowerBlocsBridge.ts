@@ -29,16 +29,16 @@ const EMPTY_SUBJECT_ACTIONS: PowerBlocSubjectActionsState = {
 let powerBlocSubjectActionsCache: PowerBlocSubjectActionsState = EMPTY_SUBJECT_ACTIONS;
 
 const POWER_BLOC_HEADER_IMAGES: Record<string, string> = {
-  BureaucracyBloc: 'edict-centralize-bureaucracy',
-  FoederatiCouncilBloc: 'interaction-commission-foederati-officers',
-  LoyalistBloc: 'regency-council',
-  MilitaryEstablishmentBloc: 'military-chain-of-command',
-  NewMenBloc: 'interaction-fund-public-works',
-  PersonalFactionBloc: 'power-struggle',
-  RegionalInterestBloc: 'interaction-dispatch-imperial-aid',
-  ReligiousBloc: 'religious-ceremony',
-  SenatorialAristocracyBloc: 'senate-debate',
-  TutorialPatronageBloc: 'conspiracy-meeting',
+  bureaucracybloc: 'edict-centralize-bureaucracy',
+  foederaticouncilbloc: 'interaction-commission-foederati-officers',
+  loyalistbloc: 'regency-council',
+  militaryestablishmentbloc: 'military-chain-of-command',
+  newmenbloc: 'interaction-fund-public-works',
+  personalfactionbloc: 'power-struggle',
+  regionalinterestbloc: 'interaction-dispatch-imperial-aid',
+  religiousbloc: 'religious-ceremony',
+  senatorialaristocracybloc: 'senate-debate',
+  tutorialpatronagebloc: 'conspiracy-meeting',
 };
 
 export function clearPowerBlocCache(blocId: string | undefined): void {

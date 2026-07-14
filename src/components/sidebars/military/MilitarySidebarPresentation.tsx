@@ -308,7 +308,7 @@ export function coerceDoctrine(raw: string | undefined): MilitaryDoctrine {
 }
 
 export function resourceIconPath(resourceId: string): string {
-  if (resourceId === 'Food') return FoaeCefUIAssetPath('/assets/icons/I_Food.png');
+  if (resourceId === 'food') return FoaeCefUIAssetPath('/assets/icons/I_Food.png');
   return FoaeCefUIAssetPath(`/assets/resources/${resourceId}.png`);
 }
 
@@ -348,7 +348,7 @@ export function resourceFillPercent(row: MilitaryResource): number {
 }
 
 export function resourceReserveTargetDays(row: MilitaryResource): number {
-  return row.id === 'Food' ? 180 : 365;
+  return row.id === 'food' ? 180 : 365;
 }
 
 export function resourceReservePercent(row: MilitaryResource): number {

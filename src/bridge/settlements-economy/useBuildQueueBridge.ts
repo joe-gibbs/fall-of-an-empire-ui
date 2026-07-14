@@ -29,14 +29,18 @@ export function clearBuildQueueCache(): void {
 }
 
 function toKebabCase(value: string): string {
-  if (value === 'RoadsDirt') {
+  const id = value.toLowerCase();
+  if (id === 'roadsdirt') {
     return 'dirt-roads';
   }
-  if (value === 'RoadsPaved') {
+  if (id === 'roadspaved') {
     return 'paved-roads';
   }
-  if (value === 'RoadsMetropolitan') {
+  if (id === 'roadsmetropolitan') {
     return 'metropolitan-roads';
+  }
+  if (id === 'shabarimdyeworks') {
+    return 'dye-works';
   }
   return value
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')

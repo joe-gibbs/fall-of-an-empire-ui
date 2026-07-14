@@ -715,7 +715,7 @@ export default function DiplomacyScreen({ onClose, initialTab }: DiplomacyScreen
   const [activeTab, setActiveTab] = useState(resolvedInitialTab);
   const [courtPosition, setCourtPosition] = useState<CourtPositionView | null>(null);
   const diplomacyOffice = useMemo(
-    () => court?.positions.find(position => position.key === 'MasterOfDiplomacy') ?? null,
+    () => court?.positions.find(position => position.key === 'masterofdiplomacy') ?? null,
     [court],
   );
 

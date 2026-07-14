@@ -72,15 +72,15 @@ const TARGET_ALIASES: Record<string, string[]> = {
   PoliciesTabButton: ['PoliciesTabButton', 'FactionPolicies', 'SidebarTab:overview', 'ScreenContent'],
   MakePeaceButton: ['MakePeaceButton'],
   TotalConquestButton: ['TotalConquestButton', 'PeaceTerm:rebel_conquest', 'PeaceTerm:annex_faction'],
-  OfferGiftButton: ['OfferGiftButton', 'Interaction:OfferGift'],
-  ProposeMarriageButton: ['ProposeMarriageButton', 'Interaction:ProposeMarriage'],
+  OfferGiftButton: ['OfferGiftButton', 'Interaction:offergift'],
+  ProposeMarriageButton: ['ProposeMarriageButton', 'Interaction:proposemarriage'],
   MilitaryAllianceOption: ['MilitaryAllianceOption'],
   DiplomatPortrait: ['DiplomatPortrait'],
-  SubornFoederatiButton: ['SubornFoederatiButton', 'Interaction:SubornFoederatiInteraction'],
-  InviteFoederatiButton: ['InviteFoederatiButton', 'Interaction:InviteFoederatiInteraction'],
+  SubornFoederatiButton: ['SubornFoederatiButton', 'Interaction:subornfoederatiinteraction'],
+  InviteFoederatiButton: ['InviteFoederatiButton', 'Interaction:invitefoederatiinteraction'],
   LoyalistMakePromiseButton: ['LoyalistMakePromiseButton'],
-  TaxRateIncreaseButton: ['TaxRateIncreaseButton', 'Policy:TaxRate'],
-  GrandFestivalButton: ['GrandFestivalButton', 'Interaction:GrandFestival'],
+  TaxRateIncreaseButton: ['TaxRateIncreaseButton', 'Policy:taxrate'],
+  GrandFestivalButton: ['GrandFestivalButton', 'Interaction:grandfestival'],
   TutorialProgress: ['TutorialProgress'],
   WarningsContainer: ['WarningsContainer'],
 };
@@ -108,7 +108,8 @@ function isVisibleElement(element: Element): boolean {
 function findByTutorialToken(tokens: string[]): HTMLElement | null {
   const candidates = Array.from(document.querySelectorAll('[data-tutorial-target]'));
   for (const token of tokens) {
-    const found = candidates.find(element => targetTokens(element).includes(token) && isVisibleElement(element));
+    const expected = token.toLowerCase();
+    const found = candidates.find(element => targetTokens(element).some(candidate => candidate.toLowerCase() === expected) && isVisibleElement(element));
     if (found instanceof HTMLElement) return found;
   }
   return null;
@@ -116,8 +117,9 @@ function findByTutorialToken(tokens: string[]): HTMLElement | null {
 
 function findRenderedByTutorialToken(token: string): HTMLElement | null {
   const candidates = Array.from(document.querySelectorAll('[data-tutorial-target]'));
+  const expected = token.toLowerCase();
   const found = candidates.find(element => {
-    if (!targetTokens(element).includes(token)) return false;
+    if (!targetTokens(element).some(candidate => candidate.toLowerCase() === expected)) return false;
     const rect = element.getBoundingClientRect();
     return rect.width > 1 && rect.height > 1;
   });
@@ -154,7 +156,8 @@ function findSpotlightTarget(spotlight: TutorialSpotlightResponse): HTMLElement 
     return null;
   }
 
-  const aliases = TARGET_ALIASES[spotlight.target] ?? [spotlight.target];
+  const targetKey = Object.keys(TARGET_ALIASES).find(key => key.toLowerCase() === spotlight.target.toLowerCase());
+  const aliases = targetKey ? TARGET_ALIASES[targetKey] : [spotlight.target];
   return findByTutorialToken([spotlight.target, ...aliases]);
 }
 
@@ -358,7 +361,7 @@ export default function TutorialSpotlightOverlay({
   useEffect(() => {
     if (!spotlight.isVisible || !eventId) return undefined;
 
-    if (spotlight.target === 'FormationNameInput') {
+    if (spotlight.target.toLowerCase() === 'formationnameinput') {
       const inputHandler = (event: Event) => {
         const target = targetElementRef.current;
         if (!(target instanceof HTMLInputElement) || event.target !== target) return;

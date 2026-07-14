@@ -321,8 +321,8 @@ function prisonActionTooltip(action: PersonInteractionView | undefined, fallback
 
 const CharacterPrisonActions = memo(function CharacterPrisonActions({ character }: { character: CharacterListEntry }) {
   const interactions = usePersonInteractionsBridge(character.isImprisoned ? character.id : null);
-  const execute = interactions.state?.interactions.find(interaction => interaction.id === 'ExecuteCharacter');
-  const release = interactions.state?.interactions.find(interaction => interaction.id === 'ReleaseCharacter');
+  const execute = interactions.state?.interactions.find(interaction => interaction.id === 'executecharacter');
+  const release = interactions.state?.interactions.find(interaction => interaction.id === 'releasecharacter');
 
   if (!character.isImprisoned) {
     return <span className="chs-muted">-</span>;
@@ -349,7 +349,7 @@ const CharacterPrisonActions = memo(function CharacterPrisonActions({ character 
           icon="/assets/person-interactions/icons/ExecuteCharacter.png"
           ariaLabel={webUIText('Characters.ExecutePrisoner')}
           disabled={actionDisabled(execute)}
-          onClick={() => void interactions.start('ExecuteCharacter')}
+          onClick={() => void interactions.start('executecharacter')}
         />
       </Tooltip>
       <Tooltip
@@ -363,7 +363,7 @@ const CharacterPrisonActions = memo(function CharacterPrisonActions({ character 
           icon="/assets/person-interactions/icons/ReleaseCharacter.png"
           ariaLabel={webUIText('Characters.FreePrisoner')}
           disabled={actionDisabled(release)}
-          onClick={() => void interactions.start('ReleaseCharacter')}
+          onClick={() => void interactions.start('releasecharacter')}
         />
       </Tooltip>
     </div>

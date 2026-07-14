@@ -191,7 +191,7 @@ export default function CourtAppointmentModal({
     : candidates[0]?.character.id ?? null;
 
   const selected = candidates.find(candidate => candidate.character.id === effectiveSelectedId) || candidates[0];
-  const canRecruit = renderedPosition?.key !== 'MasterOfReligion';
+  const canRecruit = renderedPosition?.key !== 'masterofreligion';
   const canAffordRecruit = gold >= RECRUIT_CHARACTER_GOLD_COST;
 
   const handleAppoint = useCallback(() => {

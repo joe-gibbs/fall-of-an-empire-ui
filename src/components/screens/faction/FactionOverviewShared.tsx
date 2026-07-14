@@ -544,7 +544,7 @@ export function PolicyEntry({
                   type="button"
                   className={`fov-policy-btn${canIncrease ? '' : ' fov-policy-btn--disabled'}`}
                   disabled={!canIncrease}
-                  data-tutorial-target={policy.id === 'TaxRate' ? 'TaxRateIncreaseButton' : undefined}
+                  data-tutorial-target={policy.id === 'taxrate' ? 'TaxRateIncreaseButton' : undefined}
                   onMouseDown={(e) => {
                     e.stopPropagation();
                     startAdjustment('increase');

@@ -447,7 +447,7 @@ function BlocTable({
                   <GameButton
                     variant="outline"
                     className="pbs-join-button"
-                    tutorialTarget={bloc.definitionKey === 'TutorialPatronageBloc' ? 'TutorialPatronageBlocJoinButton' : undefined}
+                    tutorialTarget={bloc.definitionKey === 'tutorialpatronagebloc' ? 'TutorialPatronageBlocJoinButton' : undefined}
                     disabled
                   >
                     {webUIText('PowerBlocs.SubjectJoin')}
@@ -462,7 +462,7 @@ function BlocTable({
               <GameButton
                 variant={joined ? 'outline' : 'burgundy'}
                 className="pbs-join-button"
-                tutorialTarget={!joined && bloc.definitionKey === 'TutorialPatronageBloc' ? 'TutorialPatronageBlocJoinButton' : undefined}
+                tutorialTarget={!joined && bloc.definitionKey === 'tutorialpatronagebloc' ? 'TutorialPatronageBlocJoinButton' : undefined}
                 onClick={() => setPowerBlocMembershipAndRefresh(bloc.id, !joined)}
               >
                 {joined ? webUIText('PowerBlocs.SubjectAction.Leave') : webUIText('PowerBlocs.SubjectJoin')}
