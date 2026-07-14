@@ -17,7 +17,7 @@ import {
   type WorldGlanceFrameSection,
   type WorldGlancesFrameResponse,
 } from '../../../bridge/app/useWorldGlancesBridge';
-import ArmyGlance from '../../world-glances/ArmyGlance';
+import ArmyGlance, { NativeMilitaryGlanceTooltip } from '../../world-glances/ArmyGlance';
 import NavyGlance from '../../world-glances/NavyGlance';
 import BattleGlance from '../../world-glances/BattleGlance';
 import SettlementGlance from '../../world-glances/SettlementGlance';
@@ -992,8 +992,82 @@ interface WorldGlanceOverlayProps {
 }
 
 function NativeWorldGlanceInputOverlay() {
-  useWorldGlancesBridge(true);
-  return null;
+  const data = useWorldGlancesBridge(true);
+  const dataRef = useRef(data);
+  const latestFrameRef = useRef<WorldGlancesFrameResponse | null>(null);
+  const [hovered, setHovered] = useState<{ kind: 'army' | 'navy'; id: string } | null>(null);
+  const hoveredRef = useRef(hovered);
+  const [anchor, setAnchor] = useState<ScreenPosition | null>(null);
+
+  dataRef.current = data;
+  hoveredRef.current = hovered;
+
+  const updateAnchor = useCallback((frame: WorldGlancesFrameResponse | null, target = hoveredRef.current) => {
+    if (!frame || !target) {
+      setAnchor(null);
+      return;
+    }
+
+    const entry = findFrameEntry(
+      dataRef.current,
+      frame,
+      target.kind,
+      target.id,
+      makeWorldGlanceFrameEntryScratch(),
+    );
+    if (!entry || !frameEntryInteractive(entry)) {
+      setAnchor(null);
+      return;
+    }
+
+    setAnchor(frameScreenPosition(
+      entry,
+      { width: window.innerWidth, height: window.innerHeight },
+      worldGlanceFrameViewportWidth(frame),
+      worldGlanceFrameViewportHeight(frame),
+    ));
+  }, []);
+
+  useEffect(() => onWorldGlancesFrame((frame) => {
+    latestFrameRef.current = frame;
+    updateAnchor(frame);
+  }), [updateAnchor]);
+
+  useEffect(() => {
+    const onHover = (event: Event) => {
+      const args = (event as CustomEvent<{ args?: unknown[] }>).detail?.args;
+      const kind = args?.[0];
+      const id = args?.[1];
+      const isHovered = args?.[2];
+      if ((kind !== 'army' && kind !== 'navy') || typeof id !== 'string' || typeof isHovered !== 'boolean') {
+        return;
+      }
+
+      if (isHovered) {
+        const target: { kind: 'army' | 'navy'; id: string } = { kind, id };
+        hoveredRef.current = target;
+        setHovered(target);
+        updateAnchor(latestFrameRef.current, target);
+      } else if (hoveredRef.current?.kind === kind && hoveredRef.current.id === id) {
+        hoveredRef.current = null;
+        setHovered(null);
+        setAnchor(null);
+      }
+    };
+
+    window.addEventListener('StrategyWorldGlanceHover', onHover);
+    return () => window.removeEventListener('StrategyWorldGlanceHover', onHover);
+  }, [updateAnchor]);
+
+  if (!data || !hovered || !anchor) return null;
+
+  const entry = hovered.kind === 'navy'
+    ? data.navies.find(candidate => candidate.id === hovered.id)
+    : data.armies.find(candidate => candidate.id === hovered.id);
+  if (!entry) return null;
+
+  const tooltipData = hovered.kind === 'navy' ? mapNavy(entry) : mapMilitary(entry);
+  return <NativeMilitaryGlanceTooltip data={tooltipData} isNavy={hovered.kind === 'navy'} anchor={anchor} />;
 }
 
 function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) {

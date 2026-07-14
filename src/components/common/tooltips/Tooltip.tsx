@@ -30,6 +30,7 @@ interface TooltipContent {
 interface TooltipProps {
   content: React.ReactNode | TooltipContent;
   children: React.ReactNode;
+  open?: boolean;
   position?: 'top' | 'bottom' | 'left' | 'right';
   delay?: number;
   variant?: 'default' | 'sidebar';
@@ -988,6 +989,7 @@ function TooltipHost() {
 const Tooltip: React.FC<TooltipProps> = ({
   content,
   children,
+  open,
   position = 'top',
   delay,
   variant = 'default',
@@ -999,6 +1001,7 @@ const Tooltip: React.FC<TooltipProps> = ({
   wrapperStyle,
   anchorRef,
 }) => {
+  const controlled = open !== undefined;
   const effectiveDelay = Math.max(delay ?? globalTooltipDelay(), 0);
   const wrapperRef = useRef<HTMLElement>(null);
   const showRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1045,7 +1048,7 @@ const Tooltip: React.FC<TooltipProps> = ({
     }, delayMs);
   }, []);
 
-  const show = useCallback(() => {
+  const beginShow = useCallback(() => {
     onShowIntent?.();
     hoveredRef.current = true;
     hoverStartedAtRef.current = Date.now();
@@ -1054,11 +1057,21 @@ const Tooltip: React.FC<TooltipProps> = ({
     scheduleShow(effectiveDelay);
   }, [effectiveDelay, onShowIntent, scheduleShow]);
 
+  const show = useCallback(() => {
+    if (!controlled) beginShow();
+  }, [beginShow, controlled]);
+
   const hide = useCallback(() => {
     hoveredRef.current = false;
     if (showRef.current) { clearTimeout(showRef.current); showRef.current = null; }
     scheduleSharedTooltipHide(tooltipIdRef.current, 80);
   }, []);
+
+  useEffect(() => {
+    if (!controlled) return;
+    if (open) beginShow();
+    else hide();
+  }, [beginShow, controlled, hide, open]);
 
   const dismissForPress = useCallback(() => {
     hoveredRef.current = false;

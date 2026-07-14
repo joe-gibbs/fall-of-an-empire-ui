@@ -168,18 +168,17 @@ interface ArmyGlanceProps {
   isNavy?: boolean;
 }
 
-export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
+interface MilitaryTooltipProps extends ArmyGlanceProps {
+  children: React.ReactNode;
+  open?: boolean;
+  passive?: boolean;
+  wrapperStyle?: CSSProperties;
+}
+
+function MilitaryTooltip({ data, isNavy = false, children, open, passive = false, wrapperStyle }: MilitaryTooltipProps) {
   const { debugMode } = useGameState();
   const [tooltipDetail, setTooltipDetail] = useState<GetMilitaryDataResponse | null>(null);
-  const strengthPct = strengthFraction(data);
-  const moralePct = clampUnitFraction(data.morale);
   const blockading = isNavy && (data as NavyGlanceData).blockading;
-  const militaryTypeIcon = FoaeCefUIAssetPath(isNavy ? '/assets/icons/I_Anchor.png' : '/assets/icons/I_Swords.png');
-  const statusIcon = blockading ? '/assets/icons/I_Siege.png' : data.raiding ? '/assets/icons/I_RaidingTorch.png' : '';
-  const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
-  const attritionIcon = FoaeCefUIAssetPath(data.attritionIcon || '/assets/icons/Terrain/I_Attrition.png');
-  const visibleStatusCount = (statusIcon ? 1 : 0) + (data.attrition ? 1 : 0) + (embarkedArmyCount > 0 ? 1 : 0);
-  const crownCount = 1 + visibleStatusCount;
   const requestTooltipDetail = useCallback(() => {
     setTooltipDetail(null);
     bridgeCall('game.get_military_data', { militaryId: data.id, subscriptionId: '', subscribe: false })
@@ -194,11 +193,57 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   return (
     <Tooltip
       content={tooltipDetail ? militaryTooltip(data, tooltipDetail, isNavy, Boolean(blockading), debugMode) : null}
+      open={open}
       position="top"
       delay={520}
-      bubbleClassName="tt-bubble--glance"
+      bubbleClassName={`tt-bubble--glance${passive ? ' tt-bubble--passive' : ''}`}
       onShowIntent={requestTooltipDetail}
+      wrapperStyle={wrapperStyle}
     >
+      {children}
+    </Tooltip>
+  );
+}
+
+export function NativeMilitaryGlanceTooltip({
+  data,
+  isNavy = false,
+  anchor,
+}: ArmyGlanceProps & { anchor: { x: number; y: number } }) {
+  return (
+    <MilitaryTooltip
+      data={data}
+      isNavy={isNavy}
+      open
+      passive
+      wrapperStyle={{
+        position: 'fixed',
+        left: anchor.x,
+        top: anchor.y,
+        width: '5rem',
+        height: '5rem',
+        transform: 'translate(-50%, -50%)',
+        pointerEvents: 'none',
+      }}
+    >
+      <span aria-hidden="true" />
+    </MilitaryTooltip>
+  );
+}
+
+export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
+  const strengthPct = strengthFraction(data);
+  const moralePct = clampUnitFraction(data.morale);
+  const blockading = isNavy && (data as NavyGlanceData).blockading;
+  const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
+  const militaryTypeIcon = FoaeCefUIAssetPath(isNavy ? '/assets/icons/I_Anchor.png' : '/assets/icons/I_Swords.png');
+  const statusIcon = blockading ? '/assets/icons/I_Siege.png' : data.raiding ? '/assets/icons/I_RaidingTorch.png' : '';
+  const attritionIcon = FoaeCefUIAssetPath(data.attritionIcon || '/assets/icons/Terrain/I_Attrition.png');
+  const visibleStatusCount = (statusIcon ? 1 : 0) + (data.attrition ? 1 : 0) + (embarkedArmyCount > 0 ? 1 : 0);
+  const crownCount = 1 + visibleStatusCount;
+
+  return (
+    <MilitaryTooltip data={data} isNavy={isNavy}>
       <div
         className={`glance glance--military${isNavy ? ' glance--navy' : ''}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
         style={{
@@ -241,6 +286,6 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
             </span>
           )}
       </div>
-    </Tooltip>
+    </MilitaryTooltip>
   );
 }
