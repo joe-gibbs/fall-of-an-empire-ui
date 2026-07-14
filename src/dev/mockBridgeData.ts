@@ -3717,8 +3717,8 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
       { id: 'mock-faction-salt-league', name: 'Salt League', colour: '#8A6930', secondaryColour: '#CFC4AA', cultureGroup: 'Aurestian', emblem: 'Aurestian_2', rulerId: 'mock-person-salt-leader', rulerName: 'Nera Solun', capital: 'Salinar', diplomaticStatus: 'neutral', diplomaticStatusLabel: 'Neutral', subjectType: '', subjectSubtype: '', buildFocusKey: '', buildFocus: '', taxRate: 0, goldTribute: 0, opinion: 36, compliance: 0, hasCompliance: false, population: 284000, settlements: 5, strength: 4200, treaties: 1, isRebel: false, isAtWar: false, canSetBuildFocus: false, buildFocusBlockedReason: '' },
     ],
     provinceCandidates: [
-      { landId: 'AurelionBasin', landName: 'Aurelion Basin', settlementCount: 3, controlPercent: 100, cost: 250, bureaucraticCreateProvinceLoad: 0, canCreate: true, blockedReason: '' },
-      { landId: 'NamarisShore', landName: 'Namaris Shore', settlementCount: 2, controlPercent: 75, cost: 180, bureaucraticCreateProvinceLoad: 0, canCreate: false, blockedReason: 'Requires full control.' },
+      { landId: 'AurelionBasin', landName: 'Aurelion Basin', settlementCount: 3, controlPercent: 100, cost: 250, bureaucraticLoadChange: -8, canCreate: true, blockedReason: '' },
+      { landId: 'NamarisShore', landName: 'Namaris Shore', settlementCount: 2, controlPercent: 75, cost: 180, bureaucraticLoadChange: -6, canCreate: false, blockedReason: 'Requires full control.' },
     ],
     regionalGovernors: [
       { regionId: 'Heartland', regionName: 'Heartland', settlementId: 'mock-settlement-capital', settlementName: 'Rephsia', governorId: MOCK_IDS.governor, governorName: 'Marcia Vennor', settlementCount: 5, corruptionPercent: 8, taxBonusPercent: 12, unrestReductionPercent: 6, militaryBonusPercent: 2, bureaucraticGovernorLoad: 0, isLocked: false, canManageGovernor: true },

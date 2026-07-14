@@ -680,8 +680,7 @@ function GovernorRow({ row, characters, blocs }: { row: RegionalGovernor; charac
 function ProvinceCandidateCard({ row, leaderCandidates }: { row: ProvinceCandidate; leaderCandidates: CharacterListEntry[] }) {
   const [leaderModalOpen, setLeaderModalOpen] = useState(false);
   const controlTone = row.controlPercent >= 100 ? 'var(--green)' : row.controlPercent >= 75 ? 'var(--yellow)' : 'var(--red-light)';
-  const createProvinceLoad = row.bureaucraticCreateProvinceLoad;
-  const createProvinceThroughputLine = bureaucraticTooltipLine(createProvinceLoad);
+  const createProvinceThroughputLine = bureaucraticTooltipLine(row.bureaucraticLoadChange);
   const statusText = row.canCreate ? webUIText("Auto.Fix.ExprTrue.componentsscreensInternalPoliticsScreen.626.1") : webUIText("Auto.Fix.ExprFalse.componentsscreensInternalPoliticsScreen.626.1");
   const statusIcon = row.canCreate ? READY_ICON : BLOCKED_ICON;
   const canCreateProvince = row.canCreate && leaderCandidates.length > 0;
@@ -736,7 +735,7 @@ function ProvinceCandidateCard({ row, leaderCandidates }: { row: ProvinceCandida
               get body() { return canCreateProvince ? webUIText('InternalPolitics.ProvinceCreationButtonBody') : createBlockedReason; },
               lines: [
                 { label: webUIText('Auto.Prop.ComponentsScreensInternalPoliticsScreen.637.7'), value: formatNumber(row.cost), valueIcon: GOLD_ICON },
-                ...(createProvinceThroughputLine ? [createProvinceThroughputLine] : []),
+                createProvinceThroughputLine,
               ],
             }}
           >
@@ -756,7 +755,7 @@ function ProvinceCandidateCard({ row, leaderCandidates }: { row: ProvinceCandida
               <WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.651.9" />
             </button>
           </Tooltip>
-          <BureaucraticInlineValue value={createProvinceLoad} compact />
+          <BureaucraticInlineValue value={row.bureaucraticLoadChange} compact />
         </div>
       </div>
       <ProvinceCreationLeaderModal

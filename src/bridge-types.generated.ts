@@ -645,7 +645,7 @@ export interface DiplomacyProvinceCandidate {
   settlementCount: number;
   controlPercent: number;
   cost: number;
-  bureaucraticCreateProvinceLoad: number;
+  bureaucraticLoadChange: number;
   canCreate: boolean;
   blockedReason: string;
 }
