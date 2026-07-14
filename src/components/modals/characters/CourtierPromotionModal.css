@@ -124,6 +124,12 @@
   display: flex;
 }
 
+.cpm-tooltip {
+  width: 25rem;
+  min-width: 25rem;
+  max-width: 25rem;
+}
+
 /* ── Card ───────────────────────────────────────────────────────────── */
 
 .cpm-card {
@@ -266,31 +272,21 @@
   flex-shrink: 0;
 }
 .cpm-stat-track {
-  position: relative;
   flex: 1;
-  height: 0.32rem;
-  background:
-    linear-gradient(90deg,
-      rgba(255, 255, 255, 0.04) 0%,
-      rgba(255, 255, 255, 0.04) 100%),
-    rgba(8, 12, 17, 0.55);
-  border: 0.077rem solid rgba(201, 168, 76, 0.15);
-  overflow: hidden;
+  height: 0.4rem;
+  display: flex;
+  column-gap: 0.08rem;
 }
-.cpm-stat-track::before {
-  /* Faint 1/4, 1/2, 3/4 tick marks to read the 0-20 scale. */
-  content: '';
-  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
-  background-image:
-    linear-gradient(90deg, transparent 0%, transparent 24.5%, rgba(201, 168, 76, 0.18) 24.5%, rgba(201, 168, 76, 0.18) 25.5%, transparent 25.5%, transparent 100%),
-    linear-gradient(90deg, transparent 0%, transparent 49.5%, rgba(201, 168, 76, 0.22) 49.5%, rgba(201, 168, 76, 0.22) 50.5%, transparent 50.5%, transparent 100%),
-    linear-gradient(90deg, transparent 0%, transparent 74.5%, rgba(201, 168, 76, 0.18) 74.5%, rgba(201, 168, 76, 0.18) 75.5%, transparent 75.5%, transparent 100%);
-  background-repeat: no-repeat, no-repeat, no-repeat;
-  pointer-events: none;
+.cpm-stat-segment {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: url('/assets/bar-track.png') repeat-x center;
+  background-size: auto 100%;
+  border-radius: 0.12rem;
 }
-.cpm-stat-fill {
-  position: absolute; top: 0; bottom: 0;
-}
+.cpm-stat-segment--green { background-image: url('/assets/bar-green.png'); }
+.cpm-stat-segment--red { background-image: url('/assets/bar-red.png'); }
 .cpm-stat-range {
   font-family: var(--font-header);
   font-size: 0.68rem; font-weight: 700;

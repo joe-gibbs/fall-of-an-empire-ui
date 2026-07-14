@@ -61,12 +61,14 @@ function statTint(mid: number): string {
   return 'var(--red)';
 }
 
-// Courtier type stat distributions are centred on 0 and clamped
-// roughly to [-10, +10]. Give the bar a bit of visual breathing room on
-// either side so negative values still render as a non-empty track.
-const STAT_MIN = -10;
-const STAT_MAX = 12;
-const STAT_SPAN = STAT_MAX - STAT_MIN;
+const STAT_SEGMENTS = [
+  { min: -10, max: -5, colour: 'red' },
+  { min: -5, max: 0, colour: 'red' },
+  { min: 0, max: 5, colour: 'green' },
+  { min: 5, max: 10, colour: 'green' },
+  { min: 10, max: 15, colour: 'green' },
+  { min: 15, max: 20, colour: 'green' },
+] as const;
 
 export default function CourtierPromotionModal({
   open, onClose, settlementName = '', playerGold = 0,
@@ -181,6 +183,7 @@ function CourtierCard({
     <Tooltip
       position="top"
       delay={250}
+      bubbleClassName="cpm-tooltip"
       content={{
         title: type.title,
         body: type.description,
@@ -228,23 +231,21 @@ function CourtierCard({
           <div className="cpm-card-stats">
             {STAT_ORDER.map((key) => {
               const range = type.stats[key];
-              const colour = statTint(rangeMid(range));
-              const clampedMin = Math.max(STAT_MIN, Math.min(STAT_MAX, range.min));
-              const clampedMax = Math.max(STAT_MIN, Math.min(STAT_MAX, range.max));
-              const leftPct = ((clampedMin - STAT_MIN) / STAT_SPAN) * 100;
-              const widthPct = ((clampedMax - clampedMin) / STAT_SPAN) * 100;
+              const midpoint = rangeMid(range);
+              const colour = statTint(midpoint);
               return (
                 <div key={key} className="cpm-stat-row">
                   <img src={STAT_ICON[key]} alt="" className="cpm-stat-icon" draggable={false} />
                   <div className="cpm-stat-track">
-                    <span
-                      className="cpm-stat-fill"
-                      style={{
-                        left: `${leftPct.toFixed(2)}%`,
-                        width: `${widthPct.toFixed(2)}%`,
-                        backgroundColor: colour,
-                      }}
-                    />
+                    {STAT_SEGMENTS.map((segment) => {
+                      const filled = range.min < segment.max && range.max > segment.min;
+                      return (
+                        <span
+                          key={segment.min}
+                          className={`cpm-stat-segment${filled ? ` cpm-stat-segment--${segment.colour}` : ''}`}
+                        />
+                      );
+                    })}
                   </div>
                   <span className="cpm-stat-range" style={{ color: colour }}>
                     {formatRange(range)}
