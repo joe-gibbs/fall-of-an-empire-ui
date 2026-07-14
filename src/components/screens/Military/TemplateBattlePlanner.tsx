@@ -2,7 +2,11 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import type { FormationTemplateUnitEntry } from '../../../bridge-types.generated.ts';
 import { formatNumber } from '../../../utils/numberFormat';
-import { battleFormationDisplayName } from '../../../utils/battleFormationNaming';
+import {
+  battleFormationDisplayName,
+  battleFormationRoleIcon,
+  newBattleFormationTooltip,
+} from '../../../utils/battleFormationNaming';
 import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
 import {
   MAX_BATTLE_FORMATION_SIZE,
@@ -13,7 +17,6 @@ import {
 } from './formationTemplateDraft';
 import { templateUnitPortrait, templateUnitTooltipData } from './TemplateManagementPanel';
 
-const SWORDS_ICON = '/assets/icons/I_Swords.png';
 const DELETE_ICON = '/assets/icons/I_Close.png';
 const ADD_ICON = '/assets/icons/I_Plus.png';
 
@@ -34,43 +37,47 @@ export function TemplateBattlePlanner({
   onAdjustBattleGroupUnitCount: (groupId: string, unitId: string, delta: number) => void;
   onOpenUnitCatalogue: (groupId: string) => void;
 }) {
+  const meleeTooltip = newBattleFormationTooltip('melee', draft.type);
+  const rangedTooltip = newBattleFormationTooltip('ranged', draft.type);
+  const siegeTooltip = newBattleFormationTooltip('siege', draft.type);
+
   return (
     <div className="chart-template-battle-editor">
       <div className="chart-template-battle-toolbar">
-        <Tooltip content={webUIText('FormationTemplate.BattlePlan.NewMeleeGroup')}>
+        <Tooltip content={meleeTooltip} bubbleClassName="tt-bubble--formation-role">
           <button
             type="button"
             className="chart-template-battle-add chart-template-battle-add--icon"
             onClick={() => onAddBattleGroup('melee')}
             disabled={!editable}
-            aria-label={webUIText('FormationTemplate.BattlePlan.NewMeleeGroup')}
+            aria-label={meleeTooltip.title}
           >
             <img src={ADD_ICON} alt="" className="chart-template-battle-add-plus" draggable={false} />
-            <img src={SWORDS_ICON} alt="" className="chart-template-battle-add-icon" draggable={false} />
+            <img src={battleFormationRoleIcon('melee', draft.type)} alt="" className="chart-template-battle-add-icon" draggable={false} />
           </button>
         </Tooltip>
-        <Tooltip content={webUIText('FormationTemplate.BattlePlan.NewRangedGroup')}>
+        <Tooltip content={rangedTooltip} bubbleClassName="tt-bubble--formation-role">
           <button
             type="button"
             className="chart-template-battle-add chart-template-battle-add--icon"
             onClick={() => onAddBattleGroup('ranged')}
             disabled={!editable}
-            aria-label={webUIText('FormationTemplate.BattlePlan.NewRangedGroup')}
+            aria-label={rangedTooltip.title}
           >
             <img src={ADD_ICON} alt="" className="chart-template-battle-add-plus" draggable={false} />
-            <img src="/assets/icons/UnitTypes/I_ArmyRanged.png" alt="" className="chart-template-battle-add-icon" draggable={false} />
+            <img src={battleFormationRoleIcon('ranged', draft.type)} alt="" className="chart-template-battle-add-icon" draggable={false} />
           </button>
         </Tooltip>
-        <Tooltip content={webUIText('FormationTemplate.BattlePlan.NewSiegeGroup')}>
+        <Tooltip content={siegeTooltip} bubbleClassName="tt-bubble--formation-role">
           <button
             type="button"
             className="chart-template-battle-add chart-template-battle-add--icon"
             onClick={() => onAddBattleGroup('siege')}
             disabled={!editable}
-            aria-label={webUIText('FormationTemplate.BattlePlan.NewSiegeGroup')}
+            aria-label={siegeTooltip.title}
           >
             <img src={ADD_ICON} alt="" className="chart-template-battle-add-plus" draggable={false} />
-            <img src="/assets/icons/UnitTypes/I_ArmySiege.png" alt="" className="chart-template-battle-add-icon" draggable={false} />
+            <img src={battleFormationRoleIcon('siege', draft.type)} alt="" className="chart-template-battle-add-icon" draggable={false} />
           </button>
         </Tooltip>
       </div>
@@ -81,9 +88,7 @@ export function TemplateBattlePlanner({
         ) : draft.battleGroups.map((group) => {
           const groupCount = battleGroupUnitCount(group);
           const groupName = battleFormationDisplayName(group, unitById, draft.type);
-          const roleIcon = group.role === 'siege'
-            ? '/assets/icons/UnitTypes/I_ArmySiege.png'
-            : group.role === 'ranged' ? '/assets/icons/UnitTypes/I_ArmyRanged.png' : SWORDS_ICON;
+          const roleIcon = battleFormationRoleIcon(group.role, draft.type);
           const groupUnits = orderedBattleGroupUnitIds(group)
             .map(unitId => ({ unit: unitById.get(unitId), count: group.counts[unitId] ?? 0 }))
             .filter((entry): entry is { unit: FormationTemplateUnitEntry; count: number } => Boolean(entry.unit) && entry.count > 0);

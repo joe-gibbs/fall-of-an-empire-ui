@@ -1000,6 +1000,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
 
         {activeTab === 'units' && (
           <MilitaryUnitsTab
+            isNavy={army.isNavy}
             compositionSummary={compositionSummary}
             unitRows={unitRows}
             battleGroups={army.battleGroups}

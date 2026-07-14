@@ -68,7 +68,7 @@ const BUILDING_CAT_COLORS: Record<BuildingCategory, string> = {
 };
 
 const ARMY_TYPE_ORDER = ['infantry', 'cavalry', 'ranged', 'siege', 'special'];
-const NAVY_TYPE_ORDER = ['scout', 'transport', 'galley', 'trireme', 'quinquereme'];
+const NAVY_TYPE_ORDER = ['scout', 'transport', 'galley', 'trireme', 'quinquereme', 'siege'];
 
 const UNIT_TYPE_ICONS: Record<string, string> = {
   infantry: '/assets/icons/UnitTypes/I_ArmyInfantry.png',
@@ -128,8 +128,11 @@ function buildingPortrait(building: EncyclopediaBuildingDTO): string | undefined
   return building.assetKey ? FoaeCefUIAssetPath(`/assets/buildings/portraits/${toKebabCase(building.assetKey)}.png`) : undefined;
 }
 
-function unitTypeIcon(type: string | undefined): string | undefined {
-  const path = UNIT_TYPE_ICONS[(type ?? '').toLowerCase()];
+function unitTypeIcon(type: string | undefined, isNaval = false): string | undefined {
+  const normalisedType = (type ?? '').toLowerCase();
+  const path = normalisedType === 'siege' && isNaval
+    ? '/assets/icons/UnitTypes/I_NavySiege.png'
+    : UNIT_TYPE_ICONS[normalisedType];
   return path ? FoaeCefUIAssetPath(path) : undefined;
 }
 
@@ -150,7 +153,7 @@ function unitTooltipData(unit: EncyclopediaUnitDTO): UnitTooltipData {
       ? FoaeCefUIAssetPath(unit.portrait)
       : FoaeCefUIAssetPath(unit.isNaval ? DEFAULT_NAVY_TOOLTIP_PORTRAIT : DEFAULT_ARMY_TOOLTIP_PORTRAIT),
     typeLabel: unit.unitTypeLabel || unit.unitType,
-    typeIcon: unitTypeIcon(unit.unitType) ?? FoaeCefUIAssetPath(unit.isNaval ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/UnitTypes/I_ArmySpecial.png'),
+    typeIcon: unitTypeIcon(unit.unitType, unit.isNaval) ?? FoaeCefUIAssetPath(unit.isNaval ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/UnitTypes/I_ArmySpecial.png'),
     tier: unit.tier,
     culture: unit.cultureName || undefined,
     cultureIcon: unit.cultureIcon ? FoaeCefUIAssetPath(unit.cultureIcon) : undefined,
@@ -1166,9 +1169,11 @@ function UnitsPanel({ units, cultures }: UnitsPanelProps) {
         {NAVY_TYPE_ORDER.map(type => {
           const typeUnits = navyByType[type];
           if (!typeUnits) return null;
+          const icon = unitTypeIcon(type, true);
           return (
             <div key={type} className="enc-unit-row enc-unit-row--navy">
               <div className="enc-unit-row-heading">
+                {icon && <img className="enc-unit-row-icon" src={icon} alt="" draggable={false} />}
                 <span className="enc-unit-type-name">{typeUnits[0]?.unitTypeLabel || type}</span>
                 <span className="enc-unit-row-count">{formatNumber(typeUnits.length)}</span>
                 <div className="enc-unit-row-rule" />

@@ -100,6 +100,9 @@ function templateUnitTypeLabel(unit: FormationTemplateUnitEntry): string {
 }
 
 function templateUnitTypeIcon(unit: FormationTemplateUnitEntry): string {
+  if (unit.type === 'siege' && unit.category === 'naval') {
+    return '/assets/icons/UnitTypes/I_NavySiege.png';
+  }
   return TEMPLATE_UNIT_TYPE_ICONS[unit.type] ?? TEMPLATE_UNIT_TYPE_ICONS[unit.category] ?? '/assets/icons/UnitTypes/I_ArmySpecial.png';
 }
 

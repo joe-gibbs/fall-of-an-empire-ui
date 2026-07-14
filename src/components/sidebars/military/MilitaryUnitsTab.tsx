@@ -6,6 +6,7 @@ import type { ArmyBattleGroup, ArmyUnitRow, ArmyUnitTypeStrength } from '../../.
 import { TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber } from '../../../utils/numberFormat';
 import { webUIText } from '../../../localization/WebUITextContext';
+import { battleFormationRoleIcon } from '../../../utils/battleFormationNaming';
 import {
   buildUnitTooltip,
   formatLargeNumber,
@@ -22,6 +23,7 @@ import {
 } from './MilitarySidebarPresentation';
 
 type MilitaryUnitsTabProps = {
+  isNavy: boolean;
   compositionSummary: CompositionSummaryRow[];
   unitRows: ArmyUnitRow[];
   battleGroups: ArmyBattleGroup[];
@@ -70,6 +72,7 @@ export function renderUnitTypeStrengths(unitTypes: CompositionSummaryRow[]): Rea
 }
 
 export function MilitaryUnitsTab({
+  isNavy,
   compositionSummary,
   unitRows,
   battleGroups,
@@ -166,11 +169,7 @@ export function MilitaryUnitsTab({
           const rows = group.unitIds
             .map(unitId => unitRowById.get(unitId))
             .filter((unit): unit is ArmyUnitRow => Boolean(unit));
-          const roleIcon = group.role === 'siege'
-            ? '/assets/icons/UnitTypes/I_ArmySiege.png'
-            : group.role === 'ranged'
-              ? '/assets/icons/UnitTypes/I_ArmyRanged.png'
-              : '/assets/icons/I_Swords.png';
+          const roleIcon = battleFormationRoleIcon(group.role, isNavy ? 'naval' : 'land');
           return (
             <div key={group.id} className="mil-battle-group">
               <div className="mil-battle-group-head">

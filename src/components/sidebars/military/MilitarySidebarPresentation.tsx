@@ -27,7 +27,7 @@ const unitTypeIcons: Record<string, string> = {
   'Galleys': '/assets/icons/UnitTypes/I_NavyGalley.png',
   'Triremes': '/assets/icons/UnitTypes/I_NavyTrireme.png',
   'Quinqueremes': '/assets/icons/UnitTypes/I_NavyQuinquereme.png',
-  'Siege Ships': '/assets/icons/UnitTypes/I_ArmySiege.png',
+  'Siege Ships': '/assets/icons/UnitTypes/I_NavySiege.png',
   'Transports': '/assets/icons/UnitTypes/I_NavyTransport.png',
 };
 

@@ -1,7 +1,9 @@
 import type { FormationTemplateUnitEntry } from '../bridge-types.generated.ts';
 import { webUIText } from '../localization/WebUITextContext';
 
-type BattleFormationRole = 'melee' | 'ranged' | 'siege';
+export type BattleFormationRole = 'melee' | 'ranged' | 'siege';
+
+type FormationType = 'land' | 'naval';
 
 type BattleFormationComposition = {
   role: BattleFormationRole;
@@ -12,10 +14,65 @@ function battleGroupName(key: string): string {
   return webUIText(`FormationTemplate.BattleGroup.${key}`);
 }
 
+export function battleFormationRoleTitle(role: BattleFormationRole, formationType: FormationType): string {
+  if (formationType === 'naval') {
+    if (role === 'siege') return webUIText('FormationTemplate.BattlePlan.BombardmentTitle');
+    if (role === 'ranged') return webUIText('FormationTemplate.BattlePlan.SkirmishTitle');
+    return webUIText('FormationTemplate.BattlePlan.AssaultTitle');
+  }
+
+  if (role === 'siege') return webUIText('FormationTemplate.BattlePlan.SiegeTitle');
+  if (role === 'ranged') return webUIText('FormationTemplate.BattlePlan.RangedTitle');
+  return webUIText('FormationTemplate.BattlePlan.MeleeTitle');
+}
+
+export function newBattleFormationLabel(role: BattleFormationRole, formationType: FormationType): string {
+  if (formationType === 'naval') {
+    if (role === 'siege') return webUIText('FormationTemplate.BattlePlan.NewBombardmentGroup');
+    if (role === 'ranged') return webUIText('FormationTemplate.BattlePlan.NewSkirmishGroup');
+    return webUIText('FormationTemplate.BattlePlan.NewAssaultGroup');
+  }
+
+  if (role === 'siege') return webUIText('FormationTemplate.BattlePlan.NewSiegeGroup');
+  if (role === 'ranged') return webUIText('FormationTemplate.BattlePlan.NewRangedGroup');
+  return webUIText('FormationTemplate.BattlePlan.NewMeleeGroup');
+}
+
+export function battleFormationRoleBody(role: BattleFormationRole, formationType: FormationType): string {
+  if (formationType === 'naval') {
+    if (role === 'siege') return webUIText('FormationTemplate.BattlePlan.BombardmentBody');
+    if (role === 'ranged') return webUIText('FormationTemplate.BattlePlan.SkirmishBody');
+    return webUIText('FormationTemplate.BattlePlan.AssaultBody');
+  }
+
+  if (role === 'siege') return webUIText('FormationTemplate.BattlePlan.SiegeBody');
+  if (role === 'ranged') return webUIText('FormationTemplate.BattlePlan.RangedBody');
+  return webUIText('FormationTemplate.BattlePlan.MeleeBody');
+}
+
+export function newBattleFormationTooltip(role: BattleFormationRole, formationType: FormationType) {
+  return {
+    title: newBattleFormationLabel(role, formationType),
+    body: battleFormationRoleBody(role, formationType),
+  };
+}
+
+export function battleFormationRoleIcon(role: BattleFormationRole, formationType: FormationType): string {
+  if (formationType === 'naval') {
+    if (role === 'siege') return '/assets/icons/UnitTypes/I_NavySiege.png';
+    if (role === 'ranged') return '/assets/icons/UnitTypes/I_NavyScout.png';
+    return '/assets/icons/UnitTypes/I_NavyGalley.png';
+  }
+
+  if (role === 'siege') return '/assets/icons/UnitTypes/I_ArmySiege.png';
+  if (role === 'ranged') return '/assets/icons/UnitTypes/I_ArmyRanged.png';
+  return '/assets/icons/I_Swords.png';
+}
+
 export function battleFormationDisplayName(
   group: BattleFormationComposition,
   unitById: Map<string, FormationTemplateUnitEntry>,
-  formationType: 'land' | 'naval',
+  formationType: FormationType,
 ): string {
   const typeCounts = new Map<string, number>();
 
@@ -26,9 +83,7 @@ export function battleFormationDisplayName(
   }
 
   if (typeCounts.size === 0) {
-    if (group.role === 'siege') return webUIText('FormationTemplate.BattlePlan.SiegeTitle');
-    if (group.role === 'ranged') return webUIText('FormationTemplate.BattlePlan.RangedTitle');
-    return webUIText('FormationTemplate.BattlePlan.MeleeTitle');
+    return battleFormationRoleTitle(group.role, formationType);
   }
 
   const count = (type: string) => typeCounts.get(type) ?? 0;

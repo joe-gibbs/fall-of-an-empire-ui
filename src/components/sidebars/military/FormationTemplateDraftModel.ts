@@ -165,7 +165,10 @@ export function unitTypeLabel(type: string): string {
   return type.replace(/(^|-|_)([a-z])/g, (_match, prefix: string, letter: string) => `${prefix ? ' ' : ''}${letter.toUpperCase()}`);
 }
 
-export function unitTypeIcon(type: string): string {
+export function unitTypeIcon(type: string, category?: string): string {
+  if (type === 'siege' && (category === 'naval' || category === 'navy')) {
+    return '/assets/icons/UnitTypes/I_NavySiege.png';
+  }
   return UNIT_TYPE_ICONS[type] ?? UNIT_TYPE_ICONS.other;
 }
 
@@ -219,7 +222,7 @@ export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number)
     description: unit.description,
     portrait: unitPortrait(unit),
     typeLabel: unit.unitTypeLabel,
-    typeIcon: unitTypeIcon(unit.type),
+    typeIcon: unitTypeIcon(unit.type, unit.category),
     tier: unit.tier,
     maxStrength: unit.maxStrength,
     price: unit.price,

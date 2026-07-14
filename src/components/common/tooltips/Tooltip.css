@@ -73,6 +73,12 @@
   max-width: 22rem;
 }
 
+.tt-bubble--formation-role {
+  width: 18rem;
+  min-width: 18rem;
+  max-width: 18rem;
+}
+
 .tt-bubble--settings {
   width: 22rem;
   min-width: 22rem;
