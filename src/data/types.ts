@@ -1168,6 +1168,9 @@ export interface Army {
   formationTemplate?: string;
   /** Settlement this army is garrisoned in */
   garrisonedAt?: string;
+  /** Navy carrying this army while embarked. */
+  embarkedNavyId?: string;
+  embarkedNavyName?: string;
   /** Command doctrine for subordinates: 'concentrate' | 'screen' | 'garrison' | 'independent'. Only applies when delegated. */
   commandDoctrine?: string;
   /** Whether this command is delegated (subordinates act on their own under

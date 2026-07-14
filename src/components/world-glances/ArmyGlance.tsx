@@ -96,6 +96,7 @@ function militaryTooltip(
   if (detail.isRaiding) statuses.push('Raiding');
   if (data.attrition) statuses.push('Attrition');
   if (blockading) statuses.push('Blockading');
+  const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
 
   const lines: TooltipLine[] = [
     {
@@ -128,6 +129,14 @@ function militaryTooltip(
       valueIcon: tierTexture(data.tier),
     },
   ];
+
+  if (embarkedArmyCount > 0) {
+    lines.push({
+      label: webUIText('Military.EmbarkedArmies'),
+      value: formatNumber(embarkedArmyCount),
+      valueIcon: '/assets/icons/I_ArmiesQuickButton.png',
+    });
+  }
 
   if (statuses.length > 0) {
     lines.push({
@@ -166,8 +175,9 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   const blockading = isNavy && (data as NavyGlanceData).blockading;
   const militaryTypeIcon = isNavy ? '/assets/icons/I_Port.png' : '/assets/icons/I_Swords.png';
   const statusIcon = blockading ? '/assets/icons/I_Siege.png' : data.raiding ? '/assets/icons/I_RaidingTorch.png' : '';
+  const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
   const attritionIcon = FoaeCefUIAssetPath(data.attritionIcon || '/assets/icons/Terrain/I_Attrition.png');
-  const visibleStatusCount = (statusIcon ? 1 : 0) + (data.attrition ? 1 : 0);
+  const visibleStatusCount = (statusIcon ? 1 : 0) + (data.attrition ? 1 : 0) + (embarkedArmyCount > 0 ? 1 : 0);
   const crownCount = 1 + visibleStatusCount;
   const requestTooltipDetail = useCallback(() => {
     setTooltipDetail(null);
@@ -222,6 +232,12 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
           )}
         </div>
         <div className="glance-military-strength">{formatNumber(data.strength)}</div>
+          {embarkedArmyCount > 0 && (
+            <span className="glance-military-status glance-military-status--embarked glance-military-icon-socket" aria-label={webUIText('Military.EmbarkedArmies')}>
+              <img className="glance-military-embarked-icon" src={FoaeCefUIAssetPath('/assets/icons/I_ArmiesQuickButton.png')} alt="" />
+              <span className="glance-military-embarked-count">{formatNumber(embarkedArmyCount)}</span>
+            </span>
+          )}
       </div>
     </Tooltip>
   );

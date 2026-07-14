@@ -9,6 +9,7 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent } from '../../common/tooltips/Tooltip';
+import GameButton from '../../common/buttons/GameButton';
 import MilitaryCommanderAssignmentModal from '../../modals/characters/MilitaryCommanderAssignmentModal';
 import type { Army, ArmyUnitRow, MilitaryDoctrine } from '../../../data/types';
 import { useGameActions, useGameState } from '../../../context/GameContext';
@@ -18,6 +19,7 @@ import { useMilitary, useMilitaryOverview, usePerson, usePlayerFactionId } from 
 import { registerSidebar } from '../../../registry/index';
 import {
   disbandMilitaryBridge,
+  disembarkMilitaryBridge,
   duplicateMilitaryFormationTemplateBridge,
   promoteMilitaryCommandBridge,
   replenishMilitaryBridge,
@@ -26,6 +28,7 @@ import {
   setMilitaryDelegationBridge,
   setMilitaryDoctrineBridge,
   setMilitaryParentBridge,
+  showMilitarySidebarBridge,
   startMilitaryEmbarkTargetingBridge,
   startMilitaryMergeTargetingBridge,
   toggleFoederatiCallupBridge,
@@ -347,12 +350,19 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   } : null;
 
   const embarkAction: MilitaryAction | null = !army.isNavy ? {
-    label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.498.6'),
-    icon: '/assets/icons/I_NaviesQuickButton.png',
-    description: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.500.7'),
+    label: army.embarkedNavyId
+      ? webUIText('Military.Disembark')
+      : webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.498.6'),
+    icon: army.embarkedNavyId ? '/assets/icons/I_Ungarrison.png' : '/assets/icons/I_NaviesQuickButton.png',
+    description: army.embarkedNavyId
+      ? webUIText('Military.DisembarkNearest.Description')
+      : webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.500.7'),
     disabled: !isPlayerControlled,
     onClick: () => {
-      startMilitaryEmbarkTargetingBridge(army.id).catch(acknowledgeBridgeFailure);
+      const action = army.embarkedNavyId
+        ? disembarkMilitaryBridge(army.id)
+        : startMilitaryEmbarkTargetingBridge(army.id);
+      action.catch(acknowledgeBridgeFailure);
     },
   } : null;
 
@@ -762,10 +772,33 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
         <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsMilitarySidebar.1063.44')} />
         <div className="mil-embarked">
           {embarkedRows.map((embarkedArmy) => (
-            <div key={embarkedArmy.id ?? embarkedArmy.name} className={`mil-embarked-row${embarkedArmy.id ? ' is-clickable' : ''}`} onClick={embarkedArmy.id ? () => openSidebar('military', embarkedArmy.id) : undefined}>
-              <img src="/assets/icons/I_ArmiesQuickButton.png" alt="" className="mil-embarked-icon" />
-              <span className="mil-embarked-name">{embarkedArmy.name}</span>
-              <span className="mil-embarked-strength">{formatLargeNumber(embarkedArmy.strength)}</span>
+            <div key={embarkedArmy.id ?? embarkedArmy.name} className="mil-embarked-row">
+              <button
+                type="button"
+                className="mil-embarked-link"
+                disabled={!embarkedArmy.id}
+                onMouseDown={() => {
+                  if (embarkedArmy.id) showMilitarySidebarBridge(embarkedArmy.id).catch(acknowledgeBridgeFailure);
+                }}
+              >
+                <img src="/assets/icons/I_ArmiesQuickButton.png" alt="" className="mil-embarked-icon" />
+                <span className="mil-embarked-name">{embarkedArmy.name}</span>
+                <span className="mil-embarked-strength">{formatLargeNumber(embarkedArmy.strength)}</span>
+              </button>
+              <Tooltip content={{ title: webUIText('Military.Disembark'), body: webUIText('Military.DisembarkNearest.Description') }} position="bottom" delay={150}>
+                <GameButton
+                  variant="outline"
+                  icon="/assets/icons/I_Ungarrison.png"
+                  className="mil-embarked-disembark"
+                  disabled={!isPlayerControlled || !embarkedArmy.id}
+                  ariaLabel={webUIText('Military.Disembark')}
+                  onClick={() => {
+                    if (embarkedArmy.id) disembarkMilitaryBridge(embarkedArmy.id).catch(acknowledgeBridgeFailure);
+                  }}
+                >
+                  {webUIText('Military.Disembark')}
+                </GameButton>
+              </Tooltip>
             </div>
           ))}
         </div>
@@ -914,6 +947,16 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       <StyledScrollArea className="sidebar-content sidebar-content--textured mil-content">
         {activeTab === 'overview' && (
           <div className="mil-overview">
+            {army.embarkedNavyId && army.embarkedNavyName && (
+              <button
+                type="button"
+                className="mil-embarked-status"
+                onPointerDown={() => openSidebar('military', army.embarkedNavyId!)}
+              >
+                <img src="/assets/icons/I_NaviesQuickButton.png" alt="" />
+                <span>{webUIText('Military.EmbarkedIn', { Navy: army.embarkedNavyName })}</span>
+              </button>
+            )}
             <SectionHeading variant="ornate" title={webUIText('Common.Stats')} />
             <div className="mil-unit-stat-summary">
               {unitStatTiles.map((tile) => (

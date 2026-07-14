@@ -519,6 +519,7 @@ function mockNavyData(data: ForceMock): NavyGlanceData {
     ...mockArmyData(data),
     faction: mockGlanceFaction(data.faction, data.faction === FACTIONS.crown ? 'own' : 'neutral'),
     blockading: data.status === 'Blockade',
+    embarkedArmyCount: data === NAVIES[0] ? 2 : 0,
   };
 }
 

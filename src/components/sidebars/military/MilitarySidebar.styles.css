@@ -2173,6 +2173,76 @@
   opacity: 0.62;
 }
 
+.mil-embarked-link {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  padding: 0.18rem 0.2rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.mil-embarked-link:disabled {
+  cursor: default;
+}
+
+.mil-embarked-link:not(:disabled):hover {
+  background: rgba(201, 168, 76, 0.08);
+}
+
+.mil-embarked-link .mil-embarked-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.mil-embarked-disembark {
+  flex-shrink: 0;
+  padding: 0.24rem 0.45rem;
+  font-size: 0.7rem;
+}
+
+.mil-embarked-disembark .btn-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.mil-embarked-status {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.48rem 0.6rem;
+  margin-bottom: 0.55rem;
+  border: 0.077rem solid rgba(201, 168, 76, 0.4);
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background: rgba(18, 24, 29, 0.82);
+  color: var(--gold);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mil-embarked-status:hover {
+  background: rgba(31, 39, 46, 0.92);
+}
+
+.mil-embarked-status img {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  margin-right: 0.45rem;
+}
+
 .mil-comp-row {
   width: 100%;
   display: flex;

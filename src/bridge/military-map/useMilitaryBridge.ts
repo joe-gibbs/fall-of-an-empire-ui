@@ -275,6 +275,8 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     currentOrder: data.currentOrder || undefined,
     formationTemplate: data.formationTemplate || undefined,
     garrisonedAt: data.garrisonedAt || undefined,
+    embarkedNavyId: data.embarkedNavyId || undefined,
+    embarkedNavyName: data.embarkedNavyName || undefined,
     commandDoctrine: parseDoctrine(data.commandDoctrine),
     delegated: data.delegated,
     autoSquashRebels: data.autoSquashRebels,
@@ -516,6 +518,14 @@ export function setMilitaryForcedMarchBridge(militaryId: string, enabled: boolea
 
 export function startMilitaryEmbarkTargetingBridge(militaryId: string): Promise<void> {
   return bridgeCall('game.start_military_embark_targeting', { militaryId }).then(() => undefined);
+}
+
+export function disembarkMilitaryBridge(militaryId: string): Promise<void> {
+  return bridgeCall('game.disembark_military', { militaryId }).then(() => undefined);
+}
+
+export function showMilitarySidebarBridge(militaryId: string): Promise<void> {
+  return bridgeCall('game.show_military_sidebar', { militaryId }).then(() => undefined);
 }
 
 export function startMilitaryMergeTargetingBridge(militaryId: string): Promise<void> {

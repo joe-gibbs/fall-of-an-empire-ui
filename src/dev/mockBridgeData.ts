@@ -2297,6 +2297,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
   const isScouts = id === 'mock-military-scouts';
   const isRiverwatch = id === 'mock-navy-riverwatch';
   const isNavy = id === MOCK_IDS.navy || isRiverwatch;
+  const isEmbarked = id === MOCK_IDS.military || isDetachment;
   const profile = isRiverwatch
     ? {
       id: 'mock-navy-riverwatch',
@@ -2510,9 +2511,11 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     ],
     commandRank: profile.commandRank,
     isNavy,
-    currentOrder: profile.currentOrder,
+    currentOrder: isEmbarked ? 'Embarked in Classis Meridian' : profile.currentOrder,
     formationTemplate: profile.formationTemplate,
-    garrisonedAt: profile.garrisonedAt,
+    garrisonedAt: isEmbarked ? '' : profile.garrisonedAt,
+    embarkedNavyId: isEmbarked ? MOCK_IDS.navy : '',
+    embarkedNavyName: isEmbarked ? 'Classis Meridian' : '',
     commandDoctrine: 'concentrate',
     delegated: false,
     autoSquashRebels: true,
@@ -5539,12 +5542,12 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             { id: MOCK_IDS.portSettlement, screenX: 1088, screenY: 650, scale: 0.94, opacity: 1, zOrder: 10, detailLevel: 'name', selected: false, targeted: false, faction: { ...playerFactionReference(), relation: 'own' }, level: 3, blockaded: true },
           ],
           armies: [
-            { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), screenX: 900, screenY: 520, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 6800, morale: 84, tier: 3, raiding: false, selected: false, targeted: false, blockading: false, attrition: false, attritionIcon: '' },
-            { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), screenX: 820, screenY: 570, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1600, morale: 71, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, attrition: false, attritionIcon: '' },
+            { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), screenX: 900, screenY: 520, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 6800, morale: 84, tier: 3, raiding: false, selected: false, targeted: false, blockading: false, embarkedArmyCount: 0, attrition: false, attritionIcon: '' },
+            { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), screenX: 820, screenY: 570, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1600, morale: 71, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, embarkedArmyCount: 0, attrition: false, attritionIcon: '' },
           ],
           navies: [
-            { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), screenX: 1060, screenY: 610, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1800, morale: 76, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, attrition: false, attritionIcon: '' },
-            { id: 'mock-navy-rival', debugShortId: mockDebugShortId('mock-navy-rival'), screenX: 1200, screenY: 540, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...rivalFactionReference(), relation: 'enemy' }, strength: 1200, morale: 68, tier: 2, raiding: false, selected: false, targeted: false, blockading: true, attrition: false, attritionIcon: '' },
+            { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), screenX: 1060, screenY: 610, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1800, morale: 76, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, embarkedArmyCount: 2, attrition: false, attritionIcon: '' },
+            { id: 'mock-navy-rival', debugShortId: mockDebugShortId('mock-navy-rival'), screenX: 1200, screenY: 540, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...rivalFactionReference(), relation: 'enemy' }, strength: 1200, morale: 68, tier: 2, raiding: false, selected: false, targeted: false, blockading: true, embarkedArmyCount: 0, attrition: false, attritionIcon: '' },
           ],
           convoys: mockWorldConvoys(state),
           battles: [
@@ -6345,6 +6348,9 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         emit('ui.sidebar_event', { type: 'close_right', id: '' });
         return undefined;
       case 'game.zoom_to':
+      case 'game.show_military_sidebar':
+        emit('ui.sidebar_event', { type: 'military', id: payloadString(payload, 'militaryId') });
+        return undefined;
         return { zoomed: true } satisfies BridgeResponse<'game.zoom_to'>;
       case 'game.save_game':
         state.saveSerial += 1;
@@ -6530,6 +6536,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.set_military_forced_march':
       case 'game.start_military_embark_targeting':
       case 'game.start_military_merge_targeting':
+      case 'game.disembark_military':
       case 'game.replenish_military':
       case 'game.disband_military':
       case 'game.set_military_formation_template':

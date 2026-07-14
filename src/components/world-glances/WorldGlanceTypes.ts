@@ -28,6 +28,7 @@ export interface ArmyGlanceData {
 
 export interface NavyGlanceData extends ArmyGlanceData {
   blockading?: boolean;
+  embarkedArmyCount?: number;
 }
 
 export interface BattleParticipant {

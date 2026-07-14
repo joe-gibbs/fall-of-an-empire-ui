@@ -268,7 +268,13 @@ export default function GlanceAtlasRoot() {
         : (data ? worldSectionEntries(data, section) : []);
       for (const entry of entries) {
         if (entry?.id) {
-          if (sectionCache.get(entry.id) !== entry) {
+          const previousEntry = sectionCache.get(entry.id);
+          if (previousEntry !== entry) {
+            const key = worldAnchorKey(section, entry.id);
+            const node = plateNodesRef.current.get(key);
+            if (previousEntry && node && (section === 'notification' || visibleAtlasKeysRef.current.has(key))) {
+              prepareWorldAnchorContentChange(node);
+            }
             changed = true;
           }
           sectionCache.set(entry.id, entry);

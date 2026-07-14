@@ -4363,6 +4363,7 @@ export interface WorldMilitaryGlance {
   selected: boolean;
   targeted: boolean;
   blockading: boolean;
+  embarkedArmyCount: number;
   attrition: boolean;
   attritionIcon: string;
 }
@@ -4881,6 +4882,8 @@ export interface GetMilitaryDataResponse {
   currentOrder: string;
   formationTemplate: string;
   garrisonedAt: string;
+  embarkedNavyId: string;
+  embarkedNavyName: string;
   commandDoctrine: string;
   delegated: boolean;
   autoSquashRebels: boolean;
@@ -5992,6 +5995,7 @@ export interface BridgeActions {
   'game.delete_save': { request: DeleteSaveRequest; response: DeleteSaveResponse };
   'game.demolish_settlement_building': { request: DemolishSettlementBuildingRequest; response: void };
   'game.diplomatic_notification_events': { request: DiplomaticNotificationEventsRequest; response: void };
+  'game.disembark_military': { request: MilitaryTargetingRequest; response: void };
   'game.disband_military': { request: DisbandMilitaryRequest; response: void };
   'game.dismiss_campaign_outcome': { request: void; response: void };
   'game.downgrade_settlement_building': { request: DowngradeSettlementBuildingRequest; response: void };
@@ -6138,6 +6142,7 @@ export interface BridgeActions {
   'game.set_resource_priority': { request: SetResourcePriorityRequest; response: void };
   'game.set_settlement_capital': { request: SetSettlementCapitalRequest; response: SetSettlementCapitalResponse };
   'game.set_settlement_sidebar_ambient': { request: SetSettlementSidebarAmbientRequest; response: void };
+  'game.show_military_sidebar': { request: MilitaryTargetingRequest; response: void };
   'game.set_speed': { request: SetSpeedRequest; response: void };
   'game.start_battle_action': { request: StartBattleActionRequest; response: StartBattleActionResponse };
   'game.start_bloc_interaction': { request: StartBlocInteractionRequest; response: StartBlocInteractionResponse };

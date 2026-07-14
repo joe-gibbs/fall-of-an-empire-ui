@@ -125,6 +125,7 @@ export function mapNavy(entry: GetWorldGlancesResponse['navies'][number]): NavyG
   return {
     ...mapMilitary(entry),
     blockading: entry.blockading,
+    embarkedArmyCount: entry.embarkedArmyCount ?? 0,
   };
 }
 

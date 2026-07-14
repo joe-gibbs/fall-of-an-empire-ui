@@ -1561,6 +1561,30 @@
   flex-shrink: 0;
 }
 
+.glance-military-embarked-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.glance-military-embarked-count {
+  position: absolute;
+  right: -0.2727rem;
+  bottom: -0.2273rem;
+  min-width: 0.8182rem;
+  height: 0.8182rem;
+  padding: 0 0.1364rem;
+  color: var(--text-bright);
+  background-color: var(--relation-label-bg);
+  border: 0.0455rem solid var(--relation-border-top);
+  border-radius: 50%;
+  font-family: var(--font-header);
+  font-size: 0.5455rem;
+  line-height: 0.7273rem;
+  text-align: center;
+}
+
 .glance-military-kind {
   position: absolute;
   top: 50%;
