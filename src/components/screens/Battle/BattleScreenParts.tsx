@@ -6,8 +6,9 @@ import Tooltip, { type TooltipContent } from '../../common/tooltips/Tooltip';
 import type { BattleFormationLive, BattleAgentFrameView } from '../../../bridge/military-map/useBattleBridge';
 import { battleFrameAgentCount, readBattleAgentFrame, startBattleActionBridge } from '../../../bridge/military-map/useBattleBridge';
 import { useGameActions } from '../../../context/GameContext';
-import type { BattleActionOption, BattleParticipantDetail, BattleSideDetail, BattlefieldHeightPointDetail, BattlefieldObstacleDetail } from '../../../bridge-types.generated.ts';
+import type { BattleActionOption, BattleFormationUnitDetail, BattleParticipantDetail, BattleSideDetail, BattlefieldHeightPointDetail, BattlefieldObstacleDetail } from '../../../bridge-types.generated.ts';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
+import { FoaeCefUIAssetPath } from '../../../utils/assets';
 import { buildHeightMapDataUrl } from './heightMapImage';
 import { buildWaypointSplinePath, coordinatePercent, coordinatePercentUnclamped, coordinatePercentValue, normaliseDegrees, normaliseSelectionBox, radiusPercent, sizePercent, stableObstacleNoise, type SelectionBox } from './battleGeometry';
 import { webUIText } from '../../../localization/WebUITextContext';
@@ -378,9 +379,11 @@ export function SideBlock({
   const { openSidebar } = useGameActions();
   const commander = sideCommander(summary);
   const participant = commander ?? summary.participants[0];
+  const singleParticipant = summary.participants.length === 1 ? summary.participants[0] : null;
   const alivePercent = summary.totalMaxStrength > 0 ? summary.totalStrength / summary.totalMaxStrength * 100 : 0;
   const participantCommanderId = participant && hasLinkId(participant.commanderId) ? participant.commanderId : '';
   const participantFactionId = participant && hasLinkId(participant.faction.id) ? participant.faction.id : '';
+  const singleParticipantId = singleParticipant && hasLinkId(singleParticipant.id) ? singleParticipant.id : '';
   const openLinkedSidebar = useCallback((event: MouseEvent<HTMLElement>, type: string, id: string) => {
     event.preventDefault();
     event.stopPropagation();
@@ -411,7 +414,15 @@ export function SideBlock({
             />
           )}
           <div className="battle-screen-side-names">
-            {participantCommanderId ? (
+            {singleParticipantId ? (
+              <button
+                type="button"
+                className="battle-screen-side-commander-name battle-screen-side-link"
+                onMouseDown={(event) => openLinkedSidebar(event, 'military', singleParticipantId)}
+              >
+                {singleParticipant?.name}
+              </button>
+            ) : participantCommanderId ? (
               <button
                 type="button"
                 className="battle-screen-side-commander-name battle-screen-side-link"
@@ -420,7 +431,9 @@ export function SideBlock({
                 {leaderName(participant)}
               </button>
             ) : (
-              <span className="battle-screen-side-commander-name">{leaderName(participant)}</span>
+              <span className="battle-screen-side-commander-name">
+                {singleParticipant?.name || leaderName(participant)}
+              </span>
             )}
             {participantFactionId ? (
               <button
@@ -533,6 +546,8 @@ export function FormationCounter({
   takingDamage,
   damagePulseKey,
   engaged,
+  outgoingAttackPosition,
+  incomingAttackPosition,
   battlefieldWidth,
   battlefieldHeight,
   onSelect,
@@ -546,6 +561,8 @@ export function FormationCounter({
   takingDamage: boolean;
   damagePulseKey: string;
   engaged: boolean;
+  outgoingAttackPosition?: 'flank' | 'rear';
+  incomingAttackPosition?: 'flank' | 'rear';
   battlefieldWidth: number;
   battlefieldHeight: number;
   onSelect: (additive: boolean) => void;
@@ -570,6 +587,8 @@ export function FormationCounter({
     return clamp((morale - segmentStart) / segmentWidth * 100, 0, 100);
   });
   const chargeReady = clamp((formation.attackChargePercent ?? 0) * 100, 0, 100);
+  const casualtyPressure = clamp((formation.recentCasualtyPressure ?? 0) * 100, 0, 100);
+  const routingRisk = morale < 18 && casualtyPressure > 7.5;
   const agentCount = formation.agentCount || battleFrameAgentCount(formation);
   const active = formation.isRouting
     ? webUIText('Battle.FormationRouting')
@@ -608,6 +627,18 @@ export function FormationCounter({
             { label: webUIText('Battle.UnitTooltip.Health'), value: formatPercent(health) },
             { label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.414.7'), value: fmt(formation.losses), valueColor: 'var(--red)' },
             { label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.369.5'), value: formatPercent(morale) },
+            ...(casualtyPressure > 0.5 ? [{ label: webUIText('Battle.UnitTooltip.RecentShock'), value: formatPercent(casualtyPressure, 1), valueColor: casualtyPressure > 7.5 ? 'var(--red)' : 'var(--yellow)' }] : []),
+            ...(routingRisk ? [{ label: webUIText('Battle.UnitTooltip.RoutingRisk'), value: webUIText('Battle.UnitTooltip.Critical'), valueColor: 'var(--red)' }] : []),
+            ...(outgoingAttackPosition ? [{
+              label: webUIText('Battle.UnitTooltip.AttackPosition'),
+              value: webUIText(outgoingAttackPosition === 'rear' ? 'Battle.RearAttackBonus' : 'Battle.FlankAttackBonus'),
+              valueColor: 'var(--green)',
+            }] : []),
+            ...(incomingAttackPosition ? [{
+              label: webUIText('Battle.UnitTooltip.UnderAttack'),
+              value: webUIText(incomingAttackPosition === 'rear' ? 'Battle.RearAttacked' : 'Battle.Flanked'),
+              valueColor: 'var(--red)',
+            }] : []),
             { label: webUIText('Battle.UnitTooltip.Speed'), labelIcon: '/assets/icons/I_Speed.png', value: fmt(Math.round(formation.speed)) },
             ...(showStance ? [{ label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.415.8'), value: formation.stanceLabel }] : []),
             ...(formation.activeActionName ? [{ label: webUIText('Battle.UnitTooltip.Action'), value: formation.activeActionName }] : []),
@@ -649,6 +680,11 @@ export function FormationCounter({
               />
             </div>
             <img className="battle-counter-typepip" src={unitIcon(formation, isNaval)} alt="" />
+            {incomingAttackPosition && (
+              <span className={`battle-counter-combat-warning battle-counter-combat-warning--${incomingAttackPosition}`}>
+                {webUIText(incomingAttackPosition === 'rear' ? 'Battle.RearAttackedShort' : 'Battle.FlankedShort')}
+              </span>
+            )}
             {stateIcon && <img className={`battle-counter-state-icon${stateIconClass}`} src={stateIcon} alt="" draggable={false} />}
             <span className={`battle-counter-hp ${health < 35 ? 'battle-counter-hp--critical' : health < 70 ? 'battle-counter-hp--wounded' : 'battle-counter-hp--healthy'}`}>
               {Math.round(health)}
@@ -689,6 +725,60 @@ export function FormationTooltipBody({ formation }: { formation: BattleFormation
       <div className="battle-formation-tooltip-faction-text">
         <span className="battle-formation-tooltip-unit-type">{formation.unitTypeLabel}</span>
         <span className="battle-formation-tooltip-faction-name">{formation.faction.name}</span>
+      </div>
+    </div>
+  );
+}
+
+function BattleFormationUnitCard({ unit, side }: { unit: BattleFormationUnitDetail; side: string }) {
+  const health = unit.maxStrength > 0 ? clamp(unit.strength / unit.maxStrength * 100, 0, 100) : 0;
+  const barColour = health > 50 ? 'green' : 'red';
+  const healthColour = health > 50 ? 'var(--green-light)' : health > 25 ? 'var(--yellow)' : 'var(--red-light)';
+  const portrait = FoaeCefUIAssetPath(unit.portrait);
+
+  return (
+    <Tooltip
+      content={{
+        title: unit.name,
+        body: unit.description || undefined,
+        lines: [
+          {
+            label: webUIText('Auto.ComponentsCommonUnitTooltip.318.4'),
+            value: `${fmt(unit.strength)} / ${fmt(unit.maxStrength)}`,
+            valueColor: healthColour,
+          },
+          { label: webUIText('Battle.UnitTooltip.Health'), value: formatPercent(health), valueColor: healthColour },
+        ],
+      }}
+      position={side === 'attacker' ? 'right' : 'left'}
+      delay={100}
+    >
+      <div
+        className={`battle-formation-unit-card${unit.strength <= 0 ? ' battle-formation-unit-card--destroyed' : ''}`}
+        onMouseDown={event => event.stopPropagation()}
+      >
+        <div className="battle-formation-unit-portrait-frame">
+          {portrait
+            ? <img src={portrait} alt="" className="battle-formation-unit-portrait" draggable={false} />
+            : <span className="battle-formation-unit-portrait-placeholder" />}
+        </div>
+        <span className="battle-formation-unit-name">{unit.name}</span>
+        <div className="battle-formation-unit-health">
+          <PaintedBar percent={health} color={barColour} className="battle-formation-unit-health-bar" />
+          <span className="battle-formation-unit-strength" style={{ color: healthColour }}>{fmt(unit.strength)}</span>
+        </div>
+      </div>
+    </Tooltip>
+  );
+}
+
+export function BattleFormationUnitRail({ formation }: { formation: BattleFormationLive }) {
+  return (
+    <div className={`battle-formation-unit-rail battle-formation-unit-rail--${formation.side}`}>
+      <div className="battle-formation-unit-grid">
+        {formation.units.map(unit => (
+          <BattleFormationUnitCard key={unit.id} unit={unit} side={formation.side} />
+        ))}
       </div>
     </div>
   );
