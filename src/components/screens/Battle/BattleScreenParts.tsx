@@ -278,8 +278,8 @@ export function buildBattleVisualAgents(
         const localIndex = visualIndex - firstVisualIndex;
         const column = localIndex % columns;
         const row = Math.floor(localIndex / columns);
-        const across = isNavalBattle ? (column - (columns - 1) * 0.5) * 20 : 0;
-        const deep = isNavalBattle ? ((rows - 1) * 0.5 - row) * 16 : 0;
+        const across = isNavalBattle ? (column - (columns - 1) * 0.5) * 24 : 0;
+        const deep = isNavalBattle ? ((rows - 1) * 0.5 - row) * 20 : 0;
         const visualX = agent.x + sideX * across + facingX * deep;
         const visualY = agent.y + sideY * across + facingY * deep;
 
@@ -316,10 +316,21 @@ export function formationAgentFootprint(formation: BattleFormationLive, typeKey:
   const radius = formation.collisionRadius ?? 80;
   const spacingAcross = clamp(radius * 0.30, 28, 58);
   const spacingDeep = clamp(radius * 0.24, 22, 46);
+  const width = clamp((columns - 1) * spacingAcross * 0.36 + 54, 58, 180);
+  const height = clamp((rows - 1) * spacingDeep * 0.58 + 42, 34, 112);
+
+  if (isNaval) {
+    // Ship markers are longer than land-unit markers and several ships can be
+    // drawn around each simulation agent, so fleets need a broader counter.
+    return {
+      width: clamp(width * 1.35, 86, 230),
+      height: clamp(height * 1.35, 58, 152),
+    };
+  }
 
   return {
-    width: clamp((columns - 1) * spacingAcross * 0.36 + 54, 58, 180),
-    height: clamp((rows - 1) * spacingDeep * 0.58 + 42, 34, 112),
+    width,
+    height,
   };
 }
 
