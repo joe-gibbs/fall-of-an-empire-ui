@@ -548,9 +548,17 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
     return !canRaiseLand && canRaiseNaval ? 'naval' : 'land';
   }, [r, settlement.hasPort]);
 
-  const pendingFormation = React.useMemo(
-    () => templateData?.pendingFormations.find(formation => formation.targetSettlementId === settlement.id) ?? null,
+  const pendingFormations = React.useMemo(
+    () => templateData?.pendingFormations.filter(formation =>
+      formation.targetSettlementId === settlement.id
+      || formation.units.some(unit => unit.settlementId === settlement.id),
+    ) ?? [],
     [settlement.id, templateData],
+  );
+
+  const targetPendingFormation = React.useMemo(
+    () => pendingFormations.find(formation => formation.targetSettlementId === settlement.id) ?? null,
+    [pendingFormations, settlement.id],
   );
 
   const raiseFormation = React.useCallback((templateId: string) => {
@@ -575,7 +583,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
   const blockedReason = settlement.canBuild === false
     ? (settlement.cannotBuildReason || 'Recruitment is not available right now.')
     : '';
-  const formationBlockedReason = blockedReason || pendingFormation?.blockReason || '';
+  const formationBlockedReason = blockedReason || targetPendingFormation?.blockReason || '';
 
   return (
     <div className={`mil-panel${blockedReason ? ' mil-panel--blocked' : ''}`}>
@@ -594,13 +602,14 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
 
       {r && <TrainingQueue items={r.trainingQueue} unitByKey={unitByKey} />}
 
-      {pendingFormation && (
+      {pendingFormations.map(pendingFormation => (
         <PendingFormationProgress
+          key={pendingFormation.id}
           formation={pendingFormation}
           unitByKey={unitByKey}
           gameDay={gameDay}
         />
-      )}
+      ))}
 
       <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsSettlementMilitaryPanel.318.8')} />
       <div className="mil-formation-list">
