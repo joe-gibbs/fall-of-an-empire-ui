@@ -5079,7 +5079,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.get_app_mode':
         return { mode: state.appMode } satisfies BridgeResponse<'game.get_app_mode'>;
       case 'game.get_game_state':
-        return { day: 17, month: 6, year: 742, gameDay: state.gameDay, dateText: '17/6/742', season: 'Summer', isPaused: state.isPaused, speedLevel: state.speedLevel, debugMode: state.debugMode, climateTrend: state.climateTrend, climateDescription: state.climateDescription, saveSerial: state.saveSerial, hasDemoTimeLimit: false, demoDaysRemaining: 0, demoEndDateText: '' } satisfies BridgeResponse<'game.get_game_state'>;
+        return { day: 17, month: 6, year: 742, gameDay: state.gameDay, dateText: '17/6/742', season: 'Summer', isPaused: state.isPaused, speedLevel: state.speedLevel, debugMode: state.debugMode, climateTrend: state.climateTrend, climateDescription: state.climateDescription, saveSerial: state.saveSerial, gameOver: false, hasDemoTimeLimit: false, demoDaysRemaining: 0, demoEndDateText: '' } satisfies BridgeResponse<'game.get_game_state'>;
       case 'game.get_game_version':
         return { version: 'Mock UI Dev', isDemo: false } satisfies BridgeResponse<'game.get_game_version'>;
       case 'game.get_resources':
@@ -6456,9 +6456,9 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.save_game':
         state.saveSerial += 1;
         emitGameState(emit);
-        return { saved: true } satisfies BridgeResponse<'game.save_game'>;
+        return { saved: true, failureReason: '' } satisfies BridgeResponse<'game.save_game'>;
       case 'game.delete_save':
-        return { deleted: true } satisfies BridgeResponse<'game.delete_save'>;
+        return { deleted: true, failureReason: '' } satisfies BridgeResponse<'game.delete_save'>;
       case 'game.set_mod_enabled':
         return { ok: true } satisfies BridgeResponse<'game.set_mod_enabled'>;
       case 'game.rebind_action_key':

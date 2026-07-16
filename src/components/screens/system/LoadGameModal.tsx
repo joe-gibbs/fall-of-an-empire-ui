@@ -109,6 +109,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
   const [loadingSlot, setLoadingSlot] = useState<string | null>(null);
   const [departingForLoad, setDepartingForLoad] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const removeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const loadTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -118,6 +119,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
     setLoadingSlot(null);
     setDepartingForLoad(false);
     setLoadError(null);
+    setDeleteError(null);
     onClosed();
   }, [onClosed]);
   const {
@@ -185,6 +187,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
   const confirmDelete = () => {
     if (!deleteTarget) return;
     const targetSlot = deleteTarget.slotName;
+    setDeleteError(null);
     setRemovingSlot(targetSlot);
 
     removeTimerRef.current = setTimeout(() => {
@@ -193,9 +196,12 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
         positions.set(slot, el.getBoundingClientRect().top);
       });
 
-      void removeSave(targetSlot).then((deleted) => {
+      void removeSave(targetSlot).then((result) => {
         setRemovingSlot(null);
-        if (!deleted) return;
+        if (!result.deleted) {
+          setDeleteError(result.failureReason);
+          return;
+        }
 
         rowRefs.current.forEach((el, slot) => {
           const oldTop = positions.get(slot);
@@ -266,6 +272,13 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
             <div className="game-notice game-notice--warning load-game__error">
               <span className="load-game__error-title">{webUIText('MainMenu.LoadSaveFailed')}</span>
               <span className="load-game__error-message">{loadError}</span>
+            </div>
+          )}
+
+          {deleteError && (
+            <div className="game-notice game-notice--warning load-game__error">
+              <span className="load-game__error-title">{webUIText('Auto.Attr.ComponentsScreensLoadGameModal.415.1')}</span>
+              <span className="load-game__error-message">{deleteError}</span>
             </div>
           )}
 

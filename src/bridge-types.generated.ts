@@ -592,6 +592,7 @@ export interface DeleteSaveRequest {
 
 export interface DeleteSaveResponse {
   deleted: boolean;
+  failureReason: string;
 }
 
 export interface DemolishSettlementBuildingRequest {
@@ -2411,6 +2412,7 @@ export interface GetGameStateResponse {
   climateTrend: number;
   climateDescription: string;
   saveSerial: number;
+  gameOver: boolean;
   hasDemoTimeLimit: boolean;
   demoDaysRemaining: number;
   demoEndDateText: string;
@@ -5611,6 +5613,7 @@ export interface SaveGameRequest {
 
 export interface SaveGameResponse {
   saved: boolean;
+  failureReason: string;
 }
 
 export interface SelectMilitaryRequest {

@@ -21,6 +21,9 @@ interface OverwriteTarget {
   name: string;
   slotName: string;
 }
+type SaveResult =
+  | { saved: true }
+  | { saved: false; failureReason: string };
 
 const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   const { resetAdvisorHints } = useGameActions();
@@ -31,7 +34,9 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   const [showResetHintsConfirm, setShowResetHintsConfirm] = useState(false);
   const [overwriteTarget, setOverwriteTarget] = useState<OverwriteTarget | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [statusIsError, setStatusIsError] = useState(false);
   const [suggestedName, setSuggestedName] = useState('');
+  const [gameOver, setGameOver] = useState(true);
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const closeChildModals = useCallback(() => {
@@ -44,6 +49,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   const handleAfterClosed = useCallback(() => {
     closeChildModals();
     setShowResetHintsConfirm(false);
+    setGameOver(true);
     onClosed();
   }, [closeChildModals, onClosed]);
 
@@ -66,10 +72,14 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     let cancelled = false;
     (async () => {
       try {
-        const faction = await bridgeCall('game.get_player_faction');
         const state = await bridgeCall('game.get_game_state');
         const date = `${state.day}/${state.month}/${state.year}`;
-        if (!cancelled) setSuggestedName(faction.name ? `${faction.name} - ${date}` : date);
+        if (cancelled) return;
+        setGameOver(state.gameOver);
+        setSuggestedName(date);
+
+        const faction = await bridgeCall('game.get_player_faction');
+        if (!cancelled && faction.name) setSuggestedName(`${faction.name} - ${date}`);
       } catch {
         if (!cancelled) setSuggestedName('');
       }
@@ -77,21 +87,31 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     return () => { cancelled = true; };
   }, [visible]);
 
-  const showStatus = useCallback((msg: string) => {
+  const showStatus = useCallback((msg: string, isError = false) => {
     setStatusMsg(msg);
+    setStatusIsError(isError);
     clearTimeout(statusTimerRef.current);
-    statusTimerRef.current = setTimeout(() => setStatusMsg(null), 2800);
+    statusTimerRef.current = setTimeout(() => setStatusMsg(null), isError ? 8000 : 2800);
   }, []);
 
-  const saveGame = useCallback(async (displayName: string, existingSlotName = ''): Promise<boolean> => {
+  const saveGame = useCallback(async (displayName: string, existingSlotName = ''): Promise<SaveResult> => {
     try {
       const res = await bridgeCall('game.save_game', { displayName, existingSlotName });
-      return res.saved;
+      return res.saved
+        ? { saved: true }
+        : { saved: false, failureReason: res.failureReason };
     } catch (err) {
       console.error('[PauseMenu] save failed', err);
-      return false;
+      return {
+        saved: false,
+        failureReason: err instanceof Error ? err.message : String(err),
+      };
     }
   }, []);
+
+  const showSaveFailure = useCallback((failureReason: string) => {
+    showStatus(webUIText('PauseMenu.SaveFailedReason', { Reason: failureReason }), true);
+  }, [showStatus]);
 
   const openSaveDialog = useCallback((mode: SaveDialogMode) => {
     setSaveDialogMode(mode);
@@ -100,15 +120,19 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
 
   const handleSaveConfirm = useCallback(async (name: string, existingSlotName = '') => {
     setShowSave(false);
-    const saved = await saveGame(name, existingSlotName);
-    showStatus(webUIText(saved ? 'PauseMenu.GameSaved' : 'PauseMenu.SaveFailed'));
-  }, [saveGame, showStatus]);
+    const result = await saveGame(name, existingSlotName);
+    if (result.saved) {
+      showStatus(webUIText('PauseMenu.GameSaved'));
+    } else {
+      showSaveFailure(result.failureReason);
+    }
+  }, [saveGame, showSaveFailure, showStatus]);
 
   const handleSaveAndQuitConfirm = useCallback(async (name: string, existingSlotName = '') => {
     setShowSave(false);
-    const saved = await saveGame(name, existingSlotName);
-    if (!saved) {
-      showStatus(webUIText('PauseMenu.SaveFailed'));
+    const result = await saveGame(name, existingSlotName);
+    if (!result.saved) {
+      showSaveFailure(result.failureReason);
       return;
     }
     try {
@@ -116,7 +140,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     } catch (err) {
       console.error('[PauseMenu] return to main menu failed', err);
     }
-  }, [saveGame, showStatus]);
+  }, [saveGame, showSaveFailure]);
 
   const completeSave = useCallback((name: string, existingSlotName = '') => {
     if (saveDialogMode === 'saveAndQuit') {
@@ -144,9 +168,9 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
       completeSave(name);
     } catch (err) {
       console.error('[PauseMenu] failed to check existing saves', err);
-      showStatus(webUIText('PauseMenu.SaveFailed'));
+      showSaveFailure(err instanceof Error ? err.message : String(err));
     }
-  }, [completeSave, showStatus]);
+  }, [completeSave, showSaveFailure]);
 
   const confirmOverwrite = useCallback(() => {
     if (!overwriteTarget) return;
@@ -179,19 +203,22 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
 
         <nav className="pause-overlay__items" onClick={stopPropagation}>
           <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); handleClose(); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.301.2" /></button>
-          <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); openSaveDialog('save'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.302.3" /></button>
+          <button className="pause-overlay__item" disabled={gameOver} onMouseDown={() => { playSound('click'); openSaveDialog('save'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.302.3" /></button>
           <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); setShowLoad(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.303.4" /></button>
           <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); setShowResetHintsConfirm(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.304.5" /></button>
           <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); setShowSettings(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.305.6" /></button>
 
           <div className="pause-overlay__separator" />
 
-          <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); openSaveDialog('saveAndQuit'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.309.7" /></button>
+          <button className="pause-overlay__item" disabled={gameOver} onMouseDown={() => { playSound('click'); openSaveDialog('saveAndQuit'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.309.7" /></button>
           <button className="pause-overlay__item" onClick={() => { playSound('click'); void handleExitToDesktop(); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.310.8" /></button>
         </nav>
 
         {statusMsg && (
-          <div className="pause-overlay__status" key={statusMsg}>
+          <div
+            className={statusIsError ? 'pause-overlay__status pause-overlay__status--error' : 'pause-overlay__status'}
+            key={statusMsg}
+          >
             <span className="pause-overlay__status-rule" />
             <span>{statusMsg}</span>
             <span className="pause-overlay__status-rule" />
@@ -200,7 +227,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
       </div>
 
       <SaveGameDialog
-        visible={showSave}
+        visible={showSave && !gameOver}
         mode={saveDialogMode}
         suggestedName={suggestedName}
         onConfirm={handleSaveDialogConfirm}
@@ -219,7 +246,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
       />
 
       <ConfirmDialog
-        visible={overwriteTarget !== null}
+        visible={overwriteTarget !== null && !gameOver}
         title={webUIText('PauseMenu.OverwriteSaveTitle')}
         message={overwriteTarget ? webUIText('PauseMenu.OverwriteSaveMessage', { SaveName: overwriteTarget.name }) : ''}
         confirmText={webUIText('PauseMenu.OverwriteSaveConfirm')}

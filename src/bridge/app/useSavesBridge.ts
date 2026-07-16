@@ -5,10 +5,15 @@ import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
 export type SaveEntry = SaveGameEntryDto;
 
+export interface DeleteSaveResult {
+  deleted: boolean;
+  failureReason: string;
+}
+
 export interface UseSavesBridge {
   saves: SaveEntry[] | null;
   load: (slotName: string) => Promise<void>;
-  remove: (slotName: string, deleteFromCloud?: boolean) => Promise<boolean>;
+  remove: (slotName: string, deleteFromCloud?: boolean) => Promise<DeleteSaveResult>;
 }
 
 export function useSavesBridge(enabled: boolean): UseSavesBridge {
@@ -49,10 +54,13 @@ export function useSavesBridge(enabled: boolean): UseSavesBridge {
       if (res.deleted) {
         setSaves(prev => prev ? prev.filter(save => save.slotName !== slotName) : prev);
       }
-      return res.deleted;
+      return { deleted: res.deleted, failureReason: res.failureReason };
     } catch (error) {
       acknowledgeBridgeFailure(error);
-      return false;
+      return {
+        deleted: false,
+        failureReason: error instanceof Error ? error.message : '',
+      };
     }
   }, []);
 

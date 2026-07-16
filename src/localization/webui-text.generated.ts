@@ -578,6 +578,7 @@ export const WEBUI_TEXT_SOURCE = {
   "CourtOffice.NoBenefit": "No benefit",
   "PauseMenu.GameSaved": "Game saved",
   "PauseMenu.SaveFailed": "Save failed",
+  "PauseMenu.SaveFailedReason": "Save failed - {Reason}",
   "PauseMenu.OverwriteSaveTitle": "Overwrite this save?",
   "PauseMenu.OverwriteSaveMessage": "A save named {SaveName} already exists. Overwrite it?",
   "PauseMenu.OverwriteSaveConfirm": "Overwrite",
