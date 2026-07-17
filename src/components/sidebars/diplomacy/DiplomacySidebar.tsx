@@ -742,6 +742,25 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             </GovernmentTooltip>
           </div>
 
+          {faction.isRebel && faction.rebelTypeName && faction.rebelGoalName && (
+            <>
+              <SectionHeading variant="ornate" title={webUIText('Diplomacy.Rebellion')} />
+              <div className="diplo-rebellion-summary">
+                <div className="diplo-rebellion-row">
+                  <span className="diplo-rebellion-label">{webUIText('Diplomacy.RebelType')}</span>
+                  <span className="diplo-rebellion-value">{faction.rebelTypeName}</span>
+                </div>
+                <div className="diplo-rebellion-row">
+                  <span className="diplo-rebellion-label">{webUIText('Diplomacy.RebelGoal')}</span>
+                  <span className="diplo-rebellion-value">{faction.rebelGoalName}</span>
+                </div>
+                {faction.rebelGoalDescription && (
+                  <p className="diplo-rebellion-description">{faction.rebelGoalDescription}</p>
+                )}
+              </div>
+            </>
+          )}
+
           {debugMode && (
             <>
               <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsDiplomacySidebar.386.23')} />
