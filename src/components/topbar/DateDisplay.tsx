@@ -1,7 +1,7 @@
 import React from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../common/tooltips/Tooltip';
 import { useGameState } from '../../context/GameContext';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 import { webUIText } from '../../localization/WebUITextContext';
 type SeasonKey = 'spring' | 'summer' | 'autumn' | 'winter';
@@ -91,7 +91,7 @@ const DateDisplay: React.FC = () => {
   const { month } = date;
   const displayMonth = Math.round(month);
   const season = seasonFromLabel(seasonLabel, displayMonth);
-  const seasonIcon = FoaeCefUIAssetPath(`/assets/icons/Seasons/I_${seasonIconName(season)}.png`);
+  const seasonIcon = WebkilnAssetPath(`/assets/icons/Seasons/I_${seasonIconName(season)}.png`);
   const trendDirection = climateTrendDirection(climateTrend);
   const trendIcon = trendDirection ? climateTrendIcon(trendDirection) : null;
   const trendLabel = trendDirection === 'warming'

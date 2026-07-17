@@ -364,12 +364,12 @@ export default {
   meta: {
     type: 'problem',
     docs: {
-      description: 'disallow mixed CSS units in FoaeCefUI animations and transform functions',
+      description: 'disallow mixed CSS units in Webkiln animations and transform functions',
     },
     schema: [],
     messages: {
-      mixedTransformUnits: 'FoaeCefUI can warn when interpolating {{functionName}}() with mixed CSS units ({{units}}). Split axes into separate transform functions or use one unit type.',
-      mixedKeyframeUnits: 'FoaeCefUI cannot reliably interpolate {{property}} in @keyframes {{name}} between mixed CSS units ({{units}}). Use one unit type across the animation.',
+      mixedTransformUnits: 'Webkiln can warn when interpolating {{functionName}}() with mixed CSS units ({{units}}). Split axes into separate transform functions or use one unit type.',
+      mixedKeyframeUnits: 'Webkiln cannot reliably interpolate {{property}} in @keyframes {{name}} between mixed CSS units ({{units}}). Use one unit type across the animation.',
     },
   },
 

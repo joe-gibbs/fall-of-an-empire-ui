@@ -3,7 +3,7 @@ import Tooltip, { type TooltipContent, type TooltipLine } from '../common/toolti
 import type { PortGlanceData } from './WorldGlanceTypes';
 import { formatNumber } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel } from './WorldGlancePresentation';
 
 import { webUIText } from '../../localization/WebUITextContext';
@@ -118,11 +118,11 @@ export default function PortGlance({ data }: PortGlanceProps) {
     data.blockaded ? 'is-blockaded' : '',
   ].filter(Boolean).join(' ');
   const levelLabel = portLevelRoman(data.level);
-  const badgeShadow = FoaeCefUIAssetPath(portBadgeLayerPath('shadow'));
-  const badgeBackground = FoaeCefUIAssetPath(portBadgeLayerPath('background'));
-  const badgeMask = FoaeCefUIAssetPath(portBadgeLayerPath('enamel-mask'));
-  const badgeLight = FoaeCefUIAssetPath(portBadgeLayerPath('enamel-light'));
-  const badgeForeground = FoaeCefUIAssetPath(portBadgeLayerPath('foreground'));
+  const badgeShadow = WebkilnAssetPath(portBadgeLayerPath('shadow'));
+  const badgeBackground = WebkilnAssetPath(portBadgeLayerPath('background'));
+  const badgeMask = WebkilnAssetPath(portBadgeLayerPath('enamel-mask'));
+  const badgeLight = WebkilnAssetPath(portBadgeLayerPath('enamel-light'));
+  const badgeForeground = WebkilnAssetPath(portBadgeLayerPath('foreground'));
 
   return (
     <Tooltip

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { FoaeCefUIAssetPath } from '../../../../utils/assets';
+import { WebkilnAssetPath } from '../../../../utils/assets';
 import { readableFactionTextColour } from '../../../../utils/colorFormatters';
 
 interface RowProps {
@@ -30,7 +30,7 @@ export function ModeRow({ label, value, tone, colour, icon }: RowProps) {
 
   return (
     <div className="province-tooltip-mode-row">
-      {icon && <img className="province-tooltip-mode-icon" src={FoaeCefUIAssetPath(icon)} alt="" />}
+      {icon && <img className="province-tooltip-mode-icon" src={WebkilnAssetPath(icon)} alt="" />}
       <span className="province-tooltip-mode-label">{label}</span>
       <span className={toneClass(tone)} style={colour ? { color: readableFactionTextColour(colour) } : undefined}>{value}</span>
     </div>

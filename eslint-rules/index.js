@@ -1,9 +1,9 @@
 import noUnformattedNumberRender from './no-unformatted-number-render.js';
 import noMissingAsset from './no-missing-asset.js';
-import noUnsupportedFoaeCefUIFeatures from './no-unsupported-runtime-features.js';
+import noUnsupportedWebkilnFeatures from './no-unsupported-runtime-features.js';
 import noHardcodedPlayerText from './no-hardcoded-player-text.js';
 import noMixedAnimationUnits from './no-mixed-animation-units.js';
-import noExpensiveFoaeCefUISelectors from './no-expensive-runtime-selectors.js';
+import noExpensiveWebkilnSelectors from './no-expensive-runtime-selectors.js';
 
 function makeLineVirtualSource(text, variableName) {
   const lines = text.split(/\r?\n/);
@@ -25,10 +25,10 @@ export default {
   rules: {
     'no-unformatted-number-render': noUnformattedNumberRender,
     'no-missing-asset': noMissingAsset,
-    'no-unsupported-runtime-features': noUnsupportedFoaeCefUIFeatures,
+    'no-unsupported-runtime-features': noUnsupportedWebkilnFeatures,
     'no-hardcoded-player-text': noHardcodedPlayerText,
     'no-mixed-animation-units': noMixedAnimationUnits,
-    'no-expensive-runtime-selectors': noExpensiveFoaeCefUISelectors,
+    'no-expensive-runtime-selectors': noExpensiveWebkilnSelectors,
   },
   processors: {
     css: {

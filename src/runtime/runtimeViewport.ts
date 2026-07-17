@@ -1,4 +1,4 @@
-// Runtime viewport helpers are shared by the FoaeCefUI host and mock browser mode.
+// Runtime viewport helpers are shared by the Webkiln host and mock browser mode.
 
 export interface RuntimeViewportState {
   scale?: number;
@@ -26,9 +26,9 @@ export function applyRuntimeViewportScale(detail: RuntimeViewportState | undefin
   document.documentElement.style.setProperty('--runtime-viewport-scale', String(safeScale));
 }
 
-export function setRuntimeClass(isFoaeCefUI: boolean) {
+export function setRuntimeClass(isWebkiln: boolean) {
   const root = document.documentElement;
-  if (isFoaeCefUI) {
+  if (isWebkiln) {
     root.classList.add('webui-runtime');
     root.classList.remove('webui-standalone');
     applyRuntimeViewportScale(window.__foaeRuntimeViewport);

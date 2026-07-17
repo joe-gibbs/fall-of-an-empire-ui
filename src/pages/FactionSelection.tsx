@@ -25,7 +25,7 @@ import ZoomPanCanvas, {
 } from '../components/common/layout/scrolling/ZoomPanCanvas';
 import VirtualList from '../components/common/layout/scrolling/VirtualList';
 import { StatCellGrid, StatCell } from '../components/sidebars/shared/StatCellGrid';
-import { FoaeCefUIAssetPath } from '../utils/assets';
+import { WebkilnAssetPath } from '../utils/assets';
 import { resolveFactionBorderVariant } from '../utils/factionBorder';
 import { emblemAssetPath } from '../utils/factionEmblem';
 import { formatNumber, formatSignedNumber } from '../utils/numberFormat';
@@ -545,7 +545,7 @@ function translateFactionSelectionData(
 
 function roundelSymbolStyle(emblemAssetPath: string): React.CSSProperties {
   return {
-    maskImage: `url("${FoaeCefUIAssetPath(emblemAssetPath)}")`,
+    maskImage: `url("${WebkilnAssetPath(emblemAssetPath)}")`,
     maskPosition: 'center',
     maskSize: 'contain',
     maskRepeat: 'no-repeat',
@@ -2004,7 +2004,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
                 <CultureTooltip info={selected.cultureInfo} fallbackName={selected.cultureDisplayName} fallbackId={selected.culture}>
                   <div className="fs-identity-item">
                     {selected.cultureIconPath ? (
-                      <img src={FoaeCefUIAssetPath(selected.cultureIconPath)} alt="" className="fs-identity-icon" />
+                      <img src={WebkilnAssetPath(selected.cultureIconPath)} alt="" className="fs-identity-icon" />
                     ) : (
                       <span className="fs-identity-icon-fallback" />
                     )}
@@ -2018,7 +2018,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
                 <ReligionTooltip info={selected.religionInfo} fallbackName={selected.religionDisplayName} fallbackId={selected.religion}>
                   <div className="fs-identity-item">
                     {selected.religionIconPath ? (
-                      <img src={FoaeCefUIAssetPath(selected.religionIconPath)} alt="" className="fs-identity-icon" />
+                      <img src={WebkilnAssetPath(selected.religionIconPath)} alt="" className="fs-identity-icon" />
                     ) : (
                       <span className="fs-identity-icon-fallback" />
                     )}

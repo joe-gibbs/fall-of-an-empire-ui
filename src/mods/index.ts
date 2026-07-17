@@ -116,12 +116,6 @@ function isContentPackManifest(value: unknown): value is ContentPackWebUIManifes
   return !!value && typeof value === 'object' && Array.isArray((value as ContentPackWebUIManifest).packs);
 }
 
-function pathBaseName(path: string | undefined): string {
-  if (!path) return '';
-  const parts = path.split(/[\\/]/).filter(Boolean);
-  return parts.length ? parts[parts.length - 1] : '';
-}
-
 function parseContentPackManifest(response: GetContentPackWebUIManifestResponse): ContentPackWebUIManifest | null {
   try {
     const parsed = JSON.parse(response.manifestJson) as unknown;
@@ -134,10 +128,7 @@ function parseContentPackManifest(response: GetContentPackWebUIManifestResponse)
 function contentPackManifestEntries(parsed: ContentPackWebUIManifest): ModManifestEntry[] {
   const entries: ModManifestEntry[] = [];
   for (const pack of parsed.packs ?? []) {
-    const fallbackBase = pack.id
-      ? `http://foae.local/foae-mods/${pathBaseName(pack.rootPath) || pack.id}`
-      : '';
-    const baseUrl = pack.resourceBaseUrl || fallbackBase;
+    const baseUrl = pack.resourceBaseUrl || '';
     if (!baseUrl) continue;
 
     const styles = (pack.styles ?? [])

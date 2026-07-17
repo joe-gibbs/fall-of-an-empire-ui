@@ -12,7 +12,7 @@ import { browserKeyToUnrealKey, browserMouseButtonToUnrealKey, isModifierCode } 
 import { useAnimatedPresence } from '../../hooks/useAnimatedPresence';
 import { useEscapeStackEntry } from '../../context/EscapeStack';
 import { bridgeCall } from '../../bridge-types.generated.ts';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import type {
   ApplySettingsRequest,
   ControlBindingDTO,
@@ -295,7 +295,7 @@ function clearStoredDisplayConfirm(): void {
   window.sessionStorage.removeItem(DISPLAY_CONFIRM_STORAGE_KEY);
 }
 
-/* â”€â”€ Setting Row Helpers (module-scope to avoid remount on re-render) â”€â”€ */
+/* ÄÄ Setting Row Helpers (module-scope to avoid remount on re-render) ÄÄ */
 
 const SettingsLabel: React.FC<{
   label: string;
@@ -434,7 +434,7 @@ const SettingsSlider: React.FC<{ label: string; desc?: string; tooltip?: Tooltip
   );
 };
 
-/* â”€â”€ Notifications Tab â”€â”€ */
+/* ÄÄ Notifications Tab ÄÄ */
 
 const NOTIFICATION_CATEGORY_ORDER = ['Military', 'Diplomatic', 'Political', 'Character', 'Settlement', 'General'];
 
@@ -492,7 +492,7 @@ const NotificationsTab: React.FC<{
   );
 };
 
-/* â”€â”€ Controls Tab â”€â”€ */
+/* ÄÄ Controls Tab ÄÄ */
 
 interface PendingRebind {
   index: number;
@@ -800,7 +800,7 @@ const ControlsTab: React.FC<{
   );
 };
 
-/* â”€â”€ Events Tab â”€â”€ */
+/* ÄÄ Events Tab ÄÄ */
 
 const EventsTab: React.FC<{
   llmProvider: string;
@@ -825,7 +825,7 @@ const EventsTab: React.FC<{
       ? model.ramRequirementMB - hardware.systemMemoryMB
       : 0
   );
-  const eventIconPath = (path: string): string => FoaeCefUIAssetPath(path) ?? path;
+  const eventIconPath = (path: string): string => WebkilnAssetPath(path) ?? path;
   const modelIconPath = (model: LlmModelDTO): string => {
     if (model.iconPath) return eventIconPath(model.iconPath);
     if (model.filename === 'Small.gguf') return eventIconPath('/assets/icons/Models/T_Events_Small.png');

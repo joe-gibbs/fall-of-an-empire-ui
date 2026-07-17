@@ -5,7 +5,7 @@ import type {
 } from '../../bridge-types.generated.ts';
 import type { Notification } from '../../data/types';
 import { useModalPresence } from '../../hooks/useModalPresence';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { renderEventTextChunk } from '../../utils/eventTextFlow';
 import { formatNumber, formatPercent } from '../../utils/numberFormat';
 import { renderRichText } from '../../utils/richText';
@@ -260,7 +260,7 @@ function DamageList({
       {units.map((unit, index) => {
         const factionId = unit.factionId || undefined;
         const handleFactionClick = factionId && onLinkClick ? () => onLinkClick('faction', factionId) : undefined;
-        const unitPortrait = FoaeCefUIAssetPath(unit.portraitPath) ?? unit.portraitPath;
+        const unitPortrait = WebkilnAssetPath(unit.portraitPath) ?? unit.portraitPath;
 
         return (
           <div key={unit.unitId || `${unit.side}-${unit.factionId}-${unit.unitName}-${index}`} className={`battle-aar-unit-card${unit.destroyed ? ' battle-aar-unit-card--destroyed' : ''}`}>
@@ -362,7 +362,7 @@ export default function BattleAfterActionModal({
 
   if (!mounted || !notification || !report?.available) return null;
 
-  const headerImage = FoaeCefUIAssetPath(report.headerImage || (report.ourSide.won ? '/assets/events/military-victory.png' : '/assets/ui/T_BattleScreen_Background.png')) ?? '';
+  const headerImage = WebkilnAssetPath(report.headerImage || (report.ourSide.won ? '/assets/events/military-victory.png' : '/assets/ui/T_BattleScreen_Background.png')) ?? '';
   const headerImageStyle = {
     backgroundImage: `url("${headerImage.replace(/"/g, '\\"')}")`,
   };

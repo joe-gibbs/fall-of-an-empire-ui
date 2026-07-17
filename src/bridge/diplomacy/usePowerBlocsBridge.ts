@@ -12,7 +12,7 @@ import type {
   PowerBlocMember,
   PowerBlocModifier,
 } from '../../data/types';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
 let powerBlocCache: PowerBloc[] | null = null;
@@ -52,13 +52,13 @@ export function clearPowerBlocCaches(): void {
 }
 
 function iconUrl(key: string): string | undefined {
-  if (key.startsWith('/') || key.startsWith('coui://')) return FoaeCefUIAssetPath(key);
-  return key ? FoaeCefUIAssetPath(`/assets/power-blocs/${key}.png`) : undefined;
+  if (key.startsWith('/') || key.startsWith('coui://')) return WebkilnAssetPath(key);
+  return key ? WebkilnAssetPath(`/assets/power-blocs/${key}.png`) : undefined;
 }
 
 function headerImageUrl(key: string): string | undefined {
   const image = POWER_BLOC_HEADER_IMAGES[key];
-  return image ? FoaeCefUIAssetPath(`/assets/events/${image}.png`) : undefined;
+  return image ? WebkilnAssetPath(`/assets/events/${image}.png`) : undefined;
 }
 
 function mapGoal(goal: PowerBlocOverviewEntry['goals'][number]): PowerBlocGoal {

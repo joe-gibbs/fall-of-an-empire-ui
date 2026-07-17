@@ -475,7 +475,7 @@ export function installMockruntimeEngine(): void {
     },
   };
 
-  window.engine = engine;
+  window.__webkilnRuntimeEngineMock = engine;
   window.__foaeMockBridge = {
     launch: (request) => runtime.launch(request, emitBridgeEvent),
     setAppMode: (mode) => runtime.setAppMode(mode, emitBridgeEvent),

@@ -1,6 +1,6 @@
 import { useBridgeQuery } from '../core/useBridgeQuery';
 import type { GetVictoryConditionsResponse } from '../../bridge-types.generated.ts';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 let victoryConditionsCache: GetVictoryConditionsResponse | null = null;
 
@@ -13,7 +13,7 @@ function mapResponse(data: GetVictoryConditionsResponse): GetVictoryConditionsRe
     ...data,
     tiers: data.tiers.map((tier) => ({
       ...tier,
-      iconPath: FoaeCefUIAssetPath(tier.iconPath) ?? '',
+      iconPath: WebkilnAssetPath(tier.iconPath) ?? '',
     })),
   };
   victoryConditionsCache = mapped;

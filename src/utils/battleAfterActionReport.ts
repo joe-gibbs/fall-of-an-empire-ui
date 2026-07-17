@@ -1,5 +1,5 @@
 import type { BattleAfterActionReportPayload } from '../bridge-types.generated.ts';
-import { FoaeCefUIAssetPath } from './assets';
+import { WebkilnAssetPath } from './assets';
 
 export function normaliseBattleAfterActionReport(
   report?: BattleAfterActionReportPayload,
@@ -7,14 +7,14 @@ export function normaliseBattleAfterActionReport(
   if (!report?.available) return undefined;
   return {
     ...report,
-    headerImage: FoaeCefUIAssetPath(report.headerImage) ?? '',
+    headerImage: WebkilnAssetPath(report.headerImage) ?? '',
     spoilsList: (report.spoilsList ?? []).map(spoil => ({
       ...spoil,
-      iconPath: FoaeCefUIAssetPath(spoil.iconPath) ?? '',
+      iconPath: WebkilnAssetPath(spoil.iconPath) ?? '',
     })),
     unitDamage: (report.unitDamage ?? []).map(unit => ({
       ...unit,
-      iconPath: FoaeCefUIAssetPath(unit.iconPath) ?? '',
+      iconPath: WebkilnAssetPath(unit.iconPath) ?? '',
     })),
   };
 }

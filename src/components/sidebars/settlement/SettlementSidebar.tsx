@@ -38,7 +38,7 @@ import SettlementMilitaryPanel from './SettlementMilitaryPanel';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import ResourceLink from '../../common/resources/ResourceLink';
 import { successChanceColour } from '../../../utils/colorFormatters';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber, formatPercent as formatPercentValue, formatSignedNumber } from '../../../utils/numberFormat';
 import { compareSortValuesWithDirection, toggleSortState, type SortState } from '../../common/layout/tables/sortUtils';
@@ -60,7 +60,7 @@ function getUnrestColor(unrest: number): string {
   return 'var(--red)';
 }
 
-/** Local fallback for the unrest label — used only if the bridge didn't
+/** Local fallback for the unrest label - used only if the bridge didn't
  *  supply one. The game side is the source
  *  of truth for real settlements. Matches the AS thresholds in
  *  GetSettlementDataAction.UnrestLabelForValue. */
@@ -881,7 +881,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
         <img src={settlementTypeHeaderBg[settlement.type] || "/assets/events/settlement-village.png"} alt="" className="settle-header-bg" />
         <Tooltip content={{ title: formatSettlementType(settlement.type), body: settlement.region }} position="bottom" delay={200}>
           <div className="settle-header-type-badge">
-            <img src={FoaeCefUIAssetPath(settlementTypeIcons[settlement.type])} alt="" className="settle-header-type-icon" />
+            <img src={WebkilnAssetPath(settlementTypeIcons[settlement.type])} alt="" className="settle-header-type-icon" />
           </div>
         </Tooltip>
         {settlement.governor && (
@@ -1306,7 +1306,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                         return (
                           <Tooltip key={r.id ?? r.name} content={buildResourceTooltip(r)} position="left" delay={200}>
                             <ResourceLink resourceId={r.id ?? r.name} className={`settle-resource-row${(r.shortage ?? 0) > 0 ? ' settle-resource-row--shortage' : ''}`}>
-                              <img src={FoaeCefUIAssetPath(r.icon || `/assets/resources/${r.id ?? r.name}.png`)} alt="" className="settle-resource-icon" />
+                              <img src={WebkilnAssetPath(r.icon || `/assets/resources/${r.id ?? r.name}.png`)} alt="" className="settle-resource-icon" />
                               <span className="settle-resource-name">{r.name}</span>
                               <span className="settle-resource-stock">{amountStr}</span>
                               <span className="settle-resource-net" style={{ color: netColor }}>{net >= 0 ? '+' : ''}{netStr}</span>

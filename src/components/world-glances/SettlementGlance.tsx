@@ -4,7 +4,7 @@ import type { SettlementGlanceData } from './WorldGlanceTypes';
 import { clampUnitFraction, percentWidth } from './glanceMath';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { readableFactionTextColour } from '../../utils/colorFormatters';
 
 import { webUIText } from '../../localization/WebUITextContext';
@@ -227,7 +227,7 @@ function renderInfoRow(icon: string, value: string, valueColor?: string, numeric
   const style = valueColor ? { color: valueColor } : undefined;
   return (
     <>
-      <img src={FoaeCefUIAssetPath(icon)} alt="" className="gset-info-icon" />
+      <img src={WebkilnAssetPath(icon)} alt="" className="gset-info-icon" />
       <span className={className} style={style}>{value}</span>
     </>
   );
@@ -339,17 +339,17 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
   const buildItemProgress = data.buildItem ? clampUnitFraction(data.buildItem.progress) : 0;
   const besieged = data.besieged === true;
   const displayedSiegeProgress = useAnimatedProgress(siegeProgress, besieged, `${data.name}:siege`);
-  const badgeShadow = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'shadow'));
-  const badgeBackground = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'background'));
-  const badgeMask = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'enamel-mask'));
-  const badgeLight = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'enamel-light'));
-  const badgeForeground = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'foreground'));
-  const badgeHoverOverlay = FoaeCefUIAssetPath(settlementBadgeLayerPath(data.settlementType, 'hover-overlay'));
+  const badgeShadow = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'shadow'));
+  const badgeBackground = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'background'));
+  const badgeMask = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'enamel-mask'));
+  const badgeLight = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'enamel-light'));
+  const badgeForeground = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'foreground'));
+  const badgeHoverOverlay = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'hover-overlay'));
   const badgeOverhangRem = (data.badgeScale - 1) * 2.1364;
   const capitalIconPath = data.isCapital
     ? '/assets/icons/I_Capital.png'
     : data.isProvincialCapital ? '/assets/icons/I_ProvincialCapital.png' : '';
-  const capitalIcon = capitalIconPath ? FoaeCefUIAssetPath(capitalIconPath) : '';
+  const capitalIcon = capitalIconPath ? WebkilnAssetPath(capitalIconPath) : '';
   const rootClass = [
     'glance',
     'glance--settlement',
@@ -410,13 +410,13 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
             <img className="gset-status-icon gset-status-icon--capital" src={capitalIcon} alt="" />
           )}
           {besieged && (
-            <img className="gset-status-icon gset-status-icon--siege" src={FoaeCefUIAssetPath('/assets/icons/I_Siege.png')} alt="" />
+            <img className="gset-status-icon gset-status-icon--siege" src={WebkilnAssetPath('/assets/icons/I_Siege.png')} alt="" />
           )}
           {data.starving && (
-            <img className="gset-status-icon gset-status-icon--starving" src={FoaeCefUIAssetPath('/assets/icons/I_StarvationApple.png')} alt="" />
+            <img className="gset-status-icon gset-status-icon--starving" src={WebkilnAssetPath('/assets/icons/I_StarvationApple.png')} alt="" />
           )}
           {data.diseased && (
-            <img className="gset-status-icon gset-status-icon--disease" src={FoaeCefUIAssetPath('/assets/icons/I_Skull.png')} alt="" />
+            <img className="gset-status-icon gset-status-icon--disease" src={WebkilnAssetPath('/assets/icons/I_Skull.png')} alt="" />
           )}
         </div>
 
@@ -431,7 +431,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
               {data.buildItem && (
                 <img
                   className="gset-build-status-icon"
-                  src={FoaeCefUIAssetPath(data.buildItem.icon)}
+                  src={WebkilnAssetPath(data.buildItem.icon)}
                   alt=""
                 />
               )}

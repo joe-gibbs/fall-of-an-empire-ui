@@ -14,7 +14,7 @@ import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBo
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import type { EncyclopediaEntryDTO, EncyclopediaBuildingDTO, EncyclopediaCultureDTO, EncyclopediaResourceCostDTO, EncyclopediaUnitDTO } from '../../../bridge-types.generated.ts';
 import { formatNumber } from '../../../utils/numberFormat';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { TIER_ICONS } from '../../../utils/iconMaps';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import './EncyclopediaScreen.css';
@@ -24,9 +24,9 @@ interface Props {
   onClose: () => void;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
    DATA
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ */
 
 // Article entries come from the game's Encyclopedia/ markdown files via the
 // `game.get_encyclopedia_entries` bridge action. See ArticlesPanel below.
@@ -129,7 +129,7 @@ function toKebabCase(value: string): string {
 }
 
 function buildingPortrait(building: EncyclopediaBuildingDTO): string | undefined {
-  return building.assetKey ? FoaeCefUIAssetPath(`/assets/buildings/portraits/${toKebabCase(building.assetKey)}.png`) : undefined;
+  return building.assetKey ? WebkilnAssetPath(`/assets/buildings/portraits/${toKebabCase(building.assetKey)}.png`) : undefined;
 }
 
 function unitTypeIcon(type: string | undefined, isNaval = false): string | undefined {
@@ -137,7 +137,7 @@ function unitTypeIcon(type: string | undefined, isNaval = false): string | undef
   const path = normalisedType === 'siege' && isNaval
     ? '/assets/icons/UnitTypes/I_NavySiege.png'
     : UNIT_TYPE_ICONS[normalisedType];
-  return path ? FoaeCefUIAssetPath(path) : undefined;
+  return path ? WebkilnAssetPath(path) : undefined;
 }
 
 function resourceCosts(costs: EncyclopediaResourceCostDTO[]) {
@@ -145,7 +145,7 @@ function resourceCosts(costs: EncyclopediaResourceCostDTO[]) {
     name: cost.name,
     displayName: cost.displayName,
     amount: cost.amount,
-    icon: FoaeCefUIAssetPath(`/assets/resources/${cost.name}.png`),
+    icon: WebkilnAssetPath(`/assets/resources/${cost.name}.png`),
   }));
 }
 
@@ -154,13 +154,13 @@ function unitTooltipData(unit: EncyclopediaUnitDTO): UnitTooltipData {
     name: unit.name,
     description: unit.description,
     portrait: unit.portrait
-      ? FoaeCefUIAssetPath(unit.portrait)
-      : FoaeCefUIAssetPath(unit.isNaval ? DEFAULT_NAVY_TOOLTIP_PORTRAIT : DEFAULT_ARMY_TOOLTIP_PORTRAIT),
+      ? WebkilnAssetPath(unit.portrait)
+      : WebkilnAssetPath(unit.isNaval ? DEFAULT_NAVY_TOOLTIP_PORTRAIT : DEFAULT_ARMY_TOOLTIP_PORTRAIT),
     typeLabel: unit.unitTypeLabel || unit.unitType,
-    typeIcon: unitTypeIcon(unit.unitType, unit.isNaval) ?? FoaeCefUIAssetPath(unit.isNaval ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/UnitTypes/I_ArmySpecial.png'),
+    typeIcon: unitTypeIcon(unit.unitType, unit.isNaval) ?? WebkilnAssetPath(unit.isNaval ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/UnitTypes/I_ArmySpecial.png'),
     tier: unit.tier,
     culture: unit.cultureName || undefined,
-    cultureIcon: unit.cultureIcon ? FoaeCefUIAssetPath(unit.cultureIcon) : undefined,
+    cultureIcon: unit.cultureIcon ? WebkilnAssetPath(unit.cultureIcon) : undefined,
     maxStrength: unit.maxStrength,
     price: unit.price,
     buildTime: unit.buildTimeDays,
@@ -312,7 +312,7 @@ function CultureTabs({ cultures, activeCulture, onCultureChange }: CultureTabsPr
       >
         <div className="enc-culture-tabs" style={{ width: `${Math.max(1, stripWidthRem)}rem` }}>
           {cultures.map(cultureOption => {
-            const icon = cultureOption.icon ? FoaeCefUIAssetPath(cultureOption.icon) : undefined;
+            const icon = cultureOption.icon ? WebkilnAssetPath(cultureOption.icon) : undefined;
             return (
               <button
                 key={cultureOption.id}
@@ -851,10 +851,10 @@ function renderMarkdownInline(
   return nodes;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
    BUILDINGS PANEL
    Culture group filter + category filter + building chains
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ */
 
 interface BuildingsPanelProps {
   buildings: EncyclopediaBuildingDTO[];
@@ -1196,8 +1196,8 @@ function UnitsPanel({ units, cultures }: UnitsPanelProps) {
 }
 
 function UnitCard({ unit }: { unit: EncyclopediaUnitDTO }) {
-  const tierIcon = FoaeCefUIAssetPath(TIER_ICONS[unit.tier] ?? TIER_ICONS[1]);
-  const portrait = unit.portrait ? FoaeCefUIAssetPath(unit.portrait) : undefined;
+  const tierIcon = WebkilnAssetPath(TIER_ICONS[unit.tier] ?? TIER_ICONS[1]);
+  const portrait = unit.portrait ? WebkilnAssetPath(unit.portrait) : undefined;
 
   return (
     <Tooltip
@@ -1220,9 +1220,9 @@ function UnitCard({ unit }: { unit: EncyclopediaUnitDTO }) {
         <span className="enc-unit-card-name">{unit.name}</span>
         <span className="enc-unit-card-type">{unit.unitTypeLabel || unit.unitType}</span>
         <div className="enc-unit-stats-row">
-          <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={FoaeCefUIAssetPath('/assets/icons/I_Damage_Slash.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.attack)}</span></span>
-          <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={FoaeCefUIAssetPath('/assets/icons/I_Armour_Slash.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.armour)}</span></span>
-          <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={FoaeCefUIAssetPath('/assets/icons/I_Speed.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.speed)}</span></span>
+          <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={WebkilnAssetPath('/assets/icons/I_Damage_Slash.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.attack)}</span></span>
+          <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={WebkilnAssetPath('/assets/icons/I_Armour_Slash.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.armour)}</span></span>
+          <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={WebkilnAssetPath('/assets/icons/I_Speed.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.speed)}</span></span>
         </div>
       </div>
     </Tooltip>

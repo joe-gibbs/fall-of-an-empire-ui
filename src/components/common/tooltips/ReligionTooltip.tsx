@@ -2,7 +2,7 @@ import React from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from './Tooltip';
 import type { ReligionInfo } from '../../../data/types';
 import { formatSignedNumber } from '../../../utils/numberFormat';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import './IdentityTooltip.css';
 
 import { webUIText } from '../../../localization/WebUITextContext';
@@ -21,7 +21,7 @@ interface ReligionTooltipProps {
 }
 
 function religionIconUrl(id?: string): string | undefined {
-  return id ? FoaeCefUIAssetPath(`/assets/religions/${id}.png`) : undefined;
+  return id ? WebkilnAssetPath(`/assets/religions/${id}.png`) : undefined;
 }
 
 interface EffectLine {

@@ -1,5 +1,5 @@
 import { memo, type ReactNode } from 'react';
-import { FoaeCefUIAssetPath } from '../../../../utils/assets';
+import { WebkilnAssetPath } from '../../../../utils/assets';
 import './ResourceLabel.css';
 
 interface ResourceLabelProps {
@@ -31,7 +31,7 @@ const ResourceLabel = memo(function ResourceLabel({
 
   return (
     <span className={classNames('resource-label', className)}>
-      {iconPath && <img src={FoaeCefUIAssetPath(iconPath)} alt="" className={classNames('resource-label__icon', iconClassName)} draggable={false} />}
+      {iconPath && <img src={WebkilnAssetPath(iconPath)} alt="" className={classNames('resource-label__icon', iconClassName)} draggable={false} />}
       <span className={classNames('resource-label__name', nameClassName)}>{name}</span>
       {amount !== undefined && amount !== null && (
         <span className={classNames('resource-label__amount', amountClassName)}>{amount}</span>

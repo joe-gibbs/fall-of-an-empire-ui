@@ -1,5 +1,5 @@
 import type { PortraitLayerData } from '../../data/types';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 interface RawPortraitLayers {
   background?: string;
@@ -13,12 +13,12 @@ interface RawPortraitLayers {
 export function mapPortraitLayers(layers?: RawPortraitLayers | null): PortraitLayerData | undefined {
   if (!layers) return undefined;
 
-  const background = FoaeCefUIAssetPath(layers.background) ?? '';
-  const backHeadgear = FoaeCefUIAssetPath(layers.backHeadgear) ?? '';
-  const portrait = FoaeCefUIAssetPath(layers.portrait) ?? '';
-  const normalMap = FoaeCefUIAssetPath(layers.normalMap) ?? '';
-  const faceMask = FoaeCefUIAssetPath(layers.faceMask) ?? '';
-  const frontHeadgear = FoaeCefUIAssetPath(layers.frontHeadgear) ?? '';
+  const background = WebkilnAssetPath(layers.background) ?? '';
+  const backHeadgear = WebkilnAssetPath(layers.backHeadgear) ?? '';
+  const portrait = WebkilnAssetPath(layers.portrait) ?? '';
+  const normalMap = WebkilnAssetPath(layers.normalMap) ?? '';
+  const faceMask = WebkilnAssetPath(layers.faceMask) ?? '';
+  const frontHeadgear = WebkilnAssetPath(layers.frontHeadgear) ?? '';
 
   if (!background && !backHeadgear && !portrait && !normalMap && !faceMask && !frontHeadgear) {
     return undefined;
@@ -35,5 +35,5 @@ export function mapPortraitLayers(layers?: RawPortraitLayers | null): PortraitLa
 }
 
 export function mapPortraitPath(path?: string | null): string {
-  return FoaeCefUIAssetPath(path) ?? '';
+  return WebkilnAssetPath(path) ?? '';
 }

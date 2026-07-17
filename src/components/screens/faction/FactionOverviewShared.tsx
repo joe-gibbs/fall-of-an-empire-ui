@@ -10,7 +10,7 @@ import { bureaucraticTooltipLine } from '../../bureaucracy/BureaucraticThroughpu
 import { cancelFactionCurrentInteraction, startFactionPolicyAdjustment } from '../../../bridge/diplomacy/useFactionBridge';
 import { setAutoAssignCourt, useCourtPositionsBridgeState, type CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
 import type { FactionModifier, FactionPolicy, FactionPolicyLevel } from '../../../data/types';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
 import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../localization/WebUITextContext';
 import './FactionOverviewScreen.css';
@@ -343,7 +343,7 @@ function policyPercentForValue(policy: FactionPolicy, value: number): number {
 
 function policyIcon(policy: FactionPolicy): string {
   const key = policy.key || policy.id;
-  return FoaeCefUIAssetPath(policy.iconId || `/assets/policies/${key}.png`) ?? '/assets/icons/I_Chart.png';
+  return WebkilnAssetPath(policy.iconId || `/assets/policies/${key}.png`) ?? '/assets/icons/I_Chart.png';
 }
 
 function TooltipEffectLines({ lines }: { lines?: FactionPolicyLevel['effectLines'] }) {
@@ -604,7 +604,7 @@ function modifierTone(modifier: FactionModifier): 'positive' | 'negative' | 'neu
 export function FactionModifierCard({ modifier }: { modifier: FactionModifier }) {
   const t = useWebUIText();
   const tone = modifierTone(modifier);
-  const iconPath = FoaeCefUIAssetPath(modifier.icon || '/assets/icons/I_Multiplier.png');
+  const iconPath = WebkilnAssetPath(modifier.icon || '/assets/icons/I_Multiplier.png');
   const tooltip: TooltipContent = {
     title: modifier.label,
     body: modifier.description,

@@ -6,7 +6,7 @@ import type {
   GetBuildQueueResponse,
 } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 export interface BuildQueueCostView extends BuildQueueCost {
   icon: string;
@@ -49,20 +49,20 @@ function toKebabCase(value: string): string {
 }
 
 function resourceIcon(name: string): string {
-  return FoaeCefUIAssetPath(`/assets/resources/${name}.png`);
+  return WebkilnAssetPath(`/assets/resources/${name}.png`);
 }
 
 function itemIcon(item: BuildQueueItemGroup): string {
   if (item.itemKind === 'building' && item.assetKey) {
-    return FoaeCefUIAssetPath(`/assets/buildings/portraits/${toKebabCase(item.assetKey)}.png`);
+    return WebkilnAssetPath(`/assets/buildings/portraits/${toKebabCase(item.assetKey)}.png`);
   }
   if (item.itemKind === 'navy_unit') {
-    return FoaeCefUIAssetPath('/assets/icons/I_NaviesQuickButton.png');
+    return WebkilnAssetPath('/assets/icons/I_NaviesQuickButton.png');
   }
   if (item.itemKind === 'army_unit' || item.itemKind === 'unit') {
-    return FoaeCefUIAssetPath('/assets/icons/I_ArmiesQuickButton.png');
+    return WebkilnAssetPath('/assets/icons/I_ArmiesQuickButton.png');
   }
-  return FoaeCefUIAssetPath('/assets/icons/I_BuildingsQuickButton.png');
+  return WebkilnAssetPath('/assets/icons/I_BuildingsQuickButton.png');
 }
 
 function mapCost(cost: BuildQueueCost): BuildQueueCostView {

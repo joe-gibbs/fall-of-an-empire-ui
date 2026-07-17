@@ -1,5 +1,5 @@
 import {
-  FoaeCefUIAutoSizedAssetPath,
+  WebkilnAutoSizedAssetPath,
   isSizableAssetPath,
   normaliseSizedAssetSource,
 } from './assets';
@@ -59,7 +59,7 @@ function applySizedSource(image: HTMLImageElement): void {
   const size = displayPixelSize(image);
   if (size <= 0) return;
 
-  const target = FoaeCefUIAutoSizedAssetPath(source, size);
+  const target = WebkilnAutoSizedAssetPath(source, size);
   if (!target || target === image.getAttribute('src')) return;
 
   const state = getImageState(image);

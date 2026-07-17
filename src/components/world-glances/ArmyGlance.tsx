@@ -5,7 +5,7 @@ import { bridgeCall, type GetMilitaryDataResponse } from '../../bridge-types.gen
 import { clampUnitFraction } from './glanceMath';
 import { militaryRingStackStyle } from './ringAssets';
 import { formatNumber, formatPercent } from '../../utils/numberFormat';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { useGameState } from '../../context/GameContext';
 import { readableFactionTextColour, relationDisplayLabel } from './WorldGlancePresentation';
 import GlanceRelationFrame from './GlanceRelationFrame';
@@ -236,9 +236,9 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   const moralePct = clampUnitFraction(data.morale);
   const blockading = isNavy && (data as NavyGlanceData).blockading;
   const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
-  const militaryTypeIcon = FoaeCefUIAssetPath(isNavy ? '/assets/icons/I_Anchor.png' : '/assets/icons/I_Swords.png');
+  const militaryTypeIcon = WebkilnAssetPath(isNavy ? '/assets/icons/I_Anchor.png' : '/assets/icons/I_Swords.png');
   const statusIcon = blockading ? '/assets/icons/I_Siege.png' : data.raiding ? '/assets/icons/I_RaidingTorch.png' : '';
-  const attritionIcon = FoaeCefUIAssetPath(data.attritionIcon || '/assets/icons/Terrain/I_Attrition.png');
+  const attritionIcon = WebkilnAssetPath(data.attritionIcon || '/assets/icons/Terrain/I_Attrition.png');
   const visibleStatusCount = (statusIcon ? 1 : 0) + (data.attrition ? 1 : 0) + (embarkedArmyCount > 0 ? 1 : 0);
   const crownCount = 1 + visibleStatusCount;
 
@@ -305,7 +305,7 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
           )}
           {embarkedArmyCount > 0 && (
             <span className="glance-military-status glance-military-status--embarked glance-military-icon-socket" aria-label={webUIText('Military.EmbarkedArmies')}>
-              <img className="glance-military-embarked-icon" src={FoaeCefUIAssetPath('/assets/icons/I_ArmiesQuickButton.png')} alt="" />
+              <img className="glance-military-embarked-icon" src={WebkilnAssetPath('/assets/icons/I_ArmiesQuickButton.png')} alt="" />
               <span className="glance-military-embarked-count">{formatNumber(embarkedArmyCount)}</span>
             </span>
           )}

@@ -10,7 +10,7 @@ import type {
   ProvinceModeScoreRowDTO,
 } from '../../bridge-types.generated.ts';
 import type { PortraitLayerData } from '../../data/types';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 export interface ProvinceModeFactionSummary {
   id: string;
@@ -158,7 +158,7 @@ function mapPerson(data: ProvinceModePersonDTO): ProvinceModePerson {
 function mapScoreRow(data: ProvinceModeScoreRowDTO): ProvinceModeScoreRow {
   return {
     id: data.id,
-    icon: FoaeCefUIAssetPath(data.icon) ?? '',
+    icon: WebkilnAssetPath(data.icon) ?? '',
     label: data.label,
     description: data.description,
     value: data.value,
@@ -171,7 +171,7 @@ function mapMission(data: ProvinceModeMissionDTO): ProvinceModeMission {
   return {
     id: data.id,
     missionTypeId: data.missionTypeId,
-    icon: FoaeCefUIAssetPath(data.icon) ?? '',
+    icon: WebkilnAssetPath(data.icon) ?? '',
     title: data.title,
     body: data.body,
     reward: data.reward,
@@ -190,7 +190,7 @@ function mapCourtOfficeAction(data: ProvinceModeCourtOfficeActionDTO): ProvinceM
     id: data.id,
     positionKey: data.positionKey,
     scope: data.scope,
-    icon: FoaeCefUIAssetPath(data.icon) ?? '',
+    icon: WebkilnAssetPath(data.icon) ?? '',
     title: data.title,
     body: data.body,
     effect: data.effect,

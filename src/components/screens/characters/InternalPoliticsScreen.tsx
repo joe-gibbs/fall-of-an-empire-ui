@@ -33,7 +33,7 @@ import type { MilitaryFoederatiEntry, MilitaryForce, PowerBloc } from '../../../
 import { getComplianceState, getOpinionColor } from '../../../utils/colorFormatters';
 import { STAT_ICONS } from '../../../utils/iconMaps';
 import { formatCompactNumber, formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { compareSortValuesWithDirection as compareValues, toggleSortState, type SortState } from '../../common/layout/tables/sortUtils';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import './InternalPoliticsScreen.css';
@@ -74,51 +74,51 @@ const INTERNAL_LIST_OVERSCAN = 2;
 
 type BuildFocusId = 'balanced' | 'economic' | 'military' | 'infrastructure' | 'cultural' | 'administrative';
 
-const LAND_ICON = FoaeCefUIAssetPath('/assets/icons/I_Land.png');
-const SETTLEMENT_ICON = FoaeCefUIAssetPath('/assets/icons/I_City.png');
+const LAND_ICON = WebkilnAssetPath('/assets/icons/I_Land.png');
+const SETTLEMENT_ICON = WebkilnAssetPath('/assets/icons/I_City.png');
 const FOCUS_OPTIONS: Array<{ id: BuildFocusId; label: string; icon: string; body: string }> = [
   {
     id: 'balanced',
     get label() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.66.6'); },
-    icon: FoaeCefUIAssetPath('/assets/events/I_Focus_Balanced.png'),
+    icon: WebkilnAssetPath('/assets/events/I_Focus_Balanced.png'),
     get body() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.68.7'); },
   },
   {
     id: 'economic',
     get label() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.72.8'); },
-    icon: FoaeCefUIAssetPath('/assets/events/I_Focus_Economic.png'),
+    icon: WebkilnAssetPath('/assets/events/I_Focus_Economic.png'),
     get body() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.74.9'); },
   },
   {
     id: 'military',
     get label() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.78.10'); },
-    icon: FoaeCefUIAssetPath('/assets/events/I_Focus_Military.png'),
+    icon: WebkilnAssetPath('/assets/events/I_Focus_Military.png'),
     get body() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.80.11'); },
   },
   {
     id: 'infrastructure',
     get label() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.84.12'); },
-    icon: FoaeCefUIAssetPath('/assets/events/I_Focus_Infrastructure.png'),
+    icon: WebkilnAssetPath('/assets/events/I_Focus_Infrastructure.png'),
     get body() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.86.13'); },
   },
   {
     id: 'cultural',
     get label() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.90.14'); },
-    icon: FoaeCefUIAssetPath('/assets/events/I_Focus_Cultural.png'),
+    icon: WebkilnAssetPath('/assets/events/I_Focus_Cultural.png'),
     get body() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.92.15'); },
   },
   {
     id: 'administrative',
     get label() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.96.16'); },
-    icon: FoaeCefUIAssetPath('/assets/events/I_Focus_Administrative.png'),
+    icon: WebkilnAssetPath('/assets/events/I_Focus_Administrative.png'),
     get body() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.98.17'); },
   },
 ];
 
-const GOLD_ICON = FoaeCefUIAssetPath('/assets/icons/I_Coins.png');
-const PROVINCE_ICON = FoaeCefUIAssetPath('/assets/icons/I_ProvincialCapital.png');
-const READY_ICON = FoaeCefUIAssetPath('/assets/icons/I_GoalMet.png');
-const BLOCKED_ICON = FoaeCefUIAssetPath('/assets/icons/I_GoalNotMet.png');
+const GOLD_ICON = WebkilnAssetPath('/assets/icons/I_Coins.png');
+const PROVINCE_ICON = WebkilnAssetPath('/assets/icons/I_ProvincialCapital.png');
+const READY_ICON = WebkilnAssetPath('/assets/icons/I_GoalMet.png');
+const BLOCKED_ICON = WebkilnAssetPath('/assets/icons/I_GoalNotMet.png');
 
 function clampPercent(value: number | undefined): number {
   if (value === undefined) return 0;

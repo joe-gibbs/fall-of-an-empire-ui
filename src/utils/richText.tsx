@@ -1,5 +1,5 @@
 import React from 'react';
-import { FoaeCefUIAssetPath } from './assets';
+import { WebkilnAssetPath } from './assets';
 
 export interface RichTextOptions {
   onLinkClick?: (type: string, id: string) => void;
@@ -30,7 +30,7 @@ export interface RichTextOptions {
    * Replace the whitespace immediately before links with a non-breaking space.
    * Compact notifications use this so phrases like "at <link>Settlement</>"
    * do not split between the preposition and linked name. The following
-   * whitespace is preserved too because FoaeCefUI can drop a regular leading
+   * whitespace is preserved too because Webkiln can drop a regular leading
    * space text node after an inline link.
    */
   keepLinksWithPreviousWord?: boolean;
@@ -232,7 +232,7 @@ export function renderRichText(input: string | null | undefined, opts: RichTextO
           <img
             key={nextKey()}
             className="rich-concept"
-            src={FoaeCefUIAssetPath(`/assets/icons/I_${id}.png`)}
+            src={WebkilnAssetPath(`/assets/icons/I_${id}.png`)}
             alt={id}
           />,
         );

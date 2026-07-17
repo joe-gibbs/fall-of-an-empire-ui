@@ -23,7 +23,7 @@ import type {
   LedgerSettlementRow,
   LedgerFactionVisual,
 } from '../../../bridge-types.generated.ts';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { renderRichText } from '../../../utils/richText';
 import { normaliseBattleAfterActionReport } from '../../../utils/battleAfterActionReport';
@@ -191,7 +191,7 @@ function FactionStatusIcon({ row }: { row: LedgerFactionRow }) {
   return (
     <Tooltip content={{ title: label }} position="bottom" delay={150} inline wrapperClassName="ledger-status-tooltip">
       <span className={`ledger-status-icon ledger-status-icon--${status}`} aria-label={label} role="img">
-        <img src={FoaeCefUIAssetPath(statusIcon(status))} alt="" draggable={false} />
+        <img src={WebkilnAssetPath(statusIcon(status))} alt="" draggable={false} />
       </span>
     </Tooltip>
   );
@@ -219,11 +219,11 @@ function buildingCategoryIcon(category: string): string {
 }
 
 function LedgerIconLabel({ icon, children }: { icon: string; children: ReactNode }) {
-  return <span className="ledger-icon-label"><img src={FoaeCefUIAssetPath(icon)} alt="" draggable={false} /><span>{children}</span></span>;
+  return <span className="ledger-icon-label"><img src={WebkilnAssetPath(icon)} alt="" draggable={false} /><span>{children}</span></span>;
 }
 
 function LedgerMetric({ icon, children }: { icon: string; children: ReactNode }) {
-  return <span className="ledger-metric"><img src={FoaeCefUIAssetPath(icon)} alt="" draggable={false} /><span>{children}</span></span>;
+  return <span className="ledger-metric"><img src={WebkilnAssetPath(icon)} alt="" draggable={false} /><span>{children}</span></span>;
 }
 
 function LedgerFactionLink({
@@ -528,7 +528,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
       <GameButton
         variant="outline"
         className="ledger-page-button"
-        icon={FoaeCefUIAssetPath('/assets/icons/I_NavPrevious.png')}
+        icon={WebkilnAssetPath('/assets/icons/I_NavPrevious.png')}
         disabled={!canPageBack}
         onClick={pageRowsBack}
       />
@@ -538,7 +538,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
       <GameButton
         variant="outline"
         className="ledger-page-button"
-        icon={FoaeCefUIAssetPath('/assets/icons/I_NavNext.png')}
+        icon={WebkilnAssetPath('/assets/icons/I_NavNext.png')}
         disabled={!canPageForward}
         onClick={pageRowsForward}
       />
@@ -676,7 +676,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
       label: webUIText('Ledger.Filter.Category'),
       render: row => (
         <span className={`ledger-notification-category ledger-notification-category--${notificationCategoryFilterValue(row)}`}>
-          <img src={FoaeCefUIAssetPath(row.icon)} alt="" draggable={false} />
+          <img src={WebkilnAssetPath(row.icon)} alt="" draggable={false} />
           <span>{row.categoryLabel}</span>
         </span>
       ),

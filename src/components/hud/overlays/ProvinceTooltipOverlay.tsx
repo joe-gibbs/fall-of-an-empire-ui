@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
 import type { GetProvinceTooltipResponse } from '../../../bridge-types.generated.ts';
 import { useProvinceTooltipBridge } from '../../../bridge/provinces/useProvinceTooltipBridge';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { toRootRem } from '../../../utils/cssUnits';
 import { formatNumber } from '../../../utils/numberFormat';
 import ProvinceTooltipModeRenderer from '../../common/province-tooltip-modes/shared/ProvinceTooltipModeRenderer';
@@ -154,7 +154,7 @@ function fallbackPosition(tooltip: GetProvinceTooltipResponse | null): TooltipPo
   };
 }
 
-function useFoaeCefUICursorPlacement(tooltip: GetProvinceTooltipResponse | null) {
+function useWebkilnCursorPlacement(tooltip: GetProvinceTooltipResponse | null) {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const currentTooltipRef = useRef<GetProvinceTooltipResponse | null>(tooltip);
   const lastPositionRef = useRef<TooltipPosition | null>(null);
@@ -238,7 +238,7 @@ function useFoaeCefUICursorPlacement(tooltip: GetProvinceTooltipResponse | null)
 }
 
 function TerrainIcon({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
-  const terrainIcon = FoaeCefUIAssetPath(tooltip.terrainIcon);
+  const terrainIcon = WebkilnAssetPath(tooltip.terrainIcon);
 
   return (
     <div className="province-tooltip-icon-frame">
@@ -252,7 +252,7 @@ function TerrainIcon({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
 }
 
 function TerrainSummary({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
-  const attritionIcon = FoaeCefUIAssetPath(tooltip.attritionIcon);
+  const attritionIcon = WebkilnAssetPath(tooltip.attritionIcon);
 
   return (
     <div className="province-tooltip-terrain-line">
@@ -378,7 +378,7 @@ function ConvoyDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
           <div className="province-tooltip-mode-rows">
             {cargo.map((item, index) => (
               <div key={`${item.label}:${String(index)}`} className="province-tooltip-mode-row">
-                {item.icon && <img className="province-tooltip-mode-icon" src={FoaeCefUIAssetPath(item.icon)} alt="" />}
+                {item.icon && <img className="province-tooltip-mode-icon" src={WebkilnAssetPath(item.icon)} alt="" />}
                 <span className="province-tooltip-mode-label">{item.label}</span>
                 <span className="province-tooltip-mode-value">{formatNumber(item.amount, { maximumFractionDigits: 1 })}</span>
               </div>
@@ -420,7 +420,7 @@ function ExpandedDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
 
 export default function ProvinceTooltipOverlay() {
   const tooltip = useProvinceTooltipBridge();
-  const tooltipRef = useFoaeCefUICursorPlacement(tooltip);
+  const tooltipRef = useWebkilnCursorPlacement(tooltip);
 
   if (!tooltip || !tooltip.visible) {
     return null;

@@ -29,7 +29,7 @@ import {
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { useGameActions, useGameState } from '../../../context/GameContext';
 import { getFormationTemplateIcon } from '../../../utils/formationTemplatePresentation';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { formatNumber } from '../../../utils/numberFormat';
 import './SettlementMilitaryPanel.css';
 
@@ -58,7 +58,7 @@ const TYPE_ICONS: Record<ArmyUnitType, string> = {
   navy: '/assets/icons/I_NaviesQuickButton.png',
 };
 
-const asset = (path: string): string => FoaeCefUIAssetPath(path) ?? path;
+const asset = (path: string): string => WebkilnAssetPath(path) ?? path;
 
 function normaliseUnitType(type: string): ArmyUnitType {
   if (type === 'infantry' || type === 'cavalry' || type === 'ranged' || type === 'siege') return type;

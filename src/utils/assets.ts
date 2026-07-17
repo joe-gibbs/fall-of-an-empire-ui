@@ -5,14 +5,13 @@ const SIZABLE_ASSET_EXT = /\.(png|jpe?g|webp)([?#].*)?$/i;
 const CONTENT_PACK_ASSET_EXT = /\.(png|jpe?g|webp|svg)$/i;
 const SIZED_ASSET_FAMILIES = new Set(['icons']);
 export const SIZED_ASSET_BUCKETS = [16, 24, 32, 48, 64, 96, 128, 192, 256] as const;
-const BASE_GAME_ASSET_URL_PREFIX = 'coui://foae/assets/';
-const HTTP_LOCAL_MODS_PREFIX = 'http://foae.local/foae-mods/';
+const BASE_GAME_ASSET_URL_PREFIX = 'gameui://app/assets/';
 const assetOverrides = new Map<string, string>();
 
 function shouldUseOptimisedAsset(path: string): boolean {
   return path.startsWith('/assets/')
     || path.startsWith(BASE_GAME_ASSET_URL_PREFIX)
-    || ((path.startsWith('coui://foae-mods/') || path.startsWith(HTTP_LOCAL_MODS_PREFIX)) && path.indexOf('/dist/assets/') >= 0);
+    || (path.startsWith('gameui://') && path.indexOf('/dist/assets/') >= 0);
 }
 
 export function registerAssetOverride(sourcePath: string, targetPath: string): void {
@@ -92,7 +91,7 @@ function sizedAssetRoot(path: string): { prefix: string; assetRest: string } | u
 
   const modAssetsSegment = '/dist/assets/';
   const modAssetsIndex = path.indexOf(modAssetsSegment);
-  if ((path.startsWith('coui://foae-mods/') || path.startsWith(HTTP_LOCAL_MODS_PREFIX)) && modAssetsIndex >= 0) {
+  if (path.startsWith('gameui://') && modAssetsIndex >= 0) {
     const prefixEnd = modAssetsIndex + modAssetsSegment.length;
     return {
       prefix: path.slice(0, prefixEnd),
@@ -136,7 +135,7 @@ export function normaliseSizedAssetSource(path: string): string {
 
 export function isSizableAssetPath(path: string): boolean {
   const { base } = splitQuery(unsizedAssetPath(path));
-  if (base.startsWith('coui://foae-mods/') || base.startsWith(HTTP_LOCAL_MODS_PREFIX) || base.startsWith('/mods/')) return false;
+  if ((base.startsWith('gameui://') && !base.startsWith(BASE_GAME_ASSET_URL_PREFIX)) || base.startsWith('/mods/')) return false;
 
   const root = sizedAssetRoot(base);
   if (!root) return false;
@@ -148,8 +147,8 @@ export function isSizableAssetPath(path: string): boolean {
   return SIZABLE_ASSET_EXT.test(parts[parts.length - 1]);
 }
 
-export function FoaeCefUIAutoSizedAssetPath(path: string, displaySizePx: number): string {
-  const source = FoaeCefUIAssetPath(normaliseSizedAssetSource(path));
+export function WebkilnAutoSizedAssetPath(path: string, displaySizePx: number): string {
+  const source = WebkilnAssetPath(normaliseSizedAssetSource(path));
   if (!source || !isSizableAssetPath(source)) return source ?? path;
 
   const bucket = sizedAssetBucket(displaySizePx);
@@ -166,9 +165,9 @@ export function FoaeCefUIAutoSizedAssetPath(path: string, displaySizePx: number)
   return `${root.prefix}${family}/__sizes/${bucket}/${sizedRest}${query}`;
 }
 
-export function FoaeCefUIAssetPath(path: string): string;
-export function FoaeCefUIAssetPath(path?: string | null): string | undefined;
-export function FoaeCefUIAssetPath(path?: string | null): string | undefined {
+export function WebkilnAssetPath(path: string): string;
+export function WebkilnAssetPath(path?: string | null): string | undefined;
+export function WebkilnAssetPath(path?: string | null): string | undefined {
   if (!path) return undefined;
   const override = assetOverrideForPath(path);
   if (override) return override;
@@ -181,15 +180,15 @@ export function FoaeCefUIAssetPath(path?: string | null): string | undefined {
 
 export function interactionAssetPath(key: string | undefined | null, basePath: string): string | undefined {
   if (!key) return undefined;
-  if (key.startsWith('/') || key.startsWith('coui://') || key.startsWith('http://foae.local/')) {
-    return FoaeCefUIAssetPath(key);
+  if (key.startsWith('/') || key.startsWith('gameui://')) {
+    return WebkilnAssetPath(key);
   }
-  return FoaeCefUIAssetPath(`${basePath}${key}.png`);
+  return WebkilnAssetPath(`${basePath}${key}.png`);
 }
 
-export function FoaeCefUISizedAssetPath(path: string, sizePx: number): string;
-export function FoaeCefUISizedAssetPath(path?: string | null, sizePx?: number): string | undefined;
-export function FoaeCefUISizedAssetPath(path?: string | null, sizePx?: number): string | undefined {
-  if (!path || !sizePx) return FoaeCefUIAssetPath(path);
-  return FoaeCefUIAutoSizedAssetPath(path, sizePx);
+export function WebkilnSizedAssetPath(path: string, sizePx: number): string;
+export function WebkilnSizedAssetPath(path?: string | null, sizePx?: number): string | undefined;
+export function WebkilnSizedAssetPath(path?: string | null, sizePx?: number): string | undefined {
+  if (!path || !sizePx) return WebkilnAssetPath(path);
+  return WebkilnAutoSizedAssetPath(path, sizePx);
 }

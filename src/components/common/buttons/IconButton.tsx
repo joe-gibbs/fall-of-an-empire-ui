@@ -1,6 +1,6 @@
 import React from 'react';
 import { playSound } from '../../../hooks/useSound';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import './IconButton.css';
 
 interface IconButtonProps {
@@ -23,7 +23,7 @@ const IconButton: React.FC<IconButtonProps> = ({
   tutorialTarget,
   badge,
 }) => {
-  const resolvedIcon = icon ? FoaeCefUIAssetPath(icon) : '';
+  const resolvedIcon = icon ? WebkilnAssetPath(icon) : '';
 
   return (
     <button

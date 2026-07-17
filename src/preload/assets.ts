@@ -1,5 +1,5 @@
 import { getAllTopbarButtons, getScreen, getSidebar } from '../registry/index';
-import { FoaeCefUIAssetPath } from '../utils/assets';
+import { WebkilnAssetPath } from '../utils/assets';
 
 type WebUIAssetPreloadMode = 'mainmenu' | 'ingame' | null;
 
@@ -175,7 +175,7 @@ const APP_PRELOAD_BATCH_DELAY_MS = 16;
 let queuedPreloadTimer = 0;
 
 function resolvedAssetPath(path: string): string {
-  return FoaeCefUIAssetPath(path) ?? path;
+  return WebkilnAssetPath(path) ?? path;
 }
 
 function preloadResolvedImageAsset(src: string): void {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { mapPortraitLayers, mapPortraitPath } from './portraitMapping';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import type { GetCourtAppointmentContestsResponse } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
@@ -58,7 +58,7 @@ function mapResponse(data: GetCourtAppointmentContestsResponse): CourtAppointmen
       description: contest.description,
       category: contest.category,
       primaryStat: contest.primaryStat,
-      icon: FoaeCefUIAssetPath(contest.icon) ?? '',
+      icon: WebkilnAssetPath(contest.icon) ?? '',
       currentHolderId: contest.currentHolderId,
       currentHolderName: contest.currentHolderName,
       daysRemaining: contest.daysRemaining,

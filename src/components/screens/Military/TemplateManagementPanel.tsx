@@ -26,7 +26,7 @@ import type {
 import type { Army } from '../../../data/types';
 import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import { formatNumber } from '../../../utils/numberFormat';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import {
   FORMATION_TEMPLATE_ICON_OPTIONS,
   getFormationTemplateIcon,
@@ -109,7 +109,7 @@ function templateUnitTypeIcon(unit: FormationTemplateUnitEntry): string {
 }
 
 export function templateUnitPortrait(unit: FormationTemplateUnitEntry): string {
-  const portrait = FoaeCefUIAssetPath(unit.portrait);
+  const portrait = WebkilnAssetPath(unit.portrait);
   return portrait || unit.portrait || templateUnitTypeIcon(unit);
 }
 

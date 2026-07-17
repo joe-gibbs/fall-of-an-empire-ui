@@ -8,7 +8,7 @@ import type {
   SaveFormationTemplateUnitRequest,
 } from '../../../bridge-types.generated.ts';
 import { formatNumber } from '../../../utils/numberFormat';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 
 export type TemplateType = 'land' | 'naval';
 export type TemplateTab = 'composition' | 'combat';
@@ -172,7 +172,7 @@ export function unitTypeIcon(type: string, category?: string): string {
 }
 
 export function resourceIcon(name: string): string {
-  return FoaeCefUIAssetPath(`/assets/resources/${name}.png`);
+  return WebkilnAssetPath(`/assets/resources/${name}.png`);
 }
 
 export function resourceAmount(value: number): string {
@@ -192,7 +192,7 @@ export function toUnitKey(raw: string): string {
 
 export function unitPortrait(unit: FormationTemplateUnitEntry): string {
   const raw = unit.portrait || UNIT_PORTRAITS[toUnitKey(unit.id)] || UNIT_PORTRAITS[toUnitKey(unit.name)] || '';
-  return FoaeCefUIAssetPath(raw) ?? raw;
+  return WebkilnAssetPath(raw) ?? raw;
 }
 
 export function resourceCosts(costs: FormationTemplateResourceCost[]) {

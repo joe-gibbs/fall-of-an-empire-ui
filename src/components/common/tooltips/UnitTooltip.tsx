@@ -2,7 +2,7 @@ import React from 'react';
 import PaintedBar from '../data-display/bars/PaintedBar';
 import CultureTooltip from './CultureTooltip';
 import { NestedTooltip } from './Tooltip';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber } from '../../../utils/numberFormat';
 import type { BuildingResourceCost, CultureInfo } from '../../../data/types';
@@ -243,10 +243,10 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
     setShowAllBuildabilitySettlements(false);
   }, [d.name, d.buildability?.settlements?.length]);
   const tierIcon = TIER_ICONS[d.tier];
-  const portrait = FoaeCefUIAssetPath(d.portrait) ?? d.portrait;
-  const typeIcon = FoaeCefUIAssetPath(d.typeIcon) ?? d.typeIcon;
-  const tierIconPath = FoaeCefUIAssetPath(tierIcon) ?? tierIcon;
-  const cultureIcon = FoaeCefUIAssetPath(d.cultureIcon) ?? d.cultureIcon;
+  const portrait = WebkilnAssetPath(d.portrait) ?? d.portrait;
+  const typeIcon = WebkilnAssetPath(d.typeIcon) ?? d.typeIcon;
+  const tierIconPath = WebkilnAssetPath(tierIcon) ?? tierIcon;
+  const cultureIcon = WebkilnAssetPath(d.cultureIcon) ?? d.cultureIcon;
   // Every bar scales against the game-wide max for that axis (constants
   // above). This is intentionally not settlement-scoped - the player sees
   // "how strong is this unit compared to anything in the game", not just

@@ -21,9 +21,7 @@ export function isGameLocalResourceUrl(input: unknown): boolean {
   const lower = text.toLowerCase();
   if (!REMOTE_SCHEME_RE.test(lower)) return true;
 
-  return lower.startsWith('coui://')
-    || lower === 'http://foae.local'
-    || lower.startsWith('http://foae.local/')
+  return lower.startsWith('gameui://')
     || lower.startsWith('data:')
     || lower.startsWith('blob:');
 }

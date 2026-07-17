@@ -1,4 +1,4 @@
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import type { FactionRelation } from './WorldGlanceTypes';
 
 const RELATION_FRAME_PATH: Record<FactionRelation, string> = {
@@ -16,7 +16,7 @@ export default function GlanceRelationFrame({ relation }: GlanceRelationFramePro
   return (
     <img
       className="glance-relation-frame"
-      src={FoaeCefUIAssetPath(RELATION_FRAME_PATH[relation])}
+      src={WebkilnAssetPath(RELATION_FRAME_PATH[relation])}
       style={relation === 'enemy' ? { transform: 'scale(1.18)' } : undefined}
       alt=""
       aria-hidden="true"

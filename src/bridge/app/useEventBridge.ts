@@ -6,7 +6,7 @@ import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import { dispatchFactionData } from '../diplomacy/useFactionBridge';
 import { dispatchPersonData } from '../characters/usePersonBridge';
 import type { Event as GameEvent, EventChoiceInputs, EventPersonNameInput, EventRegnalNameInput } from '../../data/types';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 function dispatchBridgeEvent(action: string, detail: unknown): void {
   window.dispatchEvent(new CustomEvent(`bridge:${action}`, { detail }));
@@ -80,7 +80,7 @@ function mapEvent(data: GetCurrentEventResponse): GameEvent | null {
     id: data.id,
     title: data.title,
     body: data.body,
-    image: data.imageId ? FoaeCefUIAssetPath(`/assets/events/${data.imageId}.png`) ?? null : null,
+    image: data.imageId ? WebkilnAssetPath(`/assets/events/${data.imageId}.png`) ?? null : null,
     presentationStyle: data.presentationStyle as GameEvent['presentationStyle'],
     regnalNameInput: data.regnalNameInput && data.regnalNameInput.isRequired
       ? {
@@ -122,7 +122,7 @@ function mapEvent(data: GetCurrentEventResponse): GameEvent | null {
       title: previousEvent.title,
       body: previousEvent.body,
       image: previousEvent.imageId
-        ? FoaeCefUIAssetPath(`/assets/events/${previousEvent.imageId}.png`) ?? null
+        ? WebkilnAssetPath(`/assets/events/${previousEvent.imageId}.png`) ?? null
         : null,
       presentationStyle: previousEvent.presentationStyle as GameEvent['presentationStyle'],
       chosenOptionText: previousEvent.chosenOptionText,

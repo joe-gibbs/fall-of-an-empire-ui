@@ -204,8 +204,8 @@ export interface FoaeModSDK {
     usePlayerFactionId(): string | null;
   };
   assets: {
-    FoaeCefUIAssetPath(path: string): string;
-    FoaeCefUIAssetPath(path?: string | null): string | undefined;
+    WebkilnAssetPath(path: string): string;
+    WebkilnAssetPath(path?: string | null): string | undefined;
     FoaeGameUIAssetPath?: (path: string) => string | undefined;
     modAssetRoot?: string;
     preloadImageAsset(path: string): void;

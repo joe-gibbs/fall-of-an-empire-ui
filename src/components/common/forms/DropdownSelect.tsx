@@ -2,7 +2,7 @@ import { createPortal } from 'react-dom';
 import { memo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useAnchoredDropdown } from '../../../hooks/useAnchoredDropdown';
 import { playSound } from '../../../hooks/useSound';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import './DropdownSelect.css';
 
 type DropdownPosition = 'inline' | 'below-right' | 'below-left';
@@ -125,12 +125,12 @@ const DropdownSelect = memo(function DropdownSelect({
     <>
       {selectedIcon && (
         <img
-          src={FoaeCefUIAssetPath(selectedIcon)}
+          src={WebkilnAssetPath(selectedIcon)}
           alt=""
           className={classNames('dropdown-select__icon', optionIconClassName)}
           draggable={false}
           onError={(event) => {
-            if (icon) event.currentTarget.src = FoaeCefUIAssetPath(icon);
+            if (icon) event.currentTarget.src = WebkilnAssetPath(icon);
           }}
         />
       )}
@@ -176,12 +176,12 @@ const DropdownSelect = memo(function DropdownSelect({
               <>
                 {optionIcon && (
                   <img
-                    src={FoaeCefUIAssetPath(optionIcon)}
+                    src={WebkilnAssetPath(optionIcon)}
                     alt=""
                     className={classNames('dropdown-select__option-icon', optionIconClassName)}
                     draggable={false}
                     onError={(event) => {
-                      if (icon) event.currentTarget.src = FoaeCefUIAssetPath(icon);
+                      if (icon) event.currentTarget.src = WebkilnAssetPath(icon);
                     }}
                   />
                 )}
@@ -221,7 +221,7 @@ const DropdownSelect = memo(function DropdownSelect({
         }}
       >
         {triggerContent}
-        <img src={FoaeCefUIAssetPath('/assets/icons/I_DropdownChevron.png')} alt="" className={classNames('dropdown-select__chevron', chevronClassName)} draggable={false} />
+        <img src={WebkilnAssetPath('/assets/icons/I_DropdownChevron.png')} alt="" className={classNames('dropdown-select__chevron', chevronClassName)} draggable={false} />
       </button>
       {menu && (portal ? createPortal(menu, document.body) : menu)}
     </div>

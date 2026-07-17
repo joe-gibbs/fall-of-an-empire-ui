@@ -8,7 +8,7 @@ import type {
   StartPersonInteractionResponse,
 } from '../../bridge-types.generated.ts';
 import type { DisplayTextLine } from '../../data/types';
-import { FoaeCefUIAssetPath, interactionAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath, interactionAssetPath } from '../../utils/assets';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
 export type InteractionAvailability = 'available' | 'greyed' | 'hidden';
@@ -139,8 +139,8 @@ function iconUrl(entry: PersonInteractionEntry): string | undefined {
 
 function backgroundUrl(key: string): string | undefined {
   if (!key) return undefined;
-  if (key.startsWith('/') || key.startsWith('coui://')) return FoaeCefUIAssetPath(key);
-  return FoaeCefUIAssetPath(`/assets/events/interaction-${toKebabCase(key)}.png`);
+  if (key.startsWith('/') || key.startsWith('coui://')) return WebkilnAssetPath(key);
+  return WebkilnAssetPath(`/assets/events/interaction-${toKebabCase(key)}.png`);
 }
 
 export function mapPersonInteractionEntry(entry: PersonInteractionEntry): PersonInteractionView {
@@ -196,7 +196,7 @@ export function mapPersonInteractionEntry(entry: PersonInteractionEntry): Person
       description: option.description,
       cost: option.cost,
       relationshipBonus: option.relationshipBonus,
-      iconPath: FoaeCefUIAssetPath(option.iconPath) || undefined,
+      iconPath: WebkilnAssetPath(option.iconPath) || undefined,
     })),
   };
 }

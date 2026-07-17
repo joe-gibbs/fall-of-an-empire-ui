@@ -230,11 +230,11 @@ export default {
   meta: {
     type: 'problem',
     docs: {
-      description: 'disallow broad universal selectors that make FoaeCefUI invalidate large style subtrees',
+      description: 'disallow broad universal selectors that make Webkiln invalidate large style subtrees',
     },
     schema: [],
     messages: {
-      expensiveSelector: 'Avoid broad universal selector `{{selector}}`; use explicit element selectors or a scoped direct-child selector so FoaeCefUI does not perform full-subtree style invalidation.',
+      expensiveSelector: 'Avoid broad universal selector `{{selector}}`; use explicit element selectors or a scoped direct-child selector so Webkiln does not perform full-subtree style invalidation.',
     },
   },
 

@@ -165,8 +165,7 @@ DIR_SIZES: dict[str, tuple[int, int] | None] = {
 }
 
 # ---- Extra prefiltered variants for images that are drawn very small ----
-# FoaeCefUI's runtime minification is rough on detailed UI icons.  These
-# variants are generated from the original source images using Pillow's
+# Prefiltered variants are generated from the original images using Pillow's
 # offline resampler, then selected by components that know their display size.
 SIZED_VARIANT_BUCKETS: dict[str, tuple[int, ...]] = {
     'icons': (16, 24, 32, 48, 64, 96, 128, 192, 256),

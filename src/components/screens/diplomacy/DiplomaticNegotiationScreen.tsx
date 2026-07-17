@@ -11,7 +11,7 @@ import { useGameActions } from '../../../context/GameContext';
 import { useDiplomaticNegotiationBridge, type DiplomaticNegotiationState, type DiplomaticProposalDraft } from '../../../bridge/diplomacy/useDiplomaticNegotiationBridge';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { formatTreatyType } from '../../../utils/displayLabels';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { registerScreen } from '../../../registry/index';
 import { renderAcceptabilityBreakdown } from './acceptabilityBreakdown';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -79,7 +79,7 @@ function proposalIcon(type: string): string {
 }
 
 function resourceIcon(name: string): string {
-  return FoaeCefUIAssetPath(`/assets/resources/${name}.png`);
+  return WebkilnAssetPath(`/assets/resources/${name}.png`);
 }
 
 function proposalTypeLabel(type: string): string {

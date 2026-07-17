@@ -14,7 +14,7 @@ import './registry/builtins'
 import './mods/sandbox'
 
 // Starts the optional WebUI mod loader. It uses XMLHttpRequest internally so
-// the FoaeCefUI runtime does not need browser fetch support.
+// the Webkiln runtime does not need browser fetch support.
 import { modsReady } from './mods/index'
 
 import App from './App.tsx'
@@ -32,7 +32,7 @@ import {
   nativeWorldGlancesFramePayload,
 } from './runtime/bridgePayloads'
 import { applyRuntimeViewportScale, setRuntimeClass, type RuntimeViewportState } from './runtime/runtimeViewport'
-import { applyAppModeBridgeGate } from './runtime/appModeBridgeGate'
+import { applyAppModeCacheReset } from './runtime/appModeCacheReset'
 
 const WORLD_INPUT_BLOCKING_CLASSES = [
   'sidebar',
@@ -222,7 +222,7 @@ function bindMouseStateBridge() {
 }
 
 function dispatchBridgeEvent(eventName: string, data: unknown) {
-  applyAppModeBridgeGate(eventName, data);
+  applyAppModeCacheReset(eventName, data);
   cacheBridgeEvent(eventName, data);
   window.dispatchEvent(new CustomEvent(`bridge:${eventName}`, { detail: data }));
 }

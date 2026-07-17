@@ -21,52 +21,75 @@ interface BridgeResponsePayload {
   response?: unknown;
 }
 
-interface QueuedBridgeRequest {
-  action: string;
-  generation: number;
-  request: Record<string, unknown>;
-  settle: (raw: unknown) => void;
-  fail: (error: unknown, detail: string) => void;
+
+interface WebkilnGameUI {
+  request: (action: string, payload?: unknown) => Promise<unknown>;
+  on: (name: string, callback: (...args: unknown[]) => void) => (() => void) | void;
 }
 
 const BRIDGE_RESPONSE_EVENT = 'bridge:ui.bridge_response';
 let nextBridgeRequestId = 1;
-let bridgeRequestGeneration = 0;
-let bridgeBatchQueue: QueuedBridgeRequest[] = [];
-let bridgeBatchScheduled = false;
-let gameplayBridgeRequestsBlocked = false;
 const reportedBridgeErrors = new WeakSet<object>();
 const reportedBridgeErrorKeys = new Set<string>();
 
 declare global {
   interface Window {
-    engine: runtimeEngine;
+    gameUI?: WebkilnGameUI;
+    __webkilnRuntimeEngineMock?: runtimeEngine;
   }
 }
+
+let webkilnEngineAdapter: runtimeEngine | null = null;
 
 export function requireruntimeEngine(): runtimeEngine {
   const engine = getruntimeEngine();
   if (!engine) {
-    throw new Error('FoaeCefUI runtime engine is not available');
+    throw new Error('Webkiln runtime is not available');
   }
   return engine;
 }
 
 export function getruntimeEngine(): runtimeEngine | null {
-  const engine = window.engine;
-  if (!engine?.call || !engine.on) {
-    return null;
-  }
-  if (engine.isAttached === false) {
-    return null;
-  }
-  return engine;
+	if (window.__webkilnRuntimeEngineMock) {
+		return window.__webkilnRuntimeEngineMock;
+	}
+
+	const gameUI = window.gameUI;
+	if (!gameUI?.request || !gameUI.on) {
+		return null;
+	}
+	if (!webkilnEngineAdapter) {
+		webkilnEngineAdapter = {
+			isAttached: true,
+			whenReady: Promise.resolve(),
+			on: (name, callback) => { gameUI.on(name, callback); },
+			call: (name, ...args) => gameUI.request(
+				name,
+				args.length <= 1 ? (args.length === 1 ? args[0] : null) : args,
+			),
+			callBridge: (request) => {
+				const requestId = typeof request.requestId === 'string' ? request.requestId : bridgeRequestId();
+				const action = typeof request.action === 'string' ? request.action : '';
+				void gameUI.request(action, request.payload).then(result => {
+					window.dispatchEvent(new CustomEvent(BRIDGE_RESPONSE_EVENT, {
+						detail: { requestId, response: { ok: true, result } },
+					}));
+				}, error => {
+					window.dispatchEvent(new CustomEvent(BRIDGE_RESPONSE_EVENT, {
+						detail: { requestId, response: { ok: false, error: bridgeErrorMessage(error) } },
+					}));
+				});
+				return { ok: true, pending: true, requestId };
+			},
+		};
+	}
+	return webkilnEngineAdapter;
 }
 
 export const getRuntimeEngine = getruntimeEngine;
 
 export function isRuntimeUnavailableError(error: unknown): boolean {
-  return error instanceof Error && error.message === 'FoaeCefUI runtime engine is not available';
+	return error instanceof Error && error.message === 'Webkiln runtime is not available';
 }
 
 function bridgeActionName(request: Record<string, unknown>): string {
@@ -88,92 +111,6 @@ function isTransientGameplayReadinessError(error: unknown): boolean {
   return message === 'No game state' || message === 'No player faction';
 }
 
-function isCancelledBridgeRequestError(error: unknown): boolean {
-  return bridgeErrorMessage(error) === 'Bridge call cancelled due to app mode change';
-}
-
-function isGameplayBridgeAction(action: string): boolean {
-  return action.startsWith('game.')
-    && action !== 'game.get_app_mode'
-    && action !== 'game.loading_screen'
-    && action !== 'game.get_languages'
-    && action !== 'game.get_settings'
-    && action !== 'game.get_webui_text';
-}
-
-function isMenuSafeBridgeAction(action: string): boolean {
-  return action === 'game.get_app_mode'
-    || action === 'game.loading_screen'
-    || action === 'game.get_languages'
-    || action === 'game.set_language'
-    || action === 'game.get_settings'
-    || action === 'game.apply_settings'
-    || action === 'game.reset_settings'
-    || action === 'game.rebind_action_key'
-    || action === 'game.set_notification_muted'
-    || action === 'game.reset_notification_mutes'
-    || action === 'game.get_webui_text'
-    || action === 'game.get_content_pack_webui_manifest'
-    || action === 'game.get_encyclopedia_entries'
-    || action === 'game.list_mods'
-    || action === 'game.set_mod_enabled'
-    || action === 'game.upload_mod_to_workshop'
-    || action === 'game.browse_steam_workshop'
-    || action === 'game.subscribe_steam_workshop_item'
-    || action === 'game.unsubscribe_steam_workshop_item'
-    || action === 'game.download_steam_workshop_item'
-    || action === 'game.list_new_game_maps'
-    || action === 'game.get_new_game_map_faction_selection'
-    || action === 'game.get_new_game_map_faction_geometry'
-    || action === 'game.pick_new_game_map_faction'
-    || action === 'game.start_scenario_map'
-    || action === 'game.list_saves'
-    || action === 'game.delete_save'
-    || action === 'game.load_save'
-    || action === 'game.continue'
-    || action === 'game.get_game_version'
-    || action === 'game.get_achievements'
-    || action === 'game.quit'
-    || action === 'game.restart';
-}
-
-function isWorldGameplayBridgeAction(action: string): boolean {
-  return isGameplayBridgeAction(action) && !isMenuSafeBridgeAction(action);
-}
-
-function shouldBatchBridgeAction(action: string): boolean {
-  if (action === 'game.get_character_list') {
-    return false;
-  }
-
-  return action.startsWith('game.get_')
-    || action.startsWith('game.list_')
-    || action === 'game.loading_screen'
-    || action === 'game.get_app_mode'
-    || action === 'game.get_languages'
-    || action === 'game.get_settings'
-    || action === 'game.get_webui_text'
-    || action === 'game.get_content_pack_webui_manifest';
-}
-
-export function cancelPendingGameplayBridgeRequests(): void {
-  bridgeRequestGeneration += 1;
-  const cancelled = bridgeBatchQueue.filter(request => isWorldGameplayBridgeAction(request.action));
-  bridgeBatchQueue = bridgeBatchQueue.filter(request => !isWorldGameplayBridgeAction(request.action));
-  const error = new Error('Bridge call cancelled due to app mode change');
-  cancelled.forEach(request => request.fail(error, 'cancelled'));
-}
-
-export function setGameplayBridgeRequestsBlocked(blocked: boolean): void {
-  if (gameplayBridgeRequestsBlocked === blocked) {
-    return;
-  }
-
-  gameplayBridgeRequestsBlocked = blocked;
-  if (blocked) {
-    cancelPendingGameplayBridgeRequests();
-  }
-}
 
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => window.setTimeout(resolve, ms));
@@ -223,10 +160,6 @@ function reportBridgeFailure(request: Record<string, unknown>, error: unknown): 
 }
 
 export function acknowledgeBridgeFailure(error: unknown, operation = 'unreported bridge operation'): void {
-  if (isCancelledBridgeRequestError(error)) {
-    return;
-  }
-
   if (bridgeErrorWasReported(error)) {
     return;
   }
@@ -251,7 +184,7 @@ export function waitForruntimeEngine(timeoutMs = 5000): Promise<runtimeEngine> {
       }
 
       if (Date.now() - startedAt >= timeoutMs) {
-        reject(new Error('FoaeCefUI runtime engine is not available'));
+		reject(new Error('Webkiln runtime is not available'));
         return;
       }
 
@@ -271,7 +204,7 @@ function waitForEngineBindings(engine: runtimeEngine, timeoutMs: number): Promis
   let timeoutId = 0;
   return new Promise((resolve, reject) => {
     timeoutId = window.setTimeout(() => {
-      reject(new Error('FoaeCefUI runtime engine is not available'));
+		reject(new Error('Webkiln runtime is not available'));
     }, effectiveTimeoutMs);
 
     engine.whenReady!.then(() => {
@@ -309,64 +242,10 @@ function bridgePayloadSummary(payload: unknown): string {
   return parts.join(' ');
 }
 
-function scheduleBridgeBatchFlush(): void {
-  if (bridgeBatchScheduled) {
-    return;
-  }
-
-  bridgeBatchScheduled = true;
-  const flush = () => {
-    void flushBridgeBatch();
-  };
-  if (typeof window.requestAnimationFrame === 'function') {
-    window.requestAnimationFrame(flush);
-    return;
-  }
-
-  window.setTimeout(flush, 0);
-}
-
-function enqueueBridgeRequest(request: QueuedBridgeRequest): void {
-  bridgeBatchQueue.push(request);
-  scheduleBridgeBatchFlush();
-}
-
-async function flushBridgeBatch(): Promise<void> {
-  const batch = bridgeBatchQueue.filter(request => request.generation === bridgeRequestGeneration || !isWorldGameplayBridgeAction(request.action));
-  const cancelled = bridgeBatchQueue.filter(request => request.generation !== bridgeRequestGeneration && isWorldGameplayBridgeAction(request.action));
-  bridgeBatchQueue = [];
-  bridgeBatchScheduled = false;
-  if (cancelled.length > 0) {
-    const error = new Error('Bridge call cancelled due to app mode change');
-    cancelled.forEach(request => request.fail(error, 'cancelled'));
-  }
-  if (batch.length === 0) {
-    return;
-  }
-
-  try {
-    const engine = await waitForruntimeEngine();
-    const payload = { requests: batch.map(request => request.request) };
-    const raw = await Promise.resolve(engine.call('StrategyBridgeBatchCall', payload));
-    const envelope = normalizeBridgeEnvelope(raw);
-    if (envelope.ok && envelope.pending) {
-      return;
-    }
-
-    const message = envelope.ok
-      ? 'Bridge batch did not return a pending response'
-      : envelope.error || 'Bridge batch call failed';
-    const error = new Error(message);
-    batch.forEach(request => request.fail(error, envelope.ok ? 'batch response error' : 'batch rejected'));
-  } catch (error) {
-    batch.forEach(request => request.fail(error, 'batch call error'));
-  }
-}
 
 export async function callRuntimeBridge(request: Record<string, unknown>, transientRetry = 0): Promise<unknown> {
   const startedAtMs = Date.now();
   const action = bridgeActionName(request);
-  const generation = bridgeRequestGeneration;
   const payloadSummary = bridgePayloadSummary(request.payload);
   let perfRecorded = false;
   const recordBridgePerf = (detail: string) => {
@@ -378,13 +257,6 @@ export async function callRuntimeBridge(request: Record<string, unknown>, transi
     const engine = await waitForruntimeEngine();
     const requestId = bridgeRequestId();
     const requestObject = { ...request, requestId };
-    if (generation !== bridgeRequestGeneration && isWorldGameplayBridgeAction(action)) {
-      throw new Error('Bridge call cancelled due to app mode change');
-    }
-
-    if (gameplayBridgeRequestsBlocked && isWorldGameplayBridgeAction(action)) {
-      throw new Error('Bridge call cancelled due to app mode change');
-    }
 
     return await new Promise((resolve, reject) => {
       let settled = false;
@@ -440,20 +312,9 @@ export async function callRuntimeBridge(request: Record<string, unknown>, transi
         reject(new Error('Bridge call timed out'));
       }, 30000);
 
-      if (shouldBatchBridgeAction(action)) {
-        enqueueBridgeRequest({
-          action,
-          generation,
-          request: requestObject,
-          settle,
-          fail,
-        });
-        return;
-      }
-
       try {
         if (!engine.callBridge) {
-          throw new Error('FoaeCefUI native bridge direct call binding is not available');
+			throw new Error('Webkiln native bridge direct call binding is not available');
         }
         void Promise.resolve(engine.callBridge(requestObject))
           .then((raw) => {
@@ -468,10 +329,6 @@ export async function callRuntimeBridge(request: Record<string, unknown>, transi
       }
     });
   } catch (error) {
-    if (isCancelledBridgeRequestError(error)) {
-      throw error;
-    }
-
     if (isTransientGameplayReadinessError(error) && transientRetry < 120) {
       recordBridgePerf('retry gameplay readiness');
       await delay(250);

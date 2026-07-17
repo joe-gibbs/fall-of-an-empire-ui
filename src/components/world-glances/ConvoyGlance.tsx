@@ -4,7 +4,7 @@ import type { ConvoyGlanceData } from './WorldGlanceTypes';
 import { clampUnitFraction } from './glanceMath';
 import { formatNumber, formatPercent } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import FactionRoundel from '../common/entities/FactionRoundel';
 import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel } from './WorldGlancePresentation';
 import GlanceRelationFrame from './GlanceRelationFrame';
@@ -93,7 +93,7 @@ function convoyTooltip(data: ConvoyGlanceData, detail: GetWorldGlanceTooltipResp
     lines.push({
       label: item.label,
       value: cargoAmount(item.amount),
-      valueIcon: FoaeCefUIAssetPath(item.icon),
+      valueIcon: WebkilnAssetPath(item.icon),
     });
   }
 
@@ -195,7 +195,7 @@ export default function ConvoyGlance({ data }: ConvoyGlanceProps) {
           <div className="gconv-cargo-strip" aria-hidden="true">
             {visibleCargo.map((item, index) => (
               <div key={`${item.icon}:${String(item.amount)}:${index}`} className="gconv-cargo-item">
-                <img src={FoaeCefUIAssetPath(item.icon)} alt="" />
+                <img src={WebkilnAssetPath(item.icon)} alt="" />
                 <span className="gconv-cargo-ct">{cargoAmount(item.amount)}</span>
               </div>
             ))}

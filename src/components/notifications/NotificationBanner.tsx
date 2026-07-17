@@ -5,7 +5,7 @@ import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import type { Notification } from '../../data/types';
 import { playSound } from '../../hooks/useSound';
 import { useAnchoredDropdown } from '../../hooks/useAnchoredDropdown';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { renderEventTextChunk } from '../../utils/eventTextFlow';
 import { renderRichText } from '../../utils/richText';
 import CloseButton from '../common/buttons/CloseButton';
@@ -99,7 +99,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
     />
   ) : (
     <div className={`notification-icon notification-icon--${notification.type}${notification.iconPath ? ' notification-icon--custom' : ''}`}>
-      <img src={FoaeCefUIAssetPath(iconPath)} alt="" />
+      <img src={WebkilnAssetPath(iconPath)} alt="" />
     </div>
   );
 

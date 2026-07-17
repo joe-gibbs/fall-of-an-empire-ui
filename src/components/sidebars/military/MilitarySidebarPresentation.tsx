@@ -5,7 +5,7 @@ import type { Army, ArmyUnit, ArmyUnitRow, Character, CharacterStatModifier, Mil
 import { STAT_ICONS, TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
 import { characterStatEffectLines } from '../../../utils/characterStatEffects';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import glossary from '../../../data/glossary';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 
@@ -308,8 +308,8 @@ export function coerceDoctrine(raw: string | undefined): MilitaryDoctrine {
 }
 
 export function resourceIconPath(resourceId: string): string {
-  if (resourceId === 'food') return FoaeCefUIAssetPath('/assets/icons/I_Food.png');
-  return FoaeCefUIAssetPath(`/assets/resources/${resourceId}.png`);
+  if (resourceId === 'food') return WebkilnAssetPath('/assets/icons/I_Food.png');
+  return WebkilnAssetPath(`/assets/resources/${resourceId}.png`);
 }
 
 export function formatUnitTypeName(type: string): string {

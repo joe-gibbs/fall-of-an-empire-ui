@@ -58,26 +58,26 @@ const UNSUPPORTED_TAGS = new Map([
   ['tr', ['HTML table elements', 'Use div-based layout instead.']],
   ['td', ['HTML table elements', 'Use div-based layout instead.']],
   ['th', ['HTML table elements', 'Use div-based layout instead.']],
-  ['select', ['the native select element', 'FoaeCefUI supports only a small subset of native controls. Build a custom control.']],
-  ['option', ['the native option element', 'FoaeCefUI supports only a small subset of native controls. Build a custom control.']],
-  ['textarea', ['the native textarea element', 'FoaeCefUI supports only text, button, and password inputs.']],
+  ['select', ['the native select element', 'Webkiln supports only a small subset of native controls. Build a custom control.']],
+  ['option', ['the native option element', 'Webkiln supports only a small subset of native controls. Build a custom control.']],
+  ['textarea', ['the native textarea element', 'Webkiln supports only text, button, and password inputs.']],
   ['form', ['the native form element', 'Handle submission in React state instead.']],
-  ['iframe', ['the iframe element', 'FoaeCefUI does not support embedded browsing contexts.']],
-  ['video', ['the video element', 'FoaeCefUI does not support native media elements.']],
-  ['audio', ['the audio element', 'FoaeCefUI does not support native media elements.']],
+  ['iframe', ['the iframe element', 'Webkiln does not support embedded browsing contexts.']],
+  ['video', ['the video element', 'Webkiln does not support native media elements.']],
+  ['audio', ['the audio element', 'Webkiln does not support native media elements.']],
   ['dialog', ['the dialog element', 'Build the modal with regular elements.']],
   ['details', ['the details element', 'Build the disclosure with regular elements.']],
   ['summary', ['the summary element', 'Build the disclosure with regular elements.']],
-  ['filter', ['SVG filters', 'FoaeCefUI SVG support does not include filter effects.']],
-  ['feturbulence', ['SVG filter primitives', 'FoaeCefUI SVG support does not include filter effects.']],
-  ['fedisplacementmap', ['SVG filter primitives', 'FoaeCefUI SVG support does not include filter effects.']],
-  ['fegaussianblur', ['SVG filter primitives', 'FoaeCefUI SVG support does not include filter effects.']],
-  ['fecolormatrix', ['SVG filter primitives', 'FoaeCefUI SVG support does not include filter effects.']],
-  ['fecomposite', ['SVG filter primitives', 'FoaeCefUI SVG support does not include filter effects.']],
-  ['feblend', ['SVG filter primitives', 'FoaeCefUI SVG support does not include filter effects.']],
-  ['femerge', ['SVG filter primitives', 'FoaeCefUI SVG support does not include filter effects.']],
-  ['femergenode', ['SVG filter primitives', 'FoaeCefUI SVG support does not include filter effects.']],
-  ['feoffset', ['SVG filter primitives', 'FoaeCefUI SVG support does not include filter effects.']],
+  ['filter', ['SVG filters', 'Webkiln SVG support does not include filter effects.']],
+  ['feturbulence', ['SVG filter primitives', 'Webkiln SVG support does not include filter effects.']],
+  ['fedisplacementmap', ['SVG filter primitives', 'Webkiln SVG support does not include filter effects.']],
+  ['fegaussianblur', ['SVG filter primitives', 'Webkiln SVG support does not include filter effects.']],
+  ['fecolormatrix', ['SVG filter primitives', 'Webkiln SVG support does not include filter effects.']],
+  ['fecomposite', ['SVG filter primitives', 'Webkiln SVG support does not include filter effects.']],
+  ['feblend', ['SVG filter primitives', 'Webkiln SVG support does not include filter effects.']],
+  ['femerge', ['SVG filter primitives', 'Webkiln SVG support does not include filter effects.']],
+  ['femergenode', ['SVG filter primitives', 'Webkiln SVG support does not include filter effects.']],
+  ['feoffset', ['SVG filter primitives', 'Webkiln SVG support does not include filter effects.']],
 ]);
 
 const UNSUPPORTED_DOM_CONSTRUCTORS = new Map([
@@ -111,7 +111,7 @@ const UNSUPPORTED_STYLE_PROPERTIES = new Map([
   ['background-blend-mode', ['background-blend-mode', 'Bake the blended result into an asset or use supported layering.']],
   ['background-attachment', ['background-attachment', 'Avoid fixed or local background attachment.']],
   ['border-collapse', ['border-collapse', 'Use div-based layout rather than table styling.']],
-  ['color-scheme', ['color-scheme', 'FoaeCefUI does not expose browser colour-scheme handling.']],
+  ['color-scheme', ['color-scheme', 'Webkiln does not expose browser colour-scheme handling.']],
   ['direction', ['direction', 'Use explicit layout ordering and text content instead.']],
   ['font-variant', ['font-variant', 'Use supported font files and regular font styling instead.']],
   ['font-variant-numeric', ['font-variant-numeric', 'Use supported font files and regular font styling instead.']],
@@ -128,24 +128,24 @@ const UNSUPPORTED_STYLE_PROPERTIES = new Map([
   ['scrollbar-color', ['scrollbar-color', 'Use explicit scroll track elements instead.']],
   ['scrollbar-gutter', ['scrollbar-gutter', 'Use fixed layout spacing instead.']],
   ['scrollbar-width', ['scrollbar-width', 'Use explicit scroll track elements instead.']],
-  ['touch-action', ['touch-action', 'FoaeCefUI does not expose browser touch gesture handling.']],
-  ['overscroll-behavior', ['overscroll-behavior', 'FoaeCefUI does not expose browser scroll chaining behaviour.']],
+  ['touch-action', ['touch-action', 'Webkiln does not expose browser touch gesture handling.']],
+  ['overscroll-behavior', ['overscroll-behavior', 'Webkiln does not expose browser scroll chaining behaviour.']],
   ['font-feature-settings', ['font-feature-settings', 'Use supported font files and regular font styling instead.']],
   ['image-rendering', ['image-rendering', 'Use pre-authored image assets at the intended resolution instead.']],
-  ['will-change', ['will-change', 'FoaeCefUI does not use browser compositor hinting.']],
+  ['will-change', ['will-change', 'Webkiln does not use browser compositor hinting.']],
   ['word-break', ['word-break', 'Use supported wrapping rules and explicit layout widths instead.']],
   ['writing-mode', ['writing-mode', 'Use horizontal text layout.']],
   ['zoom', ['zoom', 'Use transform scaling or layout sizing instead.']],
   ['border-image', ['border-image', 'Use regular border styling or image-backed UI elements instead.']],
-  ['-moz-osx-font-smoothing', ['-moz-osx-font-smoothing', 'FoaeCefUI does not use browser font smoothing properties.']],
+  ['-moz-osx-font-smoothing', ['-moz-osx-font-smoothing', 'Webkiln does not use browser font smoothing properties.']],
   ['-webkit-appearance', ['-webkit-appearance', 'Use explicit supported control styling instead.']],
   ['-webkit-box-orient', ['-webkit-box-orient', 'Avoid legacy WebKit box layout.']],
-  ['-webkit-font-smoothing', ['-webkit-font-smoothing', 'FoaeCefUI does not use browser font smoothing properties.']],
+  ['-webkit-font-smoothing', ['-webkit-font-smoothing', 'Webkiln does not use browser font smoothing properties.']],
   ['-webkit-line-clamp', ['-webkit-line-clamp', 'Clamp text through layout or content rules instead.']],
   ['-webkit-mask', ['-webkit-mask', 'Use regular image assets or supported mask styling instead.']],
-  ['-webkit-tap-highlight-color', ['-webkit-tap-highlight-color', 'FoaeCefUI does not support mobile browser tap highlight styling.']],
-  ['-webkit-touch-callout', ['-webkit-touch-callout', 'FoaeCefUI does not expose mobile browser callout styling.']],
-  ['-webkit-user-drag', ['-webkit-user-drag', 'FoaeCefUI does not support browser drag hint styling.']],
+  ['-webkit-tap-highlight-color', ['-webkit-tap-highlight-color', 'Webkiln does not support mobile browser tap highlight styling.']],
+  ['-webkit-touch-callout', ['-webkit-touch-callout', 'Webkiln does not expose mobile browser callout styling.']],
+  ['-webkit-user-drag', ['-webkit-user-drag', 'Webkiln does not support browser drag hint styling.']],
   ['-webkit-user-select', ['-webkit-user-select', 'Use regular user-select handling instead.']],
   ['-webkit-mask-image', ['-webkit-mask-image', 'Use regular image assets or supported mask styling instead.']],
   ['-webkit-mask-position', ['-webkit-mask-position', 'Use regular image assets or supported mask styling instead.']],
@@ -180,6 +180,7 @@ function mergeGeneratedMap(target, values) {
   if (!values || typeof values !== 'object') {
     return;
   }
+  target.clear();
   for (const [key, value] of Object.entries(values)) {
     if (Array.isArray(value) && value.length >= 2) {
       target.set(key, [String(value[0]), String(value[1])]);
@@ -282,7 +283,7 @@ const UNSUPPORTED_CSS_PATTERNS = [
   {
     pattern: UNSUPPORTED_CSS_PROPERTY_PATTERN,
     feature: 'unsupported CSS properties',
-    detail: 'Use FoaeCefUI-supported CSS properties instead.',
+    detail: 'Use Webkiln-supported CSS properties instead.',
   },
   {
     pattern: /(?:^|[;{\s])background-image\s*:\s*var\(\s*--(?:bg-card|bg-panel-dark|separator)\s*\)/i,
@@ -292,7 +293,7 @@ const UNSUPPORTED_CSS_PATTERNS = [
   {
     pattern: /data:image\/svg(?:\+|%2b)xml/i,
     feature: 'SVG data URI assets',
-    detail: 'FoaeCefUI treats data:image/svg+xml URLs as unsupported resource protocols. Use CSS geometry or a packaged image asset.',
+    detail: 'Webkiln treats data:image/svg+xml URLs as unsupported resource protocols. Use CSS geometry or a packaged image asset.',
   },
   {
     pattern: /(?:^|[;{\s])grid(?:-[a-z-]+)?\s*:/i,
@@ -402,22 +403,22 @@ const UNSUPPORTED_CSS_PATTERNS = [
   {
     pattern: /\bcalc\([^)]*(?:%[^)]*(?:px|rem|em|vh|vw)|(?:px|rem|em|vh|vw)[^)]*%)/i,
     feature: 'mixed-unit calc() expressions',
-    detail: 'FoaeCefUI calc() support is limited to same-unit arithmetic.',
+    detail: 'Webkiln calc() support is limited to same-unit arithmetic.',
   },
   {
     pattern: /\bvar\(\s*--[\w-]+\s*,/i,
     feature: 'CSS variable fallback values',
-    detail: 'FoaeCefUI supports CSS variables without fallback arguments.',
+    detail: 'Webkiln supports CSS variables without fallback arguments.',
   },
   {
     pattern: /(?:\.world-glance-node\.detail-name\s+\.gset-(?:body|head|info)|\.glance--convoy\s+\.gconv-cargo|\.screen--negotiation\s+\.screen-title-area|\.pns-panel\s+\.panel-body)\s*>\s*(?:\*|:first-child)(?:\s*\+\s*\*)?/i,
     feature: 'full subtree invalidating universal child selectors',
-    detail: 'Use explicit child classes instead of > * or > :first-child in selectors that sit under frequently mutated FoaeCefUI classes.',
+    detail: 'Use explicit child classes instead of > * or > :first-child in selectors that sit under frequently mutated Webkiln classes.',
   },
   {
     pattern: CUSTOM_EXPRESSION_SHORTHAND_PATTERN,
     feature: 'CSS custom properties inside shorthand declarations',
-    detail: 'FoaeCefUI requires longhand declarations when var() is involved.',
+    detail: 'Webkiln requires longhand declarations when var() is involved.',
   },
   {
     pattern: /(?:^|[;{\s])border(?:-[a-z-]+)?\s*:[^;]*\bdashed\b/i,
@@ -467,32 +468,32 @@ const UNSUPPORTED_CSS_PATTERNS = [
   {
     pattern: /<\s*input\b[^>]*\btype\s*=\s*["']?(?!text\b|button\b|password\b)[^"'\s>]+/i,
     feature: 'unsupported native input types',
-    detail: 'FoaeCefUI supports only text, button, and password inputs.',
+    detail: 'Webkiln supports only text, button, and password inputs.',
   },
   {
     pattern: /<\s*(?:select|option|textarea|form|iframe|video|audio|dialog|details|summary)\b/i,
     feature: 'unsupported native HTML elements',
-    detail: 'Build the control with regular FoaeCefUI-supported elements.',
+    detail: 'Build the control with regular Webkiln-supported elements.',
   },
   {
     pattern: /<\s*(?:filter|fe[a-z]+)\b/i,
     feature: 'SVG filters',
-    detail: 'FoaeCefUI SVG support does not include filter effects.',
+    detail: 'Webkiln SVG support does not include filter effects.',
   },
   {
     pattern: /\bfilter\s*=\s*["']url\s*\(/i,
     feature: 'SVG filters',
-    detail: 'FoaeCefUI SVG support does not include filter effects.',
+    detail: 'Webkiln SVG support does not include filter effects.',
   },
   {
     pattern: UNSUPPORTED_POINTER_EVENT_ATTRIBUTE_PATTERN,
     feature: 'pointer events',
-    detail: 'Use events supported by FoaeCefUI.',
+    detail: 'Use events supported by Webkiln.',
   },
   {
     pattern: UNSUPPORTED_POINTER_EVENT_LISTENER_PATTERN,
     feature: 'pointer events',
-    detail: 'Use events supported by FoaeCefUI.',
+    detail: 'Use events supported by Webkiln.',
   },
   {
     pattern: UNSUPPORTED_POINTER_CAPTURE_PATTERN,
@@ -502,17 +503,17 @@ const UNSUPPORTED_CSS_PATTERNS = [
   {
     pattern: /\bgetContext\s*\(\s*["'](?:webgl2?|experimental-webgl)["']/i,
     feature: 'WebGL canvas contexts',
-    detail: 'FoaeCefUI canvas support is limited to 2D rendering.',
+    detail: 'Webkiln canvas support is limited to 2D rendering.',
   },
   {
     pattern: /\b(?:createImageData|putImageData)\s*\(/i,
     feature: 'Canvas ImageData APIs',
-    detail: 'FoaeCefUI canvas support does not include ImageData APIs.',
+    detail: 'Webkiln canvas support does not include ImageData APIs.',
   },
   {
     pattern: /\b(?:imageSmoothingEnabled|imageSmoothingQuality)\b/i,
     feature: 'canvas image smoothing controls',
-    detail: 'FoaeCefUI canvas support does not include image smoothing controls.',
+    detail: 'Webkiln canvas support does not include image smoothing controls.',
   },
   {
     pattern: /\bnew\s+(?:window\.)?(?:AudioContext|webkitAudioContext)\s*\(/i,
@@ -530,18 +531,18 @@ const UNSUPPORTED_CSS_BLOCK_PATTERNS = [
   {
     pattern: /(?:^|})\s*\.tooltip-wrapper-inline\s*\{[\s\S]*?\bposition\s*:\s*relative\b/i,
     feature: 'positioned inline tooltip wrappers',
-    detail: 'FoaeCefUI can stop wrapping inline text around positioned tooltip trigger spans. Keep the shared inline wrapper static and scope block/flex layout to the caller.',
+    detail: 'Webkiln can stop wrapping inline text around positioned tooltip trigger spans. Keep the shared inline wrapper static and scope block/flex layout to the caller.',
   },
 ];
 
 const UNSUPPORTED_CANVAS_CALLS = new Map([
-  ['createImageData', ['CanvasRenderingContext2D.createImageData()', 'FoaeCefUI canvas support does not include ImageData APIs.']],
-  ['putImageData', ['CanvasRenderingContext2D.putImageData()', 'FoaeCefUI canvas support does not include ImageData APIs.']],
+  ['createImageData', ['CanvasRenderingContext2D.createImageData()', 'Webkiln canvas support does not include ImageData APIs.']],
+  ['putImageData', ['CanvasRenderingContext2D.putImageData()', 'Webkiln canvas support does not include ImageData APIs.']],
 ]);
 
 const UNSUPPORTED_CANVAS_PROPERTIES = new Map([
-  ['imageSmoothingEnabled', ['CanvasRenderingContext2D.imageSmoothingEnabled', 'FoaeCefUI canvas support does not include image smoothing controls.']],
-  ['imageSmoothingQuality', ['CanvasRenderingContext2D.imageSmoothingQuality', 'FoaeCefUI canvas support does not include image smoothing controls.']],
+  ['imageSmoothingEnabled', ['CanvasRenderingContext2D.imageSmoothingEnabled', 'Webkiln canvas support does not include image smoothing controls.']],
+  ['imageSmoothingQuality', ['CanvasRenderingContext2D.imageSmoothingQuality', 'Webkiln canvas support does not include image smoothing controls.']],
 ]);
 
 function reportUnsupported(context, node, feature, detail, loc = null) {
@@ -886,7 +887,7 @@ function checkStyleValue(context, node, name, valueNode, options = {}) {
         context,
         valueNode,
         'dynamic inline CSS shorthand declarations',
-        'Use FoaeCefUI-supported longhand declarations so helper-returned var() values cannot reach shorthand parsing.',
+        'Use Webkiln-supported longhand declarations so helper-returned var() values cannot reach shorthand parsing.',
       );
     } else if (value !== null && /\bvar\s*\(/i.test(value)) {
       reportUnsupported(
@@ -900,7 +901,7 @@ function checkStyleValue(context, node, name, valueNode, options = {}) {
         context,
         valueNode,
         'dynamic inline CSS shorthand declarations',
-        'Use FoaeCefUI-supported longhand declarations so helper-returned var() values cannot reach shorthand parsing.',
+        'Use Webkiln-supported longhand declarations so helper-returned var() values cannot reach shorthand parsing.',
       );
     }
   }
@@ -979,7 +980,7 @@ function checkInputType(context, node) {
       context,
       typeAttribute,
       'dynamic native input types',
-      'FoaeCefUI supports only text, button, and password inputs.',
+      'Webkiln supports only text, button, and password inputs.',
     );
     return;
   }
@@ -989,7 +990,7 @@ function checkInputType(context, node) {
       context,
       typeAttribute,
       `input type="${value}"`,
-      'FoaeCefUI supports only text, button, and password inputs.',
+      'Webkiln supports only text, button, and password inputs.',
     );
   }
 }
@@ -1004,14 +1005,14 @@ function checkJsxAttribute(context, node, attribute) {
   if (/^onPointer[A-Z]/.test(attributeName)) {
     const eventName = `pointer${attributeName.slice('onPointer'.length).toLowerCase()}`;
     if (isUnsupportedPointerEventName(eventName)) {
-      reportUnsupported(context, attribute, 'pointer events', 'Use events supported by FoaeCefUI.');
+      reportUnsupported(context, attribute, 'pointer events', 'Use events supported by Webkiln.');
     }
   }
 
   if (attributeName === 'filter') {
     const value = getAttributeValue(attribute);
     if (value && /\burl\s*\(/i.test(value)) {
-      reportUnsupported(context, attribute, 'SVG filters', 'FoaeCefUI SVG support does not include filter effects.');
+      reportUnsupported(context, attribute, 'SVG filters', 'Webkiln SVG support does not include filter effects.');
     }
   }
 
@@ -1060,18 +1061,45 @@ export default {
   meta: {
     type: 'problem',
     docs: {
-      description: 'disallow WebUI features that FoaeCefUI does not support',
+      description: 'disallow WebUI features that Webkiln does not support',
     },
     schema: [],
     messages: {
-      unsupported: 'FoaeCefUI does not support {{feature}}. {{detail}}',
-      undefinedCustomProperty: 'FoaeCefUI cannot resolve CSS custom property --{{name}}. Define the token or use an existing WebUI CSS variable.',
+      unsupported: 'Webkiln does not support {{feature}}. {{detail}}',
+      undefinedCustomProperty: 'Webkiln cannot resolve CSS custom property --{{name}}. Define the token or use an existing WebUI CSS variable.',
     },
   },
 
   create(context) {
-    if (RUNTIME_NAME === 'FoaeCefUI') {
+    if (RUNTIME_NAME !== 'Webkiln') {
       return {};
+    }
+
+    if (RUNTIME_CAPABILITIES.runtime?.css?.source === 'Chromium') {
+      return {
+        CallExpression(node) {
+          if (isNativeFetchCallee(node.callee)) {
+            reportUnsupported(
+              context,
+              node.callee,
+              'the native Fetch API for game data',
+              'Use the local game bridge instead.',
+            );
+          }
+
+          if (node.callee.type === 'MemberExpression' && getPropertyName(node.callee.property) === 'getContext') {
+            const contextType = getStaticString(node.arguments[0]);
+            if (/^(webgl2?|experimental-webgl)$/i.test(contextType ?? '')) {
+              reportUnsupported(
+                context,
+                node.arguments[0],
+                'WebGL canvas contexts',
+                'WebGL is disabled in the Webkiln browser settings.',
+              );
+            }
+          }
+        },
+      };
     }
 
     return {
@@ -1126,7 +1154,7 @@ export default {
           reportUnsupported(
             context,
             node.callee,
-            'direct FoaeCefUI engine calls before readiness checks',
+            'direct Webkiln engine calls before readiness checks',
             'Await waitForruntimeEngine() before calling engine.call().',
           );
         }
@@ -1134,14 +1162,14 @@ export default {
         if (calleeName === 'addEventListener' || calleeName === 'removeEventListener') {
           const eventName = getStaticString(node.arguments[0]);
           if (isUnsupportedPointerEventName(eventName)) {
-            reportUnsupported(context, node.arguments[0], 'pointer events', 'Use mouse events supported by FoaeCefUI.');
+            reportUnsupported(context, node.arguments[0], 'pointer events', 'Use mouse events supported by Webkiln.');
           }
         }
 
         if (calleeName === 'getContext') {
           const contextType = getStaticString(node.arguments[0]);
           if (/^(webgl2?|experimental-webgl)$/i.test(contextType ?? '')) {
-            reportUnsupported(context, node.arguments[0], 'WebGL canvas contexts', 'FoaeCefUI canvas support is limited to 2D rendering.');
+            reportUnsupported(context, node.arguments[0], 'WebGL canvas contexts', 'Webkiln canvas support is limited to 2D rendering.');
           }
         }
 
@@ -1204,7 +1232,7 @@ export default {
           (typeName === 'PointerEvent' || typeName === 'React.PointerEvent')
           && POINTER_EVENT_NAMES.size > 0
         ) {
-          reportUnsupported(context, node.typeName, 'pointer events', 'Use events supported by FoaeCefUI.');
+          reportUnsupported(context, node.typeName, 'pointer events', 'Use events supported by Webkiln.');
         }
       },
 

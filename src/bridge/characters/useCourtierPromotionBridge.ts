@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import type { CourtierType, StatKey, StatRange } from '../../data/courtierTypes';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 interface CourtierPromotionEvent {
   settlementId: string;
@@ -72,8 +72,8 @@ function mapBridgeType(t: BridgeCourtierType): CourtierType {
     id: t.id,
     title: t.title,
     description: t.description,
-    background: FoaeCefUIAssetPath(t.backgroundImage) ?? '',
-    foreground: FoaeCefUIAssetPath(t.foregroundImage) ?? '',
+    background: WebkilnAssetPath(t.backgroundImage) ?? '',
+    foreground: WebkilnAssetPath(t.foregroundImage) ?? '',
     ageRange: { min: t.ageMin, max: t.ageMax },
     stats,
     traitPool: [],

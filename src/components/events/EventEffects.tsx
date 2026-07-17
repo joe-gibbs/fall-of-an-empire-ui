@@ -1,6 +1,6 @@
 import type { EventEffect } from '../../data/types';
 import { webUIText } from '../../localization/WebUITextContext';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import './EventEffects.css';
 
 function iconFor(effect: EventEffect): string | null {
@@ -59,7 +59,7 @@ export function EventEffectRow({ effect }: { effect: EventEffect }) {
     <div className={`event-effect ${cls}`}>
       <div className="event-effect-icon-frame" aria-hidden="true">
         {icon
-          ? <img src={FoaeCefUIAssetPath(icon)} alt="" className="event-effect-icon" draggable={false} />
+          ? <img src={WebkilnAssetPath(icon)} alt="" className="event-effect-icon" draggable={false} />
           : <span className="event-effect-marker" />}
       </div>
       <span className="event-effect-desc">{effect.description || effect.kind}</span>

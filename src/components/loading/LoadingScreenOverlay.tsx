@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLoadingScreenBridge } from '../../bridge/app/useLoadingScreenBridge';
 import { preloadImageAsset } from '../../preload/assets';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import './LoadingScreenOverlay.css';
 
 const FALLBACK_BACKGROUND = '/assets/loading-screens/general.png';
@@ -60,8 +60,8 @@ const LoadingScreenOverlay: React.FC = () => {
   if (!renderedState.visible && !isClosing) return null;
 
   const progress = Math.max(0, Math.min(100, renderedState.progress));
-  const backgroundSrc = FoaeCefUIAssetPath(renderedState.background || FALLBACK_BACKGROUND);
-  const logoSrc = FoaeCefUIAssetPath(LOGO_SRC);
+  const backgroundSrc = WebkilnAssetPath(renderedState.background || FALLBACK_BACKGROUND);
+  const logoSrc = WebkilnAssetPath(LOGO_SRC);
 
   return (
     <div className={`loading-screen${isClosing ? ' loading-screen--closing' : ''}`}>

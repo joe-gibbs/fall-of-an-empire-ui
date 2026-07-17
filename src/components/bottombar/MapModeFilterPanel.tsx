@@ -3,7 +3,7 @@ import { useMapModeFiltersBridge } from '../../bridge/military-map/useMapModeFil
 import type { MapModeFilterEntry } from '../../bridge-types.generated.ts';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import { webUIText, WebUIText } from '../../localization/WebUITextContext';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { MAP_MODE_ICONS } from './mapModeIcons';
 
 function formatAmount(value: number): string {
@@ -22,7 +22,7 @@ function FilterRow({ entry, radioMode, onToggle, onSelect }: FilterRowProps) {
     ? webUIText('MapModeFilter.MonthlyAmount', { Amount: formatAmount(entry.amount) })
     : '';
   const rowClass = `map-filter-row ${entry.active ? 'is-active' : 'is-muted'}${radioMode ? ' is-radio' : ''}`;
-  const iconPath = FoaeCefUIAssetPath(entry.iconPath);
+  const iconPath = WebkilnAssetPath(entry.iconPath);
 
   return (
     <button
@@ -76,8 +76,8 @@ const MapModeFilterPanel: React.FC = () => {
   const activeCount = state.filterActive
     ? state.entries.filter(entry => entry.active).length
     : state.entries.length;
-  const modeIconPath = FoaeCefUIAssetPath(MAP_MODE_ICONS[state.modeId] ?? '/assets/icons/I_Resources.png');
-  const searchIconPath = FoaeCefUIAssetPath('/assets/icons/I_Search.png');
+  const modeIconPath = WebkilnAssetPath(MAP_MODE_ICONS[state.modeId] ?? '/assets/icons/I_Resources.png');
+  const searchIconPath = WebkilnAssetPath('/assets/icons/I_Search.png');
   const countLabel = webUIText('MapModeFilter.ActiveCount', {
     Active: formatAmount(activeCount),
     Total: formatAmount(state.entries.length),

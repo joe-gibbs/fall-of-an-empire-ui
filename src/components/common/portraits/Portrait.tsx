@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { playSound } from '../../../hooks/useSound';
 import { usePerson } from '../../../data-source/index';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import type { Character, PortraitLayerData } from '../../../data/types';
 import { useQuickInteractionMenu } from '../interactions/useQuickInteractionMenu';
 import { DEFAULT_PORTRAIT_LIGHT, portraitLightFromMouseEvent, type PortraitLight } from './portraitLighting';
@@ -316,19 +316,19 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
   const resolvedLayers = fetched?.portraitLayers ?? layers;
   const resolvedIsAlive = fetched?.isAlive ?? isAlive;
   const resolvedIsImprisoned = fetched?.isImprisoned ?? isImprisoned ?? false;
-  const layerPortrait = FoaeCefUIAssetPath(resolvedLayers?.portrait);
-  const layerBackground = FoaeCefUIAssetPath(resolvedLayers?.background);
-  const layerBackHeadgear = FoaeCefUIAssetPath(resolvedLayers?.backHeadgear);
-  const layerFaceMask = FoaeCefUIAssetPath(resolvedLayers?.faceMask);
-  const layerFrontHeadgear = FoaeCefUIAssetPath(resolvedLayers?.frontHeadgear);
-  const layerNormalMap = FoaeCefUIAssetPath(resolvedLayers?.normalMap);
-  const resolvedSrc = FoaeCefUIAssetPath(layerPortrait || src || (fetched?.portrait ? fetched.portrait : undefined));
+  const layerPortrait = WebkilnAssetPath(resolvedLayers?.portrait);
+  const layerBackground = WebkilnAssetPath(resolvedLayers?.background);
+  const layerBackHeadgear = WebkilnAssetPath(resolvedLayers?.backHeadgear);
+  const layerFaceMask = WebkilnAssetPath(resolvedLayers?.faceMask);
+  const layerFrontHeadgear = WebkilnAssetPath(resolvedLayers?.frontHeadgear);
+  const layerNormalMap = WebkilnAssetPath(resolvedLayers?.normalMap);
+  const resolvedSrc = WebkilnAssetPath(layerPortrait || src || (fetched?.portrait ? fetched.portrait : undefined));
 
   const dim = sizeMap[size];
   const faceKey = resolvedSrc ?? '';
   const hasFace = resolvedSrc && failedFaceKey !== faceKey;
   const faceSrc = resolvedSrc ?? '';
-  const bgUrl = FoaeCefUIAssetPath(layerBackground || bg || pickBg(resolvedName));
+  const bgUrl = WebkilnAssetPath(layerBackground || bg || pickBg(resolvedName));
   const hasLayeredFace = Boolean(layerPortrait && hasFace);
   const isRect = shape === 'rect' || size === 'hero';
   const isHero = size === 'hero';

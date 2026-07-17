@@ -39,7 +39,7 @@ import {
   useFaction, usePerson, useSettlement, useMilitary, usePlayerFactionId,
 } from '../data-source/index';
 import { preloadImageAsset, preloadImageAssets } from '../preload/assets';
-import { FoaeCefUIAssetPath } from '../utils/assets';
+import { WebkilnAssetPath } from '../utils/assets';
 import {
   formatWebUIText,
   useWebUILocale,
@@ -110,7 +110,7 @@ interface FoaeSDK {
 
   /** Static asset helpers for mod-owned image paths. */
   assets: {
-    FoaeCefUIAssetPath: typeof FoaeCefUIAssetPath;
+    WebkilnAssetPath: typeof WebkilnAssetPath;
     preloadImageAsset: typeof preloadImageAsset;
     preloadImageAssets: typeof preloadImageAssets;
   };
@@ -170,7 +170,7 @@ globalThis.FOAE = {
     usePlayerFactionId,
   },
   assets: {
-    FoaeCefUIAssetPath,
+    WebkilnAssetPath,
     preloadImageAsset,
     preloadImageAssets,
   },

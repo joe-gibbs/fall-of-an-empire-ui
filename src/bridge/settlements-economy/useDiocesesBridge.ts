@@ -9,7 +9,7 @@ import type {
   ReligionInfo,
 } from '../../bridge-types.generated.ts';
 import type { Character, PersonActivity } from '../../data/types';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 export interface DioceseView {
   id: string;
@@ -71,7 +71,7 @@ function mapResponse(data: GetDiocesesResponse): DiocesesResult {
     religionName: data.religionName,
     description: data.description,
     clergyTitle: data.clergyTitle,
-    iconPath: FoaeCefUIAssetPath(data.iconPath) ?? '',
+    iconPath: WebkilnAssetPath(data.iconPath) ?? '',
     colour: data.colour,
     canManage: data.canManage,
     leadingFactionName: data.leadingFactionName,
@@ -82,7 +82,7 @@ function mapResponse(data: GetDiocesesResponse): DiocesesResult {
       key: r.key,
       name: r.name,
       clergyTitle: r.clergyTitle,
-      iconPath: FoaeCefUIAssetPath(r.iconPath) ?? '',
+      iconPath: WebkilnAssetPath(r.iconPath) ?? '',
       colour: r.colour,
       isPlayerReligion: r.isPlayerReligion,
       canManage: r.canManage,

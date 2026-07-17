@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import type { Event as GameEvent, EventChoiceInputs } from '../../data/types';
 import { webUIText } from '../../localization/WebUITextContext';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import { useProvinceModeOverviewBridge } from './useProvinceModeOverviewBridge';
 
@@ -26,7 +26,7 @@ export function useProvinceRecallBridge(enabled: boolean): {
         Emperor: overview.emperor.name,
         Province: overview.province.name,
       }),
-      image: FoaeCefUIAssetPath('/assets/events/interaction-replace-governor.png') ?? null,
+      image: WebkilnAssetPath('/assets/events/interaction-replace-governor.png') ?? null,
       presentationStyle: 'important',
       previousEvents: [],
       options: [

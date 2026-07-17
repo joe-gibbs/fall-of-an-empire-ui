@@ -21,7 +21,7 @@ import type {
   ConstructionQueueItem,
   SettlementConstruction,
 } from '../../data/types';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { useGameState } from '../../context/GameContext';
 
 export interface SettlementBuildingsState {
@@ -61,14 +61,14 @@ function toKebabCase(value: string): string {
 }
 
 export function buildingPortrait(assetKey: string): string | undefined {
-  return assetKey ? FoaeCefUIAssetPath(`/assets/buildings/portraits/${toKebabCase(assetKey)}.png`) : undefined;
+  return assetKey ? WebkilnAssetPath(`/assets/buildings/portraits/${toKebabCase(assetKey)}.png`) : undefined;
 }
 
 function resourceIcon(name: string): string {
   if (name.toLowerCase() === 'gold') {
-    return FoaeCefUIAssetPath('/assets/icons/I_Coins.png');
+    return WebkilnAssetPath('/assets/icons/I_Coins.png');
   }
-  return FoaeCefUIAssetPath(`/assets/resources/${name}.png`);
+  return WebkilnAssetPath(`/assets/resources/${name}.png`);
 }
 
 function toCategory(raw: string): BuildingCategory {

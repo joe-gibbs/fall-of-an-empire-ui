@@ -24,7 +24,7 @@ import { getComplianceState, getStatColor } from '../../../utils/colorFormatters
 import { STAT_ICONS } from '../../../utils/iconMaps';
 import { formatNumber } from '../../../utils/numberFormat';
 import { formatPersonActivity } from '../../../utils/displayLabels';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { compareSortValues } from '../../common/layout/tables/sortUtils';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import './CharactersScreen.css';
@@ -136,12 +136,12 @@ function uniqueFilterOptions(
 
 function cultureIcon(character: CharacterListEntry, value: string): string {
   const id = character.cultureId || value;
-  return id ? FoaeCefUIAssetPath(`/assets/cultures/${id}.png`) : '';
+  return id ? WebkilnAssetPath(`/assets/cultures/${id}.png`) : '';
 }
 
 function religionIcon(character: CharacterListEntry, value: string): string {
   const id = character.religionId || value;
-  return id ? FoaeCefUIAssetPath(`/assets/religions/${id}.png`) : '';
+  return id ? WebkilnAssetPath(`/assets/religions/${id}.png`) : '';
 }
 
 function traitFilterOptions(characters: CharacterListEntry[], allLabel: string): FilterOption[] {

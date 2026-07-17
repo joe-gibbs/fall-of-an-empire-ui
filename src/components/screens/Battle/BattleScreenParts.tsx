@@ -8,7 +8,7 @@ import { battleFrameAgentCount, readBattleAgentFrame, startBattleActionBridge } 
 import { useGameActions } from '../../../context/GameContext';
 import type { BattleActionOption, BattleFormationUnitDetail, BattleParticipantDetail, BattleSideDetail, BattlefieldHeightPointDetail, BattlefieldObstacleDetail } from '../../../bridge-types.generated.ts';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { buildHeightMapDataUrl } from './heightMapImage';
 import { buildWaypointSplinePath, coordinatePercent, coordinatePercentUnclamped, coordinatePercentValue, normaliseDegrees, normaliseSelectionBox, radiusPercent, sizePercent, stableObstacleNoise, type SelectionBox } from './battleGeometry';
 import { battleStancePresentation } from './battleStances';
@@ -773,7 +773,7 @@ function BattleFormationUnitCard({ unit, side }: { unit: BattleFormationUnitDeta
   const health = unit.maxStrength > 0 ? clamp(unit.strength / unit.maxStrength * 100, 0, 100) : 0;
   const barColour = health > 50 ? 'green' : 'red';
   const healthColour = health > 50 ? 'var(--green-light)' : health > 25 ? 'var(--yellow)' : 'var(--red-light)';
-  const portrait = FoaeCefUIAssetPath(unit.portrait);
+  const portrait = WebkilnAssetPath(unit.portrait);
 
   return (
     <Tooltip

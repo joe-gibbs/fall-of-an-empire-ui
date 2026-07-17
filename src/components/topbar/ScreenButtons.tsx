@@ -10,7 +10,7 @@ import FactionTooltip from '../common/tooltips/FactionTooltip';
 import { usePlayerFactionSummary } from '../../data-source/index';
 import { getAllTopbarButtons, isVisibleForFactionMode } from '../../registry/index';
 import type { TopbarButtonRegistration } from '../../registry/index';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { useWebUIText, type WebUITextFormatter } from '../../localization/WebUITextContext';
 import { ScreenButtonTooltipBody } from './ScreenButtonTooltip';
 import './ScreenButtons.css';
@@ -93,7 +93,7 @@ function screenTooltipContent(button: Pick<TopbarButtonRegistration, 'label' | '
 
 function resolveScreenButtonIcon(button: TopbarButtonRegistration, playerReligionId: string | undefined): string {
   if (button.id === RELIGION_BUTTON_ID && playerReligionId) {
-    return FoaeCefUIAssetPath(`/assets/religions/${playerReligionId}.png`);
+    return WebkilnAssetPath(`/assets/religions/${playerReligionId}.png`);
   }
 
   return button.icon;

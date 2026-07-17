@@ -1,7 +1,7 @@
 import React from 'react';
 import { playSound } from '../../../hooks/useSound';
 import { emblemAssetPath } from '../../../utils/factionEmblem';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { resolveFactionBorderVariant, type FactionBorderVariant } from '../../../utils/factionBorder';
 import { useFaction } from '../../../data-source/index';
 import { useQuickInteractionMenu } from '../interactions/useQuickInteractionMenu';
@@ -22,7 +22,7 @@ interface FactionRoundelProps {
   emblem?: string;
   /** Culture family name (e.g. "Svaranic"). Used when `emblem` is missing. */
   cultureGroup?: string;
-  /** Pre-computed symbol PNG path. Overrides emblem/cultureGroup — use only
+  /** Pre-computed symbol PNG path. Overrides emblem/cultureGroup - use only
    *  when you have a literal asset path rather than faction metadata. */
   symbol?: string;
   /** Set false when the parent has already supplied the display metadata. */
@@ -80,7 +80,7 @@ const FactionRoundel: React.FC<FactionRoundelProps> = ({
   const emblemColour = resolveEmblemColour(resolvedColour, resolvedSecondary);
   const emblemLight = lighten(emblemColour, 0.15);
   const emblemDark = darken(emblemColour, 0.25);
-  const symbolPath = FoaeCefUIAssetPath(symbol ?? emblemAssetPath(resolvedEmblem, resolvedCultureGroup));
+  const symbolPath = WebkilnAssetPath(symbol ?? emblemAssetPath(resolvedEmblem, resolvedCultureGroup));
   const symbolStyle: React.CSSProperties | undefined = symbolPath ? {
     backgroundImage: `linear-gradient(160deg, ${emblemLight}, ${emblemColour} 55%, ${emblemDark})`,
     maskImage: `url("${symbolPath}")`,

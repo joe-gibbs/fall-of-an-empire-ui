@@ -3,7 +3,7 @@ import { bridgeCall } from '../../bridge-types.generated.ts';
 import type { BattleAfterActionReportPayload, PortraitLayerData } from '../../bridge-types.generated.ts';
 import type { Notification, Warning, WarningSeverity } from '../../data/types';
 import { webUIText } from '../../localization/WebUITextContext';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { normaliseBattleAfterActionReport } from '../../utils/battleAfterActionReport';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import { getCachedBridgeEventByName } from '../core/bridgeEventCache';
@@ -116,7 +116,7 @@ export function mapNotificationShown(data: NotificationShown): Notification {
     type: mapNotificationType(data.type),
     notificationTypeId: data.notificationTypeId || undefined,
     notificationTypeLabel: data.notificationTypeLabel || undefined,
-    iconPath: FoaeCefUIAssetPath(data.iconPath),
+    iconPath: WebkilnAssetPath(data.iconPath),
     timestamp: data.timestamp,
     style: mapNotificationStyle(data.style),
     createdOnDay: data.createdOnDay,
@@ -181,7 +181,7 @@ function mapDiplomaticNotification(data: DiplomaticNotificationShown): Notificat
     type: 'diplomatic',
     notificationTypeId: notificationType?.id,
     notificationTypeLabel: notificationType?.label,
-    iconPath: FoaeCefUIAssetPath(data.iconPath),
+    iconPath: WebkilnAssetPath(data.iconPath),
     timestamp: data.timestamp,
     style: 'regular',
     createdOnDay: positiveDay(data.createdOnDay),

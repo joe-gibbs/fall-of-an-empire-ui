@@ -3,7 +3,7 @@ import type { GetSettlementDataResponse, GetSettlementSiegeDataResponse } from '
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { useBridgeQuery } from '../core/useBridgeQuery';
 import type { ArmyUnitType, Character, Settlement } from '../../data/types';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 type SettlementBishopricResponse = GetSettlementDataResponse['bishoprics'][number];
 
@@ -114,8 +114,8 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       name: u.name,
       description: u.description,
       type: u.unitType,
-      typeIcon: FoaeCefUIAssetPath(UNIT_TYPE_ICONS[u.unitType as ArmyUnitType | 'Garrison']) ?? '',
-      portrait: FoaeCefUIAssetPath(u.portrait) ?? '',
+      typeIcon: WebkilnAssetPath(UNIT_TYPE_ICONS[u.unitType as ArmyUnitType | 'Garrison']) ?? '',
+      portrait: WebkilnAssetPath(u.portrait) ?? '',
       tier: u.tier,
       sourceBuilding: '',
       strength: u.strength,
@@ -176,7 +176,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       status: r.status,
       depleting: r.depleting,
       monthsUntilDepletion: r.monthsUntilDepletion,
-      icon: r.id ? FoaeCefUIAssetPath(`/assets/resources/${r.id}.png`) : undefined,
+      icon: r.id ? WebkilnAssetPath(`/assets/resources/${r.id}.png`) : undefined,
       isNatural: r.isNatural,
       siegeHalted: r.siegeHalted,
       productionSources: r.productionSources.map(s => ({ name: s.name, value: s.value })),
@@ -195,7 +195,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       percent: c.percent,
       color: c.info.colour,
       description: c.info.description,
-      icon: c.info.id ? FoaeCefUIAssetPath(`/assets/cultures/${c.info.id}.png`) : undefined,
+      icon: c.info.id ? WebkilnAssetPath(`/assets/cultures/${c.info.id}.png`) : undefined,
       info: c.info.id ? c.info : undefined,
       monthlyChangePercent: c.monthlyChangePercent,
       pressureSources: c.pressureSources.map(s => ({ name: s.name, value: s.value })),
@@ -206,7 +206,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       percent: r.percent,
       color: r.info.colour,
       description: r.info.description,
-      icon: r.info.id ? FoaeCefUIAssetPath(`/assets/religions/${r.info.id}.png`) : undefined,
+      icon: r.info.id ? WebkilnAssetPath(`/assets/religions/${r.info.id}.png`) : undefined,
       info: r.info.id ? r.info : undefined,
       monthlyChangePercent: r.monthlyChangePercent,
       pressureSources: r.pressureSources.map(s => ({ name: s.name, value: s.value })),
@@ -218,9 +218,9 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
     })),
     pops: data.pops.map(p => ({
       culture: p.culture,
-      cultureIcon: p.cultureId ? FoaeCefUIAssetPath(`/assets/cultures/${p.cultureId}.png`) : undefined,
+      cultureIcon: p.cultureId ? WebkilnAssetPath(`/assets/cultures/${p.cultureId}.png`) : undefined,
       religion: p.religion,
-      religionIcon: p.religionId ? FoaeCefUIAssetPath(`/assets/religions/${p.religionId}.png`) : undefined,
+      religionIcon: p.religionId ? WebkilnAssetPath(`/assets/religions/${p.religionId}.png`) : undefined,
       count: p.count,
       unrest: p.unrest,
       monthlyGrowth: p.monthlyGrowth,
@@ -234,7 +234,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
     modifiers: data.modifiers.map(m => ({
       key: m.key,
       label: m.label,
-      icon: (m.iconPath ? FoaeCefUIAssetPath(m.iconPath) : undefined) ?? (m.id ? FoaeCefUIAssetPath(`/assets/modifiers/${m.id}.png`) : '') ?? '',
+      icon: (m.iconPath ? WebkilnAssetPath(m.iconPath) : undefined) ?? (m.id ? WebkilnAssetPath(`/assets/modifiers/${m.id}.png`) : '') ?? '',
       description: m.description,
       total: m.hasTotal ? m.total : undefined,
       isPercent: m.hasTotal ? m.isPercent : undefined,
@@ -254,7 +254,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       religion: b.religion,
       religionKey: b.religionKey,
       religionName: b.religionName,
-      religionIcon: FoaeCefUIAssetPath(b.religionIconPath) ?? (b.religionKey ? FoaeCefUIAssetPath(`/assets/religions/${b.religionKey}.png`) : '') ?? '',
+      religionIcon: WebkilnAssetPath(b.religionIconPath) ?? (b.religionKey ? WebkilnAssetPath(`/assets/religions/${b.religionKey}.png`) : '') ?? '',
       clergyTitle: b.clergyTitle,
       canManage: b.canManage,
       bishop: b.bishopId ? mapBishopCharacter(data, b) : null,

@@ -9,7 +9,7 @@ import type {
   ReligionConversionStageEntry,
   ReligionConversionStateEntry,
 } from '../../bridge-types.generated.ts';
-import { FoaeCefUIAssetPath } from '../../utils/assets';
+import { WebkilnAssetPath } from '../../utils/assets';
 
 const RELIGION_FALLBACK_ICON = '/assets/icons/I_Religions.png';
 
@@ -71,7 +71,7 @@ export interface ReligionConversionResult {
 }
 
 function iconPath(path: string): string {
-  return FoaeCefUIAssetPath(path) ?? RELIGION_FALLBACK_ICON;
+  return WebkilnAssetPath(path) ?? RELIGION_FALLBACK_ICON;
 }
 
 function mapOption(option: ReligionConversionOptionEntry): ReligionConversionOptionView {

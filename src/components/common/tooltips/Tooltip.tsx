@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useContext, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { toRootRem } from '../../../utils/cssUnits';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { renderRichText } from '../../../utils/richText';
 import { readableFactionTextColour } from '../../../utils/colorFormatters';
 import { subscribeTooltipDismissEvent } from './tooltipEvents';
@@ -487,7 +487,7 @@ function TooltipLineItem({
     if (sidebar) {
       return (
         <div className="tt-line tt-line--header tt-line--header-sidebar">
-          <img src={FoaeCefUIAssetPath(line.labelIcon ?? '/assets/lozenge.png')} alt="" className="tt-header-lozenge" />
+          <img src={WebkilnAssetPath(line.labelIcon ?? '/assets/lozenge.png')} alt="" className="tt-header-lozenge" />
           <span className="tt-line-header-label">{line.label}</span>
           <span className="tt-header-rule" />
         </div>
@@ -496,7 +496,7 @@ function TooltipLineItem({
     return (
       <div className="tt-line tt-line--header">
         <span className="tt-line-header-label">
-          {line.labelIcon && <img src={FoaeCefUIAssetPath(line.labelIcon)} alt="" className="tt-line-label-icon" draggable={false} />}
+          {line.labelIcon && <img src={WebkilnAssetPath(line.labelIcon)} alt="" className="tt-line-label-icon" draggable={false} />}
           {line.label}
         </span>
       </div>
@@ -513,12 +513,12 @@ function TooltipLineItem({
       onMouseLeave={hideSub}
     >
       <span className="tt-line-label">
-        {line.labelIcon && <img src={FoaeCefUIAssetPath(line.labelIcon)} alt="" className="tt-line-label-icon" draggable={false} />}
+        {line.labelIcon && <img src={WebkilnAssetPath(line.labelIcon)} alt="" className="tt-line-label-icon" draggable={false} />}
         <span style={line.labelColor ? { color: line.labelColor } : undefined}>{line.label}</span>
       </span>
       {hasValue && (
         <span className="tt-line-value" style={line.valueColor ? { color: readableFactionTextColour(line.valueColor) } : undefined}>
-          {line.valueIcon && <img src={FoaeCefUIAssetPath(line.valueIcon)} alt="" className="tt-line-icon" draggable={false} />}
+          {line.valueIcon && <img src={WebkilnAssetPath(line.valueIcon)} alt="" className="tt-line-icon" draggable={false} />}
           {line.value !== undefined && <span>{line.value}</span>}
         </span>
       )}

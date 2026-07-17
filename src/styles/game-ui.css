@@ -157,7 +157,7 @@
   padding: 0.462rem 1.231rem 1.8rem 0.923rem;
 }
 
-/* FoaeCefUI does not reliably stretch ARIA table wrappers from intrinsic width. */
+/* Keep ARIA table wrappers stretched rather than sized to their contents. */
 [role="table"],
 [role="rowgroup"] {
   box-sizing: border-box;

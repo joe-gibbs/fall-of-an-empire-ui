@@ -10,7 +10,7 @@ import {
   type CampaignOutcomeRuler,
   type CampaignOutcomeSummary,
 } from './CampaignOutcomeData';
-import { FoaeCefUIAssetPath } from '../../../utils/assets';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import './CampaignOutcomeScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -184,8 +184,8 @@ export default function CampaignOutcomeScreen({
 }: CampaignOutcomeScreenProps) {
   const resolved = useMemo(() => resolveCampaignOutcomeSummary(kind, summary), [kind, summary]);
   const displayedPreviousRulers = useMemo(() => [...resolved.previousRulers].reverse(), [resolved.previousRulers]);
-  const headerImage = FoaeCefUIAssetPath(resolved.headerImage) ?? resolved.headerImage;
-  const crestIcon = FoaeCefUIAssetPath(resolved.crestIcon) ?? resolved.crestIcon;
+  const headerImage = WebkilnAssetPath(resolved.headerImage) ?? resolved.headerImage;
+  const crestIcon = WebkilnAssetPath(resolved.crestIcon) ?? resolved.crestIcon;
   const [closing, setClosing] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
 

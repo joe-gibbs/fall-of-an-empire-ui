@@ -418,9 +418,7 @@ html.ui-reduce-motion hr {
 }
 
 html {
-  /* Keep the root rem base in px. FoaeCefUI does not match Chromium's
-     rem behaviour when rem is used inside the root font-size expression.
-     13.2px is the previous 11px design base zoomed in by 20%.
+  /* Keep the root rem base in px. 13.2px is the previous 11px design base zoomed in by 20%.
      --ui-scale mirrors the gameplay UI Scale setting (see useUIScale). */
   font-size: calc(var(--runtime-root-font-size) * var(--ui-scale));
 }
