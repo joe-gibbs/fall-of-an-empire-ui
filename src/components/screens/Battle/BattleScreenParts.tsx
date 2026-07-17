@@ -367,16 +367,21 @@ export function unitIcon(formation: BattleFormationLive, isNaval: boolean): stri
 
 export function actionIcon(action: BattleActionOption): string {
   const iconId = action.iconId.trim();
-  if (!iconId) return '/assets/icons/I_Swords.png';
-  if (iconId.indexOf('/assets/') === 0) return iconId;
-  if (iconId.indexOf('/') >= 0) {
+  let assetPath: string;
+  if (!iconId) {
+    assetPath = '/assets/icons/I_Swords.png';
+  } else if (iconId.indexOf('/assets/') === 0) {
+    assetPath = iconId;
+  } else if (iconId.indexOf('/') >= 0) {
     const extension = iconId.indexOf('.png') >= 0 ? '' : '.png';
-    return `/assets/icons/${iconId}${extension}`;
+    assetPath = `/assets/icons/${iconId}${extension}`;
+  } else {
+    const filename = BATTLE_ACTION_ICON_IDS[iconId] ?? iconId;
+    const fullName = filename.indexOf('I_') === 0 ? filename : `I_${filename}`;
+    assetPath = `/assets/icons/BattleActions/${fullName}.png`;
   }
 
-  const filename = BATTLE_ACTION_ICON_IDS[iconId] ?? iconId;
-  const fullName = filename.indexOf('I_') === 0 ? filename : `I_${filename}`;
-  return `/assets/icons/BattleActions/${fullName}.png`;
+  return WebkilnAssetPath(assetPath) ?? assetPath;
 }
 
 export function terrainIcon(terrain: string): string {

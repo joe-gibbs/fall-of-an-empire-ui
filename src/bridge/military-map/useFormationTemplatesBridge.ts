@@ -58,7 +58,6 @@ export function useFormationTemplateCatalogueBridge(fetchCatalogue = true): GetF
   const live = useBridgeQuery({
     action: 'game.get_formation_template_catalogue',
     payload: fetchCatalogue ? undefined : null,
-    cacheResponse: true,
     map: (data) => {
       formationTemplateCatalogueCache = data;
       return data;
