@@ -24,7 +24,7 @@ import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBo
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import HtmlContent from '../../common/layout/content/HtmlContent';
 import ResourceLink from '../../common/resources/ResourceLink';
-import { formatNumber } from '../../../utils/numberFormat';
+import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { toRootRem } from '../../../utils/cssUnits';
 import './SettlementBuildingsPanel.css';
 
@@ -357,6 +357,7 @@ function builtTooltip(
   onNavigate?: (buildingId: string) => void,
 ): TooltipContent {
   const lines: TooltipLine[] = [];
+  const ruined = b.condition !== undefined && b.condition <= 0;
   if (b.maxLevel !== undefined) {
     const maxLevel = b.maxLevel;
     lines.push({
@@ -382,9 +383,35 @@ function builtTooltip(
     const label = condition >= 80 ? webUIText("Auto.Fix.VarExprTrue.componentssidebarsSettlementBuildingsPanel.253.1") : condition >= 50 ? webUIText("Auto.Fix.VarExprFalseTrue.componentssidebarsSettlementBuildingsPanel.254.1") : condition >= 20 ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsSettlementBuildingsPanel.255.1") : webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsSettlementBuildingsPanel.256.1");
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.261.4'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.257.1", { Value1: n(condition), Value2: label }); }, valueColor: color });
   }
+  if (b.maintenanceGovernanceThreshold !== undefined) {
+    lines.push({ label: webUIText('SettlementBuildings.Maintenance'), isHeader: true });
+    if (!ruined && b.monthlyConditionChange !== undefined) {
+      lines.push({
+        label: webUIText('SettlementBuildings.MonthlyConditionChange'),
+        value: webUIText('SettlementBuildings.ConditionChangePerMonth', {
+          Amount: formatSignedNumber(b.monthlyConditionChange, { maximumFractionDigits: 2 }),
+        }),
+        valueColor: b.monthlyConditionChange > 0
+          ? 'var(--green)'
+          : b.monthlyConditionChange < 0
+            ? 'var(--red)'
+            : 'var(--text-muted)',
+      });
+    }
+    lines.push({
+      label: webUIText('SettlementBuildings.GovernanceMaintenance', {
+        Governance: n(b.maintenanceGovernanceThreshold),
+      }),
+    });
+  }
   lines.push(...queueTooltipLines(queueSummary));
   if (b.nextBuildState) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.265.5'), isHeader: true });
+    lines.push({
+      label: ruined
+        ? webUIText('SettlementBuildings.Rebuild')
+        : webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.265.5'),
+      isHeader: true,
+    });
     if (b.nextLevelPrice !== undefined) {
       lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.267.6'), value: n(b.nextLevelPrice), valueIcon: '/assets/icons/I_Coins.png' });
     }
@@ -766,7 +793,8 @@ function BuiltCard({
   const [confirmingAction, setConfirmingAction] = React.useState<BuildingManagementAction | null>(null);
   const [pendingAction, setPendingAction] = React.useState<BuildingManagementAction | null>(null);
   const panelLockReason = React.useContext(PanelLockContext);
-  const maxed = b.maxLevel !== undefined && b.level >= b.maxLevel;
+  const ruined = b.condition !== undefined && b.condition <= 0;
+  const maxed = !ruined && b.maxLevel !== undefined && b.level >= b.maxLevel;
   const intrinsicLocked = b.nextBuildState !== undefined && b.nextBuildState.state !== 'visible';
   const rawLockReason = queueSummary
     ? undefined
@@ -781,7 +809,9 @@ function BuiltCard({
       : b.condition >= 50 ? 'gold'
       : 'red';
   const showCondition = b.condition !== undefined && b.condition < 80;
-  const levelText = b.maxLevel !== undefined && queuedToLevel !== undefined && queuedToLevel > b.level
+  const levelText = ruined
+    ? webUIText('SettlementBuildings.Ruin')
+    : b.maxLevel !== undefined && queuedToLevel !== undefined && queuedToLevel > b.level
     ? `${n(b.level)} -> ${n(queuedToLevel)} / ${n(b.maxLevel)}`
     : maxed
       ? 'Max'
@@ -1204,6 +1234,9 @@ function QueueItemCard({
         <span className="bld-queue-card-order">{n(order)}</span>
         {item.kind === 'upgrade' && (
           <span className="bld-queue-card-level">{webUIText("Auto.Fix.Expr.componentssidebarsSettlementBuildingsPanel.654.1", { Value1: n(item.toLevel) })}</span>
+        )}
+        {item.kind === 'rebuild' && (
+          <span className="bld-queue-card-level">{webUIText('SettlementBuildings.Rebuild')}</span>
         )}
       </div>
       <div className="bld-queue-card-body">

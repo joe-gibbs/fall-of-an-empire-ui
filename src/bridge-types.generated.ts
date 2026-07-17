@@ -3728,6 +3728,8 @@ export interface SettlementBuiltBuildingEntry {
   chainName: string;
   description: string;
   effectsHtml: string;
+  monthlyConditionChange: number;
+  maintenanceGovernanceThreshold: number;
   condition: number;
   nextLevelPrice: number;
   nextLevelBuildTime: number;

@@ -526,6 +526,10 @@ export interface Building {
   description?: string;
   /** Current structural condition 0-100. <=0 is a Ruin. */
   condition?: number;
+  /** Condition gained or lost during the next ordinary monthly maintenance tick. */
+  monthlyConditionChange?: number;
+  /** Governor Governance required to prevent ordinary condition decay. */
+  maintenanceGovernanceThreshold?: number;
   /** Gold price to upgrade to the next level (0 when at MaxLevel). */
   nextLevelPrice?: number;
   /** Days to upgrade to the next level. */
@@ -599,8 +603,8 @@ export interface ConstructionQueueItem {
   assetKey: string;
   name: string;
   icon?: string;
-  /** 'new' = fresh build; 'upgrade' = level+1 of an existing building. */
-  kind: 'new' | 'upgrade';
+  /** 'new' = fresh build; 'upgrade' = level+1; 'rebuild' = restore a ruin at its current level. */
+  kind: 'new' | 'upgrade' | 'rebuild';
   toLevel: number;
   /** Full cost paid upfront when queued (for display). */
   goldCost: number;

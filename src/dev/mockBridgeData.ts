@@ -1751,6 +1751,8 @@ function settlementBuilding(assetKey: string, name: string, level: number, categ
     description: `A ${name.toLowerCase()} serving the settlement.`,
     effectsHtml: '<div class="building-effect-line bullet"><span class="building-effect-segment tone-positive">Improves local output</span></div>',
     condition: 92,
+    monthlyConditionChange: -0.05,
+    maintenanceGovernanceThreshold: 5,
     nextLevelPrice: 520,
     nextLevelBuildTime: 80,
     upkeep: 12,
