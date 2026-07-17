@@ -379,6 +379,9 @@ export interface Faction {
   strength: number;
   isPlayer: boolean;
   isRebel: boolean;
+  rebelTypeName?: string;
+  rebelGoalName?: string;
+  rebelGoalDescription?: string;
   diplomaticStatus: "ally" | "rival" | "neutral" | "war" | "subject";
   /** Subject subtype, such as province, foederati, protectorate, or subject. */
   subjectSubtype?: string;

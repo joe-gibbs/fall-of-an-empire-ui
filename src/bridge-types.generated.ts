@@ -2244,6 +2244,9 @@ export interface GetFactionDataResponse {
   compliance: number;
   isPlayer: boolean;
   isRebel: boolean;
+  rebelTypeName: string;
+  rebelGoalName: string;
+  rebelGoalDescription: string;
   diplomaticStatus: string;
   subjectType: string;
   subjectSubtype: string;
