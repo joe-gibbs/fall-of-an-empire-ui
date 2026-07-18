@@ -13,7 +13,6 @@ export function clearGameplayBridgeEventCache(): void {
       || key === 'game.loading_screen'
       || key === 'game.get_languages'
       || key === 'game.get_settings'
-      || key === 'game.get_webui_text'
     ) {
       continue;
     }

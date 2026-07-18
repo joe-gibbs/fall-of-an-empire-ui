@@ -1,5 +1,4 @@
 import type { BattlefieldHeightPointDetail, BattlefieldObstacleDetail, BattleFormationAgentState, BattleFormationDetail, BridgeActions, CultureInfo, PersonActivitySegmentEntry, PersonStatModifierEntry, PortraitLayerData, ReligionInfo, ScenarioMapStatDto, ScenarioMapTraitDto, ScenarioMapTreatyDto, WebUIDisplayLine, WebUIRoleTierData } from '../bridge-types.generated.ts';
-import { WEBUI_TEXTS } from '../localization/webui-text.generated.ts';
 import {
   GOVERNOR_MISSION_ICON,
   GOVERNOR_MISSION_SUPPRESS_UNREST_ICON,
@@ -5930,11 +5929,6 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return { completed: true } satisfies BridgeResponse<'game.complete_initial_setup'>;
       case 'game.get_languages':
         return { currentLocale: 'en', languages: [{ code: 'en', name: 'English' }, { code: 'de', name: 'Deutsch' }] } satisfies BridgeResponse<'game.get_languages'>;
-      case 'game.get_webui_text':
-        return {
-          locale: 'en',
-          texts: WEBUI_TEXTS.map(entry => ({ key: entry.key, text: entry.text })),
-        } satisfies BridgeResponse<'game.get_webui_text'>;
       case 'game.list_mods':
         return { mods: [
           { id: 'mock-mod', name: 'Mock Dev Content', version: '1.0', author: 'Local', description: 'Fixture mod entry for browser UI testing.', loadOrder: 0, enabled: true, pakMounted: false, hasScripts: false, canUploadToWorkshop: true },

@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useBridgeQuery } from '../bridge/core/useBridgeQuery';
 import { formatWebUIText, setCurrentWebUIText, WebUITextContext, type WebUITextContextValue } from './WebUITextContext';
 import { getModPoCatalogueVersion, loadRegisteredModPoText, subscribeModPoCatalogues } from './modPoText';
 import { WEBUI_TEXT_SOURCE } from './webui-text.generated.ts';
 
 export function WebUITextProvider({ children }: { children: ReactNode }) {
-  const response = useBridgeQuery({
-    action: 'game.get_webui_text',
-    cacheResponse: true,
-    map: data => data,
-  });
-  const locale = response?.locale ?? 'en';
+  const [localisationVersion, setLocalisationVersion] = useState(0);
+  const localisation = window.webkiln?.localisation;
+  const locale = localisation?.locale ?? 'en';
   const [modTextState, setModTextState] = useState<{ locale: string; texts: Map<string, string> }>(() => ({
     locale: '',
     texts: new Map(),
@@ -20,6 +16,17 @@ export function WebUITextProvider({ children }: { children: ReactNode }) {
   useEffect(() => subscribeModPoCatalogues(() => {
     setModCatalogueVersion(getModPoCatalogueVersion());
   }), []);
+
+  useEffect(() => localisation?.subscribe(() => {
+    setLocalisationVersion(version => version + 1);
+  }), [localisation]);
+
+  useEffect(() => {
+    if (localisation) return undefined;
+    const onRuntimeReady = () => setLocalisationVersion(version => version + 1);
+    window.addEventListener('webkiln:runtime-ready', onRuntimeReady, { once: true });
+    return () => window.removeEventListener('webkiln:runtime-ready', onRuntimeReady);
+  }, [localisation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,9 +48,12 @@ export function WebUITextProvider({ children }: { children: ReactNode }) {
   }, [locale, modCatalogueVersion]);
 
   const textByKey = useMemo(() => {
+    void localisationVersion;
     const map = new Map<string, string>(Object.entries(WEBUI_TEXT_SOURCE));
-    for (const entry of response?.texts ?? []) {
-      map.set(entry.key, entry.text);
+    if (localisation) {
+      for (const [key, source] of Object.entries(WEBUI_TEXT_SOURCE)) {
+        map.set(key, localisation.text(key, undefined, source));
+      }
     }
     if (modTextState.locale === locale) {
       for (const [key, text] of modTextState.texts) {
@@ -51,7 +61,7 @@ export function WebUITextProvider({ children }: { children: ReactNode }) {
       }
     }
     return map;
-  }, [locale, modTextState, response]);
+  }, [locale, localisation, localisationVersion, modTextState]);
 
   const value = useMemo<WebUITextContextValue>(() => ({
     locale,

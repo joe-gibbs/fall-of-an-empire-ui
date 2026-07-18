@@ -4324,16 +4324,6 @@ export interface GetWarningsResponse {
   warnings: WarningEventPayload[];
 }
 
-export interface WebUITextEntry {
-  key: string;
-  text: string;
-}
-
-export interface GetWebUITextResponse {
-  locale: string;
-  texts: WebUITextEntry[];
-}
-
 export interface WorldGlanceFaction {
   id: string;
   debugShortId: number;
@@ -6175,7 +6165,6 @@ export interface BridgeActions {
   'game.get_tutorial_progress': { request: void; response: GetTutorialProgressResponse };
   'game.get_victory_conditions': { request: void; response: GetVictoryConditionsResponse };
   'game.get_warnings': { request: void; response: GetWarningsResponse };
-  'game.get_webui_text': { request: void; response: GetWebUITextResponse };
   'game.get_world_glance_tooltip': { request: GetWorldGlanceTooltipRequest; response: GetWorldGlanceTooltipResponse };
   'game.get_world_glances': { request: void; response: GetWorldGlancesResponse };
   'game.governor_assignment': { request: GovernorAssignmentRequest; response: GovernorAssignmentResponse };
