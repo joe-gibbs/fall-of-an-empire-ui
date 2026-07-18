@@ -34,42 +34,6 @@ import {
 import { applyRuntimeViewportScale, setRuntimeClass, type RuntimeViewportState } from './runtime/runtimeViewport'
 import { applyAppModeCacheReset } from './runtime/appModeCacheReset'
 
-const WORLD_INPUT_BLOCKING_CLASSES = [
-  'sidebar',
-  'sidebar-left',
-  'sidebar-right',
-  'sidebar-content',
-  'topbar-left',
-  'topbar-center',
-  'topbar-actions',
-  'topbar-right',
-  'topbar-portrait-slot',
-  'bottombar-tray',
-  'screen-overlay',
-  'modal-overlay',
-  'settings-modal-overlay',
-  'event-overlay',
-  'erd-overlay',
-  'pinned-dropdown',
-  'vc-dropdown',
-  'warning-icon-strip',
-  'warning-icon-btn',
-  'notification-banner',
-  'advisor-card',
-  'tutorial-progress-shell',
-  'tutorial-spotlight-overlay',
-  'candidate-list-scroll-frame',
-  'chart-unit-picker',
-  'tpl-picker',
-  'mm-root',
-  'load-game-overlay',
-  'mm-encyclopedia-overlay',
-  'mm-achievements-overlay',
-  'fs-root',
-  'tt-bubble',
-  'world-glance',
-];
-
 const GRABBING_TARGET_SELECTOR = [
   '.zoom-pan-canvas--panning',
   '.zoom-pan-canvas--right-dragging',
@@ -123,7 +87,6 @@ function configureWebkilnInput() {
     return;
   }
   input.configure({
-    blockingSelector: WORLD_INPUT_BLOCKING_CLASSES.map(className => `.${className}`).join(','),
     cursorSelectors: {
       blocked: BLOCKED_TARGET_SELECTOR,
       help: HELP_TARGET_SELECTOR,

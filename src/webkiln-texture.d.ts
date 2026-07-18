@@ -17,7 +17,6 @@ declare global {
       };
       input?: {
         configure(configuration: {
-          blockingSelector?: string;
           cursorSelectors?: Partial<Record<'pointer' | 'text' | 'grab' | 'grabbing' | 'blocked' | 'crosshair' | 'help', string>>;
         }): void;
         refresh(): void;
