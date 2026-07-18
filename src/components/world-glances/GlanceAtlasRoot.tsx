@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { memo, useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
 import { useUIScale } from '../../bridge/core/useUIScale';
 import { mapNotificationShown, onNotificationAnchorsFrame } from '../../bridge/app/useNotificationsBridge';
@@ -9,6 +9,8 @@ import {
   readWorldGlanceFrameEntry,
   useWorldGlancesBridge,
   worldGlanceFrameEntryCount,
+  handleWorldGlanceHover,
+  handleWorldGlanceInput,
   type WorldGlanceFrameSection,
 } from '../../bridge/app/useWorldGlancesBridge';
 import {
@@ -35,9 +37,8 @@ import './WorldGlances.css';
 import '../notifications/NotificationStack.css';
 import './GlanceAtlas.css';
 
-// Consumer of the world-anchor host (src/runtime/worldAnchorHost.tsx): renders one plate per
-// catalogued glance entity / active notification with data-world-anchor attributes. The host
-// owns all geometry (packing, atlas regions, ghosting, layout reports); this component owns
+// Renders one plate per catalogued glance entity / active notification with Webkiln anchor
+// attributes. Webkiln owns atlas packing and paint-safe layout hand-off; this component owns
 // CONTENT only — which plates exist, their detail class, selection/hover styling.
 
 // Notification plates are created only after their placement frame arrives. They therefore
@@ -174,12 +175,12 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   const garrisonIndex = militaryEntry?.garrisoned ? militaryEntry.garrisonIndex ?? 0 : 0;
   const reserveSize = reserveSizeForSection(section, remPx, settlementBleedRem, garrisonIndex);
   const anchorAttributes = {
-    'data-world-anchor': anchorKey,
-    'data-world-anchor-point': anchorPointFor(section, detail, remPx, settlementBleedRem),
-    'data-world-anchor-raster-scale': rasterScale,
-    ...(reserveSize ? { 'data-world-anchor-reserve-size': reserveSize } : {}),
+    'data-webkiln-anchor': anchorKey,
+    'data-webkiln-anchor-point': anchorPointFor(section, detail, remPx, settlementBleedRem),
+    'data-webkiln-anchor-raster-scale': rasterScale,
+    ...(reserveSize ? { 'data-webkiln-anchor-reserve-size': reserveSize } : {}),
     ...(section === 'notification'
-      ? { 'data-world-anchor-priority': ACTIVE_NOTIFICATION_ATLAS_PRIORITY }
+      ? { 'data-webkiln-anchor-priority': ACTIVE_NOTIFICATION_ATLAS_PRIORITY }
       : {}),
   };
   const style = {
@@ -193,6 +194,16 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
     '--convoy-atlas-bottom-bleed': `${CONVOY_ATLAS_BOTTOM_BLEED_REM}rem`,
   } as CSSProperties;
   const setNode = (node: HTMLDivElement | null) => plateRef(anchorKey, node);
+  const interactiveProps = section === 'notification' ? {} : {
+    onPointerEnter: () => handleWorldGlanceHover(section, id, true),
+    onPointerLeave: () => handleWorldGlanceHover(section, id, false),
+    onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0 && event.button !== 2) return;
+      event.preventDefault();
+      handleWorldGlanceInput(section, id, event.button === 2 ? 'right' : 'left', event.shiftKey);
+    },
+    onContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => event.preventDefault(),
+  };
 
   if (section === 'notification') {
     return (
@@ -243,8 +254,8 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   const wrapperIsHitTarget = section !== 'army' && section !== 'navy';
 
   return (
-    <div ref={setNode} className={classes.join(' ')} style={style} {...anchorAttributes}>
-      <div className="glance-tip world-glance-tip" data-world-anchor-hit-target={wrapperIsHitTarget || undefined}>{content}</div>
+    <div ref={setNode} className={classes.join(' ')} style={style} {...anchorAttributes} {...interactiveProps}>
+      <div className="glance-tip world-glance-tip" data-webkiln-anchor-hit={wrapperIsHitTarget || undefined}>{content}</div>
     </div>
   );
 });

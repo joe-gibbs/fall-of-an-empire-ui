@@ -146,11 +146,11 @@ function ModWorldGlanceNode({ registration, entry, atlas, glanceScale }: {
       <div
         className="mod-world-glance mod-world-glance--atlas glance-atlas-plate"
         style={style}
-        data-world-anchor={entry.anchorKey}
-        data-world-anchor-point={anchorPoint}
-        data-world-anchor-raster-scale={rasterScale}
-        data-world-anchor-priority={entry.atlasPriority}
-        data-world-anchor-demand={entry.opacity > 0.05 ? 'visible' : 'hidden'}
+        data-webkiln-anchor={entry.anchorKey}
+        data-webkiln-anchor-point={anchorPoint}
+        data-webkiln-anchor-raster-scale={rasterScale}
+        data-webkiln-anchor-priority={entry.atlasPriority}
+        data-webkiln-anchor-demand={entry.opacity > 0.05 ? 'visible' : 'hidden'}
       >
         {content}
       </div>

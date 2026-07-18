@@ -247,7 +247,7 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
       <MilitaryTooltip data={data} isNavy={isNavy}>
         <div
           className={`glance glance--military-garrison${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
-          data-world-anchor-hit-target
+          data-webkiln-anchor-hit
           style={{
             '--faction-colour': data.faction.colour,
             '--relation-label-bg': relationLabelBackgroundColour(data.faction.relation),
@@ -271,7 +271,7 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
     <MilitaryTooltip data={data} isNavy={isNavy}>
       <div
         className={`glance glance--military${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
-        data-world-anchor-hit-target
+        data-webkiln-anchor-hit
         style={{
           '--faction-colour': data.faction.colour,
           '--relation-bg': relationBackgroundColour(data.faction.relation),

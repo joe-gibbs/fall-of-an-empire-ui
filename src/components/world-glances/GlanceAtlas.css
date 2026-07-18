@@ -9,29 +9,6 @@
   background: transparent;
 }
 
-.world-anchor-ghost-layer,
-.world-anchor-live-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.world-anchor-paint-fence {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1px;
-  height: 1px;
-  background: rgb(0, 0, 0);
-  pointer-events: none;
-}
-
-/* Ghosts sit under live elements; both layers span the whole atlas and their children are
-   absolutely positioned by the world-anchor host. */
-.world-anchor-ghost-layer > * {
-  position: absolute;
-}
-
 /* Plates reuse the DOM overlay's node classes for styling but are pinned visible at the cell
    origin; the overlay drives these properties imperatively so the shared CSS leaves them off. */
 .glance-atlas-plate {
@@ -43,7 +20,7 @@
   visibility: visible !important;
   transform: scale(var(--glance-atlas-raster-scale, 1)) !important;
   transform-origin: left top;
-  pointer-events: none !important;
+  pointer-events: auto !important;
 }
 
 /* The native compositor owns temporal hand-off between detail states. Browser transitions can
