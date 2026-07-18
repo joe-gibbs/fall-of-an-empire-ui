@@ -4226,6 +4226,8 @@ function formationResourceCost(name: string, amount: number) {
   };
 }
 
+let mockInitialSetupCompleted = false;
+
 function formationUnit(id: string, name: string, type: string, category: string, count: number, maxStrength: number, includesCore = false, culture = rephsianCulture) {
   return {
     id,
@@ -5921,6 +5923,11 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return settingsResponse();
       case 'game.apply_settings':
         return { applied: true } satisfies BridgeResponse<'game.apply_settings'>;
+      case 'game.get_initial_setup':
+        return { completed: mockInitialSetupCompleted, forceOpen: false } satisfies BridgeResponse<'game.get_initial_setup'>;
+      case 'game.complete_initial_setup':
+        mockInitialSetupCompleted = true;
+        return { completed: true } satisfies BridgeResponse<'game.complete_initial_setup'>;
       case 'game.get_languages':
         return { currentLocale: 'en', languages: [{ code: 'en', name: 'English' }, { code: 'de', name: 'Deutsch' }] } satisfies BridgeResponse<'game.get_languages'>;
       case 'game.get_webui_text':

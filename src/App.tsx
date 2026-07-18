@@ -11,6 +11,7 @@ import { preloadWebUIAssets } from './preload/assets';
 import { acknowledgeBridgeFailure, getRuntimeEngine } from './bridge/core/runtimeEngine';
 import GameUIRoot from './components/app-shell/GameUIRoot';
 import ResourceDetailsProvider from './context/ResourceDetailsProvider';
+import InitialSetupModal from './components/initial-setup/InitialSetupModal';
 import './App.css';
 
 
@@ -85,6 +86,7 @@ function App() {
       <WebUITextProvider>
         <div className="game-cursor-surface">
           {content}
+          <InitialSetupModal autoOpen={appMode === 'mainmenu'} />
           <LoadingScreenOverlay />
         </div>
       </WebUITextProvider>

@@ -529,6 +529,10 @@ export interface ChooseEventOptionResponse {
   success: boolean;
 }
 
+export interface CompleteInitialSetupResponse {
+  completed: boolean;
+}
+
 export interface ContinueGameResponse {
   started: boolean;
   slotName: string;
@@ -2530,6 +2534,11 @@ export interface GetIncomeBreakdownResponse {
   settlementTrades: IncomeEntry[];
   armies: CommandUpkeepEntry[];
   vassals: IncomeEntry[];
+}
+
+export interface GetInitialSetupResponse {
+  completed: boolean;
+  forceOpen: boolean;
 }
 
 export interface LanguageEntry {
@@ -6078,6 +6087,7 @@ export interface BridgeActions {
   'game.cancel_spy_interaction': { request: CancelSpyInteractionRequest; response: CancelSpyInteractionResponse };
   'game.choose_event_option': { request: ChooseEventOptionRequest; response: ChooseEventOptionResponse };
   'game.clear_military_selection': { request: void; response: void };
+  'game.complete_initial_setup': { request: void; response: CompleteInitialSetupResponse };
   'game.continue': { request: void; response: ContinueGameResponse };
   'game.create_province_from_candidate': { request: CreateProvinceFromCandidateRequest; response: void };
   'game.delete_formation_template': { request: DeleteFormationTemplateRequest; response: DeleteFormationTemplateResponse };
@@ -6129,6 +6139,7 @@ export interface BridgeActions {
   'game.get_geographic_summary': { request: GetGeographicSummaryRequest; response: GetGeographicSummaryResponse };
   'game.get_heir_candidates': { request: GetHeirCandidatesRequest; response: GetHeirCandidatesResponse };
   'game.get_income_breakdown': { request: void; response: GetIncomeBreakdownResponse };
+  'game.get_initial_setup': { request: void; response: GetInitialSetupResponse };
   'game.get_languages': { request: void; response: GetLanguagesResponse };
   'game.get_ledger_overview': { request: GetLedgerOverviewRequest; response: GetLedgerOverviewResponse };
   'game.get_map_mode_filters': { request: void; response: GetMapModeFiltersResponse };

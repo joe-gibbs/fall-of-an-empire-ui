@@ -1,0 +1,281 @@
+@keyframes initial-setup-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes initial-setup-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes initial-setup-panel-in {
+  from { opacity: 0; transform: scale(0.97) translateY(0.8rem); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes initial-setup-panel-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.98) translateY(0.5rem); }
+}
+
+.initial-setup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 820;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: rgba(6, 9, 13, 0.82);
+  animation: initial-setup-overlay-in 220ms var(--ease-snap) both;
+}
+
+.initial-setup-overlay--closing {
+  pointer-events: none;
+  animation-name: initial-setup-overlay-out;
+}
+
+.initial-setup-modal {
+  display: flex;
+  width: min(78rem, 96vw);
+  height: auto;
+  max-height: 92vh;
+  padding: 0;
+  flex-direction: column;
+  overflow: hidden;
+  animation: initial-setup-panel-in 280ms var(--ease-snap) both;
+}
+
+.initial-setup-modal--closing {
+  animation-name: initial-setup-panel-out;
+  animation-duration: 220ms;
+}
+
+.initial-setup__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.35rem 1.65rem 1.05rem;
+  flex-shrink: 0;
+  background-image: url('/assets/baked/panel-charcoal.png');
+  background-position: center;
+  background-repeat: repeat;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--gold-dark);
+}
+
+.initial-setup__kicker {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.initial-setup__title {
+  margin: 0;
+  font-family: var(--font-header);
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--text-header);
+  letter-spacing: 0.035em;
+}
+
+.initial-setup__intro {
+  max-width: 70rem;
+  margin: 0.4rem 0 0;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.initial-setup__body {
+  display: flex;
+  align-items: flex-start;
+  flex: 0 1 auto;
+  min-height: 0;
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+}
+
+.initial-setup__models {
+  min-width: 0;
+  flex: 1 1 auto;
+  margin-right: 1rem;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-position: center;
+  background-repeat: repeat;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.077rem;
+}
+
+.initial-setup__models .settings-panel {
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.initial-setup__models .settings-event-cards {
+  padding: 0.45rem;
+}
+
+.initial-setup__models .settings-event-card {
+  min-height: 8.75rem;
+  margin: 0.3rem;
+}
+
+.settings-event-card__recommended {
+  display: inline-block;
+  margin-left: 0.55rem;
+  padding: 0.12rem 0.38rem;
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background-image: url('/assets/baked/button-burgundy.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: var(--gold-dark);
+  vertical-align: 0.1rem;
+}
+
+.initial-setup__side {
+  display: flex;
+  width: 23.5rem;
+  flex: 0 0 23.5rem;
+  flex-direction: column;
+}
+
+.initial-setup__preferences h2 {
+  margin: 0;
+  font-family: var(--font-header);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-header);
+  letter-spacing: 0.025em;
+}
+
+.initial-setup__preferences {
+  padding: 1rem;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-position: center;
+  background-repeat: repeat;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.077rem;
+}
+
+.initial-setup__preferences h2 {
+  margin-bottom: 0.35rem;
+}
+
+.initial-setup__preferences .settings-row {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.initial-setup__preferences .settings-row__text {
+  flex-basis: 8.5rem;
+}
+
+.initial-setup__preferences .settings-choice-group {
+  max-width: 12rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.initial-setup__preferences .settings-row--choice {
+  align-items: stretch;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+}
+
+.initial-setup__preferences .settings-row--choice .settings-row__text {
+  flex: 0 0 auto;
+}
+
+.initial-setup__preferences .settings-row--choice > * + * {
+  margin-top: 0.5rem;
+  margin-left: 0;
+}
+
+.initial-setup__preferences .settings-dropdown-select,
+.initial-setup__preferences .settings-dropdown {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.initial-setup__autosave-popup {
+  z-index: 900;
+}
+
+.initial-setup__footer {
+  display: flex;
+  min-height: 4.6rem;
+  align-items: center;
+  padding: 0.85rem 1.35rem;
+  flex-shrink: 0;
+  background-image: url('/assets/baked/panel-charcoal.png');
+  background-position: center;
+  background-repeat: repeat;
+  border-top-width: 0.077rem;
+  border-top-style: solid;
+  border-top-color: var(--gold-dark);
+}
+
+.initial-setup__footer-copy,
+.initial-setup__error {
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.initial-setup__footer-copy {
+  max-width: 30rem;
+}
+
+.initial-setup__error {
+  margin-left: 1rem;
+  color: #e08060;
+}
+
+.initial-setup__actions {
+  display: flex;
+  margin-left: auto;
+  align-items: center;
+}
+
+.initial-setup__actions > * + * {
+  margin-left: 0.75rem;
+}
+
+@media (max-width: 70rem) {
+  .initial-setup__body {
+    display: block;
+  }
+
+  .initial-setup__models {
+    margin-right: 0;
+  }
+
+  .initial-setup__side {
+    width: auto;
+    margin-top: 0.9rem;
+  }
+}

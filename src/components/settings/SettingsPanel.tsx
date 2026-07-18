@@ -13,6 +13,7 @@ import { useAnimatedPresence } from '../../hooks/useAnimatedPresence';
 import { useEscapeStackEntry } from '../../context/EscapeStack';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { WebkilnAssetPath } from '../../utils/assets';
+import { applyGameplayCssVariables } from '../../utils/gameplaySettingsCss';
 import type {
   ApplySettingsRequest,
   ControlBindingDTO,
@@ -187,18 +188,6 @@ function applySliderMagnet(value: number, min: number, max: number): number {
   return value;
 }
 
-function applyGameplayCssVariables(gameplay: ApplyPayload['gameplay']) {
-  if (Number.isFinite(gameplay.uiScale) && gameplay.uiScale > 0) {
-    document.documentElement.style.setProperty('--ui-scale', String(gameplay.uiScale));
-  }
-  if (Number.isFinite(gameplay.uiScrollSpeed) && gameplay.uiScrollSpeed > 0) {
-    document.documentElement.style.setProperty('--ui-scroll-speed', String(gameplay.uiScrollSpeed));
-  }
-  if (Number.isFinite(gameplay.tooltipDelaySeconds) && gameplay.tooltipDelaySeconds >= 0) {
-    document.documentElement.style.setProperty('--tooltip-delay-ms', String(Math.round(gameplay.tooltipDelaySeconds * 1000)));
-  }
-}
-
 const toPercent = (value: number): number => Math.round(value * 100);
 const fromPercent = (value: number): number => value / 100;
 const formatMultiplier = (value: number): string => `${value.toFixed(value < 1 ? 2 : 1)}x`;
@@ -310,7 +299,7 @@ const SettingsLabel: React.FC<{
   );
 };
 
-const Toggle: React.FC<{
+export const Toggle: React.FC<{
   checked: boolean;
   onChange: () => void;
   label: string;
@@ -329,7 +318,7 @@ const Toggle: React.FC<{
   </div>
 );
 
-const Choice: React.FC<{ label: string; desc?: string; tooltip?: TooltipContent; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void }> = ({ label, desc, tooltip, value, options, onChange }) => (
+export const Choice: React.FC<{ label: string; desc?: string; tooltip?: TooltipContent; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void }> = ({ label, desc, tooltip, value, options, onChange }) => (
   <div className="settings-row settings-row--choice">
     <div className="settings-row__text">
       <SettingsLabel label={label} tooltip={tooltip} />
@@ -345,7 +334,7 @@ const Choice: React.FC<{ label: string; desc?: string; tooltip?: TooltipContent;
   </div>
 );
 
-const Dropdown: React.FC<{ label: string; desc?: string; tooltip?: TooltipContent; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void }> = ({ label, desc, tooltip, value, options, onChange }) => {
+export const Dropdown: React.FC<{ label: string; desc?: string; tooltip?: TooltipContent; value: string; options: { value: string; label: string }[]; popupClassName?: string; onChange: (v: string) => void }> = ({ label, desc, tooltip, value, options, popupClassName, onChange }) => {
   const hasCurrentValue = options.some(o => o.value === value);
   const mergedOptions = hasCurrentValue ? options : [{ value, label: value }, ...options];
 
@@ -361,7 +350,7 @@ const Dropdown: React.FC<{ label: string; desc?: string; tooltip?: TooltipConten
         triggerClassName="settings-dropdown"
         textClassName="settings-dropdown__value"
         chevronClassName="settings-dropdown__chevron"
-        menuClassName="settings-dropdown-popup"
+        menuClassName={`settings-dropdown-popup${popupClassName ? ` ${popupClassName}` : ''}`}
         menuClosingClassName="settings-dropdown-popup--closing"
         optionClassName="settings-dropdown-popup__item"
         optionActiveClassName="settings-dropdown-popup__item--active"
@@ -383,7 +372,7 @@ const Dropdown: React.FC<{ label: string; desc?: string; tooltip?: TooltipConten
   );
 };
 
-const SettingsSlider: React.FC<{ label: string; desc?: string; tooltip?: TooltipContent; value: number; min?: number; max?: number; suffix?: string; display?: string; onChange: (v: number) => void }> = ({ label, desc, tooltip, value, min = 0, max = 100, suffix = '%', display, onChange }) => {
+export const SettingsSlider: React.FC<{ label: string; desc?: string; tooltip?: TooltipContent; value: number; min?: number; max?: number; suffix?: string; display?: string; onChange: (v: number) => void }> = ({ label, desc, tooltip, value, min = 0, max = 100, suffix = '%', display, onChange }) => {
   const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
   const thumbTransform = pct <= 0 ? 'translateX(0)' : pct >= 100 ? 'translateX(-100%)' : 'translateX(-50%)';
   const applyFromClientX = (clientX: number, track: HTMLDivElement) => {
@@ -802,14 +791,25 @@ const ControlsTab: React.FC<{
 
 /* ÄÄ Events Tab ÄÄ */
 
-const EventsTab: React.FC<{
+export const EventModelSelection: React.FC<{
   llmProvider: string;
   localLlmModel: string;
   eventFrequency: number;
   models: LlmModelDTO[];
   hardware: { videoMemoryMB: number; systemMemoryMB: number };
   setGameplay: (patch: { llmProvider?: string; localLlmModel?: string; eventFrequency?: number }) => void;
-}> = ({ llmProvider, localLlmModel, eventFrequency, models, hardware, setGameplay }) => {
+  showEventFrequency?: boolean;
+  recommendedModelFilename?: string;
+}> = ({
+  llmProvider,
+  localLlmModel,
+  eventFrequency,
+  models,
+  hardware,
+  setGameplay,
+  showEventFrequency = true,
+  recommendedModelFilename,
+}) => {
   const formatMB = (mb: number): string => {
     if (mb <= 0) return webUIText('Settings.Unknown');
     if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
@@ -912,7 +912,12 @@ const EventsTab: React.FC<{
                 {locked && !canDownload && <img src={eventIconPath('/assets/icons/I_Locked.png')} alt="" className="settings-event-card__lock" draggable={false} />}
               </span>
               <span className="settings-event-card__body">
-                <span className="settings-event-card__title">{model.title || model.filename}</span>
+                <span className="settings-event-card__title">
+                  {model.title || model.filename}
+                  {model.filename === recommendedModelFilename && (
+                    <span className="settings-event-card__recommended">{webUIText('InitialSetup.Recommended')}</span>
+                  )}
+                </span>
                 {model.description && <span className="settings-event-card__desc">{model.description}</span>}
                 {(model.vramRequirement || model.vramRequirementMB > 0) && (
                   <span className="settings-event-card__req">
@@ -948,15 +953,17 @@ const EventsTab: React.FC<{
           );
         })}
       </div>
-      <SettingsSlider
-        label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.520.10')}
-        desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.521.3')}
-        value={toPercent(eventFrequency)}
-        min={25}
-        max={1000}
-        display={formatMultiplier(eventFrequency)}
-        onChange={v => setGameplay({ eventFrequency: fromPercent(v) })}
-      />
+      {showEventFrequency && (
+        <SettingsSlider
+          label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.520.10')}
+          desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.521.3')}
+          value={toPercent(eventFrequency)}
+          min={25}
+          max={1000}
+          display={formatMultiplier(eventFrequency)}
+          onChange={v => setGameplay({ eventFrequency: fromPercent(v) })}
+        />
+      )}
     </div>
   );
 };
@@ -1394,7 +1401,7 @@ const SettingsPanel: React.FC = () => {
         )}
 
         {settingsTab === 'events' && (
-          <EventsTab
+          <EventModelSelection
             llmProvider={gameplay.llmProvider}
             localLlmModel={gameplay.localLlmModel}
             eventFrequency={gameplay.eventFrequency}
