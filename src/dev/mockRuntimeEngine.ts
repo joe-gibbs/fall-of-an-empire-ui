@@ -453,10 +453,6 @@ export function installMockruntimeEngine(): void {
         return undefined;
       }
 
-      if (name === 'StrategySetWebUIMouseState') {
-        return undefined;
-      }
-
       if (name === 'StrategyPlayUISound') {
         return undefined;
       }

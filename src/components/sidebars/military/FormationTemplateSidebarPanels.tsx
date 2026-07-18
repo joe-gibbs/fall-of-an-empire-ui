@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import CloseButton from '../../common/buttons/CloseButton';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
@@ -7,7 +7,6 @@ import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import ResourceLink from '../../common/resources/ResourceLink';
-import { acknowledgeBridgeFailure, getRuntimeEngine } from '../../../bridge/core/runtimeEngine';
 import type {
   FormationTemplateAssignedForce,
   FormationTemplateUnitEntry,
@@ -290,22 +289,6 @@ export function Picker({
       : queriedClasses.filter(group => group.type === effectiveActiveType)
   ), [effectiveActiveType, queriedClasses]);
   const visibleCount = filteredClasses.reduce((sum, group) => sum + group.units.length, 0);
-
-  useEffect(() => {
-    const engine = getRuntimeEngine();
-    if (engine) {
-      void Promise.resolve(engine.call('StrategySetWebUIMouseState', true, 'default'))
-        .catch(error => acknowledgeBridgeFailure(error, 'StrategySetWebUIMouseState'));
-    }
-
-    return () => {
-      const currentEngine = getRuntimeEngine();
-      if (currentEngine) {
-        void Promise.resolve(currentEngine.call('StrategySetWebUIMouseState', false, 'default'))
-          .catch(error => acknowledgeBridgeFailure(error, 'StrategySetWebUIMouseState'));
-      }
-    };
-  }, []);
 
   return createPortal(
     <div

@@ -16,7 +16,7 @@ import {
   saveFormationTemplateBridge,
   useFormationTemplateCatalogueBridge,
 } from '../../../bridge/military-map/useFormationTemplatesBridge';
-import { acknowledgeBridgeFailure, getRuntimeEngine } from '../../../bridge/core/runtimeEngine';
+import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import type {
   FormationTemplateAssignedForce,
   FormationTemplateEntry,
@@ -351,22 +351,6 @@ function TemplateUnitSelectorModal({
     onClose: requestClose,
     allowFromInput: true,
   });
-
-  useEffect(() => {
-    const engine = getRuntimeEngine();
-    if (engine) {
-      void Promise.resolve(engine.call('StrategySetWebUIMouseState', true, 'default'))
-        .catch(error => acknowledgeBridgeFailure(error, 'StrategySetWebUIMouseState'));
-    }
-
-    return () => {
-      const currentEngine = getRuntimeEngine();
-      if (currentEngine) {
-        void Promise.resolve(currentEngine.call('StrategySetWebUIMouseState', false, 'default'))
-          .catch(error => acknowledgeBridgeFailure(error, 'StrategySetWebUIMouseState'));
-      }
-    };
-  }, []);
 
   const typeOptions = useMemo(() => catalogueFilterOptions(
     units,

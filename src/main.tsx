@@ -70,17 +70,6 @@ const WORLD_INPUT_BLOCKING_CLASSES = [
   'world-glance',
 ];
 
-type NativeCursorKind =
-  | 'default'
-  | 'pointer'
-  | 'text'
-  | 'grab'
-  | 'grabbing'
-  | 'blocked'
-  | 'crosshair'
-  | 'help'
-  | 'gameplay';
-
 const GRABBING_TARGET_SELECTOR = [
   '.zoom-pan-canvas--panning',
   '.zoom-pan-canvas--right-dragging',
@@ -127,97 +116,22 @@ const POINTER_TARGET_SELECTOR = [
   '.speed-btn',
 ].join(',');
 
-let lastMouseBlocksWorldInput: boolean | null = null;
-let lastMouseCursorKind: NativeCursorKind | null = null;
-let nativeCursorMouseDown = false;
-
-function hasClassInAncestry(element: Element | null, classNames: string[]): boolean {
-  let current = element;
-  while (current) {
-    for (const className of classNames) {
-      if (current.classList.contains(className)) return true;
-    }
-    current = current.parentElement;
-  }
-  return false;
-}
-
-function isDisabled(element: Element): boolean {
-  if (element.getAttribute('aria-disabled') === 'true') return true;
-  if ('disabled' in element && Boolean((element as HTMLButtonElement).disabled)) return true;
-  return false;
-}
-
-function hasDisabledCursorTarget(element: Element): boolean {
-  let current: Element | null = element;
-  while (current) {
-    if (isDisabled(current)) return true;
-    current = current.parentElement;
-  }
-  return false;
-}
-
-function webUICursorKind(element: Element | null): NativeCursorKind {
-  if (!element) return 'default';
-  if (element.closest('.world-glance')) return 'gameplay';
-  if (element.closest(BLOCKED_TARGET_SELECTOR) || hasDisabledCursorTarget(element)) return 'blocked';
-  if (element.closest(HELP_TARGET_SELECTOR)) return 'help';
-  if (element.closest(CROSSHAIR_TARGET_SELECTOR)) return 'crosshair';
-  if (element.closest(GRABBING_TARGET_SELECTOR)) return 'grabbing';
-  if (element.closest(GRAB_TARGET_SELECTOR)) return nativeCursorMouseDown ? 'grabbing' : 'grab';
-
-  let current: Element | null = element;
-  while (current) {
-    const tagName = current.tagName.toLowerCase();
-    if (tagName === 'input' || tagName === 'textarea') {
-      return 'text';
-    }
-    current = current.parentElement;
-  }
-
-  if (element.closest(POINTER_TARGET_SELECTOR)) return 'pointer';
-  return 'default';
-}
-
-function syncWebUIMouseState(target: EventTarget | null) {
-  const element = target instanceof Element ? target : null;
-  const blocksWorldInput = hasClassInAncestry(element, WORLD_INPUT_BLOCKING_CLASSES);
-  const cursorKind = webUICursorKind(element);
-
-  if (
-    blocksWorldInput === lastMouseBlocksWorldInput
-    && cursorKind === lastMouseCursorKind
-  ) {
+function configureWebkilnInput() {
+  const input = window.webkiln?.input;
+  if (!input) {
+    window.addEventListener('webkiln:runtime-ready', configureWebkilnInput, { once: true });
     return;
   }
-
-  lastMouseBlocksWorldInput = blocksWorldInput;
-  lastMouseCursorKind = cursorKind;
-
-  const engine = getRuntimeEngine();
-  if (!engine) return;
-  void Promise.resolve(engine.call('StrategySetWebUIMouseState', blocksWorldInput, cursorKind))
-    .catch(error => acknowledgeBridgeFailure(error, 'StrategySetWebUIMouseState'));
-}
-
-function bindMouseStateBridge() {
-  document.addEventListener('mouseover', (event) => syncWebUIMouseState(event.target), true);
-  document.addEventListener('mousemove', (event) => syncWebUIMouseState(event.target), true);
-  document.addEventListener('mousedown', (event) => {
-    nativeCursorMouseDown = true;
-    syncWebUIMouseState(event.target);
-  }, true);
-  document.addEventListener('mouseup', (event) => {
-    nativeCursorMouseDown = false;
-    syncWebUIMouseState(event.target);
-  }, true);
-  document.addEventListener('mouseleave', () => {
-    nativeCursorMouseDown = false;
-    syncWebUIMouseState(null);
-  }, true);
-  window.addEventListener('blur', () => {
-    nativeCursorMouseDown = false;
-    syncWebUIMouseState(null);
+  input.configure({
+    blockingSelector: WORLD_INPUT_BLOCKING_CLASSES.map(className => `.${className}`).join(','),
+    cursorSelectors: {
+      blocked: BLOCKED_TARGET_SELECTOR,
+      help: HELP_TARGET_SELECTOR,
+      crosshair: CROSSHAIR_TARGET_SELECTOR,
+      grabbing: GRABBING_TARGET_SELECTOR,
+      grab: GRAB_TARGET_SELECTOR,
+      pointer: POINTER_TARGET_SELECTOR,
+    },
   });
 }
 
@@ -411,19 +325,6 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     recordUIPerfBridgeEvent('game.notification_anchors_frame', startedAtMs, Date.now());
   });
 
-  engine.on('StrategyWorldAnchorLayoutKeys', (keys) => {
-    dispatchBridgeEvent('ui.world_anchor_layout_keys', {
-      keys: Array.isArray(keys) ? keys : [],
-    });
-  });
-
-  engine.on('StrategyWorldAnchorProtectedLayout', (revision) => {
-    if (typeof revision !== 'number' || !Number.isFinite(revision)) return;
-    window.dispatchEvent(new CustomEvent('foae:world-anchor-protected-layout', {
-      detail: { revision },
-    }));
-  });
-
   if (announceScriptingReady) {
     void Promise.resolve(engine.call('ScriptingReady'))
       .catch(error => acknowledgeBridgeFailure(error, 'ScriptingReady'));
@@ -474,8 +375,8 @@ async function bootstrap() {
 
   bindRuntimeViewportScaleEvents();
 
-  // The engine enables this only after the native atlas has a paint-confirmed layout. React then
-  // replaces the browser-positioned glance tree with the native input path.
+  // The engine enables this after Webkiln has a paint-confirmed atlas layout. React then hides
+  // the browser-positioned duplicate glance tree.
   window.addEventListener('bridge:ui.native_glance_composite', (event) => {
     const enabled = Boolean((event as CustomEvent<{ enabled?: boolean }>).detail?.enabled);
     document.documentElement.classList.toggle('native-glance-composite', enabled);
@@ -488,7 +389,7 @@ async function bootstrap() {
       if (bindBridgeEvents()) window.clearInterval(retryId);
     }, 50);
   }
-  bindMouseStateBridge();
+  configureWebkilnInput();
   installImageAutosize();
   await modsReady;
 
@@ -501,8 +402,8 @@ async function bootstrap() {
 
 // The world-anchor view boots the same bundle in a minimal mode: it binds engine events (the
 // snapshot and per-frame glance payloads arrive as events), renders anchored elements for the
-// engine compositor to sample (any element with data-world-anchor — see
-// src/runtime/worldAnchorHost.tsx), and announces readiness through its own bridge action —
+// Webkiln anchor compositor to sample (any element with data-webkiln-anchor), and announces
+// readiness through its own bridge action —
 // never ScriptingReady, which gates the main view.
 async function bootstrapWorldAnchors() {
   bindRuntimeViewportScaleEvents();
