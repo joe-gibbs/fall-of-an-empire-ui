@@ -432,39 +432,39 @@ function mockDebugShortId(id: string): number {
 const MALE_PORTRAIT_1 = '/assets/portraits/male_001.png';
 const MALE_PORTRAIT_2 = '/assets/portraits/male_002.png';
 const FEMALE_PORTRAIT_1 = '/assets/portraits/female_001.png';
-const REPHSIAN_PORTRAIT_LAYER_ROOT = '/assets/portraits/layers/RephsianPhenotypeDatabase';
-const IMPRISONED_BACKGROUND = '/assets/portraits/layers/T_ImprisonedBackground.png';
+const PORTRAIT_BACKGROUND_ROOT = '/assets/portraits/backgrounds';
+const IMPRISONED_BACKGROUND = `${PORTRAIT_BACKGROUND_ROOT}/RephsianBackground4.png`;
 
 const MOCK_LAYERED_PORTRAITS: Record<string, PortraitLayerData> = {
   [MALE_PORTRAIT_1]: {
-    background: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/backgrounds/T_RephsianFactionLeaderBackground.png`,
-    backHeadgear: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/headgear/T_RephsianCrown_Background.png`,
-    portrait: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/male/char_001/40/T_RephsianPhenotypeDatabase_Male_char_001_Age40.png`,
+    background: `${PORTRAIT_BACKGROUND_ROOT}/T_RephsianFactionLeaderBackground.png`,
+    backHeadgear: '',
+    portrait: MALE_PORTRAIT_1,
     normalMap: '',
     faceMask: '',
-    frontHeadgear: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/headgear/T_RephsianCrown_Foreground.png`,
+    frontHeadgear: '',
   },
   [MALE_PORTRAIT_2]: {
-    background: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/backgrounds/RephsianArmyBackground1.png`,
-    backHeadgear: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/headgear/T_HelmetBackgroundpng.png`,
-    portrait: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/male/char_002/20/T_RephsianPhenotypeDatabase_Male_char_002_Age20.png`,
+    background: `${PORTRAIT_BACKGROUND_ROOT}/RephsianArmyBackground1.png`,
+    backHeadgear: '',
+    portrait: MALE_PORTRAIT_2,
     normalMap: '',
-    faceMask: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/headgear/T_HelmetMask.png`,
-    frontHeadgear: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/headgear/T_HelmetForeground.png`,
+    faceMask: '',
+    frontHeadgear: '',
   },
   [FEMALE_PORTRAIT_1]: {
-    background: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/backgrounds/RephsianBackground3.png`,
-    backHeadgear: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/headgear/T_RephsianFactionLeaderConsortBackground.png`,
-    portrait: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/female/char_001/40/T_RephsianPhenotypeDatabase_Female_char_001_Age40.png`,
+    background: `${PORTRAIT_BACKGROUND_ROOT}/RephsianBackground3.png`,
+    backHeadgear: '',
+    portrait: FEMALE_PORTRAIT_1,
     normalMap: '',
-    faceMask: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/headgear/T_RephsianFactionLeaderConsortMask.png`,
-    frontHeadgear: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/headgear/T_RephsianFactionLeaderConsortForeground.png`,
+    faceMask: '',
+    frontHeadgear: '',
   },
 };
 
 function mockPortraitLayers(portrait: string, isImprisoned = false): PortraitLayerData {
   const layers = MOCK_LAYERED_PORTRAITS[portrait] ?? {
-    background: `${REPHSIAN_PORTRAIT_LAYER_ROOT}/backgrounds/RephsianBackground1.png`,
+    background: `${PORTRAIT_BACKGROUND_ROOT}/RephsianBackground1.png`,
     backHeadgear: '',
     portrait,
     normalMap: '',
@@ -5936,8 +5936,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         ], steamWorkshopAvailable: true, workshopCategories: ['Campaign', 'Map', 'Gameplay', 'Faction', 'Units', 'Buildings', 'UI', 'Total Conversion', 'Translation'] } satisfies BridgeResponse<'game.list_mods'>;
       case 'game.list_saves':
         return { loadError: '', saves: [
-          { slotName: 'mock-autosave', displayName: 'Mock Autosave', playerCharacterName: 'Valen Arcastus', playerFactionName: 'Rephsian Empire', gameDateString: '17 Summer 742', timestamp: '2026-05-01T00:00:00Z', isAutosave: true, factionId: MOCK_IDS.playerFaction, factionColour: PLAYER_COLOUR, factionSecondaryColour: PLAYER_SECONDARY, factionEmblem: 'Rephsian_1', cultureGroup: 'Rephsian', characterGender: 'male', characterPortraitIndex: 1 },
-          { slotName: 'mock-manual-save', displayName: 'Before the Western Pass', playerCharacterName: 'Cassian Arcastus', playerFactionName: 'Rephsian Empire', gameDateString: '3 Autumn 742', timestamp: '2026-04-28T18:30:00Z', isAutosave: false, factionId: MOCK_IDS.playerFaction, factionColour: PLAYER_COLOUR, factionSecondaryColour: PLAYER_SECONDARY, factionEmblem: 'Rephsian_1', cultureGroup: 'Rephsian', characterGender: 'male', characterPortraitIndex: 2 },
+          { slotName: 'mock-autosave', displayName: 'Mock Autosave', playerCharacterName: 'Valen Arcastus', playerFactionName: 'Rephsian Empire', gameDateString: '17 Summer 742', timestamp: '2026-05-01T00:00:00Z', isAutosave: true, factionId: MOCK_IDS.playerFaction, factionColour: PLAYER_COLOUR, factionSecondaryColour: PLAYER_SECONDARY, factionEmblem: 'Rephsian_1', cultureGroup: 'Rephsian', characterGender: 'male' },
+          { slotName: 'mock-manual-save', displayName: 'Before the Western Pass', playerCharacterName: 'Cassian Arcastus', playerFactionName: 'Rephsian Empire', gameDateString: '3 Autumn 742', timestamp: '2026-04-28T18:30:00Z', isAutosave: false, factionId: MOCK_IDS.playerFaction, factionColour: PLAYER_COLOUR, factionSecondaryColour: PLAYER_SECONDARY, factionEmblem: 'Rephsian_1', cultureGroup: 'Rephsian', characterGender: 'male' },
         ] } satisfies BridgeResponse<'game.list_saves'>;
       case 'game.list_new_game_maps':
         return { maps: [
@@ -6007,7 +6007,6 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
                 dynasty: 'Arcastus',
                 gender: 'male',
                 born: '691',
-                portraitIndex: 0,
                 portraitLayers: mockPortraitLayers(MALE_PORTRAIT_1),
                 fame: 620,
                 traits: [
@@ -6072,7 +6071,6 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
                 dynasty: 'Velk',
                 gender: 'male',
                 born: '704',
-                portraitIndex: 1,
                 portraitLayers: mockPortraitLayers(MALE_PORTRAIT_2),
                 fame: 410,
                 traits: [

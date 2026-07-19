@@ -6,6 +6,7 @@ type PortraitSize = 'sm' | 'md' | 'lg' | 'xl';
 type BorderTier = 'gold' | 'silver' | 'bronze';
 
 interface PersonRowProps {
+  personId: string;
   name: string;
   title?: string;
   portrait?: string;
@@ -15,6 +16,7 @@ interface PersonRowProps {
 }
 
 const PersonRow: React.FC<PersonRowProps> = ({
+  personId,
   name,
   title,
   portrait,
@@ -23,8 +25,8 @@ const PersonRow: React.FC<PersonRowProps> = ({
   extra,
 }) => (
   <div className="flex-row gap-md">
-    <PersonTooltip characterId={name}>
-      <Portrait name={name} src={portrait} size={portraitSize} showBorder borderTier={borderTier} />
+    <PersonTooltip characterId={personId}>
+      <Portrait personId={personId} name={name} src={portrait} size={portraitSize} showBorder borderTier={borderTier} />
     </PersonTooltip>
     <div className="flex-col">
       <span className="text-bright" style={{ fontSize: '1.1818rem' }}>{name}</span>

@@ -519,14 +519,14 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
       {/* Full-width header with portrait scene */}
       <div className={`char-header${!isAlive ? ' char-header--dead' : ''}`} onMouseMove={handleHeaderMouseMove}>
         <div className={`char-header-portrait${spouseRel ? ' char-header-portrait--with-spouse' : ''}`}>
-          <Portrait ref={headerBackdropPortraitRef} className="char-header-selected-backdrop" name={character.name} src={character.portrait} layers={character.portraitLayers} isAlive={isAlive} isImprisoned={isImprisoned} size="hero" shape="rect" showBorder={false} />
+          <Portrait ref={headerBackdropPortraitRef} personId={character.id} className="char-header-selected-backdrop" name={character.name} src={character.portrait} layers={character.portraitLayers} isAlive={isAlive} isImprisoned={isImprisoned} size="hero" shape="rect" showBorder={false} />
           {spouseRel && (
             <div className="char-header-spouse-wrap">
               <PersonTooltip character={spouse ?? undefined} characterId={spouse ? undefined : spouseId} position="left" delay={200}>
                 <div className="char-header-spouse">
                   <Portrait
                     ref={headerSpousePortraitRef}
-                    personId={spouse ? undefined : spouseId ?? undefined}
+                    personId={spouse?.id ?? spouseId ?? undefined}
                     name={spouse?.name ?? spouseRel.characterName}
                     src={spouse?.portrait ?? spouseRel.portrait}
                     layers={spouse?.portraitLayers}
@@ -541,7 +541,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
               </PersonTooltip>
             </div>
           )}
-          <Portrait ref={headerForegroundPortraitRef} className="char-header-selected-foreground" name={character.name} src={character.portrait} layers={character.portraitLayers} isAlive={isAlive} isImprisoned={isImprisoned} size="hero" shape="rect" showBorder={false} />
+          <Portrait ref={headerForegroundPortraitRef} personId={character.id} className="char-header-selected-foreground" name={character.name} src={character.portrait} layers={character.portraitLayers} isAlive={isAlive} isImprisoned={isImprisoned} size="hero" shape="rect" showBorder={false} />
         </div>
         {/* Dead icon overlay */}
         {!isAlive && (

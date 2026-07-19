@@ -2797,7 +2797,6 @@ export interface ScenarioMapLeaderDto {
   dynasty: string;
   gender: string;
   born: string;
-  portraitIndex: number;
   portraitLayers: PortraitLayerData;
   fame: number;
   traits: ScenarioMapTraitDto[];
@@ -3212,6 +3211,10 @@ export interface GetPlayerFactionResponse {
   rulerPortraitLayers: PortraitLayerData;
   rulerIsAlive: boolean;
   rulerIsImprisoned: boolean;
+}
+
+export interface GetPortraitModeResponse {
+  use3DPortraits: boolean;
 }
 
 export interface PowerBlocOverviewGoal {
@@ -4735,7 +4738,6 @@ export interface SaveGameEntryDto {
   factionEmblem: string;
   cultureGroup: string;
   characterGender: string;
-  characterPortraitIndex: number;
 }
 
 export interface ListSavesResponse {
@@ -5171,6 +5173,7 @@ export interface NotificationShownPayload {
   durationDays: number;
   hasPortrait: boolean;
   characterName: string;
+  personId: string;
   portraitLayers: PortraitLayerData;
   canAnchorAtSettlement: boolean;
   settlementId: string;
@@ -5402,6 +5405,19 @@ export interface PortraitLayerData {
   frontHeadgear: string;
 }
 
+export interface PortraitInvalidatedEventPayload {
+  personId: string;
+  appearanceRevision: number;
+}
+
+export interface PortraitReadyEventPayload {
+  personId: string;
+  expression: string;
+  appearanceRevision: number;
+  colourUrl: string;
+  normalUrl: string;
+}
+
 export interface PromoteCourtierRequest {
   settlementId: string;
   courtierTypeId: string;
@@ -5447,6 +5463,29 @@ export interface ProvinceEmperorTakeoverResponse {
 export interface QueueSettlementBuildingRequest {
   settlementId: string;
   buildingId: string;
+}
+
+export interface RandomiseCharacterCreatorRequest {
+  female: boolean;
+  age: number;
+  seed: number;
+}
+
+export interface RandomiseCharacterCreatorResponse {
+  facialGenes: number[];
+  african: number;
+  european: number;
+  asian: number;
+  melanin: number;
+  undertone: number;
+  freckling: number;
+  eyeMelanin: number;
+  hairMelanin: number;
+  hairRedness: number;
+  hairCurl: number;
+  bodyBuild: number;
+  hairLoss: number;
+  asymmetry: number;
 }
 
 export interface RebindActionKeyRequest {
@@ -5551,10 +5590,51 @@ export interface RenameSettlementResponse {
   message: string;
 }
 
+export interface RenderCharacterCreatorPreviewRequest {
+  female: boolean;
+  age: number;
+  expression: string;
+  environmentGroup: string;
+  environmentRole: string;
+  backgroundZoom: number;
+  facialGenes: number[];
+  african: number;
+  european: number;
+  asian: number;
+  melanin: number;
+  undertone: number;
+  freckling: number;
+  eyeMelanin: number;
+  hairMelanin: number;
+  hairRedness: number;
+  hairCurl: number;
+  bodyBuild: number;
+  hairLoss: number;
+  asymmetry: number;
+  bodyCondition: number;
+  fatigue: number;
+  injurySeverity: number;
+  dirt: number;
+}
+
 export interface ReorderSettlementBuildingRequest {
   settlementId: string;
   sourceQueueIndex: number;
   targetQueueIndex: number;
+}
+
+export interface RequestPortraitRequest {
+  personId: string;
+  expression: string;
+  priority: number;
+}
+
+export interface RequestPortraitResponse {
+  personId: string;
+  appearanceRevision: number;
+  colourUrl: string;
+  normalUrl: string;
+  ready: boolean;
 }
 
 export interface ResetSettingsRequest {
@@ -5642,6 +5722,12 @@ export interface SetAutoAssignGovernorsRequest {
 
 export interface SetAutoReplenishFormationsRequest {
   enabled: boolean;
+}
+
+export interface SetCharacterCreatorCameraRotationRequest {
+  framing: string;
+  yaw: number;
+  pitch: number;
 }
 
 export interface SetConvoyGlanceFiltersRequest {
@@ -6147,6 +6233,7 @@ export interface BridgeActions {
   'game.get_person_quick_interactions': { request: GetPersonQuickInteractionsRequest; response: GetPersonInteractionsResponse };
   'game.get_pinned_items': { request: void; response: GetPinnedItemsResponse };
   'game.get_player_faction': { request: void; response: GetPlayerFactionResponse };
+  'game.get_portrait_mode': { request: void; response: GetPortraitModeResponse };
   'game.get_power_bloc_detail': { request: GetPowerBlocDetailRequest; response: GetPowerBlocDetailResponse };
   'game.get_power_blocs': { request: void; response: GetPowerBlocsResponse };
   'game.get_province_mode_overview': { request: void; response: GetProvinceModeOverviewResponse };
@@ -6181,18 +6268,23 @@ export interface BridgeActions {
   'game.open_steam_achievements': { request: void; response: void };
   'game.perform_siege_command': { request: PerformSiegeCommandRequest; response: PerformSiegeCommandResponse };
   'game.pick_new_game_map_faction': { request: PickNewGameMapFactionRequest; response: PickNewGameMapFactionResponse };
+  'game.portrait_invalidated': { request: void; response: PortraitInvalidatedEventPayload };
+  'game.portrait_ready': { request: void; response: PortraitReadyEventPayload };
   'game.promote_courtier': { request: PromoteCourtierRequest; response: PromoteCourtierResponse };
   'game.promote_military_command': { request: PromoteMilitaryCommandRequest; response: void };
   'game.province_emperor_takeover': { request: ProvinceEmperorTakeoverRequest; response: ProvinceEmperorTakeoverResponse };
   'game.queue_settlement_building': { request: QueueSettlementBuildingRequest; response: void };
   'game.quit': { request: void; response: void };
+  'game.randomise_character_creator': { request: RandomiseCharacterCreatorRequest; response: RandomiseCharacterCreatorResponse };
   'game.rebind_action_key': { request: RebindActionKeyRequest; response: RebindActionKeyResponse };
   'game.recruit_character_for_role': { request: RecruitCharacterForRoleRequest; response: RecruitCharacterForRoleResponse };
   'game.rename_settlement': { request: RenameSettlementRequest; response: RenameSettlementResponse };
+  'game.render_character_creator_preview': { request: RenderCharacterCreatorPreviewRequest; response: void };
   'game.reorder_settlement_building': { request: ReorderSettlementBuildingRequest; response: void };
   'game.replace_military_commander': { request: ReplaceMilitaryCommanderRequest; response: void };
   'game.replenish_military': { request: ReplenishMilitaryRequest; response: void };
   'game.request_battle_retreat': { request: RequestBattleRetreatRequest; response: RequestBattleRetreatResponse };
+  'game.request_portrait': { request: RequestPortraitRequest; response: RequestPortraitResponse };
   'game.reset_notification_mutes': { request: void; response: void };
   'game.reset_settings': { request: ResetSettingsRequest; response: GetSettingsResponse };
   'game.respond_to_province_recall': { request: RespondToProvinceRecallRequest; response: RespondToProvinceRecallResponse };
@@ -6212,6 +6304,7 @@ export interface BridgeActions {
   'game.set_auto_replenish_formations': { request: SetAutoReplenishFormationsRequest; response: void };
   'game.set_battle_formation_order': { request: SetBattleFormationOrderRequest; response: SetBattleFormationOrderResponse };
   'game.set_battle_formation_stance': { request: SetBattleFormationStanceRequest; response: SetBattleFormationStanceResponse };
+  'game.set_character_creator_camera_rotation': { request: SetCharacterCreatorCameraRotationRequest; response: void };
   'game.set_convoy_glance_filters': { request: SetConvoyGlanceFiltersRequest; response: void };
   'game.set_designated_heir': { request: SetDesignatedHeirRequest; response: SetDesignatedHeirResponse };
   'game.set_economy_auto_buy': { request: SetEconomyAutoBuyRequest; response: void };

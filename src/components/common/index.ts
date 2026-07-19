@@ -17,6 +17,7 @@ export type { DataTableColumn } from './layout/tables/DataTable';
 export { default as DropdownSelect } from './forms/DropdownSelect';
 export type { DropdownSelectOption } from './forms/DropdownSelect';
 export { default as NumberStepper } from './forms/NumberStepper';
+export { default as GameSlider } from './forms/GameSlider';
 export { default as ResourceLabel } from './data-display/stats/ResourceLabel';
 export { default as InteractionCard } from './interactions/InteractionCard';
 export { default as CloseButton } from './buttons/CloseButton';

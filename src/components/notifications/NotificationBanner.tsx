@@ -90,6 +90,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
     || webUIText('Notifications.ThisType');
   const iconOrPortrait = hasPortrait ? (
     <Portrait
+      personId={notification.personId}
       layers={notification.portraitLayers}
       name={notification.characterName ?? notification.title}
       size={style === 'cinematic' ? 'md' : 'sm'}

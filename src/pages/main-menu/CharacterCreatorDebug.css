@@ -1,0 +1,335 @@
+.mm-sub-view.mm-sub-view--character-creator {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 1.35rem 1.75rem 2.35rem;
+}
+
+.character-creator__header {
+  flex: 0 0 auto;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.8rem;
+}
+
+.character-creator__actions {
+  display: flex;
+  gap: 0.55rem;
+  margin-left: auto;
+}
+
+.character-creator__actions button {
+  min-width: 7.5rem;
+}
+
+.character-creator__layout {
+  display: grid;
+  grid-template-columns: minmax(22rem, 26rem) minmax(0, 1fr);
+  gap: 1.1rem;
+  min-height: 0;
+  flex: 1;
+}
+
+.character-creator__controls,
+.character-creator__preview {
+  border-width: 0.09rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.09rem;
+  border-image-repeat: round;
+  background-color: #161c22;
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-charcoal.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 9.846rem 9.846rem, 93.09rem 93.09rem;
+}
+
+.character-creator__controls {
+  min-height: 0;
+  padding: 1rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.character-creator__tabs {
+  position: sticky;
+  top: -1rem;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  margin: -1rem -1rem 0.8rem;
+  padding: 0.75rem 1rem;
+  background-image: url('/assets/baked/panel-charcoal.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 93.09rem 93.09rem;
+  border-bottom: 0.09rem solid rgba(201, 168, 76, 0.24);
+}
+
+.character-creator__tab {
+  min-height: 2.4rem;
+  padding: 0.45rem 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-header);
+  font-size: 0.86rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  background-color: transparent;
+  background-image: url('/assets/baked/button-bronze-9slice.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border: 0;
+}
+
+.character-creator__tab:hover {
+  color: var(--text);
+  background-image: url('/assets/baked/button-bronze-9slice-hover.png');
+}
+
+.character-creator__tab--active {
+  color: var(--gold-light);
+  background-image: url('/assets/baked/button-burgundy-active.png');
+}
+
+.character-creator__control-group {
+  padding: 0.9rem 0.85rem 1rem;
+  background-color: rgba(12, 17, 22, 0.72);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
+  border: 0.09rem solid rgba(201, 168, 76, 0.17);
+}
+
+.character-creator__control-group + .character-creator__control-group {
+  margin-top: 0.75rem;
+}
+
+.character-creator__control-group h3,
+.character-creator__preview h3,
+.character-creator__background-group h3 {
+  margin: 0;
+  color: var(--gold);
+  font-family: var(--font-header);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.character-creator__control-group h3 {
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 0.09rem solid rgba(201, 168, 76, 0.22);
+}
+
+.character-creator__background-browser {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.character-creator__background-zoom {
+  margin: 0;
+}
+
+.character-creator__background-group {
+  padding: 0.85rem;
+  background-color: rgba(12, 17, 22, 0.72);
+  background-image: url('/assets/baked/texture-overlay-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 7.385rem 7.385rem;
+  border: 0.09rem solid rgba(201, 168, 76, 0.17);
+}
+
+.character-creator__background-group h3 {
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 0.09rem solid rgba(201, 168, 76, 0.22);
+}
+
+.character-creator__background-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.character-creator__background-card {
+  min-width: 0;
+  padding: 0.2rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  background-color: #11171c;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border-width: 0.09rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.09rem;
+  border-image-repeat: round;
+}
+
+.character-creator__background-card:hover {
+  color: var(--text);
+  background-image: url('/assets/baked/card-charcoal-hover.png');
+}
+
+.character-creator__background-card--selected {
+  color: var(--gold-light);
+  background-image: url('/assets/baked/card-charcoal-active.png');
+  border-image-width: 0.16rem;
+}
+
+.character-creator__background-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.character-creator__background-card span {
+  display: block;
+  padding: 0.32rem 0.2rem 0.25rem;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.character-creator__dropdown + .character-creator__dropdown,
+.character-creator__dropdown + .character-creator__slider,
+.character-creator__slider + .character-creator__slider {
+  margin-top: 0.55rem;
+}
+
+.character-creator__dropdown .dropdown-select__label {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.character-creator__dropdown .dropdown-select__trigger {
+  width: 100%;
+}
+
+.character-creator__slider {
+  display: block;
+}
+
+.character-creator__slider-copy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.character-creator__slider-value {
+  flex: 0 0 auto;
+  color: var(--gold-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.character-creator__slider .game-slider {
+  margin-top: 0.12rem;
+}
+
+.character-creator__previews {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.character-creator__preview {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.character-creator__preview--composite {
+  flex: 1;
+}
+
+.character-creator__preview h3 {
+  flex: 0 0 auto;
+  margin-bottom: 0.7rem;
+  text-align: center;
+}
+
+.character-creator__preview-canvas {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background-color: #090d11;
+  background-image:
+    linear-gradient(180deg, rgba(83, 66, 49, 0.18) 0%, rgba(8, 11, 14, 0) 44%),
+    url('/assets/baked/screen-charcoal.png');
+  background-position: 0 0;
+  background-repeat: no-repeat, repeat;
+  background-size: 100% 100%, 93.09rem 93.09rem;
+  border: 0.09rem solid rgba(201, 168, 76, 0.2);
+}
+
+.character-creator__preview-stage {
+  position: absolute;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+}
+
+.character-creator__preview-stage.is-dragging {
+  cursor: grabbing;
+}
+
+.character-creator__preview-stage--body {
+  inset: 0.09rem;
+  object-fit: contain;
+}
+
+.character-creator__preview-stage--face {
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 2;
+  width: clamp(13rem, 28%, 22rem);
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+@media (max-width: 90rem) {
+  .mm-sub-view.mm-sub-view--character-creator {
+    width: 100%;
+    padding-right: 1.15rem;
+    padding-left: 1.15rem;
+  }
+
+  .character-creator__layout {
+    grid-template-columns: minmax(20rem, 23rem) minmax(0, 1fr);
+  }
+}

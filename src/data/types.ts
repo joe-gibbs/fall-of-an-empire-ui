@@ -1384,6 +1384,7 @@ export interface Notification {
   durationDays?: number;
   portraitLayers?: PortraitLayerData;
   characterName?: string;
+	personId?: string;
   canAnchorAtSettlement?: boolean;
   settlementId?: string;
   settlementScreenX?: number;

@@ -4,6 +4,11 @@ import { usePerson } from '../../../data-source/index';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import type { Character, PortraitLayerData } from '../../../data/types';
 import { useQuickInteractionMenu } from '../interactions/useQuickInteractionMenu';
+import {
+  use3DPortraitsEnabled,
+  useGeneratedPortrait,
+  type PortraitExpression,
+} from '../../../bridge/characters/useGeneratedPortrait';
 import { DEFAULT_PORTRAIT_LIGHT, portraitLightFromMouseEvent, type PortraitLight } from './portraitLighting';
 import './Portrait.css';
 
@@ -17,9 +22,7 @@ export interface PortraitHandle {
 }
 
 interface PortraitProps {
-  /** PersonID. When set, the portrait fetches the character and uses their
-   *  name + portrait path; the `src`/`name` props become fallbacks used while
-   *  the query is in flight. */
+  /** PersonID. Used to resolve character data and, when enabled, request a 3D render. */
   personId?: string;
   resolvePerson?: boolean;
   src?: string;
@@ -45,6 +48,7 @@ interface PortraitProps {
   isHeir?: boolean;
   isDesignatedHeir?: boolean;
   isPreviousRuler?: boolean;
+  expression?: PortraitExpression;
 }
 
 const sizeMap: Record<PortraitSize, string> = {
@@ -307,29 +311,51 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
   isHeir,
   isDesignatedHeir,
   isPreviousRuler,
+  expression = 'neutral',
 }, ref) => {
   const [failedFaceKey, setFailedFaceKey] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const normalLayerRef = useRef<NormalLitPortraitLayerHandle | null>(null);
-  const hasPortraitFallback = Boolean(src || layers?.portrait);
-  const fetched = usePerson(resolvePerson && !hasPortraitFallback ? personId ?? null : null);
+  const hasSuppliedMetadata = Boolean(name || src || layers);
+  const fetched = usePerson(resolvePerson && !hasSuppliedMetadata ? personId ?? null : null);
   const resolvedName = fetched?.name ?? name ?? '';
   const resolvedLayers = fetched?.portraitLayers ?? layers;
   const resolvedIsAlive = fetched?.isAlive ?? isAlive;
   const resolvedIsImprisoned = fetched?.isImprisoned ?? isImprisoned ?? false;
-  const layerPortrait = WebkilnAssetPath(resolvedLayers?.portrait);
+  const use3DPortraits = use3DPortraitsEnabled();
+  const requestPriority = size === 'hero' || size === 'xl' ? 3 : size === 'lg' || size === 'md' ? 2 : 1;
+  const refreshToken = `${fetched?.age ?? ''}|${activity ?? fetched?.activity ?? ''}|${commanderKind ?? fetched?.commanderKind ?? ''}`;
+  const generatedPortrait = useGeneratedPortrait(
+    personId,
+    expression,
+    requestPriority,
+    isVisible && use3DPortraits,
+    refreshToken,
+  );
+  const generatedColour = WebkilnAssetPath(generatedPortrait.colourUrl);
+  const generatedNormal = WebkilnAssetPath(generatedPortrait.normalUrl);
   const layerBackground = WebkilnAssetPath(resolvedLayers?.background);
   const layerBackHeadgear = WebkilnAssetPath(resolvedLayers?.backHeadgear);
+  const layerPortrait = WebkilnAssetPath(resolvedLayers?.portrait);
+  const layerNormalMap = WebkilnAssetPath(resolvedLayers?.normalMap);
   const layerFaceMask = WebkilnAssetPath(resolvedLayers?.faceMask);
   const layerFrontHeadgear = WebkilnAssetPath(resolvedLayers?.frontHeadgear);
-  const layerNormalMap = WebkilnAssetPath(resolvedLayers?.normalMap);
-  const resolvedSrc = WebkilnAssetPath(layerPortrait || src || (fetched?.portrait ? fetched.portrait : undefined));
+  const activeLayerPortrait = use3DPortraits ? generatedColour : layerPortrait;
+  const activeNormalMap = use3DPortraits ? generatedNormal : layerNormalMap;
+  const resolvedSrc = use3DPortraits
+    ? generatedColour
+    : WebkilnAssetPath(layerPortrait || src || fetched?.portrait);
 
   const dim = sizeMap[size];
   const faceKey = resolvedSrc ?? '';
   const hasFace = resolvedSrc && failedFaceKey !== faceKey;
   const faceSrc = resolvedSrc ?? '';
-  const bgUrl = WebkilnAssetPath(layerBackground || bg || pickBg(resolvedName));
-  const hasLayeredFace = Boolean(layerPortrait && hasFace);
+  const bgUrl = use3DPortraits
+    ? undefined
+    : WebkilnAssetPath(layerBackground || bg || pickBg(personId || resolvedName));
+  const hasLayeredFace = Boolean(activeLayerPortrait && hasFace);
+  const showLayeredScene = use3DPortraits || hasLayeredFace;
   const isRect = shape === 'rect' || size === 'hero';
   const isHero = size === 'hero';
   const resolvedBadge = badge ?? badgeForCharacter(fetched);
@@ -359,7 +385,7 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
   );
   const shouldShowBadge = showBadge && !isHero && resolvedIsAlive !== false && resolvedBadge !== undefined;
   const imprisonedOverlayClass = `portrait-imprisoned-overlay${isHero ? ' portrait-imprisoned-overlay--hero' : ''}`;
-  const faceMaskStyle: React.CSSProperties | undefined = layerFaceMask ? {
+  const faceMaskStyle: React.CSSProperties | undefined = !use3DPortraits && layerFaceMask ? {
     maskImage: `url(${layerFaceMask})`,
     maskPosition: 'center',
     maskRepeat: 'no-repeat',
@@ -369,10 +395,10 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
     setFailedFaceKey(faceKey);
   }, [faceKey]);
   const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!hasLayeredFace || !layerNormalMap) return;
+    if (!hasLayeredFace || !activeNormalMap) return;
     const nextLight = portraitLightFromMouseEvent(event);
     normalLayerRef.current?.relight(nextLight);
-  }, [hasLayeredFace, layerNormalMap]);
+  }, [activeNormalMap, hasLayeredFace]);
   useImperativeHandle(ref, () => ({
     relight: (light: PortraitLight) => {
       normalLayerRef.current?.relight(light);
@@ -383,6 +409,19 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
     kind: 'person',
     targetId: personId,
   });
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      setIsVisible(entries.some(entry => entry.isIntersecting));
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0) {
       if (event.button === 2 && quickMenu.onContextMenu) {
@@ -398,6 +437,7 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
   return (
     <>
       <div
+        ref={containerRef}
         className={`portrait portrait--${size}${deadClass} ${isRect ? 'portrait--rect' : ''} ${isHero ? 'portrait--hero' : ''} ${showBorder ? `portrait--bordered${resolvedBorderTier !== 'gold' ? ` portrait--tier-${resolvedBorderTier}` : ''}` : ''} ${onClick ? 'portrait--clickable' : ''} ${className}`}
         style={isHero ? undefined : {
           width: dim,
@@ -410,7 +450,7 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
         onContextMenu={quickMenu.onContextMenu}
       >
         <div className="portrait-clip">
-          {hasLayeredFace ? (
+          {showLayeredScene ? (
             <>
               {bgUrl && (
                 <img
@@ -420,44 +460,46 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
                   draggable={false}
                 />
               )}
-              <div className="portrait-layer-stack">
-                {layerBackHeadgear && (
-                  <img
-                    className="portrait-layer portrait-layer--headgear-back"
-                    src={layerBackHeadgear}
-                    alt=""
-                    draggable={false}
-                  />
-                )}
-                {layerNormalMap ? (
-                  <NormalLitPortraitLayer
-                    ref={normalLayerRef}
-                    className="portrait-layer portrait-layer--face"
-                    src={faceSrc}
-                    normalSrc={layerNormalMap}
-                    alt={resolvedName}
-                    style={faceMaskStyle}
-                    onError={handleFaceError}
-                  />
-                ) : (
-                  <img
-                    className="portrait-layer portrait-layer--face"
-                    src={faceSrc}
-                    alt={resolvedName}
-                    style={faceMaskStyle}
-                    onError={handleFaceError}
-                    draggable={false}
-                  />
-                )}
-                {layerFrontHeadgear && (
-                  <img
-                    className="portrait-layer portrait-layer--headgear-front"
-                    src={layerFrontHeadgear}
-                    alt=""
-                    draggable={false}
-                  />
-                )}
-              </div>
+              {hasLayeredFace && (
+                <div className="portrait-layer-stack">
+                  {!use3DPortraits && layerBackHeadgear && (
+                    <img
+                      className="portrait-layer portrait-layer--headgear-back"
+                      src={layerBackHeadgear}
+                      alt=""
+                      draggable={false}
+                    />
+                  )}
+                  {activeNormalMap ? (
+                    <NormalLitPortraitLayer
+                      ref={normalLayerRef}
+                      className="portrait-layer portrait-layer--face"
+                      src={faceSrc}
+                      normalSrc={activeNormalMap}
+                      alt={resolvedName}
+                      style={faceMaskStyle}
+                      onError={handleFaceError}
+                    />
+                  ) : (
+                    <img
+                      className="portrait-layer portrait-layer--face"
+                      src={faceSrc}
+                      alt={resolvedName}
+                      style={faceMaskStyle}
+                      onError={handleFaceError}
+                      draggable={false}
+                    />
+                  )}
+                  {!use3DPortraits && layerFrontHeadgear && (
+                    <img
+                      className="portrait-layer portrait-layer--headgear-front"
+                      src={layerFrontHeadgear}
+                      alt=""
+                      draggable={false}
+                    />
+                  )}
+                </div>
+              )}
             </>
           ) : hasFace ? (
             <>

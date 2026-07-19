@@ -12,16 +12,18 @@ import DropdownSelect, { type DropdownSelectOption } from '../components/common/
 import ConfirmDialog from '../components/common/forms/ConfirmDialog';
 import ContinueHeroCard from './main-menu/ContinueHeroCard';
 import CreditsRoll from './main-menu/CreditsRoll';
+import CharacterCreatorDebug from './main-menu/CharacterCreatorDebug';
 import './main-menu/MainMenu.css';
 import { bridgeCall, onBridgeEvent } from '../bridge-types.generated.ts';
 import type { GetNewGameMapFactionSelectionResponse } from '../bridge-types.generated.ts';
 import type { SaveEntry } from '../bridge/app/useSavesBridge';
 import { useModsBridge } from '../bridge/app/useModsBridge';
 import type { ModEntry, SteamWorkshopItem } from '../bridge/app/useModsBridge';
+import { use3DPortraitsEnabled } from '../bridge/characters/useGeneratedPortrait';
 import { useEscapeStackEntry } from '../context/EscapeStack';
 
 import { useWebUILocale, webUIText, WebUIText } from '../localization/WebUITextContext';
-type MenuView = 'menu' | 'settings' | 'achievements' | 'mods' | 'encyclopedia' | 'credits' | 'newgame';
+type MenuView = 'menu' | 'settings' | 'achievements' | 'mods' | 'encyclopedia' | 'credits' | 'newgame' | 'characterCreator';
 type ModsPanelView = 'installed' | 'workshop' | 'subscribed';
 
 interface NewGameMapEntry {
@@ -82,6 +84,7 @@ function compareScenarioMaps(left: NewGameMapEntry, right: NewGameMapEntry): num
 
 const MainMenu: React.FC = () => {
   const locale = useWebUILocale();
+  const use3DPortraits = use3DPortraitsEnabled();
   const [view, setView] = useState<MenuView>('menu');
 
   const [skipMenuIntro, setSkipMenuIntro] = useState(false);
@@ -856,6 +859,9 @@ const MainMenu: React.FC = () => {
           onClick: () => isDemo ? setShowFullGamePrompt(true) : openSubView('mods'),
         }]
       : []),
+    ...(use3DPortraits
+      ? [{ label: webUIText('MainMenu.CharacterCreatorDebug'), onClick: () => openSubView('characterCreator') }]
+      : []),
     { label: webUIText('Auto.Prop.PagesMainMenu.438.4'), onClick: () => openSubView('encyclopedia') },
     { label: webUIText('Auto.Prop.PagesMainMenu.439.5'), onClick: () => openSubView('credits') },
     { label: webUIText('Auto.Prop.PagesMainMenu.440.6'), onClick: handleQuit },
@@ -1041,6 +1047,7 @@ const MainMenu: React.FC = () => {
         {view === 'settings' && renderSettings()}
         {view === 'mods' && renderMods()}
         {view === 'credits' && renderCredits()}
+        {view === 'characterCreator' && <CharacterCreatorDebug closing={closing} onBack={goBack} />}
       </div>
       {view === 'encyclopedia' && renderEncyclopedia()}
       {view === 'achievements' && renderAchievements()}

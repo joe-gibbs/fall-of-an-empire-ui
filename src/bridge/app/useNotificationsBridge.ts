@@ -23,6 +23,7 @@ export interface NotificationShown {
   durationDays?: number;
   hasPortrait?: boolean;
   characterName?: string;
+	personId?: string;
   portraitLayers?: PortraitLayerData;
   canAnchorAtSettlement?: boolean;
   settlementId?: string;
@@ -124,6 +125,7 @@ export function mapNotificationShown(data: NotificationShown): Notification {
     durationDays: data.durationDays,
     portraitLayers: data.hasPortrait ? data.portraitLayers : undefined,
     characterName: data.characterName,
+	personId: data.personId || undefined,
     canAnchorAtSettlement: data.canAnchorAtSettlement,
     settlementId: data.settlementId || undefined,
     settlementScreenX: data.settlementScreenX,
