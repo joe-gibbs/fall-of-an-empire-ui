@@ -1,16 +1,11 @@
 .game-check-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  padding: 0.08rem 0.35rem;
-  background-color: transparent;
-  background-image: none;
-  border-width: 0.538rem;
-  border-style: solid;
-  border-color: transparent;
-  border-image: url('/assets/baked/button-bronze-9slice.png') 32 fill / 0.538rem / 0 stretch;
+  padding: 0;
+  background: none;
+  border: 0;
   font-size: 0.74rem;
   cursor: var(--cursor-pointer);
-  transition: background-color 120ms ease, border-color 120ms ease;
 }
 
 .game-check-button > * {
@@ -21,54 +16,38 @@
   margin-left: 0;
 }
 
-.game-check-button:hover {
-  background-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice-hover.png');
-}
-
 .game-check-button--disabled {
   opacity: 0.55;
   cursor: default;
 }
 
-.game-check-button--disabled:hover {
-  background-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice.png');
-}
-
-.game-check-button__box {
+.game-check-button__input {
+  appearance: none;
   width: 0.95rem;
   height: 0.95rem;
   margin: 0;
   flex-shrink: 0;
   position: relative;
-  border-width: 0.154rem;
-  border-style: solid;
-  border-color: transparent;
-  border-image: url('/assets/modifier-frame.png') 3 / 0.154rem / 0 round;
-  background-color: #151b20;
-  background-image: url('/assets/baked/card-charcoal.png');
-  background-repeat: repeat;
-  background-size: 17.4545rem 8.7273rem;
+  border: 0.0909rem solid var(--border-dim);
+  background-color: rgba(8, 12, 17, 0.35);
   cursor: var(--cursor-pointer);
 }
 
-.game-check-button--disabled .game-check-button__box {
+.game-check-button__input:disabled {
   cursor: default;
 }
 
-.game-check-button__box::after {
+.game-check-button__input::after {
   content: '';
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-image: url('/assets/ui/I_TickIcon.png');
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 0.72rem 0.72rem;
+  top: 0.09rem;
+  left: 0.29rem;
+  width: 0.22rem;
+  height: 0.46rem;
+  border-right: 0.12rem solid var(--gold-light);
+  border-bottom: 0.12rem solid var(--gold-light);
   opacity: 0;
+  transform: rotate(45deg);
 }
 
 .game-check-button__label {
@@ -76,17 +55,12 @@
   letter-spacing: 0;
 }
 
-.game-check-button--active {
-  background-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice-active.png');
+.game-check-button__input:checked {
+  border-color: var(--gold);
+  background-color: rgba(201, 168, 76, 0.22);
 }
 
-.game-check-button--active .game-check-button__box {
-  border-image-source: url('/assets/modifier-frame-positive.png');
-  background-color: #151b20;
-}
-
-.game-check-button--active .game-check-button__box::after {
+.game-check-button__input:checked::after {
   opacity: 1;
 }
 

@@ -1662,17 +1662,11 @@
 }
 
 .mil-doctrine-summary-action {
-  padding: 0.08rem 0.3rem;
-  background-color: transparent;
-  background-image: none;
-  border-width: 0.538rem;
+  padding: 0.16rem 0.42rem;
+  background-color: rgba(201, 168, 76, 0.12);
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice.png');
-  border-image-slice: 32 fill;
-  border-image-width: 0.538rem;
-  border-image-outset: 0;
-  border-image-repeat: stretch;
+  border-color: rgba(201, 168, 76, 0.25);
   color: var(--gold-light);
   font-family: var(--font-body);
   font-size: 0.72rem;
@@ -3386,19 +3380,14 @@
 .mil-command-mode-grid--subordinates .mil-command-mode,
 .mil-order-command {
   position: relative;
-  border-width: 0.615rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice.png');
-  border-image-slice: 32 fill;
-  border-image-width: 0.615rem;
-  border-image-outset: 0;
-  border-image-repeat: stretch;
+  border-top-color: rgba(201, 168, 76, 0.2);
+  border-right-color: rgba(201, 168, 76, 0.2);
+  border-bottom-color: rgba(201, 168, 76, 0.2);
+  border-left-color: rgba(201, 168, 76, 0.2);
   background-image: none;
-  background-color: transparent;
+  background-color: rgba(8, 12, 17, 0.3);
   color: var(--text-bright);
   text-shadow: 0 0.077rem 0.154rem rgba(0, 0, 0, 0.85);
   transition: transform 0.05s;
@@ -3413,13 +3402,12 @@
 .mil-sub-toggle:hover,
 .mil-command-mode-grid--subordinates .mil-command-mode:hover,
 .mil-order-command:hover {
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice-hover.png');
+  border-top-color: rgba(201, 168, 76, 0.42);
+  border-right-color: rgba(201, 168, 76, 0.42);
+  border-bottom-color: rgba(201, 168, 76, 0.42);
+  border-left-color: rgba(201, 168, 76, 0.42);
   background-image: none;
-  background-color: transparent;
+  background-color: rgba(201, 168, 76, 0.1);
   color: var(--text-bright);
 }
 
@@ -3431,13 +3419,12 @@
 .mil-command-mode-grid--subordinates .mil-command-mode.is-active,
 .mil-command-mode-grid--subordinates .mil-command-mode--standing-order.is-on,
 .mil-order-command.is-active {
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice-active.png');
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
   background-image: none;
-  background-color: transparent;
+  background-color: rgba(201, 168, 76, 0.16);
   color: var(--text-bright);
 }
 
@@ -3461,7 +3448,6 @@
 .mil-standing-order.is-disabled,
 .mil-command-mode-grid--subordinates .mil-command-mode.is-disabled,
 .mil-order-command.is-disabled {
-  border-image-source: url('/assets/baked/button-bronze-9slice.png');
   opacity: 0.45;
   cursor: auto;
   transform: none;
@@ -3474,7 +3460,7 @@
 .mil-standing-order.is-disabled:hover,
 .mil-command-mode-grid--subordinates .mil-command-mode.is-disabled:hover,
 .mil-order-command.is-disabled:hover {
-  border-image-source: url('/assets/baked/button-bronze-9slice.png');
+  background-color: rgba(8, 12, 17, 0.3);
   transform: none;
 }
 
@@ -3576,34 +3562,29 @@
   height: 100%;
   min-height: 0;
   padding: 0;
-  border-width: 0.42rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice.png');
-  border-image-slice: 32 fill;
-  border-image-width: 0.42rem;
-  border-image-outset: 0;
-  border-image-repeat: stretch;
+  border-top-color: rgba(201, 168, 76, 0.2);
+  border-right-color: rgba(201, 168, 76, 0.2);
+  border-bottom-color: rgba(201, 168, 76, 0.2);
+  border-left-color: rgba(201, 168, 76, 0.2);
   background-image: none;
-  background-color: transparent;
+  background-color: rgba(8, 12, 17, 0.3);
   cursor: pointer;
 }
 
 .mil-header-commander-action:hover {
-  border-image-source: url('/assets/baked/button-bronze-9slice-hover.png');
+  background-color: rgba(201, 168, 76, 0.1);
 }
 
 .mil-header-commander-action:active {
-  border-image-source: url('/assets/baked/button-bronze-9slice-active.png');
+  background-color: rgba(201, 168, 76, 0.16);
   transform: translateY(0.077rem);
 }
 
 .mil-header-commander-action.is-disabled,
 .mil-header-commander-action.is-disabled:hover {
-  border-image-source: url('/assets/baked/button-bronze-9slice.png');
+  background-color: rgba(8, 12, 17, 0.3);
   opacity: 0.45;
   cursor: auto;
   transform: none;

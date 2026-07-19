@@ -5730,7 +5730,7 @@
   overflow-y: auto;
 }
 
-/* Nine-slice buttons shared with the military sidebar. */
+/* Template controls. */
 .chart-screen--templates .chart-template-create,
 .chart-screen--templates .chart-template-composer-icon-button,
 .chart-screen--templates .chart-template-rename-button,
@@ -5743,19 +5743,14 @@
 .chart-screen--templates .chart-template-list-delete {
   box-sizing: border-box;
   position: relative;
-  border-width: 0.462rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice.png');
-  border-image-slice: 32 fill;
-  border-image-width: 0.462rem;
-  border-image-outset: 0;
-  border-image-repeat: stretch;
+  border-top-color: rgba(201, 168, 76, 0.22);
+  border-right-color: rgba(201, 168, 76, 0.22);
+  border-bottom-color: rgba(201, 168, 76, 0.22);
+  border-left-color: rgba(201, 168, 76, 0.22);
   background-image: none;
-  background-color: transparent;
+  background-color: rgba(8, 12, 17, 0.3);
   color: var(--text-bright);
   text-shadow: 0 0.077rem 0.154rem rgba(0, 0, 0, 0.85);
   cursor: var(--cursor-pointer);
@@ -5773,26 +5768,24 @@
 .chart-screen--templates .chart-template-battle-pick-unit:hover,
 .chart-screen--templates .chart-template-list-duplicate:hover,
 .chart-screen--templates .chart-template-list-delete:hover {
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice-hover.png');
+  border-top-color: rgba(201, 168, 76, 0.42);
+  border-right-color: rgba(201, 168, 76, 0.42);
+  border-bottom-color: rgba(201, 168, 76, 0.42);
+  border-left-color: rgba(201, 168, 76, 0.42);
   background-image: none;
-  background-color: transparent;
+  background-color: rgba(201, 168, 76, 0.1);
   color: var(--text-bright);
   transform: none;
 }
 
 .chart-screen--templates .chart-template-icon-choice--selected,
 .chart-screen--templates .chart-template-list-delete--confirm {
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  border-image-source: url('/assets/baked/button-bronze-9slice-active.png');
+  border-top-color: var(--gold-muted);
+  border-right-color: var(--gold-muted);
+  border-bottom-color: var(--gold-muted);
+  border-left-color: var(--gold-muted);
   background-image: none;
-  background-color: transparent;
+  background-color: rgba(201, 168, 76, 0.16);
   color: var(--text-bright);
 }
 
@@ -5817,8 +5810,7 @@
 .chart-screen--templates .chart-template-rename-button,
 .chart-screen--templates .chart-template-composer-icon-button,
 .chart-screen--templates .chart-template-icon-choice {
-  border-width: 0.385rem;
-  border-image-width: 0.385rem;
+  border-width: 0.077rem;
 }
 
 .chart-screen--templates .chart-template-list-delete {
@@ -5854,9 +5846,8 @@
 .chart-screen--templates .chart-template-list-duplicate[disabled]:hover,
 .chart-screen--templates .chart-template-list-delete[disabled],
 .chart-screen--templates .chart-template-list-delete[disabled]:hover {
-  border-image-source: url('/assets/baked/button-bronze-9slice.png');
   background-image: none;
-  background-color: transparent;
+  background-color: rgba(8, 12, 17, 0.3);
   color: var(--text-dark);
   cursor: var(--cursor-default);
   opacity: 0.45;

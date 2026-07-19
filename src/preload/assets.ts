@@ -146,9 +146,6 @@ const MAIN_MENU_ASSETS = [
 
 const IN_GAME_ASSETS = [
   '/assets/icons/Command/I_Command_Direct.png',
-  '/assets/baked/button-bronze-9slice.png',
-  '/assets/baked/button-bronze-9slice-hover.png',
-  '/assets/baked/button-bronze-9slice-active.png',
   '/assets/icons/I_Swords.png',
   '/assets/icons/Siege/besiege.png',
   '/assets/icons/I_Anchor.png',

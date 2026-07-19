@@ -19,24 +19,26 @@ export default function GameCheckButton({
   className,
   disabled = false,
 }: GameCheckButtonProps) {
-  const button = (
-    <button
-      type="button"
+  const control = (
+    <label
       className={`game-check-button${checked ? ' game-check-button--active' : ''}${disabled ? ' game-check-button--disabled' : ''}${className ? ` ${className}` : ''}`}
-      onMouseDown={() => { if (!disabled) onToggle(); }}
-      aria-pressed={checked}
-      disabled={disabled}
     >
-      <span className="game-check-button__box" />
+      <input
+        className="game-check-button__input"
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={onToggle}
+      />
       <span className="game-check-button__label">{label}</span>
-    </button>
+    </label>
   );
 
-  if (!tooltip) return button;
+  if (!tooltip) return control;
 
   return (
     <Tooltip content={tooltip}>
-      {button}
+      {control}
     </Tooltip>
   );
 }
