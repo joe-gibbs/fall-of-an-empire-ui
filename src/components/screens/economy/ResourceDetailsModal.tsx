@@ -374,7 +374,6 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
         <header className="erd-header">
           <img className="erd-header__icon" src={`/assets/resources/${resource.id}.png`} alt="" draggable={false} />
           <div className="erd-header__copy">
-            <span className="erd-header__kicker">{t('Economy.ResourceDetails')}</span>
             <h1>{details?.name || resource.name}</h1>
             <span className="erd-header__category">
               {details?.tier === 'secondary' ? t('Economy.SecondaryResource') : t('Economy.PrimaryResource')}

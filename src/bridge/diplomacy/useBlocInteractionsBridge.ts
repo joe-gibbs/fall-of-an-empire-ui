@@ -31,6 +31,21 @@ export interface BlocInteractionView {
   reasons: { reason: string; status: InteractionAvailability }[];
   successFactors: { name: string; percent: number }[];
   effectLines: DisplayTextLine[];
+  needsLoanSelection: boolean;
+  grossRevenue: number;
+  currentLandownerDebt: number;
+  currentLandownerMonthlyInterest: number;
+  loanOptions: BlocLoanOptionView[];
+}
+
+export interface BlocLoanOptionView {
+  index: number;
+  revenueMonths: number;
+  amount: number;
+  monthlyInterest: number;
+  name: string;
+  description: string;
+  iconPath: string;
 }
 
 export interface BlocInteractionsState {
@@ -79,6 +94,19 @@ function mapEntry(e: BlocInteractionEntry): BlocInteractionView {
     reasons: e.reasons.map(r => ({ reason: r.reason, status: toAvailability(r.status) })),
     successFactors: e.successFactors.map(f => ({ name: f.name, percent: f.percent })),
     effectLines: e.effectLines ?? [],
+    needsLoanSelection: e.needsLoanSelection,
+    grossRevenue: e.grossRevenue,
+    currentLandownerDebt: e.currentLandownerDebt,
+    currentLandownerMonthlyInterest: e.currentLandownerMonthlyInterest,
+    loanOptions: e.loanOptions.map(option => ({
+      index: option.index,
+      revenueMonths: option.revenueMonths,
+      amount: option.amount,
+      monthlyInterest: option.monthlyInterest,
+      name: option.name,
+      description: option.description,
+      iconPath: option.iconPath,
+    })),
   };
 }
 
@@ -95,7 +123,7 @@ function mapResponse(data: GetBlocInteractionsResponse): BlocInteractionsState {
 
 export interface BlocInteractionsBridge {
   state: BlocInteractionsState | null;
-  start: (interactionId: string) => void;
+  start: (interactionId: string, loanOptionIndex?: number) => Promise<string | null>;
   cancel: () => void;
 }
 
@@ -113,9 +141,15 @@ export function useBlocInteractionsBridge(blocId: string | null): BlocInteractio
   });
   const state = queriedState?.blocId === blocId ? queriedState : null;
 
-  const start = useCallback((interactionId: string) => {
-    if (!blocId) return;
-    bridgeCall('game.start_bloc_interaction', { blocId, interactionId }).catch(acknowledgeBridgeFailure);
+  const start = useCallback(async (interactionId: string, loanOptionIndex = -1): Promise<string | null> => {
+    if (!blocId) return null;
+    try {
+      const response = await bridgeCall('game.start_bloc_interaction', { blocId, interactionId, loanOptionIndex });
+      return response.started ? null : response.message;
+    } catch (error) {
+      acknowledgeBridgeFailure(error);
+      return 'bridge-error';
+    }
   }, [blocId]);
 
   const cancel = useCallback(() => {

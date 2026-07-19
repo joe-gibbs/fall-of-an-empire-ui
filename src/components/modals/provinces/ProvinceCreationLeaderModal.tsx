@@ -115,7 +115,6 @@ export default function ProvinceCreationLeaderModal({
       closing={closing}
       onClose={close}
       headerIcon="/assets/icons/I_ProvincialCapital.png"
-      kicker={webUIText('InternalPolitics.ProvinceCreationKicker')}
       title={landName}
     >
       <CandidateMissionBar prefix="cam">

@@ -1,6 +1,6 @@
 import FactionRoundel from '../../components/common/entities/FactionRoundel';
 import type { SaveEntry } from '../../bridge/app/useSavesBridge';
-import { webUIText, WebUIText } from '../../localization/WebUITextContext';
+import { webUIText } from '../../localization/WebUITextContext';
 
 interface ContinueHeroCardProps {
   save: SaveEntry;
@@ -56,7 +56,6 @@ export default function ContinueHeroCard({ save, onResume }: ContinueHeroCardPro
           />
         </div>
         <div className="mm-continue-hero-copy">
-          <span className="mm-continue-hero-kicker"><WebUIText textKey="Auto.PagesMainMenu.71.1" /></span>
           <span className="mm-continue-hero-name">{character}</span>
           {realm && <span className="mm-continue-hero-realm">{realm}</span>}
           {date && <span className="mm-continue-hero-date">{date}</span>}

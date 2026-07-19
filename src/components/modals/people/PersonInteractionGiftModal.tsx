@@ -140,7 +140,6 @@ export default function PersonInteractionGiftModal({
             />
           )}
           <div className="pig-header__copy">
-            <span className="pig-header__kicker"><WebUIText textKey="Auto.ComponentsModalsPersonInteractionGiftModal.132.1" /></span>
             <h2 className="pig-title">{interaction.name}</h2>
             <p className="pig-subtitle">{interaction.description}</p>
           </div>
@@ -170,14 +169,12 @@ export default function PersonInteractionGiftModal({
                 />
               </div>
               <div className="pig-recipient__copy">
-                <span className="pig-recipient__label"><WebUIText textKey="Auto.ComponentsModalsPersonInteractionGiftModal.162.2" /></span>
                 <span className="pig-recipient__name">{targetPersonName}</span>
                 {targetPersonTitle && <span className="pig-recipient__title">{targetPersonTitle}</span>}
               </div>
             </div>
 
             <div className="pig-result">
-              <span className="pig-result__label"><WebUIText textKey="Auto.ComponentsModalsPersonInteractionGiftModal.169.3" /></span>
               {selected ? (
                 <>
                   <span className="pig-result__name">{selected.name}</span>
@@ -210,9 +207,6 @@ export default function PersonInteractionGiftModal({
           </div>
 
           <div className="pig-options">
-            <div className="pig-options__header">
-              <span><WebUIText textKey="Auto.ComponentsModalsPersonInteractionGiftModal.203.9" /></span>
-            </div>
             <div className="pig-list">
               {giftOptions.length > 0 ? giftOptions.map((option) => {
                 const selectedCard = option.index === selected?.index;

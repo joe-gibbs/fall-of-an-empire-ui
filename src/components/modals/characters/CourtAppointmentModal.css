@@ -51,13 +51,6 @@
 .cam-header-left { display: flex; align-items: center; }
 .cam-header-left > * + * { margin-left: 0.7rem; }
 .cam-header-icon { width: 1.8rem; height: 1.8rem; opacity: 0.85; }
-.cam-header-copy { display: flex; flex-direction: column; }
-.cam-header-copy > * + * { margin-top: 0.1rem; }
-.cam-header-kicker {
-  font-size: 0.7rem; color: var(--text-dark);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  line-height: 1;
-}
 .cam-title {
   font-family: var(--font-header); font-size: 1.2rem;
   color: var(--text-header); letter-spacing: 0.03em;

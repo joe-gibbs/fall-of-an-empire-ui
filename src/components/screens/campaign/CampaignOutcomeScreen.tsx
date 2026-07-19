@@ -267,7 +267,6 @@ export default function CampaignOutcomeScreen({
             <img src={crestIcon} alt="" draggable={false} />
           </div>
           <div className="outcome-heading">
-            {resolved.kicker && <div className="outcome-kicker">{resolved.kicker}</div>}
             <h1>{resolved.title}</h1>
             {resolved.subtitle && <div className="outcome-subtitle">{resolved.subtitle}</div>}
           </div>

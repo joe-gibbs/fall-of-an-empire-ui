@@ -62,6 +62,7 @@ type EconomyMetricKey =
   | 'treatyTributePaid'
   | 'eventExpense'
   | 'powerBlocExpense'
+  | 'landownerInterestExpense'
   | 'autoAssignCommanderExpense'
   | 'otherExpense'
   | 'treasuryAdjustmentIncome'
@@ -96,6 +97,7 @@ const EXPENSE_ROWS: MetricDef[] = [
   { key: 'treatyTributePaid', labelKey: 'Economy.TreatyPayments' },
   { key: 'eventExpense', labelKey: 'Economy.Events' },
   { key: 'powerBlocExpense', labelKey: 'Economy.PowerBloc' },
+  { key: 'landownerInterestExpense', labelKey: 'Economy.SenateInterest' },
   { key: 'autoAssignCommanderExpense', labelKey: 'Economy.AutoCommanders' },
   { key: 'otherExpense', labelKey: 'Economy.Other' },
 ];

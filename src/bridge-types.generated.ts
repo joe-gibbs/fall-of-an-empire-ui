@@ -1309,6 +1309,16 @@ export interface BlocInteractionFactor {
   percent: number;
 }
 
+export interface BlocLoanOption {
+  index: number;
+  revenueMonths: number;
+  amount: number;
+  monthlyInterest: number;
+  name: string;
+  description: string;
+  iconPath: string;
+}
+
 export interface BlocInteractionEntry {
   id: string;
   name: string;
@@ -1329,6 +1339,11 @@ export interface BlocInteractionEntry {
   reasons: BlocInteractionReason[];
   successFactors: BlocInteractionFactor[];
   effectLines: WebUIDisplayLine[];
+  needsLoanSelection: boolean;
+  grossRevenue: number;
+  currentLandownerDebt: number;
+  currentLandownerMonthlyInterest: number;
+  loanOptions: BlocLoanOption[];
 }
 
 export interface GetBlocInteractionsResponse {
@@ -1819,6 +1834,7 @@ export interface EconomyOverviewHistoryPoint {
   treatyTributePaid: number;
   eventExpense: number;
   powerBlocExpense: number;
+  landownerInterestExpense: number;
   autoAssignCommanderExpense: number;
   otherExpense: number;
   netIncome: number;
@@ -1915,6 +1931,9 @@ export interface GetEconomyOverviewResponse {
   treatyTributePaid: number;
   eventExpense: number;
   powerBlocExpense: number;
+  landownerInterestExpense: number;
+  landownerDebt: number;
+  landownerMonthlyInterestRate: number;
   autoAssignCommanderExpense: number;
   otherExpense: number;
   treasuryAdjustment: number;
@@ -5840,6 +5859,7 @@ export interface SidebarEventPayload {
 export interface StartBlocInteractionRequest {
   blocId: string;
   interactionId: string;
+  loanOptionIndex: number;
 }
 
 export interface StartBlocInteractionResponse {

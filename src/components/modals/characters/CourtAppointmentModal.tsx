@@ -249,7 +249,6 @@ export default function CourtAppointmentModal({
       closing={closing}
       onClose={close}
       headerIcon="/assets/icons/I_Characters.png"
-      kicker={appointmentActionLabel}
       title={renderedPosition.name}
     >
       <CandidateMissionBar prefix="cam">

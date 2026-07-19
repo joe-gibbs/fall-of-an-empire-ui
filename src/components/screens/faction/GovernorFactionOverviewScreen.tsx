@@ -464,7 +464,6 @@ function EmperorPanel({ overview, onOpenCharacter }: { overview: ProvinceModeOve
         />
       </div>
       <div className="gfov-emperor-copy">
-        <span className="gfov-kicker">{t('ProvinceMode.EmperorLabel')}</span>
         <div className="gfov-emperor-name">{emperorName}</div>
         <p className="gfov-emperor-body">{t('ProvinceMode.EmperorBody')}</p>
       </div>
@@ -535,7 +534,6 @@ function EmpireTab({ overview, onOpenCharacter }: { overview: ProvinceModeOvervi
                 onClick={() => overview?.emperor.id && onOpenCharacter(overview.emperor.id)}
               />
               <div className="gfov-empire-faction-info">
-                <div className="gfov-empire-faction-kicker">{t('FactionOverview.Leader')}</div>
                 <div className="gfov-empire-ruler-name">{emperorName}</div>
                 <div className="gfov-empire-faction-name">{summary?.name ?? ''}</div>
                 <div className="gfov-empire-identity-items">
@@ -674,11 +672,11 @@ function AppointmentRoleCard({
       <img className="gfov-appointment-role-icon" src={role.icon} alt="" draggable={false} />
       <div className="gfov-appointment-role-body">
         <div className="gfov-appointment-role-copy">
-          <span className="gfov-appointment-role-kicker">
+          <span className="gfov-appointment-role-title">{appointmentRoleTitle(role, t)}</span>
+          <span className="gfov-appointment-role-meta">
             <span className="gfov-appointment-role-category">{appointmentRoleCategory(role, t)}</span>
             {playerEntered && <span className="gfov-appointment-race-star" aria-hidden="true">★</span>}
           </span>
-          <span className="gfov-appointment-role-title">{appointmentRoleTitle(role, t)}</span>
           <span className="gfov-appointment-role-holder">{holderLabel}</span>
           <div className="gfov-appointment-role-progress">
             <GameBar value={elapsedDays} max={progressMax} colour="var(--gold)" size="sm" />
@@ -975,8 +973,8 @@ function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceMode
           <div className="gfov-appointment-detail-header">
             <img src={activeRole.icon} alt="" draggable={false} />
             <div>
-              <span>{appointmentRoleCategory(activeRole, t)}</span>
               <h2>{appointmentRoleTitle(activeRole, t)}</h2>
+              <span>{appointmentRoleCategory(activeRole, t)}</span>
               <p>{appointmentRoleBody(activeRole, t)}</p>
             </div>
           </div>
@@ -1104,7 +1102,6 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
           />
         </div>
         <div className="gfov-governor-copy">
-          <span className="gfov-kicker">{t('ProvinceMode.GovernorLabel')}</span>
           <h2 className="gfov-governor-name">{governorName}</h2>
           <p className="gfov-governor-province">
             {t('ProvinceMode.ProvinceLabel')}: <strong>{provinceName}</strong>
@@ -1242,6 +1239,7 @@ function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => vo
   const [editing, setEditing] = useState<RegionalGovernor | null>(null);
   const governors = [...(diplomacy?.regionalGovernors ?? [])].sort((a, b) => a.regionName.localeCompare(b.regionName));
   const autoAssignGovernorsEnabled = diplomacy?.autoAssignGovernorsEnabled ?? false;
+  const tutorialGovernorRowIndex = governors.findIndex(row => !row.governorId && row.canManageGovernor && row.settlementId);
 
   const refreshGovernors = useCallback(() => {
     void refreshDiplomacyOverviewBridge('governors').catch(error => acknowledgeBridgeFailure(error, 'game.get_diplomacy_overview'));
@@ -1280,7 +1278,7 @@ function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => vo
         {governors.length === 0 ? (
           <div className="gfov-reggov-empty">{diplomacy?.governorEmptyReason || t('Auto.Fix.ExprFallback.componentsscreensInternalPoliticsScreen.841.1')}</div>
         ) : (
-          governors.map(row => {
+          governors.map((row, rowIndex) => {
             const corruptionTone = row.corruptionPercent >= 25 ? 'bad' : row.corruptionPercent >= 12 ? 'muted' : 'good';
             const actionLabel = t(row.governorId ? 'FactionOverview.ReplaceAppointment' : 'Settlement.AppointGovernor');
             return (
@@ -1323,6 +1321,7 @@ function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => vo
                     variant="burgundy"
                     disabled={!row.canManageGovernor || !row.settlementId}
                     onClick={() => setEditing(row)}
+                    tutorialTarget={rowIndex === tutorialGovernorRowIndex ? 'TutorialGovernorAppointButton' : undefined}
                   >
                     {actionLabel}
                   </GameButton>

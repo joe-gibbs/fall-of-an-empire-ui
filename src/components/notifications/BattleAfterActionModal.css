@@ -68,7 +68,7 @@
   flex-direction: column;
 }
 
-.battle-aar-kicker,
+.battle-aar-outcome,
 .battle-aar-meta-label,
 .battle-aar-stat-label,
 .battle-aar-unit-label {
@@ -80,6 +80,9 @@
 }
 
 .battle-aar-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
   margin: 0;
   color: var(--text-header);
   font-family: var(--font-header);

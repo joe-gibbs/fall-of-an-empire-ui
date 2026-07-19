@@ -902,8 +902,8 @@ const MainMenu: React.FC = () => {
           </span>
         )}
         <div className="mm-illust-copy">
-          {showKicker && <span className="mm-illust-kicker">{btn.kicker}</span>}
           <span className="mm-illust-label">{btn.label}</span>
+          {showKicker && <span className="mm-illust-subtitle">{btn.kicker}</span>}
         </div>
       </button>
     );

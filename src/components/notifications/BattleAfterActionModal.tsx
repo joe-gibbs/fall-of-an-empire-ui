@@ -400,8 +400,10 @@ export default function BattleAfterActionModal({
             <CloseButton size="sm" onClick={close} />
           </div>
           <div className="battle-aar-hero-content">
-            <span className="battle-aar-kicker">{report.outcome}</span>
-            <h2 className="battle-aar-title">{battleName}</h2>
+            <h2 className="battle-aar-title">
+              <span className="battle-aar-outcome">{report.outcome}</span>
+              <span>{battleName}</span>
+            </h2>
           </div>
         </div>
 

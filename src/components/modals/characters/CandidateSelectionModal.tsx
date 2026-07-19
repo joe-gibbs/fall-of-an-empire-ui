@@ -28,7 +28,6 @@ interface CandidateModalFrameProps {
   onClose: () => void;
   headerIcon: string;
   title: string;
-  kicker?: string;
   modalClassName?: string;
   children: ReactNode;
 }
@@ -39,7 +38,6 @@ export function CandidateModalFrame({
   onClose,
   headerIcon,
   title,
-  kicker,
   modalClassName,
   children,
 }: CandidateModalFrameProps) {
@@ -109,7 +107,7 @@ export function CandidateModalFrame({
           <div className={`${prefix}-drag-handle candidate-drag-handle`} onMouseDown={beginDrag} aria-hidden="true">
             <span className="candidate-drag-handle__mark" />
           </div>
-          <CandidateModalHeader prefix={prefix} icon={headerIcon} title={title} kicker={kicker} onClose={onClose} />
+          <CandidateModalHeader prefix={prefix} icon={headerIcon} title={title} onClose={onClose} />
           {children}
         </div>
       </div>
@@ -121,23 +119,15 @@ interface CandidateModalHeaderProps {
   prefix: CandidateModalPrefix;
   icon: string;
   title: string;
-  kicker?: string;
   onClose: () => void;
 }
 
-export function CandidateModalHeader({ prefix, icon, title, kicker, onClose }: CandidateModalHeaderProps) {
+export function CandidateModalHeader({ prefix, icon, title, onClose }: CandidateModalHeaderProps) {
   return (
     <div className={`${prefix}-header`}>
       <div className={`${prefix}-header-left`}>
         <img src={icon} alt="" className={`${prefix}-header-icon`} draggable={false} />
-        {kicker ? (
-          <div className={`${prefix}-header-copy`}>
-            <span className={`${prefix}-header-kicker`}>{kicker}</span>
-            <h2 className={`${prefix}-title`}>{title}</h2>
-          </div>
-        ) : (
-          <h2 className={`${prefix}-title`}>{title}</h2>
-        )}
+        <h2 className={`${prefix}-title`}>{title}</h2>
       </div>
       <CloseButton size="sm" onClick={onClose} />
     </div>
@@ -335,6 +325,7 @@ interface CandidateRowProps {
   isHeir?: boolean;
   isDesignatedHeir?: boolean;
   isPreviousRuler?: boolean;
+  tutorialTarget?: string;
 }
 
 export function CandidateRow({
@@ -365,6 +356,7 @@ export function CandidateRow({
   isHeir,
   isDesignatedHeir,
   isPreviousRuler,
+  tutorialTarget,
 }: CandidateRowProps) {
   const statNode = statValue !== undefined ? (
     <div className={`${prefix}-row-stat`}>
@@ -376,6 +368,7 @@ export function CandidateRow({
   return (
     <div
       className={`${prefix}-row${active ? ` ${prefix}-row--active` : ''}${busy ? ` ${prefix}-row--busy` : ''}`}
+      data-tutorial-target={tutorialTarget}
       onMouseDown={onSelect}
     >
       <div className={`${prefix}-row-portrait`}>

@@ -29,6 +29,7 @@ import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/
 import { renderRichText } from '../../../utils/richText';
 import { getScreenByBridgeName, registerSidebar } from '../../../registry/index';
 import { BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
+import BlocLoanModal from '../../modals/diplomacy/BlocLoanModal';
 import SidebarToolbar from '../shared/SidebarToolbar';
 import '../shared/Sidebar.css';
 import './PowerBlocSidebar.css';
@@ -583,6 +584,7 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
   const playerFactionId = usePlayerFactionId();
   const playerFaction = useFaction(playerFactionId);
   const [showAllMembers, setShowAllMembers] = React.useState(false);
+  const [loanInteraction, setLoanInteraction] = React.useState<BlocInteractionView | null>(null);
   const totalStrength = bloc.strength + bloc.imperialStrength;
   const blocPct = totalStrength > 0 ? (bloc.strength / totalStrength) * 100 : 50;
   const imperialPct = 100 - blocPct;
@@ -788,7 +790,10 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
                           cooldownDays={i.cooldownDays}
                           cooldownRemainingDays={i.cooldownRemainingDays}
                           tutorialTarget={`Interaction:${i.id}${i.id === 'makepromiseinteraction' && bloc.definitionKey === 'loyalistbloc' ? ' LoyalistMakePromiseButton' : ''}`}
-                          onClick={i.availability === 'available' && !i.inProgress ? () => startBlocInteraction(i.id) : undefined}
+                          onClick={i.availability === 'available' && !i.inProgress ? () => {
+                            if (i.needsLoanSelection) setLoanInteraction(i);
+                            else void startBlocInteraction(i.id);
+                          } : undefined}
                           onCancel={i.inProgress ? cancelBlocInteraction : undefined}
                         />
                       </Tooltip>
@@ -829,6 +834,14 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
           ) : null}
         </div>
       </StyledScrollArea>
+      <BlocLoanModal
+        interaction={loanInteraction}
+        blocName={bloc.name}
+        onClose={() => setLoanInteraction(null)}
+        onConfirm={loanOptionIndex => loanInteraction
+          ? startBlocInteraction(loanInteraction.id, loanOptionIndex)
+          : Promise.resolve(null)}
+      />
     </div>
   );
 };

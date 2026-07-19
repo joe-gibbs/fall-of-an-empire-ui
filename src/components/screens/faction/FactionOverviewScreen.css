@@ -155,15 +155,6 @@
   flex-direction: column;
 }
 
-.fov-faction-kicker {
-  font-size: 0.72rem;
-  color: var(--text-dark);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  margin-bottom: 0.18rem;
-}
-
 .fov-ruler-row {
   display: flex;
   align-items: center;

@@ -289,14 +289,6 @@
   border-bottom-color: rgba(201, 168, 76, 0.18);
 }
 
-.mil-section-kicker {
-  font-size: 0.72rem;
-  color: var(--gold);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
 .mil-section-value {
   min-width: 0;
   font-size: 0.8rem;

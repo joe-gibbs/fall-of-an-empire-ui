@@ -153,7 +153,6 @@ export default function MilitaryCommanderAssignmentModal({
       closing={closing}
       onClose={close}
       headerIcon="/assets/icons/I_ReplaceCommander.png"
-      kicker={webUIText('MilitaryCommander.Kicker')}
       title={title}
     >
       <CandidateMissionBar prefix="cam">

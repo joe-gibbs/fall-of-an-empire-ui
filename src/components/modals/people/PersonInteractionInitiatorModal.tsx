@@ -152,7 +152,6 @@ export default function PersonInteractionInitiatorModal({
       closing={closing}
       onClose={handleClose}
       headerIcon={activeInteraction.iconUrl || '/assets/icons/I_Family.png'}
-      kicker={webUIText('Auto.ComponentsModalsPersonInteractionInitiatorModal.115.1')}
       title={activeInteraction.name}
       modalClassName="cam-person-selection-modal"
     >

@@ -171,7 +171,6 @@ export default function RegionGovernorAppointmentModal({
       closing={closing}
       onClose={close}
       headerIcon={headerIcon}
-      kicker={webUIText('Auto.ExtraAttr.ComponentsModalsRegionGovernorAppointmentModal.137.1')}
       title={regionName || settlementName}
     >
       <CandidateMissionBar prefix="cam">

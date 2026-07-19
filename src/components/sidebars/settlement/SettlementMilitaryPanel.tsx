@@ -312,8 +312,8 @@ function PendingFormationProgress({
       <header className="mil-pending-header">
         <img src={asset(icon)} alt="" className="mil-pending-formation-icon" />
         <div className="mil-pending-heading">
-          <span className="mil-pending-kicker">{formation.heading}</span>
           <span className="mil-pending-name">{formation.templateName}</span>
+          <span className="mil-pending-status">{formation.heading}</span>
         </div>
         <span className="mil-pending-percent">{Math.round(overallProgress * 100)}%</span>
       </header>

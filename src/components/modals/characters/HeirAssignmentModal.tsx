@@ -116,7 +116,6 @@ export default function HeirAssignmentModal({
       closing={closing}
       onClose={close}
       headerIcon="/assets/icons/I_Family.png"
-      kicker={t('FactionOverview.Succession')}
       title={t('FactionOverview.AssignHeir')}
     >
       <CandidateMissionBar prefix="cam">

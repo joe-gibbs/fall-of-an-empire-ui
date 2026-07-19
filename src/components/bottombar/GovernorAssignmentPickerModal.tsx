@@ -119,7 +119,6 @@ export default function GovernorAssignmentPickerModal({
       closing={closing}
       onClose={close}
       headerIcon="/assets/icons/AssignGovernor.png"
-      kicker={t('BottomBar.GovernorAssignment.Title')}
       title={t('BottomBar.GovernorAssignment.ChooseAnyone')}
     >
       <CandidateMissionBar prefix="cam">

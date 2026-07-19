@@ -264,15 +264,8 @@
   margin-left: 1rem;
 }
 
-.gfov-kicker {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
 .gfov-governor-name {
-  margin: 0.1rem 0 0;
+  margin: 0;
   font-family: var(--font-header);
   font-size: 1.5rem;
   line-height: 1.1;
@@ -1249,15 +1242,6 @@
   flex-direction: column;
 }
 
-.gfov-empire-faction-kicker {
-  font-size: 0.72rem;
-  color: var(--text-dark);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  margin-bottom: 0.18rem;
-}
-
 .gfov-empire-ruler-name {
   font-family: var(--font-header);
   font-size: 1.1rem;
@@ -1650,7 +1634,7 @@
   min-width: 0;
 }
 
-.gfov-appointment-role-kicker {
+.gfov-appointment-role-meta {
   display: flex;
   align-items: center;
   min-width: 0;

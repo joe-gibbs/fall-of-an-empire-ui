@@ -188,7 +188,6 @@ function FactionHeader({
           onClick={() => faction.rulerId && onOpenCharacter(faction.rulerId)}
         />
         <div className="fov-faction-info">
-          <div className="fov-faction-kicker">{t('FactionOverview.Leader')}</div>
           <div className="fov-ruler-row">
             <button
               type="button"

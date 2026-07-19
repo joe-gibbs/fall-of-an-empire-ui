@@ -5358,33 +5358,6 @@
   color: var(--green-light);
 }
 
-/* ── Eyebrow icon (rank badge in detail header) ─────────────────────── */
-.chart-detail-eyebrow {
-  display: flex;
-  align-items: center;
-  font-family: var(--font-body);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-
-.chart-detail-eyebrow > * {
-  margin-left: 0.35rem;
-}
-
-
-
-.chart-detail-eyebrow > :first-child {
-  margin-left: 0;
-}
-
-.chart-detail-eyebrow-icon {
-  width: 0.9rem;
-  height: 0.9rem;
-}
-
 .chart-detail-actions {
   display: flex;
   flex-direction: column;

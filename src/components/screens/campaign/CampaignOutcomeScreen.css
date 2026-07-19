@@ -200,18 +200,8 @@
   min-width: 0;
 }
 
-.outcome-kicker {
-  font-family: var(--font-body);
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 0;
-  animation: outcome-copy-in 0.22s ease-out both;
-}
-
 .outcome-heading h1 {
-  margin: 0.35rem 0 0;
+  margin: 0;
   font-family: var(--font-header);
   font-size: 3.8rem;
   line-height: 0.95;

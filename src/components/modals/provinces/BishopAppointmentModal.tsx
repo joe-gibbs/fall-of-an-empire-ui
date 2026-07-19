@@ -153,7 +153,6 @@ export default function BishopAppointmentModal({
       closing={closing}
       onClose={close}
       headerIcon={religionIcon}
-      kicker={webUIText('Auto.ExtraAttr.ComponentsModalsBishopAppointmentModal.118.1')}
       title={renderedAssignment.landName}
     >
       <CandidateMissionBar prefix="bam">

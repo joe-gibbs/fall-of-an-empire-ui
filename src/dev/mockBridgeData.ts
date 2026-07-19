@@ -3220,6 +3220,9 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
     treatyTributePaid: 0,
     eventExpense: 0,
     powerBlocExpense: 150,
+    landownerInterestExpense: 0,
+    landownerDebt: 0,
+    landownerMonthlyInterestRate: 0.05,
     autoAssignCommanderExpense: 0,
     otherExpense: 0,
     treasuryAdjustment: 0,
@@ -3424,6 +3427,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
       treatyTributePaid: 0,
       eventExpense: 0,
       powerBlocExpense: 120 + (index > 5 ? 30 : 0),
+      landownerInterestExpense: 0,
       autoAssignCommanderExpense: 0,
       otherExpense: 0,
       netIncome: (
@@ -6154,7 +6158,14 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           { id: 'make-promise', name: 'Make Promise', description: 'Promise offices or patronage before the current demand expires.', effectLines: mockDisplayLines('Free. Instant. Success chance: 68%.'), iconId: 'MakePromiseInteraction', backgroundId: 'MakePromiseInteraction', goldCost: 0, durationDays: 0, cooldownDays: 120, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 0, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 68, reasons: [], successFactors: [{ name: 'Court custom', percent: 9 }, { name: 'Current demand', percent: -6 }] },
           { id: 'offer-sinecure', name: 'Offer Sinecure', description: 'Spend gold on a comfortable post for a useful ally.', effectLines: mockDisplayLines('Cost: 220 gold. Time: 15 days. Success chance: 86%.'), iconId: 'OfferASinecureInteraction', backgroundId: 'OfferASinecureInteraction', goldCost: 220, durationDays: 15, cooldownDays: 180, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 10, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 86, reasons: [], successFactors: [{ name: 'Treasury', percent: 12 }, { name: 'Court custom', percent: 9 }] },
           { id: 'intimidate', name: 'Intimidate', description: 'Pressure council members into lowering their expectations.', effectLines: mockDisplayLines('Cost: 40 gold. Time: 10 days. Success chance: 52%.'), iconId: 'IntimidateInteraction', backgroundId: 'IntimidateInteraction', goldCost: 40, durationDays: 10, cooldownDays: 160, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 10, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 52, reasons: [], successFactors: [{ name: 'Authority', percent: 14 }, { name: 'Public hostility', percent: -10 }] },
-        ], lastCompletedInteractionId: '', lastInteractionSucceeded: false, lastInteractionCompletedDate: 0, lastInteractionOutcomeText: '' } satisfies BridgeResponse<'game.get_bloc_interactions'>;
+        ].map(interaction => ({
+          needsLoanSelection: false,
+          grossRevenue: 0,
+          currentLandownerDebt: 0,
+          currentLandownerMonthlyInterest: 0,
+          loanOptions: [],
+          ...interaction,
+        })), lastCompletedInteractionId: '', lastInteractionSucceeded: false, lastInteractionCompletedDate: 0, lastInteractionOutcomeText: '' } satisfies BridgeResponse<'game.get_bloc_interactions'>;
       case 'game.get_agent_candidates': {
         const role = payloadString(payload, 'role', 'diplomat');
         const targetFactionId = payloadString(payload, 'targetFactionId', MOCK_IDS.rivalFaction);

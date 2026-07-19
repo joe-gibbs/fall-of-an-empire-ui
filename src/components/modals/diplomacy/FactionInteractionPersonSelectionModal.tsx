@@ -99,7 +99,6 @@ export default function FactionInteractionPersonSelectionModal({
       closing={closing}
       onClose={close}
       headerIcon="/assets/icons/I_ReplaceGovernor.png"
-      kicker={selection?.personSelectionPrompt || selection?.message}
       title={selection?.interactionName || t('Common.Select')}
       modalClassName="cam-person-selection-modal"
     >

@@ -247,7 +247,6 @@ export default function FactionInteractionInputModal({
             <div className="pig-result">
               {selectedGoldRequirement && (
                 <>
-                  <span className="pig-result__label">{selectedGoldRequirement.prompt}</span>
                   {selectedGoldOption && (
                     <>
                       <span className="pig-result__name">{selectedGoldOption.label}</span>
@@ -283,7 +282,6 @@ export default function FactionInteractionInputModal({
 
               {selectedFactionRequirement && selectedFaction && (
                 <div className="fii-selected-faction">
-                  <span className="pig-result__label">{selectedFactionRequirement.prompt}</span>
                   <div className="fii-selected-faction__main">
                     <FactionRoundel
                       factionId={selectedFaction.id}
@@ -305,9 +303,6 @@ export default function FactionInteractionInputModal({
           </div>
 
           <div className="pig-options">
-            <div className="pig-options__header">
-              <span>{t('Common.Select')}</span>
-            </div>
             <div className="pig-list">
               {requirements.map(req => (
                 <div key={req.inputId} className="fii-requirement">

@@ -334,20 +334,6 @@
   overflow: hidden;
 }
 
-.mm-continue-hero-kicker {
-  font-family: var(--font-body);
-  font-size: 0.7273rem;
-  line-height: 1.1;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  color: #dcc57d;
-  margin-bottom: 0.1818rem;
-  max-width: 100%;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
 .mm-continue-hero-name {
   font-family: var(--font-header);
   font-size: 1.3636rem;
@@ -487,12 +473,11 @@
   margin-top: 0.1818rem;
 }
 
-.mm-illust-kicker {
+.mm-illust-subtitle {
   font-family: var(--font-body);
   font-size: 0.7273rem;
   color: rgba(224, 200, 114, 0.78);
   letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .mm-illust-label {
@@ -1835,7 +1820,7 @@
   pointer-events: none;
 }
 
-.mm-root--mockup .mm-illust-kicker {
+.mm-root--mockup .mm-illust-subtitle {
   color: rgba(201, 168, 76, 0.86);
 }
 
@@ -2033,12 +2018,6 @@
   margin-left: 0.6364rem;
 }
 
-.mm-root--mockup-2 .mm-continue-hero-kicker {
-  font-size: 0.6364rem;
-  line-height: 1;
-  margin-bottom: 0.0909rem;
-}
-
 .mm-root--mockup-2 .mm-continue-hero-name {
   font-size: 1.1364rem;
   line-height: 1.05;
@@ -2159,7 +2138,7 @@
   transition: transform 0.14s ease;
 }
 
-.mm-root--mockup-2 .mm-illust-kicker {
+.mm-root--mockup-2 .mm-illust-subtitle {
   display: none;
 }
 

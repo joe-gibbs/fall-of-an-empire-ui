@@ -103,7 +103,6 @@ export default function ProvinceEmperorTakeoverModal({ open, takeover, onClose }
       closing={closing}
       onClose={close}
       headerIcon="/assets/icons/AssignGovernor.png"
-      kicker={t('ProvinceMode.Transition.Kicker')}
       title={t('ProvinceMode.Transition.Title')}
     >
       <CandidateMissionBar prefix="cam">

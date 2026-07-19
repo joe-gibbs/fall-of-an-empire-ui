@@ -253,11 +253,10 @@
   flex-direction: column;
 }
 
-.mil-pending-kicker {
-  color: var(--gold);
+.mil-pending-status {
+  color: var(--text-muted);
   font-size: 0.62rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .mil-pending-name {

@@ -1,0 +1,38 @@
+.blm-modal {
+  width: 58rem;
+  height: 40rem;
+}
+
+.blm-lender {
+  min-height: 7.4rem;
+}
+
+.blm-lender__icon {
+  width: 5.25rem;
+  height: 5.25rem;
+  object-fit: cover;
+}
+
+.blm-value--positive {
+  color: var(--green-light);
+}
+
+.blm-value--interest {
+  color: var(--red-light);
+}
+
+.blm-impact--interest {
+  border-color: rgba(173, 72, 64, 0.3);
+  background-color: #261615;
+  background-image: url('/assets/baked/card-red.png');
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+}
+
+@media (max-width: 62rem) {
+  .blm-modal {
+    width: 96vw;
+    height: 88vh;
+  }
+}
