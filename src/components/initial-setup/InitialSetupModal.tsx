@@ -15,6 +15,7 @@ import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type {
   ApplySettingsRequest,
   GetSettingsResponse,
+  LlmModelDTO,
   SettingsGameplayDTO,
 } from '../../bridge-types.generated.ts';
 import { webUIText, WebUIText } from '../../localization/WebUITextContext';
@@ -30,6 +31,24 @@ const SAVE_FREQUENCY_OPTIONS = [
   { value: 'Yearly', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.741.19'); } },
   { value: 'Never', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.741.20'); } },
 ];
+
+const MODEL_RECOMMENDATION_ORDER = ['Large.gguf', 'Medium.gguf', 'Small.gguf'];
+
+function recommendModel(
+  models: LlmModelDTO[],
+  hardware: GetSettingsResponse['hardware'],
+): string | undefined {
+  if (hardware.videoMemoryMB <= 0 || hardware.systemMemoryMB <= 0) return undefined;
+
+  return MODEL_RECOMMENDATION_ORDER.find(filename => {
+    const model = models.find(candidate => candidate.filename === filename);
+    return model !== undefined
+      && model.vramRequirementMB > 0
+      && model.ramRequirementMB > 0
+      && model.vramRequirementMB <= hardware.videoMemoryMB
+      && model.ramRequirementMB <= hardware.systemMemoryMB;
+  });
+}
 
 const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
   const [settings, setSettings] = useState<GetSettingsResponse | null>(null);
@@ -132,6 +151,8 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
 
   if (!presence.mounted || !settings || !workingGameplay) return null;
 
+  const recommendedModelFilename = recommendModel(settings.availableLlmModels, settings.hardware);
+
   return (
     <div className={`initial-setup-overlay${presence.closing ? ' initial-setup-overlay--closing' : ''}`}>
       <div
@@ -159,7 +180,7 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
               hardware={settings.hardware}
               setGameplay={setGameplay}
               showEventFrequency={false}
-              recommendedModelFilename="Medium.gguf"
+              recommendedModelFilename={recommendedModelFilename}
             />
           </section>
 

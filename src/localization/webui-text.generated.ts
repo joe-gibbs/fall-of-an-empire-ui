@@ -608,7 +608,7 @@ export const WEBUI_TEXT_SOURCE = {
   "Settings.Events.Model.NotInstalledHint": "This model is not installed.",
   "InitialSetup.Kicker": "Initial Setup",
   "InitialSetup.Title": "Welcome to Fall of an Empire",
-  "InitialSetup.Intro": "Narrative events turn developments in your campaign into dilemmas and choices involving your characters, factions, settlements and armies. Scripted Events use hand-authored chains; local models write new events from the current campaign, with larger models producing richer text more slowly.",
+  "InitialSetup.Intro": "Events respond to what happens in your campaign and present choices involving your characters, factions, settlements and armies. Scripted Events follow hand-written story chains. Local models create new events as you play. Larger models produce better writing, but take longer.",
   "InitialSetup.Recommended": "Recommended",
   "InitialSetup.Preferences.Title": "Essential Preferences",
   "InitialSetup.Footer": "You can change these choices later in Settings.",
