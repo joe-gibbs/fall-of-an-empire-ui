@@ -438,7 +438,11 @@
 }
 
 .topbar-actions > * + * {
-  margin-left: 1rem;
+  margin-left: 0.25rem;
+}
+
+.topbar-actions .screen-buttons > * + * {
+  margin-left: 0.25rem;
 }
 
 /* =============================================
