@@ -222,6 +222,14 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
     };
   }, [frameRef, handleWheel]);
 
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+
+    frame.addEventListener('pointerdown', cancelSmoothScroll, true);
+    return () => frame.removeEventListener('pointerdown', cancelSmoothScroll, true);
+  }, [cancelSmoothScroll, frameRef]);
+
   const clearDrag = useCallback(() => {
     dragRef.current = null;
   }, []);
