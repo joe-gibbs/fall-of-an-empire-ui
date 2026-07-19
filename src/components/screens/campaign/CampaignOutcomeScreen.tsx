@@ -25,6 +25,7 @@ interface CampaignOutcomeScreenProps {
 }
 
 const CLOSE_MS = 240;
+const MAX_HISTORY_TICKS = 5;
 
 function formatNumber(value: number): string {
   return Math.round(value).toLocaleString('en-US');
@@ -147,6 +148,14 @@ function HistoryChart({
   formatter: (value: number) => string;
 }) {
   const maxValue = Math.max(...points.map(point => point[metric]), 1);
+  const tickCount = Math.min(points.length, MAX_HISTORY_TICKS);
+  const tickPoints = tickCount <= 1
+    ? points.slice(0, 1)
+    : Array.from({ length: tickCount }, (_, index) => {
+        const pointIndex = Math.round(index * (points.length - 1) / (tickCount - 1));
+        return points[pointIndex];
+      });
+
   return (
     <div className="outcome-chart">
       <div className="outcome-chart-head">
@@ -154,20 +163,39 @@ function HistoryChart({
         <span>{formatter(points[points.length - 1]?.[metric] ?? 0)}</span>
       </div>
       <div className="outcome-chart-plot">
-        {points.map((point, index) => {
-          const height = Math.max(8, (point[metric] / maxValue) * 100);
-          return (
-            <div className="outcome-chart-col" key={`${title}:${point.label}:${index}`}>
-              <div className="outcome-chart-track">
+        <div className="outcome-chart-series">
+          {points.map((point, index) => {
+            const height = Math.max(8, (point[metric] / maxValue) * 100);
+            const animationOffset = points.length <= 1 ? 0 : index * 900 / (points.length - 1);
+            return (
+              <div className="outcome-chart-col" key={`${title}:${point.label}:${index}`}>
                 <div
                   className="outcome-chart-bar"
-                  style={{ height: `${height}%`, animationDelay: `${6540 + index * 55}ms` }}
+                  style={{ height: `${height}%`, animationDelay: `${6540 + animationOffset}ms` }}
                 />
               </div>
-              <span className="outcome-chart-label">{point.label}</span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        <div className="outcome-chart-axis" aria-hidden="true">
+          {tickPoints.map((point, index) => {
+            const position = tickCount <= 1 ? 0 : index * 100 / (tickCount - 1);
+            const edgeClass = index === 0
+              ? ' outcome-chart-label--first'
+              : index === tickCount - 1
+                ? ' outcome-chart-label--last'
+                : '';
+            return (
+              <span
+                className={`outcome-chart-label${edgeClass}`}
+                key={`${title}:tick:${point.label}:${index}`}
+                style={{ left: `${position}%` }}
+              >
+                {point.label}
+              </span>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
