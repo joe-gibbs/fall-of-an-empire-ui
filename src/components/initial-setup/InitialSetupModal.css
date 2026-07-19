@@ -55,7 +55,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 1.35rem 1.65rem 1.05rem;
+  padding: 1.05rem 1.65rem;
   flex-shrink: 0;
   background-image: url('/assets/baked/panel-charcoal.png');
   background-position: center;
@@ -63,17 +63,6 @@
   border-bottom-width: 0.077rem;
   border-bottom-style: solid;
   border-bottom-color: var(--gold-dark);
-}
-
-.initial-setup__kicker {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
 }
 
 .initial-setup__title {

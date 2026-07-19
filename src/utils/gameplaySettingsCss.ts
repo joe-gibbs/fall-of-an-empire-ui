@@ -1,9 +1,13 @@
 import type { SettingsGameplayDTO } from '../bridge-types.generated.ts';
 
-export function applyGameplayCssVariables(gameplay: SettingsGameplayDTO) {
-  if (Number.isFinite(gameplay.uiScale) && gameplay.uiScale > 0) {
-    document.documentElement.style.setProperty('--ui-scale', String(gameplay.uiScale));
+export function applyUIScaleCssVariable(uiScale: number) {
+  if (Number.isFinite(uiScale) && uiScale > 0) {
+    document.documentElement.style.setProperty('--ui-scale', String(uiScale));
   }
+}
+
+export function applyGameplayCssVariables(gameplay: SettingsGameplayDTO) {
+  applyUIScaleCssVariable(gameplay.uiScale);
   if (Number.isFinite(gameplay.uiScrollSpeed) && gameplay.uiScrollSpeed > 0) {
     document.documentElement.style.setProperty('--ui-scroll-speed', String(gameplay.uiScrollSpeed));
   }

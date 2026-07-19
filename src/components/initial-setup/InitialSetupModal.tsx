@@ -7,7 +7,7 @@ import {
   SettingsSlider,
   Toggle,
 } from '../settings/SettingsPanel';
-import { applyGameplayCssVariables } from '../../utils/gameplaySettingsCss';
+import { applyGameplayCssVariables, applyUIScaleCssVariable } from '../../utils/gameplaySettingsCss';
 import { useAnimatedPresence } from '../../hooks/useAnimatedPresence';
 import { useEscapeStackEntry } from '../../context/EscapeStack';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
@@ -100,9 +100,10 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
   const canClose = completed === true && !busy;
   const close = useCallback(() => {
     if (!canClose) return;
+    if (settings) applyGameplayCssVariables(settings.gameplay);
     setVisible(false);
     setSaveError(false);
-  }, [canClose]);
+  }, [canClose, settings]);
 
   useEscapeStackEntry({
     id: 'modal.initial-setup',
@@ -113,6 +114,12 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
 
   const setGameplay = (patch: Partial<SettingsGameplayDTO>) => {
     setWorkingGameplay(current => current ? { ...current, ...patch } : current);
+  };
+
+  const setUIScale = (value: number) => {
+    const uiScale = value / 100;
+    setGameplay({ uiScale });
+    applyUIScaleCssVariable(uiScale);
   };
 
   const save = async (playTutorial: boolean) => {
@@ -160,12 +167,12 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="initial-setup-title"
+        aria-describedby="initial-setup-intro"
       >
         <header className="initial-setup__header">
           <div>
-            <span className="initial-setup__kicker"><WebUIText textKey="InitialSetup.Kicker" /></span>
             <h1 id="initial-setup-title" className="initial-setup__title"><WebUIText textKey="InitialSetup.Title" /></h1>
-            <p className="initial-setup__intro"><WebUIText textKey="InitialSetup.Intro" /></p>
+            <p id="initial-setup-intro" className="initial-setup__intro"><WebUIText textKey="InitialSetup.Intro" /></p>
           </div>
           {canClose && <CloseButton size="sm" onClick={close} />}
         </header>
@@ -193,7 +200,7 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
                 min={50}
                 max={200}
                 suffix="%"
-                onChange={value => setGameplay({ uiScale: value / 100 })}
+                onChange={setUIScale}
               />
               <Toggle
                 label={webUIText('Settings.ReduceMotion.Label')}
