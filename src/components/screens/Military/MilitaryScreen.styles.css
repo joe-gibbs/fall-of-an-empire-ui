@@ -1768,6 +1768,9 @@
 
 .chart-template-title-input:focus {
   color: var(--text-bright);
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--gold);
 }
 
 .chart-template-rename-button {

@@ -989,18 +989,29 @@ function TemplateEditor({
                   {draft.name || createTitle}
                 </div>
               )}
-              <button
-                type="button"
-                className="chart-template-rename-button"
-                aria-label={webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12')}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  beginRename();
+              <Tooltip
+                content={{
+                  title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12'),
+                  body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.587.13'),
                 }}
+                position="bottom"
+                delay={150}
+                inline
                 disabled={!editable}
               >
-                <img src={RENAME_ICON} alt="" className="chart-template-rename-icon" draggable={false} />
-              </button>
+                <button
+                  type="button"
+                  className="chart-template-rename-button"
+                  aria-label={webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12')}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    beginRename();
+                  }}
+                  disabled={!editable}
+                >
+                  <img src={RENAME_ICON} alt="" className="chart-template-rename-icon" draggable={false} />
+                </button>
+              </Tooltip>
             </div>
           </div>
 
