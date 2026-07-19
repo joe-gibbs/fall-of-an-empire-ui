@@ -19,6 +19,7 @@ import { useMilitary, useMilitaryOverview, usePerson, usePlayerFactionId } from 
 import { registerSidebar } from '../../../registry/index';
 import {
   disbandMilitaryBridge,
+  demoteMilitaryCommandBridge,
   disembarkMilitaryBridge,
   duplicateMilitaryFormationTemplateBridge,
   promoteMilitaryCommandBridge,
@@ -325,6 +326,15 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       disabled: !isPlayerControlled,
       onClick: () => {
         setMilitaryParentBridge(army.id, null).catch(acknowledgeBridgeFailure);
+      },
+    }] : []),
+    ...(army.commandRank !== 'Legatus' ? [{
+      label: webUIText('Military.Command.Demote'),
+      icon: '/assets/icons/I_Demote.png',
+      description: webUIText('Military.Command.DemoteDescription'),
+      disabled: !isPlayerControlled,
+      onClick: () => {
+        demoteMilitaryCommandBridge(army.id).catch(acknowledgeBridgeFailure);
       },
     }] : []),
     ...(army.commandRank !== 'Dux' ? [{

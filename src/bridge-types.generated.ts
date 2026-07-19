@@ -5033,6 +5033,10 @@ export interface PromoteMilitaryCommandRequest {
   militaryId: string;
 }
 
+export interface DemoteMilitaryCommandRequest {
+  militaryId: string;
+}
+
 export interface ReplaceMilitaryCommanderRequest {
   militaryId: string;
   personId: string;
@@ -6175,6 +6179,7 @@ export interface BridgeActions {
   'game.delete_formation_template': { request: DeleteFormationTemplateRequest; response: DeleteFormationTemplateResponse };
   'game.delete_save': { request: DeleteSaveRequest; response: DeleteSaveResponse };
   'game.demolish_settlement_building': { request: DemolishSettlementBuildingRequest; response: void };
+  'game.demote_military_command': { request: DemoteMilitaryCommandRequest; response: void };
   'game.diplomatic_notification_events': { request: DiplomaticNotificationEventsRequest; response: void };
   'game.disband_military': { request: DisbandMilitaryRequest; response: void };
   'game.disembark_military': { request: MilitaryTargetingRequest; response: void };

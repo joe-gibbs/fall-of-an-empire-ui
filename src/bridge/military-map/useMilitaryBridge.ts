@@ -504,6 +504,10 @@ export function promoteMilitaryCommandBridge(militaryId: string): Promise<void> 
   return bridgeCall('game.promote_military_command', { militaryId }).then(() => undefined);
 }
 
+export function demoteMilitaryCommandBridge(militaryId: string): Promise<void> {
+  return bridgeCall('game.demote_military_command', { militaryId }).then(() => undefined);
+}
+
 export function replaceMilitaryCommanderBridge(militaryId: string, personId: string): Promise<void> {
   return bridgeCall('game.replace_military_commander', { militaryId, personId }).then(() => undefined);
 }

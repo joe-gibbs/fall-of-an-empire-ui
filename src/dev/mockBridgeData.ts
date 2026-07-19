@@ -6655,6 +6655,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.replenish_military':
       case 'game.disband_military':
       case 'game.set_military_formation_template':
+      case 'game.demote_military_command':
       case 'game.promote_military_command':
       case 'game.ungarrison_military':
       case 'game.toggle_foederati_callup':

@@ -3,7 +3,7 @@ import { useQuickInteractionMenu } from '../../common/interactions/useQuickInter
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { ZoomPanInitialView } from '../../common/layout/scrolling/ZoomPanCanvas';
 import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
-import { promoteMilitaryCommandBridge } from '../../../bridge/military-map/useMilitaryBridge';
+import { demoteMilitaryCommandBridge, promoteMilitaryCommandBridge } from '../../../bridge/military-map/useMilitaryBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { designUnitScale } from '../../../utils/cssUnits';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
@@ -154,11 +154,17 @@ export function NodeCard({
     kind: 'military',
     targetId: force.id,
     militaryType: force.isNavy ? 'fleet' : 'army',
-    actions: force.isPlayerControlled && force.rank !== 'Dux'
-      ? [{
+    actions: force.isPlayerControlled
+      ? [
+        ...(force.rank !== 'Dux' ? [{
           label: webUIText('QuickInteraction.PromoteCommand'),
           onSelect: () => promoteMilitaryCommandBridge(force.id).catch(acknowledgeBridgeFailure),
-        }]
+        }] : []),
+        ...(force.rank !== 'Legatus' ? [{
+          label: webUIText('QuickInteraction.DemoteCommand'),
+          onSelect: () => demoteMilitaryCommandBridge(force.id).catch(acknowledgeBridgeFailure),
+        }] : []),
+      ]
       : [],
   });
 
