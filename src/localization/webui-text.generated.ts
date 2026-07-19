@@ -2445,7 +2445,7 @@ export const WEBUI_TEXT_SOURCE = {
   "Auto.Prop.ComponentsSidebarsMilitarySidebar.476.4": "Stand Down",
   "Auto.Prop.ComponentsSidebarsMilitarySidebar.478.5": "Release this foederati call-up and return the auxiliary host to its own ruler.",
   "Auto.Prop.ComponentsSidebarsMilitarySidebar.498.6": "Embark",
-  "Auto.Prop.ComponentsSidebarsMilitarySidebar.500.7": "Click on a friendly navy to board it.",
+  "Auto.Prop.ComponentsSidebarsMilitarySidebar.500.7": "Click Embark and then left-click a friendly navy to board it. You can also right-click a friendly navy while this army is selected.",
   "Auto.Prop.ComponentsSidebarsMilitarySidebar.511.8": "Move faster at the cost of supply consumption, attrition risk, and morale recovery.",
   "Auto.Prop.ComponentsSidebarsMilitarySidebar.533.9": "Merge",
   "Auto.Prop.ComponentsSidebarsMilitarySidebar.572.10": "Customise",
