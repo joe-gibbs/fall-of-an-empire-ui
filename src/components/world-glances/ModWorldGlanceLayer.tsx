@@ -5,6 +5,7 @@ import {
   type WorldGlanceRegistration,
 } from '../../registry/worldGlances';
 import { useGlanceScale } from '../../bridge/core/useGlanceScale';
+import { useWorldAnchorRasterScale } from '../../runtime/worldAnchorRasterScale';
 import './ModWorldGlanceLayer.css';
 
 const MOD_FRAME_HEADER_NUMBER_COUNT = 2;
@@ -118,15 +119,16 @@ function overlayOffset(anchorPoint: string): string {
   return `${resolve(parts[0])}, ${resolve(parts[1])}`;
 }
 
-function ModWorldGlanceNode({ registration, entry, atlas, glanceScale }: {
+function ModWorldGlanceNode({ registration, entry, atlas, glanceScale, worldAnchorRasterScale }: {
   registration: WorldGlanceRegistration;
   entry: AtlasModWorldGlanceEntry;
   atlas: boolean;
   glanceScale: number;
+  worldAnchorRasterScale: number;
 }) {
   const content: ReactNode = registration.render(entry);
   const anchorPoint = registration.anchorPoint ?? 'center';
-  const rasterScale = registration.rasterScale ?? 1;
+  const rasterScale = (registration.rasterScale ?? 1) * worldAnchorRasterScale;
 
   const sendInput = (mouseButton: 'left' | 'right', event: MouseEvent<HTMLDivElement> | PointerEvent<HTMLDivElement>) => {
     if (!registration.onInput) return;
@@ -195,6 +197,7 @@ function ModWorldGlanceNode({ registration, entry, atlas, glanceScale }: {
 
 export default function ModWorldGlanceLayer({ atlas = false }: { atlas?: boolean }) {
   const glanceScale = useGlanceScale();
+  const worldAnchorRasterScale = useWorldAnchorRasterScale();
   const registrations = useWorldGlanceRegistrations();
   const frames = useModWorldGlanceFrames(atlas);
   const nodes = useMemo(() => registrations.flatMap((registration) => (
@@ -208,6 +211,7 @@ export default function ModWorldGlanceLayer({ atlas = false }: { atlas?: boolean
       entry={entry}
       atlas={atlas}
       glanceScale={glanceScale}
+      worldAnchorRasterScale={worldAnchorRasterScale}
     />
   ));
 

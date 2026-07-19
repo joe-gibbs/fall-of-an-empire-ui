@@ -25,6 +25,7 @@ import {
 import type { Notification } from '../../data/types';
 import NotificationBanner from '../notifications/NotificationBanner';
 import { prepareWorldAnchorContentChange } from '../../runtime/worldAnchorContentChanges';
+import { useWorldAnchorRasterScale } from '../../runtime/worldAnchorRasterScale';
 import type { WorldGlanceDetailClass } from './WorldGlanceTypes';
 import ArmyGlance from './ArmyGlance';
 import BattleGlance from './BattleGlance';
@@ -124,10 +125,6 @@ function anchorPointFor(section: AtlasSection, detail: WorldGlanceDetailClass, r
   return 'center';
 }
 
-function rasterScaleForSection(): number {
-  return 1;
-}
-
 function reserveSizeForSection(section: AtlasSection, remPx: number, settlementBleedRem: number, garrisonIndex: number): string | undefined {
   if (section === 'settlement') {
     const widthRem = SETTLEMENT_NAMED_ATLAS_CAPACITY_WIDTH_REM + settlementBleedRem * 2;
@@ -147,7 +144,7 @@ function reserveSizeForSection(section: AtlasSection, remPx: number, settlementB
   return undefined;
 }
 
-const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, buildItemFrame, remPx, plateRef }: {
+const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, buildItemFrame, remPx, rasterScale, plateRef }: {
   section: AtlasSection;
   id: string;
   entry: unknown;
@@ -157,10 +154,10 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   hovered: boolean;
   buildItemFrame?: SettlementBuildItemFrame;
   remPx: number;
+  rasterScale: number;
   plateRef: (key: string, node: HTMLDivElement | null) => void;
 }) {
   const anchorKey = worldAnchorKey(section, id);
-  const rasterScale = rasterScaleForSection();
   const settlementBleedRem = section === 'settlement'
     ? Math.max(
       SETTLEMENT_STATUS_TOP_BLEED_REM,
@@ -262,6 +259,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
 
 export default function GlanceAtlasRoot() {
   const uiScale = useUIScale();
+  const rasterScale = useWorldAnchorRasterScale();
   const data = useWorldGlancesBridge();
 
   const detailByKeyRef = useRef<Map<string, WorldGlanceDetailClass>>(new Map());
@@ -509,6 +507,7 @@ export default function GlanceAtlasRoot() {
               hovered={hoveredKeys.has(key)}
               buildItemFrame={section === 'settlement' ? buildItemFrameByKey.get(key) : undefined}
               remPx={remPx}
+              rasterScale={rasterScale}
               plateRef={plateRef}
             />
           );

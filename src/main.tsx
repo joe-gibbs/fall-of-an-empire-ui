@@ -33,6 +33,7 @@ import {
 } from './runtime/bridgePayloads'
 import { applyRuntimeViewportScale, setRuntimeClass, type RuntimeViewportState } from './runtime/runtimeViewport'
 import { applyAppModeCacheReset } from './runtime/appModeCacheReset'
+import { setWorldAnchorRasterScale } from './runtime/worldAnchorRasterScale'
 
 const GRABBING_TARGET_SELECTOR = [
   '.zoom-pan-canvas--panning',
@@ -258,6 +259,10 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     );
     dispatchBridgeEvent('game.world_glances_frame', data);
     recordUIPerfBridgeEvent('game.world_glances_frame', startedAtMs, Date.now());
+  });
+
+  engine.on('StrategyWorldAnchorRasterScale', (scale) => {
+    setWorldAnchorRasterScale(scale);
   });
 
   engine.on('StrategyModWorldGlancesFrame', (
