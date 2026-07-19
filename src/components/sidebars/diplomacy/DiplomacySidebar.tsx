@@ -361,8 +361,18 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
     cancel: cancelFactionInteraction,
   } =
     useFactionInteractionsBridge(faction.id);
+  const factionInteractionSelectionPanelRef = React.useRef<HTMLDivElement>(null);
   const liveDiplomaticInteractions = (factionInteractionsState?.interactions ?? [])
     .filter(i => !i.isEdict);
+
+  React.useEffect(() => {
+    if (!factionInteractionSelection) return undefined;
+
+    const frameId = window.requestAnimationFrame(() => {
+      factionInteractionSelectionPanelRef.current?.scrollIntoView({ block: 'center', inline: 'nearest' });
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [factionInteractionSelection]);
 
   // Spy interactions live on a parallel slot (FactionCharacterComponent).
   const { state: spyInteractionsState, start: startSpyInteraction, cancel: cancelSpyInteraction } =
@@ -703,6 +713,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                   fullWidth
                   icon="/assets/icons/I_Diplomacy.png"
                   className="diplo-negotiate-button"
+                  tutorialTarget="NegotiateTreatyButton"
                   onClick={() => openScreen('treaty', faction.id)}
                 >
                   <WebUIText textKey="Diplomacy.NegotiateTreaty" />
@@ -1158,7 +1169,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
               </div>
             </Tooltip>
           )}
-          <div className="diplo-actions-block">
+          {!factionInteractionSelection && <div className="diplo-actions-block">
             {liveDiplomaticInteractions.map(i => {
               const matchesOutcome = factionInteractionsState?.lastCompletedInteractionId === i.id;
               const outcome: 'success' | 'failure' | undefined = matchesOutcome
@@ -1206,9 +1217,13 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                 </Tooltip>
               );
             })}
-          </div>
+          </div>}
           {factionInteractionSelection && (
-            <div className="diplo-selection-panel">
+            <div
+              ref={factionInteractionSelectionPanelRef}
+              className="diplo-selection-panel"
+              data-tutorial-target="FoederatiRegionSelectionPanel"
+            >
               <div className="diplo-selection-panel__header">{factionInteractionSelection.interactionName}</div>
               <div className="diplo-selection-panel__message">{factionInteractionSelection.message || factionInteractionSelection.prompt}</div>
               <div className="diplo-selection-panel__count">
@@ -1293,7 +1308,12 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                 </div>
               )}
               <div className="diplo-selection-panel__actions">
-                <GameButton variant="burgundy" onClick={() => { void confirmFactionInteractionSelection(); }}>
+                <GameButton
+                  variant="burgundy"
+                  tutorialTarget="ConfirmFoederatiSelectionButton"
+                  disabled={factionInteractionSelection.selectedSettlementCount === 0}
+                  onClick={() => { void confirmFactionInteractionSelection(); }}
+                >
                   {webUIText('Diplomacy.InteractionSelection.Confirm')}
                 </GameButton>
                 <GameButton variant="outline" onClick={() => { void cancelFactionInteractionSelection(); }}>
