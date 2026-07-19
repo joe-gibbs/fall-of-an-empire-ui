@@ -366,7 +366,7 @@ export default function GameUIRoot() {
   );
 
   return (
-    <div className="game-container">
+    <div className="game-container" data-webkiln-world-input>
       <AchievementUnlockToast />
       <TopBar
         onScreenChange={handleScreenChange}
@@ -379,7 +379,7 @@ export default function GameUIRoot() {
         isVictoryOpen={showVictoryConditions}
       />
 
-      <div className="game-main">
+      <div className="game-main" data-webkiln-world-input>
         {warnings.length > 0 && (
           <WarningBar warnings={warnings} onDismiss={dismissWarning} />
         )}
@@ -413,7 +413,7 @@ export default function GameUIRoot() {
 
         {/* Screen overlay - registry-driven. */}
         <Profiler id={`screen:${activeScreen ?? 'closed'}`} onRender={recordUIPerfReactRender}>
-          <AnimatedSlot active={!!activeScreen} className={screenOverlayClass}>
+          <AnimatedSlot active={!!activeScreen} className={screenOverlayClass} passesWorldInput>
             {activeScreenReg ? activeScreenReg.render({ screenId: activeScreenId, onClose: closeScreen }) : null}
           </AnimatedSlot>
         </Profiler>

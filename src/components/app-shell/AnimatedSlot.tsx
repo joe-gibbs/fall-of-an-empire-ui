@@ -6,6 +6,7 @@ interface AnimatedSlotProps {
   className: string;
   children: ReactNode;
   keepMountedOnExit?: boolean;
+  passesWorldInput?: boolean;
 }
 
 interface AnimatedSlotState {
@@ -89,6 +90,7 @@ export default class AnimatedSlot extends Component<AnimatedSlotProps, AnimatedS
     return (
       <div
         className={`${className}${exiting ? ' slot--exiting' : ''}`}
+        data-webkiln-world-input={this.props.passesWorldInput ? '' : undefined}
         onAnimationEnd={this.handleAnimationEnd}
       >
         {exiting ? this.state.frozenChildren : this.props.children}

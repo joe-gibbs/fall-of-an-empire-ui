@@ -84,7 +84,7 @@ function App() {
   return (
     <EscapeStackProvider>
       <WebUITextProvider>
-        <div className="game-cursor-surface">
+        <div className="game-cursor-surface" data-webkiln-world-input>
           {content}
           <InitialSetupModal autoOpen={appMode === 'mainmenu'} />
           <LoadingScreenOverlay />
