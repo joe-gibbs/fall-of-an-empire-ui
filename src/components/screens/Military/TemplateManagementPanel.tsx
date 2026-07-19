@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import CloseButton from '../../common/buttons/CloseButton';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
+import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import GameButton from '../../common/buttons/GameButton';
 import Tooltip from '../../common/tooltips/Tooltip';
@@ -669,7 +670,10 @@ function TemplateAssignedForces({
   }
 
   return (
-    <div className="chart-template-force-list">
+    <StyledScrollArea
+      className="chart-template-force-scroll"
+      viewportClassName="chart-template-force-list"
+    >
       {forces.map(force => {
         const role = force.commanderName
           || force.rank
@@ -694,7 +698,7 @@ function TemplateAssignedForces({
           </button>
         );
       })}
-    </div>
+    </StyledScrollArea>
   );
 }
 

@@ -2398,13 +2398,21 @@
   color: var(--red-light);
 }
 
-.chart-template-force-list,
+.chart-template-force-scroll,
 .chart-template-settlement-list {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: auto;
   min-height: 0;
+}
+
+.chart-template-force-list,
+.chart-template-settlement-list {
   overflow-y: auto;
+}
+
+.chart-template-force-scroll > .styled-scroll-area__viewport {
+  padding-right: 0.95rem;
 }
 
 .chart-template-force-row,
