@@ -32,6 +32,7 @@ import {
   getFormationTemplateIcon,
 } from '../../../utils/formationTemplatePresentation';
 import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
+import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import type { TemplateCreateType } from './screenTokens';
 import { TemplateBattlePlanner } from './TemplateBattlePlanner';
 import {
@@ -1143,11 +1144,6 @@ export function TemplatesPanel({
   const assignmentTemplateType: TemplateCreateType | null = assignmentTarget
     ? (assignmentTarget.isNavy ? 'naval' : 'land')
     : null;
-  const visibleTemplates = useMemo(() => (
-    assignmentTemplateType
-      ? templates.filter(template => normaliseTemplateType(template.type) === assignmentTemplateType)
-      : templates
-  ), [assignmentTemplateType, templates]);
   const [templateMessage, setTemplateMessage] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(initialTemplateId);
   const [creatingTemplate, setCreatingTemplate] = useState(initialCreateType !== null);
@@ -1156,10 +1152,31 @@ export function TemplatesPanel({
   const [pendingDeleteTemplateId, setPendingDeleteTemplateId] = useState<string | null>(null);
   const [listActionActive, setListActionActive] = useState(false);
 
+  const selectedTemplateType = !creatingTemplate
+    ? templates.find(template => template.id === selectedTemplateId)?.type
+    : null;
+  const createType = assignmentTemplateType
+    ?? (selectedTemplateType ? normaliseTemplateType(selectedTemplateType) : newTemplateType);
+  const visibleTemplates = useMemo(() => (
+    templates.filter(template => normaliseTemplateType(template.type) === createType)
+  ), [createType, templates]);
+  const templateTypeTabs = useMemo(() => ([
+    {
+      id: 'land',
+      label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.986.35'),
+      icon: '/assets/icons/I_ArmiesQuickButton.png',
+      count: templates.filter(template => normaliseTemplateType(template.type) === 'land').length,
+    },
+    {
+      id: 'naval',
+      label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.987.36'),
+      icon: '/assets/icons/I_NaviesQuickButton.png',
+      count: templates.filter(template => normaliseTemplateType(template.type) === 'naval').length,
+    },
+  ]), [templates]);
   const selectedTemplate = creatingTemplate
     ? null
     : visibleTemplates.find(template => template.id === selectedTemplateId) ?? visibleTemplates[0] ?? null;
-  const createType = assignmentTemplateType ?? newTemplateType;
   const editorType = selectedTemplate ? normaliseTemplateType(selectedTemplate.type) : createType;
   const editorCatalogue = editorType === 'naval' ? navalUnitCatalogue : landUnitCatalogue;
   const createTitle = createType === 'naval'
@@ -1200,7 +1217,7 @@ export function TemplatesPanel({
       });
   };
   const createTemplate = () => {
-    setNewTemplateType(assignmentTemplateType ?? editorType);
+    setNewTemplateType(createType);
     setSelectedTemplateId(null);
     setCreatingTemplate(true);
     setTemplateMessage('');
@@ -1286,6 +1303,21 @@ export function TemplatesPanel({
   return (
     <div className="chart-template-panel">
       {templateMessage && <div className="chart-template-status">{templateMessage}</div>}
+      {!assignmentTemplateType && (
+        <div className="chart-template-type-tabs">
+          <SidebarTabBar
+            tabs={templateTypeTabs}
+            activeTab={createType}
+            onTabChange={(id) => {
+              const nextType = id as TemplateCreateType;
+              setNewTemplateType(nextType);
+              setSelectedTemplateId(null);
+              setTemplateMessage('');
+              setPendingDeleteTemplateId(null);
+            }}
+          />
+        </div>
+      )}
 
       <div className="chart-template-split">
         <div className="chart-template-list-pane">
