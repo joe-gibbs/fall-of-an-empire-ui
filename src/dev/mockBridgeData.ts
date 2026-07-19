@@ -485,6 +485,8 @@ function mockPortraitLayers(portrait: string, isImprisoned = false): PortraitLay
 const rephsianCulture: CultureInfo = {
   id: 'rephsian',
   name: 'Rephsian',
+  adjective: 'Rephsian',
+  plural: 'Rephsians',
   description: 'A courtly imperial culture with a strong written tradition and disciplined public life.',
   colour: '#C9A85A',
   group: 'rephsian',
@@ -495,6 +497,8 @@ const rephsianCulture: CultureInfo = {
 const aurestianCulture: CultureInfo = {
   id: 'aurestian',
   name: 'Aurestian',
+  adjective: 'Aurestian',
+  plural: 'Aurestians',
   description: 'A frontier culture shaped by hill towns, local assemblies, and veteran households.',
   colour: '#74A0AA',
   group: 'rephsian',
@@ -505,6 +509,8 @@ const aurestianCulture: CultureInfo = {
 const rephsianReligion: ReligionInfo = {
   id: 'rephsianpantheon',
   name: 'Rephsian Pantheon',
+  adjective: 'Rephsian',
+  adherentPlural: 'Pantheonists',
   description: 'An organised temple tradition that binds legitimacy to public rites and civic patronage.',
   colour: '#C9A85A',
   isOrganised: true,
@@ -523,6 +529,8 @@ const rephsianReligion: ReligionInfo = {
 const rivalReligion: ReligionInfo = {
   id: 'aurelianism',
   name: 'Aurelianism',
+  adjective: 'Aurelian',
+  adherentPlural: 'Aurelians',
   description: 'A solar reform faith favoured by officers, magistrates, and ambitious frontier patrons.',
   colour: '#D8B35A',
   isOrganised: true,
@@ -1905,8 +1913,10 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
       {
         cultureId: rephsianCulture.id,
         culture: rephsianCulture.name,
+        cultureAdjective: rephsianCulture.adjective,
         religionId: rephsianReligion.id,
         religion: rephsianReligion.name,
+        religionAdherentPlural: rephsianReligion.adherentPlural,
         count: isPort ? 91000 : 310000,
         unrest: isPort ? 10 : 4,
         unrestBreakdown: [{ name: 'Taxes', value: 6 }, { name: 'Governor', value: -4 }],
@@ -1922,8 +1932,10 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
       {
         cultureId: aurestianCulture.id,
         culture: aurestianCulture.name,
+        cultureAdjective: aurestianCulture.adjective,
         religionId: rivalReligion.id,
         religion: rivalReligion.name,
+        religionAdherentPlural: rivalReligion.adherentPlural,
         count: isPort ? 51000 : 74000,
         unrest: isPort ? 18 : 12,
         unrestBreakdown: [{ name: 'Taxes', value: 9 }, { name: 'Local elders', value: -3 }],

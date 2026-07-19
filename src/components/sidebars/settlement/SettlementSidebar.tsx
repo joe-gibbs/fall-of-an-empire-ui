@@ -746,7 +746,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
     sorted.sort((a, b) => {
       if (popSort.key === 'population') return compareSortValuesWithDirection(a.count, b.count, popSort.direction);
       if (popSort.key === 'unrest') return compareSortValuesWithDirection(a.unrest, b.unrest, popSort.direction);
-      return compareSortValuesWithDirection(`${a.culture} ${a.religion}`, `${b.culture} ${b.religion}`, popSort.direction);
+      return compareSortValuesWithDirection(`${a.cultureAdjective} ${a.religionAdherentPlural}`, `${b.cultureAdjective} ${b.religionAdherentPlural}`, popSort.direction);
     });
     return sorted;
   }, [settlement.pops, popSort]);
@@ -1227,7 +1227,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                 }
 
                 const popTooltip: TooltipContent = {
-                  get title() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1298.1", { Culture: p.culture, Religion: p.religion }); },
+                  get title() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1298.1", { Culture: p.cultureAdjective, Religion: p.religionAdherentPlural }); },
                   get body() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1299.1", { Value1: formatNumber(p.count), Value2: formatPercentValue(p.unrest) }); },
                   lines: tooltipLines.length > 0 ? tooltipLines : undefined,
                 };
@@ -1237,7 +1237,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                       <span className="settle-pop-col-name">
                         {p.cultureIcon && <img src={p.cultureIcon} alt="" className="settle-pop-icon" />}
                         {p.religionIcon && <img src={p.religionIcon} alt="" className="settle-pop-icon" />}
-                        <span className="settle-pop-name-text">{p.culture} {p.religion}</span>
+                        <span className="settle-pop-name-text">{p.cultureAdjective} {p.religionAdherentPlural}</span>
                       </span>
                       <span className="settle-pop-col-count">{formatNumber(p.count)}</span>
                       <span className="settle-pop-col-unrest" style={{ color: getUnrestColor(p.unrest) }}>{formatPercentValue(p.unrest)}</span>

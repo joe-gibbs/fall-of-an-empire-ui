@@ -218,8 +218,10 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
     })),
     pops: data.pops.map(p => ({
       culture: p.culture,
+      cultureAdjective: p.cultureAdjective,
       cultureIcon: p.cultureId ? WebkilnAssetPath(`/assets/cultures/${p.cultureId}.png`) : undefined,
       religion: p.religion,
+      religionAdherentPlural: p.religionAdherentPlural,
       religionIcon: p.religionId ? WebkilnAssetPath(`/assets/religions/${p.religionId}.png`) : undefined,
       count: p.count,
       unrest: p.unrest,

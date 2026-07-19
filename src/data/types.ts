@@ -825,8 +825,10 @@ export interface ReligionShare {
 
 export interface PopGroup {
   culture: string;
+  cultureAdjective: string;
   cultureIcon?: string;
   religion: string;
+  religionAdherentPlural: string;
   religionIcon?: string;
   count: number;
   unrest: number;

@@ -564,6 +564,8 @@ export interface CourtierPromotionEventPayload {
 export interface CultureInfo {
   id: string;
   name: string;
+  adjective: string;
+  plural: string;
   description: string;
   colour: string;
   group: string;
@@ -574,6 +576,8 @@ export interface CultureInfo {
 export interface ReligionInfo {
   id: string;
   name: string;
+  adjective: string;
+  adherentPlural: string;
   description: string;
   colour: string;
   isOrganised: boolean;
@@ -3842,8 +3846,10 @@ export interface SettlementReligionEntry {
 export interface SettlementPopEntry {
   cultureId: string;
   culture: string;
+  cultureAdjective: string;
   religionId: string;
   religion: string;
+  religionAdherentPlural: string;
   count: number;
   unrest: number;
   unrestBreakdown: SettlementModifierSource[];
