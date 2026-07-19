@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { bridgeCall } from '../../../bridge-types.generated.ts';
 import { useFactionInteractionsBridge, type FactionInteractionView } from '../../../bridge/diplomacy/useFactionInteractionsBridge';
@@ -180,6 +180,7 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
   const [requestedTargetId, setRequestedTargetId] = useState<string | null>(null);
   const [requestKey, setRequestKey] = useState(0);
   const [point, setPoint] = useState<MenuPoint | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const personQuickInteractions = usePersonQuickInteractions(kind === 'person' ? requestedTargetId : null, requestKey);
   const factionBridge = useFactionInteractionsBridge(kind === 'faction' ? requestedTargetId : null);
   const gameActions = useOptionalGameActions();
@@ -222,7 +223,13 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
   useEffect(() => {
     if (!point) return undefined;
 
-    const handlePointerDown = () => close();
+    const handlePointerDown = (event: PointerEvent) => {
+      const eventTarget = event.target;
+      if (eventTarget instanceof Node && menuRef.current?.contains(eventTarget)) {
+        return;
+      }
+      close();
+    };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close();
     };
@@ -312,6 +319,7 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
   const node = point && style && (hasViewAction || hasZoomAction || actions.length > 0 || interactions.length > 0) && typeof document !== 'undefined'
     ? createPortal(
       <div
+        ref={menuRef}
         className="quick-interaction-menu"
         style={style}
         onPointerEnter={dismissSharedTooltips}

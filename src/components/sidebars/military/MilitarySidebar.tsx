@@ -576,7 +576,21 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       });
   };
 
-  const renderCommandIconAction = (action: MilitaryAction) => renderOrderCommand(action);
+  const renderCommandAction = (action: MilitaryAction) => (
+    <Tooltip key={action.label} content={action.tooltip ?? { title: action.label, body: action.description }} position="bottom" delay={150}>
+      <GameButton
+        variant="outline"
+        fullWidth
+        icon={action.icon}
+        tutorialTarget={action.tutorialTarget}
+        disabled={action.disabled}
+        ariaLabel={action.label}
+        onClick={action.onClick}
+      >
+        {action.label}
+      </GameButton>
+    </Tooltip>
+  );
 
   const renderOrderCommand = (action: MilitaryAction) => (
     <Tooltip key={action.label} content={action.tooltip ?? { title: action.label, body: action.description }} position="bottom" delay={150}>
@@ -624,6 +638,11 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
               </div>
             </div>
           )}
+          {commandActions.length > 0 && (
+            <div className="mil-command-actions">
+              {commandActions.map((action) => renderCommandAction(action))}
+            </div>
+          )}
           {army.parentCommand && (
             <Tooltip
               content={{
@@ -643,11 +662,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 onMouseDown={() => { if (army.parentCommandId) openSidebar('military', army.parentCommandId); }}
               >
                 <img src="/assets/icons/I_AttachCommand.png" alt="" className="mil-parent-command-icon" />
-                {commandActions.length > 0 && (
-                  <div className="mil-parent-command-actions">
-                    {commandActions.map((action) => renderCommandIconAction(action))}
-                  </div>
-                )}
                 <span className="mil-parent-command-name">{webUIText("Auto.Fix.ExprTrue.componentssidebarsMilitarySidebar.930.1", { ParentCommand: army.parentCommand })}</span>
                 {army.parentCommandId && <img src="/assets/icons/I_NavNext.png" alt="" className="mil-parent-command-jump" />}
               </div>
@@ -660,11 +674,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 <strong>{commandModeOptions.find((option) => option.id === commandMode)?.label}</strong>
               </div>
               <div className="mil-command-mode-grid mil-command-mode-grid--subordinates">
-                {!army.parentCommand && commandActions.length > 0 && (
-                  <div className="mil-sub-command-actions">
-                    {commandActions.map((action) => renderCommandIconAction(action))}
-                  </div>
-                )}
                 {commandModeOptions.map((option) => (
                   <Tooltip key={option.id} content={commandModeTooltips[option.id]} position="bottom" delay={150}>
                     <button
@@ -708,11 +717,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                   </button>
                 </Tooltip>
               </div>
-            </div>
-          )}
-          {!canHaveSubordinates && !army.parentCommand && commandActions.length > 0 && (
-            <div className="mil-action-strip mil-action-strip--sub-command">
-              {commandActions.map((action) => renderCommandIconAction(action))}
             </div>
           )}
           {visibleSubs.map((sub) => {

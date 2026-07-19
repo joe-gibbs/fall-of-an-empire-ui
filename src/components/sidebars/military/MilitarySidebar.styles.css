@@ -1212,6 +1212,25 @@
   padding: 0.18rem 0 0.25rem;
 }
 
+.mil-command-actions {
+  display: flex;
+  align-items: stretch;
+  margin: 0.3rem 0;
+}
+
+.mil-command-actions > .tooltip-wrapper {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.mil-command-actions > .tooltip-wrapper + .tooltip-wrapper {
+  margin-left: 0.3rem;
+}
+
+.mil-command-actions .btn--outline {
+  min-height: 2.45rem;
+}
+
 .mil-command-mode-grid--subordinates > .tooltip-wrapper {
   width: 19%;
   margin-right: 0.14rem;
@@ -1378,13 +1397,6 @@
 .mil-standing-order--in-panel {
   width: 100%;
   margin: 0 0 0.25rem;
-}
-
-.mil-action-strip--sub-command {
-  padding-top: 0.25rem;
-  border-top-width: 0.077rem;
-  border-top-style: solid;
-  border-top-color: var(--separator);
 }
 
 .mil-commander-card > * + * {
@@ -3165,28 +3177,6 @@
   margin-bottom: 0;
 }
 
-.mil-command-mode-grid--subordinates > .mil-sub-command-actions {
-  display: flex;
-  align-items: center;
-  flex-grow: 0;
-  flex-shrink: 0;
-  margin-right: 0.36rem;
-}
-
-.mil-command-mode-grid--subordinates > .mil-sub-command-actions > .tooltip-wrapper {
-  width: 3rem;
-  height: 3rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 3rem;
-  margin-right: 0.18rem;
-}
-
-.mil-command-mode-grid--subordinates > .mil-sub-command-actions .mil-order-command {
-  width: 100%;
-  height: 100%;
-}
-
 .mil-command-mode-grid--subordinates > .tooltip-wrapper:last-child {
   margin-right: 0;
 }
@@ -4418,48 +4408,6 @@
   font-family: var(--font-header);
   font-size: 0.68rem;
   font-weight: 400;
-}
-
-.mil-parent-command-actions {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  margin-left: 0.28rem;
-  margin-right: 0.35rem;
-}
-
-.mil-parent-command-actions > .tooltip-wrapper {
-  width: 2.15rem;
-  height: 2.15rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  margin-right: 0.16rem;
-}
-
-.mil-parent-command-actions .mil-order-command,
-.mil-action-strip--sub-command .mil-order-command {
-  width: 100%;
-  height: 100%;
-}
-
-.mil-parent-command-actions .mil-order-command img,
-.mil-action-strip--sub-command .mil-order-command img {
-  width: 1.16rem;
-  height: 1.16rem;
-}
-
-.mil-action-strip--sub-command {
-  justify-content: flex-end;
-  padding-top: 0.2rem;
-  padding-bottom: 0.18rem;
-}
-
-.mil-action-strip--sub-command > .tooltip-wrapper {
-  width: 2.25rem;
-  height: 2.25rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  margin-left: 0.18rem;
 }
 
 .mil-sub-toggle {
