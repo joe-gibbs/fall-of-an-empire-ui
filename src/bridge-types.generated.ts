@@ -6176,7 +6176,6 @@ export interface BridgeActions {
   'game.downgrade_settlement_building': { request: DowngradeSettlementBuildingRequest; response: void };
   'game.download_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.duplicate_military_formation_template': { request: DuplicateMilitaryFormationTemplateRequest; response: DuplicateMilitaryFormationTemplateResponse };
-  'game.end_peace_settlement_selection': { request: void; response: void };
   'game.enter_court_appointment_contest': { request: EnterCourtAppointmentContestRequest; response: EnterCourtAppointmentContestResponse };
   'game.form_personal_power_bloc': { request: void; response: FormPersonalPowerBlocResponse };
   'game.generate_formation_template_name': { request: GenerateFormationTemplateNameRequest; response: GenerateFormationTemplateNameResponse };
@@ -6265,7 +6264,6 @@ export interface BridgeActions {
   'game.loading_screen': { request: void; response: LoadingScreenResponse };
   'game.navigate_settlement': { request: NavigateSettlementRequest; response: NavigateSettlementResponse };
   'game.notification_events': { request: NotificationEventsRequest; response: void };
-  'game.open_steam_achievements': { request: void; response: void };
   'game.perform_siege_command': { request: PerformSiegeCommandRequest; response: PerformSiegeCommandResponse };
   'game.pick_new_game_map_faction': { request: PickNewGameMapFactionRequest; response: PickNewGameMapFactionResponse };
   'game.portrait_invalidated': { request: void; response: PortraitInvalidatedEventPayload };

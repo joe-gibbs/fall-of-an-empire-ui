@@ -6362,8 +6362,6 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           terms: Array.isArray(terms) ? terms as BridgeResponse<'game.start_peace_settlement_selection'>['terms'] : [],
         } satisfies BridgeResponse<'game.start_peace_settlement_selection'>;
       }
-      case 'game.end_peace_settlement_selection':
-        return undefined satisfies BridgeResponse<'game.end_peace_settlement_selection'>;
       case 'game.submit_peace_negotiation':
         return { submitted: true, result: 'accepted', message: 'Mock peace offer submitted.', state: peaceState() } satisfies BridgeResponse<'game.submit_peace_negotiation'>;
       case 'game.get_battle_data': {
