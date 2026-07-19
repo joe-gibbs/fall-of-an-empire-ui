@@ -9,7 +9,6 @@
   pointer-events: auto;
   background-color: #242a30;
   color: var(--text-bright);
-  animation: loading-screen-in 0.35s ease both;
 }
 
 .loading-screen--closing {
@@ -122,16 +121,6 @@
 
   .loading-screen__tip {
     font-size: 1.08rem;
-  }
-}
-
-@keyframes loading-screen-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
   }
 }
 

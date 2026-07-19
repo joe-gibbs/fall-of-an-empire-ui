@@ -57,14 +57,15 @@ const LoadingScreenOverlay: React.FC = () => {
     preloadImageAsset(LOGO_SRC);
   }, [renderedState.background]);
 
-  if (!renderedState.visible && !isClosing) return null;
+  if (!state.visible && !renderedState.visible && !isClosing) return null;
 
-  const progress = Math.max(0, Math.min(100, renderedState.progress));
-  const backgroundSrc = WebkilnAssetPath(renderedState.background || FALLBACK_BACKGROUND);
+  const visibleState = state.visible ? state : renderedState;
+  const progress = Math.max(0, Math.min(100, visibleState.progress));
+  const backgroundSrc = WebkilnAssetPath(visibleState.background || FALLBACK_BACKGROUND);
   const logoSrc = WebkilnAssetPath(LOGO_SRC);
 
   return (
-    <div className={`loading-screen${isClosing ? ' loading-screen--closing' : ''}`}>
+    <div className={`loading-screen${isClosing && !state.visible ? ' loading-screen--closing' : ''}`}>
       <div
         className="loading-screen__background"
         style={{ backgroundImage: `url("${backgroundSrc}")` }}
@@ -79,9 +80,9 @@ const LoadingScreenOverlay: React.FC = () => {
       />
 
       <div className="loading-screen__content">
-        {renderedState.tip && (
+        {visibleState.tip && (
           <div className="loading-screen__tip">
-            {renderedState.tip}
+            {visibleState.tip}
           </div>
         )}
 
