@@ -13,6 +13,88 @@ import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
 
 let formationTemplatesCache: GetFormationTemplatesResponse | null = null;
 let formationTemplateCatalogueCache: GetFormationTemplateCatalogueResponse | null = null;
+let goldPatchListenerInstalled = false;
+let dynamicPatchListenerInstalled = false;
+
+interface FormationTemplateGoldChangedEvent {
+  playerGold: number;
+  insufficientGoldReason: string;
+  noSettlementsCanBuildReason: string;
+}
+
+interface FormationTemplatesDynamicChangedEvent {
+  activeBuildTemplateId: string;
+  playerGold: number;
+  pendingFormations: GetFormationTemplatesResponse['pendingFormations'];
+  templates: Array<Pick<GetFormationTemplatesResponse['templates'][number],
+    'id' | 'canApply' | 'applyReason' | 'isActiveBuildTemplate' | 'assignedForces'>>;
+}
+
+function ensureGoldPatchListener(): void {
+  if (goldPatchListenerInstalled) return;
+  goldPatchListenerInstalled = true;
+  window.addEventListener('bridge:game.formation_template_gold_changed', (event: Event) => {
+    const detail = (event as CustomEvent<unknown>).detail as Partial<FormationTemplateGoldChangedEvent> | null;
+    if (!detail || typeof detail.playerGold !== 'number' || !formationTemplatesCache) return;
+    const playerGold = detail.playerGold;
+
+    formationTemplatesCache = {
+      ...formationTemplatesCache,
+      playerGold,
+      templates: formationTemplatesCache.templates.map((template) => {
+        if (template.units.length === 0) return template;
+        const canProduceAnyUnit = template.units.some(unit => unit.availableSettlementCount > 0);
+        if (playerGold < template.creationCost) {
+          return {
+            ...template,
+            canApply: false,
+            applyReason: typeof detail.insufficientGoldReason === 'string'
+              ? detail.insufficientGoldReason
+              : template.applyReason,
+          };
+        }
+        return {
+          ...template,
+          canApply: canProduceAnyUnit,
+          applyReason: canProduceAnyUnit
+            ? ''
+            : typeof detail.noSettlementsCanBuildReason === 'string'
+              ? detail.noSettlementsCanBuildReason
+              : template.applyReason,
+        };
+      }),
+    };
+    dispatchBridgeResponse('game.get_formation_templates', formationTemplatesCache);
+  });
+}
+
+function ensureDynamicPatchListener(): void {
+  if (dynamicPatchListenerInstalled) return;
+  dynamicPatchListenerInstalled = true;
+  window.addEventListener('bridge:game.formation_templates_dynamic_changed', (event: Event) => {
+    const detail = (event as CustomEvent<unknown>).detail as Partial<FormationTemplatesDynamicChangedEvent> | null;
+    if (!detail || !formationTemplatesCache || !Array.isArray(detail.templates)) return;
+
+    const dynamicById = new Map(detail.templates.map(template => [template.id, template]));
+    formationTemplatesCache = {
+      ...formationTemplatesCache,
+      activeBuildTemplateId: typeof detail.activeBuildTemplateId === 'string'
+        ? detail.activeBuildTemplateId
+        : formationTemplatesCache.activeBuildTemplateId,
+      playerGold: typeof detail.playerGold === 'number'
+        ? detail.playerGold
+        : formationTemplatesCache.playerGold,
+      pendingFormations: Array.isArray(detail.pendingFormations)
+        ? detail.pendingFormations
+        : formationTemplatesCache.pendingFormations,
+      templates: formationTemplatesCache.templates.map((template) => {
+        const dynamic = dynamicById.get(template.id);
+        return dynamic ? { ...template, ...dynamic } : template;
+      }),
+    };
+    dispatchBridgeResponse('game.get_formation_templates', formationTemplatesCache);
+  });
+}
 
 export function clearFormationTemplateCache(templateId: string | undefined): void {
   clearBridgeQueryCache('game.get_formation_templates');
@@ -41,6 +123,8 @@ function dispatchBridgeResponse(action: string, detail: unknown): void {
 }
 
 export function useFormationTemplatesBridge(fetchTemplates = true): GetFormationTemplatesResponse | null {
+  ensureGoldPatchListener();
+  ensureDynamicPatchListener();
   const live = useBridgeQuery({
     action: 'game.get_formation_templates',
     payload: fetchTemplates ? undefined : null,
