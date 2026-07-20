@@ -10,6 +10,7 @@ import './ModWorldGlanceLayer.css';
 
 const MOD_FRAME_HEADER_NUMBER_COUNT = 2;
 const MOD_FRAME_ENTRY_NUMBER_STRIDE = 5;
+const ATLAS_VISIBLE_OPACITY_THRESHOLD = 0.05;
 
 interface ModWorldGlanceFrameEvent {
   providerId: string;
@@ -18,9 +19,7 @@ interface ModWorldGlanceFrameEvent {
   entryPayloads: string[];
 }
 
-interface AtlasModWorldGlanceEntry extends ModWorldGlanceEntry {
-  atlasPriority: number;
-}
+type AtlasModWorldGlanceEntry = ModWorldGlanceEntry;
 
 function parsePayload(payload: string | undefined): unknown {
   if (!payload) return null;
@@ -64,7 +63,6 @@ function entriesFromFrame(frame: ModWorldGlanceFrameEvent): AtlasModWorldGlanceE
       zOrder: frame.frameNumbers[offset + 4] ?? 0,
       viewportWidth,
       viewportHeight,
-      atlasPriority: (frame.frameNumbers[offset + 3] ?? 0) > 0.05 ? Date.now() : 0,
     });
   }
   return entries;
@@ -77,7 +75,7 @@ function atlasContentMatches(
   return previous?.length === next.length && previous.every((entry, index) => (
     entry.anchorKey === next[index].anchorKey
     && JSON.stringify(entry.payload) === JSON.stringify(next[index].payload)
-    && (entry.opacity > 0.05) === (next[index].opacity > 0.05)
+    && (entry.opacity > ATLAS_VISIBLE_OPACITY_THRESHOLD) === (next[index].opacity > ATLAS_VISIBLE_OPACITY_THRESHOLD)
   ));
 }
 
@@ -151,8 +149,7 @@ function ModWorldGlanceNode({ registration, entry, atlas, glanceScale, worldAnch
         data-webkiln-anchor={entry.anchorKey}
         data-webkiln-anchor-point={anchorPoint}
         data-webkiln-anchor-raster-scale={rasterScale}
-        data-webkiln-anchor-priority={entry.atlasPriority}
-        data-webkiln-anchor-demand={entry.opacity > 0.05 ? 'visible' : 'hidden'}
+        data-webkiln-anchor-demand={entry.opacity > ATLAS_VISIBLE_OPACITY_THRESHOLD ? 'visible' : 'hidden'}
       >
         {content}
       </div>

@@ -42,11 +42,6 @@ import './GlanceAtlas.css';
 // attributes. Webkiln owns atlas packing and paint-safe layout hand-off; this component owns
 // CONTENT only — which plates exist, their detail class, selection/hover styling.
 
-// Notification plates are created only after their placement frame arrives. They therefore
-// cannot receive the usual "recently visible" priority stamp until after the host has already
-// scheduled its admission repack. Keep live notifications ahead of the persistent world
-// catalogue so their native cell is always present for the main-view handover.
-const ACTIVE_NOTIFICATION_ATLAS_PRIORITY = Number.MAX_SAFE_INTEGER;
 const SETTLEMENT_BADGE_HALF_SIZE_REM = 2.1364;
 const SETTLEMENT_ATLAS_EDGE_BLEED_REM = 0.0909;
 // The siege progress track and capital socket sit above the settlement plate's layout box.
@@ -55,8 +50,8 @@ const SETTLEMENT_ATLAS_EDGE_BLEED_REM = 0.0909;
 const SETTLEMENT_STATUS_TOP_BLEED_REM = 0.4545;
 // Covers the furthest military crown socket (1.5rem) plus a small atlas edge guard.
 const MILITARY_ATLAS_BLEED_REM = 1.5909;
-// Settlement cells keep one stable footprint across flag/name/detail changes. The paint-confirmed
-// half-sheet buffer and 1x raster scale provide enough capacity without moving cells during zoom.
+// Admitted settlement cells keep one stable footprint across flag/name/detail changes so their
+// atlas coordinates remain valid until the next paint-safe admission generation becomes active.
 const SETTLEMENT_NAMED_ATLAS_CAPACITY_WIDTH_REM = 15.1818;
 const SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM = 4.2727;
 const MILITARY_ATLAS_CAPACITY_REM = 9;
@@ -144,7 +139,7 @@ function reserveSizeForSection(section: AtlasSection, remPx: number, settlementB
   return undefined;
 }
 
-const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, buildItemFrame, remPx, rasterScale, plateRef }: {
+const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, buildItemFrame, remPx, rasterScale, plateRef, atlasVisible }: {
   section: AtlasSection;
   id: string;
   entry: unknown;
@@ -156,6 +151,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   remPx: number;
   rasterScale: number;
   plateRef: (key: string, node: HTMLDivElement | null) => void;
+  atlasVisible: boolean;
 }) {
   const anchorKey = worldAnchorKey(section, id);
   const settlementBleedRem = section === 'settlement'
@@ -175,10 +171,10 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
     'data-webkiln-anchor': anchorKey,
     'data-webkiln-anchor-point': anchorPointFor(section, detail, remPx, settlementBleedRem),
     'data-webkiln-anchor-raster-scale': rasterScale,
-    ...(reserveSize ? { 'data-webkiln-anchor-reserve-size': reserveSize } : {}),
     ...(section === 'notification'
-      ? { 'data-webkiln-anchor-priority': ACTIVE_NOTIFICATION_ATLAS_PRIORITY }
-      : {}),
+      ? { 'data-webkiln-anchor-persistent': true }
+      : { 'data-webkiln-anchor-demand': atlasVisible ? 'visible' : 'hidden' }),
+    ...(reserveSize ? { 'data-webkiln-anchor-reserve-size': reserveSize } : {}),
   };
   const style = {
     '--glance-atlas-raster-scale': rasterScale,
@@ -276,6 +272,7 @@ export default function GlanceAtlasRoot() {
   const [flagsByKey, setFlagsByKey] = useState<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
   const [buildItemFrameByKey, setBuildItemFrameByKey] = useState<Map<string, SettlementBuildItemFrame>>(new Map());
   const [hoveredKeys, setHoveredKeys] = useState<Set<string>>(new Set());
+  const [visibleAtlasKeys, setVisibleAtlasKeys] = useState<Set<string>>(new Set());
   const [entryCache, setEntryCache] = useState<Map<AtlasSection, Map<string, { id: string }>>>(new Map());
   const [notificationEntries, setNotificationEntries] = useState<Notification[]>([]);
   const [runtimeRootFontPx, setRuntimeRootFontPx] = useState(() => currentRuntimeRootFontPx());
@@ -284,11 +281,6 @@ export default function GlanceAtlasRoot() {
   const plateRef = (key: string, node: HTMLDivElement | null) => {
     if (node) {
       plateNodesRef.current.set(key, node);
-      const visible = key.startsWith('notif:') || visibleAtlasKeysRef.current.has(key);
-      node.dataset.worldAnchorDemand = visible ? 'visible' : 'hidden';
-      if (visible && !key.startsWith('notif:')) {
-        node.dataset.worldAnchorPriority = String(Date.now());
-      }
     } else {
       plateNodesRef.current.delete(key);
     }
@@ -333,8 +325,8 @@ export default function GlanceAtlasRoot() {
   // ResizeObserver) and settlement anchor points must be restated in fresh px.
   useEffect(() => {
     const onRuntimeViewport = () => setRuntimeRootFontPx(currentRuntimeRootFontPx());
-    window.addEventListener('foae:runtime-viewport', onRuntimeViewport);
-    return () => window.removeEventListener('foae:runtime-viewport', onRuntimeViewport);
+    window.addEventListener('webkiln:runtime-viewport', onRuntimeViewport);
+    return () => window.removeEventListener('webkiln:runtime-viewport', onRuntimeViewport);
   }, []);
 
   // Engine-side hover forwarding (native composite input path).
@@ -379,17 +371,14 @@ export default function GlanceAtlasRoot() {
     setNotificationEntries(frame.settlements.map(entry => mapNotificationShown(entry.payload)));
   }), []);
 
-  // Frame events drive per-entry detail level, selection/target styling, and pack priority
-  // (recently-visible plates must win atlas space on overflow). Priority is stamped imperatively
-  // on the DOM nodes: it changes every frame and must not re-render or reorder plates.
+  // Frame events drive admission, detail level, and selection/target styling. The catalogue DOM
+  // remains stable while the double-buffered atlas admits the camera-visible subset.
   useEffect(() => {
     const scratch = makeWorldGlanceFrameEntryScratch();
     return onWorldGlancesFrame((frame) => {
       let detailChanged = false;
       let flagsChanged = false;
       let constructionChanged = false;
-      const now = Date.now();
-      const previousVisibleKeys = visibleAtlasKeysRef.current;
       const nextVisibleKeys = new Set<string>();
       for (const section of WORLD_GLANCE_FRAME_SECTIONS) {
         const count = worldGlanceFrameEntryCount(frame, section);
@@ -401,16 +390,6 @@ export default function GlanceAtlasRoot() {
 
           if (atlasVisible) {
             nextVisibleKeys.add(key);
-            const node = plateNodesRef.current.get(key);
-            if (node) {
-              // Restamp every visible frame, not just on the hidden->visible transition: atlas
-              // overflow evicts lowest priority first, and a plate the player is currently seeing
-              // must outrank every plate that left the screen earlier in the zoom.
-              node.dataset.worldAnchorPriority = String(now);
-              if (node.dataset.worldAnchorDemand !== 'visible') {
-                node.dataset.worldAnchorDemand = 'visible';
-              }
-            }
           }
 
           if (section === 'settlement' && typeof entry.hasBuildItem === 'boolean') {
@@ -450,14 +429,9 @@ export default function GlanceAtlasRoot() {
           }
         }
       }
-      for (const key of previousVisibleKeys) {
-        if (!nextVisibleKeys.has(key)) {
-          const node = plateNodesRef.current.get(key);
-          if (node) {
-            node.dataset.worldAnchorDemand = 'hidden';
-          }
-        }
-      }
+      const previousVisibleKeys = visibleAtlasKeysRef.current;
+      const visibilityChanged = previousVisibleKeys.size !== nextVisibleKeys.size
+        || Array.from(nextVisibleKeys).some(key => !previousVisibleKeys.has(key));
       visibleAtlasKeysRef.current = nextVisibleKeys;
 
       if (detailChanged) {
@@ -468,6 +442,9 @@ export default function GlanceAtlasRoot() {
       }
       if (constructionChanged) {
         setBuildItemFrameByKey(new Map(buildItemFrameByKeyRef.current));
+      }
+      if (visibilityChanged) {
+        setVisibleAtlasKeys(nextVisibleKeys);
       }
     });
   }, []);
@@ -509,6 +486,7 @@ export default function GlanceAtlasRoot() {
               remPx={remPx}
               rasterScale={rasterScale}
               plateRef={plateRef}
+              atlasVisible={section === 'notification' || visibleAtlasKeys.has(key)}
             />
           );
         });
