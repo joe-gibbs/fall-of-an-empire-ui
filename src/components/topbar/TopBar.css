@@ -421,20 +421,29 @@
 }
 
 /* =============================================
-   Right: Action buttons (opposite screen buttons)
+   Right rail: actions, standing and resources
    ============================================= */
 
-.topbar-actions {
+.topbar-right-rail {
   position: absolute;
-  top: 0.5rem;
-  right: 0;
-  width: 40vw;
+  top: 0;
+  right: 6.5vw;
+  min-width: max(0px, calc(43.5vw - 17rem));
   height: var(--topbar-height);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  z-index: 2;
-  padding-left: 4rem;
+  justify-content: space-between;
+  z-index: 3;
+}
+
+.topbar-actions {
+  position: relative;
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 1rem;
+  margin-right: 0.75rem;
 }
 
 .topbar-actions > * + * {
@@ -450,13 +459,11 @@
    ============================================= */
 
 .topbar-right {
-  position: absolute;
-  top: 0;
-  right: 6.5vw;
+  position: relative;
   height: var(--topbar-height);
   display: flex;
   align-items: center;
-  z-index: 3;
+  flex-shrink: 0;
 }
 
 .topbar-right > * + * {

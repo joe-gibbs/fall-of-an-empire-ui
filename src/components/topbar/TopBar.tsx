@@ -196,57 +196,59 @@ const TopBar: React.FC<TopBarProps> = ({
         )}
       </div>
 
-      {/* Right: screen and action buttons */}
-      <div className="topbar-actions" data-tutorial-target="ScreenButtonGroup ActionButtonGroup">
-        <ScreenButtons
-          activeScreen={activeScreen}
-          onScreenChange={onScreenChange}
-          placement="right"
-        />
-        {actionButtons.filter(btn => {
-          const mode = btn.factionMode ?? 'all';
-          return mode === 'all' || (subjectMode ? mode === 'subject' : mode === 'independent');
-        }).map((btn) => {
-          const label = webUIText(btn.labelKey);
-          const active = activeScreen === btn.id || (btn.id === 'pinned' && isPinnedOpen) || (btn.id === 'victory' && isVictoryOpen);
-          const className = btn.id === 'pinned' ? 'pinned-toggle-btn' : btn.id === 'victory' ? 'victory-toggle-btn' : '';
-          const handleClick = () => {
-            if (btn.id === 'pinned') onPinnedToggle?.();
-            else if (btn.id === 'victory') onVictoryToggle?.();
-            else onScreenChange?.(btn.id as ScreenId);
-          };
-          return (
-            <Tooltip
-              key={btn.id}
-              content={actionTooltip(btn)}
-              position="bottom"
-              delay={200}
-              variant="sidebar"
-              bubbleClassName="tt-bubble--screen-button"
-            >
-              <IconButton
-                icon={btn.icon}
-                label={label}
-                active={active}
-                className={className}
-                tutorialTarget={btn.tutorialTarget}
-                onClick={handleClick}
-                badge={btn.id === 'pinned' ? pinnedCount : undefined}
-              />
-            </Tooltip>
-          );
-        })}
-      </div>
+      <div className="topbar-right-rail">
+        {/* Right: screen and action buttons */}
+        <div className="topbar-actions" data-tutorial-target="ScreenButtonGroup ActionButtonGroup">
+          <ScreenButtons
+            activeScreen={activeScreen}
+            onScreenChange={onScreenChange}
+            placement="right"
+          />
+          {actionButtons.filter(btn => {
+            const mode = btn.factionMode ?? 'all';
+            return mode === 'all' || (subjectMode ? mode === 'subject' : mode === 'independent');
+          }).map((btn) => {
+            const label = webUIText(btn.labelKey);
+            const active = activeScreen === btn.id || (btn.id === 'pinned' && isPinnedOpen) || (btn.id === 'victory' && isVictoryOpen);
+            const className = btn.id === 'pinned' ? 'pinned-toggle-btn' : btn.id === 'victory' ? 'victory-toggle-btn' : '';
+            const handleClick = () => {
+              if (btn.id === 'pinned') onPinnedToggle?.();
+              else if (btn.id === 'victory') onVictoryToggle?.();
+              else onScreenChange?.(btn.id as ScreenId);
+            };
+            return (
+              <Tooltip
+                key={btn.id}
+                content={actionTooltip(btn)}
+                position="bottom"
+                delay={200}
+                variant="sidebar"
+                bubbleClassName="tt-bubble--screen-button"
+              >
+                <IconButton
+                  icon={btn.icon}
+                  label={label}
+                  active={active}
+                  className={className}
+                  tutorialTarget={btn.tutorialTarget}
+                  onClick={handleClick}
+                  badge={btn.id === 'pinned' ? pinnedCount : undefined}
+                />
+              </Tooltip>
+            );
+          })}
+        </div>
 
-      {/* Far right: standing and resources */}
-      <div className="topbar-right">
-        <ImperialStandingIndicator
-          playerFaction={playerFaction}
-          onOpenSubjectScreen={() => onScreenChange?.('faction')}
-          tooltipDisabled={activeScreen === 'governor-faction-overview'}
-        />
-        {!subjectMode && <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />}
-        <ResourceDisplay />
+        {/* Far right: standing and resources */}
+        <div className="topbar-right">
+          <ImperialStandingIndicator
+            playerFaction={playerFaction}
+            onOpenSubjectScreen={() => onScreenChange?.('faction')}
+            tooltipDisabled={activeScreen === 'governor-faction-overview'}
+          />
+          {!subjectMode && <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />}
+          <ResourceDisplay />
+        </div>
       </div>
       </header>
 
