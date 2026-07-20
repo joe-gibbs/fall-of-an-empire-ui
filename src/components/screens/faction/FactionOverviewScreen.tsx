@@ -514,7 +514,9 @@ function RulersTab({
     const result: FamilyTreePerson[] = [];
     const current = familyTree?.rulerId ? people.get(familyTree.rulerId) : undefined;
     if (current) result.push(current);
-    for (const id of familyTree?.groups.previousRulers ?? []) {
+    const previousRulerIds = familyTree?.groups.previousRulers ?? [];
+    for (let index = previousRulerIds.length - 1; index >= 0; index -= 1) {
+      const id = previousRulerIds[index];
       const person = people.get(id);
       if (person && !result.find(existing => existing.id === person.id)) result.push(person);
     }
