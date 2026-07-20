@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -99,7 +100,9 @@ const DEFAULT_RIGHT_DRAG_THRESHOLD_PX = 15;
 const DEFAULT_RIGHT_DRAG_SAMPLE_PX = 30;
 const WHEEL_DELTA_UNIT = 120;
 const MAX_WHEEL_STEPS_PER_EVENT = 3;
-const SMOOTH_WHEEL_LERP = 0.28;
+const SMOOTH_WHEEL_LERP_AT_60_FPS = 0.28;
+const NOMINAL_WHEEL_FRAME_MS = 1000 / 60;
+const SMOOTH_WHEEL_ZOOM_EPSILON = 0.00001;
 const SMOOTH_WHEEL_EPSILON = 0.02;
 const INITIAL_VIEW: ZoomPanView = { zoom: 1, panX: 0, panY: 0 };
 const WHEEL_ZOOMING_CLASS = 'zoom-pan-canvas--wheel-zooming';
@@ -121,16 +124,25 @@ function assignRef<T>(ref: Ref<T> | undefined, value: T | null): void {
   ref.current = value;
 }
 
-function buildContentStyle(view: ZoomPanView, customStyle?: CSSProperties): CSSProperties {
-  return {
+function buildContentStyle(
+  view: ZoomPanView,
+  customStyle: CSSProperties | undefined,
+  deferTransformToDom: boolean,
+): CSSProperties {
+  const style: CSSProperties = {
     ...(customStyle ?? {}),
     transformOrigin: '0 0',
-    transform: viewTransform(view),
   };
+  if (deferTransformToDom) {
+    delete style.transform;
+  } else {
+    style.transform = viewTransform(view);
+  }
+  return style;
 }
 
 function viewTransform(view: ZoomPanView): string {
-  return `translate(${view.panX.toFixed(2)}px, ${view.panY.toFixed(2)}px) scale(${view.zoom.toFixed(3)})`;
+  return `translate3d(${view.panX}px, ${view.panY}px, 0) scale(${view.zoom})`;
 }
 
 function clientToContentPercent(
@@ -203,9 +215,10 @@ export default function ZoomPanCanvas({
   const viewRef = useRef<ZoomPanView>(view);
   const layoutMetricsRef = useRef<ZoomPanMetrics | null>(null);
   const resizeFrameRef = useRef(0);
-  const smoothWheelRef = useRef<{ target: ZoomPanView; frameId: number }>({
+  const smoothWheelRef = useRef<{ target: ZoomPanView; frameId: number; lastFrameTimeMs: number }>({
     target: INITIAL_VIEW,
     frameId: 0,
+    lastFrameTimeMs: 0,
   });
   const dragRef = useRef<DragState>({
     mode: null,
@@ -221,17 +234,19 @@ export default function ZoomPanCanvas({
     lastSampleY: 0,
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     viewRef.current = view;
     if (deferWheelViewState) {
       const content = contentRef.current;
       if (content) {
-        content.style.transformOrigin = '0 0';
         content.style.transform = viewTransform(view);
       }
     }
+  }, [deferWheelViewState, view]);
+
+  useEffect(() => {
     onViewChange?.(view);
-  }, [deferWheelViewState, onViewChange, view]);
+  }, [onViewChange, view]);
 
   const bindViewportRef = useCallback((node: HTMLDivElement | null) => {
     internalViewportRef.current = node;
@@ -256,6 +271,7 @@ export default function ZoomPanCanvas({
     }
     setWheelZooming(false);
     smoothWheelRef.current.target = viewRef.current;
+    smoothWheelRef.current.lastFrameTimeMs = 0;
     if (syncDeferredState && deferWheelViewState) setView(viewRef.current);
   }, [deferWheelViewState, setWheelZooming]);
 
@@ -353,7 +369,7 @@ export default function ZoomPanCanvas({
   const startSmoothWheel = useCallback(() => {
     if (smoothWheelRef.current.frameId !== 0) return;
 
-    const step = () => {
+    const step = (frameTimeMs: number) => {
       const target = smoothWheelRef.current.target;
       const current = viewRef.current;
       const deltaZoom = target.zoom - current.zoom;
@@ -361,20 +377,30 @@ export default function ZoomPanCanvas({
       const deltaY = target.panY - current.panY;
 
       if (
-        Math.abs(deltaZoom) < 0.001 &&
+        Math.abs(deltaZoom) < SMOOTH_WHEEL_ZOOM_EPSILON &&
         Math.abs(deltaX) < SMOOTH_WHEEL_EPSILON &&
         Math.abs(deltaY) < SMOOTH_WHEEL_EPSILON
       ) {
         smoothWheelRef.current.frameId = 0;
+        smoothWheelRef.current.lastFrameTimeMs = 0;
         setWheelZooming(false);
         commitView(target);
         return;
       }
 
+      const previousFrameTimeMs = smoothWheelRef.current.lastFrameTimeMs;
+      const elapsedFrameMs = previousFrameTimeMs === 0
+        ? NOMINAL_WHEEL_FRAME_MS
+        : frameTimeMs - previousFrameTimeMs;
+      const frameLerp = 1 - Math.pow(
+        1 - SMOOTH_WHEEL_LERP_AT_60_FPS,
+        elapsedFrameMs / NOMINAL_WHEEL_FRAME_MS,
+      );
+      smoothWheelRef.current.lastFrameTimeMs = frameTimeMs;
       commitView({
-        zoom: current.zoom + deltaZoom * SMOOTH_WHEEL_LERP,
-        panX: current.panX + deltaX * SMOOTH_WHEEL_LERP,
-        panY: current.panY + deltaY * SMOOTH_WHEEL_LERP,
+        zoom: current.zoom + deltaZoom * frameLerp,
+        panX: current.panX + deltaX * frameLerp,
+        panY: current.panY + deltaY * frameLerp,
       }, !deferWheelViewState);
       smoothWheelRef.current.frameId = requestAnimationFrame(step);
     };
@@ -733,7 +759,7 @@ export default function ZoomPanCanvas({
         <div
           ref={contentRef}
           className={`zoom-pan-canvas__content${contentClassName ? ` ${contentClassName}` : ''}`}
-          style={buildContentStyle(view, contentStyle)}
+          style={buildContentStyle(view, contentStyle, deferWheelViewState)}
           onMouseLeave={() => onContentMouseLeave?.()}
         >
           {children}

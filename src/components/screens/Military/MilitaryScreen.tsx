@@ -550,6 +550,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
         minZoom={MIN_CHART_ZOOM}
         maxZoom={MAX_CHART_ZOOM}
         zoomStep={CHART_ZOOM_STEP}
+        deferWheelViewState
         panMode="bounded"
         panMarginPx={CANVAS_PAD * designUnitScale()}
         viewportRef={viewport}

@@ -27,6 +27,7 @@
 .zoom-pan-canvas--left-selecting .zoom-pan-canvas__content,
 .zoom-pan-canvas--wheel-zooming .zoom-pan-canvas__content {
   transition-property: none;
+  will-change: transform;
 }
 
 .zoom-pan-canvas--wheel-zooming .zoom-pan-canvas__content {
