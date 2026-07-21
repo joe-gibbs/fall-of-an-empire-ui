@@ -12,11 +12,13 @@ import { acknowledgeBridgeFailure, getRuntimeEngine } from './bridge/core/runtim
 import GameUIRoot from './components/app-shell/GameUIRoot';
 import ResourceDetailsProvider from './context/ResourceDetailsProvider';
 import InitialSetupModal from './components/initial-setup/InitialSetupModal';
+import { useButtonClickSound } from './hooks/useSound';
 import './App.css';
 
 
 function App() {
   useUIScale();
+  useButtonClickSound();
   const appMode = useAppMode();
   useEffect(() => {
     preloadWebUIAssets(appMode);

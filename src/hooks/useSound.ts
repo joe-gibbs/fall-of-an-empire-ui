@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { acknowledgeBridgeFailure, callRuntimeBridge } from '../bridge/core/runtimeEngine';
 
 const SOUND_EVENT_IDS = {
@@ -48,6 +48,22 @@ export function useSound() {
   }, []);
 
   return { play };
+}
+
+export function useButtonClickSound() {
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!event.isPrimary || event.button !== 0 || !(event.target instanceof Element)) return;
+
+      const button = event.target.closest('button');
+      if (!(button instanceof HTMLButtonElement) || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
+
+      playSound('click');
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, []);
 }
 
 export { playSound, ensureLoaded };
