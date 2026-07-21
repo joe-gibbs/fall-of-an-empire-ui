@@ -3608,6 +3608,26 @@ export interface GetResourcesResponse {
   populationDelta: number;
 }
 
+export interface SeasonResourceEffect {
+  resourceId: string;
+  resourceName: string;
+  modifierPercent: number;
+}
+
+export interface SeasonDiseaseEffect {
+  diseaseName: string;
+  modifierPercent: number;
+}
+
+export interface GetSeasonEffectsResponse {
+  gameDay: number;
+  resourceEffects: SeasonResourceEffect[];
+  buildingConditionChangePerMonth: number;
+  snowSeverityMultiplier: number;
+  terrainDrynessModifierPercent: number;
+  diseaseEffects: SeasonDiseaseEffect[];
+}
+
 export interface GetSelectedMilitariesResponse {
   militaries: MilitaryOverviewForce[];
 }
@@ -6271,6 +6291,7 @@ export interface BridgeActions {
   'game.get_region_governor_candidates': { request: GetRegionGovernorCandidatesRequest; response: GetRegionGovernorCandidatesResponse };
   'game.get_religion_conversion': { request: void; response: GetReligionConversionResponse };
   'game.get_resources': { request: void; response: GetResourcesResponse };
+  'game.get_season_effects': { request: void; response: GetSeasonEffectsResponse };
   'game.get_selected_militaries': { request: void; response: GetSelectedMilitariesResponse };
   'game.get_settings': { request: void; response: GetSettingsResponse };
   'game.get_settlement_buildings': { request: GetSettlementBuildingsRequest; response: GetSettlementBuildingsResponse };

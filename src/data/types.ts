@@ -802,7 +802,7 @@ export interface CultureShare {
   info?: CultureInfo;
   /** Settlement-specific monthly share change, in percentage points. */
   monthlyChangePercent?: number;
-  /** Settlement-specific pressure source contributions, in percentage points per month. */
+  /** Settlement-specific causes of change, in percentage points per month. */
   pressureSources?: ModifierSource[];
 }
 
@@ -998,7 +998,7 @@ export interface SiegeProgressFactor {
   helpsProgress: boolean;
 }
 
-/** The headline state of a settlement under hostile pressure or control.
+/** The headline state of a settlement under attack or hostile control.
  *  - `siege`: actively besieged - progress, defenders, besieging armies.
  *  - `blockade`: naval blockade only, no land siege.
  *  - `occupation`: captured and held by another faction. */

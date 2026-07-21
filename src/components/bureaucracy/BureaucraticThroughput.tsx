@@ -349,7 +349,7 @@ export function BureaucraticRushTooltipAction({
 
   const rushStoreKey = `${targetId ?? ''}:${targetFactionId ?? ''}:${actionId}`;
   const rushed = rushedActionIds.has(rushStoreKey);
-  const pressureDurationDays = Math.max(7, daysSaved * 4);
+  const addedLoadDurationDays = Math.max(7, daysSaved * 4);
   const projectedLoad = (throughput?.currentLoad ?? 0) + overloadLoad;
   const capacity = throughput?.capacity ?? 0;
   const projectedPenaltyPercent = throughput
@@ -391,8 +391,8 @@ export function BureaucraticRushTooltipAction({
         <span className="btm-rush-detail">
           {webUIText('BureaucracyMock.Rush.TemporaryLoad', {
             Load: formatNumber(overloadLoad),
-            Days: formatNumber(pressureDurationDays),
-            DayWord: dayWord(pressureDurationDays),
+            Days: formatNumber(addedLoadDurationDays),
+            DayWord: dayWord(addedLoadDurationDays),
           })}
         </span>
         {throughput && (

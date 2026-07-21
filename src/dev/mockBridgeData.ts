@@ -869,7 +869,7 @@ function mockPolicy(id: string, name: string, value: number) {
   const currentLoad = inProgress ? 24 : 0;
   const effectDescription = value >= 0 ? '+5% stability' : '-5% unrest control';
   const increaseEffectDescription = 'Higher investment improves local compliance.';
-  const decreaseEffectDescription = 'Lower investment frees funds at the cost of local pressure.';
+  const decreaseEffectDescription = 'Lower investment frees funds but weakens local services.';
   return {
     id,
     key: id,
@@ -1141,7 +1141,7 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
       decimals: 2,
       sources: [{ label: 'Provincial strain', value: 0.06 }],
     }),
-    mockFactionModifier('OccupationCulturePressure', 'Occupation Culture Pressure', 'Changes culture pressure from occupation.', '/assets/icons/I_Domain.png', 0.9, {
+    mockFactionModifier('OccupationCulturePressure', 'Occupation culture spread', "Changes how quickly an occupier's culture grows.", '/assets/icons/I_Domain.png', 0.9, {
       isMultiplier: true,
       decimals: 2,
       sources: [{ label: 'Local autonomy', value: -0.1 }],
@@ -1365,7 +1365,7 @@ const provincePlayerFaction: BridgeResponse<'game.get_faction_data'> = {
         { label: 'Suspected ambition', value: -12 },
       ],
     }),
-    mockFactionModifier('RecallPressure', 'Recall Pressure', 'Shows the current risk of being removed by the emperor.', '/assets/icons/I_Caution.png', 18, {
+    mockFactionModifier('RecallPressure', 'Recall risk', 'Shows the current risk of being removed by the emperor.', '/assets/icons/I_Caution.png', 18, {
       invertColouring: true,
       sources: [
         { label: 'Court scrutiny', value: 12 },
@@ -1901,7 +1901,7 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
         info: rivalReligion,
         percent: isPort ? 26 : 15,
         monthlyChangePercent: isPort ? -0.21 : -0.04,
-        pressureSources: [{ name: 'State faith pressure', value: -0.21 }],
+        pressureSources: [{ name: 'State faith', value: -0.21 }],
         conversionResistancePercent: 25,
         zealousMinority: false,
         naturallyGrowing: false,
@@ -2665,7 +2665,7 @@ const mockHintSeeds: Record<string, MockHintSeed> = {
     title: 'Power Bloc Details',
     paragraphs: [
       'Open a power bloc to check its leader, happiness, strength, goals, available actions, members, and active demand.',
-      'Resolve demands before escalation turns political pressure into rebellion.',
+      'Resolve demands before the bloc moves towards rebellion.',
     ],
   },
   PeaceHint: {
@@ -2681,7 +2681,7 @@ const mockHintSeeds: Record<string, MockHintSeed> = {
     title: 'Economy',
     paragraphs: [
       'Use Economy to move between overview totals, resources, food, settlements, military, provinces, and the full income breakdown.',
-      'Use Overview for the biggest gains and losses, Resources and Food for stockpile pressure, and Breakdown for income, upkeep, subject contributions, and tax losses.',
+      'Use Overview for the biggest gains and losses, Resources and Food for shortages, and Breakdown for income, upkeep, subject contributions, and tax losses.',
     ],
   },
   FactionHint: {
@@ -4202,7 +4202,7 @@ function peaceState(): BridgeResponse<'game.get_peace_negotiation_state'> {
       { optionId: 'concession:release_vassal:mock-faction-player:mock-faction-subject', type: 'release_vassal', direction: 'concession', label: 'Release: Meridian Prefecture', description: 'Release one of your subjects as part of the treaty.', targetFactionId: MOCK_IDS.playerFaction, targetFactionName: 'Rephsian Empire', vassalFactionId: MOCK_IDS.subjectFaction, vassalFactionName: 'Meridian Prefecture', defaultTributeAmount: 0, defaultTributeDurationDays: 0, isSelected: false, ...NO_PEACE_SETTLEMENT_TARGET },
       { optionId: 'white-peace', type: 'white_peace', direction: 'neutral', label: 'White peace', description: 'End the war without concessions.', targetFactionId: MOCK_IDS.rivalFaction, targetFactionName: 'Aurestian League', vassalFactionId: '', vassalFactionName: '', defaultTributeAmount: 0, defaultTributeDurationDays: 0, isSelected: false, ...NO_PEACE_SETTLEMENT_TARGET },
     ],
-    preview: { currentWarScore: 18, demandCost: 0, concessionCost: 0, netCostForPlayer: 0, acceptanceScore: 12, verdict: 'possible', verdictLabel: 'Possible', canSubmit: true, blockedReason: '', breakdown: 'War score and treasury pressure make a modest settlement possible.', warScoreBreakdown: [
+    preview: { currentWarScore: 18, demandCost: 0, concessionCost: 0, netCostForPlayer: 0, acceptanceScore: 12, verdict: 'possible', verdictLabel: 'Possible', canSubmit: true, blockedReason: '', breakdown: 'War score and limited funds make a modest settlement possible.', warScoreBreakdown: [
       { label: 'Battles', score: 12, eventCount: 3, isOurs: true, depth: 0 },
       { label: 'Occupied settlements', score: 6, eventCount: 1, isOurs: true, depth: 0 },
     ] },
@@ -4854,7 +4854,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         },
         { sourceId: 'load:policy', label: 'Tax policy change', kind: 'load', category: 'policy', value: 21, expiresInDays: 12, expiresOnDate: state.gameDay + 12, details: [] },
         { sourceId: 'load:interaction', label: 'Provincial requisition', kind: 'load', category: 'interaction', value: 14, expiresInDays: 18, expiresOnDate: state.gameDay + 18, details: [] },
-        { sourceId: 'load:province-pressure', label: 'Province pressure', kind: 'load', category: 'province', value: 8, expiresInDays: 0, expiresOnDate: 0, details: [] },
+        { sourceId: 'load:province-pressure', label: 'Governor corruption', kind: 'load', category: 'province', value: 8, expiresInDays: 0, expiresOnDate: 0, details: [] },
         ...(rushPressure > 0 ? [
           { sourceId: 'load:rush:mock', label: 'Rushed action', kind: 'load', category: 'rush', value: rushPressure, expiresInDays: 7, expiresOnDate: state.gameDay + 7, details: [] },
         ] : []),
@@ -6127,7 +6127,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.get_faction_interactions':
         return { targetFactionId: payloadString(payload, 'targetFactionId', MOCK_IDS.rivalFaction), interactions: [
           { id: 'send-envoy', name: 'Send Envoy', description: 'Attempt to improve relations through a formal mission.', descriptionLines: mockDisplayLines('Attempt to improve relations through a formal mission.'), effectLines: mockDisplayLines('Cost: 120 gold. Time: 45 days. Success chance: 68%.'), iconId: 'CallToWarInteraction', backgroundId: 'CallToWarInteraction', showInQuickInteractionMenu: true, isEdict: false, goldCost: 120, durationDays: 45, cooldownDays: 180, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 14, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 68, needsSettlementSelection: false, canStartSettlementSelection: false, settlementSelectionPrompt: '', needsInputSelection: false, canStartInputSelection: false, reasons: [], successFactors: [{ name: 'Assigned diplomat', percent: 18 }, { name: 'Recent trade', percent: 8 }] },
-          { id: 'pressure-council', name: 'Pressure Council', description: 'Lean on friendly merchants to isolate the rival court.', descriptionLines: mockDisplayLines('Lean on friendly merchants to isolate the rival court.'), effectLines: mockDisplayLines('Cost: 180 gold. Time: 60 days. Success chance: 46%.'), iconId: 'CallToWarInteraction', backgroundId: 'CallToWarInteraction', showInQuickInteractionMenu: false, isEdict: false, goldCost: 180, durationDays: 60, cooldownDays: 210, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 18, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 46, needsSettlementSelection: false, canStartSettlementSelection: false, settlementSelectionPrompt: '', needsInputSelection: false, canStartInputSelection: false, reasons: [], successFactors: [{ name: 'Border leverage', percent: 12 }, { name: 'War exhaustion', percent: 10 }] },
+          { id: 'pressure-council', name: 'Isolate Rival Court', description: 'Lean on friendly merchants to isolate the rival court.', descriptionLines: mockDisplayLines('Lean on friendly merchants to isolate the rival court.'), effectLines: mockDisplayLines('Cost: 180 gold. Time: 60 days. Success chance: 46%.'), iconId: 'CallToWarInteraction', backgroundId: 'CallToWarInteraction', showInQuickInteractionMenu: false, isEdict: false, goldCost: 180, durationDays: 60, cooldownDays: 210, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 18, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 46, needsSettlementSelection: false, canStartSettlementSelection: false, settlementSelectionPrompt: '', needsInputSelection: false, canStartInputSelection: false, reasons: [], successFactors: [{ name: 'Border leverage', percent: 12 }, { name: 'War exhaustion', percent: 10 }] },
         ], lastCompletedInteractionId: '', lastInteractionSucceeded: false, lastInteractionCompletedDate: 0, lastInteractionOutcomeText: '' } satisfies BridgeResponse<'game.get_faction_interactions'>;
       case 'game.get_spy_interactions':
         return { targetFactionId: payloadString(payload, 'targetFactionId', MOCK_IDS.rivalFaction), interactions: [
@@ -6157,7 +6157,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           { id: 'convene-council', name: 'Convene Council', description: 'Bring the council into session and hear its grievances directly.', effectLines: mockDisplayLines('Cost: 80 gold. Time: 7 days. Success chance: 74%.'), iconId: 'ConveneSenateInteraction', backgroundId: 'ConveneSenateInteraction', goldCost: 80, durationDays: 7, cooldownDays: 90, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 8, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 74, reasons: [], successFactors: [{ name: 'Leader respect', percent: 11 }, { name: 'Recent offices', percent: 5 }] },
           { id: 'make-promise', name: 'Make Promise', description: 'Promise offices or patronage before the current demand expires.', effectLines: mockDisplayLines('Free. Instant. Success chance: 68%.'), iconId: 'MakePromiseInteraction', backgroundId: 'MakePromiseInteraction', goldCost: 0, durationDays: 0, cooldownDays: 120, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 0, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 68, reasons: [], successFactors: [{ name: 'Court custom', percent: 9 }, { name: 'Current demand', percent: -6 }] },
           { id: 'offer-sinecure', name: 'Offer Sinecure', description: 'Spend gold on a comfortable post for a useful ally.', effectLines: mockDisplayLines('Cost: 220 gold. Time: 15 days. Success chance: 86%.'), iconId: 'OfferASinecureInteraction', backgroundId: 'OfferASinecureInteraction', goldCost: 220, durationDays: 15, cooldownDays: 180, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 10, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 86, reasons: [], successFactors: [{ name: 'Treasury', percent: 12 }, { name: 'Court custom', percent: 9 }] },
-          { id: 'intimidate', name: 'Intimidate', description: 'Pressure council members into lowering their expectations.', effectLines: mockDisplayLines('Cost: 40 gold. Time: 10 days. Success chance: 52%.'), iconId: 'IntimidateInteraction', backgroundId: 'IntimidateInteraction', goldCost: 40, durationDays: 10, cooldownDays: 160, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 10, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 52, reasons: [], successFactors: [{ name: 'Authority', percent: 14 }, { name: 'Public hostility', percent: -10 }] },
+          { id: 'intimidate', name: 'Intimidate', description: 'Frighten council members into lowering their expectations.', effectLines: mockDisplayLines('Cost: 40 gold. Time: 10 days. Success chance: 52%.'), iconId: 'IntimidateInteraction', backgroundId: 'IntimidateInteraction', goldCost: 40, durationDays: 10, cooldownDays: 160, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 10, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 52, reasons: [], successFactors: [{ name: 'Authority', percent: 14 }, { name: 'Public hostility', percent: -10 }] },
         ].map(interaction => ({
           needsLoanSelection: false,
           grossRevenue: 0,
@@ -6304,7 +6304,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           {
             positionKey: 'masterofeconomy',
             title: 'Master of Economy',
-            description: 'Control of finance, tribute pressure, and treasury access.',
+            description: 'Control of finance, tribute collection, and treasury access.',
             category: 'Court',
             primaryStat: 'governance',
             icon: '/assets/icons/I_Coins.png',

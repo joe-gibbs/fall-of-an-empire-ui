@@ -1,20 +1,19 @@
-import React from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../common/tooltips/Tooltip';
 import { useGameState } from '../../context/GameContext';
 import { WebkilnAssetPath } from '../../utils/assets';
+import {
+  bridgeCall,
+  type GetSeasonEffectsResponse,
+  type SeasonResourceEffect,
+} from '../../bridge-types.generated';
+import { formatNumber, formatSignedNumber } from '../../utils/numberFormat';
 
 import { webUIText } from '../../localization/WebUITextContext';
 type SeasonKey = 'spring' | 'summer' | 'autumn' | 'winter';
 type ClimateTrendDirection = 'warming' | 'cooling' | null;
 
 const CLIMATE_TREND_THRESHOLD = 0.003;
-
-const SEASON_FOOTERS: Record<SeasonKey, string> = {
-  spring: 'Spring brings steadier conditions for food, supply, and movement.',
-  summer: 'Summer is the best season for campaigning and reliable supply.',
-  autumn: 'Autumn is harvest season, with ordinary movement and supply conditions.',
-  winter: 'Winter reduces food and makes supply and movement harsher.',
-};
 
 const seasonForMonth = (month: number): SeasonKey => {
   if (month >= 3 && month <= 5) return 'spring';
@@ -46,12 +45,18 @@ const climateTrendIcon = (direction: Exclude<ClimateTrendDirection, null>): stri
   direction === 'warming' ? '/assets/icons/I_Warming.png' : '/assets/icons/I_Cooling.png'
 );
 
+const signedValueColour = (value: number, positiveIsGood: boolean): string => {
+  if (Math.abs(value) <= 0.0001) return 'var(--text-muted)';
+  return (value > 0) === positiveIsGood ? 'var(--green)' : 'var(--red)';
+};
+
 const buildTooltip = (
   dateText: string,
   seasonLabel: string,
   season: SeasonKey,
   climateDescription: string,
   trendDirection: ClimateTrendDirection,
+  seasonEffects: GetSeasonEffectsResponse | null,
 ): TooltipContent => {
   const lines: TooltipLine[] = [
     { label: webUIText('Auto.Prop.ComponentsTopbarDateDisplay.52.1'), value: seasonLabel || seasonIconName(season) },
@@ -71,10 +76,61 @@ const buildTooltip = (
     });
   }
 
+  if (seasonEffects) {
+    lines.push({ label: webUIText('Topbar.SeasonEffects'), isHeader: true });
+    if (seasonEffects.resourceEffects.length === 0) {
+      lines.push({ label: webUIText('Topbar.SeasonNoProductionEffects') });
+    } else {
+      seasonEffects.resourceEffects.forEach((effect: SeasonResourceEffect) => {
+        lines.push({
+          label: webUIText('Topbar.SeasonProductionEffect', { Resource: effect.resourceName }),
+          value: `${formatSignedNumber(effect.modifierPercent, { maximumFractionDigits: 1 })}%`,
+          valueColor: signedValueColour(effect.modifierPercent, true),
+          valueIcon: `/assets/resources/${effect.resourceId}.png`,
+        });
+      });
+    }
+
+    lines.push({
+      label: webUIText('Topbar.SeasonBuildingCondition'),
+      value: webUIText('Topbar.SeasonPerMonthValue', {
+        Value: formatSignedNumber(seasonEffects.buildingConditionChangePerMonth, { maximumFractionDigits: 2 }),
+      }),
+      valueColor: signedValueColour(seasonEffects.buildingConditionChangePerMonth, true),
+      valueIcon: '/assets/icons/I_BuildingsQuickButton.png',
+    });
+    lines.push({
+      label: webUIText('Topbar.SeasonSnowSeverity'),
+      value: webUIText('Topbar.SeasonMultiplierValue', {
+        Value: formatNumber(seasonEffects.snowSeverityMultiplier, { maximumFractionDigits: 2 }),
+      }),
+      valueColor: signedValueColour(seasonEffects.snowSeverityMultiplier - 1, false),
+      valueIcon: '/assets/icons/Terrain/I_SnowAttrition.png',
+    });
+    lines.push({
+      label: webUIText('Topbar.SeasonTerrainDryness'),
+      value: `${formatSignedNumber(seasonEffects.terrainDrynessModifierPercent, { maximumFractionDigits: 1 })}%`,
+      valueColor: signedValueColour(seasonEffects.terrainDrynessModifierPercent, false),
+      valueIcon: '/assets/icons/Terrain/I_DesertAttrition.png',
+    });
+
+    if (seasonEffects.diseaseEffects.length > 0) {
+      lines.push({ label: webUIText('Topbar.SeasonDiseaseEffects'), isHeader: true });
+      seasonEffects.diseaseEffects.forEach((effect) => {
+        lines.push({
+          label: effect.diseaseName,
+          value: `${formatSignedNumber(effect.modifierPercent, { maximumFractionDigits: 1 })}%`,
+          valueColor: signedValueColour(effect.modifierPercent, false),
+          valueIcon: '/assets/icons/I_Skull.png',
+        });
+      });
+    }
+  }
+
   return {
     title: dateText,
     lines,
-    footer: SEASON_FOOTERS[season],
+    footer: seasonEffects ? webUIText('Topbar.SeasonEffectsFooter') : undefined,
   };
 };
 
@@ -87,7 +143,28 @@ const DateDisplay: React.FC = () => {
     season: seasonLabel,
     climateTrend,
     climateDescription,
+    gameDay,
   } = useGameState();
+  const [seasonEffects, setSeasonEffects] = useState<GetSeasonEffectsResponse | null>(null);
+  const requestedGameDayRef = useRef<number | null>(null);
+  const currentGameDayRef = useRef(gameDay);
+  currentGameDayRef.current = gameDay;
+
+  const requestSeasonEffects = useCallback(() => {
+    if (seasonEffects?.gameDay === gameDay || requestedGameDayRef.current === gameDay) return;
+    requestedGameDayRef.current = gameDay;
+    bridgeCall('game.get_season_effects')
+      .then((response) => {
+        if (response.gameDay === currentGameDayRef.current) {
+          setSeasonEffects(response);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (requestedGameDayRef.current === gameDay) requestedGameDayRef.current = null;
+      });
+  }, [gameDay, seasonEffects?.gameDay]);
+
   const { month } = date;
   const displayMonth = Math.round(month);
   const season = seasonFromLabel(seasonLabel, displayMonth);
@@ -105,10 +182,11 @@ const DateDisplay: React.FC = () => {
     season,
     climateDescription,
     trendDirection,
+    seasonEffects?.gameDay === gameDay ? seasonEffects : null,
   );
 
   return (
-    <Tooltip content={tooltip} position="bottom" delay={200}>
+    <Tooltip content={tooltip} position="bottom" delay={200} onShowIntent={requestSeasonEffects}>
       <div className="date-display" data-tutorial-target="DateDisplay SeasonDisplay" aria-label={tooltip.title}>
         <img
           src={seasonIcon}
