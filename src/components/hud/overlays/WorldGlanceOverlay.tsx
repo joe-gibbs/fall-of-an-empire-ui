@@ -1012,6 +1012,97 @@ function GlanceContentPlaceholder({ kind }: { kind: string }) {
 
 interface WorldGlanceOverlayProps {
   visible?: boolean;
+  tutorialTarget?: string;
+}
+
+interface WorldGlanceTutorialTarget {
+  section: WorldGlanceFrameSection;
+  id: string;
+  token: string;
+}
+
+const WORLD_GLANCE_TUTORIAL_SECTIONS = new Set<WorldGlanceFrameSection>([
+  'settlement',
+  'port',
+  'convoy',
+  'army',
+  'navy',
+  'battle',
+]);
+
+function parseWorldGlanceTutorialTarget(target: string): WorldGlanceTutorialTarget | null {
+  const orderPrefix = 'OrderTarget:';
+  const token = target.slice(0, orderPrefix.length).toLowerCase() === orderPrefix.toLowerCase()
+    ? target.slice(orderPrefix.length)
+    : target;
+  const separatorIndex = token.indexOf(':');
+  if (separatorIndex <= 0 || separatorIndex === token.length - 1) {
+    return null;
+  }
+
+  const section = token.slice(0, separatorIndex).toLowerCase() as WorldGlanceFrameSection;
+  if (!WORLD_GLANCE_TUTORIAL_SECTIONS.has(section)) {
+    return null;
+  }
+
+  return {
+    section,
+    id: token.slice(separatorIndex + 1),
+    token,
+  };
+}
+
+export function isWorldGlanceTutorialTarget(target: string): boolean {
+  return parseWorldGlanceTutorialTarget(target) !== null;
+}
+
+function NativeTutorialWorldGlanceTarget({ target }: { target?: string }) {
+  const data = useWorldGlancesBridge(true);
+  const targetRef = useRef<HTMLDivElement | null>(null);
+  const parsedTarget = parseWorldGlanceTutorialTarget(target ?? '');
+  const section = parsedTarget?.section;
+  const id = parsedTarget?.id;
+
+  useEffect(() => {
+    const node = targetRef.current;
+    if (!node || !section || !id) {
+      return undefined;
+    }
+
+    const hide = () => {
+      node.style.display = 'none';
+      node.style.visibility = 'hidden';
+    };
+
+    hide();
+    const scratch = makeWorldGlanceFrameEntryScratch();
+    return onWorldGlancesFrame((frame) => {
+      const entry = findFrameEntry(data, frame, section, id, scratch);
+      if (!entry || !frameEntryInteractive(entry)) {
+        hide();
+        return;
+      }
+
+      const position = frameScreenPosition(
+        entry,
+        { width: window.innerWidth, height: window.innerHeight },
+        worldGlanceFrameViewportWidth(frame),
+        worldGlanceFrameViewportHeight(frame),
+      );
+      node.style.display = 'block';
+      node.style.visibility = 'visible';
+      node.style.transform = `translate3d(${formatPx(position.x)}, ${formatPx(position.y)}, 0) translate3d(-50%, -50%, 0)`;
+    });
+  }, [data, id, section]);
+
+  return (
+    <div
+      ref={targetRef}
+      className={`native-tutorial-world-glance-target native-tutorial-world-glance-target--${section ?? 'none'}`}
+      data-tutorial-target={parsedTarget?.token}
+      aria-hidden="true"
+    />
+  );
 }
 
 function NativeWorldGlanceInputOverlay() {
@@ -1450,7 +1541,7 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
             key={`port:${entry.id}`}
             kind="port"
             id={entry.id}
-            tutorialTarget={`army:${entry.id}${entry.faction.relation === 'own' ? ' PlayerArmy' : ''}`}
+            tutorialTarget={`port:${entry.id}`}
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <PortGlance data={mapPort(entry)} />}
@@ -1466,7 +1557,7 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
             key={`convoy:${entry.id}`}
             kind="convoy"
             id={entry.id}
-            tutorialTarget={`navy:${entry.id}${entry.faction.relation === 'own' ? ' PlayerNavy' : ''}`}
+            tutorialTarget={`convoy:${entry.id}`}
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <ConvoyGlance data={mapConvoy(entry)} />}
@@ -1482,6 +1573,7 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
             key={`army:${entry.id}`}
             kind="army"
             id={entry.id}
+            tutorialTarget={`army:${entry.id}${entry.faction.relation === 'own' ? ' PlayerArmy' : ''}`}
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <ArmyGlance data={mapMilitary(entry)} />}
@@ -1497,6 +1589,7 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
             key={`navy:${entry.id}`}
             kind="navy"
             id={entry.id}
+            tutorialTarget={`navy:${entry.id}${entry.faction.relation === 'own' ? ' PlayerNavy' : ''}`}
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <NavyGlance data={mapNavy(entry)} />}
@@ -1512,6 +1605,7 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
             key={`battle:${entry.id}`}
             kind="battle"
             id={entry.id}
+            tutorialTarget={`battle:${entry.id}`}
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <BattleGlance data={mapBattle(entry)} />}
@@ -1545,7 +1639,12 @@ export default function WorldGlanceOverlay(props: WorldGlanceOverlayProps) {
     <>
       <SelectedMilitaryConnectors visible={props.visible !== false} />
       {nativeCompositeEnabled
-        ? <NativeWorldGlanceInputOverlay />
+        ? (
+            <>
+              <NativeTutorialWorldGlanceTarget target={props.tutorialTarget} />
+              <NativeWorldGlanceInputOverlay />
+            </>
+          )
         : <BrowserWorldGlanceOverlay {...props} />}
     </>
   );

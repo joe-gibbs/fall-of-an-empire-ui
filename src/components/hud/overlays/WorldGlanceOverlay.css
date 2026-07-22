@@ -65,6 +65,22 @@
   display: none;
 }
 
+.native-tutorial-world-glance-target {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: none;
+  visibility: hidden;
+  width: 5rem;
+  height: 5rem;
+  pointer-events: none;
+}
+
+.native-tutorial-world-glance-target--settlement {
+  width: 6rem;
+  height: 5rem;
+}
+
 .world-glance-overlay .glance--military-garrison {
   display: flex;
   width: 5.7273rem;

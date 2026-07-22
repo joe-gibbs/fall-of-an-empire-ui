@@ -7,7 +7,7 @@ import TutorialProgress from '../hud/tutorial/TutorialProgress';
 import TutorialSpotlightOverlay from '../hud/overlays/TutorialSpotlightOverlay';
 import PinnedItemsBar from '../hud/panels/PinnedItemsBar';
 import VictoryConditionsDropdown from '../hud/panels/VictoryConditionsDropdown';
-import WorldGlanceOverlay from '../hud/overlays/WorldGlanceOverlay';
+import WorldGlanceOverlay, { isWorldGlanceTutorialTarget } from '../hud/overlays/WorldGlanceOverlay';
 import ProvinceTooltipOverlay from '../hud/overlays/ProvinceTooltipOverlay';
 import DragSelectionMarquee from '../hud/overlays/DragSelectionMarquee';
 import AchievementUnlockToast from '../hud/overlays/AchievementUnlockToast';
@@ -352,6 +352,10 @@ export default function GameUIRoot() {
     || (provinceEmperorTakeoverOpen && !!provinceEmperorTakeover?.active)
     || tutorialSpotlight.spotlight.isVisible,
   );
+  const tutorialWorldGlanceTarget = tutorialSpotlight.spotlight.isVisible
+    && isWorldGlanceTutorialTarget(tutorialSpotlight.spotlight.target)
+    ? tutorialSpotlight.spotlight.target
+    : '';
   const mapGlancesObscured = Boolean(
     showPause
     || showVictory
@@ -362,7 +366,7 @@ export default function GameUIRoot() {
     || courtierPromotion.open
     || allyCallDialog.open
     || (provinceEmperorTakeoverOpen && !!provinceEmperorTakeover?.active)
-    || tutorialSpotlight.spotlight.isVisible,
+    || (tutorialSpotlight.spotlight.isVisible && !tutorialWorldGlanceTarget),
   );
 
   return (
@@ -393,7 +397,10 @@ export default function GameUIRoot() {
         />
 
         <BottomBar />
-        <WorldGlanceOverlay visible={!mapGlancesObscured} />
+        <WorldGlanceOverlay
+          visible={!mapGlancesObscured}
+          tutorialTarget={tutorialWorldGlanceTarget}
+        />
         <ProvinceTooltipOverlay />
         <DragSelectionMarquee enabled={!mapAnchorsObscured} />
 
