@@ -1786,7 +1786,7 @@ export interface EconomyOverviewResourceRow {
   production: number;
   vassalContribution: number;
   treatyIncome: number;
-  armyUsage: number;
+  militaryUsage: number;
   queuedUsage: number;
   settlementConsumption: number;
   decayLoss: number;
@@ -1942,7 +1942,7 @@ export interface GetEconomyOverviewResponse {
   foodSubjectContribution: number;
   foodTreatyIncome: number;
   settlementFoodConsumption: number;
-  armyFoodConsumption: number;
+  militaryFoodConsumption: number;
   foodQueuedConsumption: number;
   foodDecayLoss: number;
   foodIncomeTotal: number;

@@ -831,7 +831,7 @@ function FlowFooter({ label, value, extra }: { label: string; value: ReactNode; 
 function largestUseLabel(resource: EconomyOverviewResourceRow, t: WebUITextFormatter): string {
   const uses = [
     { value: resource.settlementConsumption, label: t('Economy.UsedBySettlements') },
-    { value: resource.armyUsage, label: t('Economy.UsedByMilitary') },
+    { value: resource.militaryUsage, label: t('Economy.UsedByMilitary') },
     { value: resource.queuedUsage, label: t('Economy.UsedByRecruitment') },
     { value: resource.decayLoss, label: t('Economy.LostToDecay') },
   ];
@@ -1447,7 +1447,7 @@ function OverviewTab({ data, onOpenResource }: { data: GetEconomyOverviewRespons
             tone="expense"
             entries={[
               { label: t('Economy.SettlementUse'), value: data?.settlementFoodConsumption ?? 0 },
-              { label: t('Economy.ForceUse'), value: data?.armyFoodConsumption ?? 0 },
+              { label: t('Economy.ForceUse'), value: data?.militaryFoodConsumption ?? 0 },
               { label: t('Economy.QueuedFood'), value: data?.foodQueuedConsumption ?? 0 },
               { label: t('Economy.Spoilage'), value: data?.foodDecayLoss ?? 0 },
             ]}
@@ -1500,8 +1500,8 @@ function ResourcesTab({ data, onOpenResource }: { data: GetEconomyOverviewRespon
       label: <ResourceTableHeader label={t('Economy.Use')} shortLabel={t('Economy.Use')} />,
       align: 'right',
       className: 'econ-negative',
-      render: row => negativeFmt1(row.armyUsage + row.queuedUsage + row.settlementConsumption),
-      sortValue: row => row.armyUsage + row.queuedUsage + row.settlementConsumption,
+      render: row => negativeFmt1(row.militaryUsage + row.queuedUsage + row.settlementConsumption),
+      sortValue: row => row.militaryUsage + row.queuedUsage + row.settlementConsumption,
     },
     { id: 'decay', label: <ResourceTableHeader label={t('Economy.Decay')} shortLabel={t('Economy.Decay')} />, align: 'right', className: 'econ-negative', render: row => row.decayLoss > 0 ? `-${fmt1(row.decayLoss)}` : '0', sortValue: row => row.decayLoss },
     { id: 'net', label: <ResourceTableHeader label={t('Economy.NetPerMonth')} shortLabel={t('Economy.NetPerMonth')} />, align: 'right', render: row => <span className={valueClass(row.netPerMonth)}>{signed(row.netPerMonth)}</span>, sortValue: row => row.netPerMonth },
@@ -1560,7 +1560,7 @@ function FoodTab({ data }: { data: GetEconomyOverviewResponse | null }) {
         <div className="econ-summary-grid">
           <SummaryRow label={t('Economy.Production')} value={`${fmt1(data?.foodProduction)}${t('Economy.PerMonth')}`} tone="econ-positive" />
           <SummaryRow label={t('Economy.SettlementUse')} value={`${negativeFmt1(data?.settlementFoodConsumption)}${t('Economy.PerMonth')}`} tone="econ-negative" />
-          <SummaryRow label={t('Economy.ForceUse')} value={`${negativeFmt1(data?.armyFoodConsumption)}${t('Economy.PerMonth')}`} tone="econ-negative" />
+          <SummaryRow label={t('Economy.ForceUse')} value={`${negativeFmt1(data?.militaryFoodConsumption)}${t('Economy.PerMonth')}`} tone="econ-negative" />
           <SummaryRow label={t('Economy.NetChange')} value={`${signed(data?.foodNet)}${t('Economy.PerMonth')}`} tone={valueClass(data?.foodNet)} />
           <SummaryRow label={t('Economy.FoodStockpiles')} value={fmt1(data?.totalFood)} />
           <SummaryRow label={t('Economy.AutoBuy')} value={<AutoBuyControl data={data} />} />

@@ -281,7 +281,7 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
         dateText: t('Economy.Current'),
         stockpile: resource.amount,
         production: resource.production + resource.vassalContribution + resource.treatyIncome,
-        consumption: resource.armyUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss,
+        consumption: resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss,
         net: resource.netPerMonth,
         marketPrice: Math.ceil(TRADE_AMOUNT * resource.buyPrice),
       }];
@@ -361,7 +361,7 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
   const canBuy = buyCost > 0 && gold >= buyCost;
   const canSell = sellReturn > 0;
   const totalIn = resource.production + resource.vassalContribution + resource.treatyIncome;
-  const totalOut = resource.armyUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss;
+  const totalOut = resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss;
   const threshold = Math.max(0, resource.autoSellThreshold);
   const thresholdMax = Math.max(1, resource.autoSellSliderMax);
   const setAutoSellThreshold = (next: number) => {

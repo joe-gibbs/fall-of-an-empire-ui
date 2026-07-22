@@ -1000,7 +1000,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
               get body() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1089.1", { Value1: formatNumber(foodProdRounded), Value2: formatNumber(foodConsRounded) }); },
               lines: breakdownLines(settlement.foodBreakdown, v => formatNumber(v, { maximumFractionDigits: 1 })),
             }} position="bottom" delay={150}>
-              <StatCell icon="/assets/icons/I_Resources.png" value={formatSignedNumber(foodNetRounded)} valueColor={foodColor} />
+              <StatCell icon="/assets/icons/I_Food.png" value={formatSignedNumber(foodNetRounded)} valueColor={foodColor} />
             </Tooltip>
             <Tooltip content={{
               get title() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1095.1", { Value1: formatNumber(settlement.fortificationLevel) }); },

@@ -3231,7 +3231,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
     foodSubjectContribution: 104,
     foodTreatyIncome: 0,
     settlementFoodConsumption: 180,
-    armyFoodConsumption: 54,
+    militaryFoodConsumption: 54,
     foodQueuedConsumption: 0,
     foodDecayLoss: 0,
     foodIncomeTotal: 252,
@@ -3247,7 +3247,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         production: 96,
         vassalContribution: 0,
         treatyIncome: 0,
-        armyUsage: 0,
+        militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 122,
         decayLoss: 0,
@@ -3275,7 +3275,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         production: 48,
         vassalContribution: 0,
         treatyIncome: 0,
-        armyUsage: 0,
+        militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 36,
         decayLoss: 0,
@@ -3301,7 +3301,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         production: 28,
         vassalContribution: 0,
         treatyIncome: 0,
-        armyUsage: 0,
+        militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 18,
         decayLoss: 0,
@@ -3327,7 +3327,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         production: 34,
         vassalContribution: 0,
         treatyIncome: 0,
-        armyUsage: 0,
+        militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 55,
         decayLoss: 0,
@@ -3353,7 +3353,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         production: 22,
         vassalContribution: 0,
         treatyIncome: 0,
-        armyUsage: 0,
+        militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 14,
         decayLoss: 0,
@@ -3379,7 +3379,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         production: 18,
         vassalContribution: 0,
         treatyIncome: 0,
-        armyUsage: 0,
+        militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 35,
         decayLoss: 0,
@@ -3668,7 +3668,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
 
 function economyResourceDetails(resourceId: string): BridgeResponse<'game.get_economy_resource_details'> {
   const resource = economyOverview().resources.find(row => row.id === resourceId) ?? economyOverview().resources[0]!;
-  const consumption = resource.armyUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss;
+  const consumption = resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss;
   return {
     resourceId: resource.id,
     name: resource.name,
@@ -3698,7 +3698,7 @@ function economyResourceDetails(resourceId: string): BridgeResponse<'game.get_ec
     }] : [],
     consumers: [
       ...(resource.settlementConsumption > 0 ? [{ id: 'settlement-use', name: 'Settlements', kind: 'settlement', linkType: '', linkId: '', amount: resource.settlementConsumption }] : []),
-      ...(resource.armyUsage > 0 ? [{ id: 'army-use', name: 'Field Army', kind: 'army', linkType: 'military', linkId: MOCK_IDS.military, amount: resource.armyUsage }] : []),
+      ...(resource.militaryUsage > 0 ? [{ id: 'military-use', name: 'Field Army', kind: 'army', linkType: 'military', linkId: MOCK_IDS.military, amount: resource.militaryUsage }] : []),
       ...(resource.queuedUsage > 0 ? [{ id: 'queued-use', name: 'Recruitment queues', kind: 'queued', linkType: '', linkId: '', amount: resource.queuedUsage }] : []),
       ...(resource.decayLoss > 0 ? [{ id: 'decay-use', name: 'Spoilage and decay', kind: 'decay', linkType: '', linkId: '', amount: resource.decayLoss }] : []),
     ],
