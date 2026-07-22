@@ -113,6 +113,7 @@ export function mapMilitary(entry: GetWorldGlancesResponse['armies'][number]): A
     faction: mapFaction(entry.faction),
     strength: entry.strength ?? 0,
     morale: entry.morale ?? 0,
+    retreating: entry.retreating ?? false,
     tier: clampTier(entry.tier),
     raiding: entry.raiding ?? false,
     attrition: entry.attrition ?? false,

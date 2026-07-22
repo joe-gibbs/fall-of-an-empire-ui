@@ -4,10 +4,6 @@ import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
 import { getCachedBridgeEvent, getCachedBridgeEventByName } from '../core/bridgeEventCache';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
-function makeGlanceKey(kind: string, id: string): string {
-  return `${kind}:${id}`;
-}
-
 const PACKED_WORLD_GLANCES_FRAME = 'worldGlancesFrame';
 const WORLD_GLANCE_FRAME_NUMBER_STRIDE = 8;
 const WORLD_GLANCE_FRAME_SELECTED_FLAG = 1 << 0;
@@ -89,23 +85,6 @@ function normaliseWorldGlancesSnapshot(snapshot: unknown): GetWorldGlancesRespon
   } as GetWorldGlancesResponse;
 }
 
-function collectKnownGlanceKeys(data: GetWorldGlancesResponse | null): Set<string> {
-  const keys = new Set<string>();
-
-  if (!data) {
-    return keys;
-  }
-
-  for (const entry of data.settlements) keys.add(makeGlanceKey('settlement', entry.id));
-  for (const entry of data.ports) keys.add(makeGlanceKey('port', entry.id));
-  for (const entry of data.convoys) keys.add(makeGlanceKey('convoy', entry.id));
-  for (const entry of data.armies) keys.add(makeGlanceKey('army', entry.id));
-  for (const entry of data.navies) keys.add(makeGlanceKey('navy', entry.id));
-  for (const entry of data.battles) keys.add(makeGlanceKey('battle', entry.id));
-
-  return keys;
-}
-
 function mergeCatalogueEntries<T extends { id: string }>(
   current: T[],
   upserts: T[],
@@ -135,24 +114,6 @@ function snapshotSectionEntries(data: GetWorldGlancesResponse | null, section: W
   if (section === 'army') return data.armies;
   if (section === 'navy') return data.navies;
   return data.battles;
-}
-
-function frameHasUnknownEntries(
-  frame: WorldGlancesFrameResponse,
-  data: GetWorldGlancesResponse | null,
-  knownKeys: Set<string>,
-): boolean {
-  for (const section of WORLD_GLANCE_FRAME_SECTIONS) {
-    const count = worldGlanceFrameEntryCount(frame, section);
-    for (let index = 0; index < count; index += 1) {
-      const id = worldGlanceFrameEntryIdFromSnapshot(data, frame, section, index);
-      if (!knownKeys.has(makeGlanceKey(section, id))) {
-        return true;
-      }
-    }
-  }
-
-  return false;
 }
 
 function frameHasEntries(frame: WorldGlancesFrameResponse): boolean {
@@ -332,7 +293,6 @@ function cachedWorldGlancesFrame(): WorldGlancesFrameResponse | null {
 type WorldGlancesStoreListener = () => void;
 
 let worldGlancesStoreData = cachedWorldGlancesSnapshot();
-let worldGlancesKnownKeys = collectKnownGlanceKeys(worldGlancesStoreData);
 let worldGlancesStoreStop: (() => void) | null = null;
 let worldGlancesStoreGeneration = 0;
 let worldGlancesRefreshInFlight = false;
@@ -343,18 +303,12 @@ function getWorldGlancesStoreSnapshot(): GetWorldGlancesResponse | null {
   return worldGlancesStoreData;
 }
 
-function publishWorldGlancesStoreData(
-  next: GetWorldGlancesResponse | null,
-  catalogueChanged: boolean,
-) {
+function publishWorldGlancesStoreData(next: GetWorldGlancesResponse | null) {
   if (next === worldGlancesStoreData) {
     return;
   }
 
   worldGlancesStoreData = next;
-  if (catalogueChanged) {
-    worldGlancesKnownKeys = collectKnownGlanceKeys(next);
-  }
   for (const listener of worldGlancesStoreListeners) {
     listener();
   }
@@ -370,7 +324,7 @@ function startWorldGlancesStore() {
 
   const applySnapshot = (next: GetWorldGlancesResponse | null) => {
     if (isActive()) {
-      publishWorldGlancesStoreData(next, true);
+      publishWorldGlancesStoreData(next);
     }
   };
 
@@ -482,19 +436,18 @@ function startWorldGlancesStore() {
         snapshotEntries<GetWorldGlancesResponse['convoys'][number]>(delta.upsertedConvoys),
         removedIds(delta.removedConvoyIds),
       ),
-    }, true);
+    });
   };
-  window.addEventListener('bridge:game.world_glances_catalogue_delta', catalogueDeltaHandler);
+  bridgeEvents.addEventListener('game.world_glances_catalogue_delta', catalogueDeltaHandler);
 
   const unsubscribeFrame = onWorldGlancesFrame((frame) => {
     const settlementData = mergeFrameSettlementProgress(worldGlancesStoreData, frame);
     const nextData = mergeFrameBattleValues(settlementData, frame);
     if (nextData !== worldGlancesStoreData) {
-      publishWorldGlancesStoreData(nextData, false);
+      publishWorldGlancesStoreData(nextData);
     }
 
-    if ((!worldGlancesStoreData && frameHasEntries(frame))
-      || frameHasUnknownEntries(frame, worldGlancesStoreData, worldGlancesKnownKeys)) {
+    if (!worldGlancesStoreData && frameHasEntries(frame)) {
       queueRefresh();
     }
   });
@@ -511,7 +464,7 @@ function startWorldGlancesStore() {
     worldGlancesRefreshInFlight = false;
     unsubscribeSnapshot();
     unsubscribeFrame();
-    window.removeEventListener('bridge:game.world_glances_catalogue_delta', catalogueDeltaHandler);
+    bridgeEvents.removeEventListener('game.world_glances_catalogue_delta', catalogueDeltaHandler);
     worldGlancesStoreStop = null;
   };
 
@@ -821,7 +774,7 @@ function ensureWorldGlancesFrameHandler() {
     return;
   }
 
-  window.addEventListener('bridge:game.world_glances_frame', dispatchWorldGlancesFrame as EventListener);
+  bridgeEvents.addEventListener('game.world_glances_frame', dispatchWorldGlancesFrame as EventListener);
   worldGlancesFrameHandlerBound = true;
 }
 
@@ -830,7 +783,7 @@ function releaseWorldGlancesFrameHandler() {
     return;
   }
 
-  window.removeEventListener('bridge:game.world_glances_frame', dispatchWorldGlancesFrame as EventListener);
+  bridgeEvents.removeEventListener('game.world_glances_frame', dispatchWorldGlancesFrame as EventListener);
   worldGlancesFrameHandlerBound = false;
 }
 

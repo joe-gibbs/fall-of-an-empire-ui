@@ -234,6 +234,7 @@ export function NativeMilitaryGlanceTooltip({
 export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   const strengthPct = strengthFraction(data);
   const moralePct = clampUnitFraction(data.morale);
+  const moraleStateClass = data.retreating ? ' is-retreating' : moralePct < 0.5 ? ' is-low-morale' : '';
   const blockading = isNavy && (data as NavyGlanceData).blockading;
   const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
   const militaryTypeIcon = WebkilnAssetPath(isNavy ? '/assets/icons/I_Anchor.png' : '/assets/icons/I_Swords.png');
@@ -246,8 +247,7 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
     return (
       <MilitaryTooltip data={data} isNavy={isNavy}>
         <div
-          className={`glance glance--military-garrison${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
-          data-webkiln-anchor-hit
+          className={`glance glance--military-garrison${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${moraleStateClass}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
           style={{
             '--faction-colour': data.faction.colour,
             '--relation-label-bg': relationLabelBackgroundColour(data.faction.relation),
@@ -255,6 +255,8 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
             '--garrison-stack-offset': `${(data.garrisonIndex ?? 0) * 1.3636}rem`,
           } as CSSProperties}
         >
+          <span className="glance-military-garrison-hit-target" data-webkiln-anchor-hit aria-hidden="true" />
+          <span className="glance-military-alert-flash" aria-hidden="true" />
           <span className="glance-garrison-selection" aria-hidden="true" />
           <span className="glance-garrison-target" aria-hidden="true" />
           <span className="glance-garrison-kind" aria-hidden="true">
@@ -270,8 +272,7 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
   return (
     <MilitaryTooltip data={data} isNavy={isNavy}>
       <div
-        className={`glance glance--military${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
-        data-webkiln-anchor-hit
+        className={`glance glance--military${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${moraleStateClass}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
         style={{
           '--faction-colour': data.faction.colour,
           '--relation-bg': relationBackgroundColour(data.faction.relation),
@@ -283,6 +284,8 @@ export default function ArmyGlance({ data, isNavy = false }: ArmyGlanceProps) {
           '--morale-colour': moraleColour(moralePct),
         } as CSSProperties}
       >
+        <span className="glance-military-hit-target" data-webkiln-anchor-hit aria-hidden="true" />
+        <span className="glance-military-alert-flash" aria-hidden="true" />
         <div className="glance-military-rings" aria-hidden="true">
           <div className="glance-ring-sprite glance-military-ring-stack" style={militaryRingStackStyle(data.faction.relation, strengthPct, moralePct)} />
           <GlanceRelationFrame relation={data.faction.relation} />

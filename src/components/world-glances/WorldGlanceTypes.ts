@@ -18,6 +18,7 @@ export interface ArmyGlanceData {
   faction: GlanceFactionStub;
   strength: number;
   morale: number;
+  retreating?: boolean;
   tier: 1 | 2 | 3 | 4 | 5;
   raiding?: boolean;
   attrition?: boolean;

@@ -1319,6 +1319,50 @@
   margin-left: 0;
 }
 
+.glance--military .glance-military-hit-target {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 6.5rem;
+  height: 6.5rem;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.glance-military-alert-flash {
+  position: absolute;
+  inset: 0.2273rem;
+  z-index: 8;
+  display: block;
+  border-radius: 50%;
+  background-color: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glance--military.is-low-morale .glance-military-alert-flash,
+.glance--military-garrison.is-low-morale .glance-military-alert-flash {
+  animation: military-glance-white-flash 1.4s ease-in-out infinite;
+}
+
+.glance--military.is-retreating .glance-military-alert-flash,
+.glance--military-garrison.is-retreating .glance-military-alert-flash {
+  animation: military-glance-white-flash 0.65s ease-in-out infinite;
+}
+
+@keyframes military-glance-white-flash {
+  0%,
+  42%,
+  100% {
+    opacity: 0;
+  }
+
+  14% {
+    opacity: 0.82;
+  }
+}
+
 .glance--military::before {
   top: 0.9545rem;
   right: 0.9545rem;
@@ -1451,34 +1495,29 @@
 
 .glance-military-target-indicator {
   position: absolute;
-  top: 0.0455rem;
-  left: 0.0455rem;
-  width: calc(100% - 0.091rem);
-  height: calc(100% - 0.091rem);
+  top: -0.4091rem;
+  left: -0.4091rem;
+  z-index: 2;
   display: block;
-  box-sizing: border-box;
+  width: calc(100% + 0.8182rem);
+  height: calc(100% + 0.8182rem);
   border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(244, 239, 226, 0.46) 0%,
+    rgba(214, 168, 58, 0.34) 48%,
+    rgba(214, 168, 58, 0.18) 64%,
+    rgba(214, 168, 58, 0) 80%
+  );
   opacity: 0;
   pointer-events: none;
-}
-
-.glance-military-target-indicator {
-  z-index: 7;
-  border-width: 0.0455rem;
-  border-style: solid;
-  border-top-color: #f4efe2;
-  border-right-color: #d6a83a;
-  border-bottom-color: #d6a83a;
-  border-left-color: #d6a83a;
+  transform-origin: center center;
 }
 
 .world-glance-node.is-targeted .glance--military .glance-military-target-indicator,
 .glance--military.is-targeted .glance-military-target-indicator {
   opacity: 1;
-  animation-name: world-glance-target-roundel-pulse;
-  animation-duration: 0.9s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
+  animation: world-glance-target-glow-pulse 0.9s ease-in-out infinite;
 }
 
 .glance-military-core {
@@ -1750,6 +1789,22 @@
   color: #f4efe2;
 }
 
+.glance--military-garrison .glance-military-alert-flash {
+  inset: 0;
+  border-radius: 0;
+}
+
+.glance--military-garrison .glance-military-garrison-hit-target {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 6.5rem;
+  height: 2.5rem;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
 /* Once the location glance is no longer painted, move its attached tab onto the shared
    projected centre. While the location remains visible or is fading, keep the tab below it. */
 .detail-location-faded .glance--military-garrison {
@@ -1909,14 +1964,6 @@
   left: 0.5909rem;
   right: 0.5909rem;
   font-size: 0.6364rem;
-}
-
-.detail-flag .glance-military-target-indicator,
-.detail-name .glance-military-target-indicator {
-  top: 0.0455rem;
-  left: 0.0455rem;
-  width: calc(100% - 0.091rem);
-  height: calc(100% - 0.091rem);
 }
 
 /* Final world-map treatment for civic and battle glances. These keep their
@@ -2933,33 +2980,34 @@
 .glance--settlement.is-hovered .gset-badge-layer--hover,
 .world-glance-node.is-targeted .glance--settlement .gset-badge-layer--hover,
 .glance--settlement.is-targeted .gset-badge-layer--hover {
-  opacity: 0.58;
+  opacity: 1;
 }
 
 .gset-badge-layer--target {
-  z-index: 2;
-  display: none;
-  pointer-events: none;
+  z-index: 6;
   opacity: 0;
+  transform: scale(1.14);
+  transform-origin: center center;
 }
 
-.world-settlement-badge.is-targeted .gset-badge-layer--target,
-.world-settlement-badge.is-targeted:hover .gset-badge-layer--target {
-  animation: gset-target-pulse 1.15s ease-in-out infinite;
+.world-glance-node.is-targeted .glance--settlement .gset-badge-layer--target,
+.glance--settlement.is-targeted .gset-badge-layer--target {
+  animation: settlement-glance-target-pulse 0.9s ease-in-out infinite;
 }
 
-@keyframes gset-target-pulse {
+@keyframes settlement-glance-target-pulse {
   0%,
   100% {
-    opacity: 0.52;
-    transform: scale(1.02);
+    opacity: 0.72;
+    transform: scale(1.14);
   }
 
   50% {
-    opacity: 0.98;
-    transform: scale(1.12);
+    opacity: 1;
+    transform: scale(1.28);
   }
 }
+
 .gset-status-icon {
   position: absolute;
   z-index: 8;
