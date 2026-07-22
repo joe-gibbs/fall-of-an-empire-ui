@@ -80,6 +80,7 @@ function mapForce(data: MilitaryOverviewForce): MilitaryForce {
     id: data.id,
     debugShortId: data.debugShortId,
     name: data.name,
+    factionId: data.factionId,
     parentId: data.parentId || null,
     rank: data.rank as MilitaryForce['rank'],
     commanderName: data.commanderName,
@@ -98,6 +99,8 @@ function mapForce(data: MilitaryOverviewForce): MilitaryForce {
     delegated: data.delegated,
     autoSquashRebels: data.autoSquashRebels,
     isPlayerControlled: data.isPlayerControlled,
+    subordinateCount: data.subordinateCount,
+    subordinateCapacity: data.subordinateCapacity,
   };
 }
 
@@ -323,6 +326,8 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     attritionSources: data.attritionSources.map(mapAttritionSource),
     supplyDays: data.supplyDays,
     isForcedMarching: data.isForcedMarching,
+    canForcedMarch: data.canForcedMarch,
+    canMerge: data.canMerge,
     isRaiding: data.isRaiding,
     isReplenishing: data.isReplenishing,
     replenishCost: data.replenishCost > 0 ? data.replenishCost : undefined,

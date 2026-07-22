@@ -69,6 +69,13 @@
   padding: 0.462rem;
 }
 
+.mil-selection-drag-hint {
+  margin-top: 0.24rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.25;
+}
+
 .mil-selection-branch {
   position: relative;
 }
@@ -112,7 +119,8 @@
   pointer-events: none;
 }
 
-.mil-selection-row {
+.mil-selection-row,
+.mil-selection-drag-copy {
   width: 100%;
   min-height: 5.2rem;
   display: flex;
@@ -133,6 +141,56 @@
   background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
   background-color: #11171d;
   cursor: pointer;
+}
+
+.mil-selection-row.is-draggable {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.mil-selection-chart.is-dragging .mil-selection-row {
+  cursor: grabbing;
+}
+
+.mil-selection-row.is-drag-source {
+  opacity: 0.36;
+}
+
+.mil-selection-row.is-drop-target {
+  border-top-color: rgba(232, 210, 128, 0.92);
+  border-right-color: rgba(201, 168, 76, 0.78);
+  border-bottom-color: rgba(201, 168, 76, 0.72);
+  border-left-color: rgba(201, 168, 76, 0.78);
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-active.png');
+  background-repeat: repeat, repeat;
+  background-size: 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  transform: translateX(0.15rem);
+}
+
+.mil-selection-row.is-drop-invalid {
+  border-top-color: rgba(180, 66, 52, 0.88);
+  border-right-color: rgba(180, 66, 52, 0.68);
+  border-bottom-color: rgba(180, 66, 52, 0.64);
+  border-left-color: rgba(180, 66, 52, 0.68);
+}
+
+.mil-selection-drag-copy {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 12000;
+  min-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: top left;
+  transition: opacity 90ms ease;
+}
+
+.mil-selection-drag-copy.is-shown {
+  opacity: 0.94;
 }
 
 .mil-selection-row--rank-dux {
@@ -201,6 +259,22 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.mil-selection-row.is-drop-target,
+.mil-selection-row.is-drop-target:hover {
+  border-top-color: rgba(232, 210, 128, 0.92);
+  border-right-color: rgba(201, 168, 76, 0.78);
+  border-bottom-color: rgba(201, 168, 76, 0.72);
+  border-left-color: rgba(201, 168, 76, 0.78);
+}
+
+.mil-selection-row.is-drop-invalid,
+.mil-selection-row.is-drop-invalid:hover {
+  border-top-color: rgba(180, 66, 52, 0.88);
+  border-right-color: rgba(180, 66, 52, 0.68);
+  border-bottom-color: rgba(180, 66, 52, 0.64);
+  border-left-color: rgba(180, 66, 52, 0.68);
 }
 
 .mil-selection-meta > span:first-child {
@@ -282,6 +356,10 @@
   flex-shrink: 0;
 }
 
+.mil-selection-actions > .tooltip-wrapper {
+  display: flex;
+}
+
 .mil-selection-action {
   width: 1.65rem;
   height: 1.65rem;
@@ -297,7 +375,7 @@
   cursor: pointer;
 }
 
-.mil-selection-action + .mil-selection-action {
+.mil-selection-actions > * + * {
   margin-top: 0.24rem;
 }
 
@@ -306,13 +384,23 @@
   background-color: rgba(201, 168, 76, 0.08);
 }
 
+.mil-selection-action--detach:hover {
+  border-color: rgba(201, 168, 76, 0.62);
+}
+
+.mil-selection-action:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
 .mil-selection-action img {
   width: 0.92rem;
   height: 0.92rem;
 }
 
 .mil-selection-total-row > * + *,
-.mil-selection-row > * + * {
+.mil-selection-row > * + *,
+.mil-selection-drag-copy > * + * {
   margin-left: 0.42rem;
 }
 

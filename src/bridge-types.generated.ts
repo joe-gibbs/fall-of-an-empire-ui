@@ -1,6 +1,7 @@
 // Auto-generated from AngelScript bridge actions.
 // Do not edit - run: python Automation/generate_bridge_types.py
 import { callRuntimeBridge } from './bridge/core/runtimeEngine';
+import { subscribeBridgeEvent } from './bridge/core/bridgeEvents';
 
 export interface AchievementUnlockedPayload {
   id: string;
@@ -2429,6 +2430,27 @@ export interface GetFamilyTreeResponse {
   groups: FamilyTreeGroups;
 }
 
+export interface FormationTemplateGoldChangedEvent {
+  playerGold: number;
+  insufficientGoldReason: string;
+  noSettlementsCanBuildReason: string;
+}
+
+export interface FormationTemplateDynamicEntry {
+  id: string;
+  canApply: boolean;
+  applyReason: string;
+  isActiveBuildTemplate: boolean;
+  assignedForces: FormationTemplateAssignedForce[];
+}
+
+export interface FormationTemplatesDynamicChangedEvent {
+  activeBuildTemplateId: string;
+  playerGold: number;
+  pendingFormations: PendingFormationEntry[];
+  templates: FormationTemplateDynamicEntry[];
+}
+
 export interface GetGameStateResponse {
   day: number;
   month: number;
@@ -2446,6 +2468,16 @@ export interface GetGameStateResponse {
   hasDemoTimeLimit: boolean;
   demoDaysRemaining: number;
   demoEndDateText: string;
+}
+
+export interface GameDateChangedEvent {
+  day: number;
+  month: number;
+  year: number;
+  gameDay: number;
+  dateText: string;
+  season: string;
+  demoDaysRemaining: number;
 }
 
 export interface GetGameVersionResponse {
@@ -3783,9 +3815,9 @@ export interface SettlementBuiltBuildingEntry {
   chainName: string;
   description: string;
   effectsHtml: string;
+  condition: number;
   monthlyConditionChange: number;
   maintenanceGovernanceThreshold: number;
-  condition: number;
   nextLevelPrice: number;
   nextLevelBuildTime: number;
   upkeep: number;
@@ -4193,6 +4225,33 @@ export interface GetSettlementInteractionsResponse {
   lastInteractionOutcomeText: string;
 }
 
+export interface SettlementInteractionDailyReason {
+  reason: string;
+  status: string;
+}
+
+export interface SettlementInteractionDailyEntry {
+  id: string;
+  visible: boolean;
+  availability: string;
+  inProgress: boolean;
+  remainingDays: number;
+  cooldownRemainingDays: number;
+  bureaucraticRushDaysSaved: number;
+  bureaucraticRushLoad: number;
+  successChancePercent: number;
+  reasons: SettlementInteractionDailyReason[];
+}
+
+export interface SettlementInteractionsDailyPayload {
+  settlementId: string;
+  lastCompletedInteractionId: string;
+  lastInteractionSucceeded: boolean;
+  lastInteractionCompletedDate: number;
+  lastInteractionOutcomeText: string;
+  interactions: SettlementInteractionDailyEntry[];
+}
+
 export interface GetSettlementSiegeDataRequest {
   settlementId: string;
 }
@@ -4490,6 +4549,7 @@ export interface WorldMilitaryGlance {
   faction: WorldGlanceFaction;
   strength: number;
   morale: number;
+  retreating: boolean;
   tier: number;
   raiding: boolean;
   selected: boolean;
@@ -4827,6 +4887,7 @@ export interface MilitaryOverviewForce {
   id: string;
   debugShortId: number;
   name: string;
+  factionId: string;
   parentId: string;
   rank: string;
   commanderName: string;
@@ -4845,6 +4906,8 @@ export interface MilitaryOverviewForce {
   delegated: boolean;
   autoSquashRebels: boolean;
   isPlayerControlled: boolean;
+  subordinateCount: number;
+  subordinateCapacity: number;
 }
 
 export interface FoederatiOverviewEntry {
@@ -5039,6 +5102,8 @@ export interface GetMilitaryDataResponse {
   attritionSources: MilitaryAttritionEntry[];
   supplyDays: number;
   isForcedMarching: boolean;
+  canForcedMarch: boolean;
+  canMerge: boolean;
   isRaiding: boolean;
   isReplenishing: boolean;
   replenishCost: number;
@@ -6436,7 +6501,5 @@ export function onBridgeEvent<A extends keyof BridgeActions>(
   action: A,
   callback: EventCallback<A>,
 ): () => void {
-  const handler = (e: CustomEvent<BridgeActions[A]['response']>) => callback(e.detail);
-  window.addEventListener(`bridge:${action}`, handler as EventListener);
-  return () => window.removeEventListener(`bridge:${action}`, handler as EventListener);
+  return subscribeBridgeEvent(action, callback as (data: unknown) => void);
 }

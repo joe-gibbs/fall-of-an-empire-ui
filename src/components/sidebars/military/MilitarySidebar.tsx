@@ -15,7 +15,7 @@ import type { Army, ArmyUnitRow, MilitaryDoctrine } from '../../../data/types';
 import { useGameActions, useGameState } from '../../../context/GameContext';
 import { usePinnedItemsBridge, zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
-import { useMilitary, useMilitaryOverview, usePerson, usePlayerFactionId } from '../../../data-source/index';
+import { useMilitary, useMilitaryOverview, usePerson } from '../../../data-source/index';
 import { registerSidebar } from '../../../registry/index';
 import {
   disbandMilitaryBridge,
@@ -28,7 +28,6 @@ import {
   setMilitaryAutoSquashRebelsBridge,
   setMilitaryDelegationBridge,
   setMilitaryDoctrineBridge,
-  setMilitaryParentBridge,
   showMilitarySidebarBridge,
   startMilitaryEmbarkTargetingBridge,
   startMilitaryMergeTargetingBridge,
@@ -90,7 +89,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const { debugMode } = useGameState();
   const { isPinned: checkPinned, togglePin } = usePinnedItemsBridge();
   const militaryOverview = useMilitaryOverview();
-  const playerFactionId = usePlayerFactionId();
   const commander = usePerson(army.commanderId);
 
   const initialDoctrine = coerceDoctrine(army.commandDoctrine);
@@ -133,7 +131,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const movementSpeed = isForcedMarching ? derived.speed * 2 : derived.speed;
   const canHaveSubordinates = army.commandRank === 'Dux' || army.commandRank === 'Praefectus';
   const headerBg = army.isNavy ? '/assets/events/naval-battle.png' : '/assets/events/cavalry-charge.png';
-  const isPlayerControlled = army.isPlayerControlled ?? (playerFactionId == null || army.factionId == null || army.factionId === playerFactionId);
+  const isPlayerControlled = army.isPlayerControlled;
   const resourceRows = buildResourceRows(army);
   const subordinateRows = army.subordinates ?? [];
   const attritionSources = army.attritionSources ?? [];
@@ -319,15 +317,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   );
 
   const commandActions: MilitaryAction[] = [
-    ...(army.parentCommand ? [{
-      label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.460.1'),
-      icon: '/assets/icons/I_DetachCommand.png',
-      get description() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.462.1", { ParentCommand: army.parentCommand }); },
-      disabled: !isPlayerControlled,
-      onClick: () => {
-        setMilitaryParentBridge(army.id, null).catch(acknowledgeBridgeFailure);
-      },
-    }] : []),
     ...(army.commandRank !== 'Legatus' ? [{
       label: webUIText('Military.Command.Demote'),
       icon: '/assets/icons/I_Demote.png',
@@ -367,6 +356,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     description: army.embarkedNavyId
       ? webUIText('Military.DisembarkNearest.Description')
       : webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.500.7'),
+    tutorialTarget: army.embarkedNavyId ? undefined : 'EmbarkMilitaryButton',
     disabled: !isPlayerControlled,
     onClick: () => {
       const action = army.embarkedNavyId
@@ -381,7 +371,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     icon: '/assets/icons/I_Speed.png',
     description: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.511.8'),
     isActive: isForcedMarching,
-    disabled: army.isNavy || !isPlayerControlled,
+    disabled: army.isNavy || !isPlayerControlled || (!isForcedMarching && !army.canForcedMarch),
     onClick: () => {
       setMilitaryForcedMarchBridge(army.id, !isForcedMarching).catch(acknowledgeBridgeFailure);
     },
@@ -395,7 +385,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.533.9'),
       icon: '/assets/icons/I_MergeUnits.png',
       get description() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.535.1", { Value1: webUIText(army.isNavy ? 'Common.FleetLower' : 'Common.ArmyLower') }); },
-      disabled: !isPlayerControlled || army.isFoederatiAuxiliary,
+      disabled: !isPlayerControlled || !army.canMerge,
       onClick: () => {
         startMilitaryMergeTargetingBridge(army.id).catch(acknowledgeBridgeFailure);
       },

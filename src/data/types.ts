@@ -1217,6 +1217,8 @@ export interface Army {
   attritionSources?: MilitaryAttritionSource[];
   supplyDays?: number;
   isForcedMarching?: boolean;
+  canForcedMarch: boolean;
+  canMerge: boolean;
   isRaiding?: boolean;
   isReplenishing?: boolean;
   replenishCost?: number;
@@ -1230,6 +1232,7 @@ export interface MilitaryForce {
   id: string;
   debugShortId?: number;
   name: string;
+  factionId: string;
   parentId: string | null;
   rank: MilitaryRank;
   commanderName: string;
@@ -1248,6 +1251,8 @@ export interface MilitaryForce {
   delegated: boolean;
   autoSquashRebels: boolean;
   isPlayerControlled: boolean;
+  subordinateCount: number;
+  subordinateCapacity: number;
 }
 
 export interface MilitaryFoederatiEntry {
