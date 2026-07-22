@@ -46,6 +46,12 @@ const DIFFICULTY_OPTIONS: SettingsOption[] = [
   { value: 'Hard', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.740.14'); } },
   { value: 'VeryHard', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.740.15'); } },
 ];
+const DIFFICULTY_EFFECT_KEYS: Record<string, string> = {
+  Easy: 'Settings.Difficulty.EasyEffects',
+  Normal: 'Settings.Difficulty.NormalEffects',
+  Hard: 'Settings.Difficulty.HardEffects',
+  VeryHard: 'Settings.Difficulty.VeryHardEffects',
+};
 const SAVE_FREQUENCY_OPTIONS: SettingsOption[] = [
   { value: 'Monthly', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.741.17'); } },
   { value: 'SixMonths', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.741.18'); } },
@@ -161,6 +167,20 @@ const graphicsQualityTooltip = (key: string): TooltipContent | undefined => {
 const settingsTooltip = (title: string, bodyKey: string): TooltipContent => ({
   title,
   body: webUIText(bodyKey),
+});
+
+const difficultyEffects = (difficulty: string): string => (
+  webUIText(DIFFICULTY_EFFECT_KEYS[difficulty] ?? DIFFICULTY_EFFECT_KEYS.Normal)
+);
+
+const difficultyTooltip = (): TooltipContent => ({
+  title: webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.740.11'),
+  body: webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.740.4'),
+  lines: DIFFICULTY_OPTIONS.map(option => ({
+    label: option.label,
+    value: difficultyEffects(option.value),
+    stacked: true,
+  })),
 });
 
 const SLIDER_MINOR_SNAP_INTERVAL = 5;
@@ -1253,7 +1273,7 @@ const SettingsPanel: React.FC = () => {
       <StyledScrollArea className="settings-body" viewportClassName="settings-body__viewport">
         {settingsTab === 'gameplay' && (
           <div className="settings-panel">
-            <Choice label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.740.11')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.740.4')} value={gameplay.difficulty} options={DIFFICULTY_OPTIONS} onChange={v => setGameplay({ difficulty: v })} />
+            <Choice label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.740.11')} desc={difficultyEffects(gameplay.difficulty)} tooltip={difficultyTooltip()} value={gameplay.difficulty} options={DIFFICULTY_OPTIONS} onChange={v => setGameplay({ difficulty: v })} />
             <Choice label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.741.16')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.741.5')} value={gameplay.saveFrequency} options={SAVE_FREQUENCY_OPTIONS} onChange={v => setGameplay({ saveFrequency: v })} />
             <Choice label={webUIText('Settings.AutosaveSlotCount.Label')} desc={webUIText('Settings.AutosaveSlotCount.Description')} value={gameplay.autosaveSlotCount.toString()} options={AUTOSAVE_SLOT_OPTIONS} onChange={v => setGameplay({ autosaveSlotCount: parseInt(v, 10) })} />
             <Choice label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.742.21')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.742.6')} value={gameplay.pauseOnNotifications} options={PAUSE_NOTIFICATION_OPTIONS} onChange={v => setGameplay({ pauseOnNotifications: v })} />
