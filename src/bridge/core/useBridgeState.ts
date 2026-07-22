@@ -42,6 +42,28 @@ function mapGameState(gs: GetGameStateResponse): Partial<BridgeGameState> {
   };
 }
 
+interface GameDateChangedEvent {
+  day: number;
+  month: number;
+  year: number;
+  gameDay: number;
+  dateText: string;
+  season: string;
+  demoDaysRemaining: number;
+}
+
+function isGameDateChangedEvent(value: unknown): value is GameDateChangedEvent {
+  if (!value || typeof value !== 'object') return false;
+  const event = value as Partial<GameDateChangedEvent>;
+  return typeof event.day === 'number'
+    && typeof event.month === 'number'
+    && typeof event.year === 'number'
+    && typeof event.gameDay === 'number'
+    && typeof event.dateText === 'string'
+    && typeof event.season === 'string'
+    && typeof event.demoDaysRemaining === 'number';
+}
+
 function mapResources(res: GetResourcesResponse): Partial<BridgeGameState> {
   return {
     gold: res.gold,
@@ -89,9 +111,9 @@ export function useBridgeState(): BridgeGameState | null {
     }
 
     // Subscribe before the initial requests so startup pushes cannot be missed.
-    window.addEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, resetState);
+    bridgeEvents.addEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, resetState);
     const unsubs = [
-      () => window.removeEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, resetState),
+      () => bridgeEvents.removeEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, resetState),
       onBridgeEvent('game.get_game_state', (data) => {
         applyState(mapGameState(data));
       }),
@@ -100,11 +122,26 @@ export function useBridgeState(): BridgeGameState | null {
       }),
     ];
 
+    const handleDateChanged = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail;
+      if (!isGameDateChangedEvent(detail)) return;
+      setState(prev => ({
+        ...(prev ?? {}),
+        date: { day: detail.day, month: detail.month, year: detail.year },
+        dateText: detail.dateText,
+        season: detail.season,
+        gameDay: detail.gameDay,
+        demoDaysRemaining: detail.demoDaysRemaining,
+      }));
+    };
+    bridgeEvents.addEventListener('game.game_date_changed', handleDateChanged as EventListener);
+
     initGameState();
     initResources();
 
     return () => {
       cancelled = true;
+      bridgeEvents.removeEventListener('game.game_date_changed', handleDateChanged as EventListener);
       unsubs.forEach(fn => fn());
     };
   }, []);

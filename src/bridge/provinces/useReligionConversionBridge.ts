@@ -140,7 +140,7 @@ function mapResponse(data: GetReligionConversionResponse): ReligionConversionRes
 export async function refreshReligionConversion(): Promise<void> {
   try {
     const fresh = await bridgeCall('game.get_religion_conversion');
-    window.dispatchEvent(new CustomEvent('bridge:game.get_religion_conversion', { detail: fresh }));
+    bridgeEvents.dispatchEvent(new CustomEvent('game.get_religion_conversion', { detail: fresh }));
   } catch (error) {
     acknowledgeBridgeFailure(error);
   }
@@ -153,11 +153,19 @@ export function useReligionConversionBridge(): ReligionConversionResult | null {
   });
   const active = Boolean(data?.state.active);
 
-  useEffect(() => onBridgeEvent('game.get_game_state', () => {
-    if (active) {
-      void refreshReligionConversion();
-    }
-  }), [active]);
+  useEffect(() => {
+    const refreshIfActive = () => {
+      if (active) {
+        void refreshReligionConversion();
+      }
+    };
+    const unsubscribeState = onBridgeEvent('game.get_game_state', refreshIfActive);
+    bridgeEvents.addEventListener('game.game_date_changed', refreshIfActive);
+    return () => {
+      unsubscribeState();
+      bridgeEvents.removeEventListener('game.game_date_changed', refreshIfActive);
+    };
+  }, [active]);
 
   return data;
 }

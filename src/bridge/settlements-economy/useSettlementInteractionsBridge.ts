@@ -1,6 +1,5 @@
-import { useCallback } from 'react';
-import { useBridgeQuery } from '../core/useBridgeQuery';
-import { bridgeCall } from '../../bridge-types.generated.ts';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type {
   GetSettlementInteractionsResponse,
   SettlementInteractionEntry,
@@ -111,19 +110,139 @@ export interface SettlementInteractionsBridge {
   cancel: () => void;
 }
 
+interface SettlementInteractionDailyPatch {
+  settlementId: string;
+  lastCompletedInteractionId: string;
+  lastInteractionSucceeded: boolean;
+  lastInteractionCompletedDate: number;
+  lastInteractionOutcomeText: string;
+  interactions: Array<{
+    id: string;
+    visible: boolean;
+    availability: string;
+    inProgress: boolean;
+    remainingDays: number;
+    cooldownRemainingDays: number;
+    bureaucraticRushDaysSaved: number;
+    bureaucraticRushLoad: number;
+    successChancePercent: number;
+    reasons: Array<{ reason: string; status: string }>;
+  }>;
+}
+
+function isDailyPatch(value: unknown): value is SettlementInteractionDailyPatch {
+  if (!value || typeof value !== 'object') return false;
+  const patch = value as Partial<SettlementInteractionDailyPatch>;
+  return typeof patch.settlementId === 'string' && Array.isArray(patch.interactions);
+}
+
+function applyDailyPatch(
+  state: SettlementInteractionsState | null,
+  patch: SettlementInteractionDailyPatch,
+): SettlementInteractionsState | null {
+  if (!state || state.settlementId !== patch.settlementId) return state;
+  const updates = new Map(patch.interactions.map(entry => [entry.id, entry]));
+  return {
+    ...state,
+    lastCompletedInteractionId: patch.lastCompletedInteractionId,
+    lastInteractionSucceeded: patch.lastInteractionSucceeded,
+    lastInteractionCompletedDate: patch.lastInteractionCompletedDate,
+    lastInteractionOutcomeText: patch.lastInteractionOutcomeText,
+    interactions: state.interactions
+      .filter(interaction => updates.get(interaction.id)?.visible !== false)
+      .map((interaction) => {
+        const update = updates.get(interaction.id);
+        if (!update) return interaction;
+        return {
+          ...interaction,
+          availability: toAvailability(update.availability),
+          inProgress: update.inProgress,
+          remainingDays: update.remainingDays,
+          cooldownRemainingDays: update.cooldownRemainingDays,
+          bureaucraticRushDaysSaved: update.bureaucraticRushDaysSaved,
+          bureaucraticRushLoad: update.bureaucraticRushLoad,
+          successChancePercent: update.successChancePercent,
+          reasons: update.reasons.map(reason => ({
+            reason: reason.reason,
+            status: toAvailability(reason.status),
+          })),
+        };
+      }),
+  };
+}
+
+function patchIntroducesVisibleInteraction(
+  state: SettlementInteractionsState | null,
+  patch: SettlementInteractionDailyPatch,
+): boolean {
+  if (!state || state.settlementId !== patch.settlementId) return false;
+  const knownIds = new Set(state.interactions.map(interaction => interaction.id));
+  return patch.interactions.some(interaction => interaction.visible && !knownIds.has(interaction.id));
+}
+
 /**
  * Live list of settlement interactions for the given settlement, plus callbacks
  * for starting or cancelling them. Subscribes to bridge pushes so progress
  * updates as game days tick by.
  */
 export function useSettlementInteractionsBridge(settlementId: string | null): SettlementInteractionsBridge {
-  const queriedState = useBridgeQuery({
-    action: 'game.get_settlement_interactions',
-    payload: settlementId ? { settlementId } : null,
-    map: mapResponse,
-    matchPush: (data) => data.settlementId === settlementId,
-  });
-  const state = queriedState?.settlementId === settlementId ? queriedState : null;
+  const [interactionsState, setInteractionsState] = useState<SettlementInteractionsState | null>(null);
+  const interactionsStateRef = useRef<SettlementInteractionsState | null>(null);
+
+  useEffect(() => {
+    interactionsStateRef.current = interactionsState;
+  }, [interactionsState]);
+
+  useEffect(() => {
+    if (!settlementId) return undefined;
+
+    let cancelled = false;
+    let refreshInFlight = false;
+    const unsubscribeFull = onBridgeEvent('game.get_settlement_interactions', (data) => {
+      if (!cancelled && data.settlementId === settlementId) {
+        setInteractionsState(mapResponse(data));
+      }
+    });
+    const handleDailyPatch = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail;
+      if (!cancelled && isDailyPatch(detail) && detail.settlementId === settlementId) {
+        if (patchIntroducesVisibleInteraction(interactionsStateRef.current, detail)) {
+          if (!refreshInFlight) {
+            refreshInFlight = true;
+            void bridgeCall('game.get_settlement_interactions', { settlementId })
+              .then((data) => {
+                if (!cancelled) setInteractionsState(mapResponse(data));
+              })
+              .catch((error) => {
+                if (!cancelled) acknowledgeBridgeFailure(error);
+              })
+              .finally(() => {
+                refreshInFlight = false;
+              });
+          }
+          return;
+        }
+        setInteractionsState(current => applyDailyPatch(current, detail));
+      }
+    };
+    bridgeEvents.addEventListener('game.settlement_interactions_daily', handleDailyPatch as EventListener);
+
+    void bridgeCall('game.get_settlement_interactions', { settlementId })
+      .then((data) => {
+        if (!cancelled) setInteractionsState(mapResponse(data));
+      })
+      .catch((error) => {
+        if (!cancelled) acknowledgeBridgeFailure(error);
+      });
+
+    return () => {
+      cancelled = true;
+      unsubscribeFull();
+      bridgeEvents.removeEventListener('game.settlement_interactions_daily', handleDailyPatch as EventListener);
+    };
+  }, [settlementId]);
+
+  const state = interactionsState?.settlementId === settlementId ? interactionsState : null;
 
   const start = useCallback((interactionId: string) => {
     if (!settlementId) return;
