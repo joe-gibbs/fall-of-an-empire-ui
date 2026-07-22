@@ -142,14 +142,14 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
       applyGameplayCssVariables(workingGameplay);
       await bridgeCall('game.complete_initial_setup');
       setCompleted(true);
+      setVisible(false);
 
       if (playTutorial) {
         await bridgeCall('game.start_scenario_map', { mapId: 'Tutorial', playerFactionBaseName: '' });
-      } else {
-        setVisible(false);
       }
     } catch (error) {
       acknowledgeBridgeFailure(error);
+      setVisible(true);
       setSaveError(true);
     } finally {
       setBusy(false);

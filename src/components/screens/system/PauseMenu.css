@@ -132,6 +132,11 @@
   color: var(--gold);
 }
 
+.pause-overlay__item:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
 .pause-overlay__status {
   position: absolute;
   left: 55vw;
@@ -166,4 +171,9 @@
   animation-duration: 2.8s;
   animation-timing-function: var(--ease-snap);
   animation-fill-mode: forwards;
+}
+
+.pause-overlay__status--error,
+.pause-overlay__status--error .pause-overlay__status-rule {
+  animation-duration: 8s;
 }

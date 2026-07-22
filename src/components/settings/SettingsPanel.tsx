@@ -90,7 +90,8 @@ const GRAPHICS_QUALITY_OPTIONS: SettingsOption[] = [
   { value: '0', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.773.60'); } },
   { value: '1', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.773.61'); } },
   { value: '2', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.773.62'); } },
-  { value: '3', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.773.63'); } },
+  { value: '3', get label() { return webUIText('Settings.GraphicsQuality.VeryHigh'); } },
+  { value: '4', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.773.63'); } },
 ];
 const GLANCE_DENSITY_OPTIONS: SettingsOption[] = [
   { value: 'Minimal', get label() { return webUIText('Settings.GlanceDensity.Minimal'); } },
@@ -304,7 +305,7 @@ function clearStoredDisplayConfirm(): void {
   window.sessionStorage.removeItem(DISPLAY_CONFIRM_STORAGE_KEY);
 }
 
-/* ÄÄ Setting Row Helpers (module-scope to avoid remount on re-render) ÄÄ */
+/* â”€â”€ Setting Row Helpers (module-scope to avoid remount on re-render) â”€â”€ */
 
 const SettingsLabel: React.FC<{
   label: string;
@@ -443,7 +444,7 @@ export const SettingsSlider: React.FC<{ label: string; desc?: string; tooltip?: 
   );
 };
 
-/* ÄÄ Notifications Tab ÄÄ */
+/* â”€â”€ Notifications Tab â”€â”€ */
 
 const NOTIFICATION_CATEGORY_ORDER = ['Military', 'Diplomatic', 'Political', 'Character', 'Settlement', 'General'];
 
@@ -501,7 +502,7 @@ const NotificationsTab: React.FC<{
   );
 };
 
-/* ÄÄ Controls Tab ÄÄ */
+/* â”€â”€ Controls Tab â”€â”€ */
 
 interface PendingRebind {
   index: number;
@@ -809,7 +810,7 @@ const ControlsTab: React.FC<{
   );
 };
 
-/* ÄÄ Events Tab ÄÄ */
+/* â”€â”€ Events Tab â”€â”€ */
 
 export const EventModelSelection: React.FC<{
   llmProvider: string;

@@ -509,7 +509,7 @@
 
 .pig-option__mark {
   position: absolute;
-  right: 8.8rem;
+  right: 10.15rem;
   bottom: 0.3rem;
   width: 8rem;
   height: 8rem;
@@ -524,8 +524,8 @@
 .pig-option__stats {
   position: relative;
   z-index: 1;
-  width: 8.4rem;
-  min-width: 8.4rem;
+  width: 9.75rem;
+  min-width: 9.75rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
