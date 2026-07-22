@@ -122,7 +122,7 @@ function CourtSlot({
 
   return (
     <Tooltip content={tooltip} delay={200} variant="sidebar">
-      <div className={rootClassName} onMouseDown={() => { if (!readOnly) onOpen(position); }}>
+      <div className={rootClassName} data-tutorial-target={`CourtOffice:${position.key}`} onMouseDown={() => { if (!readOnly) onOpen(position); }}>
         <div className="fov-court-portrait-col">
           {position.holder ? (
             <>

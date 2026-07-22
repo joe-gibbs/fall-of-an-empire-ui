@@ -244,13 +244,13 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
       // the next user-triggered re-open.
       try {
         const fresh = await bridgeCall('game.get_faction_data', { factionId: activeTargetId, scope: 'full' });
-        window.dispatchEvent(new CustomEvent('bridge:game.get_faction_data', { detail: fresh }));
+        bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_data', { detail: fresh }));
         if (role === 'spy') {
           const interactions = await bridgeCall('game.get_spy_interactions', { targetFactionId: activeTargetId });
-          window.dispatchEvent(new CustomEvent('bridge:game.get_spy_interactions', { detail: interactions }));
+          bridgeEvents.dispatchEvent(new CustomEvent('game.get_spy_interactions', { detail: interactions }));
         } else {
           const interactions = await bridgeCall('game.get_faction_interactions', { targetFactionId: activeTargetId });
-          window.dispatchEvent(new CustomEvent('bridge:game.get_faction_interactions', { detail: interactions }));
+          bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_interactions', { detail: interactions }));
         }
       } catch (error) {
         acknowledgeBridgeFailure(error);
@@ -371,6 +371,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
                   key={c.id}
                   prefix="asm"
                   active={active}
+                  tutorialTarget={role === 'diplomat' ? 'DiplomatCandidate' : undefined}
                   busy={busy}
                   onSelect={() => setSelectedId(c.id)}
                   onViewCharacter={() => handleView(c.id)}
@@ -525,7 +526,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
 
                 <CandidateFooter prefix="asm">
                   <GameButton variant="outline" onClick={() => handleView(selected.character.id)}><WebUIText textKey="Auto.ComponentsModalsAgentSelectModal.523.3" /></GameButton>
-                  <GameButton variant="burgundy" onClick={handleAppoint}><WebUIText textKey="Auto.ComponentsModalsAgentSelectModal.524.4" /></GameButton>
+                  <GameButton variant="burgundy" tutorialTarget={role === 'diplomat' ? 'DiplomatAppointmentConfirmButton' : undefined} onClick={handleAppoint}><WebUIText textKey="Auto.ComponentsModalsAgentSelectModal.524.4" /></GameButton>
                 </CandidateFooter>
               </>
             ) : (

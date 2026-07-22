@@ -147,6 +147,7 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
       type="button"
       className={`icon-button screen-button-faction ${activeScreen === FACTION_BUTTON_ID ? 'icon-button--active screen-button-faction--active' : ''}`}
       data-tutorial-target={topbarButtonTargets(FACTION_BUTTON_ID)}
+      data-tutorial-satisfied={activeScreen === FACTION_BUTTON_ID ? 'true' : undefined}
       onMouseDown={() => { playSound('click'); onScreenChange?.(FACTION_BUTTON_ID); }}
       aria-label={factionButtonLabel}
     >

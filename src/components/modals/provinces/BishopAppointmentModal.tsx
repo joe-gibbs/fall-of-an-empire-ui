@@ -191,6 +191,7 @@ export default function BishopAppointmentModal({
               key={character.id}
               prefix="bam"
               active={active}
+              tutorialTarget="BishopCandidate"
               onSelect={() => setSelectedId(character.id)}
               onViewCharacter={() => handleView(character.id)}
               personId={character.id}
@@ -260,7 +261,7 @@ export default function BishopAppointmentModal({
 
               <CandidateFooter prefix="bam">
                 <GameButton variant="outline" onClick={() => handleView(selected.character.id)}><WebUIText textKey="Auto.ComponentsModalsBishopAppointmentModal.222.1" /></GameButton>
-                <GameButton variant="burgundy" onClick={handleAppoint}><WebUIText textKey="Auto.ComponentsModalsBishopAppointmentModal.223.2" /></GameButton>
+                <GameButton variant="burgundy" tutorialTarget="BishopAppointmentConfirmButton" onClick={handleAppoint}><WebUIText textKey="Auto.ComponentsModalsBishopAppointmentModal.223.2" /></GameButton>
               </CandidateFooter>
             </>
           ) : (

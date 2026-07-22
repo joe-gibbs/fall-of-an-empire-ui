@@ -55,6 +55,7 @@ interface DataTableProps<T, TKey extends string = string> {
   rowKey?: (row: T, index: number) => Key;
   emptyLabel?: ReactNode;
   onRowClick?: (row: T, index: number) => void;
+  rowTutorialTarget?: (row: T, index: number) => string | undefined;
 
   className?: string;
   toolsClassName?: string;
@@ -184,6 +185,7 @@ function DataTable<T, TKey extends string = string>({
   rowKey,
   emptyLabel = webUIText("Auto.Fix.Default.componentscommonDataTable.164.1"),
   onRowClick,
+  rowTutorialTarget,
 
   className = '',
   toolsClassName = '',
@@ -319,10 +321,10 @@ function DataTable<T, TKey extends string = string>({
     const updateRootFontSize = () => setRootFontSize(currentRootFontSize());
     updateRootFontSize();
     window.addEventListener('resize', updateRootFontSize);
-    window.addEventListener('foae:runtime-viewport', updateRootFontSize);
+    window.addEventListener('webkiln:runtime-viewport', updateRootFontSize);
     return () => {
       window.removeEventListener('resize', updateRootFontSize);
-      window.removeEventListener('foae:runtime-viewport', updateRootFontSize);
+      window.removeEventListener('webkiln:runtime-viewport', updateRootFontSize);
     };
   }, [virtualRowHeightRem]);
 
@@ -366,6 +368,7 @@ function DataTable<T, TKey extends string = string>({
             return (
               <div
                 key={rowKey ? rowKey(row, absoluteIndex) : absoluteIndex}
+                data-tutorial-target={rowTutorialTarget?.(row, absoluteIndex)}
                 role="row"
                 className={classNames(
                   'data-table-row',

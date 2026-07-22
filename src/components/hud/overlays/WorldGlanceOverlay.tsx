@@ -883,6 +883,7 @@ function frameHasMountedNode(
 interface GlanceNodeProps {
   kind: string;
   id: string;
+  tutorialTarget?: string;
   attached?: boolean;
   nodeRef?: (kind: string, id: string, node: HTMLDivElement | null, attached?: boolean) => void;
   onHoverChange?: (kind: string, id: string, hovered: boolean) => void;
@@ -895,6 +896,7 @@ interface GlanceNodeProps {
 const GlanceNode = memo(function GlanceNode({
   kind,
   id,
+  tutorialTarget,
   attached = false,
   nodeRef,
   onHoverChange,
@@ -980,6 +982,7 @@ const GlanceNode = memo(function GlanceNode({
   return (
     <div
       ref={setRootNode}
+      data-tutorial-target={tutorialTarget}
       className={`world-glance world-glance-node world-glance-node--${kind}${attached ? ' world-glance-node--attached' : ''} detail-flag`}
       style={INITIAL_NODE_STYLE}
       onMouseOver={onMouseOver}
@@ -1330,8 +1333,8 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
       setGlanceWidgetsVisible(detail.visible);
     };
 
-    window.addEventListener('bridge:ui.glance_widgets_visibility', handler as EventListener);
-    return () => window.removeEventListener('bridge:ui.glance_widgets_visibility', handler as EventListener);
+    bridgeEvents.addEventListener('ui.glance_widgets_visibility', handler as EventListener);
+    return () => bridgeEvents.removeEventListener('ui.glance_widgets_visibility', handler as EventListener);
   }, []);
 
   useEffect(() => {
@@ -1431,6 +1434,7 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
             key={`settlement:${entry.id}`}
             kind="settlement"
             id={entry.id}
+            tutorialTarget={`settlement:${entry.id}`}
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <SettlementGlance data={mapSettlement(entry)} />}
@@ -1446,6 +1450,7 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
             key={`port:${entry.id}`}
             kind="port"
             id={entry.id}
+            tutorialTarget={`army:${entry.id}${entry.faction.relation === 'own' ? ' PlayerArmy' : ''}`}
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <PortGlance data={mapPort(entry)} />}
@@ -1461,6 +1466,7 @@ function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) 
             key={`convoy:${entry.id}`}
             kind="convoy"
             id={entry.id}
+            tutorialTarget={`navy:${entry.id}${entry.faction.relation === 'own' ? ' PlayerNavy' : ''}`}
             nodeRef={setNodeRef}
             onHoverChange={handleGlanceHoverChange}
             renderContent={() => <ConvoyGlance data={mapConvoy(entry)} />}
@@ -1531,8 +1537,8 @@ export default function WorldGlanceOverlay(props: WorldGlanceOverlayProps) {
       ));
     };
 
-    window.addEventListener('bridge:ui.native_glance_composite', onNativeCompositeChanged);
-    return () => window.removeEventListener('bridge:ui.native_glance_composite', onNativeCompositeChanged);
+    bridgeEvents.addEventListener('ui.native_glance_composite', onNativeCompositeChanged);
+    return () => bridgeEvents.removeEventListener('ui.native_glance_composite', onNativeCompositeChanged);
   }, []);
 
   return (

@@ -292,10 +292,10 @@ async function refreshAgentTarget(factionId: string, role: AgentRole): Promise<v
 
   if (role === 'spy') {
     const spyInteractions = await bridgeCall('game.get_spy_interactions', { targetFactionId: factionId });
-    window.dispatchEvent(new CustomEvent('bridge:game.get_spy_interactions', { detail: spyInteractions }));
+    bridgeEvents.dispatchEvent(new CustomEvent('game.get_spy_interactions', { detail: spyInteractions }));
   } else {
     const factionInteractions = await bridgeCall('game.get_faction_interactions', { targetFactionId: factionId });
-    window.dispatchEvent(new CustomEvent('bridge:game.get_faction_interactions', { detail: factionInteractions }));
+    bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_interactions', { detail: factionInteractions }));
   }
 }
 
@@ -782,7 +782,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             </>
           )}
 
-          {/* Opinion bar (hidden for subjects - compliance replaces it) */}
+          {/* Opinion bar (hidden for subjects — compliance replaces it) */}
           {showOpinion && (
             <Tooltip content={{
               title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.397.26'),
@@ -1209,7 +1209,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                     outcomeKey={outcomeKey}
                     cooldownDays={i.cooldownDays}
                     cooldownRemainingDays={i.cooldownRemainingDays}
-                    tutorialTarget={`Interaction:${i.id}${i.id === 'subornfoederatiinteraction' ? ' SubornFoederatiButton' : ''}${i.id === 'invitefoederatiinteraction' ? ' InviteFoederatiButton' : ''}`}
+                    tutorialTarget={`Interaction:${i.id}${i.id === 'subornfoederatiinteraction' ? ' SubornFoederatiButton' : ''}${i.id === 'invitefoederatiinteraction' ? ' InviteFoederatiButton' : ''}${i.id === 'declarerebellioninteraction' ? ' DeclareRebellionButton' : ''}${i.id === 'calltowarinteraction' ? ' CallToWarButton' : ''}`}
                     onClick={canClick ? () => startInteraction(i.id) : undefined}
                     onCancel={i.inProgress ? cancelFactionInteraction : undefined}
                     meta={unavailableReason ? <span className="diplo-action-reason">{unavailableReason}</span> : undefined}

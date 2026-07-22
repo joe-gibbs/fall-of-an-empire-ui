@@ -317,6 +317,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
             columns={columns}
             rows={rows}
             rowKey={(row) => row.assignment.id}
+            rowTutorialTarget={(row) => `Bishopric:${row.assignment.id}`}
             wrapperClassName="rel-table-wrap"
             tableClassName="rel-table"
             headerRowClassName="rel-header-row"

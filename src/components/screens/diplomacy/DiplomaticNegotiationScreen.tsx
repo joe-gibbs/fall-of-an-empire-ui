@@ -499,10 +499,10 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
     };
 
     window.addEventListener('keydown', keyHandler, true);
-    window.addEventListener('bridge:ui.escape_pressed', closeFromEscape, true);
+    bridgeEvents.addEventListener('ui.escape_pressed', closeFromEscape);
     return () => {
       window.removeEventListener('keydown', keyHandler, true);
-      window.removeEventListener('bridge:ui.escape_pressed', closeFromEscape, true);
+      bridgeEvents.removeEventListener('ui.escape_pressed', closeFromEscape);
     };
   }, [onClose]);
 
@@ -698,7 +698,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
           </div>
           {preview?.blockedReason ? <div className="pns-empty-state pns-empty-state--quiet">{preview.blockedReason}</div> : null}
           {outcome ? <div className="pns-outcome">{outcome}</div> : null}
-          <button type="button" className={`btn--burgundy btn--full pns-propose-button${canSubmit ? '' : ' pns-propose-button--disabled'}`} disabled={!canSubmit} onMouseDown={handleSubmit}>
+          <button type="button" data-tutorial-target="SubmitTreatyProposalButton" className={`btn--burgundy btn--full pns-propose-button${canSubmit ? '' : ' pns-propose-button--disabled'}`} disabled={!canSubmit} onMouseDown={handleSubmit}>
             <WebUIText textKey="TreatyNegotiation.Propose" />
           </button>
         </div>

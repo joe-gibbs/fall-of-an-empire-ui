@@ -29,6 +29,7 @@ const IconButton: React.FC<IconButtonProps> = ({
     <button
       className={`icon-button ${active ? 'icon-button--active' : ''} ${className}`}
       data-tutorial-target={tutorialTarget}
+      data-tutorial-satisfied={tutorialTarget && active ? 'true' : undefined}
       onMouseDown={() => { playSound('click'); onClick?.(); }}
     >
       {resolvedIcon ? (

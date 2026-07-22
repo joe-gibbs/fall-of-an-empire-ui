@@ -277,6 +277,7 @@ export default function CourtAppointmentModal({
               key={character.id}
               prefix="cam"
               active={active}
+              tutorialTarget="CourtAppointmentCandidate"
               onSelect={() => setSelectedId(character.id)}
               onViewCharacter={() => handleView(character.id)}
               personId={character.id}
@@ -345,7 +346,7 @@ export default function CourtAppointmentModal({
               <CandidateFooter prefix="cam">
                 <GameButton variant="outline" fullWidth onClick={() => handleView(selected.character.id)}><WebUIText textKey="Auto.ComponentsModalsCourtAppointmentModal.209.1" /></GameButton>
                 <Tooltip content={appointmentTooltip ?? ''} position="top" delay={450}>
-                  <GameButton variant="burgundy" fullWidth onClick={handleAppoint}>{appointmentActionLabel}</GameButton>
+                  <GameButton variant="burgundy" fullWidth tutorialTarget="CourtAppointmentConfirmButton" onClick={handleAppoint}>{appointmentActionLabel}</GameButton>
                 </Tooltip>
               </CandidateFooter>
             </>

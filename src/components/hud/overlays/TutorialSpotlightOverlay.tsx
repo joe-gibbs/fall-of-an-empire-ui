@@ -115,6 +115,23 @@ function findByTutorialToken(tokens: string[]): HTMLElement | null {
   return null;
 }
 
+function spotlightTargetTokens(spotlight: TutorialSpotlightResponse): string[] {
+  const requestedTarget = spotlight.target.startsWith('OrderTarget:')
+    ? spotlight.target.slice('OrderTarget:'.length)
+    : spotlight.target;
+  const targetKey = Object.keys(TARGET_ALIASES).find(key => key.toLowerCase() === requestedTarget.toLowerCase());
+  const aliases = targetKey ? TARGET_ALIASES[targetKey] : [requestedTarget];
+  return [requestedTarget, ...aliases];
+}
+
+function isSpotlightTargetSatisfied(spotlight: TutorialSpotlightResponse): boolean {
+  if (spotlight.isBuildingTarget || spotlight.isUnitTarget) return false;
+
+  const expectedTokens = new Set(spotlightTargetTokens(spotlight).map(token => token.toLowerCase()));
+  const candidates = Array.from(document.querySelectorAll('[data-tutorial-satisfied="true"]'));
+  return candidates.some(element => targetTokens(element).some(token => expectedTokens.has(token.toLowerCase())));
+}
+
 function findRenderedByTutorialToken(token: string): HTMLElement | null {
   const candidates = Array.from(document.querySelectorAll('[data-tutorial-target]'));
   const expected = token.toLowerCase();
@@ -156,9 +173,7 @@ function findSpotlightTarget(spotlight: TutorialSpotlightResponse): HTMLElement 
     return null;
   }
 
-  const targetKey = Object.keys(TARGET_ALIASES).find(key => key.toLowerCase() === spotlight.target.toLowerCase());
-  const aliases = targetKey ? TARGET_ALIASES[targetKey] : [spotlight.target];
-  return findByTutorialToken([spotlight.target, ...aliases]);
+  return findByTutorialToken(spotlightTargetTokens(spotlight));
 }
 
 function elementUnitCount(element: HTMLElement | null): number {
@@ -320,7 +335,14 @@ export default function TutorialSpotlightOverlay({
 
     let frameId = 0;
     let revealedTarget = false;
+    let resolvedSatisfiedTarget = false;
     const tick = () => {
+      if (!resolvedSatisfiedTarget && !spotlight.canGoForward && isSpotlightTargetSatisfied(spotlight)) {
+        resolvedSatisfiedTarget = true;
+        onResolve(eventId);
+        return;
+      }
+
       if (!revealedTarget && !spotlight.isBuildingTarget && !spotlight.isUnitTarget) {
         const renderedTarget = findRenderedByTutorialToken(spotlight.target);
         if (renderedTarget) {
@@ -340,7 +362,7 @@ export default function TutorialSpotlightOverlay({
 
     tick();
     return () => window.cancelAnimationFrame(frameId);
-  }, [eventId, spotlight]);
+  }, [eventId, onResolve, spotlight]);
 
   useEffect(() => {
     if (!spotlight.isVisible) return undefined;
@@ -359,7 +381,7 @@ export default function TutorialSpotlightOverlay({
   }, [spotlight.isVisible, spotlight.title, spotlight.body, spotlight.currentPage, spotlight.totalPages]);
 
   useEffect(() => {
-    if (!spotlight.isVisible || !eventId) return undefined;
+    if (!spotlight.isVisible || !eventId || spotlight.canGoForward) return undefined;
 
     if (spotlight.target.toLowerCase() === 'formationnameinput') {
       const inputHandler = (event: Event) => {
@@ -376,6 +398,7 @@ export default function TutorialSpotlightOverlay({
     const handler = (event: MouseEvent) => {
       const target = targetElementRef.current;
       if (!target || !(event.target instanceof Node) || !target.contains(event.target)) return;
+      if (spotlight.target.startsWith('OrderTarget:') && event.button !== 2) return;
 
       if (spotlight.isBuildingTarget) return;
 
@@ -404,7 +427,10 @@ export default function TutorialSpotlightOverlay({
     event.preventDefault();
     event.stopPropagation();
     if (direction < 0 && !spotlight.canGoBack) return;
-    if (direction > 0 && !spotlight.canGoForward) return;
+    if (direction > 0 && !spotlight.canGoForward) {
+      onResolve(eventId);
+      return;
+    }
     onNavigate(direction);
   };
 
@@ -456,8 +482,7 @@ export default function TutorialSpotlightOverlay({
           {pageText && <span className="tutorial-spotlight-page">{pageText}</span>}
           <button
             type="button"
-            className={`tutorial-spotlight-nav${!spotlight.canGoForward ? ' tutorial-spotlight-nav--disabled' : ''}`}
-            disabled={!spotlight.canGoForward}
+            className="tutorial-spotlight-nav"
             onMouseDown={(event) => handleNavigateMouseDown(event, 1)}
           >
             <img src="/assets/icons/I_NavNext.png" alt="" className="tutorial-spotlight-nav-icon" draggable={false} />

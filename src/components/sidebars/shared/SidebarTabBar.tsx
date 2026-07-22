@@ -27,6 +27,7 @@ const SidebarTabBar: React.FC<SidebarTabBarProps> = ({ tabs, activeTab, onTabCha
           key={tab.id}
           className={`sidebar-tab${tab.id === activeTab ? ' sidebar-tab--active' : ''}`}
           data-tutorial-target={`SidebarTab:${tab.id}`}
+          data-tutorial-satisfied={tab.id === activeTab ? 'true' : undefined}
           onMouseDown={() => { playSound('tab'); handleChange(tab.id); }}
         >
           {tab.icon && <img src={WebkilnAssetPath(tab.icon)} alt="" className="sidebar-tab-icon" draggable={false} />}

@@ -909,7 +909,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
                           outcomeKey={outcomeKey}
                           cooldownDays={interaction.cooldownDays}
                           cooldownRemainingDays={interaction.cooldownRemainingDays}
-                          tutorialTarget={`Interaction:${interaction.id}${interaction.id === 'offergift' ? ' OfferGiftButton' : ''}${interaction.id === 'proposemarriage' ? ' ProposeMarriageButton' : ''}`}
+                          tutorialTarget={`Interaction:${interaction.id}${interaction.id === 'offergift' ? ' OfferGiftButton' : ''}${interaction.id === 'proposemarriage' ? ' ProposeMarriageButton' : ''}${interaction.id === 'poachclient' ? ' PoachClientButton' : ''}`}
                           onClick={interaction.availability === 'available' && !interaction.inProgress
                             ? () => { void handleInteractionClick(interaction); }
                             : undefined}

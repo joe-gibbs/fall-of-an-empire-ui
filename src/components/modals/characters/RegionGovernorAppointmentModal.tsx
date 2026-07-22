@@ -218,6 +218,7 @@ export default function RegionGovernorAppointmentModal({
                 statIcon={primaryStatIcon}
                 statValue={formatNumber(stat)}
                 statColor={candidateStatColour(stat)}
+                tutorialTarget={`GovernorCandidate:${candidate.id}`}
               />
             );
           }}
@@ -280,7 +281,14 @@ export default function RegionGovernorAppointmentModal({
                   </Tooltip>
                 )}
                 <GameButton variant="outline" onClick={() => handleView(selected.id)}><WebUIText textKey="Auto.ComponentsModalsRegionGovernorAppointmentModal.245.2" /></GameButton>
-                <GameButton variant="burgundy" onClick={handleAppoint} disabled={selectedIsCurrent}><WebUIText textKey="Auto.ComponentsModalsRegionGovernorAppointmentModal.246.3" /></GameButton>
+                <GameButton
+                  variant="burgundy"
+                  onClick={handleAppoint}
+                  disabled={selectedIsCurrent}
+                  tutorialTarget={!selectedIsCurrent ? 'TutorialGovernorConfirmButton' : undefined}
+                >
+                  <WebUIText textKey="Auto.ComponentsModalsRegionGovernorAppointmentModal.246.3" />
+                </GameButton>
               </CandidateFooter>
             </>
           ) : (

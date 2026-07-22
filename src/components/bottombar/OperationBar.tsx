@@ -55,17 +55,20 @@ function OperationButton({
   onPress,
   disabled,
   variant = 'default',
+  tutorialTarget,
 }: {
   icon: string;
   label: string;
   onPress: () => void;
   disabled?: boolean;
   variant?: 'default' | 'confirm' | 'danger';
+  tutorialTarget?: string;
 }) {
   return (
     <Tooltip content={{ title: label }} position="top" delay={150}>
       <button
         type="button"
+        data-tutorial-target={tutorialTarget}
         className={`operation-button operation-button--${variant}${disabled ? ' operation-button--disabled' : ''}`}
         aria-label={label}
         aria-disabled={disabled ? 'true' : 'false'}
@@ -346,6 +349,7 @@ function BuildingPlacementPanel({ operation }: { operation: BuildingPlacementOpe
           icon={ICONS.confirm}
           label={t('Common.Confirm')}
           variant="confirm"
+          tutorialTarget="FormationSelectionConfirmButton"
           disabled={!operation.canConfirm}
           onPress={() => { confirmBuildingPlacementBridge().catch(acknowledgeBridgeFailure); }}
         />
@@ -407,8 +411,8 @@ const OperationBar: React.FC = () => {
 
   React.useEffect(() => {
     const handler = () => setGovernorPickerRequested(true);
-    window.addEventListener('bridge:ui.open_governor_assignment_picker', handler);
-    return () => window.removeEventListener('bridge:ui.open_governor_assignment_picker', handler);
+    bridgeEvents.addEventListener('ui.open_governor_assignment_picker', handler);
+    return () => bridgeEvents.removeEventListener('ui.open_governor_assignment_picker', handler);
   }, []);
 
   const consumeGovernorPickerRequest = React.useCallback(() => {
