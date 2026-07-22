@@ -22,7 +22,7 @@ interface RecruitCharacterOptions {
 }
 
 function dispatchBridgeResponse(action: string, detail: unknown): void {
-  window.dispatchEvent(new CustomEvent(`bridge:${action}`, { detail }));
+  bridgeEvents.dispatchEvent(new CustomEvent(action, { detail }));
 }
 
 export async function recruitCharacterForRoleBridge(

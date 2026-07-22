@@ -22,7 +22,7 @@ interface FactionRoundelProps {
   emblem?: string;
   /** Culture family name (e.g. "Svaranic"). Used when `emblem` is missing. */
   cultureGroup?: string;
-  /** Pre-computed symbol PNG path. Overrides emblem/cultureGroup - use only
+  /** Pre-computed symbol PNG path. Overrides emblem/cultureGroup — use only
    *  when you have a literal asset path rather than faction metadata. */
   symbol?: string;
   /** Set false when the parent has already supplied the display metadata. */

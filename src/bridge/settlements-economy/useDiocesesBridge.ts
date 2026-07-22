@@ -177,7 +177,7 @@ export async function appointBishop(religionKey: string, landKey: string, person
     });
     try {
       const fresh = await bridgeCall('game.get_dioceses', { religionKey });
-      window.dispatchEvent(new CustomEvent('bridge:game.get_dioceses', { detail: fresh }));
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_dioceses', { detail: fresh }));
     } catch (error) {
       acknowledgeBridgeFailure(error);
     }
@@ -193,7 +193,7 @@ export async function setAutoAssignClergy(enabled: boolean, religionKey: string)
     await bridgeCall('game.set_auto_assign_clergy', { enabled });
     try {
       const fresh = await bridgeCall('game.get_dioceses', { religionKey });
-      window.dispatchEvent(new CustomEvent('bridge:game.get_dioceses', { detail: fresh }));
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_dioceses', { detail: fresh }));
     } catch (error) {
       acknowledgeBridgeFailure(error);
     }

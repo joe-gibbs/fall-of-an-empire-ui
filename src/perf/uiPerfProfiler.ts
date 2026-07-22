@@ -361,7 +361,7 @@ export function bindUIPerfCommands(): void {
   if (commandListenerBound) return;
   commandListenerBound = true;
 
-  window.addEventListener('bridge:ui.perf_profile', (event) => {
+  bridgeEvents.addEventListener('ui.perf_profile', (event) => {
     handleCommand(((event as CustomEvent).detail ?? {}) as PerfCommand);
   });
 }

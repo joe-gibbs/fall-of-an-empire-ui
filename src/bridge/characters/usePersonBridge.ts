@@ -190,7 +190,7 @@ export function clearPersonCaches(): void {
 }
 
 export function dispatchPersonData(data: GetPersonDataResponse): void {
-  window.dispatchEvent(new CustomEvent('bridge:game.get_person_data', { detail: data }));
+  bridgeEvents.dispatchEvent(new CustomEvent('game.get_person_data', { detail: data }));
 }
 
 type PersonBridgeScope = 'full' | 'summary' | 'tooltip';

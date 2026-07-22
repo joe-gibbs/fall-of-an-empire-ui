@@ -10,7 +10,7 @@ import { clearPersonCaches } from '../characters/usePersonBridge';
 import { clearPowerBlocCaches } from '../diplomacy/usePowerBlocsBridge';
 import { clearVictoryConditionsCache } from '../app/useVictoryConditionsBridge';
 
-export const GAMEPLAY_CONTEXT_RESET_EVENT = 'bridge:ui.gameplay_context_reset';
+export const GAMEPLAY_CONTEXT_RESET_EVENT = 'ui.gameplay_context_reset';
 
 export function clearGameplayDataCaches(): void {
   clearBattleCache();
@@ -28,5 +28,5 @@ export function clearGameplayDataCaches(): void {
 }
 
 export function dispatchGameplayContextReset(): void {
-  window.dispatchEvent(new CustomEvent(GAMEPLAY_CONTEXT_RESET_EVENT));
+  bridgeEvents.dispatchEvent(new CustomEvent(GAMEPLAY_CONTEXT_RESET_EVENT));
 }

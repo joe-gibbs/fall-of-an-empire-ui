@@ -237,7 +237,7 @@ export async function appointToCourtPosition(positionKey: string, personId: stri
     // Refresh the court positions so the UI picks up the change without a manual re-open.
     try {
       const fresh = await bridgeCall('game.get_court_positions');
-      window.dispatchEvent(new CustomEvent('bridge:game.get_court_positions', { detail: fresh }));
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_court_positions', { detail: fresh }));
     } catch (error) {
       acknowledgeBridgeFailure(error);
     }
@@ -251,17 +251,17 @@ export async function appointToCourtPosition(positionKey: string, personId: stri
 export async function setAutoAssignCourt(enabled: boolean): Promise<void> {
   await bridgeCall('game.set_auto_assign_court', { enabled });
   const fresh = await bridgeCall('game.get_court_positions');
-  window.dispatchEvent(new CustomEvent('bridge:game.get_court_positions', { detail: fresh }));
+  bridgeEvents.dispatchEvent(new CustomEvent('game.get_court_positions', { detail: fresh }));
 }
 
 export async function enterCourtAppointmentContest(positionKey: string): Promise<boolean> {
   try {
     const response = await bridgeCall('game.enter_court_appointment_contest', { positionKey });
     const fresh = await bridgeCall('game.get_court_positions');
-    window.dispatchEvent(new CustomEvent('bridge:game.get_court_positions', { detail: fresh }));
+    bridgeEvents.dispatchEvent(new CustomEvent('game.get_court_positions', { detail: fresh }));
     try {
       const contests = await bridgeCall('game.get_court_appointment_contests');
-      window.dispatchEvent(new CustomEvent('bridge:game.get_court_appointment_contests', { detail: contests }));
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_court_appointment_contests', { detail: contests }));
     } catch (error) {
       acknowledgeBridgeFailure(error);
     }

@@ -7,7 +7,7 @@
  */
 export function emblemAssetPath(emblem?: string, cultureGroup?: string): string {
   const source = emblem || (cultureGroup ? `${cultureGroup}_1` : '');
-  if (source.startsWith('/') || source.startsWith('coui://')) return source;
+  if (source.startsWith('/') || source.startsWith('gameui://')) return source;
   if (!source) return '/assets/factions/Rephsian_symbol_1.png';
   const idx = source.lastIndexOf('_');
   if (idx <= 0) return `/assets/factions/${source}_symbol_1.png`;

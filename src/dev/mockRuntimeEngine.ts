@@ -397,7 +397,7 @@ export function installMockruntimeEngine(): void {
   }
 
   const emitBridgeEvent: MockBridgeEventEmitter = (eventName, payload) => {
-    emitEngineEvent('StrategyBridgeEvent', eventName, payload);
+    emitEngineEvent(eventName, payload);
   };
 
   const engine: runtimeEngine = {
@@ -410,15 +410,8 @@ export function installMockruntimeEngine(): void {
     },
     callBridge(request) {
       const action = typeof request.action === 'string' ? request.action : '';
-      const requestId = typeof request.requestId === 'string' ? request.requestId : '';
       const response = runtime.handle(action, request.payload, emitBridgeEvent);
-      if (requestId.length > 0) {
-        emitBridgeEvent('ui.bridge_response', {
-          requestId,
-          response,
-        });
-      }
-      return JSON.stringify({ ok: true, pending: true, requestId });
+      return response.result;
     },
     call(name, ...args) {
       if (name === 'StrategyBridgeCall') {

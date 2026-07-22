@@ -29,7 +29,7 @@ export interface ScreenRegistration {
   /** BEM modifier appended to the screen-overlay div, e.g. 'diplomacy'. */
   overlayVariant?: string;
 
-  /** Lowercase aliases matched against `bridge:ui.show_screen` events. */
+  /** Lowercase aliases matched against `ui.show_screen` events. */
   bridgeNames?: string[];
 
   /** Raw packaged image paths to warm when this screen is opened. Mods may

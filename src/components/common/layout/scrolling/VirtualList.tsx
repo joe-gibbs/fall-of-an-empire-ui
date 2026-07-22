@@ -101,11 +101,11 @@ export default function VirtualList<T>({
   useEffect(() => {
     const id = window.setTimeout(updateViewport, 0);
     window.addEventListener('resize', updateViewport);
-    window.addEventListener('foae:runtime-viewport', updateViewport);
+    window.addEventListener('webkiln:runtime-viewport', updateViewport);
     return () => {
       window.clearTimeout(id);
       window.removeEventListener('resize', updateViewport);
-      window.removeEventListener('foae:runtime-viewport', updateViewport);
+      window.removeEventListener('webkiln:runtime-viewport', updateViewport);
     };
   }, [items.length, updateViewport, useVirtualRows]);
 

@@ -88,8 +88,8 @@ export function EscapeStackProvider({ children }: { children: ReactNode }) {
       event.stopImmediatePropagation();
     };
 
-    window.addEventListener('bridge:ui.escape_pressed', handler);
-    return () => window.removeEventListener('bridge:ui.escape_pressed', handler);
+    bridgeEvents.addEventListener('ui.escape_pressed', handler);
+    return () => bridgeEvents.removeEventListener('ui.escape_pressed', handler);
   }, [handleEscapeStack]);
 
   const value = useMemo<EscapeStackContextValue>(() => ({

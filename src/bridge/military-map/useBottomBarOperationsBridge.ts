@@ -15,7 +15,7 @@ import { useBridgeQuery } from '../core/useBridgeQuery';
 type BridgeActionName = keyof BridgeActions;
 
 function dispatchBridgeResponse(action: BridgeActionName, detail: unknown): void {
-  window.dispatchEvent(new CustomEvent(`bridge:${action}`, { detail }));
+  bridgeEvents.dispatchEvent(new CustomEvent(action, { detail }));
 }
 
 export interface GovernorAssignmentCandidateView {

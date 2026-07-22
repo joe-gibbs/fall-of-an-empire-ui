@@ -8,6 +8,7 @@ import type {
   SubmitDiplomaticNegotiationResponse,
 } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
+import { refreshFactionData } from './useFactionBridge';
 
 export type DiplomaticNegotiationState = GetDiplomaticNegotiationStateResponse;
 export type DiplomaticNegotiationDraftPreview = GetDiplomaticNegotiationPreviewResponse;
@@ -71,10 +72,14 @@ export function useDiplomaticNegotiationBridge(
 
   const submit = useCallback(async (currentProposals: DiplomaticProposalDraft[]) => {
     if (!targetFactionId) return null;
-    return bridgeCall('game.submit_diplomatic_negotiation', {
+    const result = await bridgeCall('game.submit_diplomatic_negotiation', {
       targetFactionId,
       proposals: currentProposals,
     });
+    if (result.result === 'accepted') {
+      await refreshFactionData(targetFactionId);
+    }
+    return result;
   }, [targetFactionId]);
 
   return { state: stateQuery.value, statePending: stateQuery.pending, draftPreview, submit };

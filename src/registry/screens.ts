@@ -37,7 +37,7 @@ export function getScreenOpenedByTopbar(topbarId: string, subjectMode?: boolean)
   return undefined;
 }
 
-/** Resolve a screen from an incoming `bridge:ui.show_screen` event name. */
+/** Resolve a screen from an incoming `ui.show_screen` event name. */
 export function getScreenByBridgeName(name: string, subjectMode?: boolean): ScreenRegistration | undefined {
   const lower = name.toLowerCase();
   for (const s of screens.values()) {

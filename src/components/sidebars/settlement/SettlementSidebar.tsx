@@ -60,7 +60,7 @@ function getUnrestColor(unrest: number): string {
   return 'var(--red)';
 }
 
-/** Local fallback for the unrest label - used only if the bridge didn't
+/** Local fallback for the unrest label — used only if the bridge didn't
  *  supply one. The game side is the source
  *  of truth for real settlements. Matches the AS thresholds in
  *  GetSettlementDataAction.UnrestLabelForValue. */
@@ -182,7 +182,7 @@ function showHintKey(hintKey: string, force: boolean = true) {
 function refreshSettlementData(settlementId: string): void {
   bridgeCall('game.get_settlement_data', { settlementId })
     .then((fresh) => {
-      window.dispatchEvent(new CustomEvent('bridge:game.get_settlement_data', { detail: fresh }));
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_settlement_data', { detail: fresh }));
     })
     .catch(acknowledgeBridgeFailure);
 }
@@ -723,8 +723,8 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
       if (tab) setActiveTab(tab);
     };
 
-    window.addEventListener('bridge:ui.sidebar_tab_event', handler);
-    return () => window.removeEventListener('bridge:ui.sidebar_tab_event', handler);
+    bridgeEvents.addEventListener('ui.sidebar_tab_event', handler);
+    return () => bridgeEvents.removeEventListener('ui.sidebar_tab_event', handler);
   }, [settlement.id]);
 
   const foodNet = settlement.foodProduction - settlement.foodConsumption;

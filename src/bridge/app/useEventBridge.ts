@@ -9,7 +9,7 @@ import type { Event as GameEvent, EventChoiceInputs, EventPersonNameInput, Event
 import { WebkilnAssetPath } from '../../utils/assets';
 
 function dispatchBridgeEvent(action: string, detail: unknown): void {
-  window.dispatchEvent(new CustomEvent(`bridge:${action}`, { detail }));
+  bridgeEvents.dispatchEvent(new CustomEvent(action, { detail }));
 }
 
 type RegnalNameRefreshAction =

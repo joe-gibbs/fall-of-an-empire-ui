@@ -98,8 +98,8 @@ function useModWorldGlanceFrames(atlas: boolean): ReadonlyMap<string, readonly A
         return next;
       });
     };
-    window.addEventListener('bridge:ui.mod_world_glances_frame', onFrame);
-    return () => window.removeEventListener('bridge:ui.mod_world_glances_frame', onFrame);
+    bridgeEvents.addEventListener('ui.mod_world_glances_frame', onFrame);
+    return () => bridgeEvents.removeEventListener('ui.mod_world_glances_frame', onFrame);
   }, [atlas]);
 
   return frames;

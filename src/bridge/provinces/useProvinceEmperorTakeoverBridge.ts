@@ -66,7 +66,7 @@ export function useProvinceEmperorTakeoverBridge(enabled: boolean): ProvinceEmpe
 
 export async function refreshProvinceEmperorTakeover(): Promise<void> {
   const fresh = await bridgeCall('game.province_emperor_takeover', { command: 'state', personId: '' });
-  window.dispatchEvent(new CustomEvent('bridge:game.province_emperor_takeover', { detail: fresh }));
+  bridgeEvents.dispatchEvent(new CustomEvent('game.province_emperor_takeover', { detail: fresh }));
 }
 
 export async function selectProvinceEmperorTakeoverCandidate(personId: string): Promise<boolean> {
@@ -83,10 +83,10 @@ export async function selectProvinceEmperorTakeoverCandidate(personId: string): 
 export async function confirmProvinceEmperorTakeoverCandidate(personId: string): Promise<boolean> {
   try {
     const response = await bridgeCall('game.province_emperor_takeover', { command: 'confirm', personId });
-    window.dispatchEvent(new CustomEvent('bridge:game.province_emperor_takeover', { detail: response }));
+    bridgeEvents.dispatchEvent(new CustomEvent('game.province_emperor_takeover', { detail: response }));
     try {
       const playerFaction = await bridgeCall('game.get_player_faction');
-      window.dispatchEvent(new CustomEvent('bridge:game.get_player_faction', { detail: playerFaction }));
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_player_faction', { detail: playerFaction }));
     } catch (error) {
       acknowledgeBridgeFailure(error);
     }

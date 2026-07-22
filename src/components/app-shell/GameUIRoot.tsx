@@ -161,8 +161,8 @@ export default function GameUIRoot() {
       setProvinceEmperorTakeoverDismissed(false);
     };
 
-    window.addEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, handleReset);
-    return () => window.removeEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, handleReset);
+    bridgeEvents.addEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, handleReset);
+    return () => bridgeEvents.removeEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, handleReset);
   }, []);
 
   useEffect(() => {
@@ -223,8 +223,8 @@ export default function GameUIRoot() {
 
   useEffect(() => {
     const handler = () => { handleEscape(false); };
-    window.addEventListener('bridge:ui.escape_pressed', handler);
-    return () => window.removeEventListener('bridge:ui.escape_pressed', handler);
+    bridgeEvents.addEventListener('ui.escape_pressed', handler);
+    return () => bridgeEvents.removeEventListener('ui.escape_pressed', handler);
   }, [handleEscape]);
 
   useEffect(() => {
@@ -233,8 +233,8 @@ export default function GameUIRoot() {
       setProvinceEmperorTakeoverDismissed(false);
       void refreshProvinceEmperorTakeover().catch(acknowledgeBridgeFailure);
     };
-    window.addEventListener('bridge:ui.open_province_emperor_takeover_picker', handler);
-    return () => window.removeEventListener('bridge:ui.open_province_emperor_takeover_picker', handler);
+    bridgeEvents.addEventListener('ui.open_province_emperor_takeover_picker', handler);
+    return () => bridgeEvents.removeEventListener('ui.open_province_emperor_takeover_picker', handler);
   }, []);
 
   const handleCampaignOutcomeContinue = useCallback(() => {
@@ -275,11 +275,11 @@ export default function GameUIRoot() {
       setShowGameOver(true);
     };
 
-    window.addEventListener('bridge:ui.show_victory_screen', victoryHandler);
-    window.addEventListener('bridge:ui.show_game_over_screen', gameOverHandler);
+    bridgeEvents.addEventListener('ui.show_victory_screen', victoryHandler);
+    bridgeEvents.addEventListener('ui.show_game_over_screen', gameOverHandler);
     return () => {
-      window.removeEventListener('bridge:ui.show_victory_screen', victoryHandler);
-      window.removeEventListener('bridge:ui.show_game_over_screen', gameOverHandler);
+      bridgeEvents.removeEventListener('ui.show_victory_screen', victoryHandler);
+      bridgeEvents.removeEventListener('ui.show_game_over_screen', gameOverHandler);
     };
   }, []);
 

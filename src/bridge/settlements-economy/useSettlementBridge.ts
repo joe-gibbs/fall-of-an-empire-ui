@@ -418,7 +418,7 @@ function applySiegePatch(settlement: Settlement | null, patch: GetSettlementSieg
 }
 
 export function dispatchSettlementData(data: GetSettlementDataResponse): void {
-  window.dispatchEvent(new CustomEvent('bridge:game.get_settlement_data', { detail: data }));
+  bridgeEvents.dispatchEvent(new CustomEvent('game.get_settlement_data', { detail: data }));
 }
 
 export async function refreshSettlementData(settlementId: string): Promise<void> {

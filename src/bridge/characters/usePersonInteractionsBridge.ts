@@ -139,7 +139,7 @@ function iconUrl(entry: PersonInteractionEntry): string | undefined {
 
 function backgroundUrl(key: string): string | undefined {
   if (!key) return undefined;
-  if (key.startsWith('/') || key.startsWith('coui://')) return WebkilnAssetPath(key);
+  if (key.startsWith('/') || key.startsWith('gameui://')) return WebkilnAssetPath(key);
   return WebkilnAssetPath(`/assets/events/interaction-${toKebabCase(key)}.png`);
 }
 
@@ -259,7 +259,7 @@ function applyDailyPatch(
 }
 
 function dispatchBridgeEvent<A extends keyof WindowEventMap | string>(action: A, detail: unknown) {
-  window.dispatchEvent(new CustomEvent(`bridge:${action}`, { detail }));
+  bridgeEvents.dispatchEvent(new CustomEvent(action, { detail }));
 }
 
 export function usePersonInteractionsBridge(personId: string | null): PersonInteractionsBridge {
@@ -281,7 +281,7 @@ export function usePersonInteractionsBridge(personId: string | null): PersonInte
       setPersonInteractionsState(current => applyDailyPatch(current, detail));
     };
 
-    window.addEventListener('bridge:game.person_interactions_daily', handleDailyPatch as EventListener);
+    bridgeEvents.addEventListener('game.person_interactions_daily', handleDailyPatch as EventListener);
 
     void bridgeCall('game.get_person_interactions', { personId })
       .then((data) => {
@@ -296,7 +296,7 @@ export function usePersonInteractionsBridge(personId: string | null): PersonInte
     return () => {
       cancelled = true;
       unsubscribeFull();
-      window.removeEventListener('bridge:game.person_interactions_daily', handleDailyPatch as EventListener);
+      bridgeEvents.removeEventListener('game.person_interactions_daily', handleDailyPatch as EventListener);
     };
   }, [personId]);
 

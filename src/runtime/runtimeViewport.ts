@@ -14,7 +14,7 @@ const ROOT_FONT_SIZE = 13.2;
 
 declare global {
   interface Window {
-    __foaeRuntimeViewport?: RuntimeViewportState;
+    __webkilnRuntimeViewport?: RuntimeViewportState;
   }
 }
 
@@ -31,7 +31,7 @@ export function setRuntimeClass(isWebkiln: boolean) {
   if (isWebkiln) {
     root.classList.add('webui-runtime');
     root.classList.remove('webui-standalone');
-    applyRuntimeViewportScale(window.__foaeRuntimeViewport);
+    applyRuntimeViewportScale(window.__webkilnRuntimeViewport);
   } else {
     root.classList.add('webui-standalone');
     root.classList.remove('webui-runtime');

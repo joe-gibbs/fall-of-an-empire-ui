@@ -281,7 +281,7 @@ export function dispatchFactionData(data: GetFactionDataResponse): void {
   clearBridgeQueryCache('game.get_faction_data');
   const mapped = mapFaction(data);
   cacheFaction(mapped);
-  window.dispatchEvent(new CustomEvent('bridge:game.get_faction_data', { detail: data }));
+  bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_data', { detail: data }));
 }
 
 /**
@@ -344,7 +344,7 @@ export function useFactionBridge(factionId: string | null | undefined, scope: Fa
   return useFactionBridgeState(factionId, scope, fetch).faction;
 }
 
-async function refreshFactionData(factionId: string): Promise<void> {
+export async function refreshFactionData(factionId: string): Promise<void> {
   const fresh = await bridgeCall('game.get_faction_data', { factionId, scope: 'full' });
   dispatchFactionData(fresh);
 }

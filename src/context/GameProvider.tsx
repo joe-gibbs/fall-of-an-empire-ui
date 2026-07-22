@@ -61,8 +61,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState(createInitialGameState());
     };
 
-    window.addEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, handleReset);
-    return () => window.removeEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, handleReset);
+    bridgeEvents.addEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, handleReset);
+    return () => bridgeEvents.removeEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, handleReset);
   }, []);
 
   // Bridge integration: derive HUD values from live game state when available.

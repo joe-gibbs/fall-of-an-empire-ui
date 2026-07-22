@@ -31,9 +31,9 @@ function dispatchSidebarTabEvent(data: SidebarEvent) {
     pendingSidebarTabs.set(sidebarTabKey(data.type, data.id), data);
   }
 
-  const event = new CustomEvent('bridge:ui.sidebar_tab_event', { detail: data });
-  window.dispatchEvent(event);
-  window.setTimeout(() => window.dispatchEvent(event), 0);
+  const event = new CustomEvent('ui.sidebar_tab_event', { detail: data });
+  bridgeEvents.dispatchEvent(event);
+  window.setTimeout(() => bridgeEvents.dispatchEvent(event), 0);
 }
 
 export function consumePendingSidebarTab(type: string, id: string): number | undefined {
@@ -126,13 +126,13 @@ export function useBridgeSidebarEvents(
       }
     };
 
-    window.addEventListener('bridge:ui.sidebar_event', sidebarHandler);
-    window.addEventListener('bridge:ui.show_screen', screenHandler);
-    window.addEventListener('bridge:ui.hide_current_screen', hideCurrentScreenHandler);
+    bridgeEvents.addEventListener('ui.sidebar_event', sidebarHandler);
+    bridgeEvents.addEventListener('ui.show_screen', screenHandler);
+    bridgeEvents.addEventListener('ui.hide_current_screen', hideCurrentScreenHandler);
     return () => {
-      window.removeEventListener('bridge:ui.sidebar_event', sidebarHandler);
-      window.removeEventListener('bridge:ui.show_screen', screenHandler);
-      window.removeEventListener('bridge:ui.hide_current_screen', hideCurrentScreenHandler);
+      bridgeEvents.removeEventListener('ui.sidebar_event', sidebarHandler);
+      bridgeEvents.removeEventListener('ui.show_screen', screenHandler);
+      bridgeEvents.removeEventListener('ui.hide_current_screen', hideCurrentScreenHandler);
     };
   }, [openSidebar, closeSidebarFromBridge, closeSidebarEntityFromBridge, openScreen, closeScreenFromBridge, subjectMode]);
 }

@@ -200,7 +200,7 @@ function mapCourtOfficeAction(data: ProvinceModeCourtOfficeActionDTO): ProvinceM
 }
 
 function dispatchProvinceModeOverview(data: GetProvinceModeOverviewResponse): void {
-  window.dispatchEvent(new CustomEvent('bridge:game.get_province_mode_overview', { detail: data }));
+  bridgeEvents.dispatchEvent(new CustomEvent('game.get_province_mode_overview', { detail: data }));
 }
 
 export async function runGovernorMissionAction(missionId: string, action: string): Promise<boolean> {

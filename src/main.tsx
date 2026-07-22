@@ -20,8 +20,8 @@ import { modsReady } from './mods/index'
 import App from './App.tsx'
 import './styles/raster-surfaces.css'
 import { acknowledgeBridgeFailure, getRuntimeEngine } from './bridge/core/runtimeEngine'
-import { cacheBridgeEvent } from './bridge/core/bridgeEventCache'
 import { bindUIPerfCommands, recordUIPerfBridgeEvent } from './perf/uiPerfProfiler'
+import { bindBridgeEventRuntime, publishBridgeEvent, subscribeBridgeEvent } from './bridge/core/bridgeEvents'
 import { installImageAutosize } from './utils/imageAutosize'
 import {
   bridgeEventPayload,
@@ -32,7 +32,6 @@ import {
   nativeWorldGlancesFramePayload,
 } from './runtime/bridgePayloads'
 import { applyRuntimeViewportScale, setRuntimeClass, type RuntimeViewportState } from './runtime/runtimeViewport'
-import { applyAppModeCacheReset } from './runtime/appModeCacheReset'
 import { setWorldAnchorRasterScale } from './runtime/worldAnchorRasterScale'
 
 const GRABBING_TARGET_SELECTOR = [
@@ -99,14 +98,8 @@ function configureWebkilnInput() {
   });
 }
 
-function dispatchBridgeEvent(eventName: string, data: unknown) {
-  applyAppModeCacheReset(eventName, data);
-  cacheBridgeEvent(eventName, data);
-  window.dispatchEvent(new CustomEvent(`bridge:${eventName}`, { detail: data }));
-}
-
 function bindRuntimeViewportScaleEvents() {
-  window.addEventListener('foae:runtime-viewport', (event) => {
+  window.addEventListener('webkiln:runtime-viewport', (event) => {
     applyRuntimeViewportScale((event as CustomEvent<RuntimeViewportState>).detail);
   });
 }
@@ -119,16 +112,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
   }
 
   setRuntimeClass(true);
-
-  // Receive push events from the native web UI host and re-dispatch as
-  // CustomEvents that onBridgeEvent() listeners can subscribe to.
-  engine.on('StrategyBridgeEvent', (eventName, payload) => {
-    if (typeof eventName !== 'string') return;
-    const data = bridgeEventPayload(eventName, payload);
-    const startedAtMs = Date.now();
-    dispatchBridgeEvent(eventName, data);
-    recordUIPerfBridgeEvent(eventName, startedAtMs, Date.now());
-  });
+  bindBridgeEventRuntime(engine);
 
   engine.on('StrategyBridgeEventNative', (
     eventName,
@@ -142,7 +126,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     const startedAtMs = Date.now();
     const payload = nativeBridgeJsonPayload(types, counts, integers, floats, strings);
     const data = bridgeEventPayload(eventName, payload);
-    dispatchBridgeEvent(eventName, data);
+    publishBridgeEvent(eventName, data);
     recordUIPerfBridgeEvent(eventName, startedAtMs, Date.now());
   });
 
@@ -201,7 +185,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
       heightMapShape,
       heightMapNumbers,
     );
-    dispatchBridgeEvent('game.get_battle_data', data);
+    publishBridgeEvent('game.get_battle_data', data);
     recordUIPerfBridgeEvent('game.get_battle_data', startedAtMs, Date.now());
   });
 
@@ -236,7 +220,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
       unitCounts,
       unitStrengths,
     );
-    dispatchBridgeEvent('game.get_battle_frame', data);
+    publishBridgeEvent('game.get_battle_frame', data);
     recordUIPerfBridgeEvent('game.get_battle_frame', startedAtMs, Date.now());
   });
 
@@ -257,7 +241,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
       entryNumbers,
       entryFlags,
     );
-    dispatchBridgeEvent('game.world_glances_frame', data);
+    publishBridgeEvent('game.world_glances_frame', data);
     recordUIPerfBridgeEvent('game.world_glances_frame', startedAtMs, Date.now());
   });
 
@@ -273,7 +257,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
   ) => {
     if (typeof providerId !== 'string') return;
     const startedAtMs = Date.now();
-    dispatchBridgeEvent('ui.mod_world_glances_frame', {
+    publishBridgeEvent('ui.mod_world_glances_frame', {
       providerId,
       anchorKeys: Array.isArray(anchorKeys) ? anchorKeys : [],
       frameNumbers: Array.isArray(frameNumbers) ? frameNumbers : [],
@@ -289,7 +273,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
   ) => {
     const startedAtMs = Date.now();
     const data = nativeNotificationAnchorsFramePayload(entryStrings, entryNumbers, entryPayloads);
-    dispatchBridgeEvent('game.notification_anchors_frame', data);
+    publishBridgeEvent('game.notification_anchors_frame', data);
     recordUIPerfBridgeEvent('game.notification_anchors_frame', startedAtMs, Date.now());
   });
 
@@ -345,8 +329,8 @@ async function bootstrap() {
 
   // The engine enables this after Webkiln has a paint-confirmed atlas layout. React then hides
   // the browser-positioned duplicate glance tree.
-  window.addEventListener('bridge:ui.native_glance_composite', (event) => {
-    const enabled = Boolean((event as CustomEvent<{ enabled?: boolean }>).detail?.enabled);
+  subscribeBridgeEvent('ui.native_glance_composite', (data) => {
+    const enabled = Boolean((data as { enabled?: boolean } | undefined)?.enabled);
     document.documentElement.classList.toggle('native-glance-composite', enabled);
   });
 

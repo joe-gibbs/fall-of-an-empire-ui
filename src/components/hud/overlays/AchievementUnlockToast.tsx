@@ -48,11 +48,11 @@ export default function AchievementUnlockToast() {
       }, DISPLAY_DURATION_MS);
     };
 
-    window.addEventListener('bridge:game.achievement_unlocked', onAchievementUnlocked);
+    bridgeEvents.addEventListener('game.achievement_unlocked', onAchievementUnlocked);
     bridgeCall('game.achievement_events').catch(acknowledgeBridgeFailure);
 
     return () => {
-      window.removeEventListener('bridge:game.achievement_unlocked', onAchievementUnlocked);
+      bridgeEvents.removeEventListener('game.achievement_unlocked', onAchievementUnlocked);
       if (dismissTimer.current !== undefined) {
         window.clearTimeout(dismissTimer.current);
       }

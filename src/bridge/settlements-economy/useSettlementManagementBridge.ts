@@ -15,7 +15,7 @@ export interface RegionGovernorCandidateView extends Character {
 }
 
 function dispatchBridgeResponse(action: string, detail: unknown): void {
-  window.dispatchEvent(new CustomEvent(`bridge:${action}`, { detail }));
+  bridgeEvents.dispatchEvent(new CustomEvent(action, { detail }));
 }
 
 export async function refreshSettlementBridge(settlementId: string): Promise<void> {

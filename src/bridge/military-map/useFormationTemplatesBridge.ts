@@ -33,7 +33,7 @@ interface FormationTemplatesDynamicChangedEvent {
 function ensureGoldPatchListener(): void {
   if (goldPatchListenerInstalled) return;
   goldPatchListenerInstalled = true;
-  window.addEventListener('bridge:game.formation_template_gold_changed', (event: Event) => {
+  bridgeEvents.addEventListener('game.formation_template_gold_changed', (event: Event) => {
     const detail = (event as CustomEvent<unknown>).detail as Partial<FormationTemplateGoldChangedEvent> | null;
     if (!detail || typeof detail.playerGold !== 'number' || !formationTemplatesCache) return;
     const playerGold = detail.playerGold;
@@ -71,7 +71,7 @@ function ensureGoldPatchListener(): void {
 function ensureDynamicPatchListener(): void {
   if (dynamicPatchListenerInstalled) return;
   dynamicPatchListenerInstalled = true;
-  window.addEventListener('bridge:game.formation_templates_dynamic_changed', (event: Event) => {
+  bridgeEvents.addEventListener('game.formation_templates_dynamic_changed', (event: Event) => {
     const detail = (event as CustomEvent<unknown>).detail as Partial<FormationTemplatesDynamicChangedEvent> | null;
     if (!detail || !formationTemplatesCache || !Array.isArray(detail.templates)) return;
 
@@ -119,7 +119,7 @@ export function clearFormationTemplateCatalogueCache(): void {
 }
 
 function dispatchBridgeResponse(action: string, detail: unknown): void {
-  window.dispatchEvent(new CustomEvent(`bridge:${action}`, { detail }));
+  bridgeEvents.dispatchEvent(new CustomEvent(action, { detail }));
 }
 
 export function useFormationTemplatesBridge(fetchTemplates = true): GetFormationTemplatesResponse | null {

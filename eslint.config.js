@@ -7,7 +7,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import localRules from './eslint-rules/index.js'
 
 export default defineConfig([
-  globalIgnores(['dist', 'tmp']),
+  globalIgnores(['dist', 'tmp', '.vite', 'node_modules', 'Saved', '.image-cache', '__pycache__']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -39,7 +39,6 @@ export default defineConfig([
       // Hard error: referenced asset files must exist on disk. No graceful
       // fallbacks for missing icons/textures.
       'local/no-missing-asset': 'error',
-      'local/no-unsupported-runtime-features': 'error',
       'local/no-mixed-animation-units': 'error',
       'local/no-expensive-runtime-selectors': 'error',
       'react-hooks/immutability': 'error',
@@ -56,7 +55,6 @@ export default defineConfig([
     },
     processor: 'local/css',
     rules: {
-      'local/no-unsupported-runtime-features': 'error',
       'local/no-mixed-animation-units': 'error',
       'local/no-expensive-runtime-selectors': 'error',
     },

@@ -2,33 +2,17 @@ import { recordUIPerfBridgeCall } from '../../perf/uiPerfProfiler';
 
 export interface runtimeEngine {
   call: (name: string, ...args: unknown[]) => unknown | Promise<unknown>;
-  callBridge?: (request: Record<string, unknown>) => unknown | Promise<unknown>;
-  on: (name: string, callback: (...args: unknown[]) => void) => void;
+  callBridge: (request: Record<string, unknown>) => unknown | Promise<unknown>;
+  on: (name: string, callback: (...args: unknown[]) => void) => (() => void) | void;
   whenReady?: Promise<void>;
   isAttached?: boolean;
 }
-
-interface BridgeEnvelope {
-  ok: boolean;
-  pending?: boolean;
-  requestId?: string;
-  result?: unknown;
-  error?: string;
-}
-
-interface BridgeResponsePayload {
-  requestId?: string;
-  response?: unknown;
-}
-
 
 interface WebkilnGameUI {
   request: (action: string, payload?: unknown) => Promise<unknown>;
   on: (name: string, callback: (...args: unknown[]) => void) => (() => void) | void;
 }
 
-const BRIDGE_RESPONSE_EVENT = 'bridge:ui.bridge_response';
-let nextBridgeRequestId = 1;
 const reportedBridgeErrors = new WeakSet<object>();
 const reportedBridgeErrorKeys = new Set<string>();
 
@@ -62,25 +46,15 @@ export function getruntimeEngine(): runtimeEngine | null {
 		webkilnEngineAdapter = {
 			isAttached: true,
 			whenReady: Promise.resolve(),
-			on: (name, callback) => { gameUI.on(name, callback); },
+			on: (name, callback) => gameUI.on(name, callback),
 			call: (name, ...args) => gameUI.request(
 				name,
 				args.length <= 1 ? (args.length === 1 ? args[0] : null) : args,
 			),
-			callBridge: (request) => {
-				const requestId = typeof request.requestId === 'string' ? request.requestId : bridgeRequestId();
-				const action = typeof request.action === 'string' ? request.action : '';
-				void gameUI.request(action, request.payload).then(result => {
-					window.dispatchEvent(new CustomEvent(BRIDGE_RESPONSE_EVENT, {
-						detail: { requestId, response: { ok: true, result } },
-					}));
-				}, error => {
-					window.dispatchEvent(new CustomEvent(BRIDGE_RESPONSE_EVENT, {
-						detail: { requestId, response: { ok: false, error: bridgeErrorMessage(error) } },
-					}));
-				});
-				return { ok: true, pending: true, requestId };
-			},
+			callBridge: (request) => gameUI.request(
+				typeof request.action === 'string' ? request.action : '',
+				request.payload,
+			),
 		};
 	}
 	return webkilnEngineAdapter;
@@ -217,18 +191,6 @@ function waitForEngineBindings(engine: runtimeEngine, timeoutMs: number): Promis
   });
 }
 
-function normalizeBridgeEnvelope(raw: unknown): BridgeEnvelope {
-  if (typeof raw === 'string') {
-    return JSON.parse(raw) as BridgeEnvelope;
-  }
-  return raw as BridgeEnvelope;
-}
-
-function bridgeRequestId(): string {
-  nextBridgeRequestId += 1;
-  return `web-${Date.now()}-${nextBridgeRequestId}`;
-}
-
 function bridgePayloadSummary(payload: unknown): string {
   if (!payload || typeof payload !== 'object') return '';
   const record = payload as Record<string, unknown>;
@@ -255,79 +217,9 @@ export async function callRuntimeBridge(request: Record<string, unknown>, transi
   };
   try {
     const engine = await waitForruntimeEngine();
-    const requestId = bridgeRequestId();
-    const requestObject = { ...request, requestId };
-
-    return await new Promise((resolve, reject) => {
-      let settled = false;
-      let timeoutId = 0;
-
-      function handleResponse(event: CustomEvent<BridgeResponsePayload>) {
-        const detail = event.detail;
-        if (!detail || detail.requestId !== requestId) return;
-        settle(detail.response);
-      }
-
-      function cleanup() {
-        if (timeoutId !== 0) {
-          window.clearTimeout(timeoutId);
-        }
-        window.removeEventListener(BRIDGE_RESPONSE_EVENT, handleResponse as EventListener);
-      }
-
-      function settle(raw: unknown) {
-        if (settled) return;
-        settled = true;
-        cleanup();
-
-        try {
-          const envelope = normalizeBridgeEnvelope(raw);
-          if (!envelope.ok) {
-            reject(new Error(envelope.error || 'Bridge call failed'));
-            return;
-          }
-
-          recordBridgePerf('ok');
-          resolve(envelope.result);
-        } catch (error) {
-          recordBridgePerf('parse error');
-          reject(error);
-        }
-      }
-
-      function fail(error: unknown, detail: string) {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        recordBridgePerf(detail);
-        reject(error);
-      }
-
-      window.addEventListener(BRIDGE_RESPONSE_EVENT, handleResponse as EventListener);
-      timeoutId = window.setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        recordBridgePerf('timeout');
-        reject(new Error('Bridge call timed out'));
-      }, 30000);
-
-      try {
-        if (!engine.callBridge) {
-			throw new Error('Webkiln native bridge direct call binding is not available');
-        }
-        void Promise.resolve(engine.callBridge(requestObject))
-          .then((raw) => {
-            const envelope = normalizeBridgeEnvelope(raw);
-            if (!envelope.ok || !envelope.pending) {
-              fail(new Error(envelope.ok ? 'Bridge call did not return a pending response' : envelope.error || 'Bridge call failed'), 'direct rejected');
-            }
-          })
-          .catch(error => fail(error, 'direct call error'));
-      } catch (error) {
-        fail(error, 'direct call error');
-      }
-    });
+    const result = await engine.callBridge(request);
+    recordBridgePerf('ok');
+    return result;
   } catch (error) {
     if (isTransientGameplayReadinessError(error) && transientRetry < 120) {
       recordBridgePerf('retry gameplay readiness');

@@ -490,10 +490,10 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
 
     updateVirtualRowHeight();
     window.addEventListener('resize', updateVirtualRowHeight);
-    window.addEventListener('foae:runtime-viewport', updateVirtualRowHeight);
+    window.addEventListener('webkiln:runtime-viewport', updateVirtualRowHeight);
     return () => {
       window.removeEventListener('resize', updateVirtualRowHeight);
-      window.removeEventListener('foae:runtime-viewport', updateVirtualRowHeight);
+      window.removeEventListener('webkiln:runtime-viewport', updateVirtualRowHeight);
     };
   }, []);
 

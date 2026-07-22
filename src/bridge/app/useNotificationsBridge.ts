@@ -253,14 +253,14 @@ export function useNotificationsAndWarningsBridge(handlers: BridgeHandlers) {
     };
     const onWarningsClearedFn = () => handlers.onWarningsCleared();
 
-    window.addEventListener('bridge:game.notification_shown', onShown);
-    window.addEventListener('bridge:game.notifications_cleared', onCleared);
-    window.addEventListener('bridge:game.diplomatic_notification_shown', onDiplomaticShown);
-    window.addEventListener('bridge:game.diplomatic_notification_dismissed', onDiplomaticDismissed);
-    window.addEventListener('bridge:game.warning_added', onAdded);
-    window.addEventListener('bridge:game.warning_updated', onUpdated);
-    window.addEventListener('bridge:game.warning_removed', onRemoved);
-    window.addEventListener('bridge:game.warnings_cleared', onWarningsClearedFn);
+    bridgeEvents.addEventListener('game.notification_shown', onShown);
+    bridgeEvents.addEventListener('game.notifications_cleared', onCleared);
+    bridgeEvents.addEventListener('game.diplomatic_notification_shown', onDiplomaticShown);
+    bridgeEvents.addEventListener('game.diplomatic_notification_dismissed', onDiplomaticDismissed);
+    bridgeEvents.addEventListener('game.warning_added', onAdded);
+    bridgeEvents.addEventListener('game.warning_updated', onUpdated);
+    bridgeEvents.addEventListener('game.warning_removed', onRemoved);
+    bridgeEvents.addEventListener('game.warnings_cleared', onWarningsClearedFn);
 
     // The offscreen atlas can receive its replayed catalogue between bridge binding and React's
     // passive effects. Recover that event from the bridge cache so its notification plate is
@@ -268,14 +268,14 @@ export function useNotificationsAndWarningsBridge(handlers: BridgeHandlers) {
     publishShown(getCachedBridgeEventByName('game.notification_shown') as NotificationShown | undefined);
 
     return () => {
-      window.removeEventListener('bridge:game.notification_shown', onShown);
-      window.removeEventListener('bridge:game.notifications_cleared', onCleared);
-      window.removeEventListener('bridge:game.diplomatic_notification_shown', onDiplomaticShown);
-      window.removeEventListener('bridge:game.diplomatic_notification_dismissed', onDiplomaticDismissed);
-      window.removeEventListener('bridge:game.warning_added', onAdded);
-      window.removeEventListener('bridge:game.warning_updated', onUpdated);
-      window.removeEventListener('bridge:game.warning_removed', onRemoved);
-      window.removeEventListener('bridge:game.warnings_cleared', onWarningsClearedFn);
+      bridgeEvents.removeEventListener('game.notification_shown', onShown);
+      bridgeEvents.removeEventListener('game.notifications_cleared', onCleared);
+      bridgeEvents.removeEventListener('game.diplomatic_notification_shown', onDiplomaticShown);
+      bridgeEvents.removeEventListener('game.diplomatic_notification_dismissed', onDiplomaticDismissed);
+      bridgeEvents.removeEventListener('game.warning_added', onAdded);
+      bridgeEvents.removeEventListener('game.warning_updated', onUpdated);
+      bridgeEvents.removeEventListener('game.warning_removed', onRemoved);
+      bridgeEvents.removeEventListener('game.warnings_cleared', onWarningsClearedFn);
     };
   }, [handlers]);
 
@@ -318,12 +318,12 @@ export function dismissDiplomaticNotificationOnBridge(notificationId: string) {
 
 export function onNotificationAnchorsFrame(callback: (data: NotificationAnchorsFrameResponse) => void): () => void {
   const handler = (event: Event) => callback((event as CustomEvent<NotificationAnchorsFrameResponse>).detail);
-  window.addEventListener('bridge:game.notification_anchors_frame', handler as EventListener);
+  bridgeEvents.addEventListener('game.notification_anchors_frame', handler as EventListener);
   const cached = getCachedBridgeEventByName('game.notification_anchors_frame') as NotificationAnchorsFrameResponse | undefined;
   if (cached) {
     callback(cached);
   }
-  return () => window.removeEventListener('bridge:game.notification_anchors_frame', handler as EventListener);
+  return () => bridgeEvents.removeEventListener('game.notification_anchors_frame', handler as EventListener);
 }
 
 export function activateWarning(key: string, targetIndex: number) {

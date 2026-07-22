@@ -39,7 +39,7 @@ export function createProvinceFromCandidateBridge(landId: string, leaderPersonId
 export async function refreshDiplomacyOverviewBridge(scope: DiplomacyOverviewScope = 'full'): Promise<void> {
   clearBridgeQueryCache('game.get_diplomacy_overview');
   const fresh = await bridgeCall('game.get_diplomacy_overview', { scope });
-  window.dispatchEvent(new CustomEvent('bridge:game.get_diplomacy_overview', { detail: fresh }));
+  bridgeEvents.dispatchEvent(new CustomEvent('game.get_diplomacy_overview', { detail: fresh }));
 }
 
 export async function setAutoAssignGovernorsBridge(enabled: boolean): Promise<void> {

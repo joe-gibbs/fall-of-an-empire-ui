@@ -52,7 +52,7 @@ export function clearPowerBlocCaches(): void {
 }
 
 function iconUrl(key: string): string | undefined {
-  if (key.startsWith('/') || key.startsWith('coui://')) return WebkilnAssetPath(key);
+  if (key.startsWith('/') || key.startsWith('gameui://')) return WebkilnAssetPath(key);
   return key ? WebkilnAssetPath(`/assets/power-blocs/${key}.png`) : undefined;
 }
 
@@ -165,11 +165,11 @@ function mapResponse(data: GetPowerBlocsResponse): PowerBloc[] {
 }
 
 function dispatchPowerBlocs(data: GetPowerBlocsResponse): void {
-  window.dispatchEvent(new CustomEvent('bridge:game.get_power_blocs', { detail: data }));
+  bridgeEvents.dispatchEvent(new CustomEvent('game.get_power_blocs', { detail: data }));
 }
 
 function dispatchPowerBlocDetail(data: GetPowerBlocDetailResponse): void {
-  window.dispatchEvent(new CustomEvent('bridge:game.get_power_bloc_detail', { detail: data }));
+  bridgeEvents.dispatchEvent(new CustomEvent('game.get_power_bloc_detail', { detail: data }));
 }
 
 async function refreshPowerBlocs(): Promise<void> {

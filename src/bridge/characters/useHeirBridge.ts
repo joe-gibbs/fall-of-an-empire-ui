@@ -27,20 +27,20 @@ export async function setDesignatedHeir(personId: string, factionId?: string): P
 
       if (!factionId) {
         const familyTree = await bridgeCall('game.get_family_tree', { personId: '', scope: 'lineage' });
-        window.dispatchEvent(new CustomEvent('bridge:game.get_family_tree', { detail: familyTree }));
+        bridgeEvents.dispatchEvent(new CustomEvent('game.get_family_tree', { detail: familyTree }));
 
         const factionDataId = targetFactionId || familyTree.factionId;
         if (factionDataId) {
           const faction = await bridgeCall('game.get_faction_data', { factionId: factionDataId, scope: 'full' });
-          window.dispatchEvent(new CustomEvent('bridge:game.get_faction_data', { detail: faction }));
+          bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_data', { detail: faction }));
         }
       } else if (targetFactionId) {
         const faction = await bridgeCall('game.get_faction_data', { factionId: targetFactionId, scope: 'full' });
-        window.dispatchEvent(new CustomEvent('bridge:game.get_faction_data', { detail: faction }));
+        bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_data', { detail: faction }));
       }
 
       const candidates = await bridgeCall('game.get_heir_candidates', { factionId: targetFactionId });
-      window.dispatchEvent(new CustomEvent('bridge:game.get_heir_candidates', { detail: candidates }));
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_heir_candidates', { detail: candidates }));
     } catch (error) {
       acknowledgeBridgeFailure(error);
     }

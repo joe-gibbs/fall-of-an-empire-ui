@@ -153,6 +153,6 @@ export function installImageAutosize(): void {
   }
 
   window.addEventListener('resize', () => scheduleScan());
-  window.addEventListener('foae:runtime-viewport', () => scheduleScan());
+  window.addEventListener('webkiln:runtime-viewport', () => scheduleScan());
   scheduleScan();
 }

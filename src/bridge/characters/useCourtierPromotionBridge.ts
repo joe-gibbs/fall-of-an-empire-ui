@@ -134,10 +134,10 @@ export function useCourtierPromotionBridge() {
       });
     };
 
-    window.addEventListener('bridge:ui.courtier_promotion_event', handler as EventListener);
+    bridgeEvents.addEventListener('ui.courtier_promotion_event', handler as EventListener);
     return () => {
       cancelled = true;
-      window.removeEventListener('bridge:ui.courtier_promotion_event', handler as EventListener);
+      bridgeEvents.removeEventListener('ui.courtier_promotion_event', handler as EventListener);
     };
   }, []);
 
