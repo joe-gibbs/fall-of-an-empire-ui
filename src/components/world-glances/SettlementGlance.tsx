@@ -391,6 +391,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
             <img className="gset-badge-layer gset-badge-layer--light" src={badgeLight} alt="" />
             <img className="gset-badge-layer gset-badge-layer--foreground" src={badgeForeground} alt="" />
             <img className="gset-badge-layer gset-badge-layer--hover" src={badgeHoverOverlay} alt="" />
+            <img className="gset-badge-layer gset-badge-layer--target" src={badgeHoverOverlay} alt="" />
           </span>
           {data.occupier && (
             <FactionRoundel

@@ -2936,6 +2936,30 @@
   opacity: 0.58;
 }
 
+.gset-badge-layer--target {
+  z-index: 2;
+  display: none;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.world-settlement-badge.is-targeted .gset-badge-layer--target,
+.world-settlement-badge.is-targeted:hover .gset-badge-layer--target {
+  animation: gset-target-pulse 1.15s ease-in-out infinite;
+}
+
+@keyframes gset-target-pulse {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: scale(1.02);
+  }
+
+  50% {
+    opacity: 0.98;
+    transform: scale(1.12);
+  }
+}
 .gset-status-icon {
   position: absolute;
   z-index: 8;
