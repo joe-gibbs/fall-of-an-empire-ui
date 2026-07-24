@@ -720,7 +720,7 @@ export interface FormationTemplate {
   totalStrength: number;
   /** True if this settlement can raise the whole composition unassisted. */
   raisableHere: boolean;
-  /** Per-slot issues when not raisable (e.g. "Cannot train Equites Clibanarii
+  /** Per-slot issues when not raisable (e.g. "Cannot train Palatine Cataphracts
    *  - requires Stable at Lv 4 (currently 2)"). */
   lockReasons?: string[];
 }
