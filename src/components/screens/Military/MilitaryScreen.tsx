@@ -15,6 +15,7 @@ import {
   setAutoReplenishFormationsBridge,
 } from '../../../bridge/military-map/useMilitaryBridge';
 import { useFormationTemplatesBridge } from '../../../bridge/military-map/useFormationTemplatesBridge';
+import { usePersonalGuardBridge } from '../../../bridge/military-map/usePersonalGuardBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import type { CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
 import {
@@ -51,6 +52,7 @@ import {
   type HighlightKey,
 } from './ForceTreeParts';
 import { TemplatesPanel } from './TemplateManagementPanel';
+import { PersonalGuardPanel } from './PersonalGuardPanel';
 import './MilitaryScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -158,6 +160,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
   const playerFactionId = usePlayerFactionId();
   const [showOnly, setShowOnly] = useState<MilitaryScreenTab>(() => initialMilitaryTab(screenId));
   const templateData = useFormationTemplatesBridge(showOnly === 'templates');
+  const personalGuard = usePersonalGuardBridge();
   const overviewForces = useMemo(
     () => (overview?.forces as Force[] | undefined) ?? [],
     [overview],
@@ -225,7 +228,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
 
   // Pointer pipeline
   useEffect(() => {
-    if (showOnly === 'templates') return;
+    if (showOnly === 'templates' || showOnly === 'guard') return;
     const el = viewport.current;
     if (!el) return;
 
@@ -270,6 +273,9 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       const src = byId.get(srcId);
       const tgt = byId.get(tgtId);
       if (!src || !tgt) return { ok: false, reason: 'Unknown target' };
+      if (src.isProvincialGuard || tgt.isProvincialGuard) {
+        return { ok: false, reason: webUIText('Military.ProvincialGuard.CommandRestriction') };
+      }
       if (!src.isPlayerControlled) return { ok: false, reason: 'You do not command this military' };
       if (!tgt.isPlayerControlled) return { ok: false, reason: 'You do not command the parent military' };
       if (srcId === tgtId) return { ok: false, reason: 'Cannot report to itself' };
@@ -457,8 +463,11 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
     { id: 'sea',       label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.987.36') },
     { id: 'templates', label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.988.37') },
   ];
+  if (personalGuard?.eligible) {
+    tabs.push({ id: 'guard', label: webUIText('Military.PersonalGuard.Tab') });
+  }
 
-  const officeStrip = militaryCourtPositions.length > 0 ? (
+  const officeStrip = (showOnly === 'land' || showOnly === 'sea') && militaryCourtPositions.length > 0 ? (
     <div className="chart-office-strip">
       <span className="chart-office-strip-label"><WebUIText textKey="Auto.ComponentsScreensMilitaryMilitaryScreen.992.11" /></span>
       <div className="chart-office-list">
@@ -476,7 +485,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
 
   const topControls = (
     <>
-      {showOnly !== 'templates' && (
+      {(showOnly === 'land' || showOnly === 'sea') && (
         <div className="chart-header-extra">
           <span className="chart-highlight-label"><WebUIText textKey="Auto.ComponentsScreensMilitaryMilitaryScreen.1009.12" /></span>
           <div className="chart-highlight-group">
@@ -523,13 +532,15 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       title={webUIText('Auto.Attr.ComponentsScreensMilitaryMilitaryScreen.1053.40')}
       onClose={onClose}
       advisorTopic="militaryScreen"
-      className={`chart-screen${showOnly === 'templates' ? ' chart-screen--templates' : ''}`}
+      className={`chart-screen${showOnly === 'templates' ? ' chart-screen--templates' : ''}${showOnly === 'guard' ? ' chart-screen--guard' : ''}`}
       contentClassName="chart-content"
       tabs={<SidebarTabBar tabs={tabs} activeTab={showOnly} onTabChange={(id) => setShowOnly(id as MilitaryScreenTab)} />}
     >
       {topControls}
       {officeStrip}
-      {showOnly === 'templates' ? (
+      {showOnly === 'guard' ? (
+        personalGuard?.eligible ? <PersonalGuardPanel guard={personalGuard} /> : null
+      ) : showOnly === 'templates' ? (
         <TemplatesPanel
           templates={templates}
           initialTemplateId={initialTemplateId}
@@ -659,5 +670,5 @@ registerScreen({
   render: ({ screenId, onClose }) => <MilitaryScreen key={screenId ?? 'default'} screenId={screenId} onClose={onClose} />,
   topbarId: 'military',
   advisorTopic: 'militaryScreen',
-  bridgeNames: ['militaryscreen', 'militaryoverview', 'militaryoverviewscreen', 'formations', 'formationtemplates', 'formation_templates'],
+  bridgeNames: ['militaryscreen', 'militaryoverview', 'militaryoverviewscreen', 'formations', 'formationtemplates', 'formation_templates', 'personalguard', 'provincialguard', 'guard'],
 });

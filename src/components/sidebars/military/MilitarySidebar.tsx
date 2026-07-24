@@ -316,7 +316,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     }, new Map<string, CompositionSummaryRow>()).values(),
   );
 
-  const commandActions: MilitaryAction[] = [
+  const commandActions: MilitaryAction[] = army.isProvincialGuard ? [] : [
     ...(army.commandRank !== 'Legatus' ? [{
       label: webUIText('Military.Command.Demote'),
       icon: '/assets/icons/I_Demote.png',
@@ -448,7 +448,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     ...orderPanelActions,
   ];
 
-  const formationActions: MilitaryAction[] = [
+  const formationActions: MilitaryAction[] = army.isProvincialGuard ? [] : [
     {
       get label() { return webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.557.1"); },
       icon: '/assets/icons/I_NewTemplate.png',
@@ -872,7 +872,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                     </button>
                   </Tooltip>
                 </div>
-                <span className="mil-header-commander-title">{army.commandRank}</span>
+                <span className="mil-header-commander-title">{army.commanderTitle || army.commandRank}</span>
               </div>
               {commanderStats.length > 0 && (
                 <div className="mil-header-commander-stats">
@@ -1043,7 +1043,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
               <div className="mil-formation-main">
                 <img src="/assets/icons/I_Template.png" alt="" />
                 <div>
-                  {army.formationTemplate ? (
+                  {army.formationTemplate && !army.isProvincialGuard ? (
                     <Tooltip
                       content={{
                         title: army.formationTemplate,
@@ -1061,7 +1061,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                       </button>
                     </Tooltip>
                   ) : (
-                    <span className="mil-formation-name">{webUIText("Auto.Fix.ExprFallback.componentssidebarsMilitarySidebar.899.1")}</span>
+                    <span className="mil-formation-name">{army.formationTemplate || webUIText("Auto.Fix.ExprFallback.componentssidebarsMilitarySidebar.899.1")}</span>
                   )}
                 </div>
               </div>

@@ -1,4 +1,4 @@
-export type MilitaryScreenTab = 'land' | 'sea' | 'templates';
+export type MilitaryScreenTab = 'land' | 'sea' | 'templates' | 'guard';
 export type TemplateCreateType = 'land' | 'naval';
 
 function decodeScreenToken(value: string): string {
@@ -32,6 +32,10 @@ function isTemplateScreenToken(id: string): boolean {
 
 export function initialMilitaryTab(screenId: string | null | undefined): MilitaryScreenTab {
   const id = (screenId ?? '').trim().toLowerCase();
+  const compactId = compactScreenToken(id);
+  if (compactId === 'guard' || compactId === 'personalguard' || compactId === 'provincialguard') {
+    return 'guard';
+  }
   if (isTemplateScreenToken(id)) {
     return 'templates';
   }

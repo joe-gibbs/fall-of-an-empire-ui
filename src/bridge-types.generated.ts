@@ -3961,6 +3961,7 @@ export interface SettlementGarrisonArmy {
   debugShortId: number;
   name: string;
   commanderName: string;
+  commanderTitle: string;
   commanderId: string;
   commanderDebugShortId: number;
   strength: number;
@@ -4899,6 +4900,7 @@ export interface MilitaryOverviewForce {
   supplyDays: number;
   attrition: boolean;
   isNavy: boolean;
+  isProvincialGuard: boolean;
   doctrine: string;
   template: string;
   location: string;
@@ -5076,6 +5078,7 @@ export interface GetMilitaryDataResponse {
   battleGroups: MilitaryBattleGroupEntry[];
   commandRank: string;
   isNavy: boolean;
+  isProvincialGuard: boolean;
   currentOrder: string;
   formationTemplate: string;
   garrisonedAt: string;
@@ -5498,6 +5501,56 @@ export interface PersonActivitySegmentEntry {
   text: string;
   linkType: string;
   linkId: string;
+}
+
+export interface PersonalGuardCompanyEntry {
+  slotNumber: number;
+  unitId: string;
+  name: string;
+  description: string;
+  portrait: string;
+  type: string;
+  typeLabel: string;
+  cultureName: string;
+  isHousehold: boolean;
+  isBarbarian: boolean;
+  strength: number;
+  maxStrength: number;
+  upkeep: number;
+  status: string;
+}
+
+export interface PersonalGuardRequirementEntry {
+  id: string;
+  name: string;
+  context: string;
+  iconPath: string;
+  available: number;
+  required: number;
+  met: boolean;
+  description: string;
+}
+
+export interface GetPersonalGuardResponse {
+  eligible: boolean;
+  hasGuard: boolean;
+  militaryId: string;
+  name: string;
+  provinceName: string;
+  commanderName: string;
+  commanderTitle: string;
+  location: string;
+  isAbroad: boolean;
+  strength: number;
+  maxStrength: number;
+  companyCapacity: number;
+  upkeep: number;
+  barbarianPopulation: number;
+  barbarianCultureCount: number;
+  status: string;
+  companies: PersonalGuardCompanyEntry[];
+  formationRequirements: PersonalGuardRequirementEntry[];
+  companyEquipmentRequirements: PersonalGuardRequirementEntry[];
 }
 
 export interface PickNewGameMapFactionRequest {
@@ -6346,6 +6399,7 @@ export interface BridgeActions {
   'game.get_person_interaction_options': { request: GetPersonInteractionOptionsRequest; response: GetPersonInteractionOptionsResponse };
   'game.get_person_interactions': { request: GetPersonInteractionsRequest; response: GetPersonInteractionsResponse };
   'game.get_person_quick_interactions': { request: GetPersonQuickInteractionsRequest; response: GetPersonInteractionsResponse };
+  'game.get_personal_guard': { request: void; response: GetPersonalGuardResponse };
   'game.get_pinned_items': { request: void; response: GetPinnedItemsResponse };
   'game.get_player_faction': { request: void; response: GetPlayerFactionResponse };
   'game.get_portrait_mode': { request: void; response: GetPortraitModeResponse };

@@ -14,6 +14,7 @@ export interface Force {
   morale: number;
   supplyDays: number;
   isNavy: boolean;
+  isProvincialGuard: boolean;
   doctrine: Doctrine;
   template: string;
   location: string;
@@ -76,6 +77,7 @@ export const RANK_META: Record<Rank, {
 };
 
 export function rankLabel(f: Force): string {
+  if (f.isProvincialGuard) return webUIText('Military.ProvincialGuard');
   const meta = RANK_META[f.rank];
   return f.isNavy ? meta.navalLabel : meta.label;
 }

@@ -187,7 +187,7 @@ export function NodeCard({
           onContextMenu={quickMenu.onContextMenu}
         >
         <div className="chart-node-inner">
-        <Tooltip content={{ title: rankLabel(force), body: rm.desc }}>
+        <Tooltip content={{ title: rankLabel(force), body: force.isProvincialGuard ? webUIText('Military.ProvincialGuard.Description') : rm.desc }}>
           <div className="chart-node-crest">
             <img className="chart-node-rank-icon" src={rm.icon} alt="" draggable={false} />
             {force.isNavy && (

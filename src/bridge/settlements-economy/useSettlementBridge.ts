@@ -140,7 +140,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       commanderId: a.commanderId || undefined,
       commanderDebugShortId: a.commanderDebugShortId || undefined,
       commanderPortrait: '',
-      commanderTitle: '',
+      commanderTitle: a.commanderTitle,
       strength: a.strength,
       maxStrength: a.maxStrength,
       morale: a.morale,
