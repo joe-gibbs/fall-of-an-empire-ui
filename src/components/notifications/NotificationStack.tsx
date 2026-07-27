@@ -21,6 +21,8 @@ import {
   type WorldGlancesFrameResponse,
 } from '../../bridge/app/useWorldGlancesBridge';
 import { toRootRem } from '../../utils/cssUnits';
+import { UI_MOTION } from '../../config/motion';
+import { UI_PRESENTATION } from '../../config/presentation';
 import '../world-glances/WorldGlances.css';
 import './NotificationStack.css';
 
@@ -42,10 +44,8 @@ interface SettlementNotificationAnchor {
 
 type SettlementAnchorMap = Record<string, SettlementNotificationAnchor>;
 
-const NOTIFICATION_EXIT_REMOVAL_MS = 320;
 const SETTLEMENT_NOTIFICATION_BASE_Z_INDEX = 20;
 const SETTLEMENT_NOTIFICATION_MAX_Z_INDEX = 43;
-const SETTLEMENT_NOTIFICATION_SCALE = 0.7;
 
 function canUseSettlementAnchor(notification: Notification): boolean {
   return notification.canAnchorAtSettlement === true && (notification.style ?? 'regular') === 'regular';
@@ -183,7 +183,7 @@ function settlementNotificationStyle(anchor: SettlementNotificationAnchor, index
 
   return {
     zIndex,
-    transform: `translate3d(${toRootRem(screenX)}, ${toRootRem(screenY)}, 0) translate3d(-50%, -100%, 0) scale(${SETTLEMENT_NOTIFICATION_SCALE})`,
+    transform: `translate3d(${toRootRem(screenX)}, ${toRootRem(screenY)}, 0) translate3d(-50%, -100%, 0) scale(${UI_PRESENTATION.worldAnchors.notificationScale})`,
   };
 }
 
@@ -271,7 +271,10 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
         dismissNotificationOnBridge(id);
       }
     }
-    exitTimersRef.current[id] = window.setTimeout(() => finishExit(id), NOTIFICATION_EXIT_REMOVAL_MS);
+    exitTimersRef.current[id] = window.setTimeout(
+      () => finishExit(id),
+      UI_MOTION.notificationRemovalFallbackMs,
+    );
   }, [finishExit, notifications, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds]);
 
   const handleDecision = useCallback((id: string, accepted: boolean) => {
@@ -411,7 +414,7 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
               <div
                 key={n.id}
                 className={`notification-slot notification-slot--${n.style ?? 'regular'}${isExiting ? ' notification-slot--exiting' : ''}`}
-                style={{ animationDelay: isExiting ? '0s' : `${i * 0.06}s` }}
+                style={{ animationDelay: isExiting ? '0s' : `${i * UI_MOTION.notificationStackStaggerMs}ms` }}
                 onAnimationEnd={(e) => handleAnimationEnd(n.id, e)}
               >
                 <NotificationBanner
@@ -442,7 +445,11 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
               >
                 <div
                   className={`settlement-notification-slot notification-slot notification-slot--${n.style ?? 'regular'}${exiting.has(n.id) ? ' notification-slot--exiting' : ''}`}
-                  style={{ animationDelay: exiting.has(n.id) ? '0s' : `${i * 0.05}s` }}
+                  style={{
+                    animationDelay: exiting.has(n.id)
+                      ? '0s'
+                      : `${i * UI_MOTION.settlementNotificationStaggerMs}ms`,
+                  }}
                   onAnimationEnd={(e) => handleAnimationEnd(n.id, e)}
                 >
                   <NotificationBanner

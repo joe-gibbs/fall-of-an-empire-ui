@@ -42,6 +42,8 @@ import type {
 import '../../world-glances/WorldGlances.css';
 import './WorldGlanceOverlay.css';
 import { parseWorldGlanceTutorialTarget } from './worldGlanceTutorialTarget';
+import { UI_PERFORMANCE } from '../../../config/uiPerformance';
+import { UI_PRESENTATION } from '../../../config/presentation';
 
 function clampTier(tier: number): 1 | 2 | 3 | 4 | 5 {
   return Math.max(1, Math.min(5, Math.round(tier))) as 1 | 2 | 3 | 4 | 5;
@@ -269,7 +271,7 @@ type WorldGlanceNodeState = {
 
 type WorldGlanceNodeStateMap = Record<string, WorldGlanceNodeState | undefined>;
 const SETTLEMENT_VISIBILITY_POP_CLASS = 'is-visible-pop';
-const SETTLEMENT_VISIBLE_OPACITY_THRESHOLD = 0.05;
+const SETTLEMENT_VISIBLE_OPACITY_THRESHOLD = UI_PRESENTATION.worldAnchors.visibleOpacityThreshold;
 const VISIBILITY_POP_DURATION_MS = 180;
 const SETTLEMENT_GLANCE_OFFSET_X = '-1.9091rem';
 const SETTLEMENT_GLANCE_OFFSET_Y = '-2.1364rem';
@@ -282,10 +284,10 @@ const INITIAL_NODE_STYLE = {
 const WORLD_GLANCE_Z_INDEX_DIVISOR = 1000;
 const WORLD_GLANCE_MAX_Z_INDEX = 36;
 const MASS_DETAIL_CHANGE_LIMIT = Number.MAX_SAFE_INTEGER;
-const DETAIL_FLUSH_DELAY_MS = 180;
-const DETAIL_FLUSH_BATCH_SIZE = 4;
-const DETAIL_FLUSH_BATCH_INTERVAL_MS = 32;
-const GLANCE_CONTENT_HYDRATION_BATCH_SIZE = 8;
+const DETAIL_FLUSH_DELAY_MS = UI_PERFORMANCE.worldGlances.detailFlushDelayMs;
+const DETAIL_FLUSH_BATCH_SIZE = UI_PERFORMANCE.worldGlances.detailFlushBatchSize;
+const DETAIL_FLUSH_BATCH_INTERVAL_MS = UI_PERFORMANCE.worldGlances.detailFlushBatchIntervalMs;
+const GLANCE_CONTENT_HYDRATION_BATCH_SIZE = UI_PERFORMANCE.worldGlances.contentHydrationBatchSize;
 
 type HydrationCallback = () => void;
 

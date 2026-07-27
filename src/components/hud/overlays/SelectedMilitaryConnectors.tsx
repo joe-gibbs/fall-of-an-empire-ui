@@ -10,6 +10,7 @@ import {
   type WorldGlancesFrameResponse,
 } from '../../../bridge/app/useWorldGlancesBridge';
 import { useSelectedMilitaries } from '../../../data-source';
+import { UI_PRESENTATION } from '../../../config/presentation';
 import { onSelectedMilitaryConnectorHover } from './militarySelectionConnectorSignals';
 import './SelectedMilitaryConnectors.css';
 
@@ -64,7 +65,11 @@ export default function SelectedMilitaryConnectors({ visible = true }: { visible
       const count = worldGlanceFrameEntryCount(frame, section);
       for (let index = 0; index < count; index += 1) {
         const entry = readWorldGlanceFrameEntry(frame, section, index, scratch);
-        if (!entry?.selected || entry.opacity <= 0.05 || !selectedIds.has(entry.id)) continue;
+        if (
+          !entry?.selected
+          || entry.opacity <= UI_PRESENTATION.worldAnchors.visibleOpacityThreshold
+          || !selectedIds.has(entry.id)
+        ) continue;
         positions.set(entry.id, {
           x: entry.screenX * scaleX,
           y: entry.screenY * scaleY,

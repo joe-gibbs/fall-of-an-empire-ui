@@ -7,11 +7,11 @@ import {
 import { useGlanceScale } from '../../bridge/core/useGlanceScale';
 import { useWorldAnchorRasterScale } from '../../runtime/worldAnchorRasterScale';
 import { NATIVE_BRIDGE_PROTOCOL } from '../../native-bridge-protocol.generated';
+import { UI_PRESENTATION } from '../../config/presentation';
 import './ModWorldGlanceLayer.css';
 
 const MOD_FRAME_HEADER_NUMBER_COUNT = NATIVE_BRIDGE_PROTOCOL.strides.modWorldGlanceFrameHeaderNumbers;
 const MOD_FRAME_ENTRY_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.modWorldGlanceEntryNumbers;
-const ATLAS_VISIBLE_OPACITY_THRESHOLD = 0.05;
 
 interface ModWorldGlanceFrameEvent {
   providerId: string;
@@ -76,7 +76,8 @@ function atlasContentMatches(
   return previous?.length === next.length && previous.every((entry, index) => (
     entry.anchorKey === next[index].anchorKey
     && JSON.stringify(entry.payload) === JSON.stringify(next[index].payload)
-    && (entry.opacity > ATLAS_VISIBLE_OPACITY_THRESHOLD) === (next[index].opacity > ATLAS_VISIBLE_OPACITY_THRESHOLD)
+    && (entry.opacity > UI_PRESENTATION.worldAnchors.visibleOpacityThreshold)
+      === (next[index].opacity > UI_PRESENTATION.worldAnchors.visibleOpacityThreshold)
   ));
 }
 
@@ -150,7 +151,9 @@ function ModWorldGlanceNode({ registration, entry, atlas, glanceScale, worldAnch
         data-webkiln-anchor={entry.anchorKey}
         data-webkiln-anchor-point={anchorPoint}
         data-webkiln-anchor-raster-scale={rasterScale}
-        data-webkiln-anchor-demand={entry.opacity > ATLAS_VISIBLE_OPACITY_THRESHOLD ? 'visible' : 'hidden'}
+        data-webkiln-anchor-demand={
+          entry.opacity > UI_PRESENTATION.worldAnchors.visibleOpacityThreshold ? 'visible' : 'hidden'
+        }
       >
         {content}
       </div>

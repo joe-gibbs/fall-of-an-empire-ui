@@ -1,6 +1,12 @@
 export const UI_PRESENTATION = {
   // Root font size used to calibrate rem-based game UI measurements.
   rootFontSizePx: 13.2,
+  worldAnchors: {
+    // Opacity at or below which a world-anchored element is excluded from presentation.
+    visibleOpacityThreshold: 0.05,
+    // Visual scale applied to notification banners anchored over settlements.
+    notificationScale: 0.7,
+  },
   tooltip: {
     // Minimum delay before a tooltip may open, before the player's preference is applied.
     minimumDelayMs: 450,

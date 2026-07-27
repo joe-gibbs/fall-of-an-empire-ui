@@ -14,6 +14,7 @@ import { compareSortValues, normaliseSortText, type SortDirection, type SortStat
 import { useLedgerOverviewBridge } from '../../../bridge/settlements-economy/useLedgerOverviewBridge';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import { useGameActions } from '../../../context/GameContext';
+import { UI_PERFORMANCE } from '../../../config/uiPerformance';
 import { UI_PRESENTATION } from '../../../config/presentation';
 import type {
   LedgerBuildingRow,
@@ -34,7 +35,7 @@ import { webUIText } from '../../../localization/WebUITextContext';
 type LedgerTab = 'settlements' | 'militaries' | 'factions' | 'resources' | 'buildings' | 'notifications';
 const ALL_FILTER = '__all__';
 const LEDGER_ROW_HEIGHT_REM = 3.75;
-const LEDGER_PAGE_SIZE = 150;
+const LEDGER_PAGE_SIZE = UI_PERFORMANCE.ledgerPageSize;
 
 const EMPTY_SETTLEMENTS: LedgerSettlementRow[] = [];
 const EMPTY_MILITARIES: LedgerMilitaryRow[] = [];

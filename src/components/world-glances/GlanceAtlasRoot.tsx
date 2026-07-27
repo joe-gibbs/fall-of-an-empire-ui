@@ -388,7 +388,8 @@ export default function GlanceAtlasRoot() {
           const entry = readWorldGlanceFrameEntry(frame, section, index, scratch);
           if (!entry || !entry.id) continue;
           const key = worldAnchorKey(section, entry.id);
-          const atlasVisible = (entry.opacity ?? 0) > 0.05;
+          const atlasVisible =
+            (entry.opacity ?? 0) > UI_PRESENTATION.worldAnchors.visibleOpacityThreshold;
 
           if (atlasVisible) {
             nextVisibleKeys.add(key);
