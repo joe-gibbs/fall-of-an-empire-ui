@@ -1627,53 +1627,410 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
   },
 );
 
-const FactionSelection: React.FC<FactionSelectionProps> = ({
-  mapId,
-  initialData = null,
-  loadFactionSelection,
-  scenario,
-  closing = false,
-  onClose,
-  showPurchaseForLocked = false,
-  onPurchaseFullGame,
+interface FactionSelectionDetailPanelProps {
+  selected: ScenarioMapFactionDto;
+  factions: ScenarioMapFactionDto[];
+  factionsByBase: Map<string, ScenarioMapFactionDto>;
+  wars: ScenarioMapWarDto[];
+  showPurchaseForSelected: boolean;
+  onSelectBaseName: (baseName: string) => void;
+  onFactionHover: (baseName: string) => void;
+  onFactionHoverEnd: () => void;
+  onConfirm: FactionSelectionProps['onConfirm'];
+  onPurchaseFullGame?: FactionSelectionProps['onPurchaseFullGame'];
+}
+
+function FactionSelectionDetailPanel({
+  selected,
+  factions,
+  factionsByBase,
+  wars,
+  showPurchaseForSelected,
+  onSelectBaseName,
+  onFactionHover,
+  onFactionHoverEnd,
   onConfirm,
-}) => {
+  onPurchaseFullGame,
+}: FactionSelectionDetailPanelProps) {
   const t = useWebUIText();
+  const selectedLeader = getLeader(selected);
+  const selectedSubjects = factions
+    .filter((faction) => faction.overlordBaseName === selected.baseName)
+    .sort(factionSort);
+  const selectedProvinceSubjects = selectedSubjects.filter((subject) => subject.subjectSubtype === 'province');
+  const selectedFoederatiSubjects = selectedSubjects.filter((subject) => subject.subjectSubtype === 'foederati');
+  const warsInvolvingSelected = getWarsForFaction(wars, selected.baseName);
+  const nonSubjectTreaties = selected.treaties.filter((treaty) => !isSubjectTreaty(treaty.type));
+  const treatiesByLabel = new Map<string, ScenarioMapTreatyDto[]>();
+
+  nonSubjectTreaties.forEach((treaty) => {
+    const label = treatyBlockLabel(treaty.type, t);
+    const treaties = treatiesByLabel.get(label) ?? [];
+    treaties.push(treaty);
+    treatiesByLabel.set(label, treaties);
+  });
+
+  const renderSubjectRoundels = (subjects: ScenarioMapFactionDto[]) => (
+    <div className="fs-subject-roundel-list">
+      {subjects.map((subject) => (
+        <Tooltip
+          key={subject.baseName}
+          content={{
+            title: subject.displayName,
+            body: subject.capitalSettlementName || subject.realm || undefined,
+          }}
+          position="bottom"
+          delay={150}
+          wrapperClassName="fs-subject-roundel-tooltip"
+        >
+          <button
+            type="button"
+            className={`fs-subject-roundel-btn${!subject.playable ? ' fs-subject-roundel-btn--locked' : ''}`}
+            aria-label={subject.displayName}
+            onClick={() => onSelectBaseName(subject.baseName)}
+            onMouseEnter={() => onFactionHover(subject.baseName)}
+            onMouseLeave={onFactionHoverEnd}
+          >
+            <span className={roundelClassName(subject, 'sm')} style={roundelStyle(subject)}>
+              {renderRoundelSymbol(subject)}
+            </span>
+          </button>
+        </Tooltip>
+      ))}
+    </div>
+  );
+
+  const renderWarSide = (
+    side: ScenarioMapWarDto['attacker'],
+    leader: ScenarioMapFactionDto | undefined,
+    allyCount: number,
+    tone: 'ours' | 'theirs',
+  ) => {
+    const content = (
+      <>
+        {leader && (
+          <span className={roundelClassName(leader, 'sm')} style={roundelStyle(leader)}>
+            {renderRoundelSymbol(leader)}
+          </span>
+        )}
+        <div className="fs-war-side-meta">
+          <div className="fs-war-side-label">{t(tone === 'ours' ? 'MainMenu.OurSide' : 'MainMenu.Enemy')}</div>
+          <div className="fs-war-side-leader">{side.leaderFactionDisplayName}</div>
+          {allyCount > 0 && (
+            <div className="fs-war-side-count">
+              {`+${formatNumber(allyCount)} ${t(allyCount === 1 ? 'Common.Ally' : 'Common.Allies')}`}
+            </div>
+          )}
+        </div>
+      </>
+    );
+
+    if (!leader) {
+      return <div className={`fs-war-side fs-war-side--${tone}`}>{content}</div>;
+    }
+
+    return (
+      <button
+        type="button"
+        className={`fs-war-side fs-war-side--${tone} fs-war-side--clickable`}
+        aria-label={leader.displayName}
+        onClick={() => onSelectBaseName(leader.baseName)}
+        onMouseEnter={() => onFactionHover(leader.baseName)}
+        onMouseLeave={onFactionHoverEnd}
+      >
+        {content}
+      </button>
+    );
+  };
+
+  return (
+    <aside className="fs-detail-panel">
+      <div className="fs-detail-hero">
+        {selectedLeader ? (
+          <div className="fs-detail-hero-portrait">
+            <Portrait
+              name={selectedLeader.displayName}
+              layers={selectedLeader.portraitLayers}
+              size="hero"
+              shape="rect"
+              showBorder={false}
+              className="fs-detail-hero-composite"
+            />
+          </div>
+        ) : (
+          <div className="fs-detail-hero-placeholder">{selected.displayName}</div>
+        )}
+
+        <div className="fs-detail-hero-vignette" />
+
+        <div className="fs-detail-hero-scrim">
+          <span className={roundelClassName(selected, 'lg')} style={roundelStyle(selected)}>
+            {renderRoundelSymbol(selected)}
+          </span>
+          <div className="fs-detail-hero-info">
+            <div className="fs-detail-hero-faction-name">{selected.displayName}</div>
+            {selectedLeader && (
+              <div className="fs-detail-hero-ruler-name">{selectedLeader.displayName}</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="fs-detail-body">
+        {selectedLeader && (
+          <div className="fs-detail-section fs-detail-section--leader">
+            {selectedLeader.dynasty && (
+              <div className="fs-dynasty-row">
+                <img src="/assets/icons/I_Family.png" alt="" className="fs-dynasty-icon" />
+                <span>{t('MainMenu.House', { Dynasty: selectedLeader.dynasty })}</span>
+              </div>
+            )}
+            {renderLeaderStats(selectedLeader.stats, t)}
+            {selectedLeader.fame > 0 && (
+              <div className="fs-fame-row">
+                <img src="/assets/icons/I_Chart.png" alt="" className="fs-fame-icon" />
+                <span className="fs-fame-label">{t('Common.Fame')}</span>
+                <span className="fs-fame-value">{formatNumber(selectedLeader.fame)}</span>
+              </div>
+            )}
+            {selectedLeader.traits.length > 0 && (
+              <div className="fs-trait-strip">{selectedLeader.traits.map(renderTraitIcon)}</div>
+            )}
+          </div>
+        )}
+
+        <div className="fs-detail-section">
+          <div className="fs-detail-section-title">
+            <img src="/assets/icons/I_Domain.png" alt="" className="fs-detail-section-icon" />
+            <span>{t('MainMenu.Realm')}</span>
+          </div>
+
+          <div className="fs-identity-grid">
+            <CultureTooltip info={selected.cultureInfo} fallbackName={selected.cultureDisplayName} fallbackId={selected.culture}>
+              <div className="fs-identity-item">
+                {selected.cultureIconPath ? (
+                  <img src={WebkilnAssetPath(selected.cultureIconPath)} alt="" className="fs-identity-icon" />
+                ) : (
+                  <span className="fs-identity-icon-fallback" />
+                )}
+                <div>
+                  <div className="fs-identity-label">{t('MainMenu.Culture')}</div>
+                  <div className="fs-identity-text">{selected.cultureDisplayName || '-'}</div>
+                </div>
+              </div>
+            </CultureTooltip>
+
+            <ReligionTooltip info={selected.religionInfo} fallbackName={selected.religionDisplayName} fallbackId={selected.religion}>
+              <div className="fs-identity-item">
+                {selected.religionIconPath ? (
+                  <img src={WebkilnAssetPath(selected.religionIconPath)} alt="" className="fs-identity-icon" />
+                ) : (
+                  <span className="fs-identity-icon-fallback" />
+                )}
+                <div>
+                  <div className="fs-identity-label">{t('MainMenu.Religion')}</div>
+                  <div className="fs-identity-text">{selected.religionDisplayName || '-'}</div>
+                </div>
+              </div>
+            </ReligionTooltip>
+
+            <div className="fs-identity-item">
+              <img src="/assets/icons/I_Capital.png" alt="" className="fs-identity-icon" />
+              <div>
+                <div className="fs-identity-label">{t('Common.Capital')}</div>
+                <div className="fs-identity-text">{selected.capitalSettlementName || '-'}</div>
+              </div>
+            </div>
+
+            <GovernmentTooltip
+              government={selected.government}
+              displayName={selected.governmentDisplayName}
+              description={selected.governmentDescription}
+              capabilities={selected.governmentCapabilities}
+            >
+              <div className="fs-identity-item">
+                <img src="/assets/icons/I_Domain.png" alt="" className="fs-identity-icon" />
+                <div>
+                  <div className="fs-identity-label">{t('MainMenu.Government')}</div>
+                  <div className="fs-identity-text">{selected.governmentDisplayName || '-'}</div>
+                </div>
+              </div>
+            </GovernmentTooltip>
+          </div>
+
+          {renderFactionStats(selected.stats)}
+        </div>
+
+        {warsInvolvingSelected.length > 0 && (
+          <div className="fs-detail-section">
+            <div className="fs-detail-section-title">
+              <img src="/assets/icons/I_War.png" alt="" className="fs-detail-section-icon" />
+              <span>{t('MainMenu.Wars')}</span>
+            </div>
+            <div className="fs-war-list">
+              {warsInvolvingSelected.map((war) => {
+                const onAttackerSide = war.attacker.memberFactionBaseNames.includes(selected.baseName);
+                const ourSide = onAttackerSide ? war.attacker : war.defender;
+                const enemySide = onAttackerSide ? war.defender : war.attacker;
+                const ourLeader = factionsByBase.get(ourSide.leaderFactionBaseName);
+                const enemyLeader = factionsByBase.get(enemySide.leaderFactionBaseName);
+                const ourAllyCount = Math.max(0, ourSide.memberFactionBaseNames.length - 1);
+                const enemyAllyCount = Math.max(0, enemySide.memberFactionBaseNames.length - 1);
+                const totalSideStrength = ourSide.militaryStrength + enemySide.militaryStrength;
+
+                return (
+                  <div key={war.id} className="fs-war">
+                    <div className="fs-war-name">{war.name}</div>
+                    <div className="fs-war-sides">
+                      {renderWarSide(ourSide, ourLeader, ourAllyCount, 'ours')}
+                      <div className="fs-war-vs"><WebUIText textKey="Auto.PagesFactionSelection.928.2" /></div>
+                      {renderWarSide(enemySide, enemyLeader, enemyAllyCount, 'theirs')}
+                    </div>
+                    {totalSideStrength > 0 && (
+                      <div className="fs-war-strength">
+                        <div className="fs-war-strength-values">
+                          <span className="comparison-strength-value comparison-strength-value--gold">{formatNumber(ourSide.militaryStrength)}</span>
+                          <span>{t('Economy.Strength')}</span>
+                          <span className="comparison-strength-value comparison-strength-value--red">{formatNumber(enemySide.militaryStrength)}</span>
+                        </div>
+                        <div className="fs-war-strength-bar">
+                          <span
+                            className="fs-war-strength-fill fs-war-strength-fill--ours"
+                            style={{ width: warStrengthShare(ourSide.militaryStrength, totalSideStrength) }}
+                          />
+                          <span
+                            className="fs-war-strength-fill fs-war-strength-fill--theirs"
+                            style={{ width: warStrengthShare(enemySide.militaryStrength, totalSideStrength) }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {war.startedDay && <div className="fs-war-started">{t('MainMenu.Declared', { Date: war.startedDay })}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="fs-detail-section">
+          <div className="fs-detail-section-title">
+            <img src="/assets/icons/I_Diplomacy.png" alt="" className="fs-detail-section-icon" />
+            <span>{t('MainMenu.Diplomacy')}</span>
+          </div>
+
+          {selectedProvinceSubjects.length > 0 && (
+            <div className="fs-treaty-block">
+              <div className="fs-treaty-block-label">{t('MainMenu.Provinces')}</div>
+              {renderSubjectRoundels(selectedProvinceSubjects)}
+            </div>
+          )}
+
+          {selectedFoederatiSubjects.length > 0 && (
+            <div className="fs-treaty-block">
+              <div className="fs-treaty-block-label">{t('MainMenu.Foederati')}</div>
+              {renderSubjectRoundels(selectedFoederatiSubjects)}
+            </div>
+          )}
+
+          {Array.from(treatiesByLabel.entries()).map(([label, treaties]) => (
+            <div key={label} className="fs-treaty-block">
+              <div className="fs-treaty-block-label">{label}</div>
+              <div className="fs-treaty-list">
+                {treaties.map((treaty, index) => {
+                  const treatyLabel = treaty.displayName || treaty.type;
+                  return (
+                    <Tooltip
+                      key={`${treaty.type}-${index}`}
+                      content={{
+                        title: treatyLabel,
+                        body: treaty.description,
+                      }}
+                      position="bottom"
+                      delay={150}
+                    >
+                      <div className="fs-treaty">
+                        {TREATY_ICONS[treaty.type] && (
+                          <img src={TREATY_ICONS[treaty.type]} alt="" className="fs-treaty-icon" />
+                        )}
+                        <div className="fs-treaty-info">
+                          <span className="fs-treaty-with">{treaty.withFactionDisplayName}</span>
+                          <span className="fs-treaty-type">{treatyLabel}</span>
+                        </div>
+                      </div>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {selectedSubjects.length === 0 && nonSubjectTreaties.length === 0 && (
+            <div className="fs-detail-note">{t('MainMenu.NoStandingTreaties')}</div>
+          )}
+        </div>
+      </div>
+
+      <div className="fs-detail-footer">
+        <button
+          type="button"
+          className={`fs-begin-btn${selected.playable || showPurchaseForSelected ? '' : ' fs-begin-btn--disabled'}`}
+          disabled={!selected.playable && !showPurchaseForSelected}
+          onClick={() => {
+            if (selected.playable) {
+              onConfirm({ baseName: selected.baseName, displayName: selected.displayName });
+            } else if (showPurchaseForSelected) {
+              onPurchaseFullGame?.();
+            }
+          }}
+        >
+          <span className="fs-begin-btn-main">
+            {!selected.playable && (
+              <img src="/assets/icons/I_Locked.png" alt="" className="fs-begin-btn-lock-icon" draggable={false} />
+            )}
+            <span>{selected.playable
+              ? t('MainMenu.BeginCampaign')
+              : showPurchaseForSelected
+                ? t('Demo.BuyFullGame')
+                : t('MainMenu.Locked')}</span>
+          </span>
+          <span className="fs-begin-btn-sub">
+            {selected.playable
+              ? t('MainMenu.AsFaction', { Faction: selected.displayName })
+              : showPurchaseForSelected
+                ? t('Demo.PlayFaction', { Faction: selected.displayName })
+                : t('MainMenu.FactionPlayableLater')}
+          </span>
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+interface FactionSelectionDataState {
+  data: GetNewGameMapFactionSelectionResponse | null;
+  displayData: GetNewGameMapFactionSelectionResponse | null;
+  loadError: string | null;
+  factions: ScenarioMapFactionDto[];
+  factionsByBase: Map<string, ScenarioMapFactionDto>;
+  selected: ScenarioMapFactionDto | null;
+  selectedBaseName: string;
+  setSelectedBaseName: React.Dispatch<React.SetStateAction<string>>;
+}
+
+function useFactionSelectionData(
+  mapId: string,
+  initialData: GetNewGameMapFactionSelectionResponse | null,
+  loadFactionSelection: FactionSelectionProps['loadFactionSelection'],
+  t: WebUITextFormatter,
+): FactionSelectionDataState {
   const initialSelectionData = initialData?.mapId === mapId ? initialData : null;
   const [data, setData] = useState<GetNewGameMapFactionSelectionResponse | null>(initialSelectionData);
   const [selectedBaseName, setSelectedBaseName] = useState(
     initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '',
   );
-  const [search, setSearch] = useState('');
-  const [showForeign, setShowForeign] = useState(showPurchaseForLocked);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [resetForMapId, setResetForMapId] = useState(mapId);
-
-  const mapHoverRef = useRef<FactionMapHoverHandle | null>(null);
   const geometryRequestMapIdRef = useRef('');
-
-  if (resetForMapId !== mapId) {
-    setResetForMapId(mapId);
-    setData(initialSelectionData);
-    setLoadError(null);
-    setSearch('');
-    setShowForeign(showPurchaseForLocked);
-    setSelectedBaseName(initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '');
-  }
-
-  useEffect(() => {
-    geometryRequestMapIdRef.current = '';
-  }, [mapId]);
-
-  useEffect(() => {
-    if (!initialSelectionData || data?.mapId === initialSelectionData.mapId) {
-      return;
-    }
-
-    setData(initialSelectionData);
-    setLoadError(null);
-    setSelectedBaseName(getDefaultSelectedFactionBaseName(initialSelectionData));
-  }, [data?.mapId, initialSelectionData]);
 
   useEffect(() => {
     if (data?.mapId === mapId) {
@@ -1682,30 +2039,34 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
 
     let cancelled = false;
 
-    (async () => {
-      try {
-        const response = loadFactionSelection
-          ? await loadFactionSelection(mapId)
-          : await bridgeCall('game.get_new_game_map_faction_selection', { mapId });
+    const request = initialSelectionData
+      ? Promise.resolve(initialSelectionData)
+      : loadFactionSelection
+        ? loadFactionSelection(mapId)
+        : bridgeCall('game.get_new_game_map_faction_selection', { mapId });
+
+    void request
+      .then((response) => {
         if (cancelled) {
           return;
         }
 
         setData(response);
+        setLoadError(null);
         setSelectedBaseName(getDefaultSelectedFactionBaseName(response));
-      } catch (error) {
+      })
+      .catch((error: unknown) => {
         if (!cancelled) {
           setLoadError(
             error instanceof Error ? error.message : t('MainMenu.FactionSelectionLoadFailed'),
           );
         }
-      }
-    })();
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [data?.mapId, loadFactionSelection, mapId, t]);
+  }, [data?.mapId, initialSelectionData, loadFactionSelection, mapId, t]);
 
   useEffect(() => {
     if (!data || geometryRequestMapIdRef.current === data.mapId) {
@@ -1750,18 +2111,48 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     [factions],
   );
   const selected = factionsByBase.get(selectedBaseName) ?? factions[0] ?? null;
+
+  return {
+    data,
+    displayData,
+    loadError,
+    factions,
+    factionsByBase,
+    selected,
+    selectedBaseName,
+    setSelectedBaseName,
+  };
+}
+
+const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
+  mapId,
+  initialData = null,
+  loadFactionSelection,
+  scenario,
+  closing = false,
+  onClose,
+  showPurchaseForLocked = false,
+  onPurchaseFullGame,
+  onConfirm,
+}) => {
+  const t = useWebUIText();
+  const {
+    data,
+    displayData,
+    loadError,
+    factions,
+    factionsByBase,
+    selected,
+    selectedBaseName,
+    setSelectedBaseName,
+  } = useFactionSelectionData(mapId, initialData, loadFactionSelection, t);
+  const [search, setSearch] = useState('');
+  const [showForeign, setShowForeign] = useState(showPurchaseForLocked);
+
+  const mapHoverRef = useRef<FactionMapHoverHandle | null>(null);
   const showPurchaseForSelected = Boolean(
     selected && showPurchaseForLocked && selected.fullGamePlayable,
   );
-  const selectedLeader = getLeader(selected);
-  const selectedSubjects = selected
-    ? factions
-        .filter((faction) => faction.overlordBaseName === selected.baseName)
-        .sort(factionSort)
-    : [];
-  const selectedProvinceSubjects = selectedSubjects.filter((subject) => subject.subjectSubtype === 'province');
-  const selectedFoederatiSubjects = selectedSubjects.filter((subject) => subject.subjectSubtype === 'foederati');
-  const warsInvolvingSelected = selected ? getWarsForFaction(displayData?.wars ?? [], selected.baseName) : [];
   const scenarioTitle = displayData?.displayName || scenario?.displayName || '';
   const scenarioDescription = displayData?.factionSelectionDescription ?? '';
   const scenarioDescriptionParts = scenarioDescription
@@ -1769,17 +2160,6 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
     .map((part) => part.trim())
     .filter(Boolean);
   const rootClassName = `fs-root${closing ? ' fs-root--closing' : ''}`;
-  const nonVassalTreaties = selected
-    ? selected.treaties.filter((treaty) => !isSubjectTreaty(treaty.type))
-    : [];
-  const treatiesByLabel = new Map<string, ScenarioMapTreatyDto[]>();
-  nonVassalTreaties.forEach((treaty) => {
-    const label = treatyBlockLabel(treaty.type, t);
-    const list = treatiesByLabel.get(label) ?? [];
-    list.push(treaty);
-    treatiesByLabel.set(label, list);
-  });
-  const treatyBlocks = Array.from(treatiesByLabel.entries());
 
   const handleFactionHover = useCallback((baseName: string) => {
     mapHoverRef.current?.setHovered(baseName);
@@ -1795,84 +2175,7 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
       setShowForeign(true);
     }
     setSelectedBaseName(baseName);
-  }, [factionsByBase]);
-
-  const renderSubjectRoundels = (subjects: ScenarioMapFactionDto[]) => (
-    <div className="fs-subject-roundel-list">
-      {subjects.map((subject) => (
-        <Tooltip
-          key={subject.baseName}
-          content={{
-            title: subject.displayName,
-            body: subject.capitalSettlementName || subject.realm || undefined,
-          }}
-          position="bottom"
-          delay={150}
-          wrapperClassName="fs-subject-roundel-tooltip"
-        >
-          <button
-            type="button"
-            className={`fs-subject-roundel-btn${!subject.playable ? ' fs-subject-roundel-btn--locked' : ''}`}
-            aria-label={subject.displayName}
-            onClick={() => selectFactionBaseName(subject.baseName)}
-            onMouseEnter={() => handleFactionHover(subject.baseName)}
-            onMouseLeave={handleFactionHoverEnd}
-          >
-            <span className={roundelClassName(subject, 'sm')} style={roundelStyle(subject)}>
-              {renderRoundelSymbol(subject)}
-            </span>
-          </button>
-        </Tooltip>
-      ))}
-    </div>
-  );
-
-  const renderWarSide = (
-    side: ScenarioMapWarDto['attacker'],
-    leader: ScenarioMapFactionDto | undefined,
-    allyCount: number,
-    tone: 'ours' | 'theirs',
-  ) => {
-    const content = (
-      <>
-        {leader && (
-          <span className={roundelClassName(leader, 'sm')} style={roundelStyle(leader)}>
-            {renderRoundelSymbol(leader)}
-          </span>
-        )}
-        <div className="fs-war-side-meta">
-          <div className="fs-war-side-label">{t(tone === 'ours' ? 'MainMenu.OurSide' : 'MainMenu.Enemy')}</div>
-          <div className="fs-war-side-leader">{side.leaderFactionDisplayName}</div>
-          {allyCount > 0 && (
-            <div className="fs-war-side-count">
-              {`+${formatNumber(allyCount)} ${t(allyCount === 1 ? 'Common.Ally' : 'Common.Allies')}`}
-            </div>
-          )}
-        </div>
-      </>
-    );
-
-    if (!leader) {
-      return (
-        <div className={`fs-war-side fs-war-side--${tone}`}>
-          {content}
-        </div>
-      );
-    }
-
-    return (
-      <button
-        type="button"
-        className={`fs-war-side fs-war-side--${tone} fs-war-side--clickable`}
-        aria-label={leader.displayName}
-        onClick={() => selectFactionBaseName(leader.baseName)}
-        onMouseEnter={() => handleFactionHover(leader.baseName)}
-        onMouseLeave={handleFactionHoverEnd}
-      >
-        {content}
-      </button>
-    );
-  };
+  }, [factionsByBase, setSelectedBaseName]);
 
   if (loadError) {
     return (
@@ -1937,273 +2240,25 @@ const FactionSelection: React.FC<FactionSelectionProps> = ({
           scenarioDescriptionParts={scenarioDescriptionParts}
         />
 
-        <aside className="fs-detail-panel">
-          <div className="fs-detail-hero">
-            {selectedLeader ? (
-              <div className="fs-detail-hero-portrait">
-                <Portrait
-                  name={selectedLeader.displayName}
-                  layers={selectedLeader.portraitLayers}
-                  size="hero"
-                  shape="rect"
-                  showBorder={false}
-                  className="fs-detail-hero-composite"
-                />
-              </div>
-            ) : (
-              <div className="fs-detail-hero-placeholder">{selected.displayName}</div>
-            )}
-
-            <div className="fs-detail-hero-vignette" />
-
-            <div className="fs-detail-hero-scrim">
-              <span className={roundelClassName(selected, 'lg')} style={roundelStyle(selected)}>
-                {renderRoundelSymbol(selected)}
-              </span>
-              <div className="fs-detail-hero-info">
-                <div className="fs-detail-hero-faction-name">{selected.displayName}</div>
-                {selectedLeader && (
-                  <>
-                    <div className="fs-detail-hero-ruler-name">{selectedLeader.displayName}</div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="fs-detail-body">
-            {selectedLeader && (
-              <div className="fs-detail-section fs-detail-section--leader">
-                {selectedLeader.dynasty && (
-                  <div className="fs-dynasty-row">
-                    <img src="/assets/icons/I_Family.png" alt="" className="fs-dynasty-icon" />
-                    <span>{t('MainMenu.House', { Dynasty: selectedLeader.dynasty })}</span>
-                  </div>
-                )}
-                {renderLeaderStats(selectedLeader.stats, t)}
-                {selectedLeader.fame > 0 && (
-                  <div className="fs-fame-row">
-                    <img src="/assets/icons/I_Chart.png" alt="" className="fs-fame-icon" />
-                    <span className="fs-fame-label">{t('Common.Fame')}</span>
-                    <span className="fs-fame-value">{formatNumber(selectedLeader.fame)}</span>
-                  </div>
-                )}
-                {selectedLeader.traits.length > 0 && (
-                  <div className="fs-trait-strip">{selectedLeader.traits.map(renderTraitIcon)}</div>
-                )}
-              </div>
-            )}
-
-            <div className="fs-detail-section">
-              <div className="fs-detail-section-title">
-                <img src="/assets/icons/I_Domain.png" alt="" className="fs-detail-section-icon" />
-                <span>{t('MainMenu.Realm')}</span>
-              </div>
-
-              <div className="fs-identity-grid">
-                <CultureTooltip info={selected.cultureInfo} fallbackName={selected.cultureDisplayName} fallbackId={selected.culture}>
-                  <div className="fs-identity-item">
-                    {selected.cultureIconPath ? (
-                      <img src={WebkilnAssetPath(selected.cultureIconPath)} alt="" className="fs-identity-icon" />
-                    ) : (
-                      <span className="fs-identity-icon-fallback" />
-                    )}
-                    <div>
-                      <div className="fs-identity-label">{t('MainMenu.Culture')}</div>
-                      <div className="fs-identity-text">{selected.cultureDisplayName || '-'}</div>
-                    </div>
-                  </div>
-                </CultureTooltip>
-
-                <ReligionTooltip info={selected.religionInfo} fallbackName={selected.religionDisplayName} fallbackId={selected.religion}>
-                  <div className="fs-identity-item">
-                    {selected.religionIconPath ? (
-                      <img src={WebkilnAssetPath(selected.religionIconPath)} alt="" className="fs-identity-icon" />
-                    ) : (
-                      <span className="fs-identity-icon-fallback" />
-                    )}
-                    <div>
-                      <div className="fs-identity-label">{t('MainMenu.Religion')}</div>
-                      <div className="fs-identity-text">{selected.religionDisplayName || '-'}</div>
-                    </div>
-                  </div>
-                </ReligionTooltip>
-
-                <div className="fs-identity-item">
-                  <img src="/assets/icons/I_Capital.png" alt="" className="fs-identity-icon" />
-                  <div>
-                    <div className="fs-identity-label">{t('Common.Capital')}</div>
-                    <div className="fs-identity-text">{selected.capitalSettlementName || '-'}</div>
-                  </div>
-                </div>
-
-                <GovernmentTooltip
-                  government={selected.government}
-                  displayName={selected.governmentDisplayName}
-                  description={selected.governmentDescription}
-                  capabilities={selected.governmentCapabilities}
-                >
-                  <div className="fs-identity-item">
-                    <img src="/assets/icons/I_Domain.png" alt="" className="fs-identity-icon" />
-                    <div>
-                      <div className="fs-identity-label">{t('MainMenu.Government')}</div>
-                      <div className="fs-identity-text">
-                        {selected.governmentDisplayName || '-'}
-                      </div>
-                    </div>
-                  </div>
-                </GovernmentTooltip>
-              </div>
-
-              {renderFactionStats(selected.stats)}
-            </div>
-
-            {warsInvolvingSelected.length > 0 && (
-              <div className="fs-detail-section">
-                <div className="fs-detail-section-title">
-                  <img src="/assets/icons/I_War.png" alt="" className="fs-detail-section-icon" />
-                  <span>{t('MainMenu.Wars')}</span>
-                </div>
-                <div className="fs-war-list">
-                  {warsInvolvingSelected.map((war) => {
-                    const onAttackerSide = war.attacker.memberFactionBaseNames.includes(selected.baseName);
-                    const ourSide = onAttackerSide ? war.attacker : war.defender;
-                    const enemySide = onAttackerSide ? war.defender : war.attacker;
-                    const ourLeader = factionsByBase.get(ourSide.leaderFactionBaseName);
-                    const enemyLeader = factionsByBase.get(enemySide.leaderFactionBaseName);
-                    const ourAllyCount = Math.max(0, ourSide.memberFactionBaseNames.length - 1);
-                    const enemyAllyCount = Math.max(0, enemySide.memberFactionBaseNames.length - 1);
-                    const totalSideStrength = ourSide.militaryStrength + enemySide.militaryStrength;
-
-                    return (
-                      <div key={war.id} className="fs-war">
-                        <div className="fs-war-name">{war.name}</div>
-                        <div className="fs-war-sides">
-                          {renderWarSide(ourSide, ourLeader, ourAllyCount, 'ours')}
-                          <div className="fs-war-vs"><WebUIText textKey="Auto.PagesFactionSelection.928.2" /></div>
-                          {renderWarSide(enemySide, enemyLeader, enemyAllyCount, 'theirs')}
-                        </div>
-                        {totalSideStrength > 0 && (
-                          <div className="fs-war-strength">
-                            <div className="fs-war-strength-values">
-                              <span className="comparison-strength-value comparison-strength-value--gold">{formatNumber(ourSide.militaryStrength)}</span>
-                              <span>{t('Economy.Strength')}</span>
-                              <span className="comparison-strength-value comparison-strength-value--red">{formatNumber(enemySide.militaryStrength)}</span>
-                            </div>
-                            <div className="fs-war-strength-bar">
-                              <span
-                                className="fs-war-strength-fill fs-war-strength-fill--ours"
-                                style={{ width: warStrengthShare(ourSide.militaryStrength, totalSideStrength) }}
-                              />
-                              <span
-                                className="fs-war-strength-fill fs-war-strength-fill--theirs"
-                                style={{ width: warStrengthShare(enemySide.militaryStrength, totalSideStrength) }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                        {war.startedDay && <div className="fs-war-started">{t('MainMenu.Declared', { Date: war.startedDay })}</div>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className="fs-detail-section">
-              <div className="fs-detail-section-title">
-                <img src="/assets/icons/I_Diplomacy.png" alt="" className="fs-detail-section-icon" />
-                <span>{t('MainMenu.Diplomacy')}</span>
-              </div>
-
-              {selectedProvinceSubjects.length > 0 && (
-                <div className="fs-treaty-block">
-                  <div className="fs-treaty-block-label">{t('MainMenu.Provinces')}</div>
-                  {renderSubjectRoundels(selectedProvinceSubjects)}
-                </div>
-              )}
-
-              {selectedFoederatiSubjects.length > 0 && (
-                <div className="fs-treaty-block">
-                  <div className="fs-treaty-block-label">{t('MainMenu.Foederati')}</div>
-                  {renderSubjectRoundels(selectedFoederatiSubjects)}
-                </div>
-              )}
-
-              {treatyBlocks.map(([label, treaties]) => (
-                <div key={label} className="fs-treaty-block">
-                  <div className="fs-treaty-block-label">{label}</div>
-                  <div className="fs-treaty-list">
-                    {treaties.map((treaty, index) => {
-                      const treatyLabel = treaty.displayName || treaty.type;
-                      return (
-                        <Tooltip
-                          key={`${treaty.type}-${index}`}
-                          content={{
-                            title: treatyLabel,
-                            body: treaty.description,
-                          }}
-                          position="bottom"
-                          delay={150}
-                        >
-                          <div className="fs-treaty">
-                            {TREATY_ICONS[treaty.type] && (
-                              <img src={TREATY_ICONS[treaty.type]} alt="" className="fs-treaty-icon" />
-                            )}
-                            <div className="fs-treaty-info">
-                              <span className="fs-treaty-with">{treaty.withFactionDisplayName}</span>
-                              <span className="fs-treaty-type">{treatyLabel}</span>
-                            </div>
-                          </div>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-
-              {selectedSubjects.length === 0 && nonVassalTreaties.length === 0 && (
-                <div className="fs-detail-note">{t('MainMenu.NoStandingTreaties')}</div>
-              )}
-            </div>
-          </div>
-
-          <div className="fs-detail-footer">
-            <button
-              type="button"
-              className={`fs-begin-btn${selected.playable || showPurchaseForSelected ? '' : ' fs-begin-btn--disabled'}`}
-              disabled={!selected.playable && !showPurchaseForSelected}
-              onClick={() => {
-                if (selected.playable) {
-                  onConfirm({ baseName: selected.baseName, displayName: selected.displayName });
-                } else if (showPurchaseForSelected) {
-                  onPurchaseFullGame?.();
-                }
-              }}
-            >
-              <span className="fs-begin-btn-main">
-                {!selected.playable && (
-                  <img src="/assets/icons/I_Locked.png" alt="" className="fs-begin-btn-lock-icon" draggable={false} />
-                )}
-                <span>{selected.playable
-                  ? t('MainMenu.BeginCampaign')
-                  : showPurchaseForSelected
-                    ? t('Demo.BuyFullGame')
-                    : t('MainMenu.Locked')}</span>
-              </span>
-              <span className="fs-begin-btn-sub">
-                {selected.playable
-                  ? t('MainMenu.AsFaction', { Faction: selected.displayName })
-                  : showPurchaseForSelected
-                    ? t('Demo.PlayFaction', { Faction: selected.displayName })
-                  : t('MainMenu.FactionPlayableLater')}
-              </span>
-            </button>
-          </div>
-        </aside>
+        <FactionSelectionDetailPanel
+          selected={selected}
+          factions={factions}
+          factionsByBase={factionsByBase}
+          wars={displayData.wars}
+          showPurchaseForSelected={showPurchaseForSelected}
+          onSelectBaseName={selectFactionBaseName}
+          onFactionHover={handleFactionHover}
+          onFactionHoverEnd={handleFactionHoverEnd}
+          onConfirm={onConfirm}
+          onPurchaseFullGame={onPurchaseFullGame}
+        />
       </div>
     </div>
   );
 };
+
+const FactionSelection: React.FC<FactionSelectionProps> = (props) => (
+  <FactionSelectionScreen key={props.mapId} {...props} />
+);
 
 export default FactionSelection;
