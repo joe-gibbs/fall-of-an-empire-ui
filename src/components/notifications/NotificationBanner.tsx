@@ -8,6 +8,7 @@ import { useAnchoredDropdown } from '../../hooks/useAnchoredDropdown';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { renderEventTextChunk } from '../../utils/eventTextFlow';
 import { renderRichText } from '../../utils/richText';
+import { UI_MOTION } from '../../config/motion';
 import CloseButton from '../common/buttons/CloseButton';
 import GameButton from '../common/buttons/GameButton';
 import Portrait from '../common/portraits/Portrait';
@@ -71,7 +72,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   } = useAnchoredDropdown({
     open: optionsOpen,
     onClose: () => setOptionsOpen(false),
-    durationMs: 120,
+    durationMs: UI_MOTION.notificationCloseMs,
     position: 'below-left',
     offset: 6,
     useRootRem: true,

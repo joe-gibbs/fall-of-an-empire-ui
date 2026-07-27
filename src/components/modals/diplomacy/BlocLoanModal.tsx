@@ -6,6 +6,7 @@ import { playSound } from '../../../hooks/useSound';
 import { useWebUIText } from '../../../localization/WebUITextContext';
 import { formatNumber } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
+import { UI_MOTION } from '../../../config/motion';
 import CloseButton from '../../common/buttons/CloseButton';
 import '../people/PersonInteractionGiftModal.css';
 import './BlocLoanModal.css';
@@ -16,8 +17,6 @@ interface Props {
   onClose: () => void;
   onConfirm: (loanOptionIndex: number) => Promise<string | null | void>;
 }
-
-const CLOSE_MS = 180;
 
 export default function BlocLoanModal({ interaction, blocName, onClose, onConfirm }: Props) {
   const t = useWebUIText();
@@ -36,7 +35,7 @@ export default function BlocLoanModal({ interaction, blocName, onClose, onConfir
     closeTimerRef.current = setTimeout(() => {
       closeTimerRef.current = null;
       onClose();
-    }, CLOSE_MS);
+    }, UI_MOTION.modalCloseMs);
   }, [closing, onClose]);
 
   const handleClose = useCallback(() => {

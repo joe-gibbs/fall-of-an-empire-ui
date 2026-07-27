@@ -3,6 +3,7 @@ import type { AdvisorHint } from '../../../context/GameContext';
 import { useAnimatedPresence } from '../../../hooks/useAnimatedPresence';
 import { playSound } from '../../../hooks/useSound';
 import CloseButton from '../../common/buttons/CloseButton';
+import { UI_MOTION } from '../../../config/motion';
 import './AdvisorPanel.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -16,8 +17,6 @@ interface AdvisorPanelProps {
   onDismiss: () => void;
 }
 
-const CLOSE_DURATION = 220;
-
 function AdvisorPanel({
   hint,
   step,
@@ -29,7 +28,7 @@ function AdvisorPanel({
 }: AdvisorPanelProps) {
   const [renderHint, setRenderHint] = useState<AdvisorHint | null>(hint);
   const active = Boolean(hint && visible);
-  const { mounted, closing } = useAnimatedPresence(active, { durationMs: CLOSE_DURATION });
+  const { mounted, closing } = useAnimatedPresence(active, { durationMs: UI_MOTION.panelCloseMs });
 
   let currentHint = renderHint;
   if (active && hint && hint.hintKey !== renderHint?.hintKey) {

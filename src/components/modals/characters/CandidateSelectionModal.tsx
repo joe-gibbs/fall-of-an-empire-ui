@@ -8,14 +8,16 @@ import type { CharacterTrait, PortraitLayerData } from '../../../data/types';
 import { getStatColor } from '../../../utils/colorFormatters';
 import { toRootRem } from '../../../utils/cssUnits';
 import { formatNumber } from '../../../utils/numberFormat';
+import { UI_PERFORMANCE } from '../../../config/uiPerformance';
+import { UI_PRESENTATION } from '../../../config/presentation';
 import type { CandidateModalPrefix } from './CandidateSelectionUtils';
 import './CandidateSelectionModal.css';
 
 import { webUIText } from '../../../localization/WebUITextContext';
-const CANDIDATE_LIST_VIRTUALISE_THRESHOLD = 24;
+const CANDIDATE_LIST_VIRTUALISE_THRESHOLD = UI_PERFORMANCE.virtualListThreshold;
 const CANDIDATE_LIST_OVERSCAN = 6;
 const CANDIDATE_ROW_HEIGHT_REM = 4;
-const DEFAULT_ROOT_FONT_SIZE = 13.2;
+const DEFAULT_ROOT_FONT_SIZE = UI_PRESENTATION.rootFontSizePx;
 
 function currentRootFontSize(): number {
   const parsed = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize);
@@ -200,7 +202,7 @@ export function CandidateListPane<TItem, TSort extends string>({
   const scrollFrameRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
-  const [rootFontSize, setRootFontSize] = useState(DEFAULT_ROOT_FONT_SIZE);
+  const [rootFontSize, setRootFontSize] = useState<number>(DEFAULT_ROOT_FONT_SIZE);
 
   const useVirtualRows = items.length > CANDIDATE_LIST_VIRTUALISE_THRESHOLD;
   const rowHeight = Math.max(1, rootFontSize * CANDIDATE_ROW_HEIGHT_REM);

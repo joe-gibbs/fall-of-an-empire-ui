@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import CloseButton from '../../common/buttons/CloseButton';
 import GameButton from '../../common/buttons/GameButton';
 import { useModalPresence } from '../../../hooks/useModalPresence';
+import { UI_MOTION } from '../../../config/motion';
 import './SaveGameDialog.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -12,8 +13,6 @@ interface SaveGameDialogProps {
   onConfirm: (name: string) => void;
   onClosed: () => void;
 }
-
-const CLOSE_MS = 200;
 
 const SaveGameDialog: React.FC<SaveGameDialogProps> = ({
   visible,
@@ -35,7 +34,7 @@ const SaveGameDialog: React.FC<SaveGameDialogProps> = ({
     open: visible,
     onClose: onClosed,
     escapeId: 'modal.save-game',
-    durationMs: CLOSE_MS,
+    durationMs: UI_MOTION.subviewCloseMs,
     allowFromInput: true,
     closeStrategy: 'request',
   });

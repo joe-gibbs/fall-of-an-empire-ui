@@ -11,6 +11,7 @@ import {
   type CampaignOutcomeSummary,
 } from './CampaignOutcomeData';
 import { WebkilnAssetPath } from '../../../utils/assets';
+import { UI_MOTION } from '../../../config/motion';
 import './CampaignOutcomeScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -24,7 +25,6 @@ interface CampaignOutcomeScreenProps {
   onPurchaseFullGame?: () => void;
 }
 
-const CLOSE_MS = 240;
 const MAX_HISTORY_TICKS = 5;
 
 function formatNumber(value: number): string {
@@ -228,7 +228,7 @@ export default function CampaignOutcomeScreen({
       closeTimerRef.current = null;
       onClose();
       afterClose?.();
-    }, CLOSE_MS);
+    }, UI_MOTION.campaignOutcomeCloseMs);
   }, [closing, onClose]);
 
   const handlePrimaryAction = useCallback(() => {

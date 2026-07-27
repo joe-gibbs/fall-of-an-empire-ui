@@ -9,6 +9,7 @@ import type { PortraitLayerData } from '../../../data/types';
 import { formatNumber } from '../../../utils/numberFormat';
 import { playSound } from '../../../hooks/useSound';
 import { useEscapeStackEntry } from '../../../context/EscapeStack';
+import { UI_MOTION } from '../../../config/motion';
 import './PersonInteractionGiftModal.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -26,7 +27,6 @@ interface Props {
 }
 
 const EMPTY_GIFT_OPTIONS: PersonInteractionView['giftOptions'] = [];
-const CLOSE_MS = 180;
 
 export default function PersonInteractionGiftModal({
   interaction,
@@ -62,7 +62,7 @@ export default function PersonInteractionGiftModal({
     closeTimerRef.current = setTimeout(() => {
       closeTimerRef.current = null;
       onClose();
-    }, CLOSE_MS);
+    }, UI_MOTION.modalCloseMs);
   }, [closing, onClose]);
 
   const handleClose = useCallback(() => {

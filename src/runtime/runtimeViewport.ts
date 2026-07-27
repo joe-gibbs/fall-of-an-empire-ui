@@ -1,4 +1,5 @@
 // Runtime viewport helpers are shared by the Webkiln host and mock browser mode.
+import { UI_PRESENTATION } from '../config/presentation';
 
 export interface RuntimeViewportState {
   scale?: number;
@@ -10,8 +11,6 @@ export interface RuntimeViewportState {
   renderHeight?: number;
 }
 
-const ROOT_FONT_SIZE = 13.2;
-
 declare global {
   interface Window {
     __webkilnRuntimeViewport?: RuntimeViewportState;
@@ -22,7 +21,7 @@ export function applyRuntimeViewportScale(detail: RuntimeViewportState | undefin
   const scale = detail?.scale ?? detail?.scaleX ?? 1;
   const safeScale = scale > 0 ? scale : 1;
 
-  document.documentElement.style.setProperty('--runtime-root-font-size', `${ROOT_FONT_SIZE * safeScale}px`);
+  document.documentElement.style.setProperty('--runtime-root-font-size', `${UI_PRESENTATION.rootFontSizePx * safeScale}px`);
   document.documentElement.style.setProperty('--runtime-viewport-scale', String(safeScale));
 }
 

@@ -10,12 +10,14 @@ import {
   type UIEvent,
 } from 'react';
 import { StyledScrollbar } from './StyledScrollArea';
+import { UI_PERFORMANCE } from '../../../../config/uiPerformance';
+import { UI_PRESENTATION } from '../../../../config/presentation';
 import './VirtualList.css';
 
-const DEFAULT_ROOT_FONT_SIZE = 13.2;
+const DEFAULT_ROOT_FONT_SIZE = UI_PRESENTATION.rootFontSizePx;
 const DEFAULT_ROW_HEIGHT_REM = 3.5;
-const DEFAULT_VIRTUALISE_THRESHOLD = 24;
-const DEFAULT_OVERSCAN = 8;
+const DEFAULT_VIRTUALISE_THRESHOLD = UI_PERFORMANCE.virtualListThreshold;
+const DEFAULT_OVERSCAN = UI_PERFORMANCE.virtualListOverscan;
 
 function currentRootFontSize(): number {
   const parsed = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize);
@@ -70,7 +72,7 @@ export default function VirtualList<T>({
   const frameRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
-  const [rootFontSize, setRootFontSize] = useState(DEFAULT_ROOT_FONT_SIZE);
+  const [rootFontSize, setRootFontSize] = useState<number>(DEFAULT_ROOT_FONT_SIZE);
   const useVirtualRows = items.length > virtualizeThreshold;
   const safeRowHeight = Math.max(1, rowHeight ?? rootFontSize * rowHeightRem);
   const visibleCount = useVirtualRows

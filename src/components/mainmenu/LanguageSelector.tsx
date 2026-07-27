@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useLanguageBridge } from '../../bridge/app/useLanguageBridge';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import { useEscapeStackEntry } from '../../context/EscapeStack';
+import { UI_MOTION } from '../../config/motion';
 import { webUIText, useWebUIText } from '../../localization/WebUITextContext';
 import './LanguageSelector.css';
 
@@ -33,7 +34,6 @@ const FALLBACK_LANGUAGES = [
 ];
 
 const flagSrc = (code: string) => `/assets/icons/Flags/I_Flag_${code}.png`;
-const CLOSE_MS = 200;
 
 const LanguageSelector: React.FC = () => {
   const t = useWebUIText();
@@ -50,7 +50,7 @@ const LanguageSelector: React.FC = () => {
     const t = setTimeout(() => {
       setMounted(false);
       setClosing(false);
-    }, CLOSE_MS);
+    }, UI_MOTION.subviewCloseMs);
     return () => clearTimeout(t);
   }, [closing]);
 

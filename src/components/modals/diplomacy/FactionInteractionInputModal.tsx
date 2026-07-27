@@ -13,6 +13,7 @@ import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { playSound } from '../../../hooks/useSound';
 import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import { useWebUIText } from '../../../localization/WebUITextContext';
+import { UI_MOTION } from '../../../config/motion';
 import '../people/PersonInteractionGiftModal.css';
 import './FactionInteractionInputModal.css';
 
@@ -38,7 +39,6 @@ interface Props {
   onConfirm: (interactionId: string, inputs: BridgeFactionInteractionProvidedInput[]) => Promise<string | null | void>;
 }
 
-const CLOSE_MS = 180;
 
 function selectionKey(selection: InputSelectionResponse | null): string {
   if (!selection) return '';
@@ -129,7 +129,7 @@ export default function FactionInteractionInputModal({
     closeTimerRef.current = setTimeout(() => {
       closeTimerRef.current = null;
       onClose();
-    }, CLOSE_MS);
+    }, UI_MOTION.modalCloseMs);
   }, [closing, onClose, setClosing]);
 
   const handleClose = useCallback(() => {

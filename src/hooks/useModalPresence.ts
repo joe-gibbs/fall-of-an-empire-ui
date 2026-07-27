@@ -1,8 +1,7 @@
 import { useCallback, type MouseEvent } from 'react';
 import { useEscapeStackEntry } from '../context/EscapeStack';
 import { useAnimatedPresence } from './useAnimatedPresence';
-
-const DEFAULT_MODAL_EXIT_MS = 180;
+import { UI_MOTION } from '../config/motion';
 
 type ModalCloseStrategy = 'notify' | 'request';
 
@@ -28,7 +27,7 @@ export function useModalPresence({
   open,
   onClose,
   escapeId,
-  durationMs = DEFAULT_MODAL_EXIT_MS,
+  durationMs = UI_MOTION.modalCloseMs,
   allowFromInput = false,
   closeStrategy = 'notify',
   onBeforeClose,

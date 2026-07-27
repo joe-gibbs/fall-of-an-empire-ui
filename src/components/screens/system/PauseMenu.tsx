@@ -7,6 +7,7 @@ import ConfirmDialog from '../../common/forms/ConfirmDialog';
 import { useGameActions } from '../../../context/GameContext';
 import { bridgeCall } from '../../../bridge-types.generated.ts';
 import { useModalPresence } from '../../../hooks/useModalPresence';
+import { UI_MOTION } from '../../../config/motion';
 import './PauseMenu.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -15,7 +16,6 @@ interface PauseMenuProps {
   onClosed: () => void;
 }
 
-const CLOSE_DURATION = 280;
 type SaveDialogMode = 'save' | 'saveAndQuit';
 interface OverwriteTarget {
   name: string;
@@ -62,7 +62,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     open: visible,
     onClose: handleAfterClosed,
     escapeId: 'ui.pause-menu',
-    durationMs: CLOSE_DURATION,
+    durationMs: UI_MOTION.pauseMenuCloseMs,
     closeStrategy: 'request',
     onBeforeClose: closeChildModals,
   });

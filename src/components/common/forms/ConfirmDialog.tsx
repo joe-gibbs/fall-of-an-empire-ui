@@ -5,6 +5,7 @@ import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import CloseButton from '../buttons/CloseButton';
 import GameButton from '../buttons/GameButton';
 import { webUIText } from '../../../localization/WebUITextContext';
+import { UI_MOTION } from '../../../config/motion';
 import './ConfirmDialog.css';
 
 interface ConfirmDialogProps {
@@ -17,8 +18,6 @@ interface ConfirmDialogProps {
   onClosed: () => void;
   variant?: 'default' | 'danger';
 }
-
-const CLOSE_MS = 220;
 
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   visible,
@@ -36,7 +35,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     onClosed();
   }, [onClosed]);
   const { mounted, closing, requestClose } = useAnimatedPresence(visible, {
-    durationMs: CLOSE_MS,
+    durationMs: UI_MOTION.panelCloseMs,
     onClosed: handleClosed,
   });
 

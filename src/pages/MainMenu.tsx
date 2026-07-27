@@ -21,6 +21,7 @@ import { useModsBridge } from '../bridge/app/useModsBridge';
 import type { ModEntry, SteamWorkshopItem } from '../bridge/app/useModsBridge';
 import { use3DPortraitsEnabled } from '../bridge/characters/useGeneratedPortrait';
 import { useEscapeStackEntry } from '../context/EscapeStack';
+import { UI_MOTION } from '../config/motion';
 
 import { useWebUILocale, webUIText, WebUIText } from '../localization/WebUITextContext';
 type MenuView = 'menu' | 'settings' | 'achievements' | 'mods' | 'encyclopedia' | 'credits' | 'newgame' | 'characterCreator';
@@ -105,7 +106,6 @@ const MainMenu: React.FC = () => {
   const lastIllustratedPointerActivationAtRef = useRef(0);
   const factionSelectionCacheRef = useRef(new Map<string, GetNewGameMapFactionSelectionResponse>());
   const factionSelectionRequestRef = useRef(new Map<string, Promise<GetNewGameMapFactionSelectionResponse>>());
-  const SUB_VIEW_CLOSE_MS = 200;
 
   const {
     mods,
@@ -391,7 +391,7 @@ const MainMenu: React.FC = () => {
       setClosing(false);
       setSelectedNewGameMap(null);
       closeTimerRef.current = null;
-    }, SUB_VIEW_CLOSE_MS);
+    }, UI_MOTION.subviewCloseMs);
     return () => {
       if (closeTimerRef.current !== null) {
         clearTimeout(closeTimerRef.current);

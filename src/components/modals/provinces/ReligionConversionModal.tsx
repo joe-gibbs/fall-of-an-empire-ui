@@ -14,6 +14,7 @@ import {
 } from '../../../bridge/provinces/useReligionConversionBridge';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
+import { UI_MOTION } from '../../../config/motion';
 import './ReligionConversionModal.css';
 
 interface Props {
@@ -23,7 +24,6 @@ interface Props {
   onChanged?: () => void;
 }
 
-const CLOSE_MS = 180;
 const RELIGION_FALLBACK_ICON = '/assets/icons/I_Religions.png';
 
 function formatDuration(days: number): string {
@@ -119,7 +119,7 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
       closeTimerRef.current = null;
       setClosing(false);
       onClose();
-    }, CLOSE_MS);
+    }, UI_MOTION.modalCloseMs);
   }, [closing, onClose]);
 
   useEscapeStackEntry({

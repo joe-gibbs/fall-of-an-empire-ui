@@ -22,9 +22,11 @@ import {
 } from './sortUtils';
 import './DataTable.css';
 import { webUIText } from '../../../../localization/WebUITextContext';
+import { UI_PERFORMANCE } from '../../../../config/uiPerformance';
+import { UI_PRESENTATION } from '../../../../config/presentation';
 
-const DEFAULT_ROOT_FONT_SIZE = 13.2;
-const DEFAULT_VIRTUALIZE_THRESHOLD = 24;
+const DEFAULT_ROOT_FONT_SIZE = UI_PRESENTATION.rootFontSizePx;
+const DEFAULT_VIRTUALIZE_THRESHOLD = UI_PERFORMANCE.virtualListThreshold;
 
 type TableAlign = 'left' | 'right' | 'centre';
 type RowClassName<T> = string | ((row: T, index: number) => string);

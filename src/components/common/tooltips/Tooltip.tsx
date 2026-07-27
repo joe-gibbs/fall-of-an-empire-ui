@@ -4,6 +4,7 @@ import { toRootRem } from '../../../utils/cssUnits';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { renderRichText } from '../../../utils/richText';
 import { readableFactionTextColour } from '../../../utils/colorFormatters';
+import { UI_PRESENTATION } from '../../../config/presentation';
 import { subscribeTooltipDismissEvent } from './tooltipEvents';
 import './Tooltip.css';
 
@@ -83,13 +84,12 @@ const TooltipNestingContext = React.createContext<{
 } | null>(null);
 
 /** Default hover-open delay when the settings bridge has not supplied one yet. */
-const MIN_TOOLTIP_DELAY = 450;
-
-const VIEWPORT_PAD = 8;
-const TOOLTIP_GAP = 12;
-const SUB_TOOLTIP_GAP = 6;
-const SUB_TOOLTIP_VERTICAL_OFFSET = 8;
-const PLACEMENT_STABILISE_FRAMES = 8;
+const MIN_TOOLTIP_DELAY = UI_PRESENTATION.tooltip.minimumDelayMs;
+const VIEWPORT_PAD = UI_PRESENTATION.tooltip.viewportPaddingPx;
+const TOOLTIP_GAP = UI_PRESENTATION.tooltip.gapPx;
+const SUB_TOOLTIP_GAP = UI_PRESENTATION.tooltip.nestedGapPx;
+const SUB_TOOLTIP_VERTICAL_OFFSET = UI_PRESENTATION.tooltip.nestedVerticalOffsetPx;
+const PLACEMENT_STABILISE_FRAMES = UI_PRESENTATION.tooltip.placementStabiliseFrames;
 
 function rectFromBounds(rect: DOMRect): Rect {
   const width = rect.width > 0 ? rect.width : Math.max(0, rect.right - rect.left);

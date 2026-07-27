@@ -19,6 +19,7 @@ import type {
   SettingsGameplayDTO,
 } from '../../bridge-types.generated.ts';
 import { webUIText, WebUIText } from '../../localization/WebUITextContext';
+import { UI_MOTION } from '../../config/motion';
 import './InitialSetupModal.css';
 
 interface InitialSetupModalProps {
@@ -96,7 +97,7 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
     void refreshSettings().catch(acknowledgeBridgeFailure);
   }), [refreshSettings]);
 
-  const presence = useAnimatedPresence(visible, { durationMs: 220 });
+  const presence = useAnimatedPresence(visible, { durationMs: UI_MOTION.panelCloseMs });
   const canClose = completed === true && !busy;
   const close = useCallback(() => {
     if (!canClose) return;

@@ -7,10 +7,10 @@ import VirtualList from '../../common/layout/scrolling/VirtualList';
 import { useSavesBridge, type SaveEntry } from '../../../bridge/app/useSavesBridge';
 import { toRootRem } from '../../../utils/cssUnits';
 import { useModalPresence } from '../../../hooks/useModalPresence';
+import { UI_MOTION } from '../../../config/motion';
 import './LoadGameModal.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
-const CLOSE_MS = 220;
 const FADE_MS = 160;
 const SLIDE_MS = 220;
 const LOAD_DEPARTURE_MS = 220;
@@ -131,7 +131,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
     open: visible,
     onClose: handleClosed,
     escapeId: 'modal.load-game',
-    durationMs: CLOSE_MS,
+    durationMs: UI_MOTION.panelCloseMs,
     allowFromInput: true,
     closeStrategy: 'request',
   });

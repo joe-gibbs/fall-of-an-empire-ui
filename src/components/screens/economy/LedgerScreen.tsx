@@ -14,6 +14,7 @@ import { compareSortValues, normaliseSortText, type SortDirection, type SortStat
 import { useLedgerOverviewBridge } from '../../../bridge/settlements-economy/useLedgerOverviewBridge';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import { useGameActions } from '../../../context/GameContext';
+import { UI_PRESENTATION } from '../../../config/presentation';
 import type {
   LedgerBuildingRow,
   LedgerFactionRow,
@@ -484,7 +485,9 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const updateVirtualRowHeight = () => {
       const rootFontSize = parseFloat(window.getComputedStyle(document.documentElement).fontSize);
-      const safeFontSize = Number.isFinite(rootFontSize) && rootFontSize > 0 ? rootFontSize : 13.2;
+      const safeFontSize = Number.isFinite(rootFontSize) && rootFontSize > 0
+        ? rootFontSize
+        : UI_PRESENTATION.rootFontSizePx;
       setVirtualRowHeight(Math.ceil(safeFontSize * LEDGER_ROW_HEIGHT_REM));
     };
 
