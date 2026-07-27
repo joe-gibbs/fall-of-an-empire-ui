@@ -6,10 +6,11 @@ import {
 } from '../../registry/worldGlances';
 import { useGlanceScale } from '../../bridge/core/useGlanceScale';
 import { useWorldAnchorRasterScale } from '../../runtime/worldAnchorRasterScale';
+import { NATIVE_BRIDGE_PROTOCOL } from '../../native-bridge-protocol.generated';
 import './ModWorldGlanceLayer.css';
 
-const MOD_FRAME_HEADER_NUMBER_COUNT = 2;
-const MOD_FRAME_ENTRY_NUMBER_STRIDE = 5;
+const MOD_FRAME_HEADER_NUMBER_COUNT = NATIVE_BRIDGE_PROTOCOL.strides.modWorldGlanceFrameHeaderNumbers;
+const MOD_FRAME_ENTRY_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.modWorldGlanceEntryNumbers;
 const ATLAS_VISIBLE_OPACITY_THRESHOLD = 0.05;
 
 interface ModWorldGlanceFrameEvent {

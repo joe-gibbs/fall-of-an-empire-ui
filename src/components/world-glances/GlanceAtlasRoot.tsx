@@ -1,6 +1,8 @@
 import { memo, useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
 import { useUIScale } from '../../bridge/core/useUIScale';
+import { UI_PRESENTATION } from '../../config/presentation';
+import { NATIVE_BRIDGE_PROTOCOL } from '../../native-bridge-protocol.generated';
 import { mapNotificationShown, onNotificationAnchorsFrame } from '../../bridge/app/useNotificationsBridge';
 import {
   WORLD_GLANCE_FRAME_SECTIONS,
@@ -93,7 +95,7 @@ function worldSectionEntries(data: GetWorldGlancesResponse, section: WorldGlance
 
 function currentRuntimeRootFontPx(): number {
   const value = getComputedStyle(document.documentElement).getPropertyValue('--runtime-root-font-size');
-  return Number.parseFloat(value) || 13.2;
+  return Number.parseFloat(value) || UI_PRESENTATION.rootFontSizePx;
 }
 
 function convoyMarkerSizeRem(detail: WorldGlanceDetailClass): number {
@@ -355,8 +357,8 @@ export default function GlanceAtlasRoot() {
       });
     };
 
-    window.addEventListener('StrategyWorldGlanceHover', onHover);
-    return () => window.removeEventListener('StrategyWorldGlanceHover', onHover);
+    window.addEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
+    return () => window.removeEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
   }, []);
 
   // Notification anchor frames define which notification plates are live.

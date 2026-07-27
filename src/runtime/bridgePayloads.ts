@@ -287,24 +287,24 @@ function normaliseBattleFrame(payload: unknown) {
   };
 }
 
-const NATIVE_BATTLE_PARTICIPANT_STRING_STRIDE = 11;
-const NATIVE_BATTLE_PARTICIPANT_NUMBER_STRIDE = 6;
-const NATIVE_BATTLE_SIDE_NUMBER_STRIDE = 6;
-const NATIVE_BATTLE_FORMATION_STRING_STRIDE = 19;
-const NATIVE_BATTLE_FORMATION_DETAIL_NUMBER_STRIDE = 18;
-const NATIVE_BATTLE_ACTION_STRING_STRIDE = 5;
-const NATIVE_BATTLE_ACTION_NUMBER_STRIDE = 7;
-const NATIVE_BATTLE_UNIT_STRING_STRIDE = 4;
-const NATIVE_BATTLE_UNIT_NUMBER_STRIDE = 2;
-const NATIVE_BATTLE_OBSTACLE_STRING_STRIDE = 2;
-const NATIVE_BATTLE_OBSTACLE_NUMBER_STRIDE = 10;
-const NATIVE_BATTLE_FORMATION_MANUAL_TARGET_FLAG = 1 << 0;
-const NATIVE_BATTLE_FORMATION_ROUTING_FLAG = 1 << 1;
-const NATIVE_BATTLE_FORMATION_WITHDRAWING_FLAG = 1 << 2;
-const NATIVE_BATTLE_FORMATION_PLAYER_CONTROLLED_FLAG = 1 << 3;
-const NATIVE_BATTLE_FORMATION_COMMANDABLE_FLAG = 1 << 4;
-const NATIVE_NOTIFICATION_ANCHOR_FRAME_NUMBER_STRIDE = 5;
-const NATIVE_BRIDGE_JSON_NULL = 0;
+const NATIVE_BATTLE_PARTICIPANT_STRING_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleParticipantStrings;
+const NATIVE_BATTLE_PARTICIPANT_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleParticipantNumbers;
+const NATIVE_BATTLE_SIDE_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleSideNumbers;
+const NATIVE_BATTLE_FORMATION_STRING_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleFormationStrings;
+const NATIVE_BATTLE_FORMATION_DETAIL_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleFormationDetailNumbers;
+const NATIVE_BATTLE_ACTION_STRING_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleActionStrings;
+const NATIVE_BATTLE_ACTION_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleActionNumbers;
+const NATIVE_BATTLE_UNIT_STRING_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleUnitStrings;
+const NATIVE_BATTLE_UNIT_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleUnitNumbers;
+const NATIVE_BATTLE_OBSTACLE_STRING_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleObstacleStrings;
+const NATIVE_BATTLE_OBSTACLE_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleObstacleNumbers;
+const NATIVE_BATTLE_FORMATION_MANUAL_TARGET_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFrameFormation.manualTarget;
+const NATIVE_BATTLE_FORMATION_ROUTING_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFrameFormation.routing;
+const NATIVE_BATTLE_FORMATION_WITHDRAWING_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFrameFormation.withdrawing;
+const NATIVE_BATTLE_FORMATION_PLAYER_CONTROLLED_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFormation.playerControlled;
+const NATIVE_BATTLE_FORMATION_COMMANDABLE_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFormation.commandable;
+const NATIVE_NOTIFICATION_ANCHOR_FRAME_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.notificationAnchorNumbers;
+const NATIVE_BRIDGE_JSON_NULL = NATIVE_BRIDGE_PROTOCOL.jsonNodeTypes.null;
 const NATIVE_BRIDGE_JSON_FALSE = 1;
 const NATIVE_BRIDGE_JSON_TRUE = 2;
 const NATIVE_BRIDGE_JSON_INT32 = 3;
@@ -454,9 +454,9 @@ export function nativeBattleDataPayload(
       losses: participantNumbers[numberOffset + 3] ?? 0,
       morale: participantNumbers[numberOffset + 4] ?? 0,
       tier: participantNumbers[numberOffset + 5] ?? 1,
-      isNavy: (flags & (1 << 0)) !== 0,
-      isPlayerControlled: (flags & (1 << 1)) !== 0,
-      canRetreat: (flags & (1 << 2)) !== 0,
+      isNavy: (flags & NATIVE_BRIDGE_PROTOCOL.flags.battleParticipant.navy) !== 0,
+      isPlayerControlled: (flags & NATIVE_BRIDGE_PROTOCOL.flags.battleParticipant.playerControlled) !== 0,
+      canRetreat: (flags & NATIVE_BRIDGE_PROTOCOL.flags.battleParticipant.canRetreat) !== 0,
       currentOrder: participantStrings[stringOffset + 10] ?? '',
     };
   };
@@ -517,8 +517,8 @@ export function nativeBattleDataPayload(
         armourMultiplier: actionNumbers[actionNumberOffset + 4] ?? 1,
         moraleModifier: actionNumbers[actionNumberOffset + 5] ?? 0,
         speedMultiplier: actionNumbers[actionNumberOffset + 6] ?? 1,
-        canActivate: (actionStateFlags & (1 << 0)) !== 0,
-        isActive: (actionStateFlags & (1 << 1)) !== 0,
+        canActivate: (actionStateFlags & NATIVE_BRIDGE_PROTOCOL.flags.battleAction.canActivate) !== 0,
+        isActive: (actionStateFlags & NATIVE_BRIDGE_PROTOCOL.flags.battleAction.active) !== 0,
         disabledReason: actionStrings[actionStringOffset + 4] ?? '',
       });
     }
@@ -613,14 +613,14 @@ export function nativeBattleDataPayload(
   }
 
   return {
-    found: (battleFlags & (1 << 0)) !== 0,
+    found: (battleFlags & NATIVE_BRIDGE_PROTOCOL.flags.battle.found) !== 0,
     id: battleStrings[0] ?? '',
     title: battleStrings[1] ?? '',
     battleType: battleStrings[2] ?? '',
     location: battleStrings[3] ?? '',
     terrain: battleStrings[4] ?? '',
-    hasSnowAttrition: (battleFlags & (1 << 1)) !== 0,
-    hasDesertAttrition: (battleFlags & (1 << 2)) !== 0,
+    hasSnowAttrition: (battleFlags & NATIVE_BRIDGE_PROTOCOL.flags.battle.snowAttrition) !== 0,
+    hasDesertAttrition: (battleFlags & NATIVE_BRIDGE_PROTOCOL.flags.battle.desertAttrition) !== 0,
     battlefieldWidth: battleNumbers[0] ?? 0,
     battlefieldHeight: battleNumbers[1] ?? 0,
     attacker: buildSide(0, Math.max(sideParticipantCounts[0] ?? 0, 0)),
@@ -630,9 +630,9 @@ export function nativeBattleDataPayload(
     heightMapColumns: heightMapShape[0] ?? 0,
     heightMapRows: heightMapShape[1] ?? 0,
     heightMap,
-    playerIsAttacker: (battleFlags & (1 << 3)) !== 0,
-    playerIsDefender: (battleFlags & (1 << 4)) !== 0,
-    canIssueCommands: (battleFlags & (1 << 5)) !== 0,
+    playerIsAttacker: (battleFlags & NATIVE_BRIDGE_PROTOCOL.flags.battle.playerAttacker) !== 0,
+    playerIsDefender: (battleFlags & NATIVE_BRIDGE_PROTOCOL.flags.battle.playerDefender) !== 0,
+    canIssueCommands: (battleFlags & NATIVE_BRIDGE_PROTOCOL.flags.battle.canIssueCommands) !== 0,
   };
 }
 
@@ -765,3 +765,4 @@ export function bridgeEventPayload(eventName: string, payload: unknown): unknown
   return normalise ? normalise(parsed) : parsed;
 }
 
+import { NATIVE_BRIDGE_PROTOCOL } from '../native-bridge-protocol.generated';

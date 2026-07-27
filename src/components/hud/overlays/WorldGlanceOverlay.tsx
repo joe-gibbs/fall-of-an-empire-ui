@@ -2,6 +2,7 @@
 import { memo } from 'react';
 import type { GetWorldGlancesResponse } from '../../../bridge-types.generated.ts';
 import { useGlanceScale } from '../../../bridge/core/useGlanceScale';
+import { NATIVE_BRIDGE_PROTOCOL } from '../../../native-bridge-protocol.generated';
 import {
   handleWorldGlanceHover,
   handleWorldGlanceInput,
@@ -1129,8 +1130,8 @@ function NativeWorldGlanceInputOverlay() {
       }
     };
 
-    window.addEventListener('StrategyWorldGlanceHover', onHover);
-    return () => window.removeEventListener('StrategyWorldGlanceHover', onHover);
+    window.addEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
+    return () => window.removeEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
   }, [updateAnchor]);
 
   if (!data || !hovered || !anchor) return null;

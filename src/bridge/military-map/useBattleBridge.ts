@@ -11,15 +11,16 @@ import type {
 } from '../../bridge-types.generated.ts';
 import { getruntimeEngine } from '../core/runtimeEngine';
 import { useBridgeQueryState } from '../core/useBridgeQuery';
+import { NATIVE_BRIDGE_PROTOCOL } from '../../native-bridge-protocol.generated';
 
 const PACKED_BATTLE_FRAME = 'battleFrame';
-const BATTLE_FRAME_FORMATION_NUMBER_STRIDE = 13;
-const BATTLE_FRAME_AGENT_NUMBER_STRIDE = 4;
-const BATTLE_FRAME_FORMATION_MANUAL_TARGET_FLAG = 1 << 0;
-const BATTLE_FRAME_FORMATION_ROUTING_FLAG = 1 << 1;
-const BATTLE_FRAME_FORMATION_WITHDRAWING_FLAG = 1 << 2;
-const BATTLE_FRAME_AGENT_MELEE_FLAG = 1 << 0;
-const BATTLE_FRAME_AGENT_DETACHED_FLAG = 1 << 1;
+const BATTLE_FRAME_FORMATION_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleFrameFormationNumbers;
+const BATTLE_FRAME_AGENT_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.battleFrameAgentNumbers;
+const BATTLE_FRAME_FORMATION_MANUAL_TARGET_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFrameFormation.manualTarget;
+const BATTLE_FRAME_FORMATION_ROUTING_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFrameFormation.routing;
+const BATTLE_FRAME_FORMATION_WITHDRAWING_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFrameFormation.withdrawing;
+const BATTLE_FRAME_AGENT_MELEE_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFrameAgent.melee;
+const BATTLE_FRAME_AGENT_DETACHED_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.battleFrameAgent.detached;
 
 export interface PackedBattleFrameResponse {
   packed: typeof PACKED_BATTLE_FRAME;

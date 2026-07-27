@@ -3,14 +3,15 @@ import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
 import { getCachedBridgeEvent, getCachedBridgeEventByName } from '../core/bridgeEventCache';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
+import { NATIVE_BRIDGE_PROTOCOL } from '../../native-bridge-protocol.generated';
 
 const PACKED_WORLD_GLANCES_FRAME = 'worldGlancesFrame';
-const WORLD_GLANCE_FRAME_NUMBER_STRIDE = 8;
-const WORLD_GLANCE_FRAME_SELECTED_FLAG = 1 << 0;
-const WORLD_GLANCE_FRAME_TARGETED_FLAG = 1 << 1;
-const WORLD_GLANCE_FRAME_BESIEGED_FLAG = 1 << 2;
-const WORLD_GLANCE_FRAME_HAS_BUILD_ITEM_FLAG = 1 << 3;
-const WORLD_GLANCE_FRAME_SOURCE_INDEX_SHIFT = 4;
+const WORLD_GLANCE_FRAME_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.worldGlanceEntryNumbers;
+const WORLD_GLANCE_FRAME_SELECTED_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.worldGlance.selected;
+const WORLD_GLANCE_FRAME_TARGETED_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.worldGlance.targeted;
+const WORLD_GLANCE_FRAME_BESIEGED_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.worldGlance.besieged;
+const WORLD_GLANCE_FRAME_HAS_BUILD_ITEM_FLAG = NATIVE_BRIDGE_PROTOCOL.flags.worldGlance.hasBuildItem;
+const WORLD_GLANCE_FRAME_SOURCE_INDEX_SHIFT = NATIVE_BRIDGE_PROTOCOL.flags.worldGlance.sourceIndexShift;
 
 export type WorldGlanceFrameSection = 'settlement' | 'port' | 'convoy' | 'army' | 'navy' | 'battle';
 
@@ -122,8 +123,8 @@ function frameHasEntries(frame: WorldGlancesFrameResponse): boolean {
 
 const FRAME_SETTLEMENT_PROGRESS_EPSILON = 0.0001;
 const FRAME_BATTLE_MORALE_EPSILON = 0.001;
-const WORLD_GLANCE_FRAME_HEADER_NUMBER_COUNT = 7;
-const WORLD_GLANCE_FRAME_BATTLE_NUMBER_STRIDE = 6;
+const WORLD_GLANCE_FRAME_HEADER_NUMBER_COUNT = NATIVE_BRIDGE_PROTOCOL.strides.worldGlanceFrameHeaderNumbers;
+const WORLD_GLANCE_FRAME_BATTLE_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.worldGlanceBattleNumbers;
 
 function clampUnit(value: number): number {
   if (!Number.isFinite(value)) {

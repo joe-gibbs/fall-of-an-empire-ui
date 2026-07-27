@@ -23,6 +23,7 @@ import { acknowledgeBridgeFailure, getRuntimeEngine } from './bridge/core/runtim
 import { bindUIPerfCommands, recordUIPerfBridgeEvent } from './perf/uiPerfProfiler'
 import { bindBridgeEventRuntime, publishBridgeEvent, subscribeBridgeEvent } from './bridge/core/bridgeEvents'
 import { installImageAutosize } from './utils/imageAutosize'
+import { NATIVE_BRIDGE_PROTOCOL } from './native-bridge-protocol.generated'
 import {
   bridgeEventPayload,
   nativeBattleDataPayload,
@@ -114,7 +115,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
   setRuntimeClass(true);
   bindBridgeEventRuntime(engine);
 
-  engine.on('StrategyBridgeEventNative', (
+  engine.on(NATIVE_BRIDGE_PROTOCOL.events.bridgeJson, (
     eventName,
     types,
     counts,
@@ -130,7 +131,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     recordUIPerfBridgeEvent(eventName, startedAtMs, Date.now());
   });
 
-  engine.on('StrategyBattleData', (
+  engine.on(NATIVE_BRIDGE_PROTOCOL.events.battleData, (
     battleStrings,
     battleNumbers,
     battleFlags,
@@ -189,7 +190,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     recordUIPerfBridgeEvent('game.get_battle_data', startedAtMs, Date.now());
   });
 
-  engine.on('StrategyBattleFrame', (
+  engine.on(NATIVE_BRIDGE_PROTOCOL.events.battleFrame, (
     battleId,
     formationIds,
     formationNumbers,
@@ -224,7 +225,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     recordUIPerfBridgeEvent('game.get_battle_frame', startedAtMs, Date.now());
   });
 
-  engine.on('StrategyWorldGlancesFrame', (
+  engine.on(NATIVE_BRIDGE_PROTOCOL.events.worldGlancesFrame, (
     frameNumbers,
     frameFlags,
     counts,
@@ -245,11 +246,11 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     recordUIPerfBridgeEvent('game.world_glances_frame', startedAtMs, Date.now());
   });
 
-  engine.on('StrategyWorldAnchorRasterScale', (scale) => {
+  engine.on(NATIVE_BRIDGE_PROTOCOL.events.worldAnchorRasterScale, (scale) => {
     setWorldAnchorRasterScale(scale);
   });
 
-  engine.on('StrategyModWorldGlancesFrame', (
+  engine.on(NATIVE_BRIDGE_PROTOCOL.events.modWorldGlancesFrame, (
     providerId,
     anchorKeys,
     frameNumbers,
@@ -266,7 +267,7 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     recordUIPerfBridgeEvent('ui.mod_world_glances_frame', startedAtMs, Date.now());
   });
 
-  engine.on('StrategyNotificationAnchorsFrame', (
+  engine.on(NATIVE_BRIDGE_PROTOCOL.events.notificationAnchorsFrame, (
     entryStrings,
     entryNumbers,
     entryPayloads,
