@@ -22,7 +22,7 @@ import {
 } from '../../../bridge/settlements-economy/useSettlementBuildingsBridge';
 import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBottomBarOperationsBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
-import HtmlContent from '../../common/layout/content/HtmlContent';
+import BuildingEffects from '../../common/content/BuildingEffects';
 import ResourceLink from '../../common/resources/ResourceLink';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { toRootRem } from '../../../utils/cssUnits';
@@ -298,8 +298,8 @@ function queueTooltipLines(summary?: BuildingQueueSummary): TooltipLine[] {
   return lines;
 }
 
-function buildingTooltipBody(description?: string, effectsHtml?: string): React.ReactNode | undefined {
-  if (!description && !effectsHtml) return undefined;
+function buildingTooltipBody(description?: string, effectsText?: string): React.ReactNode | undefined {
+  if (!description && !effectsText) return undefined;
 
   return (
     <>
@@ -308,7 +308,7 @@ function buildingTooltipBody(description?: string, effectsHtml?: string): React.
           {description}
         </div>
       )}
-      <HtmlContent html={effectsHtml} className="bld-tooltip-effects" />
+      <BuildingEffects text={effectsText} className="bld-tooltip-effects" />
     </>
   );
 }
@@ -438,7 +438,7 @@ function builtTooltip(
   addBuildingRequirementLines(lines, b.requiredBuildings);
   return {
     title: b.name,
-    body: buildingTooltipBody(b.description, b.effectsHtml),
+    body: buildingTooltipBody(b.description, b.effectsText),
     lines,
     afterLines: actions,
     footer: canCancel && displayQueueItem(queueSummary)
@@ -486,7 +486,7 @@ function availTooltip(
   }
   return {
     title: a.name,
-    body: buildingTooltipBody(a.description, a.effectsHtml),
+    body: buildingTooltipBody(a.description, a.effectsText),
     lines,
     footer: canCancel && displayQueueItem(queueSummary)
       ? webUIText('SettlementBuildings.RightClickCancelConstruction')
@@ -637,8 +637,8 @@ function RequiresRow({ items }: { items: BuildingRequirement[] }) {
   );
 }
 
-function EffectsBlock({ html }: { html?: string }) {
-  return <HtmlContent html={html} className="bld-effects" />;
+function EffectsBlock({ text }: { text?: string }) {
+  return <BuildingEffects text={text} className="bld-effects" />;
 }
 
 type BuildingManagementAction = 'downgrade' | 'demolish';
@@ -922,7 +922,7 @@ function BuiltCard({
               />
             </span>
           </div>
-          <EffectsBlock html={b.effectsHtml} />
+          <EffectsBlock text={b.effectsText} />
           {b.requiredBuildings && b.requiredBuildings.length > 0 && (
             <RequiresRow items={b.requiredBuildings} />
           )}
@@ -1053,7 +1053,7 @@ function AvailCard({
               </span>
             </div>
           )}
-          <EffectsBlock html={a.effectsHtml} />
+          <EffectsBlock text={a.effectsText} />
           {a.requiredBuildings && a.requiredBuildings.length > 0 && (
             <RequiresRow items={a.requiredBuildings} />
           )}

@@ -7,7 +7,7 @@ import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import type { UnitTooltipData } from '../../common/tooltips/UnitTooltip';
-import HtmlContent from '../../common/layout/content/HtmlContent';
+import BuildingEffects from '../../common/content/BuildingEffects';
 import glossary from '../../../data/glossary';
 import { useEncyclopediaBridge } from '../../../bridge/settlements-economy/useEncyclopediaBridge';
 import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBottomBarOperationsBridge';
@@ -1019,7 +1019,7 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
                               body: (
                                 <>
                                   {building.description && <div>{building.description}</div>}
-                                  <HtmlContent html={building.effectsHtml} />
+                                  <BuildingEffects text={building.effectsText} />
                                 </>
                               ),
                               lines: [

@@ -2046,7 +2046,7 @@ export interface EncyclopediaBuildingDTO {
   categoryLabel: string;
   cultureId: string;
   description: string;
-  effectsHtml: string;
+  effectsText: string;
   maxLevel: number;
   price: number;
   buildTimeDays: number;
@@ -3832,7 +3832,7 @@ export interface SettlementBuiltBuildingEntry {
   category: string;
   chainName: string;
   description: string;
-  effectsHtml: string;
+  effectsText: string;
   condition: number;
   monthlyConditionChange: number;
   maintenanceGovernanceThreshold: number;
@@ -3863,7 +3863,7 @@ export interface SettlementAvailableBuildingEntry {
   category: string;
   chainName: string;
   description: string;
-  effectsHtml: string;
+  effectsText: string;
   price: number;
   buildTime: number;
   upkeep: number;

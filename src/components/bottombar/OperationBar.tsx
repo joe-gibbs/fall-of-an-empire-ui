@@ -28,7 +28,7 @@ import type {
   GovernorAssignmentOperation,
 } from '../../bridge/military-map/useBottomBarOperationsBridge';
 import type { EncyclopediaBuildingDTO } from '../../bridge-types.generated.ts';
-import HtmlContent from '../common/layout/content/HtmlContent';
+import BuildingEffects from '../common/content/BuildingEffects';
 
 const ICONS = {
   governor: '/assets/icons/AssignGovernor.png',
@@ -130,7 +130,7 @@ function buildingTooltipBody(building: EncyclopediaBuildingDTO): React.ReactNode
           {building.description}
         </div>
       )}
-      <HtmlContent html={building.effectsHtml} className="operation-building-tooltip-effects" />
+      <BuildingEffects text={building.effectsText} className="operation-building-tooltip-effects" />
     </>
   );
 }
