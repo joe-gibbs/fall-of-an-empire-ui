@@ -23,7 +23,7 @@ interface Props {
   onClose: () => void;
   settlementName?: string;
   playerGold?: number;
-  promotionCost?: number;
+  promotionCost: number;
   types: CourtierType[];
   onPromote?: (courtierTypeId: string) => Promise<{ success: boolean; message: string }>;
 }
@@ -72,7 +72,7 @@ const STAT_SEGMENTS = [
 
 export default function CourtierPromotionModal({
   open, onClose, settlementName = '', playerGold = 0,
-  promotionCost = 500, types, onPromote,
+  promotionCost, types, onPromote,
 }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [promoting, setPromoting] = useState(false);

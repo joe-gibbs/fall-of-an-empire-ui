@@ -15,7 +15,6 @@ import {
 } from '../../../bridge/military-map/useBattleBridge';
 import { registerScreen } from '../../../registry/index';
 import {
-  battlefieldDimension,
   elementHeight,
   findFormationAtPoint,
   formationIdsInSelection,
@@ -338,8 +337,8 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
   }, [activeBattleId, battle?.formations, battle?.found]);
 
   const formations = useMemo(() => battle?.formations ?? [], [battle?.formations]);
-  const battlefieldWidth = battlefieldDimension(battle?.battlefieldWidth);
-  const battlefieldHeight = battlefieldDimension(battle?.battlefieldHeight);
+  const battlefieldWidth = battle?.battlefieldWidth ?? 0;
+  const battlefieldHeight = battle?.battlefieldHeight ?? 0;
   const playerReferenceColour = useMemo(() => {
     const playerFormation = formations.find(formation => formation.isPlayerControlled);
     return playerFormation?.faction.colour || null;

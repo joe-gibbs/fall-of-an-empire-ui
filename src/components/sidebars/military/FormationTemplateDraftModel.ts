@@ -125,7 +125,6 @@ export const EMPTY_TOTALS: DerivedTotals = {
 };
 
 export const EMPTY_UNIT_CATALOGUE: FormationTemplateUnitEntry[] = [];
-export const MAX_BATTLE_FORMATION_SIZE = 10;
 let nextBattleGroupId = 1;
 
 export function fmt(value: number, maximumFractionDigits = 0): string {
@@ -486,12 +485,16 @@ export function allUnitsAssigned(draft: DraftTemplate): boolean {
   return requests.every(request => assignedBattleGroupCount(draft, request.unitId) === request.count);
 }
 
-export function battleGroupsValid(draft: DraftTemplate, unitById: Map<string, FormationTemplateUnitEntry>): boolean {
+export function battleGroupsValid(
+  draft: DraftTemplate,
+  unitById: Map<string, FormationTemplateUnitEntry>,
+  maximumBattleGroupUnits: number,
+): boolean {
   if (!allUnitsAssigned(draft)) return false;
 
   return draft.battleGroups.every(group => {
     const total = battleGroupUnitCount(group);
-    if (total <= 0 || total > MAX_BATTLE_FORMATION_SIZE) return false;
+    if (total <= 0 || total > maximumBattleGroupUnits) return false;
     return orderedBattleGroupUnitIds(group)
       .filter(unitId => (group.counts[unitId] ?? 0) > 0)
       .every(unitId => {

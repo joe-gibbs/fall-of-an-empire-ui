@@ -37,7 +37,6 @@ import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import type { TemplateCreateType } from './screenTokens';
 import { TemplateBattlePlanner } from './TemplateBattlePlanner';
 import {
-  MAX_BATTLE_FORMATION_SIZE,
   battleGroupUnitCount,
   battleGroupsValid,
   battleRoleForUnit,
@@ -69,8 +68,6 @@ const SAVE_ICON = '/assets/icons/I_SaveFolder.png';
 const DUPLICATE_ICON = '/assets/icons/I_DuplicateTemplate.png';
 const DELETE_ICON = '/assets/icons/I_Close.png';
 const RENAME_ICON = '/assets/icons/I_Rename.png';
-const TEMPLATE_LIMIT = 30;
-
 type UnitCatalogueColumnKey = 'unit' | 'type' | 'tier' | 'strength' | 'cost' | 'upkeep' | 'settlements' | 'add';
 type UnitCatalogueFilterKey = 'type' | 'culture';
 
@@ -707,6 +704,7 @@ function TemplateEditor({
   type,
   unitCatalogue,
   assignmentTarget,
+  maximumBattleGroupUnits,
   onNeedCatalogue,
   onRaiseTemplate,
   onAssignTemplate,
@@ -717,6 +715,7 @@ function TemplateEditor({
   type: TemplateCreateType;
   unitCatalogue: FormationTemplateUnitEntry[];
   assignmentTarget?: Army | null;
+  maximumBattleGroupUnits: number;
   onNeedCatalogue: () => void;
   onRaiseTemplate: (id: string) => void;
   onAssignTemplate?: (id: string) => void;
@@ -766,7 +765,7 @@ function TemplateEditor({
   const dirty = !templateDraftsEqual(draft, baseline);
   const editable = !template || template.canEdit;
   const hasName = draft.name.trim().length > 0;
-  const hasValidBattleGroups = battleGroupsValid(draft, unitById);
+  const hasValidBattleGroups = battleGroupsValid(draft, unitById, maximumBattleGroupUnits);
   const canSave = editable && dirty && hasName && unitCount > 0 && hasValidBattleGroups && !actionActive;
   const canRaise = !!template && template.canApply && !dirty && !actionActive;
   const canAssign = !!assignmentTarget
@@ -844,7 +843,7 @@ function TemplateEditor({
       if (targetIndex < 0) return current;
       const targetGroup = current.battleGroups[targetIndex];
       const currentCount = targetGroup.counts[unitId] ?? 0;
-      if (delta > 0 && battleGroupUnitCount(targetGroup) >= MAX_BATTLE_FORMATION_SIZE) return current;
+      if (delta > 0 && battleGroupUnitCount(targetGroup) >= maximumBattleGroupUnits) return current;
       if (delta < 0 && currentCount <= 0) return current;
 
       const nextCount = currentCount + delta;
@@ -869,7 +868,7 @@ function TemplateEditor({
 
   const saveDraft = (draftToSave: TemplateDraft) => {
     const name = draftToSave.name.trim();
-    if (!name || draftUnitCount(draftToSave) <= 0 || !battleGroupsValid(draftToSave, unitById)) return;
+    if (!name || draftUnitCount(draftToSave) <= 0 || !battleGroupsValid(draftToSave, unitById, maximumBattleGroupUnits)) return;
 
     const resolvedIconId = draftToSave.iconId || getFormationTemplateIcon(
       draftToSave.type,
@@ -1024,6 +1023,7 @@ function TemplateEditor({
               draft={draft}
               unitById={unitById}
               editable={editable}
+              maximumBattleGroupUnits={maximumBattleGroupUnits}
               onAddBattleGroup={addBattleGroup}
               onRemoveBattleGroup={removeBattleGroup}
               onAdjustBattleGroupUnitCount={adjustBattleGroupUnitCount}
@@ -1143,12 +1143,16 @@ export function TemplatesPanel({
   initialTemplateId,
   initialCreateType,
   assignmentTargetId,
+  maximumBattleGroupUnits,
+  maximumFormationTemplates,
   onCloseScreen,
 }: {
   templates: FormationTemplateEntry[];
   initialTemplateId: string | null;
   initialCreateType: TemplateCreateType | null;
   assignmentTargetId: string | null;
+  maximumBattleGroupUnits: number;
+  maximumFormationTemplates: number;
   onCloseScreen: () => void;
 }) {
   const [catalogueRequested, setCatalogueRequested] = useState(false);
@@ -1339,7 +1343,7 @@ export function TemplatesPanel({
           <div className="chart-template-list-head">
             <span className="chart-template-list-title"><WebUIText textKey="Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.988.37" /></span>
             <div className="chart-template-list-head-actions">
-              <span className="chart-template-list-count">{webUIText('FormationTemplate.TemplateCount', { Count: formatNumber(visibleTemplates.length), Max: formatNumber(TEMPLATE_LIMIT) })}</span>
+              <span className="chart-template-list-count">{webUIText('FormationTemplate.TemplateCount', { Count: formatNumber(visibleTemplates.length), Max: formatNumber(maximumFormationTemplates) })}</span>
               <Tooltip content={{ title: createTitle, body: createBody }} wrapperClassName="chart-template-create-wrapper">
                 <button
                   type="button"
@@ -1380,6 +1384,7 @@ export function TemplatesPanel({
           type={editorType}
           unitCatalogue={editorCatalogue}
           assignmentTarget={assignmentTarget}
+          maximumBattleGroupUnits={maximumBattleGroupUnits}
           onNeedCatalogue={() => setCatalogueRequested(true)}
           onRaiseTemplate={raiseTemplate}
           onAssignTemplate={assignTemplate}

@@ -6,9 +6,9 @@ import { useBishopCandidates } from '../../../data-source/index';
 import { appointBishop, type DioceseView } from '../../../bridge/settlements-economy/useDiocesesBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import {
-  RECRUIT_CHARACTER_GOLD_COST,
   recruitCharacterForRoleBridge,
   refreshBishopCandidatesBridge,
+  useRecruitCharacterGoldCost,
 } from '../../../bridge/characters/useCharacterRecruitmentBridge';
 import type { StatKey } from '../../../data/types';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
@@ -100,7 +100,8 @@ export default function BishopAppointmentModal({
     : candidates[0]?.character.id ?? null;
 
   const selected = candidates.find(candidate => candidate.character.id === effectiveSelectedId) || candidates[0];
-  const canAffordRecruit = gold >= RECRUIT_CHARACTER_GOLD_COST;
+  const recruitGoldCost = useRecruitCharacterGoldCost();
+  const canAffordRecruit = recruitGoldCost !== null && gold >= recruitGoldCost;
 
   const handleAppoint = useCallback(() => {
     if (!selected || !renderedAssignment || !religionKey) return;
@@ -135,7 +136,7 @@ export default function BishopAppointmentModal({
 
   const primaryStatIcon = statIconPath(PRIMARY_STAT);
   const primaryStatLabel = webUIText('Common.Authority');
-  const recruitButton = (
+  const recruitButton = recruitGoldCost === null ? undefined : (
     <GameButton
       variant="outline"
       className="candidate-list-action"
@@ -143,7 +144,7 @@ export default function BishopAppointmentModal({
       onClick={handleRecruit}
       disabled={recruiting || !canAffordRecruit}
     >
-      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(RECRUIT_CHARACTER_GOLD_COST) })}
+      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(recruitGoldCost) })}
     </GameButton>
   );
 

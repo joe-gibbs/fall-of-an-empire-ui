@@ -3231,6 +3231,10 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
     autoAssignCommanderExpense: 0,
     otherExpense: 0,
     treasuryAdjustment: 0,
+    tradeTransactionAmount: 100,
+    tradeShiftMultiplier: 5,
+    tradeControlShiftMultiplier: 10,
+    autoSellThresholdStep: 500,
     totalFood: 1285,
     foodProduction: 148,
     foodSubjectContribution: 104,
@@ -4185,6 +4189,8 @@ function peaceState(): BridgeResponse<'game.get_peace_negotiation_state'> {
     settlementsCaptured: 1,
     isWarLeader: true,
     isRebellionWar: false,
+    amountStep: 50,
+    durationOptionsDays: [336, 672, 1680, 3360],
     playerFaction: player,
     targetFaction: rival,
     ourParticipants: [
@@ -5106,7 +5112,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.get_app_mode':
         return { mode: state.appMode } satisfies BridgeResponse<'game.get_app_mode'>;
       case 'game.get_game_state':
-        return { day: 17, month: 6, year: 742, gameDay: state.gameDay, dateText: '17/6/742', season: 'Summer', isPaused: state.isPaused, speedLevel: state.speedLevel, debugMode: state.debugMode, climateTrend: state.climateTrend, climateDescription: state.climateDescription, saveSerial: state.saveSerial, gameOver: false, hasDemoTimeLimit: false, demoDaysRemaining: 0, demoEndDateText: '' } satisfies BridgeResponse<'game.get_game_state'>;
+        return { day: 17, month: 6, year: 742, gameDay: state.gameDay, dateText: '17/6/742', season: 'Summer', calendarKey: 'fantasy', daysInYear: 336, daysInMonth: 28, isPaused: state.isPaused, speedLevel: state.speedLevel, debugMode: state.debugMode, climateTrend: state.climateTrend, climateDescription: state.climateDescription, saveSerial: state.saveSerial, gameOver: false, hasDemoTimeLimit: false, demoDaysRemaining: 0, demoEndDateText: '' } satisfies BridgeResponse<'game.get_game_state'>;
       case 'game.get_game_version':
         return { version: 'Mock UI Dev', isDemo: false } satisfies BridgeResponse<'game.get_game_version'>;
       case 'game.get_resources':
@@ -6370,6 +6376,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           pendingFormations: [],
           activeBuildTemplateId: 'balanced-field-army',
           playerGold: 4280,
+          maximumBattleGroupUnits: 10,
+          maximumFormationTemplates: 30,
         } satisfies BridgeResponse<'game.get_formation_templates'>;
       case 'game.get_formation_template_catalogue':
         return {

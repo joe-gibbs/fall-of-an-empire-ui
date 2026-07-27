@@ -30,13 +30,7 @@ type ResourceOption = DiplomaticNegotiationState['ourResources'][number];
 type AcceptabilityTone = 'green' | 'gold' | 'red';
 
 const ACCEPTED_HOLD_MS = 900;
-const AMOUNT_STEP = 50;
-const DURATION_OPTIONS = [
-  { days: 365, label: '1' },
-  { days: 730, label: '2' },
-  { days: 1825, label: '5' },
-  { days: 3650, label: '10' },
-] as const;
+const DURATION_YEAR_LABELS = ['1', '2', '5', '10'] as const;
 
 const TREATY_ICONS: Record<string, string> = {
   military_alliance: '/assets/icons/Treaties/I_MilitaryAlliance.png',
@@ -249,12 +243,16 @@ function ProposalChip({
   proposal,
   live,
   resourceOptions,
+  amountStep,
+  durationOptionsDays,
   onRemove,
   onChange,
 }: {
   proposal: DiplomaticProposalDraft;
   live?: TreatyEntry;
   resourceOptions: ResourceOption[];
+  amountStep: number;
+  durationOptionsDays: number[];
   onRemove: () => void;
   onChange: (patch: Partial<DiplomaticProposalDraft>) => void;
 }) {
@@ -282,7 +280,7 @@ function ProposalChip({
               <span className="pns-term-control-label"><WebUIText textKey="TreatyNegotiation.Gold" /></span>
               <NumberStepper
                 value={amount}
-                step={AMOUNT_STEP}
+                step={amountStep}
                 min={0}
                 className="pns-amount-control"
                 buttonClassName="pns-step-btn"
@@ -312,7 +310,7 @@ function ProposalChip({
             <div className="pns-term-field pns-term-field--resource-amount">
               <NumberStepper
                 value={resourceAmount}
-                step={AMOUNT_STEP}
+                step={amountStep}
                 min={0}
                 max={selectedResource ? Math.round(selectedResource.amount) : undefined}
                 className="pns-amount-control"
@@ -330,14 +328,14 @@ function ProposalChip({
             <div className="pns-term-field pns-term-field--years">
               <span className="pns-term-control-label"><WebUIText textKey="TreatyNegotiation.Years" /></span>
               <div className="pns-duration-options">
-                {DURATION_OPTIONS.map(option => (
+                {durationOptionsDays.map((days, index) => (
                   <button
-                    key={option.days}
+                    key={days}
                     type="button"
-                    className={`pns-duration-button${durationDays === option.days ? ' pns-duration-button--active' : ''}`}
-                    onMouseDown={() => onChange({ durationDays: option.days })}
+                    className={`pns-duration-button${durationDays === days ? ' pns-duration-button--active' : ''}`}
+                    onMouseDown={() => onChange({ durationDays: days })}
                   >
-                    {option.label}
+                    {DURATION_YEAR_LABELS[index]}
                   </button>
                 ))}
               </div>
@@ -397,6 +395,8 @@ function ProposalColumn({
   selected,
   stateProposals,
   resourceOptions,
+  amountStep,
+  durationOptionsDays,
   side,
   onRemove,
   onChange,
@@ -405,6 +405,8 @@ function ProposalColumn({
   selected: DiplomaticProposalDraft[];
   stateProposals: TreatyEntry[];
   resourceOptions: ResourceOption[];
+  amountStep: number;
+  durationOptionsDays: number[];
   side: 'offer' | 'request';
   onRemove: (proposalId: string) => void;
   onChange: (proposalId: string, patch: Partial<DiplomaticProposalDraft>) => void;
@@ -434,6 +436,8 @@ function ProposalColumn({
                 proposal={proposal}
                 live={live}
                 resourceOptions={resourceOptions}
+                amountStep={amountStep}
+                durationOptionsDays={durationOptionsDays}
                 onRemove={() => onRemove(id)}
                 onChange={patch => onChange(id, patch)}
               />
@@ -657,6 +661,8 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
             selected={selectedOffers}
             stateProposals={liveProposals}
             resourceOptions={ourResources}
+            amountStep={state.amountStep}
+            durationOptionsDays={state.durationOptionsDays}
             side="offer"
             onRemove={removeProposal}
             onChange={updateProposal}
@@ -666,6 +672,8 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
             selected={selectedRequests}
             stateProposals={liveProposals}
             resourceOptions={theirResources}
+            amountStep={state.amountStep}
+            durationOptionsDays={state.durationOptionsDays}
             side="request"
             onRemove={removeProposal}
             onChange={updateProposal}

@@ -113,8 +113,6 @@ const HISTORY_CHART_SEGMENTS: Array<{ key: HistoryMetricKey; labelKey: string; c
 
 const HISTORY_INCOME_KEYS: HistoryMetricKey[] = HISTORY_CHART_SEGMENTS.map(segment => segment.key);
 
-const TRADE_AMOUNT = 100;
-
 function fmt(value: number | undefined): string {
   return formatNumber(value);
 }
@@ -161,10 +159,15 @@ function displayRate(value: number | undefined): string {
   return `${fmt1(ratePercent(value))}%`;
 }
 
-function tradeAmountFromEvent(event: MouseEvent<HTMLButtonElement>): number {
-  if (event.ctrlKey && event.shiftKey) return TRADE_AMOUNT * 10;
-  if (event.shiftKey) return TRADE_AMOUNT * 5;
-  return TRADE_AMOUNT;
+function tradeAmountFromEvent(
+  event: MouseEvent<HTMLButtonElement>,
+  baseAmount: number,
+  shiftMultiplier: number,
+  controlShiftMultiplier: number,
+): number {
+  if (event.ctrlKey && event.shiftKey) return baseAmount * controlShiftMultiplier;
+  if (event.shiftKey) return baseAmount * shiftMultiplier;
+  return baseAmount;
 }
 
 function metric(data: GetEconomyOverviewResponse | null, key: EconomyMetricKey): number {
@@ -1035,10 +1038,22 @@ function IncomeHistoryChart({ data, compact = false }: { data: GetEconomyOvervie
   );
 }
 
-function TradeControls({ resource, gold }: { resource: EconomyOverviewResourceRow; gold: number }) {
+function TradeControls({
+  resource,
+  gold,
+  tradeAmount,
+  shiftMultiplier,
+  controlShiftMultiplier,
+}: {
+  resource: EconomyOverviewResourceRow;
+  gold: number;
+  tradeAmount: number;
+  shiftMultiplier: number;
+  controlShiftMultiplier: number;
+}) {
   const t = useWebUIText();
-  const buyCost = Math.ceil(TRADE_AMOUNT * resource.buyPrice);
-  const sellReturn = Math.floor(Math.min(TRADE_AMOUNT, resource.amount) * resource.sellPrice);
+  const buyCost = Math.ceil(tradeAmount * resource.buyPrice);
+  const sellReturn = Math.floor(Math.min(tradeAmount, resource.amount) * resource.sellPrice);
   const canBuy = buyCost > 0 && gold >= buyCost;
   const canSell = sellReturn > 0;
 
@@ -1059,7 +1074,10 @@ function TradeControls({ resource, gold }: { resource: EconomyOverviewResourceRo
             event.preventDefault();
             event.stopPropagation();
             if (!canBuy) return;
-            buyEconomyResourceBridge(resource.id, tradeAmountFromEvent(event)).catch(() => undefined);
+            buyEconomyResourceBridge(
+              resource.id,
+              tradeAmountFromEvent(event, tradeAmount, shiftMultiplier, controlShiftMultiplier),
+            ).catch(() => undefined);
           }}
         >
           <img className="econ-trade-btn-mark" src="/assets/icons/I_Minus.png" alt="" />
@@ -1082,7 +1100,10 @@ function TradeControls({ resource, gold }: { resource: EconomyOverviewResourceRo
             event.preventDefault();
             event.stopPropagation();
             if (!canSell) return;
-            sellEconomyResourceBridge(resource.id, tradeAmountFromEvent(event)).catch(() => undefined);
+            sellEconomyResourceBridge(
+              resource.id,
+              tradeAmountFromEvent(event, tradeAmount, shiftMultiplier, controlShiftMultiplier),
+            ).catch(() => undefined);
           }}
         >
           <img className="econ-trade-btn-mark" src="/assets/icons/I_Plus.png" alt="" />
@@ -1489,6 +1510,7 @@ function ResourceTableHeader({ label, shortLabel }: { label: string; shortLabel:
 function ResourcesTab({ data, onOpenResource }: { data: GetEconomyOverviewResponse | null; onOpenResource: (resource: EconomyOverviewResourceRow) => void }) {
   const t = useWebUIText();
   const rows = data?.resources ?? [];
+  const tradeAmount = data?.tradeTransactionAmount ?? 0;
   const columns: EconomyColumn<EconomyOverviewResourceRow>[] = [
     { id: 'name', label: <ResourceTableHeader label={t('Economy.Resource')} shortLabel={t('Economy.Resource')} />, render: row => <ResourceName row={row} onOpen={onOpenResource} />, sortValue: row => row.name },
     { id: 'stockpile', label: <ResourceTableHeader label={t('Economy.Stockpile')} shortLabel={t('Economy.Stockpile')} />, align: 'right', render: row => fmt1(row.amount), sortValue: row => row.amount },
@@ -1509,10 +1531,22 @@ function ResourcesTab({ data, onOpenResource }: { data: GetEconomyOverviewRespon
       id: 'market',
       label: <ResourceTableHeader label={t('Economy.Market')} shortLabel={t('Economy.Price')} />,
       align: 'right',
-      render: row => <span className="econ-market-price"><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{price(Math.ceil(TRADE_AMOUNT * row.buyPrice))}</span>,
-      sortValue: row => Math.ceil(TRADE_AMOUNT * row.buyPrice),
+      render: row => <span className="econ-market-price"><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{price(Math.ceil(tradeAmount * row.buyPrice))}</span>,
+      sortValue: row => Math.ceil(tradeAmount * row.buyPrice),
     },
-    { id: 'trade', label: <ResourceTableHeader label={t('Economy.Trade')} shortLabel={t('Economy.Trade')} />, render: row => <TradeControls resource={row} gold={data?.gold ?? 0} /> },
+    {
+      id: 'trade',
+      label: <ResourceTableHeader label={t('Economy.Trade')} shortLabel={t('Economy.Trade')} />,
+      render: row => (
+        <TradeControls
+          resource={row}
+          gold={data?.gold ?? 0}
+          tradeAmount={tradeAmount}
+          shiftMultiplier={data?.tradeShiftMultiplier ?? 0}
+          controlShiftMultiplier={data?.tradeControlShiftMultiplier ?? 0}
+        />
+      ),
+    },
   ];
 
   return (

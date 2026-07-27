@@ -11,6 +11,9 @@ export interface BridgeGameState {
   dateText?: string;
   season?: string;
   gameDay?: number;
+  calendarKey?: string;
+  daysInYear?: number;
+  daysInMonth?: number;
   debugMode?: boolean;
   climateTrend?: number;
   climateDescription?: string;
@@ -32,6 +35,9 @@ function mapGameState(gs: GetGameStateResponse): Partial<BridgeGameState> {
     dateText: gs.dateText,
     season: gs.season,
     gameDay: gs.gameDay,
+    calendarKey: gs.calendarKey,
+    daysInYear: gs.daysInYear,
+    daysInMonth: gs.daysInMonth,
     debugMode: gs.debugMode,
     climateTrend: gs.climateTrend,
     climateDescription: gs.climateDescription,
@@ -47,6 +53,9 @@ interface GameDateChangedEvent {
   month: number;
   year: number;
   gameDay: number;
+  calendarKey: string;
+  daysInYear: number;
+  daysInMonth: number;
   dateText: string;
   season: string;
   demoDaysRemaining: number;
@@ -59,6 +68,9 @@ function isGameDateChangedEvent(value: unknown): value is GameDateChangedEvent {
     && typeof event.month === 'number'
     && typeof event.year === 'number'
     && typeof event.gameDay === 'number'
+    && typeof event.calendarKey === 'string'
+    && typeof event.daysInYear === 'number'
+    && typeof event.daysInMonth === 'number'
     && typeof event.dateText === 'string'
     && typeof event.season === 'string'
     && typeof event.demoDaysRemaining === 'number';
@@ -131,6 +143,9 @@ export function useBridgeState(): BridgeGameState | null {
         dateText: detail.dateText,
         season: detail.season,
         gameDay: detail.gameDay,
+        calendarKey: detail.calendarKey,
+        daysInYear: detail.daysInYear,
+        daysInMonth: detail.daysInMonth,
         demoDaysRemaining: detail.demoDaysRemaining,
       }));
     };

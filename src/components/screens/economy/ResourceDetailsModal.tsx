@@ -25,9 +25,6 @@ import { compareSortValuesWithDirection, toggleSortState, type SortState } from 
 import Tooltip from '../../common/tooltips/Tooltip';
 import './ResourceDetailsModal.css';
 
-const TRADE_AMOUNT = 100;
-const AUTO_SELL_STEP = 500;
-
 type HistoryRange = '12' | '24' | 'all';
 type LedgerSortKey = 'name' | 'amount';
 
@@ -35,6 +32,8 @@ interface Props {
   resource: EconomyOverviewResourceRow | null;
   gold: number;
   autoBuyEnabled: boolean;
+  tradeAmount: number;
+  autoSellThresholdStep: number;
   onClose: () => void;
 }
 
@@ -260,7 +259,14 @@ function HistoryCharts({ history }: { history: EconomyResourceHistoryPoint[] }) 
   );
 }
 
-export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, onClose }: Props) {
+export default function ResourceDetailsModal({
+  resource,
+  gold,
+  autoBuyEnabled,
+  tradeAmount,
+  autoSellThresholdStep,
+  onClose,
+}: Props) {
   const t = useWebUIText();
   const details = useEconomyResourceDetailsBridge(resource?.id ?? null);
   const buildQueue = useBuildQueueBridge(!!resource);
@@ -283,12 +289,12 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
         production: resource.production + resource.vassalContribution + resource.treatyIncome,
         consumption: resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss,
         net: resource.netPerMonth,
-        marketPrice: Math.ceil(TRADE_AMOUNT * resource.buyPrice),
+        marketPrice: Math.ceil(tradeAmount * resource.buyPrice),
       }];
     }
     if (historyRange === 'all') return points;
     return points.slice(-Number(historyRange));
-  }, [details?.history, historyRange, resource, t]);
+  }, [details?.history, historyRange, resource, t, tradeAmount]);
 
   const requirements = useMemo(() => {
     if (!resource) return [];
@@ -355,8 +361,8 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
 
   if (!mounted || !resource) return null;
 
-  const buyCost = Math.ceil(TRADE_AMOUNT * resource.buyPrice);
-  const sellAmount = Math.min(TRADE_AMOUNT, resource.amount);
+  const buyCost = Math.ceil(tradeAmount * resource.buyPrice);
+  const sellAmount = Math.min(tradeAmount, resource.amount);
   const sellReturn = Math.floor(sellAmount * resource.sellPrice);
   const canBuy = buyCost > 0 && gold >= buyCost;
   const canSell = sellReturn > 0;
@@ -406,9 +412,9 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
                 variant="outline"
                 className="erd-trade__button erd-trade__button--buy"
                 disabled={!canBuy}
-                onClick={() => buyEconomyResourceBridge(resource.id, TRADE_AMOUNT).catch(() => undefined)}
+                onClick={() => buyEconomyResourceBridge(resource.id, tradeAmount).catch(() => undefined)}
               >
-                <span>{t('Economy.BuyAmount', { Amount: number(TRADE_AMOUNT) })}</span>
+                <span>{t('Economy.BuyAmount', { Amount: number(tradeAmount) })}</span>
                 <small><img className="erd-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{t('Economy.CostsGold', { Amount: number(buyCost) })}</small>
               </GameButton>
               <GameButton
@@ -448,10 +454,10 @@ export default function ResourceDetailsModal({ resource, gold, autoBuyEnabled, o
                   wrapperClassName="erd-threshold-tooltip"
                 >
                   <div className="erd-threshold">
-                    <button type="button" onMouseDown={() => setAutoSellThreshold(threshold - AUTO_SELL_STEP)}>-</button>
+                    <button type="button" onMouseDown={() => setAutoSellThreshold(threshold - autoSellThresholdStep)}>-</button>
                     <div><span style={{ width: `${Math.min(100, threshold / thresholdMax * 100)}%` }} /></div>
                     <strong><small>{t('Economy.AutoSellReserveShort')}</small>{number(threshold)}</strong>
-                    <button type="button" onMouseDown={() => setAutoSellThreshold(threshold + AUTO_SELL_STEP)}>+</button>
+                    <button type="button" onMouseDown={() => setAutoSellThreshold(threshold + autoSellThresholdStep)}>+</button>
                   </div>
                 </Tooltip>
               )}

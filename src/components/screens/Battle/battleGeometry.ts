@@ -1,7 +1,6 @@
 import type { ZoomPanPoint } from '../../common/layout/scrolling/ZoomPanCanvas';
 import type { BattleFormationLive } from '../../../bridge/military-map/useBattleBridge';
 
-const DEFAULT_BATTLEFIELD_SIZE = 2000;
 const ORDER_PATH_MIN_POINT_DISTANCE = 60.0;
 const ORDER_PATH_FINAL_POINT_DISTANCE = 10.0;
 
@@ -18,10 +17,6 @@ export function normaliseDegrees(value: number): number {
   while (next < 0) next += 360;
   while (next >= 360) next -= 360;
   return next;
-}
-
-export function battlefieldDimension(value: number | undefined): number {
-  return Number.isFinite(value) && value !== undefined && value > 0 ? value : DEFAULT_BATTLEFIELD_SIZE;
 }
 
 export function coordinatePercent(value: number, size: number, fallbackPercent: number): string {

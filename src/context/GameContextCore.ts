@@ -44,6 +44,9 @@ export interface GameState {
   dateText: string;
   season: string;
   gameDay: number;
+  calendarKey: string;
+  daysInYear: number;
+  daysInMonth: number;
   debugMode: boolean;
   climateTrend: number;
   climateDescription: string;
@@ -82,6 +85,9 @@ export function createInitialGameState(): GameState {
     dateText: '',
     season: 'Winter',
     gameDay: 0,
+    calendarKey: '',
+    daysInYear: 0,
+    daysInMonth: 0,
     debugMode: false,
     climateTrend: 0,
     climateDescription: '',

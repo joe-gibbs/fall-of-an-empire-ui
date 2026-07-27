@@ -9,7 +9,6 @@ import {
 } from '../../../utils/battleFormationNaming';
 import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
 import {
-  MAX_BATTLE_FORMATION_SIZE,
   battleGroupUnitCount,
   orderedBattleGroupUnitIds,
   type BattleFormationRole,
@@ -24,6 +23,7 @@ export function TemplateBattlePlanner({
   draft,
   unitById,
   editable,
+  maximumBattleGroupUnits,
   onAddBattleGroup,
   onRemoveBattleGroup,
   onAdjustBattleGroupUnitCount,
@@ -32,6 +32,7 @@ export function TemplateBattlePlanner({
   draft: TemplateDraft;
   unitById: Map<string, FormationTemplateUnitEntry>;
   editable: boolean;
+  maximumBattleGroupUnits: number;
   onAddBattleGroup: (role: BattleFormationRole) => void;
   onRemoveBattleGroup: (groupId: string) => void;
   onAdjustBattleGroupUnitCount: (groupId: string, unitId: string, delta: number) => void;
@@ -100,8 +101,8 @@ export function TemplateBattlePlanner({
               <div className="chart-template-battle-group-head">
                 <img src={roleIcon} alt="" className="chart-template-battle-group-icon" draggable={false} />
                 <span className="chart-template-battle-group-title">{groupName}</span>
-                <span className={`chart-template-battle-group-count${groupCount > MAX_BATTLE_FORMATION_SIZE ? ' chart-template-battle-group-count--bad' : ''}`}>
-                  {formatNumber(groupCount)} / {formatNumber(MAX_BATTLE_FORMATION_SIZE)}
+                <span className={`chart-template-battle-group-count${groupCount > maximumBattleGroupUnits ? ' chart-template-battle-group-count--bad' : ''}`}>
+                  {formatNumber(groupCount)} / {formatNumber(maximumBattleGroupUnits)}
                 </span>
                 <button
                   type="button"
@@ -118,7 +119,7 @@ export function TemplateBattlePlanner({
                 {groupUnits.length === 0 ? (
                   <div className="chart-template-empty-inline"><WebUIText textKey="FormationTemplate.BattlePlan.EmptyGroup" /></div>
                 ) : groupUnits.map(({ unit, count }) => {
-                  const canIncrement = editable && groupCount < MAX_BATTLE_FORMATION_SIZE;
+                  const canIncrement = editable && groupCount < maximumBattleGroupUnits;
 
                   return (
                     <div key={unit.id} className="chart-template-battle-unit">
@@ -156,7 +157,7 @@ export function TemplateBattlePlanner({
                 type="button"
                 className="chart-template-battle-pick-unit"
                 onClick={() => onOpenUnitCatalogue(group.id)}
-                disabled={!editable || groupCount >= MAX_BATTLE_FORMATION_SIZE}
+                disabled={!editable || groupCount >= maximumBattleGroupUnits}
               >
                 <img src={ADD_ICON} alt="" className="chart-template-battle-pick-unit-icon" draggable={false} />
                 <WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.616.2" />

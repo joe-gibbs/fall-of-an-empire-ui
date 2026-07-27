@@ -19,6 +19,8 @@ export default function ResourceDetailsProvider({ children }: { children: ReactN
         resource={resource}
         gold={economy?.gold ?? 0}
         autoBuyEnabled={economy?.autoBuyEnabled ?? false}
+        tradeAmount={economy?.tradeTransactionAmount ?? 0}
+        autoSellThresholdStep={economy?.autoSellThresholdStep ?? 0}
         onClose={actions.closeResource}
       />
     </ResourceDetailsContext.Provider>

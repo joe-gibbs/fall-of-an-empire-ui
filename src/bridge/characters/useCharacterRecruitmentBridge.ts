@@ -1,6 +1,13 @@
 import { bridgeCall, type RecruitCharacterForRoleResponse } from '../../bridge-types.generated.ts';
+import { useBridgeQuery } from '../core/useBridgeQuery';
 
-export const RECRUIT_CHARACTER_GOLD_COST = 500;
+export function useRecruitCharacterGoldCost(): number | null {
+  return useBridgeQuery({
+    action: 'game.get_character_recruitment_config',
+    map: data => data.goldCost,
+    cacheResponse: true,
+  });
+}
 
 export type RecruitCharacterRole =
   | 'commander'

@@ -24,7 +24,6 @@ import {
   compositionRequests,
   fmt,
   groupAssignedCountExcluding,
-  MAX_BATTLE_FORMATION_SIZE,
   orderedBattleGroupUnitIds,
   resourceAmount,
   resourceIcon,
@@ -416,6 +415,7 @@ export function CombatTab({
   draft,
   unitById,
   derived,
+  maximumBattleGroupUnits,
   onAddBattleGroup,
   onRemoveBattleGroup,
   onSetBattleGroupUnitCount,
@@ -423,6 +423,7 @@ export function CombatTab({
   draft: DraftTemplate;
   unitById: Map<string, FormationTemplateUnitEntry>;
   derived: DerivedTotals;
+  maximumBattleGroupUnits: number;
   onAddBattleGroup: (role: BattleFormationRole) => void;
   onRemoveBattleGroup: (groupId: string) => void;
   onSetBattleGroupUnitCount: (groupId: string, unitId: string, count: number) => void;
@@ -507,7 +508,7 @@ export function CombatTab({
               <div className="tpl-battle-group-head">
                 <img src={roleIcon} alt="" className="tpl-battle-group-icon" />
                 <span className="tpl-battle-group-title">{groupName}</span>
-                <span className={`tpl-battle-group-count${groupCount > MAX_BATTLE_FORMATION_SIZE ? ' tpl-battle-group-count--bad' : ''}`}>{`${fmt(groupCount)} / ${fmt(MAX_BATTLE_FORMATION_SIZE)}`}</span>
+                <span className={`tpl-battle-group-count${groupCount > maximumBattleGroupUnits ? ' tpl-battle-group-count--bad' : ''}`}>{`${fmt(groupCount)} / ${fmt(maximumBattleGroupUnits)}`}</span>
                 <button type="button" className="tpl-unit-remove" onMouseDown={() => onRemoveBattleGroup(group.id)} aria-label={webUIText('FormationTemplate.BattlePlan.RemoveGroup')}>
                   <img src="/assets/icons/I_Trash.png" alt="" className="tpl-unit-action-icon" />
                 </button>
@@ -518,7 +519,7 @@ export function CombatTab({
                 ) : groupUnits.map(({ unit, count }) => {
                   const assignedElsewhere = groupAssignedCountExcluding(draft, unit.id, group.id);
                   const availableForGroup = Math.max(0, (draft.counts[unit.id] ?? 0) - assignedElsewhere);
-                  const groupRoom = MAX_BATTLE_FORMATION_SIZE - groupCount;
+                  const groupRoom = maximumBattleGroupUnits - groupCount;
                   const canIncrement = count < availableForGroup && groupRoom > 0;
                   return (
                     <div key={unit.id} className="tpl-battle-group-unit">
@@ -533,7 +534,7 @@ export function CombatTab({
                   );
                 })}
               </div>
-              {compatibleUnassigned.length > 0 && groupCount < MAX_BATTLE_FORMATION_SIZE && (
+              {compatibleUnassigned.length > 0 && groupCount < maximumBattleGroupUnits && (
                 <div className="tpl-battle-group-add-list">
                   {compatibleUnassigned.map(({ unit, count }) => (
                     <button key={unit.id} type="button" className="tpl-battle-group-add-unit" onMouseDown={() => onSetBattleGroupUnitCount(group.id, unit.id, (group.counts[unit.id] ?? 0) + 1)}>

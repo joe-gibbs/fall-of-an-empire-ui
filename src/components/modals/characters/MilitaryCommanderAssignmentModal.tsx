@@ -9,9 +9,9 @@ import {
   type MilitaryCommanderCandidateView,
 } from '../../../bridge/military-map/useMilitaryBridge';
 import {
-  RECRUIT_CHARACTER_GOLD_COST,
   recruitCharacterForRoleBridge,
   refreshMilitaryCommanderCandidatesBridge,
+  useRecruitCharacterGoldCost,
 } from '../../../bridge/characters/useCharacterRecruitmentBridge';
 import { formatNumber } from '../../../utils/numberFormat';
 import { useModalPresence } from '../../../hooks/useModalPresence';
@@ -98,7 +98,8 @@ export default function MilitaryCommanderAssignmentModal({
   const selectedIsCurrent = !!selected && (selected.isCurrentCommander || selected.id === currentCommanderId);
   const candidateEmptyText = candidatesResult?.message || webUIText('MilitaryCommander.Empty');
   const canRecruit = !!candidatesResult?.found && !candidatesResult?.message;
-  const canAffordRecruit = gold >= RECRUIT_CHARACTER_GOLD_COST;
+  const recruitGoldCost = useRecruitCharacterGoldCost();
+  const canAffordRecruit = recruitGoldCost !== null && gold >= recruitGoldCost;
 
   const handleAssign = useCallback(() => {
     if (!selected || selectedIsCurrent) return;
@@ -135,7 +136,7 @@ export default function MilitaryCommanderAssignmentModal({
   const title = currentCommanderId
     ? webUIText('MilitaryCommander.ReplaceTitle')
     : webUIText('MilitaryCommander.AssignTitle');
-  const recruitButton = canRecruit ? (
+  const recruitButton = canRecruit && recruitGoldCost !== null ? (
     <GameButton
       variant="outline"
       className="candidate-list-action"
@@ -143,7 +144,7 @@ export default function MilitaryCommanderAssignmentModal({
       onClick={handleRecruit}
       disabled={recruiting || !canAffordRecruit}
     >
-      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(RECRUIT_CHARACTER_GOLD_COST) })}
+      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(recruitGoldCost) })}
     </GameButton>
   ) : undefined;
 

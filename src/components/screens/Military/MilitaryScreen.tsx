@@ -546,6 +546,8 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
           initialTemplateId={initialTemplateId}
           initialCreateType={initialCreateType}
           assignmentTargetId={assignmentTargetId}
+          maximumBattleGroupUnits={templateData?.maximumBattleGroupUnits ?? 0}
+          maximumFormationTemplates={templateData?.maximumFormationTemplates ?? 0}
           onCloseScreen={onClose}
         />
       ) : (

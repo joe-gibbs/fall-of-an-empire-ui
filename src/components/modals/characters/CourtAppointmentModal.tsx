@@ -7,10 +7,10 @@ import { useCourtCandidates } from '../../../data-source/index';
 import { appointToCourtPosition, type CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import {
-  RECRUIT_CHARACTER_GOLD_COST,
   recruitCharacterForRoleBridge,
   refreshCourtCandidatesBridge,
   type RecruitCharacterRole,
+  useRecruitCharacterGoldCost,
 } from '../../../bridge/characters/useCharacterRecruitmentBridge';
 import type { StatKey } from '../../../data/types';
 import { formatNumber } from '../../../utils/numberFormat';
@@ -192,7 +192,8 @@ export default function CourtAppointmentModal({
 
   const selected = candidates.find(candidate => candidate.character.id === effectiveSelectedId) || candidates[0];
   const canRecruit = renderedPosition?.key !== 'masterofreligion';
-  const canAffordRecruit = gold >= RECRUIT_CHARACTER_GOLD_COST;
+  const recruitGoldCost = useRecruitCharacterGoldCost();
+  const canAffordRecruit = recruitGoldCost !== null && gold >= recruitGoldCost;
 
   const handleAppoint = useCallback(() => {
     if (!selected || !renderedPosition) return;
@@ -231,7 +232,7 @@ export default function CourtAppointmentModal({
   const appointmentActionLabel = renderedPosition.holder
     ? webUIText('CourtAppointment.ReplaceAction')
     : webUIText('Auto.ComponentsModalsCourtAppointmentModal.210.2');
-  const recruitButton = canRecruit ? (
+  const recruitButton = canRecruit && recruitGoldCost !== null ? (
     <GameButton
       variant="outline"
       className="candidate-list-action"
@@ -239,7 +240,7 @@ export default function CourtAppointmentModal({
       onClick={handleRecruit}
       disabled={recruiting || !canAffordRecruit}
     >
-      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(RECRUIT_CHARACTER_GOLD_COST) })}
+      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(recruitGoldCost) })}
     </GameButton>
   ) : undefined;
 

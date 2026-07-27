@@ -49,7 +49,6 @@ import {
   EMPTY_UNIT_CATALOGUE,
   fmt,
   groupAssignedCountExcluding,
-  MAX_BATTLE_FORMATION_SIZE,
   newTemplateTypeFromSidebarId,
   normaliseTemplateType,
   removeUnitsFromBattleGroups,
@@ -70,6 +69,7 @@ interface FormationTemplateSidebarProps {
 
 const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sidebarId, onClose }) => {
   const data = useFormationTemplatesBridge();
+  const maximumBattleGroupUnits = data?.maximumBattleGroupUnits ?? 0;
   const { openSidebar } = useGameActions();
   const templates = useMemo(() => data?.templates ?? [], [data]);
   const assignmentTargetId = sidebarId && sidebarId.startsWith('assign:')
@@ -221,7 +221,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
   const headerTint = iconProfile.tint;
   const selectedSiblings = templatesForMode.filter(template => normaliseTemplateType(template.type) === draft.type);
   const selectedIndex = selectedSiblings.findIndex(template => template.id === selected?.id);
-  const canSave = isDirty && draft.name.trim().length > 0 && unitCount > 0 && battleGroupsValid(draft, unitById) && (!selected || selected.canEdit);
+  const canSave = isDirty && draft.name.trim().length > 0 && unitCount > 0 && battleGroupsValid(draft, unitById, maximumBattleGroupUnits) && (!selected || selected.canEdit);
   const canApply = Boolean(selected && !isDirty && selected.canApply);
   const canAssign = Boolean(assignmentTarget && selected && !isDirty && normaliseTemplateType(selected.type) === assignmentTemplateType);
   const assignButtonLabel = assignmentTarget
@@ -359,7 +359,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
         const currentCount = group.counts[unitId] ?? 0;
         const assignedElsewhere = groupAssignedCountExcluding(current, unitId, groupId);
         const availableForGroup = Math.max(0, (current.counts[unitId] ?? 0) - assignedElsewhere);
-        const groupRoom = MAX_BATTLE_FORMATION_SIZE - battleGroupUnitCount(group) + currentCount;
+        const groupRoom = maximumBattleGroupUnits - battleGroupUnitCount(group) + currentCount;
         const nextCount = Math.max(0, Math.min(count, availableForGroup, groupRoom));
         const counts = { ...group.counts };
         let order = group.order.includes(unitId) ? [...group.order] : [...group.order, unitId];
@@ -636,6 +636,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
             draft={draft}
             unitById={unitById}
             derived={derived}
+            maximumBattleGroupUnits={maximumBattleGroupUnits}
             onAddBattleGroup={addBattleGroup}
             onRemoveBattleGroup={removeBattleGroup}
             onSetBattleGroupUnitCount={setBattleGroupUnitCount}

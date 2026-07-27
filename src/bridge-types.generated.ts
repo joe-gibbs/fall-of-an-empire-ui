@@ -813,6 +813,8 @@ export interface GetDiplomaticNegotiationStateResponse {
   availableRequests: DiplomaticNegotiationOption[];
   ourResources: DiplomaticNegotiationResourceOption[];
   theirResources: DiplomaticNegotiationResourceOption[];
+  amountStep: number;
+  durationOptionsDays: number[];
   preview: DiplomaticNegotiationPreview;
   emptyReason: string;
 }
@@ -1071,6 +1073,8 @@ export interface GetFormationTemplatesResponse {
   pendingFormations: PendingFormationEntry[];
   activeBuildTemplateId: string;
   playerGold: number;
+  maximumBattleGroupUnits: number;
+  maximumFormationTemplates: number;
 }
 
 export interface GetFormationTemplateCatalogueResponse {
@@ -1461,6 +1465,10 @@ export interface GetCharacterListResponse {
   scope: string;
   characters: CharacterListEntry[];
   traits: CharacterListTraitEntry[];
+}
+
+export interface GetCharacterRecruitmentConfigResponse {
+  goldCost: number;
 }
 
 export interface GetContentPackWebUIManifestResponse {
@@ -1911,6 +1919,10 @@ export interface EconomyOverviewVassalRow {
 }
 
 export interface GetEconomyOverviewResponse {
+  tradeTransactionAmount: number;
+  tradeShiftMultiplier: number;
+  tradeControlShiftMultiplier: number;
+  autoSellThresholdStep: number;
   gold: number;
   netIncome: number;
   incomeTotal: number;
@@ -2456,6 +2468,9 @@ export interface GetGameStateResponse {
   month: number;
   year: number;
   gameDay: number;
+  calendarKey: string;
+  daysInYear: number;
+  daysInMonth: number;
   dateText: string;
   season: string;
   isPaused: boolean;
@@ -2475,6 +2490,9 @@ export interface GameDateChangedEvent {
   month: number;
   year: number;
   gameDay: number;
+  calendarKey: string;
+  daysInYear: number;
+  daysInMonth: number;
   dateText: string;
   season: string;
   demoDaysRemaining: number;
@@ -5458,6 +5476,8 @@ export interface GetPeaceNegotiationStateResponse {
   theirParticipants: PeaceNegotiationParticipant[];
   terms: PeaceNegotiationTermEntry[];
   availableTerms: PeaceNegotiationTermOption[];
+  amountStep: number;
+  durationOptionsDays: number[];
   preview: PeaceNegotiationPreview;
   emptyReason: string;
 }
@@ -6358,6 +6378,7 @@ export interface BridgeActions {
   'game.get_build_queue': { request: GetBuildQueueRequest; response: GetBuildQueueResponse };
   'game.get_bureaucratic_throughput': { request: void; response: GetBureaucraticThroughputResponse };
   'game.get_character_list': { request: GetCharacterListRequest; response: GetCharacterListResponse };
+  'game.get_character_recruitment_config': { request: void; response: GetCharacterRecruitmentConfigResponse };
   'game.get_content_pack_webui_manifest': { request: void; response: GetContentPackWebUIManifestResponse };
   'game.get_convoy_glance_filters': { request: void; response: GetConvoyGlanceFiltersResponse };
   'game.get_court_appointment_contests': { request: void; response: GetCourtAppointmentContestsResponse };

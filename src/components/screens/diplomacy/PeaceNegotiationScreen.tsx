@@ -10,10 +10,11 @@ import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/too
 import NumberStepper from '../../common/forms/NumberStepper';
 import { usePeaceNegotiationBridge, type PeaceNegotiationState, type PeaceTermDraft } from '../../../bridge/diplomacy/usePeaceNegotiationBridge';
 import { onBridgeEvent } from '../../../bridge-types.generated.ts';
-import { useGameActions } from '../../../context/GameContext';
+import { useGameActions, useGameState } from '../../../context/GameContext';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { renderRichText, stripRichTags } from '../../../utils/richText';
 import { registerScreen } from '../../../registry/index';
+import { UI_MOTION } from '../../../config/motion';
 import './PeaceNegotiationScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -36,14 +37,7 @@ type ReplacementCandidate = TermOption['replacementCandidates'][number];
 type AcceptabilityTone = 'green' | 'gold' | 'red';
 type ParticipantRoleKind = 'leader' | 'subject' | null;
 
-const TRIBUTE_AMOUNT_STEP = 50;
-const ACCEPTED_CLOSE_DELAY_MS = 1150;
-const TRIBUTE_DURATION_OPTIONS = [
-  { days: 365, label: '1' },
-  { days: 730, label: '2' },
-  { days: 1825, label: '5' },
-  { days: 3650, label: '10' },
-] as const;
+const TRIBUTE_DURATION_YEAR_LABELS = ['1', '2', '5', '10'] as const;
 
 const TERM_ICONS: Record<string, string> = {
   onetime_tribute: '/assets/icons/I_OfferTribute.png',
@@ -319,12 +313,12 @@ function fmtWarScore(value: number): string {
   return `${formatted} (Stalemate)`;
 }
 
-function fmtWarDuration(days: number | undefined): string {
+function fmtWarDuration(days: number | undefined, daysInYear: number, daysInMonth: number): string {
   const totalDays = Math.max(0, Math.round(days ?? 0));
-  const years = Math.floor(totalDays / 336);
-  const remainingDays = totalDays % 336;
-  const months = Math.floor(remainingDays / 28);
-  const daysLeft = remainingDays % 28;
+  const years = Math.floor(totalDays / daysInYear);
+  const remainingDays = totalDays % daysInYear;
+  const months = Math.floor(remainingDays / daysInMonth);
+  const daysLeft = remainingDays % daysInMonth;
 
   if (years > 0 && months > 0) {
     return webUIText('Common.YearMonthDuration', {
@@ -441,8 +435,8 @@ function shouldGroupOptions(options: TermOption[]): boolean {
   return options[0]?.type === 'release_vassal';
 }
 
-function buildWarSummary(state: PeaceNegotiationState): string {
-  const parts = [fmtWarDuration(state.warDurationDays)];
+function buildWarSummary(state: PeaceNegotiationState, daysInYear: number, daysInMonth: number): string {
+  const parts = [fmtWarDuration(state.warDurationDays, daysInYear, daysInMonth)];
   if (state.battlesFought > 0) {
     parts.push(`${fmt(state.battlesFought)} ${state.battlesFought === 1 ? 'battle' : 'battles'}`);
   }
@@ -572,12 +566,16 @@ function Confronter({
 function DraftTermChip({
   term,
   live,
+  amountStep,
+  durationOptionsDays,
   onRemove,
   onChange,
   onViewCharacter,
 }: {
   term: PeaceTermDraft;
   live?: TermEntry;
+  amountStep: number;
+  durationOptionsDays: number[];
   onRemove: () => void;
   onChange: (patch: Partial<PeaceTermDraft>) => void;
   onViewCharacter: (personId: string) => void;
@@ -589,7 +587,7 @@ function DraftTermChip({
   const isTribute = term.type === 'onetime_tribute' || term.type === 'ongoing_tribute';
   const isOngoing = term.type === 'ongoing_tribute';
   const tributeAmount = Math.max(0, Math.round(term.tributeAmount ?? live?.tributeAmount ?? 0));
-  const tributeDurationDays = term.tributeDurationDays || live?.tributeDurationDays || 3650;
+  const tributeDurationDays = term.tributeDurationDays || live?.tributeDurationDays || durationOptionsDays[durationOptionsDays.length - 1];
   const candidates = replacementCandidates(term, live);
   const activeReplacementId = term.replacementRulerId || live?.replacementRulerId || candidates[0]?.id || '';
 
@@ -618,7 +616,7 @@ function DraftTermChip({
                 <span className="pns-term-control-label"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.412.3" /></span>
                 <NumberStepper
                   value={tributeAmount}
-                  step={TRIBUTE_AMOUNT_STEP}
+                  step={amountStep}
                   min={0}
                   className="pns-amount-control"
                   buttonClassName="pns-step-btn"
@@ -632,14 +630,14 @@ function DraftTermChip({
                 <div className="pns-term-field pns-term-field--years">
                   <span className="pns-term-control-label"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.438.4" /></span>
                   <div className="pns-duration-options">
-                    {TRIBUTE_DURATION_OPTIONS.map(option => (
+                    {durationOptionsDays.map((days, index) => (
                       <button
-                        key={option.days}
+                        key={days}
                         type="button"
-                        className={`pns-duration-button${tributeDurationDays === option.days ? ' pns-duration-button--active' : ''}`}
-                        onMouseDown={() => onChange({ tributeDurationDays: option.days })}
+                        className={`pns-duration-button${tributeDurationDays === days ? ' pns-duration-button--active' : ''}`}
+                        onMouseDown={() => onChange({ tributeDurationDays: days })}
                       >
-                        {option.label}
+                        {TRIBUTE_DURATION_YEAR_LABELS[index]}
                       </button>
                     ))}
                   </div>
@@ -789,6 +787,8 @@ function TermsColumn({
   selectedTerms,
   stateTerms,
   total,
+  amountStep,
+  durationOptionsDays,
   onRemove,
   onChange,
   onViewCharacter,
@@ -799,6 +799,8 @@ function TermsColumn({
   selectedTerms: PeaceTermDraft[];
   stateTerms: TermEntry[];
   total: number;
+  amountStep: number;
+  durationOptionsDays: number[];
   onRemove: (termId: string) => void;
   onChange: (termId: string, patch: Partial<PeaceTermDraft>) => void;
   onViewCharacter: (personId: string) => void;
@@ -827,6 +829,8 @@ function TermsColumn({
                 key={id}
                 term={term}
                 live={byId.get(id)}
+                amountStep={amountStep}
+                durationOptionsDays={durationOptionsDays}
                 onRemove={() => onRemove(id)}
                 onChange={patch => onChange(id, patch)}
                 onViewCharacter={onViewCharacter}
@@ -977,6 +981,7 @@ function PeaceNegotiationScreenContent({
   onClose: () => void;
 }) {
   const { openScreen, openSidebar } = useGameActions();
+  const { daysInYear, daysInMonth } = useGameState();
   const [terms, setTerms] = useState<PeaceTermDraft[]>([]);
   const [sourceOfferHydrated, setSourceOfferHydrated] = useState(false);
   const [submitState, setSubmitState] = useState<PeaceNegotiationState | null>(null);
@@ -1056,7 +1061,7 @@ function PeaceNegotiationScreenContent({
           ) : null}
         </div>
         <span className="pns-title-progress-value">{fmtWarScore(warScore)}</span>
-        <span className="pns-title-progress-summary">{buildWarSummary(state)}</span>
+        <span className="pns-title-progress-summary">{buildWarSummary(state, daysInYear, daysInMonth)}</span>
       </div>
     </Tooltip>
   ) : undefined;
@@ -1205,7 +1210,10 @@ function PeaceNegotiationScreenContent({
       if (acceptedCloseTimerRef.current !== null) {
         window.clearTimeout(acceptedCloseTimerRef.current);
       }
-      acceptedCloseTimerRef.current = window.setTimeout(onClose, ACCEPTED_CLOSE_DELAY_MS);
+      acceptedCloseTimerRef.current = window.setTimeout(
+        onClose,
+        UI_MOTION.acceptedNegotiationCloseMs
+      );
       return;
     }
 
@@ -1248,6 +1256,8 @@ function PeaceNegotiationScreenContent({
             selectedTerms={selectedConcessions}
             stateTerms={liveTerms}
             total={concessionCost}
+            amountStep={state.amountStep}
+            durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}
             onChange={updateTerm}
             onViewCharacter={id => openSidebar('character', id)}
@@ -1260,6 +1270,8 @@ function PeaceNegotiationScreenContent({
             selectedTerms={selectedDemands}
             stateTerms={liveTerms}
             total={demandCost}
+            amountStep={state.amountStep}
+            durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}
             onChange={updateTerm}
             onViewCharacter={id => openSidebar('character', id)}

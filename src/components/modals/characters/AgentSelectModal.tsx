@@ -13,9 +13,9 @@ import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/
 import { bridgeCall } from '../../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import {
-  RECRUIT_CHARACTER_GOLD_COST,
   recruitCharacterForRoleBridge,
   refreshAgentCandidatesBridge,
+  useRecruitCharacterGoldCost,
 } from '../../../bridge/characters/useCharacterRecruitmentBridge';
 import { useModalPresence } from '../../../hooks/useModalPresence';
 import {
@@ -230,7 +230,8 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
     : candidates[0]?.character.id ?? null;
 
   const selected = candidates.find(c => c.character.id === effectiveSelectedId) || candidates[0];
-  const canAffordRecruit = gold >= RECRUIT_CHARACTER_GOLD_COST;
+  const recruitGoldCost = useRecruitCharacterGoldCost();
+  const canAffordRecruit = recruitGoldCost !== null && gold >= recruitGoldCost;
 
   const handleAppoint = useCallback(() => {
     if (!selected) return;
@@ -286,7 +287,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
   const primaryStatLabel = webUIText("Auto.Var.componentsmodalsAgentSelectModal.297.1");
   const roleIconPath = role === 'diplomat' ? '/assets/icons/I_Diplomacy.png' : '/assets/icons/I_Intrigue.png';
   const roleReadable = role === 'diplomat' ? webUIText('AgentSelect.Role.Diplomatic') : webUIText('AgentSelect.Role.Intrigue');
-  const recruitButton = (
+  const recruitButton = recruitGoldCost === null ? undefined : (
     <GameButton
       variant="outline"
       className="candidate-list-action"
@@ -294,7 +295,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
       onClick={handleRecruit}
       disabled={recruiting || !canAffordRecruit}
     >
-      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(RECRUIT_CHARACTER_GOLD_COST) })}
+      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(recruitGoldCost) })}
     </GameButton>
   );
 

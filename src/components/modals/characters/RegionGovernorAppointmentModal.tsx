@@ -7,9 +7,9 @@ import { useRegionGovernorCandidates } from '../../../data-source/index';
 import { appointRegionGovernorBridge, type RegionGovernorCandidateView } from '../../../bridge/settlements-economy/useSettlementManagementBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import {
-  RECRUIT_CHARACTER_GOLD_COST,
   recruitCharacterForRoleBridge,
   refreshRegionGovernorCandidatesBridge,
+  useRecruitCharacterGoldCost,
 } from '../../../bridge/characters/useCharacterRecruitmentBridge';
 import type { StatKey } from '../../../data/types';
 import { formatNumber } from '../../../utils/numberFormat';
@@ -109,7 +109,8 @@ export default function RegionGovernorAppointmentModal({
     : candidates[0]?.id ?? null;
   const selected = candidates.find(candidate => candidate.id === effectiveSelectedId) ?? candidates[0];
   const selectedIsCurrent = !!selected && selected.id === currentGovernorId;
-  const canAffordRecruit = gold >= RECRUIT_CHARACTER_GOLD_COST;
+  const recruitGoldCost = useRecruitCharacterGoldCost();
+  const canAffordRecruit = recruitGoldCost !== null && gold >= recruitGoldCost;
 
   const handleAppoint = useCallback(() => {
     if (!selected || selectedIsCurrent) return;
@@ -153,7 +154,7 @@ export default function RegionGovernorAppointmentModal({
   const primaryStatIcon = statIconPath(PRIMARY_STAT);
   const primaryStatLabel = webUIText('Common.Governance');
   const headerIcon = currentGovernorId ? '/assets/icons/I_ReplaceGovernor.png' : '/assets/icons/AssignGovernor.png';
-  const recruitButton = (
+  const recruitButton = recruitGoldCost === null ? undefined : (
     <GameButton
       variant="outline"
       className="candidate-list-action"
@@ -161,7 +162,7 @@ export default function RegionGovernorAppointmentModal({
       onClick={handleRecruit}
       disabled={recruiting || !canAffordRecruit}
     >
-      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(RECRUIT_CHARACTER_GOLD_COST) })}
+      {webUIText('CandidateRecruit.RecruitWithCost', { Cost: formatNumber(recruitGoldCost) })}
     </GameButton>
   );
 

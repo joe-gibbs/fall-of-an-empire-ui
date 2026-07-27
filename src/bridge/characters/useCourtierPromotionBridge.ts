@@ -45,7 +45,7 @@ const INITIAL: CourtierPromotionState = {
   settlementId: '',
   settlementName: '',
   playerGold: 0,
-  promotionCost: 500,
+  promotionCost: 0,
   types: [],
 };
 
@@ -82,7 +82,7 @@ function mapBridgeType(t: BridgeCourtierType): CourtierType {
   };
 }
 
-let costCache = 500;
+let costCache = 0;
 
 /**
  * Listens for ui.courtier_promotion_event pushes from the game. The game

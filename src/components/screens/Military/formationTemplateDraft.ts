@@ -8,8 +8,6 @@ import type {
 import { formatNumber } from '../../../utils/numberFormat';
 import type { TemplateCreateType } from './screenTokens';
 
-export const MAX_BATTLE_FORMATION_SIZE = 10;
-
 let nextBattleGroupId = 1;
 
 export type BattleFormationRole = 'melee' | 'ranged' | 'siege';
@@ -187,13 +185,17 @@ export function battleRoleForUnit(unit: FormationTemplateUnitEntry | undefined):
   return unit ? normaliseBattleRole(unit.battleRole) : 'melee';
 }
 
-export function battleGroupsValid(draft: TemplateDraft, unitById: Map<string, FormationTemplateUnitEntry>): boolean {
+export function battleGroupsValid(
+  draft: TemplateDraft,
+  unitById: Map<string, FormationTemplateUnitEntry>,
+  maximumBattleGroupUnits: number,
+): boolean {
   const requests = draftCompositionRequests(draft);
   if (requests.length === 0) return false;
 
   return draft.battleGroups.every(group => {
     const total = battleGroupUnitCount(group);
-    if (total <= 0 || total > MAX_BATTLE_FORMATION_SIZE) return false;
+    if (total <= 0 || total > maximumBattleGroupUnits) return false;
     return orderedBattleGroupUnitIds(group).every(unitId => {
       const unit = unitById.get(unitId);
       return unit ? battleRoleForUnit(unit) === group.role : false;

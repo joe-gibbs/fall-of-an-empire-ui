@@ -3,11 +3,9 @@ import Tooltip, { type TooltipContent } from '../common/tooltips/Tooltip';
 import { useGameState } from '../../context/GameContext';
 import { webUIText } from '../../localization/WebUITextContext';
 
-const DEMO_DAYS_PER_YEAR = 336;
-
-const formatDemoTimeRemaining = (daysRemaining: number): string => {
-  const years = Math.floor(daysRemaining / DEMO_DAYS_PER_YEAR);
-  const days = daysRemaining % DEMO_DAYS_PER_YEAR;
+const formatDemoTimeRemaining = (daysRemaining: number, daysInYear: number): string => {
+  const years = Math.floor(daysRemaining / daysInYear);
+  const days = daysRemaining % daysInYear;
   if (years > 0 && days > 0) {
     return webUIText('Demo.TimeRemainingYearsDays', { Years: years, Days: days });
   }
@@ -18,12 +16,12 @@ const formatDemoTimeRemaining = (daysRemaining: number): string => {
 };
 
 const DemoTimer: React.FC = () => {
-  const { hasDemoTimeLimit, demoDaysRemaining, demoEndDateText } = useGameState();
+  const { hasDemoTimeLimit, demoDaysRemaining, demoEndDateText, daysInYear } = useGameState();
   if (!hasDemoTimeLimit) {
     return null;
   }
 
-  const timeRemaining = formatDemoTimeRemaining(demoDaysRemaining);
+  const timeRemaining = formatDemoTimeRemaining(demoDaysRemaining, daysInYear);
   const tooltip: TooltipContent = {
     title: webUIText('Demo.TimeRemaining'),
     lines: [

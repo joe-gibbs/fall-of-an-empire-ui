@@ -9,7 +9,7 @@ import CourtOfficeSummary from '../../common/entities/CourtOfficeSummary';
 import VirtualList from '../../common/layout/scrolling/VirtualList';
 import CourtAppointmentModal from '../../modals/characters/CourtAppointmentModal';
 import SortableHeader from '../../common/layout/tables/SortableHeader';
-import { useGameActions } from '../../../context/GameContext';
+import { useGameActions, useGameState } from '../../../context/GameContext';
 import { useCourtPositions, useFaction, usePlayerFactionId } from '../../../data-source/index';
 import { breakTreatyBridge, useDiplomacyOverviewBridge, type DiplomacyOverviewState } from '../../../bridge/diplomacy/useDiplomacyOverviewBridge';
 import type { CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
@@ -98,10 +98,10 @@ function fmtSigned(value: number | undefined): string {
   return formatSignedNumber(value);
 }
 
-function fmtDuration(days: number | undefined): string {
+function fmtDuration(days: number | undefined, daysInYear: number): string {
   const total = Math.max(0, Math.round(days ?? 0));
-  const years = Math.floor(total / 336);
-  const remainder = total % 336;
+  const years = Math.floor(total / daysInYear);
+  const remainder = total % daysInYear;
   const dayText = `${fmt(remainder)} day${remainder === 1 ? '' : 's'}`;
   if (years <= 0) return dayText;
   return `${fmt(years)} year${years === 1 ? '' : 's'}, ${dayText}`;
@@ -625,6 +625,7 @@ function Treaties({ rows }: { rows: FactionTreaty[] }) {
 
 function ActiveWars({ rows }: { rows: ActiveWar[] }) {
   const { openScreen } = useGameActions();
+  const { daysInYear } = useGameState();
   const [sort, setSort] = useState<SortState<WarSortKey>>({ key: 'warScore', direction: 'desc' });
   const sortedRows = useMemo(() => sortedWarRows(rows, sort), [rows, sort]);
 
@@ -683,7 +684,7 @@ function ActiveWars({ rows }: { rows: ActiveWar[] }) {
               <span className="dps-war-score-value">{fmtSigned(row.warScore)}</span>
             </Tooltip>
           </TableCell>
-          <TableCell className="dps-table-col--short">{fmtDuration(row.durationDays)}</TableCell>
+          <TableCell className="dps-table-col--short">{fmtDuration(row.durationDays, daysInYear)}</TableCell>
           <TableCell className="dps-table-col--short">{fmt(row.battlesFought)}</TableCell>
           <TableCell className="dps-table-col--actions">
             {row.canNegotiate && row.theirLeader.id ? (
