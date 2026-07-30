@@ -1,4 +1,5 @@
 import { bridgeCall, onBridgeEvent, type GetContentPackWebUIManifestResponse } from '../bridge-types.generated.ts';
+import { getRuntimeEngine } from '../bridge/core/runtimeEngine';
 import { registerModPoCatalogues } from '../localization/modPoText';
 import { registerAssetOverride, registerContentPackAssetPaths } from '../utils/assets';
 import { joinGameLocalResourceUrl } from '../utils/localResourceUrl';
@@ -24,8 +25,9 @@ import { joinGameLocalResourceUrl } from '../utils/localResourceUrl';
  *     { "name": "sample", "entry": "/mods/sample/index.js", "styles": ["/mods/sample/style.css"] }
  *   ]
  *
- * `main.tsx` awaits `modsReady` before rendering so registrations land
- * in the registry before the first paint.
+ * `main.tsx` awaits `modsReady` before rendering so manifest registrations
+ * land in the registry before the first paint. Content-pack UI is discovered
+ * over the bridge and registers after it, once the runtime is up.
  *
  * Deployment notes:
  *   - In dev, files under `WebUI/public/mods/` are served at `/mods/...`
@@ -160,13 +162,37 @@ function contentPackManifestEntries(parsed: ContentPackWebUIManifest): ModManife
   return entries;
 }
 
-async function fetchContentPackManifest(): Promise<ModManifestEntry[]> {
+/**
+ * Resolves once the Webkiln bridge is callable.
+ *
+ * `window.gameUI` is installed with the rest of the runtime scripts when the document finishes
+ * loading, so bridge calls made while the page is still parsing have nothing to talk to. The
+ * runtime announces itself with `webkiln:runtime-ready`; outside the game (dev server, mock mode)
+ * that event never fires and this never resolves, so only background work may await it.
+ */
+function whenBridgeAvailable(): Promise<void> {
+  if (getRuntimeEngine()) {
+    return Promise.resolve();
+  }
+  return new Promise(resolve => {
+    window.addEventListener('webkiln:runtime-ready', () => resolve(), { once: true });
+  });
+}
+
+/**
+ * Loads content-pack UI once the bridge is up. This runs off the boot path because the manifest
+ * needs the bridge: the pack entries register after the first paint, the same way they do when
+ * `game.get_content_pack_webui_manifest` arrives as a change event.
+ */
+async function loadContentPackMods(): Promise<void> {
+  await whenBridgeAvailable();
   try {
-    const response = await bridgeCall('game.get_content_pack_webui_manifest');
-    const parsed = parseContentPackManifest(response);
-    return parsed ? contentPackManifestEntries(parsed) : [];
+    const parsed = parseContentPackManifest(await bridgeCall('game.get_content_pack_webui_manifest'));
+    if (parsed) {
+      await loadModManifestEntries(contentPackManifestEntries(parsed));
+    }
   } catch {
-    return [];
+    // A manifest the bridge cannot serve leaves the base game UI intact.
   }
 }
 
@@ -240,11 +266,12 @@ async function loadMods(): Promise<void> {
     return;
   }
 
+  void loadContentPackMods();
+
   const manifest = await fetchManifest();
-  const contentPackManifest = await fetchContentPackManifest();
 
   const byEntry = new Map<string, ModManifestEntry>();
-  [...manifest, ...contentPackManifest].forEach(mod => {
+  manifest.forEach(mod => {
     if (mod.entry) byEntry.set(mod.entry, mod);
   });
   const allMods = Array.from(byEntry.values());
