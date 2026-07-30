@@ -171,11 +171,39 @@ function contentPackManifestEntries(parsed: ContentPackWebUIManifest): ModManife
  * that event never fires and this never resolves, so only background work may await it.
  */
 function whenBridgeAvailable(): Promise<void> {
+  // TEMPORARY startup diagnostics for the content-pack manifest failure.
+  const probe = (stage: string) => {
+    const gameUI = (window as { gameUI?: Record<string, unknown> }).gameUI;
+    console.warn(`[mods][probe] ${stage} t=${Math.round(performance.now()).toString()}ms`
+      + ` gameUI=${gameUI ? 'yes' : 'no'}`
+      + ` request=${typeof gameUI?.request} on=${typeof gameUI?.on} markReady=${typeof gameUI?.markReady}`
+      + ` engine=${getRuntimeEngine() ? 'yes' : 'no'}`
+      + ` readyState=${document.readyState}`);
+  };
+  probe('module-scope');
   if (getRuntimeEngine()) {
     return Promise.resolve();
   }
   return new Promise(resolve => {
-    window.addEventListener('webkiln:runtime-ready', () => resolve(), { once: true });
+    window.addEventListener('webkiln:runtime-ready', () => {
+      probe('runtime-ready');
+      resolve();
+    }, { once: true });
+    window.addEventListener('load', () => { probe('window-load'); }, { once: true });
+    const started = performance.now();
+    const tick = () => {
+      if (getRuntimeEngine()) {
+        probe('engine-appeared');
+        resolve();
+        return;
+      }
+      if (performance.now() - started > 30000) {
+        probe('gave-up');
+        return;
+      }
+      window.setTimeout(tick, 100);
+    };
+    tick();
   });
 }
 
@@ -186,13 +214,15 @@ function whenBridgeAvailable(): Promise<void> {
  */
 async function loadContentPackMods(): Promise<void> {
   await whenBridgeAvailable();
+  console.warn(`[mods][probe] calling manifest t=${Math.round(performance.now()).toString()}ms`);
   try {
     const parsed = parseContentPackManifest(await bridgeCall('game.get_content_pack_webui_manifest'));
+    console.warn(`[mods][probe] manifest ok t=${Math.round(performance.now()).toString()}ms packs=${parsed ? 'yes' : 'no'}`);
     if (parsed) {
       await loadModManifestEntries(contentPackManifestEntries(parsed));
     }
-  } catch {
-    // A manifest the bridge cannot serve leaves the base game UI intact.
+  } catch (error) {
+    console.warn(`[mods][probe] manifest failed t=${Math.round(performance.now()).toString()}ms`, error);
   }
 }
 
