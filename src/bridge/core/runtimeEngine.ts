@@ -9,6 +9,7 @@ export interface runtimeEngine {
 }
 
 interface WebkilnGameUI {
+  markReady: () => Promise<void>;
   request: (action: string, payload?: unknown) => Promise<unknown>;
   on: (name: string, callback: (...args: unknown[]) => void) => (() => void) | void;
 }
@@ -39,7 +40,7 @@ export function getruntimeEngine(): runtimeEngine | null {
 	}
 
 	const gameUI = window.gameUI;
-	if (!gameUI?.request || !gameUI.on) {
+	if (!gameUI?.request || !gameUI.on || !gameUI.markReady) {
 		return null;
 	}
 	if (!webkilnEngineAdapter) {

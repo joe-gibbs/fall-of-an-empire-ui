@@ -19,7 +19,7 @@ import { modsReady } from './mods/index'
 
 import App from './App.tsx'
 import './styles/raster-surfaces.css'
-import { acknowledgeBridgeFailure, getRuntimeEngine } from './bridge/core/runtimeEngine'
+import { getRuntimeEngine } from './bridge/core/runtimeEngine'
 import { bindUIPerfCommands, recordUIPerfBridgeEvent } from './perf/uiPerfProfiler'
 import { bindBridgeEventRuntime, publishBridgeEvent, subscribeBridgeEvent } from './bridge/core/bridgeEvents'
 import { installImageAutosize } from './utils/imageAutosize'
@@ -105,7 +105,7 @@ function bindRuntimeViewportScaleEvents() {
   });
 }
 
-function bindBridgeEvents(announceScriptingReady = true): boolean {
+function bindBridgeEvents(): boolean {
   const engine = getRuntimeEngine();
   if (!engine) {
     setRuntimeClass(false);
@@ -278,10 +278,6 @@ function bindBridgeEvents(announceScriptingReady = true): boolean {
     recordUIPerfBridgeEvent('game.notification_anchors_frame', startedAtMs, Date.now());
   });
 
-  if (announceScriptingReady) {
-    void Promise.resolve(engine.call('ScriptingReady'))
-      .catch(error => acknowledgeBridgeFailure(error, 'ScriptingReady'));
-  }
   return true;
 }
 
@@ -338,9 +334,14 @@ async function bootstrap() {
   bindUIPerfCommands();
 
   if (!bindBridgeEvents()) {
-    const retryId = window.setInterval(() => {
-      if (bindBridgeEvents()) window.clearInterval(retryId);
-    }, 50);
+    await new Promise<void>((resolve) => {
+      const retryId = window.setInterval(() => {
+        if (bindBridgeEvents()) {
+          window.clearInterval(retryId);
+          resolve();
+        }
+      }, 50);
+    });
   }
   configureWebkilnInput();
   installImageAutosize();
@@ -351,20 +352,22 @@ async function bootstrap() {
       <App />
     </StrictMode>,
   );
+  void window.gameUI?.markReady().catch(error => {
+    console.error('Webkiln application readiness failed', error);
+  });
 }
 
 // The world-anchor view boots the same bundle in a minimal mode: it binds engine events (the
 // snapshot and per-frame glance payloads arrive as events), renders anchored elements for the
-// Webkiln anchor compositor to sample (any element with data-webkiln-anchor), and announces
-// readiness through its own bridge action —
-// never ScriptingReady, which gates the main view.
+// Webkiln anchor compositor to sample (any element with data-webkiln-anchor), then marks that
+// application ready through Webkiln's view lifecycle.
 async function bootstrapWorldAnchors() {
   bindRuntimeViewportScaleEvents();
 
-  if (!bindBridgeEvents(false)) {
+  if (!bindBridgeEvents()) {
     await new Promise<void>((resolve) => {
       const retryId = window.setInterval(() => {
-        if (bindBridgeEvents(false)) {
+        if (bindBridgeEvents()) {
           window.clearInterval(retryId);
           resolve();
         }
@@ -398,15 +401,9 @@ async function bootstrapWorldAnchors() {
   // Base-game atlas plates and readiness must not wait for optional content-pack discovery.
   // Mod renderers register dynamically and trigger their own atlas admission after modsReady.
 
-  const engine = getRuntimeEngine();
-  if (engine) {
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        void Promise.resolve(engine.call('WorldAnchorReady'))
-          .catch(error => acknowledgeBridgeFailure(error, 'WorldAnchorReady'));
-      });
-    });
-  }
+  void window.gameUI?.markReady().catch(error => {
+    console.error('Webkiln world-anchor readiness failed', error);
+  });
 }
 
 const bootView = new URLSearchParams(window.location.search).get('view');

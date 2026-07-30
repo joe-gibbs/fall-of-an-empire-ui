@@ -438,10 +438,6 @@ export function installMockruntimeEngine(): void {
         return JSON.stringify({ ok: true, pending: true });
       }
 
-      if (name === 'ScriptingReady') {
-        return undefined;
-      }
-
       if (name === 'UIRendered') {
         return undefined;
       }
