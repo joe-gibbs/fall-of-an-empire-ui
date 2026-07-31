@@ -3800,6 +3800,7 @@ export interface GetSettingsResponse {
   hardware: HardwareInfoDTO;
   supportedResolutions: string[];
   dlssSupported: boolean;
+  upscalingTechnology: string;
 }
 
 export interface GetSettlementBuildingsRequest {

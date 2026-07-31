@@ -464,7 +464,10 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
     { id: 'templates', label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.988.37') },
   ];
   if (personalGuard?.eligible) {
-    tabs.push({ id: 'guard', label: webUIText('Military.PersonalGuard.Tab') });
+    tabs.push({
+      id: 'guard',
+      label: webUIText('Military.PersonalGuard.Tab'),
+    });
   }
 
   const officeStrip = (showOnly === 'land' || showOnly === 'sea') && militaryCourtPositions.length > 0 ? (

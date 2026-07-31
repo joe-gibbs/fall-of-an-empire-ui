@@ -4120,6 +4120,7 @@ function settingsResponse(): BridgeResponse<'game.get_settings'> {
     hardware: { videoMemoryMB: 8192, systemMemoryMB: 32768 },
     supportedResolutions: ['1280x720', '1920x1080', '2560x1440'],
     dlssSupported: false,
+    upscalingTechnology: 'TSR',
   };
 }
 

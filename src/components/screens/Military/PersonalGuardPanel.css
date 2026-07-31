@@ -5,262 +5,33 @@
 .personal-guard-view {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   padding: 1rem 1.15rem 1.15rem;
   overflow-y: auto;
 }
 
-.personal-guard-banner {
-  padding: 0.85rem 1rem 0.9rem;
-}
-
-.personal-guard-banner-title {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  padding-bottom: 0.75rem;
-  border-bottom: 0.0909rem solid var(--separator);
-}
-
-.personal-guard-banner-title > .tooltip-wrapper {
-  flex: 0 0 auto;
-  margin-right: 0.85rem;
-}
-
-.personal-guard-emblem {
-  width: 3.45rem;
-  height: 3.45rem;
-  object-fit: contain;
-}
-
-.personal-guard-banner-title > div {
-  min-width: 0;
-}
-
-.personal-guard-banner-title h2,
-.personal-guard-section-header h3,
-.personal-guard-side h3 {
-  margin: 0;
-  font-family: var(--font-header);
-  color: var(--text-header);
-  font-weight: 700;
-}
-
-.personal-guard-banner-title h2 {
-  font-size: 1.65rem;
-  letter-spacing: 0.035em;
-}
-
-.personal-guard-banner-title p,
-.personal-guard-section-header p,
-.personal-guard-side p {
-  margin: 0.22rem 0 0;
-  color: var(--text-muted);
-  line-height: 1.42;
-}
-
-.personal-guard-standing {
-  margin-left: auto;
-  padding-left: 1rem;
-  color: var(--gold-light);
-  font-family: var(--font-header);
-  font-size: 1rem;
-  letter-spacing: 0.06em;
-  text-align: right;
-}
-
-.personal-guard-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  padding-top: 0.75rem;
-}
-
-.personal-guard-metrics--three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.personal-guard-metrics > .tooltip-wrapper {
-  min-width: 0;
-}
-
-.personal-guard-metrics > .tooltip-wrapper + .tooltip-wrapper {
-  border-left: 0.0909rem solid var(--separator);
-}
-
-.personal-guard-metric {
-  display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  column-gap: 0.55rem;
-  align-items: center;
-  padding: 0.1rem 0.8rem;
-}
-
-.personal-guard-metric > img {
-  grid-row: 1 / 3;
-  width: 1.9rem;
-  height: 1.9rem;
-  object-fit: contain;
-}
-
-.personal-guard-metric-label {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.personal-guard-metric strong {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--text-bright);
-  font-family: var(--font-header);
-  font-size: 1.08rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.personal-guard-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 2.15fr) minmax(18rem, 0.85fr);
-  gap: 0.9rem;
-  margin-top: 0.9rem;
-  align-items: start;
-}
-
-.personal-guard-formation {
-  margin-top: 0.9rem;
-}
-
-.personal-guard-requirement-groups {
-  display: grid;
-  gap: 0.85rem;
-  padding: 0.7rem;
-}
-
-.personal-guard-requirement-groups > div + div {
-  padding-top: 0.7rem;
-  border-top: 0.0909rem solid var(--separator);
-}
-
-.personal-guard-requirement-groups h4 {
-  margin: 0 0 0.42rem;
-  color: var(--text-header);
-  font-family: var(--font-header);
-  font-size: 0.9rem;
-  letter-spacing: 0.035em;
-}
-
-.personal-guard-requirement-groups > div > p {
-  margin: -0.18rem 0 0.5rem;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-.personal-guard-requirement-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-
-.personal-guard-requirement-grid > .tooltip-wrapper {
-  min-width: 0;
-}
-
-.personal-guard-requirement {
-  display: grid;
-  grid-template-columns: 2.45rem minmax(0, 1fr) auto;
-  gap: 0.55rem;
-  align-items: center;
-  min-height: 4rem;
-  padding: 0.38rem 0.55rem;
-}
-
-.personal-guard-requirement > img {
-  width: 2.15rem;
-  height: 2.15rem;
-  object-fit: contain;
-}
-
-.personal-guard-requirement-copy {
+.personal-guard-roster {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  min-width: 0;
 }
 
-.personal-guard-requirement-copy strong {
-  overflow: hidden;
-  color: var(--text-bright);
-  font-family: var(--font-header);
-  font-size: 0.86rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.personal-guard-requirement-copy span {
-  margin-top: 0.12rem;
-  font-size: 0.7rem;
-}
-
-.personal-guard-requirement-copy .is-ready {
-  color: var(--positive);
-}
-
-.personal-guard-requirement-copy .is-missing {
-  color: var(--negative);
-}
-
-.personal-guard-requirement-value {
+.personal-guard-toolbar {
   display: flex;
-  align-items: baseline;
-  padding-left: 0.45rem;
-  border-left: 0.0909rem solid var(--separator);
-  white-space: nowrap;
-}
-
-.personal-guard-requirement-value strong {
-  color: var(--text-bright);
-  font-family: var(--font-header);
-  font-size: 1rem;
-}
-
-.personal-guard-requirement-value span {
-  margin-left: 0.18rem;
-  color: var(--text-muted);
-  font-size: 0.7rem;
-}
-
-.personal-guard-roster {
-  min-width: 0;
-}
-
-.personal-guard-section-header {
-  padding: 0.65rem 0.8rem;
-}
-
-.personal-guard-section-header > div {
-  min-width: 0;
-  padding-right: 0.75rem;
-}
-
-.personal-guard-section-header h3,
-.personal-guard-side h3 {
-  font-size: 1.05rem;
-}
-
-.personal-guard-section-header p {
-  font-size: 0.78rem;
-}
-
-.personal-guard-section-header .btn--outline {
-  flex: 0 0 auto;
+  justify-content: flex-end;
+  padding: 0.65rem 0.8rem 0;
 }
 
 .personal-guard-company-grid {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
-  padding: 0.65rem;
+  grid-auto-rows: minmax(4.55rem, auto);
+  align-content: start;
+  gap: 0.55rem;
+  padding: 0.75rem;
 }
 
 .personal-guard-company-grid > .tooltip-wrapper {
@@ -370,95 +141,8 @@
   justify-self: center;
 }
 
-.personal-guard-side {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.personal-guard-side > .panel {
-  padding: 0.75rem;
-}
-
-.personal-guard-side-heading {
-  display: flex;
-  align-items: center;
-  padding-bottom: 0.55rem;
-  border-bottom: 0.0909rem solid var(--separator);
-}
-
-.personal-guard-side-heading img {
-  width: 2.15rem;
-  height: 2.15rem;
-  object-fit: contain;
-  margin-right: 0.55rem;
-}
-
-.personal-guard-captain > strong {
-  display: block;
-  margin-top: 0.65rem;
-  color: var(--text-bright);
-  font-family: var(--font-header);
-  font-size: 1.12rem;
-}
-
-.personal-guard-side p {
-  font-size: 0.78rem;
-}
-
-.personal-guard-warband dl {
-  margin: 0.65rem 0;
-}
-
-.personal-guard-warband dl > div {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.32rem 0;
-  border-top: 0.0909rem solid var(--separator);
-}
-
-.personal-guard-warband dt {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-}
-
-.personal-guard-warband dd {
-  margin: 0;
-  color: var(--text-bright);
-  font-family: var(--font-header);
-}
-
-.personal-guard-no-barbarians {
-  margin: 0.65rem 0;
-  padding-top: 0.55rem;
-  border-top: 0.0909rem solid var(--separator);
-}
-
-.personal-guard-warband .btn-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  object-fit: cover;
-}
-
-@media (max-width: 78rem) {
-  .personal-guard-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .personal-guard-side {
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  }
-}
-
 @media (max-width: 62rem) {
-  .personal-guard-metrics,
-  .personal-guard-requirement-grid,
-  .personal-guard-company-grid,
-  .personal-guard-side {
+  .personal-guard-company-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .personal-guard-metrics > .tooltip-wrapper + .tooltip-wrapper {
-    border-left: none;
-    border-top: 0.0909rem solid var(--separator);
   }
 }

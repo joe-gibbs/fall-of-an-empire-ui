@@ -73,14 +73,25 @@ const WINDOW_MODE_OPTIONS: SettingsOption[] = [
   { value: 'WindowedFullscreen', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.761.41'); } },
   { value: 'Windowed', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.761.42'); } },
 ];
-const DLSS_MODE_OPTIONS: SettingsOption[] = [
-  { value: 'Off', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.47'); } },
-  { value: 'DLAA', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.48'); } },
-  { value: 'Quality', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.49'); } },
-  { value: 'Balanced', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.50'); } },
-  { value: 'Performance', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.51'); } },
-  { value: 'UltraPerformance', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.52'); } },
-];
+// The quality names are shared; only the native-resolution mode is vendor-branded, so it
+// reads "DLAA" under DLSS and "Native AA" under TSR.
+function upscalingModeOptions(usesDLSS: boolean): SettingsOption[] {
+  return [
+    { value: 'Off', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.47'); } },
+    {
+      value: 'DLAA',
+      get label() {
+        return usesDLSS
+          ? webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.48')
+          : webUIText('Settings.Upscaling.NativeAA');
+      },
+    },
+    { value: 'Quality', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.49'); } },
+    { value: 'Balanced', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.50'); } },
+    { value: 'Performance', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.51'); } },
+    { value: 'UltraPerformance', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.766.52'); } },
+  ];
+}
 const ANTI_ALIASING_OPTIONS: SettingsOption[] = [
   { value: 'None', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.768.54'); } },
   { value: 'FXAA', get label() { return webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.768.55'); } },
@@ -1096,7 +1107,9 @@ const SettingsPanel: React.FC = () => {
   const audioUi = finiteNumber(audio.ui, appliedSnapshot.audio.ui);
   const audioAmbience = finiteNumber(audio.ambience, appliedSnapshot.audio.ambience);
   const canSelectResolution = video.windowMode !== 'WindowedFullscreen';
-  const dlssActive = settings.dlssSupported && video.dlssMode !== 'Off';
+  // TSR stands in wherever DLSS is absent, so upscaling is always offered.
+  const usesDLSS = settings.upscalingTechnology === 'DLSS';
+  const dlssActive = video.dlssMode !== 'Off';
 
   const setVideo = (patch: Partial<typeof video>) => setWorking(w => w && { ...w, video: { ...w.video, ...patch } });
   const setGameplay = (patch: Partial<typeof gameplay>) => setWorking(w => w && { ...w, gameplay: { ...w.gameplay, ...patch } });
@@ -1341,16 +1354,19 @@ const SettingsPanel: React.FC = () => {
                 onChange={v => setVideo({ resolutionScale: v })}
               />
             )}
-            {settings.dlssSupported && (
-              <Choice
-                label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.766.46')}
-                desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.766.17')}
-                tooltip={settingsTooltip(webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.766.46'), 'Settings.Tooltip.DLSS.Body')}
-                value={video.dlssMode}
-                options={DLSS_MODE_OPTIONS}
-                onChange={v => setVideo({ dlssMode: v })}
-              />
-            )}
+            <Choice
+              label={settings.upscalingTechnology}
+              desc={usesDLSS
+                ? webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.766.17')
+                : webUIText('Settings.Upscaling.TSRDesc')}
+              tooltip={settingsTooltip(
+                settings.upscalingTechnology,
+                usesDLSS ? 'Settings.Tooltip.DLSS.Body' : 'Settings.Tooltip.TSR.Body',
+              )}
+              value={video.dlssMode}
+              options={upscalingModeOptions(usesDLSS)}
+              onChange={v => setVideo({ dlssMode: v })}
+            />
             {!dlssActive && (
               <Choice
                 label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.768.53')}
