@@ -1,0 +1,109 @@
+.key-glyph {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.key-glyph__mod {
+  color: var(--text-muted, #a89a7c);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.key-glyph__pad {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.28rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 0, 0, 0.45);
+  background: #c8c8c8;
+  box-sizing: border-box;
+}
+
+.key-glyph__pad--face {
+  width: 1.35rem;
+  min-width: 1.35rem;
+  padding: 0;
+  border-radius: 50%;
+  color: #0d0d0d;
+}
+
+.key-glyph__pad--wide {
+  border-radius: 0.22rem;
+  min-width: 1.7rem;
+}
+
+.key-glyph__pad--a {
+  background: #3ecf5a;
+}
+
+.key-glyph__pad--b {
+  background: #e05a4f;
+}
+
+.key-glyph__pad--x {
+  background: #4aa3e8;
+}
+
+.key-glyph__pad--y {
+  background: #e8c84a;
+}
+
+.key-glyph__pad--lb,
+.key-glyph__pad--rb,
+.key-glyph__pad--lt,
+.key-glyph__pad--rt,
+.key-glyph__pad--ls,
+.key-glyph__pad--rs,
+.key-glyph__pad--view,
+.key-glyph__pad--menu,
+.key-glyph__pad--lstick,
+.key-glyph__pad--rstick,
+.key-glyph__pad--dpad_up,
+.key-glyph__pad--dpad_down,
+.key-glyph__pad--dpad_left,
+.key-glyph__pad--dpad_right {
+  background: #d6c9a8;
+  color: #1a1510;
+  border-color: rgba(40, 28, 12, 0.5);
+}
+
+.key-glyph__mouse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #f0e6c8;
+  background: #3a3428;
+  border: 1px solid #8a7a52;
+  box-sizing: border-box;
+}
+
+.key-glyph__keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.35rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 0.18rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #f0e6c8;
+  background: #2c2830;
+  border: 1px solid #6a5f48;
+  box-sizing: border-box;
+  white-space: nowrap;
+}

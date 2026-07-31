@@ -1816,7 +1816,7 @@ export const WEBUI_TEXT_SOURCE = {
   "Auto.ComponentsScreensSaveGameDialog.210.2": "Cancel",
   "Auto.ComponentsScreensSettingsModal.145.1": "Settings",
   "Auto.ComponentsSettingsSettingsPanel.251.1": "Reset Mutes",
-  "Auto.ComponentsSettingsSettingsPanel.393.2": "Press any key or mouse button - Esc to cancel",
+  "Auto.ComponentsSettingsSettingsPanel.393.2": "Press any key, mouse button, or gamepad button - Esc or View to cancel",
   "Auto.ComponentsSettingsSettingsPanel.418.3": "No bindings match \"",
   "Auto.ComponentsSettingsSettingsPanel.446.4": "Reset Controls",
   "Auto.ComponentsSettingsSettingsPanel.493.5": "VRAM",

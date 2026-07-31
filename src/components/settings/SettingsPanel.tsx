@@ -9,6 +9,9 @@ import Tooltip, { type TooltipContent } from '../common/tooltips/Tooltip';
 import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { browserKeyToUnrealKey, browserMouseButtonToUnrealKey, isModifierCode } from '../../bridge/core/browserKeyToUnrealKey';
+import { browserGamepadButtonToUnrealKey } from '../../bridge/core/browserGamepadToUnrealKey';
+import { KeyGlyph } from '../common/KeyGlyph';
+import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
 import { useAnimatedPresence } from '../../hooks/useAnimatedPresence';
 import { useEscapeStackEntry } from '../../context/EscapeStack';
 import { bridgeCall } from '../../bridge-types.generated.ts';
@@ -527,9 +530,13 @@ type ControlListItem =
 
 const ControlsTab: React.FC<{
   controls: ControlBindingDTO[];
+  initialInputDevice: string;
   rebind: (index: number, isAxis: boolean, keyName: string, mods: { shift: boolean; ctrl: boolean; alt: boolean; cmd: boolean }) => Promise<string[]>;
   clearBinding: (index: number, isAxis: boolean) => void;
-}> = ({ controls, rebind, clearBinding }) => {
+}> = ({ controls, initialInputDevice, rebind, clearBinding }) => {
+  const activeInputDevice = useActiveInputDevice(
+    initialInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
+  );
   const [pending, setPending] = useState<PendingRebind | null>(null);
   const [renderedPending, setRenderedPending] = useState<PendingRebind | null>(null);
   const [mods, setMods] = useState({ shift: false, ctrl: false, alt: false });
@@ -627,12 +634,64 @@ const ControlsTab: React.FC<{
       e.stopPropagation();
     };
 
+    // Capture gamepad buttons via the browser Gamepad API (works under CEF).
+    let rafId = 0;
+    const prevButtons = new Map<string, boolean[]>();
+    // The button that opened this prompt is usually still held on the first poll, so seed
+    // from the current state and only treat later transitions as presses.
+    let seeded = false;
+    const readPads = () => (
+      typeof navigator !== 'undefined' && navigator.getGamepads ? navigator.getGamepads() : []
+    );
+    const axisKeyNames = ['Gamepad_LeftX', 'Gamepad_LeftY', 'Gamepad_RightX', 'Gamepad_RightY'];
+    const pollGamepads = () => {
+      for (const pad of readPads()) {
+        if (!pad) continue;
+        const prev = prevButtons.get(pad.id) ?? [];
+        for (let i = 0; i < pad.buttons.length; i++) {
+          const pressed = !!pad.buttons[i]?.pressed;
+          const wasPressed = !!prev[i];
+          prev[i] = pressed;
+          if (!seeded || !pressed || wasPressed) continue;
+
+          // View/Back cancels, matching the Esc affordance for keyboard users.
+          if (i === 8) {
+            setPending(null);
+            return;
+          }
+          // Triggers bind as analog axes when the target is an axis.
+          const keyName = pending.isAxis && (i === 6 || i === 7)
+            ? (i === 6 ? 'Gamepad_LeftTriggerAxis' : 'Gamepad_RightTriggerAxis')
+            : browserGamepadButtonToUnrealKey(i);
+          if (keyName) {
+            void finishRebind(pending, keyName, { shift: false, ctrl: false, alt: false, cmd: false });
+            return;
+          }
+        }
+        prevButtons.set(pad.id, prev);
+
+        // Stick axes for axis rebinds
+        if (seeded && pending.isAxis) {
+          const dead = 0.55;
+          const axisIndex = axisKeyNames.findIndex((_, i) => Math.abs(pad.axes[i] ?? 0) > dead);
+          if (axisIndex >= 0) {
+            void finishRebind(pending, axisKeyNames[axisIndex], { shift: false, ctrl: false, alt: false, cmd: false });
+            return;
+          }
+        }
+      }
+      seeded = true;
+      rafId = window.requestAnimationFrame(pollGamepads);
+    };
+    rafId = window.requestAnimationFrame(pollGamepads);
+
     window.addEventListener('keydown', keyHandler, true);
     window.addEventListener('mousedown', mouseHandler, true);
     window.addEventListener('wheel', wheelHandler, { capture: true, passive: false });
     window.addEventListener('contextmenu', blockMouseMenu, true);
     window.addEventListener('auxclick', blockMouseMenu, true);
     return () => {
+      window.cancelAnimationFrame(rafId);
       window.removeEventListener('keydown', keyHandler, true);
       window.removeEventListener('mousedown', mouseHandler, true);
       window.removeEventListener('wheel', wheelHandler, true);
@@ -681,16 +740,6 @@ const ControlsTab: React.FC<{
     if (!categories.includes(c)) categories.push(c);
   }
 
-  const formatChord = (b: ControlBindingDTO) => {
-    const parts: string[] = [];
-    if (b.ctrl) parts.push('Ctrl');
-    if (b.shift) parts.push('Shift');
-    if (b.alt) parts.push('Alt');
-    if (b.cmd) parts.push('Cmd');
-    parts.push(b.keyDisplay || 'Unbound');
-    return parts.join(' + ');
-  };
-
   const movementSort = (a: ControlBindingDTO, b: ControlBindingDTO) => {
     const order = (control: ControlBindingDTO) => {
       if (control.actionName === 'MoveForward') return control.scale >= 0 ? 0 : 1;
@@ -702,13 +751,26 @@ const ControlsTab: React.FC<{
     return a.keyDisplay.localeCompare(b.keyDisplay);
   };
 
+  // Bindings for the device the player is actually holding read as the live ones.
+  const isActiveDeviceBinding = (b: ControlBindingDTO) =>
+    b.glyphId.startsWith('gamepad_') === (activeInputDevice === 'gamepad');
+
   const renderControlActions = (b: ControlBindingDTO, compact = false) => (
     <div className={`settings-controls-actions${compact ? ' settings-controls-actions--compact' : ''}`}>
       <button
-        className="settings-key-badge settings-key-badge--clickable"
+        className={`settings-key-badge settings-key-badge--clickable settings-key-badge--glyph${
+          isActiveDeviceBinding(b) ? ' settings-key-badge--active-device' : ''
+        }`}
         onClick={() => setPending({ index: b.index, isAxis: b.isAxis, label: b.label })}
       >
-        {formatChord(b)}
+        <KeyGlyph
+          keyDisplay={b.keyDisplay}
+          glyphId={b.glyphId}
+          shift={b.shift}
+          ctrl={b.ctrl}
+          alt={b.alt}
+          cmd={b.cmd}
+        />
       </button>
       {!compact && b.keyName && (
         <button className="settings-key-clear" onClick={() => clearBinding(b.index, b.isAxis)} aria-label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.437.3')}>
@@ -1432,6 +1494,7 @@ const SettingsPanel: React.FC = () => {
         {settingsTab === 'controls' && (
           <ControlsTab
             controls={settings.controls}
+            initialInputDevice={settings.activeInputDevice}
             rebind={handleRebind}
             clearBinding={handleClearBinding}
           />

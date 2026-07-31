@@ -3765,6 +3765,7 @@ export interface ControlBindingDTO {
   groupItemLabel: string;
   keyName: string;
   keyDisplay: string;
+  glyphId: string;
   shift: boolean;
   ctrl: boolean;
   alt: boolean;
@@ -3801,6 +3802,7 @@ export interface GetSettingsResponse {
   supportedResolutions: string[];
   dlssSupported: boolean;
   upscalingTechnology: string;
+  activeInputDevice: string;
 }
 
 export interface GetSettlementBuildingsRequest {
