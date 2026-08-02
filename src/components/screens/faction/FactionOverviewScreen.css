@@ -135,7 +135,8 @@
 .fov-overlord-opinion {
   display: flex;
   align-items: center;  font-family: var(--font-header);
-  font-size: 0.95rem;  margin-top: 0.1rem;
+  font-size: 0.95rem;
+  margin-top: 0.1rem;
 }
 
 .fov-overlord-details {
@@ -265,7 +266,8 @@
 .fov-stat-val {
   font-family: var(--font-header);
   font-size: 0.95rem;
-  color: var(--text);}
+  color: var(--text);
+}
 
 .fov-stat-val {
   font-family: var(--font-header);
@@ -341,7 +343,8 @@
 }
 
 .fov-culture-pct {
-  color: var(--text);}
+  color: var(--text);
+}
 
 .fov-legend-icon {
   width: 0.85rem;
@@ -397,7 +400,8 @@
 .fov-modifier-value {
   font-family: var(--font-header);
   font-size: 0.74rem;
-  letter-spacing: 0.03em;}
+  letter-spacing: 0.03em;
+}
 
 .fov-modifier-badge--positive .fov-modifier-value {
   color: var(--green);
@@ -635,7 +639,8 @@
   flex-shrink: 0;
   min-width: 2.4rem;
   white-space: nowrap;
-  text-align: right;}
+  text-align: right;
+}
 
 .fov-policy-effects {
   display: flex;
@@ -1054,7 +1059,8 @@
 .fov-court-bonus-val {
   font-family: var(--font-header);
   font-size: 1.3rem;
-  color: var(--green);}
+  color: var(--green);
+}
 
 .fov-court-replace-btn {
   align-self: flex-start;
@@ -1136,7 +1142,8 @@
 .fov-court-stat-val {
   font-family: var(--font-header);
   font-size: 1.15rem;
-  color: var(--gold);}
+  color: var(--gold);
+}
 
 .fov-court-stat-name {
   font-size: 0.75rem;
@@ -1322,7 +1329,8 @@
   margin-bottom: 0.4rem;
 }
 
-.fov-auto-assign input[type="checkbox"] {  width: 1rem;
+.fov-auto-assign input[type="checkbox"] {
+  width: 1rem;
   height: 1rem;
   cursor: pointer;
 }
@@ -1393,11 +1401,25 @@
   border-color: rgba(201, 168, 76, 0.16);
 }
 
-/* Treasury delta in stats bar */
+/* Inline projected change next to a stat value */
 .fov-stat-delta {
   font-family: var(--font-body);
   font-size: 0.75rem;
-  margin-left: 0.15rem;}
+  margin-left: 0.28rem;
+  color: var(--text-muted);
+}
+
+.fov-stat-delta--positive {
+  color: var(--green);
+}
+
+.fov-stat-delta--negative {
+  color: var(--red);
+}
+
+.fov-stat-delta--muted {
+  color: var(--text-muted);
+}
 
 /* ─── Roster inline ────────────────────────────────────────────────────── */
 
@@ -1591,7 +1613,8 @@
 
 .fov-succession-rank {
   font-size: 0.7rem;
-  color: var(--text-dark);}
+  color: var(--text-dark);
+}
 
 /* ─── Realm Stability ──────────────────────────────────────────────────── */
 
@@ -1618,7 +1641,8 @@
 /* ─── Vassal Table ─────────────────────────────────────────────────────── */
 
 .fov-vassal-table {
-  width: 100%;}
+  width: 100%;
+}
 
 .fov-vassal-table th {
   font-family: var(--font-header);
@@ -1649,7 +1673,8 @@
 }
 
 .fov-vassal-table td.fov-td--right {
-  text-align: right;}
+  text-align: right;
+}
 
 .fov-vassal-table tr:hover td {
   background: rgba(201, 168, 76, 0.04);

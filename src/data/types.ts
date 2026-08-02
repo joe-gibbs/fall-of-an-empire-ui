@@ -440,10 +440,20 @@ export interface Faction {
   gold: number;
   /** Monthly gold income */
   income: number;
-  /** Total population across all settlements */
+  /** Total population across direct holdings and subject territories */
   population: number;
+  /** Population in settlements this faction controls directly */
+  directPopulation?: number;
+  /** Population across direct subject territories */
+  subjectPopulation?: number;
+  /** Projected net monthly population change (people per month) */
+  populationMonthlyChange?: number;
+  /** Absolute people/month sources composing the monthly change */
+  populationGrowthBreakdown?: ModifierSource[];
   /** Number of controlled settlements */
   settlements: number;
+  /** Settlements owned by direct subject factions */
+  subjectSettlements?: number;
   /** Number of vassal factions */
   vassalCount: number;
   /** Number of active armies */
@@ -915,6 +925,7 @@ export interface Settlement {
   canNavigateSettlements?: boolean;
   type: "village" | "town" | "city" | "metropolis" | "fortress" | "monastery" | "port" | "mining";
   population: number;
+  /** Absolute monthly population change in people. */
   populationGrowth: number;
   income: number;
   food: number;

@@ -597,8 +597,9 @@ function buildUnrestTooltip(settlement: Settlement, unrestRounded: string, unres
 }
 
 function buildPopulationGrowthTooltip(settlement: Settlement): TooltipContent {
+  const monthlyGrowth = Math.round(settlement.populationGrowth);
   const lines: TooltipLine[] = [
-    ...(breakdownLines(settlement.growthBreakdown, v => `${formatNumber(v, { maximumFractionDigits: 2 })}%`) ?? []),
+    ...(breakdownLines(settlement.growthBreakdown, v => formatNumber(Math.round(v))) ?? []),
   ];
 
   if (settlement.pops.length > 1) {
@@ -614,8 +615,11 @@ function buildPopulationGrowthTooltip(settlement: Settlement): TooltipContent {
   }
 
   return {
-    title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.608.41'),
-    get body() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.609.1", { Value1: formatNumber(settlement.population), Value2: formatSignedNumber(settlement.populationGrowth, { maximumFractionDigits: 1 }) }); },
+    title: webUIText('SettlementSidebar.PopulationGrowthTitle'),
+    body: webUIText('SettlementSidebar.PopulationTooltipBody', {
+      Population: formatNumber(settlement.population),
+      Change: formatSignedNumber(monthlyGrowth),
+    }),
     lines,
   };
 }
@@ -986,7 +990,14 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
           {/* Stats row */}
           <StatCellGrid>
             <Tooltip content={buildPopulationGrowthTooltip(settlement)} position="bottom" delay={150}>
-              <StatCell icon="/assets/icons/I_Population.png" value={formatNumber(settlement.population)} delta={`${formatSignedNumber(settlement.populationGrowth, { maximumFractionDigits: 1 })}%`} deltaColor={settlement.populationGrowth >= 0 ? 'var(--green)' : 'var(--red)'} />
+              <StatCell
+                icon="/assets/icons/I_Population.png"
+                value={formatNumber(settlement.population)}
+                delta={webUIText('SettlementSidebar.PerMonth', {
+                  Value1: formatSignedNumber(Math.round(settlement.populationGrowth)),
+                })}
+                deltaColor={settlement.populationGrowth >= 0 ? 'var(--green)' : 'var(--red)'}
+              />
             </Tooltip>
             <Tooltip content={{
               title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1078.60'),

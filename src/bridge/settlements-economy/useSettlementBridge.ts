@@ -46,10 +46,7 @@ function mapBishopCharacter(data: GetSettlementDataResponse, bishopric: Settleme
  * Fields that don't exist in the bridge response get sensible defaults.
  */
 function mapSettlement(data: GetSettlementDataResponse): Settlement {
-  // Bridge sends populationGrowth as an absolute count (people/year); convert to a % of population.
-  const growthPercent = data.population > 0
-    ? (data.populationGrowth / data.population) * 100
-    : 0;
+  // Bridge sends populationGrowth as absolute people per month.
   const firstBishopric = data.bishoprics.find(b => !!b.bishopId);
   const firstBishop = firstBishopric ? mapBishopCharacter(data, firstBishopric) : null;
   return {
@@ -75,7 +72,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
     canNavigateSettlements: data.canNavigateSettlements,
     type: (data.type as Settlement['type']) || 'village',
     population: data.population,
-    populationGrowth: growthPercent,
+    populationGrowth: data.populationGrowth,
     income: data.income,
     food: 0,
     foodProduction: data.foodProduction,

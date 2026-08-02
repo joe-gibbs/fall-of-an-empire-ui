@@ -8,6 +8,7 @@ import FactionTooltip from '../../common/tooltips/FactionTooltip';
 import CultureTooltip from '../../common/tooltips/CultureTooltip';
 import GovernmentTooltip from '../../common/tooltips/GovernmentTooltip';
 import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
+import { cultureIconPath } from '../../../utils/cultureIcons';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
 import InteractionCard from '../../common/interactions/InteractionCard';
 import Badge from '../../common/data-display/stats/Badge';
@@ -29,7 +30,6 @@ import type { Faction } from '../../../data/types';
 import { formatPersonActivity } from '../../../utils/displayLabels';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { displayTextToPlain } from '../../../utils/displayText';
-import { cultureIconPath } from '../../../utils/cultureIcons';
 import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../localization/WebUITextContext';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import { CourtPositionsPanel, FactionModifierCard, PolicyEntry } from './FactionOverviewShared';
@@ -117,6 +117,8 @@ function StatCell({
   icon,
   label,
   value,
+  delta,
+  deltaTone,
   tooltip,
   className = '',
   tone,
@@ -124,22 +126,84 @@ function StatCell({
   icon: string;
   label: string;
   value: string;
+  delta?: string;
+  deltaTone?: 'positive' | 'negative' | 'muted';
   tooltip: TooltipContent;
   className?: string;
   tone?: 'gold' | 'positive' | 'negative';
 }) {
   const valueClass = `fov-stat-val${tone ? ` fov-stat-val--${tone}` : ''}`;
+  const deltaClass = deltaTone ? `fov-stat-delta fov-stat-delta--${deltaTone}` : 'fov-stat-delta';
   return (
     <Tooltip content={tooltip} delay={200}>
       <div className={`fov-stat${className ? ` ${className}` : ''}`}>
         <img className="fov-stat-icon" src={icon} alt="" draggable={false} />
         <div className="fov-stat-copy">
           <span className="fov-stat-label">{label}</span>
-          <span className={valueClass}>{value}</span>
+          <span className={valueClass}>
+            {value}
+            {delta ? <span className={deltaClass}>{delta}</span> : null}
+          </span>
         </div>
       </div>
     </Tooltip>
   );
+}
+
+function populationGrowthLines(
+  sources: Faction['populationGrowthBreakdown'] | undefined,
+): TooltipLine[] {
+  if (!sources || sources.length === 0) return [];
+  const sorted = [...sources].sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  return sorted.map(source => {
+    const rounded = Math.round(source.value);
+    return {
+      label: source.name,
+      value: formatSignedNumber(rounded),
+      valueColor: rounded > 0 ? 'var(--green)' : rounded < 0 ? 'var(--red)' : 'var(--text-muted)',
+    };
+  });
+}
+
+function buildPopulationTooltip(faction: Faction, t: WebUITextFormatter): TooltipContent {
+  const monthlyChange = faction.populationMonthlyChange ?? 0;
+  const directPopulation = faction.directPopulation ?? faction.population;
+  const subjectPopulation = faction.subjectPopulation ?? 0;
+  const subjectSettlements = faction.subjectSettlements ?? 0;
+  const lines: TooltipLine[] = [
+    {
+      label: t('FactionOverview.PopulationDirect'),
+      value: fmtFull(directPopulation),
+    },
+  ];
+
+  if (subjectPopulation > 0 || subjectSettlements > 0 || (faction.vassalCount ?? 0) > 0) {
+    lines.push({
+      label: t('FactionOverview.PopulationSubjects'),
+      value: fmtFull(subjectPopulation),
+    });
+    if (subjectSettlements > 0) {
+      lines.push({
+        label: t('FactionOverview.SubjectSettlements'),
+        value: fmtFull(subjectSettlements),
+      });
+    }
+  }
+
+  const growthLines = populationGrowthLines(faction.populationGrowthBreakdown);
+  if (growthLines.length > 0) {
+    lines.push({ label: t('FactionOverview.PopulationMonthlyChange'), isHeader: true });
+    lines.push(...growthLines);
+  }
+
+  return {
+    title: t('Common.Population'),
+    body: t('FactionOverview.PopulationTooltipBody', {
+      Total: fmtFull(faction.population),
+      Change: fmtSigned(monthlyChange),
+    }),
+    lines,
+  };
 }
 
 function FactionHeader({
@@ -236,10 +300,23 @@ function FactionHeader({
 
 function StatsBar({ faction }: { faction: Faction }) {
   const t = useWebUIText();
+  const monthlyChange = faction.populationMonthlyChange ?? 0;
+  const populationDelta = monthlyChange === 0
+    ? undefined
+    : t('FactionOverview.PopulationDelta', { Change: fmtSigned(monthlyChange) });
+  const populationDeltaTone = monthlyChange > 0 ? 'positive' : monthlyChange < 0 ? 'negative' : 'muted';
+
   return (
     <div className="fov-stats-bar">
       <StatCell icon="/assets/icons/I_Domain.png" label={t('Economy.Settlements')} value={fmtFull(faction.settlements)} tooltip={{ title: t('Economy.Settlements'), body: t('FactionOverview.SettlementsTooltip') }} />
-      <StatCell icon="/assets/icons/I_Population.png" label={t('Common.Population')} value={fmtNum(faction.population)} tooltip={{ title: t('Common.Population'), body: t('FactionOverview.PopulationTooltip') }} />
+      <StatCell
+        icon="/assets/icons/I_Population.png"
+        label={t('Common.Population')}
+        value={fmtNum(faction.population)}
+        delta={populationDelta}
+        deltaTone={populationDeltaTone}
+        tooltip={buildPopulationTooltip(faction, t)}
+      />
       <StatCell icon="/assets/icons/I_ArmiesQuickButton.png" label={t('FactionOverview.ArmyStrength')} value={fmtNum(faction.strength)} tooltip={{ title: t('FactionOverview.ArmyStrength'), body: t('FactionOverview.ArmyStrengthTooltip') }} />
       <StatCell icon="/assets/icons/I_Capital.png" label={t('FactionOverview.Capital')} value={faction.capital || t('Common.None')} tooltip={{ title: t('FactionOverview.Capital'), body: faction.capital || t('Common.None') }} />
     </div>
