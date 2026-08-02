@@ -7,6 +7,7 @@ import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/too
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import NumberStepper from '../../common/forms/NumberStepper';
 import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
+import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import { useGameActions } from '../../../context/GameContext';
 import { useDiplomaticNegotiationBridge, type DiplomaticNegotiationState, type DiplomaticProposalDraft } from '../../../bridge/diplomacy/useDiplomaticNegotiationBridge';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
@@ -57,7 +58,7 @@ const TREATY_TYPE_DISPLAY_KEYS: Record<string, string> = {
   tribute: 'Tribute',
   tribute_one_off: 'TributeOneOff',
   passage_rights: 'PassageRights',
-  subject: 'Subject Pact',
+  subject: 'Subject',
 };
 
 function fmtSigned(value: number | undefined | null): string {
@@ -228,6 +229,9 @@ function ResourceDropdown({
       options={options}
       escapeId={`treaty.resource.${selected.name}`}
       isActive={false}
+      position="below-left"
+      portal
+      closeOnScroll
       stopPropagation
       renderValue={renderResourceLabel}
       renderOption={renderResourceLabel}
@@ -379,13 +383,13 @@ function AvailableTreatyRow({ option, onAdd }: { option: TreatyOption; onAdd: ()
 function OptionsPanel({ title, options, onAdd }: { title: string; options: TreatyOption[]; onAdd: (option: TreatyOption) => void }) {
   return (
     <Panel title={title} className="pns-panel pns-panel--options">
-      <div className="pns-option-list">
+      <StyledScrollArea className="pns-option-scroll" viewportClassName="pns-option-list">
         {options.length > 0 ? options.map(option => (
           <AvailableTreatyRow key={option.optionId} option={option} onAdd={() => onAdd(option)} />
         )) : (
           <div className="pns-empty-state pns-empty-state--quiet"><WebUIText textKey="TreatyNegotiation.NoOptions" /></div>
         )}
-      </div>
+      </StyledScrollArea>
     </Panel>
   );
 }
@@ -426,7 +430,7 @@ function ProposalColumn({
             ? webUIText('TreatyNegotiation.WeGive')
             : webUIText('TreatyNegotiation.WeAsk')}</span>
         </div>
-        <div className="pns-draft-list">
+        <StyledScrollArea className="pns-draft-scroll" viewportClassName="pns-draft-list">
           {selected.length > 0 ? selected.map(proposal => {
             const id = proposal.proposalId || proposalKey(proposal);
             const live = byId.get(id) ?? byKey.get(proposalKey(proposal));
@@ -445,7 +449,7 @@ function ProposalColumn({
           }) : (
             <div className="pns-empty-state pns-empty-state--quiet"><WebUIText textKey="TreatyNegotiation.NoSelected" /></div>
           )}
-        </div>
+        </StyledScrollArea>
       </div>
     </div>
   );

@@ -124,9 +124,13 @@ function draftFromEntry(entry: TermEntry): PeaceTermDraft {
 function termFallbackLabel(term: PeaceTermDraft): string {
   switch (term.type) {
     case 'onetime_tribute':
-      return term.direction === 'demand' ? 'Demand One-time Tribute' : 'Offer One-time Tribute';
+      return term.direction === 'demand'
+        ? webUIText('PeaceNegotiation.Term.DemandOnetimeTribute')
+        : webUIText('PeaceNegotiation.Term.OfferOnetimeTribute');
     case 'ongoing_tribute':
-      return term.direction === 'demand' ? 'Demand Ongoing Tribute' : 'Offer Ongoing Tribute';
+      return term.direction === 'demand'
+        ? webUIText('PeaceNegotiation.Term.DemandOngoingTribute')
+        : webUIText('PeaceNegotiation.Term.OfferOngoingTribute');
     case 'annex_territory':
       return term.direction === 'demand' ? webUIText('PeaceNegotiation.Term.DemandTerritory') : webUIText('PeaceNegotiation.Term.OfferTerritory');
     case 'impose_peace':
@@ -403,12 +407,18 @@ function optionGroupKey(option: TermOption): string {
 function optionGroupLabel(option: TermOption): string {
   switch (option.type) {
     case 'release_vassal':
-      return isConcession(option) ? 'Release Our Subjects' : 'Release Their Subjects';
+      return isConcession(option)
+        ? webUIText('PeaceNegotiation.Group.ReleaseOurSubjects')
+        : webUIText('PeaceNegotiation.Group.ReleaseTheirSubjects');
     case 'onetime_tribute':
     case 'tribute':
-      return isConcession(option) ? 'Offer Gold' : 'Demand Gold';
+      return isConcession(option)
+        ? webUIText('PeaceNegotiation.Group.OfferGold')
+        : webUIText('PeaceNegotiation.Group.DemandGold');
     case 'ongoing_tribute':
-      return isConcession(option) ? 'Offer Tribute' : 'Demand Tribute';
+      return isConcession(option)
+        ? webUIText('PeaceNegotiation.Group.OfferTribute')
+        : webUIText('PeaceNegotiation.Group.DemandTribute');
     case 'annex_territory':
       return isConcession(option) ? webUIText('PeaceNegotiation.Group.OfferTerritory') : webUIText('PeaceNegotiation.Group.DemandTerritory');
     case 'impose_peace':
@@ -438,10 +448,16 @@ function shouldGroupOptions(options: TermOption[]): boolean {
 function buildWarSummary(state: PeaceNegotiationState, daysInYear: number, daysInMonth: number): string {
   const parts = [fmtWarDuration(state.warDurationDays, daysInYear, daysInMonth)];
   if (state.battlesFought > 0) {
-    parts.push(`${fmt(state.battlesFought)} ${state.battlesFought === 1 ? 'battle' : 'battles'}`);
+    parts.push(webUIText(
+      state.battlesFought === 1 ? 'PeaceNegotiation.WarSummary.Battle' : 'PeaceNegotiation.WarSummary.Battles',
+      { Count: fmt(state.battlesFought) },
+    ));
   }
   if (state.settlementsCaptured > 0) {
-    parts.push(`${fmt(state.settlementsCaptured)} ${state.settlementsCaptured === 1 ? 'settlement' : 'settlements'} taken`);
+    parts.push(webUIText(
+      state.settlementsCaptured === 1 ? 'PeaceNegotiation.WarSummary.SettlementTaken' : 'PeaceNegotiation.WarSummary.SettlementsTaken',
+      { Count: fmt(state.settlementsCaptured) },
+    ));
   }
   return parts.join(' - ');
 }
