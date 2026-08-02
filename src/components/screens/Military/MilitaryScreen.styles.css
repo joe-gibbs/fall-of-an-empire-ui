@@ -3528,6 +3528,12 @@
   height: 1.8rem;
 }
 
+.chart-unit-picker-unavailable-toggle {
+  margin-left: 0.55rem;
+  margin-bottom: 0.35rem;
+  min-height: 1.8rem;
+}
+
 .chart-unit-picker-table-wrapper {
   flex-grow: 1;
   flex-shrink: 1;
@@ -3712,6 +3718,54 @@
   margin-top: 0.08rem;
   color: var(--text-muted);
   font-size: 0.72rem;
+}
+
+.chart-unit-picker-actions--with-count {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.chart-unit-picker-actions--with-count .chart-unit-picker-unit-count {
+  margin-left: 0;
+  margin-right: 0.1rem;
+}
+
+.chart-unit-picker-total-cost {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: auto;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 1.05rem;
+}
+
+.chart-unit-picker-total-cost img {
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+}
+
+.chart-unit-picker-add--select {
+  min-width: 5.5rem;
+  min-height: 1.9rem;
+  padding: 0.2rem 0.45rem;
+  color: var(--gold-light);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chart-unit-picker-delta--up {
+  color: var(--green, #6fbf73);
+}
+
+.chart-unit-picker-delta--down {
+  color: var(--red, #c45c5c);
 }
 
 .chart-unit-picker-unit-count {

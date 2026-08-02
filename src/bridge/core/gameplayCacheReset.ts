@@ -6,6 +6,7 @@ import { clearFactionCaches } from '../diplomacy/useFactionBridge';
 import { clearFormationTemplateCaches, clearFormationTemplateCatalogueCache } from '../military-map/useFormationTemplatesBridge';
 import { clearLedgerOverviewCache } from '../settlements-economy/useLedgerOverviewBridge';
 import { clearMilitaryCaches } from '../military-map/useMilitaryBridge';
+import { clearPersonalGuardCache } from '../military-map/usePersonalGuardBridge';
 import { clearPersonCaches } from '../characters/usePersonBridge';
 import { clearPowerBlocCaches } from '../diplomacy/usePowerBlocsBridge';
 import { clearVictoryConditionsCache } from '../app/useVictoryConditionsBridge';
@@ -22,6 +23,7 @@ export function clearGameplayDataCaches(): void {
   clearFormationTemplateCatalogueCache();
   clearLedgerOverviewCache();
   clearMilitaryCaches();
+  clearPersonalGuardCache();
   clearPersonCaches();
   clearPowerBlocCaches();
   clearVictoryConditionsCache();

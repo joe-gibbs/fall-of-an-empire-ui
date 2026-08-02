@@ -793,10 +793,17 @@
 
 .tpl-picker-controls {
   flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   padding: 0.55rem 0.65rem;
   border-bottom-width: 0.077rem;
   border-bottom-style: solid;
   border-bottom-color: rgba(201, 168, 76, 0.18);
+}
+
+.tpl-picker-unavailable-toggle {
+  margin-left: 0.65rem;
 }
 
 .tpl-picker-tabs {

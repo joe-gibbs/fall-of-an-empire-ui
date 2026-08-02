@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import CloseButton from '../../common/buttons/CloseButton';
+import GameCheckButton from '../../common/buttons/GameCheckButton';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
@@ -242,6 +243,11 @@ export function UnitRow({
   );
 }
 
+function unitCanBuildInAnySettlement(unit: FormationTemplateUnitEntry): boolean {
+  if ((unit.availableSettlementCount || 0) > 0) return true;
+  return (unit.availableSettlements ?? []).some(settlement => settlement.available);
+}
+
 export function Picker({
   availableClasses,
   currentCounts,
@@ -255,6 +261,7 @@ export function Picker({
 }) {
   const [query, setQuery] = useState('');
   const [activeType, setActiveType] = useState('all');
+  const [showUnavailable, setShowUnavailable] = useState(false);
   const {
     offsetStyle,
     rootRef: dialogRef,
@@ -267,6 +274,7 @@ export function Picker({
       'dropdown-select',
       'search-field',
       'search-input',
+      'game-check-button',
       'tpl-picker-controls',
       'tpl-picker-tabs',
       'tpl-picker-body',
@@ -279,15 +287,19 @@ export function Picker({
     Array.from(availableClasses.entries())
       .map(([type, units]) => ({
         type,
-        units: trimmedQuery.length === 0
-          ? units
-          : units.filter(unit => {
-              const haystack = `${unit.name} ${unitTypeLabel(unit.type)} ${unit.description}`.toLowerCase();
-              return haystack.includes(trimmedQuery);
-            }),
+        units: units.filter(unit => {
+          if (!showUnavailable
+            && !unitCanBuildInAnySettlement(unit)
+            && (currentCounts[unit.id] ?? 0) <= 0) {
+            return false;
+          }
+          if (trimmedQuery.length === 0) return true;
+          const haystack = `${unit.name} ${unitTypeLabel(unit.type)} ${unit.description}`.toLowerCase();
+          return haystack.includes(trimmedQuery);
+        }),
       }))
       .filter(group => group.units.length > 0)
-  ), [availableClasses, trimmedQuery]);
+  ), [availableClasses, currentCounts, showUnavailable, trimmedQuery]);
   const typeTabs = useMemo(() => ([
     {
       id: 'all',
@@ -349,6 +361,16 @@ export function Picker({
               onChange={event => setQuery(event.target.value)}
               placeholder={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.627.29')}
               autoFocus
+            />
+            <GameCheckButton
+              checked={showUnavailable}
+              label={webUIText('FormationTemplate.ShowUnavailableUnits')}
+              className="tpl-picker-unavailable-toggle game-check-button--compact-label"
+              onToggle={() => setShowUnavailable(value => !value)}
+              tooltip={{
+                title: webUIText('FormationTemplate.ShowUnavailableUnits'),
+                body: webUIText('FormationTemplate.ShowUnavailableUnitsTooltip'),
+              }}
             />
           </div>
           <div className="tpl-picker-tabs">

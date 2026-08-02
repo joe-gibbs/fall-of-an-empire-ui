@@ -340,12 +340,22 @@ const GRAND_CAMPAIGN_MENU_DESCRIPTION = 'Pick a faction in the fractured Rephsia
 const GRAND_CAMPAIGN_FACTION_SELECTION_DESCRIPTION = 'Rephsia still commands a vast chain of provinces, border marches and foederati allies, but the realm is already cracking. The Western Rebellion has broken into open war, the Hervati have risen against imperial authority, and frontier conflicts are draining attention from the capital.\n\nEvery playable faction begins inside that crisis. Loyalists can try to hold the old order together through governors, armies and uneasy subjects. Rebels and frontier powers can turn imperial weakness into land, legitimacy and a new balance of power. Your choice decides whether the campaign is a defence of the old realm, a civil war for its heart, or the start of something that replaces it.';
 const TUTORIAL_MENU_DESCRIPTION = 'A guided campaign for learning armies, settlements, diplomacy and war.';
 
+interface MockPersonalGuardState {
+  unitIds: string[];
+  hasGuard: boolean;
+  isForming: boolean;
+  formStartDay: number;
+  militaryId: string;
+  commanderId: string;
+}
+
 interface MockBridgeState {
   appMode: MockAppMode;
   provinceMode: boolean;
   isPaused: boolean;
   pauseMenuOpen: boolean;
   speedLevel: number;
+  personalGuard: MockPersonalGuardState;
   debugMode: boolean;
   gameDay: number;
   climateTrend: number;
@@ -3947,6 +3957,154 @@ function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
   };
 }
 
+function personalGuardEligibleUnits() {
+  const withAvailability = (
+    unit: ReturnType<typeof formationUnit>,
+    settlements: { id: string; name: string; available: boolean }[],
+  ) => ({
+    ...unit,
+    availableSettlementCount: settlements.filter(entry => entry.available).length,
+    availableSettlements: settlements,
+  });
+
+  return [
+    withAvailability(formationUnit('palace-guard', 'Palace Guard', 'infantry', 'land', 0, 20), [
+      { id: 'mock-settlement-rephsia', name: 'Rephsia', available: true },
+    ]),
+    withAvailability(formationUnit('palace-archers', 'Palace Archers', 'ranged', 'land', 0, 20), [
+      { id: 'mock-settlement-rephsia', name: 'Rephsia', available: true },
+    ]),
+    withAvailability(formationUnit('governors-horse', "Governor's Horse", 'cavalry', 'land', 0, 20), [
+      { id: 'mock-settlement-aurelion', name: 'Aurelion', available: true },
+      { id: 'mock-settlement-rephsia', name: 'Rephsia', available: true },
+    ]),
+    // Foederati companies with no current recruitment base - hidden until "Show unavailable".
+    withAvailability(
+      formationUnit('assembly-vanguard', 'Assembly Vanguard', 'infantry', 'land', 0, 105, false, aurestianCulture),
+      [],
+    ),
+    withAvailability(
+      formationUnit('lions-red-wood', 'Lions of the Red Wood', 'cavalry', 'land', 0, 120, false, aurestianCulture),
+      [],
+    ),
+  ];
+}
+
+function personalGuardUnitMeta(unitId: string) {
+  return personalGuardEligibleUnits().find(unit => unit.id === unitId)
+    ?? formationUnit(unitId, unitId, 'infantry', 'land', 0, 20);
+}
+
+function personalGuardStatus(state: MockBridgeState): BridgeResponse<'game.get_personal_guard'> {
+  const eligibleUnits = personalGuardEligibleUnits();
+  const unitById = new Map(eligibleUnits.map(unit => [unit.id, unit]));
+  const rulerName = state.provinceMode ? 'Marcia Vennor' : 'Valen Arcastus';
+  const companyCapacity = state.provinceMode ? 10 : 20;
+  const isForming = state.personalGuard.isForming;
+  const hasGuard = state.personalGuard.hasGuard || isForming;
+  const daysSinceForm = isForming
+    ? Math.max(0, state.gameDay - state.personalGuard.formStartDay)
+    : 0;
+  const companies = state.personalGuard.unitIds.map((unitId, index) => {
+    const unit = unitById.get(unitId) ?? personalGuardUnitMeta(unitId);
+    const isReady = hasGuard && (!isForming || index === 0 || daysSinceForm >= (index * 12));
+    const isRecruiting = hasGuard && !isReady;
+    const remainingDays = isRecruiting ? Math.max(1, (index * 12) - daysSinceForm) : 0;
+    const progress = isRecruiting
+      ? Math.min(0.95, daysSinceForm / Math.max(1, index * 12))
+      : isReady ? 1 : 0;
+    return {
+      slotNumber: index + 1,
+      unitId,
+      name: unit.name,
+      description: unit.description,
+      portrait: unit.portrait,
+      type: unit.type,
+      typeLabel: unit.unitTypeLabel,
+      cultureName: unit.cultureName,
+      isHousehold: !unit.cultureId || unit.cultureId === rephsianCulture.id,
+      isBarbarian: Boolean(unit.cultureId && unit.cultureId !== rephsianCulture.id),
+      strength: isReady ? unit.maxStrength : 0,
+      maxStrength: unit.maxStrength,
+      upkeep: unit.upkeep,
+      status: isReady ? 'Ready' : isRecruiting ? 'Joining the guard' : 'Selected',
+      progress,
+      remainingDays,
+      isRecruiting,
+    };
+  });
+  const strength = companies.reduce((sum, company) => sum + company.strength, 0);
+  const maxStrength = companies.reduce((sum, company) => sum + company.maxStrength, 0);
+  const upkeep = companies.reduce((sum, company) => sum + (company.strength > 0 ? company.upkeep : 0), 0);
+  const formGoldCost = companies.length > 0
+    ? (unitById.get(companies[0].unitId)?.price ?? 340) * 2
+    : 680;
+  const formGoldSpent = hasGuard
+    ? companies.reduce((sum, company, index) => {
+      const unit = unitById.get(company.unitId);
+      if (!unit) return sum;
+      if (index === 0) return sum + unit.price * 2;
+      return company.strength > 0 || company.isRecruiting ? sum + unit.price : sum;
+    }, 0)
+    : 0;
+  const canEditComposition = !hasGuard && !isForming;
+  const canForm = canEditComposition && companies.length > 0 && state.playerGold >= formGoldCost;
+  return {
+    eligible: true,
+    hasGuard,
+    canForm,
+    isForming,
+    formBlockReason: canForm
+      ? ''
+      : companies.length === 0
+        ? 'Choose companies for the Personal Guard first.'
+        : state.playerGold < formGoldCost
+          ? `Needs ${formGoldCost - state.playerGold} more gold`
+          : '',
+    militaryId: hasGuard ? state.personalGuard.militaryId : '',
+    name: `${rulerName}'s Guard`,
+    provinceName: state.provinceMode ? provincePlayerFaction.name : playerFaction.name,
+    commanderId: state.personalGuard.commanderId,
+    commanderName: state.personalGuard.commanderId ? personProfile(state.personalGuard.commanderId).name : '',
+    commanderTitle: 'Captain of the Guard',
+    commanderPortrait: state.personalGuard.commanderId ? personProfile(state.personalGuard.commanderId).portrait : '',
+    commanderPortraitLayers: state.personalGuard.commanderId
+      ? mockPortraitLayers(personProfile(state.personalGuard.commanderId).portrait)
+      : mockPortraitLayers(''),
+    location: hasGuard ? 'Aurelion' : '',
+    isAbroad: false,
+    strength,
+    maxStrength,
+    companyCapacity,
+    upkeep,
+    formGoldCost,
+    formGoldSpent,
+    formDurationDays: isForming ? Math.max(12, companies.length * 12) : Math.max(0, (companies.length - 1) * 12),
+    formRemainingDays: isForming
+      ? Math.max(0, ...companies.filter(company => company.isRecruiting).map(company => company.remainingDays), 0)
+      : 0,
+    barbarianPopulation: 4200,
+    barbarianCultureCount: 2,
+    status: isForming ? 'Forming the standing guard' : hasGuard ? 'Standing' : '',
+    companies,
+    eligibleUnits,
+    canEditComposition,
+    formationRequirements: canEditComposition
+      ? [{
+        id: 'gold',
+        name: 'Gold',
+        context: '',
+        iconPath: '/assets/icons/I_Coins.png',
+        available: state.playerGold,
+        required: formGoldCost,
+        met: state.playerGold >= formGoldCost,
+        description: 'Paid when the Personal Guard is established.',
+      }]
+      : [],
+    companyEquipmentRequirements: [],
+  };
+}
+
 function militaryOverview(): BridgeResponse<'game.get_military_overview'> {
   return {
     forces: [
@@ -4684,6 +4842,14 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     isPaused: true,
     pauseMenuOpen: false,
     speedLevel: 1,
+    personalGuard: {
+      unitIds: [],
+      hasGuard: false,
+      isForming: false,
+      formStartDay: 0,
+      militaryId: 'mock-military-personal-guard',
+      commanderId: '',
+    },
     debugMode: searchParams.has('debug'),
     gameDay: 249409,
     climateTrend: 0.006,
@@ -5190,6 +5356,68 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return clone(militaryCommanderCandidates(payloadString(payload, 'militaryId', MOCK_IDS.military)));
       case 'game.get_military_overview':
         return clone(militaryOverview());
+      case 'game.get_personal_guard':
+        return clone(personalGuardStatus(state));
+      case 'game.set_personal_guard_composition': {
+        if (state.personalGuard.hasGuard || state.personalGuard.isForming) {
+          return { success: false, message: 'The Personal Guard is already established.' } satisfies BridgeResponse<'game.set_personal_guard_composition'>;
+        }
+        const unitIds = payloadStringArray(payload, 'unitIds').slice(0, state.provinceMode ? 10 : 20);
+        state.personalGuard.unitIds = unitIds;
+        const response = personalGuardStatus(state);
+        emit('game.get_personal_guard', response);
+        return { success: true, message: '' } satisfies BridgeResponse<'game.set_personal_guard_composition'>;
+      }
+      case 'game.form_personal_guard': {
+        if (state.personalGuard.hasGuard || state.personalGuard.isForming) {
+          return { success: false, message: 'The Personal Guard is already established.' } satisfies BridgeResponse<'game.form_personal_guard'>;
+        }
+        const unitIds = payloadStringArray(payload, 'unitIds');
+        if (unitIds.length > 0) {
+          state.personalGuard.unitIds = unitIds.slice(0, state.provinceMode ? 10 : 20);
+        }
+        if (state.personalGuard.unitIds.length === 0) {
+          return { success: false, message: 'Choose companies for the Personal Guard first.' } satisfies BridgeResponse<'game.form_personal_guard'>;
+        }
+        const cost = personalGuardStatus(state).formGoldCost;
+        if (state.playerGold < cost) {
+          return { success: false, message: `Needs ${cost - state.playerGold} more gold` } satisfies BridgeResponse<'game.form_personal_guard'>;
+        }
+        state.playerGold -= cost;
+        state.personalGuard.hasGuard = true;
+        state.personalGuard.isForming = true;
+        state.personalGuard.formStartDay = state.gameDay;
+        const response = personalGuardStatus(state);
+        emit('game.get_personal_guard', response);
+        emit('game.get_resources', responseFor('game.get_resources', undefined, emit));
+        emit('game.get_military_overview', responseFor('game.get_military_overview', undefined, emit));
+        return { success: true, message: 'The Personal Guard has been established.' } satisfies BridgeResponse<'game.form_personal_guard'>;
+      }
+      case 'game.replace_personal_guard_company': {
+        if (!state.personalGuard.hasGuard && !state.personalGuard.isForming) {
+          return { success: false, message: 'The Personal Guard is not available.' } satisfies BridgeResponse<'game.replace_personal_guard_company'>;
+        }
+        const capacity = state.provinceMode ? 10 : 20;
+        const slotNumber = Math.max(1, Math.round(payloadNumber(payload, 'slotNumber', 1)));
+        const unitId = payloadString(payload, 'unitId', '');
+        if (!unitId || !personalGuardUnitMeta(unitId)) {
+          return { success: false, message: 'That company cannot join the Personal Guard.' } satisfies BridgeResponse<'game.replace_personal_guard_company'>;
+        }
+        const index = slotNumber - 1;
+        if (index < 0 || index >= capacity) {
+          return { success: false, message: 'Could not replace that company.' } satisfies BridgeResponse<'game.replace_personal_guard_company'>;
+        }
+        if (index < state.personalGuard.unitIds.length) {
+          state.personalGuard.unitIds[index] = unitId;
+        } else if (state.personalGuard.unitIds.length < capacity) {
+          state.personalGuard.unitIds.push(unitId);
+        } else {
+          return { success: false, message: 'The Personal Guard has no free company slots.' } satisfies BridgeResponse<'game.replace_personal_guard_company'>;
+        }
+        const response = personalGuardStatus(state);
+        emit('game.get_personal_guard', response);
+        return { success: true, message: '' } satisfies BridgeResponse<'game.replace_personal_guard_company'>;
+      }
       case 'game.get_selected_militaries':
         return clone(selectedMilitaries());
       case 'game.get_map_modes':
@@ -7118,5 +7346,6 @@ export function defaultIdForScreen(screen: string): string {
   if (lower.includes('peace')) return MOCK_IDS.rivalFaction;
   if (lower.includes('faction')) return MOCK_IDS.playerFaction;
   if (lower.includes('family')) return MOCK_IDS.playerFaction;
+  if (lower.includes('personalguard') || lower === 'guard') return 'personalguard';
   return '';
 }

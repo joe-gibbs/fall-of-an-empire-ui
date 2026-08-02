@@ -17,13 +17,11 @@ import MilitaryCommanderAssignmentModal from '../../modals/characters/MilitaryCo
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { bridgeEvents } from '../../../bridge/core/bridgeEvents';
 import { mapPortraitLayers, mapPortraitPath } from '../../../bridge/characters/portraitMapping';
-import { refreshPersonalGuard } from '../../../bridge/military-map/usePersonalGuardBridge';
 import { TemplateUnitSelectorModal } from './TemplateManagementPanel';
 import './PersonalGuardPanel.css';
 
 const COMPANY_ICON = '/assets/icons/I_ArmiesQuickButton.png';
 const SWORDS_ICON = '/assets/icons/I_Swords.png';
-const GOLD_ICON = '/assets/icons/I_Coins.png';
 const CAPTAIN_ICON = '/assets/icons/I_Characters.png';
 const TACTICS_ICON = '/assets/icons/StatIcons/I_Tactics.png';
 const UPKEEP_ICON = '/assets/icons/Diplomacy/I_DemandGoldRecurring.png';
@@ -50,35 +48,47 @@ function romanSlot(slot: number): string {
 function CompanyCard({
   company,
   slot,
-  editable,
-  onOpenCatalogue,
-  onClear,
+  canEdit,
+  onEdit,
 }: {
   company: PersonalGuardCompanyEntry | null;
   slot: number;
-  editable: boolean;
-  onOpenCatalogue: () => void;
-  onClear?: () => void;
+  canEdit: boolean;
+  onEdit?: () => void;
 }) {
   if (!company) {
-    return (
-      <button
-        type="button"
-        className={`card personal-guard-company personal-guard-company--empty${editable ? ' personal-guard-company--pick' : ''}`}
+    const emptyBody = (
+      <div
+        className={`card personal-guard-company personal-guard-company--empty${canEdit ? ' personal-guard-company--addable' : ''}`}
         aria-label={webUIText('Military.PersonalGuard.EmptySlot')}
-        disabled={!editable}
-        onMouseDown={() => {
-          if (editable) onOpenCatalogue();
-        }}
       >
         <span className="personal-guard-company-number">{romanSlot(slot)}</span>
         <img src={COMPANY_ICON} alt="" draggable={false} />
-        {editable && (
-          <span className="personal-guard-company-pick-label">
-            <WebUIText textKey="Military.PersonalGuard.ChooseCompany" />
+        {canEdit && (
+          <span className="personal-guard-company-empty-label">
+            {webUIText('Military.PersonalGuard.ChooseCompany')}
           </span>
         )}
-      </button>
+      </div>
+    );
+
+    if (!canEdit) {
+      return emptyBody;
+    }
+
+    return (
+      <Tooltip content={{
+        title: webUIText('Military.PersonalGuard.ChooseCompany'),
+        body: webUIText('Military.PersonalGuard.EmptySlot'),
+      }}>
+        <button
+          type="button"
+          className="personal-guard-company-button"
+          onMouseDown={() => onEdit?.()}
+        >
+          {emptyBody}
+        </button>
+      </Tooltip>
     );
   }
 
@@ -86,9 +96,20 @@ function CompanyCard({
   const kind = company.isBarbarian
     ? webUIText('Military.PersonalGuard.BarbarianCompany')
     : webUIText('Military.PersonalGuard.HouseholdCompany');
+  const isRecruiting = Boolean(company.isRecruiting);
+  const progress = Math.max(0, Math.min(1, company.progress ?? 0));
+  const remainingDays = company.remainingDays ?? 0;
 
   const body = (
-    <div className={`card personal-guard-company${company.isBarbarian ? ' personal-guard-company--barbarian' : ''}${editable ? ' personal-guard-company--draft' : ''}`}>
+    <div className={`card personal-guard-company${company.isBarbarian ? ' personal-guard-company--barbarian' : ''}${canEdit ? ' personal-guard-company--replaceable' : ''}${isRecruiting ? ' personal-guard-company--recruiting' : ''}`}>
+      {isRecruiting && (
+        <div className="personal-guard-company-progress">
+          <div
+            className="personal-guard-company-progress-fill"
+            style={{ transform: `scaleX(${progress.toFixed(4)})` }}
+          />
+        </div>
+      )}
       <span className="personal-guard-company-number">{romanSlot(slot)}</span>
       <div className="personal-guard-company-portrait">
         <img src={portrait} alt="" draggable={false} />
@@ -97,33 +118,23 @@ function CompanyCard({
       <div className="personal-guard-company-copy">
         <strong>{company.name}</strong>
         <span>{company.cultureName} - {company.typeLabel}</span>
-        <span className="personal-guard-company-status">{company.status}</span>
+        <span className="personal-guard-company-status">
+          {isRecruiting && remainingDays > 0
+            ? webUIText('Common.DayCount', {
+              Days: formatNumber(remainingDays),
+              Unit: remainingDays === 1 ? webUIText('Common.Day') : webUIText('Common.Days'),
+            })
+            : company.status}
+        </span>
       </div>
       <div className="personal-guard-company-strength">
-        {editable && onClear ? (
-          <button
-            type="button"
-            className="personal-guard-company-remove"
-            aria-label={webUIText('Military.PersonalGuard.RemoveCompany')}
-            onMouseDown={event => {
-              event.preventDefault();
-              event.stopPropagation();
-              onClear();
-            }}
-          >
-            <img src="/assets/icons/I_Close.png" alt="" draggable={false} />
-          </button>
-        ) : (
-          <>
-            <strong>{formatNumber(company.strength)}</strong>
-            <span>/ {formatNumber(company.maxStrength)}</span>
-          </>
-        )}
+        <strong>{formatNumber(company.strength)}</strong>
+        <span>/ {formatNumber(company.maxStrength)}</span>
       </div>
     </div>
   );
 
-  return (
+  const card = (
     <Tooltip content={{
       title: company.name,
       body: company.description,
@@ -133,41 +144,19 @@ function CompanyCard({
         { label: webUIText('Military.PersonalGuard.CompanyUpkeep'), value: formatNumber(company.upkeep) },
       ],
     }}>
-      {editable ? (
+      {canEdit ? (
         <button
           type="button"
           className="personal-guard-company-button"
-          onMouseDown={() => onOpenCatalogue()}
+          onMouseDown={() => onEdit?.()}
         >
           {body}
         </button>
       ) : body}
     </Tooltip>
   );
-}
 
-function SpendMetric({
-  icon,
-  label,
-  value,
-  tooltip,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-  tooltip: string;
-}) {
-  return (
-    <Tooltip content={{ title: label, body: tooltip }}>
-      <div className="personal-guard-spend-metric">
-        <img src={icon} alt="" draggable={false} />
-        <div>
-          <span>{label}</span>
-          <strong>{value}</strong>
-        </div>
-      </div>
-    </Tooltip>
-  );
+  return card;
 }
 
 async function refreshGuardAndMilitary(): Promise<void> {
@@ -182,93 +171,147 @@ async function refreshGuardAndMilitary(): Promise<void> {
 export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse }) {
   const { openSidebar, openRightSidebar } = useGameActions();
   const [formBusy, setFormBusy] = useState(false);
-  const [compositionBusy, setCompositionBusy] = useState(false);
+  const [replaceBusy, setReplaceBusy] = useState(false);
   const [commanderModalOpen, setCommanderModalOpen] = useState(false);
-  const [catalogueOpen, setCatalogueOpen] = useState(false);
+  const [establishOpen, setEstablishOpen] = useState(false);
+  const [draftUnitIds, setDraftUnitIds] = useState<string[]>([]);
+  const [replaceSlot, setReplaceSlot] = useState<number | null>(null);
 
-  const canEditComposition = Boolean(guard.canEditComposition);
   const companies = useMemo(() => {
     const bySlot = new Map(guard.companies.map(company => [company.slotNumber, company]));
-    return Array.from({ length: guard.companyCapacity }, (_, index) => bySlot.get(index + 1) ?? null);
+    const length = Math.max(guard.companyCapacity, guard.companies.length);
+    return Array.from({ length }, (_, index) => bySlot.get(index + 1) ?? null);
   }, [guard.companies, guard.companyCapacity]);
 
-  const selectedUnitIds = useMemo(
-    () => guard.companies.map(company => company.unitId).filter(Boolean),
-    [guard.companies],
+  const eligibleUnits = useMemo(
+    () => (guard.eligibleUnits ?? []) as FormationTemplateUnitEntry[],
+    [guard.eligibleUnits],
   );
+  const unitById = useMemo(() => {
+    const map = new Map<string, FormationTemplateUnitEntry>();
+    for (const unit of eligibleUnits) map.set(unit.id, unit);
+    return map;
+  }, [eligibleUnits]);
 
-  const currentCounts = useMemo(() => {
+  const draftCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const unitId of selectedUnitIds) {
+    for (const unitId of draftUnitIds) {
       counts[unitId] = (counts[unitId] ?? 0) + 1;
     }
     return counts;
-  }, [selectedUnitIds]);
+  }, [draftUnitIds]);
 
-  const eligibleUnits = (guard.eligibleUnits ?? []) as FormationTemplateUnitEntry[];
+  const draftCost = useMemo(() => {
+    return draftUnitIds.reduce((sum, unitId) => sum + (unitById.get(unitId)?.price ?? 0), 0);
+  }, [draftUnitIds, unitById]);
 
   const commanderPortrait = mapPortraitPath(guard.commanderPortrait);
   const commanderLayers = mapPortraitLayers(guard.commanderPortraitLayers);
   const commanderTitle = guard.commanderTitle || webUIText('Military.PersonalGuard.Captain');
   const commanderName = guard.commanderName || webUIText('Military.PersonalGuard.CaptainVacant');
   const canAppointCommander = Boolean(guard.militaryId);
-  const showEstablishCard = !guard.hasGuard || guard.isForming;
-  const formGoldSpent = guard.formGoldSpent ?? 0;
-  const formDurationDays = guard.formDurationDays ?? 0;
-  const formRemainingDays = guard.formRemainingDays ?? 0;
+  const canEstablish = !guard.hasGuard && !guard.isForming;
+  const canEditCompanies = Boolean(guard.hasGuard || guard.isForming);
 
-  const formTooltip = guard.canForm
-    ? webUIText('Military.PersonalGuard.FormTooltipReady')
-    : (guard.formBlockReason || webUIText('Military.PersonalGuard.FormUnavailable'));
+  const replaceCompany = replaceSlot != null
+    ? guard.companies.find(company => company.slotNumber === replaceSlot) ?? null
+    : null;
+  const isAddingCompany = replaceSlot != null && !replaceCompany;
+  const compareUnit = replaceCompany
+    ? unitById.get(replaceCompany.unitId) ?? {
+      id: replaceCompany.unitId,
+      name: replaceCompany.name,
+      description: replaceCompany.description,
+      portrait: replaceCompany.portrait,
+      includesCore: false,
+      type: replaceCompany.type,
+      unitTypeLabel: replaceCompany.typeLabel,
+      category: replaceCompany.type,
+      battleRole: '',
+      cultureId: '',
+      cultureName: replaceCompany.cultureName,
+      cultureColour: '',
+      tier: 1,
+      count: 1,
+      maxStrength: replaceCompany.maxStrength,
+      price: 0,
+      buildTimeDays: 0,
+      upkeep: replaceCompany.upkeep,
+      foodConsumption: 0,
+      resourceCost: [],
+      monthlyConsumption: [],
+      speed: 0,
+      range: 0,
+      siegePower: 0,
+      pierceDamage: 0,
+      crushDamage: 0,
+      slashDamage: 0,
+      pierceArmour: 0,
+      crushArmour: 0,
+      slashArmour: 0,
+      immuneToWinterAttrition: false,
+      immuneToDesertAttrition: false,
+      availableSettlementCount: 0,
+      availableSettlements: [],
+      upgradeUnitId: '',
+      downgradeUnitId: '',
+    } as FormationTemplateUnitEntry
+    : null;
 
-  const setComposition = (unitIds: string[]) => {
-    if (compositionBusy || !canEditComposition) return;
-    setCompositionBusy(true);
-    void bridgeCall('game.set_personal_guard_composition', { unitIds })
-      .then((response) => {
-        if (!response.success) {
-          acknowledgeBridgeFailure(response.message || 'game.set_personal_guard_composition failed', 'game.set_personal_guard_composition');
-        }
-        refreshPersonalGuard();
-      })
-      .catch((error: unknown) => acknowledgeBridgeFailure(error, 'game.set_personal_guard_composition'))
-      .finally(() => setCompositionBusy(false));
+  const openEstablish = () => {
+    setDraftUnitIds([]);
+    setEstablishOpen(true);
   };
 
-  const handleAddUnit = (unitId: string) => {
-    if (selectedUnitIds.length >= guard.companyCapacity) return;
-    setComposition([...selectedUnitIds, unitId]);
+  const handleAddDraft = (unitId: string) => {
+    if (draftUnitIds.length >= guard.companyCapacity) return;
+    setDraftUnitIds(current => [...current, unitId]);
   };
 
-  const handleRemoveUnit = (unitId: string) => {
-    const index = selectedUnitIds.lastIndexOf(unitId);
-    if (index < 0) return;
-    const next = selectedUnitIds.slice();
-    next.splice(index, 1);
-    setComposition(next);
+  const handleRemoveDraft = (unitId: string) => {
+    setDraftUnitIds(current => {
+      const index = current.lastIndexOf(unitId);
+      if (index < 0) return current;
+      const next = current.slice();
+      next.splice(index, 1);
+      return next;
+    });
   };
 
-  const handleClearSlot = (slotIndex: number) => {
-    const next = selectedUnitIds.slice();
-    if (slotIndex < 0 || slotIndex >= next.length) return;
-    next.splice(slotIndex, 1);
-    setComposition(next);
-  };
-
-  const handleFormGuard = () => {
-    if (formBusy || !guard.canForm || guard.isForming) {
-      return;
-    }
+  const handleEstablishDone = () => {
+    if (formBusy || draftUnitIds.length === 0) return;
     setFormBusy(true);
-    void bridgeCall('game.form_personal_guard')
+    void bridgeCall('game.form_personal_guard', { unitIds: draftUnitIds })
       .then((response) => {
         if (!response.success) {
           acknowledgeBridgeFailure(response.message || 'game.form_personal_guard failed', 'game.form_personal_guard');
+          return;
         }
+        setEstablishOpen(false);
+        setDraftUnitIds([]);
         return refreshGuardAndMilitary();
       })
       .catch((error: unknown) => acknowledgeBridgeFailure(error, 'game.form_personal_guard'))
       .finally(() => setFormBusy(false));
+  };
+
+  const handleReplace = (unitId: string) => {
+    if (replaceBusy || replaceSlot == null) return;
+    setReplaceBusy(true);
+    void bridgeCall('game.replace_personal_guard_company', {
+      slotNumber: replaceSlot,
+      unitId,
+    })
+      .then((response) => {
+        if (!response.success) {
+          acknowledgeBridgeFailure(response.message || 'game.replace_personal_guard_company failed', 'game.replace_personal_guard_company');
+          return;
+        }
+        setReplaceSlot(null);
+        return refreshGuardAndMilitary();
+      })
+      .catch((error: unknown) => acknowledgeBridgeFailure(error, 'game.replace_personal_guard_company'))
+      .finally(() => setReplaceBusy(false));
   };
 
   return (
@@ -322,57 +365,60 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
                 </span>
                 <span className="personal-guard-captain-name">{commanderName}</span>
               </span>
-              <span className="personal-guard-captain-action">
-                {canAppointCommander
-                  ? webUIText(guard.commanderId ? 'Military.PersonalGuard.ReplaceCaptain' : 'Military.PersonalGuard.AppointCaptain')
-                  : webUIText('Military.PersonalGuard.CaptainPending')}
-              </span>
+              {canAppointCommander && (
+                <span className="personal-guard-captain-action">
+                  {webUIText(guard.commanderId ? 'Military.PersonalGuard.ReplaceCaptain' : 'Military.PersonalGuard.AppointCaptain')}
+                </span>
+              )}
             </button>
           </Tooltip>
 
           <div className="personal-guard-spend">
-            <SpendMetric
-              icon={GOLD_ICON}
-              label={webUIText('Military.PersonalGuard.Spending')}
-              value={formatNumber(formGoldSpent)}
-              tooltip={webUIText('Military.PersonalGuard.SpendingTooltipSpent', { Amount: formatNumber(formGoldSpent) })}
-            />
             {(guard.hasGuard || guard.upkeep > 0) && (
-              <SpendMetric
-                icon={UPKEEP_ICON}
-                label={webUIText('Military.PersonalGuard.Upkeep')}
-                value={formatNumber(guard.upkeep)}
-                tooltip={webUIText('Military.PersonalGuard.UpkeepTooltip')}
-              />
+              <Tooltip content={{
+                title: webUIText('Military.PersonalGuard.Upkeep'),
+                body: webUIText('Military.PersonalGuard.UpkeepTooltip'),
+              }}>
+                <div className="personal-guard-spend-metric">
+                  <img src={UPKEEP_ICON} alt="" draggable={false} />
+                  <div>
+                    <span>{webUIText('Military.PersonalGuard.Upkeep')}</span>
+                    <strong>{formatNumber(guard.upkeep)}</strong>
+                  </div>
+                </div>
+              </Tooltip>
             )}
             {guard.hasGuard && (
-              <SpendMetric
-                icon={SWORDS_ICON}
-                label={webUIText('Military.PersonalGuard.Strength')}
-                value={`${formatNumber(guard.strength)} / ${formatNumber(guard.maxStrength)}`}
-                tooltip={webUIText('Military.PersonalGuard.StrengthTooltip')}
-              />
+              <Tooltip content={{
+                title: webUIText('Military.PersonalGuard.Strength'),
+                body: webUIText('Military.PersonalGuard.StrengthTooltip'),
+              }}>
+                <div className="personal-guard-spend-metric">
+                  <img src={SWORDS_ICON} alt="" draggable={false} />
+                  <div>
+                    <span>{webUIText('Military.PersonalGuard.Strength')}</span>
+                    <strong>{`${formatNumber(guard.strength)} / ${formatNumber(guard.maxStrength)}`}</strong>
+                  </div>
+                </div>
+              </Tooltip>
             )}
           </div>
         </div>
 
-        {showEstablishCard && (
+        {canEstablish && (
           <div className="personal-guard-establish">
             <InteractionCard
               title={webUIText('Military.PersonalGuard.Form')}
-              description={formTooltip}
+              description={webUIText('Military.PersonalGuard.FormOpenCatalogue')}
               image={SWORDS_ICON}
               bgImage={ESTABLISH_BG}
-              durationDays={formDurationDays}
-              remainingDays={formRemainingDays}
-              inProgress={guard.isForming}
-              onClick={guard.canForm && !formBusy ? handleFormGuard : undefined}
+              onClick={openEstablish}
               tutorialTarget="FormPersonalGuardButton"
             />
           </div>
         )}
 
-        {guard.hasGuard && guard.militaryId && !guard.isForming && (
+        {guard.hasGuard && guard.militaryId && (
           <div className="personal-guard-toolbar">
             {guard.status && <span className="personal-guard-standing">{guard.status}</span>}
             <Tooltip content={{
@@ -399,21 +445,47 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
               key={index + 1}
               company={company}
               slot={index + 1}
-              editable={canEditComposition}
-              onOpenCatalogue={() => setCatalogueOpen(true)}
-              onClear={company ? () => handleClearSlot(index) : undefined}
+              canEdit={canEditCompanies}
+              onEdit={() => setReplaceSlot(index + 1)}
             />
           ))}
         </div>
       </section>
 
-      {catalogueOpen && canEditComposition && (
+      {establishOpen && canEstablish && (
         <TemplateUnitSelectorModal
           units={eligibleUnits}
-          currentCounts={currentCounts}
-          onAdd={handleAddUnit}
-          onRemove={handleRemoveUnit}
-          onClose={() => setCatalogueOpen(false)}
+          currentCounts={draftCounts}
+          onAdd={handleAddDraft}
+          onRemove={handleRemoveDraft}
+          onClose={() => {
+            setEstablishOpen(false);
+            setDraftUnitIds([]);
+          }}
+          title={webUIText('Military.PersonalGuard.Form')}
+          doneLabel={webUIText('Military.PersonalGuard.Form')}
+          totalCost={draftCost}
+          doneDisabled={formBusy || draftUnitIds.length === 0}
+          onDone={handleEstablishDone}
+        />
+      )}
+
+      {replaceSlot != null && canEditCompanies && (
+        <TemplateUnitSelectorModal
+          mode="single"
+          units={eligibleUnits}
+          currentCounts={compareUnit ? { [compareUnit.id]: 1 } : {}}
+          onAdd={handleReplace}
+          onRemove={() => undefined}
+          onClose={() => setReplaceSlot(null)}
+          title={webUIText(
+            isAddingCompany
+              ? 'Military.PersonalGuard.ChooseCompany'
+              : 'Military.PersonalGuard.ReplaceCompany',
+          )}
+          compareUnit={compareUnit}
+          doneLabel={webUIText('Common.Cancel')}
+          onDone={() => setReplaceSlot(null)}
         />
       )}
 

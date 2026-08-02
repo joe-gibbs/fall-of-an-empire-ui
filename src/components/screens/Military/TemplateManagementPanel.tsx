@@ -5,6 +5,7 @@ import DataTable, { type DataTableColumn } from '../../common/layout/tables/Data
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import GameButton from '../../common/buttons/GameButton';
+import GameCheckButton from '../../common/buttons/GameCheckButton';
 import ModalDragHandle from '../../common/layout/shell/ModalDragHandle';
 import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip, { type UnitTooltipData } from '../../common/tooltips/UnitTooltip';
@@ -256,10 +257,16 @@ function availableSettlementNames(unit: FormationTemplateUnitEntry): string[] {
 }
 
 function availableSettlementEntries(unit: FormationTemplateUnitEntry): { id: string; name: string }[] {
-  return unit.availableSettlements
+  const settlements = unit.availableSettlements ?? [];
+  return settlements
     .filter(settlement => settlement.available)
     .map(settlement => ({ id: settlement.id, name: settlement.name }))
     .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function unitCanBuildInAnySettlement(unit: FormationTemplateUnitEntry): boolean {
+  if ((unit.availableSettlementCount || 0) > 0) return true;
+  return availableSettlementEntries(unit).length > 0;
 }
 
 function catalogueFilterOptions(
@@ -323,18 +330,34 @@ export function TemplateUnitSelectorModal({
   onAdd,
   onRemove,
   onClose,
+  mode = 'multi',
+  title,
+  doneLabel,
+  onDone,
+  doneDisabled,
+  totalCost,
+  compareUnit,
 }: {
   units: FormationTemplateUnitEntry[];
   currentCounts: Record<string, number>;
   onAdd: (unitId: string) => void;
   onRemove: (unitId: string) => void;
   onClose: () => void;
+  mode?: 'multi' | 'single';
+  title?: string;
+  doneLabel?: string;
+  onDone?: () => void;
+  doneDisabled?: boolean;
+  totalCost?: number;
+  compareUnit?: FormationTemplateUnitEntry | null;
 }) {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState(CATALOGUE_ALL_FILTER);
   const [cultureFilter, setCultureFilter] = useState(CATALOGUE_ALL_FILTER);
+  const [showUnavailable, setShowUnavailable] = useState(false);
   const [closing, setClosing] = useState(false);
   const closeTimerRef = useRef<number | undefined>(undefined);
+  const isSingle = mode === 'single';
   const {
     offsetStyle,
     rootRef: dialogRef,
@@ -349,6 +372,7 @@ export function TemplateUnitSelectorModal({
       'search-field',
       'search-input',
       'data-table',
+      'game-check-button',
       'chart-unit-picker-body',
       'chart-unit-picker-foot',
       'chart-unit-picker-table',
@@ -391,7 +415,7 @@ export function TemplateUnitSelectorModal({
     {
       id: 'unit',
       label: webUIText('Common.Unit'),
-      width: '31%',
+      width: isSingle ? '28%' : '24%',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--unit',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--unit',
       render: unit => {
@@ -400,10 +424,10 @@ export function TemplateUnitSelectorModal({
           <Tooltip
             position="left"
             delay={200}
-            content={{ afterLines: <UnitTooltip data={templateUnitTooltipData(unit, count)} /> }}
+            content={{ afterLines: <UnitTooltip data={templateUnitTooltipData(unit, Math.max(1, count))} /> }}
           >
             <div
-              className={`chart-unit-picker-unit${count > 0 ? ' chart-unit-picker-unit--selected' : ''}`}
+              className={`chart-unit-picker-unit${count > 0 || (isSingle && compareUnit?.id === unit.id) ? ' chart-unit-picker-unit--selected' : ''}`}
               data-tutorial-target="DynamicUnit"
               data-tutorial-unit-id={unit.id}
               data-tutorial-unit-count={count}
@@ -413,8 +437,10 @@ export function TemplateUnitSelectorModal({
               </span>
               <span className="chart-unit-picker-unit-copy">
                 <strong>{unit.name}</strong>
+                {isSingle && compareUnit && compareUnit.id === unit.id && (
+                  <span>{webUIText('Military.PersonalGuard.CurrentCompany')}</span>
+                )}
               </span>
-              <span className="chart-unit-picker-unit-count">{formatNumber(count)}</span>
             </div>
           </Tooltip>
         );
@@ -425,7 +451,7 @@ export function TemplateUnitSelectorModal({
     {
       id: 'type',
       label: webUIText('Economy.Type'),
-      width: '13%',
+      width: '11%',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--type',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--type',
       render: unit => (
@@ -460,11 +486,22 @@ export function TemplateUnitSelectorModal({
           <span>{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.433.5')}</span>
         </span>
       ),
-      width: '10%',
+      width: '9%',
       align: 'right',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--number',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--number',
-      render: unit => formatNumber(unit.maxStrength),
+      render: unit => {
+        if (isSingle && compareUnit && compareUnit.id !== unit.id) {
+          const delta = unit.maxStrength - compareUnit.maxStrength;
+          return (
+            <span className={delta > 0 ? 'chart-unit-picker-delta--up' : delta < 0 ? 'chart-unit-picker-delta--down' : undefined}>
+              {formatNumber(unit.maxStrength)}
+              {delta !== 0 ? ` (${delta > 0 ? '+' : ''}${formatNumber(delta)})` : ''}
+            </span>
+          );
+        }
+        return formatNumber(unit.maxStrength);
+      },
       sortValue: unit => unit.maxStrength,
     },
     {
@@ -475,11 +512,22 @@ export function TemplateUnitSelectorModal({
           <span>{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.442.8')}</span>
         </span>
       ),
-      width: '10%',
+      width: '9%',
       align: 'right',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--number',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--number',
-      render: unit => formatNumber(unit.price),
+      render: unit => {
+        if (isSingle && compareUnit && compareUnit.id !== unit.id) {
+          const delta = unit.price - compareUnit.price;
+          return (
+            <span className={delta > 0 ? 'chart-unit-picker-delta--down' : delta < 0 ? 'chart-unit-picker-delta--up' : undefined}>
+              {formatNumber(unit.price)}
+              {delta !== 0 ? ` (${delta > 0 ? '+' : ''}${formatNumber(delta)})` : ''}
+            </span>
+          );
+        }
+        return formatNumber(unit.price);
+      },
       sortValue: unit => unit.price,
     },
     {
@@ -490,11 +538,22 @@ export function TemplateUnitSelectorModal({
           <span>{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.451.11')}</span>
         </span>
       ),
-      width: '10%',
+      width: '9%',
       align: 'right',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--number',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--number',
-      render: unit => formatNumber(unit.upkeep),
+      render: unit => {
+        if (isSingle && compareUnit && compareUnit.id !== unit.id) {
+          const delta = unit.upkeep - compareUnit.upkeep;
+          return (
+            <span className={delta > 0 ? 'chart-unit-picker-delta--down' : delta < 0 ? 'chart-unit-picker-delta--up' : undefined}>
+              {formatNumber(unit.upkeep)}
+              {delta !== 0 ? ` (${delta > 0 ? '+' : ''}${formatNumber(delta)})` : ''}
+            </span>
+          );
+        }
+        return formatNumber(unit.upkeep);
+      },
       sortValue: unit => unit.upkeep,
     },
     {
@@ -505,7 +564,7 @@ export function TemplateUnitSelectorModal({
           <span>{webUIText('PeaceNegotiation.Tooltip.Settlements')}</span>
         </span>
       ),
-      width: '12%',
+      width: '14%',
       align: 'right',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--settlements',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--settlements',
@@ -517,6 +576,11 @@ export function TemplateUnitSelectorModal({
           : settlementCount > 0
             ? webUIText('Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.618.1', { Value1: formatNumber(settlementCount) })
             : webUIText('Common.NoneAvailable');
+        const label = settlementNames.length > 0
+          ? (settlementNames.length <= 2
+            ? settlementNames.join(', ')
+            : webUIText('Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.618.1', { Value1: formatNumber(settlementCount) }))
+          : formatNumber(settlementCount);
         return (
           <Tooltip
             inline
@@ -526,7 +590,7 @@ export function TemplateUnitSelectorModal({
               body: settlementTooltipBody,
             }}
           >
-            <span className="chart-unit-picker-settlement-count">{formatNumber(settlementCount)}</span>
+            <span className="chart-unit-picker-settlement-count">{label}</span>
           </Tooltip>
         );
       },
@@ -535,15 +599,34 @@ export function TemplateUnitSelectorModal({
     {
       id: 'add',
       label: '',
-      width: '7%',
+      width: isSingle ? '13%' : '17%',
       align: 'centre',
       sortable: false,
       className: 'chart-unit-picker-cell chart-unit-picker-cell--add',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--add',
       render: unit => {
         const count = currentCounts[unit.id] ?? 0;
+        if (isSingle) {
+          return (
+            <Tooltip
+              inline
+              position="left"
+              content={{ title: unit.name, body: webUIText('Military.PersonalGuard.SelectReplacement') }}
+            >
+              <button
+                type="button"
+                className="chart-unit-picker-add chart-unit-picker-add--select"
+                onMouseDown={event => event.stopPropagation()}
+                onClick={() => onAdd(unit.id)}
+              >
+                <WebUIText textKey="Military.PersonalGuard.SelectReplacement" />
+              </button>
+            </Tooltip>
+          );
+        }
         return (
-          <span className="chart-unit-picker-actions">
+          <span className="chart-unit-picker-actions chart-unit-picker-actions--with-count">
+            <span className="chart-unit-picker-unit-count">{formatNumber(count)}</span>
             <Tooltip
               inline
               position="left"
@@ -579,12 +662,18 @@ export function TemplateUnitSelectorModal({
         );
       },
     },
-  ], [currentCounts, onAdd, onRemove]);
+  ], [compareUnit, currentCounts, isSingle, onAdd, onRemove]);
   const filterUnit = (unit: FormationTemplateUnitEntry) => {
     const unitType = unit.type || unit.category;
     const unitCulture = unit.cultureId || unit.cultureName;
-    return (typeFilter === CATALOGUE_ALL_FILTER || typeFilter === unitType)
-      && (cultureFilter === CATALOGUE_ALL_FILTER || cultureFilter === unitCulture);
+    if (typeFilter !== CATALOGUE_ALL_FILTER && typeFilter !== unitType) return false;
+    if (cultureFilter !== CATALOGUE_ALL_FILTER && cultureFilter !== unitCulture) return false;
+    if (showUnavailable) return true;
+    if (unitCanBuildInAnySettlement(unit)) return true;
+    // Keep units already in the draft, and the company being replaced, visible.
+    if ((currentCounts[unit.id] ?? 0) > 0) return true;
+    if (isSingle && compareUnit?.id === unit.id) return true;
+    return false;
   };
 
   return createPortal(
@@ -614,7 +703,14 @@ export function TemplateUnitSelectorModal({
           <ModalDragHandle onMouseDown={onHandleMouseDown} />
           <div className="chart-unit-picker-head">
             <div className="chart-unit-picker-title-block">
-              <span className="chart-unit-picker-title"><WebUIText textKey="FormationTemplate.UnitCatalogue" /></span>
+              <span className="chart-unit-picker-title">
+                {title ?? webUIText('FormationTemplate.UnitCatalogue')}
+              </span>
+              {isSingle && compareUnit && (
+                <span className="chart-unit-picker-subtitle">
+                  {webUIText('Military.PersonalGuard.ReplacingCompany', { Name: compareUnit.name })}
+                </span>
+              )}
             </div>
             <CloseButton size="sm" onClick={requestClose} />
           </div>
@@ -643,6 +739,16 @@ export function TemplateUnitSelectorModal({
                     options={cultureOptions}
                     onChange={setCultureFilter}
                   />
+                  <GameCheckButton
+                    checked={showUnavailable}
+                    label={webUIText('FormationTemplate.ShowUnavailableUnits')}
+                    className="chart-unit-picker-unavailable-toggle game-check-button--compact-label"
+                    onToggle={() => setShowUnavailable(value => !value)}
+                    tooltip={{
+                      title: webUIText('FormationTemplate.ShowUnavailableUnits'),
+                      body: webUIText('FormationTemplate.ShowUnavailableUnitsTooltip'),
+                    }}
+                  />
                 </div>
               )}
               filterPredicate={filterUnit}
@@ -667,13 +773,23 @@ export function TemplateUnitSelectorModal({
             />
           </div>
           <div className="chart-unit-picker-foot">
+            {!isSingle && typeof totalCost === 'number' && (
+              <span className="chart-unit-picker-total-cost">
+                <img src={GOLD_ICON} alt="" draggable={false} />
+                <strong>{formatNumber(totalCost)}</strong>
+              </span>
+            )}
             <GameButton
               variant="burgundy"
               className="chart-unit-picker-done"
-              tutorialTarget="CloseUnitCatalogueButton"
-              onClick={requestClose}
+              tutorialTarget={onDone ? 'FormPersonalGuardButton' : 'CloseUnitCatalogueButton'}
+              disabled={doneDisabled}
+              onClick={() => {
+                if (onDone) onDone();
+                else requestClose();
+              }}
             >
-              <WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" />
+              {doneLabel ?? webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.667.4')}
             </GameButton>
           </div>
         </div>

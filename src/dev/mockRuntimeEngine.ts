@@ -305,6 +305,13 @@ function installLauncher(runtime: ReturnType<typeof createMockBridgeRuntime>, em
         screenId: screenIdInput.value || defaultIdForScreen(screenSelect.value),
       }, emitBridgeEvent);
     }),
+    createButton('Personal Guard', () => {
+      runtime.launch({
+        appMode: 'ingame',
+        screen: 'military',
+        screenId: 'personalguard',
+      }, emitBridgeEvent);
+    }),
   ]));
 
   const playerModeLabel = document.createElement('span');

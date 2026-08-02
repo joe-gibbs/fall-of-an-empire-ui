@@ -1152,6 +1152,10 @@ export interface ApplyFormationTemplateResponse {
   message: string;
 }
 
+export interface FormPersonalGuardRequest {
+  unitIds: string[];
+}
+
 export interface FormPersonalGuardResponse {
   success: boolean;
   message: string;
@@ -5546,6 +5550,9 @@ export interface PersonalGuardCompanyEntry {
   maxStrength: number;
   upkeep: number;
   status: string;
+  progress: number;
+  remainingDays: number;
+  isRecruiting: boolean;
 }
 
 export interface PersonalGuardRequirementEntry {
@@ -5828,6 +5835,16 @@ export interface ReorderSettlementBuildingRequest {
   settlementId: string;
   sourceQueueIndex: number;
   targetQueueIndex: number;
+}
+
+export interface ReplacePersonalGuardCompanyRequest {
+  slotNumber: number;
+  unitId: string;
+}
+
+export interface ReplacePersonalGuardCompanyResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface RequestPortraitRequest {
@@ -6399,7 +6416,7 @@ export interface BridgeActions {
   'game.download_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.duplicate_military_formation_template': { request: DuplicateMilitaryFormationTemplateRequest; response: DuplicateMilitaryFormationTemplateResponse };
   'game.enter_court_appointment_contest': { request: EnterCourtAppointmentContestRequest; response: EnterCourtAppointmentContestResponse };
-  'game.form_personal_guard': { request: void; response: FormPersonalGuardResponse };
+  'game.form_personal_guard': { request: FormPersonalGuardRequest; response: FormPersonalGuardResponse };
   'game.form_personal_power_bloc': { request: void; response: FormPersonalPowerBlocResponse };
   'game.generate_formation_template_name': { request: GenerateFormationTemplateNameRequest; response: GenerateFormationTemplateNameResponse };
   'game.get_achievements': { request: void; response: GetAchievementsResponse };
@@ -6506,6 +6523,7 @@ export interface BridgeActions {
   'game.render_character_creator_preview': { request: RenderCharacterCreatorPreviewRequest; response: void };
   'game.reorder_settlement_building': { request: ReorderSettlementBuildingRequest; response: void };
   'game.replace_military_commander': { request: ReplaceMilitaryCommanderRequest; response: void };
+  'game.replace_personal_guard_company': { request: ReplacePersonalGuardCompanyRequest; response: ReplacePersonalGuardCompanyResponse };
   'game.replenish_military': { request: ReplenishMilitaryRequest; response: void };
   'game.request_battle_retreat': { request: RequestBattleRetreatRequest; response: RequestBattleRetreatResponse };
   'game.request_portrait': { request: RequestPortraitRequest; response: RequestPortraitResponse };
