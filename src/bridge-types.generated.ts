@@ -1152,6 +1152,11 @@ export interface ApplyFormationTemplateResponse {
   message: string;
 }
 
+export interface FormPersonalGuardResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface FormPersonalPowerBlocResponse {
   success: boolean;
   message: string;
@@ -2046,7 +2051,7 @@ export interface EncyclopediaBuildingDTO {
   categoryLabel: string;
   cultureId: string;
   description: string;
-  effectsText: string;
+  effectsHtml: string;
   maxLevel: number;
   price: number;
   buildTimeDays: number;
@@ -3835,7 +3840,7 @@ export interface SettlementBuiltBuildingEntry {
   category: string;
   chainName: string;
   description: string;
-  effectsText: string;
+  effectsHtml: string;
   condition: number;
   monthlyConditionChange: number;
   maintenanceGovernanceThreshold: number;
@@ -3866,7 +3871,7 @@ export interface SettlementAvailableBuildingEntry {
   category: string;
   chainName: string;
   description: string;
-  effectsText: string;
+  effectsHtml: string;
   price: number;
   buildTime: number;
   upkeep: number;
@@ -4921,7 +4926,7 @@ export interface MilitaryOverviewForce {
   supplyDays: number;
   attrition: boolean;
   isNavy: boolean;
-  isProvincialGuard: boolean;
+  isPersonalGuard: boolean;
   doctrine: string;
   template: string;
   location: string;
@@ -5099,7 +5104,7 @@ export interface GetMilitaryDataResponse {
   battleGroups: MilitaryBattleGroupEntry[];
   commandRank: string;
   isNavy: boolean;
-  isProvincialGuard: boolean;
+  isPersonalGuard: boolean;
   currentOrder: string;
   formationTemplate: string;
   garrisonedAt: string;
@@ -5557,21 +5562,33 @@ export interface PersonalGuardRequirementEntry {
 export interface GetPersonalGuardResponse {
   eligible: boolean;
   hasGuard: boolean;
+  canForm: boolean;
+  isForming: boolean;
+  formBlockReason: string;
   militaryId: string;
   name: string;
   provinceName: string;
+  commanderId: string;
   commanderName: string;
   commanderTitle: string;
+  commanderPortrait: string;
+  commanderPortraitLayers: PortraitLayerData;
   location: string;
   isAbroad: boolean;
   strength: number;
   maxStrength: number;
   companyCapacity: number;
   upkeep: number;
+  formGoldCost: number;
+  formGoldSpent: number;
+  formDurationDays: number;
+  formRemainingDays: number;
   barbarianPopulation: number;
   barbarianCultureCount: number;
   status: string;
   companies: PersonalGuardCompanyEntry[];
+  eligibleUnits: FormationTemplateUnitEntry[];
+  canEditComposition: boolean;
   formationRequirements: PersonalGuardRequirementEntry[];
   companyEquipmentRequirements: PersonalGuardRequirementEntry[];
 }
@@ -5973,6 +5990,19 @@ export interface SetNotificationMutedRequest {
   muted: boolean;
 }
 
+export interface SetPauseMenuOpenRequest {
+  open: boolean;
+}
+
+export interface SetPersonalGuardCompositionRequest {
+  unitIds: string[];
+}
+
+export interface SetPersonalGuardCompositionResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface SetPowerBlocMembershipRequest {
   blocId: string;
   join: boolean;
@@ -6369,6 +6399,7 @@ export interface BridgeActions {
   'game.download_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.duplicate_military_formation_template': { request: DuplicateMilitaryFormationTemplateRequest; response: DuplicateMilitaryFormationTemplateResponse };
   'game.enter_court_appointment_contest': { request: EnterCourtAppointmentContestRequest; response: EnterCourtAppointmentContestResponse };
+  'game.form_personal_guard': { request: void; response: FormPersonalGuardResponse };
   'game.form_personal_power_bloc': { request: void; response: FormPersonalPowerBlocResponse };
   'game.generate_formation_template_name': { request: GenerateFormationTemplateNameRequest; response: GenerateFormationTemplateNameResponse };
   'game.get_achievements': { request: void; response: GetAchievementsResponse };
@@ -6513,6 +6544,8 @@ export interface BridgeActions {
   'game.set_military_parent': { request: SetMilitaryParentRequest; response: void };
   'game.set_mod_enabled': { request: SetModEnabledRequest; response: SetModEnabledResponse };
   'game.set_notification_muted': { request: SetNotificationMutedRequest; response: void };
+  'game.set_pause_menu_open': { request: SetPauseMenuOpenRequest; response: void };
+  'game.set_personal_guard_composition': { request: SetPersonalGuardCompositionRequest; response: SetPersonalGuardCompositionResponse };
   'game.set_power_bloc_membership': { request: SetPowerBlocMembershipRequest; response: SetPowerBlocMembershipResponse };
   'game.set_province_build_focus': { request: SetProvinceBuildFocusRequest; response: void };
   'game.set_resource_auto_sell': { request: SetResourceAutoSellRequest; response: void };

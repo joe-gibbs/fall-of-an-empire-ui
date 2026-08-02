@@ -315,7 +315,7 @@ function CatalogueFilterSelect({
   );
 }
 
-function TemplateUnitSelectorModal({
+export function TemplateUnitSelectorModal({
   units,
   currentCounts,
   onAdd,

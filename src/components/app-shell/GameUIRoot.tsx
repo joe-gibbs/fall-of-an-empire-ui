@@ -209,6 +209,15 @@ export default function GameUIRoot() {
     return true;
   }, [handleEscapeStack, markEscapeHandled]);
 
+  // ESC menu must keep the campaign paused for as long as it is open.
+  useEffect(() => {
+    bridgeCall('game.set_pause_menu_open', { open: showPause }).catch(acknowledgeBridgeFailure);
+    if (!showPause) return undefined;
+    return () => {
+      bridgeCall('game.set_pause_menu_open', { open: false }).catch(acknowledgeBridgeFailure);
+    };
+  }, [showPause]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.code === 'Escape') {

@@ -7,7 +7,7 @@ import { useBridgeQuery } from '../core/useBridgeQuery';
 
 let personalGuardCache: GetPersonalGuardResponse | null = null;
 
-function refreshPersonalGuard(): void {
+export function refreshPersonalGuard(): void {
   void bridgeCall('game.get_personal_guard')
     .then((response) => {
       personalGuardCache = response;
@@ -30,7 +30,11 @@ export function usePersonalGuardBridge(): GetPersonalGuardResponse | null {
   useEffect(() => {
     const refresh = () => refreshPersonalGuard();
     bridgeEvents.addEventListener('game.get_military_overview', refresh);
-    return () => bridgeEvents.removeEventListener('game.get_military_overview', refresh);
+    bridgeEvents.addEventListener('game.game_date_changed', refresh);
+    return () => {
+      bridgeEvents.removeEventListener('game.get_military_overview', refresh);
+      bridgeEvents.removeEventListener('game.game_date_changed', refresh);
+    };
   }, []);
 
   return live ?? personalGuardCache;

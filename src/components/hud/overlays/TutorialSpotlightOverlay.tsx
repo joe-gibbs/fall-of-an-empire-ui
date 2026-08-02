@@ -58,6 +58,7 @@ const TARGET_ALIASES: Record<string, string[]> = {
   MapModeButtonGroup: ['MapModeButtonGroup'],
   MilitaryTemplatesTab: ['MilitaryTemplatesTab', 'SidebarTab:templates'],
   MilitaryPersonalGuardTab: ['MilitaryPersonalGuardTab', 'SidebarTab:guard'],
+  FormPersonalGuardButton: ['FormPersonalGuardButton'],
   OpenPersonalGuardButton: ['OpenPersonalGuardButton'],
   NewFormationButton: ['NewFormationButton'],
   FormationNameInput: ['FormationNameInput'],

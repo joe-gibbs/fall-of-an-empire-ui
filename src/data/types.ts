@@ -1175,7 +1175,7 @@ export interface Army {
   battleGroups: ArmyBattleGroup[];
   commandRank: string;
   isNavy: boolean;
-  isProvincialGuard?: boolean;
+  isPersonalGuard?: boolean;
   doctrine: string;
   currentOrder?: string;
   /** Formation template name */
@@ -1245,7 +1245,7 @@ export interface MilitaryForce {
   supplyDays: number;
   attrition: boolean;
   isNavy: boolean;
-  isProvincialGuard: boolean;
+  isPersonalGuard: boolean;
   doctrine: MilitaryDoctrine;
   template: string;
   location: string;

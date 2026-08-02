@@ -316,7 +316,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     }, new Map<string, CompositionSummaryRow>()).values(),
   );
 
-  const commandActions: MilitaryAction[] = army.isProvincialGuard ? [] : [
+  const commandActions: MilitaryAction[] = army.isPersonalGuard ? [] : [
     ...(army.commandRank !== 'Legatus' ? [{
       label: webUIText('Military.Command.Demote'),
       icon: '/assets/icons/I_Demote.png',
@@ -448,7 +448,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     ...orderPanelActions,
   ];
 
-  const formationActions: MilitaryAction[] = army.isProvincialGuard ? [] : [
+  const formationActions: MilitaryAction[] = army.isPersonalGuard ? [] : [
     {
       get label() { return webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.557.1"); },
       icon: '/assets/icons/I_NewTemplate.png',
@@ -1043,7 +1043,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
               <div className="mil-formation-main">
                 <img src="/assets/icons/I_Template.png" alt="" />
                 <div>
-                  {army.formationTemplate && !army.isProvincialGuard ? (
+                  {army.formationTemplate && !army.isPersonalGuard ? (
                     <Tooltip
                       content={{
                         title: army.formationTemplate,

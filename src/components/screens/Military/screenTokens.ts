@@ -33,7 +33,7 @@ function isTemplateScreenToken(id: string): boolean {
 export function initialMilitaryTab(screenId: string | null | undefined): MilitaryScreenTab {
   const id = (screenId ?? '').trim().toLowerCase();
   const compactId = compactScreenToken(id);
-  if (compactId === 'guard' || compactId === 'personalguard' || compactId === 'provincialguard') {
+  if (compactId === 'guard' || compactId === 'personalguard' || compactId === 'personalguard') {
     return 'guard';
   }
   if (isTemplateScreenToken(id)) {

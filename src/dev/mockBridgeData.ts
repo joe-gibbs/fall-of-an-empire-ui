@@ -344,6 +344,7 @@ interface MockBridgeState {
   appMode: MockAppMode;
   provinceMode: boolean;
   isPaused: boolean;
+  pauseMenuOpen: boolean;
   speedLevel: number;
   debugMode: boolean;
   gameDay: number;
@@ -1756,7 +1757,7 @@ function settlementBuilding(assetKey: string, name: string, level: number, categ
     category,
     chainName: name,
     description: `A ${name.toLowerCase()} serving the settlement.`,
-    effectsText: '<bullet><colour green>Improves local output</></>',
+    effectsHtml: '<bullet><colour green>Improves local output</></>',
     condition: 92,
     monthlyConditionChange: -0.05,
     maintenanceGovernanceThreshold: 5,
@@ -2260,7 +2261,7 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
       category: entry.category,
       chainName: entry.chainName,
       description: entry.description,
-      effectsText: entry.effectsText,
+      effectsHtml: entry.effectsHtml,
       price: entry.price,
       buildTime: entry.buildTime,
       upkeep: entry.upkeep,
@@ -2533,7 +2534,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     ],
     commandRank: profile.commandRank,
     isNavy,
-    isProvincialGuard: false,
+    isPersonalGuard: false,
     currentOrder: isEmbarked ? 'Embarked in Classis Meridian' : profile.currentOrder,
     formationTemplate: profile.formationTemplate,
     garrisonedAt: isEmbarked ? '' : profile.garrisonedAt,
@@ -3949,11 +3950,11 @@ function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
 function militaryOverview(): BridgeResponse<'game.get_military_overview'> {
   return {
     forces: [
-      { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), name: 'I Field Army', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Dux', commanderName: 'Valen Arcastus', commanderId: MOCK_IDS.character, commanderDebugShortId: mockDebugShortId(MOCK_IDS.character), strength: 6800, maxStrength: 7600, morale: 84, supplyDays: 54, attrition: false, isNavy: false, isProvincialGuard: false, doctrine: 'concentrate', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Holding Aurelion', delegated: false, autoSquashRebels: true, isPlayerControlled: true, subordinateCount: 2, subordinateCapacity: 5 },
-      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), name: 'Aurelion Detachment', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, morale: 71, supplyDays: 43, attrition: false, isNavy: false, isProvincialGuard: false, doctrine: 'garrison', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Garrisoning Aurelion', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
-      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), name: 'Western Scouts', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, morale: 68, supplyDays: 0, attrition: true, isNavy: false, isProvincialGuard: false, doctrine: 'screen', template: 'Light Border Screen', location: 'Berginian March', currentOrder: 'Screening the western road', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
-      { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), name: 'Classis Meridian', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Praefectus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 1800, maxStrength: 2200, morale: 76, supplyDays: 88, attrition: false, isNavy: true, isProvincialGuard: false, doctrine: 'screen', template: 'Coastal Patrol', location: 'Namaris', currentOrder: 'Patrolling Namaris', delegated: false, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 1, subordinateCapacity: 3 },
-      { id: 'mock-navy-riverwatch', debugShortId: mockDebugShortId('mock-navy-riverwatch'), name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.navy, rank: 'Legatus', commanderName: 'Severus Laco', commanderId: 'mock-person-tribune', commanderDebugShortId: mockDebugShortId('mock-person-tribune'), strength: 900, maxStrength: 1100, morale: 69, supplyDays: 61, attrition: false, isNavy: true, isProvincialGuard: false, doctrine: 'screen', template: 'River Patrol', location: 'Tavarii Ford', currentOrder: 'Watching the ford crossings', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
+      { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), name: 'I Field Army', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Dux', commanderName: 'Valen Arcastus', commanderId: MOCK_IDS.character, commanderDebugShortId: mockDebugShortId(MOCK_IDS.character), strength: 6800, maxStrength: 7600, morale: 84, supplyDays: 54, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'concentrate', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Holding Aurelion', delegated: false, autoSquashRebels: true, isPlayerControlled: true, subordinateCount: 2, subordinateCapacity: 5 },
+      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), name: 'Aurelion Detachment', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, morale: 71, supplyDays: 43, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'garrison', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Garrisoning Aurelion', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
+      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), name: 'Western Scouts', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, morale: 68, supplyDays: 0, attrition: true, isNavy: false, isPersonalGuard: false, doctrine: 'screen', template: 'Light Border Screen', location: 'Berginian March', currentOrder: 'Screening the western road', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
+      { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), name: 'Classis Meridian', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Praefectus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 1800, maxStrength: 2200, morale: 76, supplyDays: 88, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'Coastal Patrol', location: 'Namaris', currentOrder: 'Patrolling Namaris', delegated: false, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 1, subordinateCapacity: 3 },
+      { id: 'mock-navy-riverwatch', debugShortId: mockDebugShortId('mock-navy-riverwatch'), name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.navy, rank: 'Legatus', commanderName: 'Severus Laco', commanderId: 'mock-person-tribune', commanderDebugShortId: mockDebugShortId('mock-person-tribune'), strength: 900, maxStrength: 1100, morale: 69, supplyDays: 61, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'River Patrol', location: 'Tavarii Ford', currentOrder: 'Watching the ford crossings', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
     ],
     foederati: [
       { id: 'mock-foederati-subject', factionId: MOCK_IDS.subjectFaction, factionName: 'Meridian Prefecture', factionColour: SUBJECT_COLOUR, factionSecondaryColour: SUBJECT_SECONDARY, factionEmblem: 'Rephsian_2', factionCultureGroup: 'Rephsian', rulerName: 'Iulia Seran', rulerId: 'mock-person-subject', rulerPortrait: FEMALE_PORTRAIT_1, rulerPortraitLayers: mockPortraitLayers(FEMALE_PORTRAIT_1), strength: 2400, availableStrength: 1800, activeStrength: 600, isCalledUp: true, compliance: 72, canCall: true },
@@ -4681,6 +4682,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     appMode: searchParams.get('mode') === 'mainmenu' ? 'mainmenu' : 'ingame',
     provinceMode: initialProvinceMode,
     isPaused: true,
+    pauseMenuOpen: false,
     speedLevel: 1,
     debugMode: searchParams.has('debug'),
     gameDay: 249409,
@@ -5126,12 +5128,23 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return response;
       }
       case 'game.toggle_pause':
-        state.isPaused = !state.isPaused;
+        if (state.pauseMenuOpen) {
+          state.isPaused = true;
+        } else {
+          state.isPaused = !state.isPaused;
+        }
         emitGameState(emit);
         return { isPaused: state.isPaused } satisfies BridgeResponse<'game.toggle_pause'>;
+      case 'game.set_pause_menu_open': {
+        const open = Boolean((payload as { open?: boolean } | undefined)?.open);
+        state.pauseMenuOpen = open;
+        if (open) state.isPaused = true;
+        emitGameState(emit);
+        return undefined;
+      }
       case 'game.set_speed':
         state.speedLevel = payloadNumber(payload, 'speedLevel', 1);
-        state.isPaused = false;
+        state.isPaused = state.pauseMenuOpen ? true : false;
         emitGameState(emit);
         return undefined;
       case 'game.get_player_faction':
@@ -5447,7 +5460,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
               categoryLabel: 'Administrative',
               cultureId: rephsianCulture.id,
               description: 'A civic centre where magistrates manage records, levies, and petitions.',
-              effectsText: '',
+              effectsHtml: '',
               maxLevel: 3,
               price: 420,
               buildTimeDays: 120,
@@ -5465,7 +5478,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
               categoryLabel: 'Administrative',
               cultureId: rephsianCulture.id,
               description: 'A larger hall for law, contracts, and provincial administration.',
-              effectsText: '',
+              effectsHtml: '',
               maxLevel: 3,
               price: 780,
               buildTimeDays: 180,
@@ -5483,7 +5496,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
               categoryLabel: 'Defensive',
               cultureId: aurestianCulture.id,
               description: 'A fortified hilltop enclosure for frontier musters and local refuge.',
-              effectsText: '',
+              effectsHtml: '',
               maxLevel: 2,
               price: 360,
               buildTimeDays: 110,

@@ -1019,7 +1019,7 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
                               body: (
                                 <>
                                   {building.description && <div>{building.description}</div>}
-                                  <BuildingEffects text={building.effectsText} />
+                                  <BuildingEffects text={building.effectsHtml} />
                                 </>
                               ),
                               lines: [

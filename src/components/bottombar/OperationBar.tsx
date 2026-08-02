@@ -130,7 +130,7 @@ function buildingTooltipBody(building: EncyclopediaBuildingDTO): React.ReactNode
           {building.description}
         </div>
       )}
-      <BuildingEffects text={building.effectsText} className="operation-building-tooltip-effects" />
+      <BuildingEffects text={building.effectsHtml} className="operation-building-tooltip-effects" />
     </>
   );
 }

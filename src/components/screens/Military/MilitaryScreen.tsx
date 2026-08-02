@@ -273,8 +273,8 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       const src = byId.get(srcId);
       const tgt = byId.get(tgtId);
       if (!src || !tgt) return { ok: false, reason: 'Unknown target' };
-      if (src.isProvincialGuard || tgt.isProvincialGuard) {
-        return { ok: false, reason: webUIText('Military.ProvincialGuard.CommandRestriction') };
+      if (src.isPersonalGuard || tgt.isPersonalGuard) {
+        return { ok: false, reason: webUIText('Military.PersonalGuard.CommandRestriction') };
       }
       if (!src.isPlayerControlled) return { ok: false, reason: 'You do not command this military' };
       if (!tgt.isPlayerControlled) return { ok: false, reason: 'You do not command the parent military' };
@@ -675,5 +675,5 @@ registerScreen({
   render: ({ screenId, onClose }) => <MilitaryScreen key={screenId ?? 'default'} screenId={screenId} onClose={onClose} />,
   topbarId: 'military',
   advisorTopic: 'militaryScreen',
-  bridgeNames: ['militaryscreen', 'militaryoverview', 'militaryoverviewscreen', 'formations', 'formationtemplates', 'formation_templates', 'personalguard', 'provincialguard', 'guard'],
+  bridgeNames: ['militaryscreen', 'militaryoverview', 'militaryoverviewscreen', 'formations', 'formationtemplates', 'formation_templates', 'personalguard', 'personalguard', 'guard'],
 });
