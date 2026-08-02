@@ -16,6 +16,12 @@ import { useBuildQueueBridge } from '../../../bridge/settlements-economy/useBuil
 import { useModalPresence } from '../../../hooks/useModalPresence';
 import { useWebUIText } from '../../../localization/WebUITextContext';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
+import {
+  stepAmountFromEvent,
+  stepAmountFromMultiplier,
+  stepButtonLabel,
+  useStepMultiplier,
+} from '../../../utils/stepModifiers';
 import CloseButton from '../../common/buttons/CloseButton';
 import GameButton from '../../common/buttons/GameButton';
 import EntityLink from '../../common/entities/EntityLink';
@@ -279,6 +285,9 @@ export default function ResourceDetailsModal({
     escapeId: 'modal.economy-resource-details',
     closeStrategy: 'request',
   });
+  const multiplier = useStepMultiplier();
+  const effectiveTradeAmount = stepAmountFromMultiplier(multiplier, tradeAmount);
+  const effectiveThresholdStep = stepAmountFromMultiplier(multiplier, autoSellThresholdStep);
 
   const history = useMemo(() => {
     const points = details?.history ?? [];
@@ -361,8 +370,9 @@ export default function ResourceDetailsModal({
 
   if (!mounted || !resource) return null;
 
-  const buyCost = Math.ceil(tradeAmount * resource.buyPrice);
-  const sellAmount = Math.min(tradeAmount, resource.amount);
+  const marketPrice = Math.ceil(tradeAmount * resource.buyPrice);
+  const buyCost = Math.ceil(effectiveTradeAmount * resource.buyPrice);
+  const sellAmount = Math.min(effectiveTradeAmount, resource.amount);
   const sellReturn = Math.floor(sellAmount * resource.sellPrice);
   const canBuy = buyCost > 0 && gold >= buyCost;
   const canSell = sellReturn > 0;
@@ -400,7 +410,7 @@ export default function ResourceDetailsModal({
               <Metric label={t('Economy.Production')} value={`+${number(totalIn)}${t('Economy.PerMonth')}`} tone="erd-positive" />
               <Metric label={t('Economy.Use')} value={`-${number(totalOut)}${t('Economy.PerMonth')}`} tone="erd-negative" />
               <Metric label={t('Economy.NetPerMonth')} value={signed(resource.netPerMonth)} tone={valueClass(resource.netPerMonth)} />
-              <Metric label={t('Economy.MarketPrice')} value={price(buyCost)} icon="/assets/icons/I_Coins.png" />
+              <Metric label={t('Economy.MarketPrice')} value={price(marketPrice)} icon="/assets/icons/I_Coins.png" />
               {isFood && <Metric label={t('Economy.FoodValue')} value={number(details?.foodValue)} />}
               {(details?.decayRate ?? 0) > 0 && <Metric label={t('Economy.DecayRate')} value={`${number((details?.decayRate ?? 0) * 100)}%`} />}
             </div>
@@ -408,24 +418,42 @@ export default function ResourceDetailsModal({
 
           <section className="erd-trade">
             <div className="erd-trade__buttons">
-              <GameButton
-                variant="outline"
-                className="erd-trade__button erd-trade__button--buy"
-                disabled={!canBuy}
-                onClick={() => buyEconomyResourceBridge(resource.id, tradeAmount).catch(() => undefined)}
+              <Tooltip
+                content={{ title: t('Economy.Buy'), body: t('Economy.BuyTradeTooltip') }}
+                position="top"
+                delay={150}
+                wrapperClassName="erd-trade-btn-tooltip"
               >
-                <span>{t('Economy.BuyAmount', { Amount: number(tradeAmount) })}</span>
-                <small><img className="erd-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{t('Economy.CostsGold', { Amount: number(buyCost) })}</small>
-              </GameButton>
-              <GameButton
-                variant="burgundy"
-                className="erd-trade__button erd-trade__button--sell"
-                disabled={!canSell}
-                onClick={() => sellEconomyResourceBridge(resource.id, sellAmount).catch(() => undefined)}
+                <GameButton
+                  variant="outline"
+                  className="erd-trade__button erd-trade__button--buy"
+                  disabled={!canBuy}
+                  onClick={(event) => {
+                    buyEconomyResourceBridge(resource.id, stepAmountFromEvent(event, tradeAmount)).catch(() => undefined);
+                  }}
+                >
+                  <span>{t('Economy.BuyAmount', { Amount: number(effectiveTradeAmount) })}</span>
+                  <small><img className="erd-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{t('Economy.CostsGold', { Amount: number(buyCost) })}</small>
+                </GameButton>
+              </Tooltip>
+              <Tooltip
+                content={{ title: t('Economy.Sell'), body: t('Economy.SellTradeTooltip') }}
+                position="top"
+                delay={150}
+                wrapperClassName="erd-trade-btn-tooltip"
               >
-                <span>{t('Economy.SellAmount', { Amount: number(sellAmount) })}</span>
-                <small><img className="erd-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{t('Economy.ReturnsGold', { Amount: number(sellReturn) })}</small>
-              </GameButton>
+                <GameButton
+                  variant="burgundy"
+                  className="erd-trade__button erd-trade__button--sell"
+                  disabled={!canSell}
+                  onClick={(event) => {
+                    sellEconomyResourceBridge(resource.id, stepAmountFromEvent(event, tradeAmount)).catch(() => undefined);
+                  }}
+                >
+                  <span>{t('Economy.SellAmount', { Amount: number(sellAmount) })}</span>
+                  <small><img className="erd-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{t('Economy.ReturnsGold', { Amount: number(sellReturn) })}</small>
+                </GameButton>
+              </Tooltip>
             </div>
             <div className="erd-automation">
               {isFood && (
@@ -449,15 +477,32 @@ export default function ResourceDetailsModal({
                   content={{
                     title: t('Economy.AutoSellReserve'),
                     body: t('Economy.AutoSellReserveExplanation'),
+                    footer: t('Common.StepModifiersBody'),
                   }}
                   position="left"
                   wrapperClassName="erd-threshold-tooltip"
                 >
                   <div className="erd-threshold">
-                    <button type="button" onMouseDown={() => setAutoSellThreshold(threshold - autoSellThresholdStep)}>-</button>
+                    <button
+                      type="button"
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        setAutoSellThreshold(threshold - stepAmountFromEvent(event, autoSellThresholdStep));
+                      }}
+                    >
+                      {stepButtonLabel(-1, effectiveThresholdStep)}
+                    </button>
                     <div><span style={{ width: `${Math.min(100, threshold / thresholdMax * 100)}%` }} /></div>
                     <strong><small>{t('Economy.AutoSellReserveShort')}</small>{number(threshold)}</strong>
-                    <button type="button" onMouseDown={() => setAutoSellThreshold(threshold + autoSellThresholdStep)}>+</button>
+                    <button
+                      type="button"
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        setAutoSellThreshold(threshold + stepAmountFromEvent(event, autoSellThresholdStep));
+                      }}
+                    >
+                      {stepButtonLabel(1, effectiveThresholdStep)}
+                    </button>
                   </div>
                 </Tooltip>
               )}

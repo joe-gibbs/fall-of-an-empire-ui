@@ -7,6 +7,10 @@
   margin-left: 0.12rem;
 }
 
+.number-stepper__tooltip {
+  display: inline-flex;
+}
+
 .number-stepper__button,
 .number-stepper__input {
   box-sizing: border-box;

@@ -603,8 +603,8 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
                     count={request.count}
                     includesCore={includesCore}
                     unitById={unitById}
-                    onIncrement={() => updateCount(unit.id, request.count + 1)}
-                    onDecrement={() => updateCount(unit.id, request.count - 1)}
+                    onIncrement={(delta) => updateCount(unit.id, request.count + delta)}
+                    onDecrement={(delta) => updateCount(unit.id, request.count - delta)}
                     onSwap={swapUnit}
                     onRemove={() => updateCount(unit.id, 0)}
                   />
@@ -648,7 +648,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
         <Picker
           availableClasses={availableClasses}
           currentCounts={draft.counts}
-          onAdd={unitId => updateCount(unitId, (draft.counts[unitId] ?? 0) + 1)}
+          onAdd={(unitId, amount) => updateCount(unitId, (draft.counts[unitId] ?? 0) + amount)}
           onCancel={() => setPickerOpen(false)}
         />
       )}

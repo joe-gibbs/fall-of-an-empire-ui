@@ -22,6 +22,12 @@ import {
   newBattleFormationTooltip,
 } from '../../../utils/battleFormationNaming';
 import {
+  stepAmountFromEvent,
+  stepAmountFromMultiplier,
+  stepButtonLabel,
+  useStepMultiplier,
+} from '../../../utils/stepModifiers';
+import {
   battleFormationRole,
   battleGroupUnitCount,
   compositionRequests,
@@ -170,8 +176,8 @@ export function UnitRow({
   count: number;
   includesCore: boolean;
   unitById: Map<string, FormationTemplateUnitEntry>;
-  onIncrement: () => void;
-  onDecrement: () => void;
+  onIncrement: (delta: number) => void;
+  onDecrement: (delta: number) => void;
   onSwap: (fromId: string, toId: string) => void;
   onRemove: () => void;
 }) {
@@ -179,6 +185,11 @@ export function UnitRow({
   const downgrade = unit.downgradeUnitId ? unitById.get(unit.downgradeUnitId) : undefined;
   const strength = unit.maxStrength * count;
   const upkeep = unit.upkeep * count;
+  const stepModifiersBody = webUIText('Common.StepModifiersBody');
+  const stepMultiplier = useStepMultiplier();
+  const effectiveStep = stepAmountFromMultiplier(stepMultiplier);
+  const decrementLabel = stepButtonLabel(-1, effectiveStep);
+  const incrementLabel = stepButtonLabel(1, effectiveStep);
 
   return (
     <div className={`tpl-unit-row${includesCore ? ' tpl-unit-row--core' : ''}`}>
@@ -208,14 +219,35 @@ export function UnitRow({
             { label: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.546.23'), value: fmt(strength), valueColor: 'var(--green)' },
             { label: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.547.24'), get value() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.547.1", { Value1: fmt(upkeep) }); }, valueColor: 'var(--red)' },
           ],
+          footer: stepModifiersBody,
         }}
         position="left"
         delay={200}
       >
         <div className="tpl-stepper">
-          <button type="button" className="tpl-step-btn" onMouseDown={onDecrement} aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25')}>-</button>
+          <button
+            type="button"
+            className="tpl-step-btn"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              onDecrement(stepAmountFromEvent(event));
+            }}
+            aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25')}
+          >
+            {decrementLabel}
+          </button>
           <span className="tpl-step-count">{fmt(count)}</span>
-          <button type="button" className="tpl-step-btn" onMouseDown={onIncrement} aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.556.26')}>+</button>
+          <button
+            type="button"
+            className="tpl-step-btn"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              onIncrement(stepAmountFromEvent(event));
+            }}
+            aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.556.26')}
+          >
+            {incrementLabel}
+          </button>
         </div>
       </Tooltip>
       <div className="tpl-unit-actions">
@@ -256,7 +288,7 @@ export function Picker({
 }: {
   availableClasses: Map<string, FormationTemplateUnitEntry[]>;
   currentCounts: Record<string, number>;
-  onAdd: (unitId: string) => void;
+  onAdd: (unitId: string, amount: number) => void;
   onCancel: () => void;
 }) {
   const [query, setQuery] = useState('');
@@ -408,12 +440,22 @@ export function Picker({
                           data-tutorial-target="DynamicUnit"
                           data-tutorial-unit-id={unit.id}
                           data-tutorial-unit-count={count}
-                          onMouseDown={() => onAdd(unit.id)}
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                            onAdd(unit.id, stepAmountFromEvent(event));
+                          }}
                         >
                           <img src={unitPortrait(unit)} alt="" className="tpl-picker-row-icon" />
                           <span className="tpl-picker-row-copy">
                             <strong>{unit.name}</strong>
-                            <span>{webUIText("FormationTemplateSidebar.Tier", { Value1: unitTypeLabel(unit.type), Value2: fmt(unit.tier) })}</span>
+                            <span>
+                              {unit.cultureName
+                                ? webUIText('FormationTemplate.CulturePopulation', {
+                                  Culture: unit.cultureName,
+                                  Population: fmt(Math.max(0, unit.availableManpower ?? 0)),
+                                })
+                                : webUIText('FormationTemplateSidebar.Tier', { Value1: unitTypeLabel(unit.type), Value2: fmt(unit.tier) })}
+                            </span>
                           </span>
                           <span className="tpl-picker-row-stats">
                             <span>{webUIText("FormationTemplateSidebar.Strength", { Value1: fmt(unit.maxStrength) })}</span>
@@ -481,6 +523,10 @@ export function CombatTab({
   onRemoveBattleGroup: (groupId: string) => void;
   onSetBattleGroupUnitCount: (groupId: string, unitId: string, count: number) => void;
 }) {
+  const stepMultiplier = useStepMultiplier();
+  const effectiveStep = stepAmountFromMultiplier(stepMultiplier);
+  const decrementLabel = stepButtonLabel(-1, effectiveStep);
+  const incrementLabel = stepButtonLabel(1, effectiveStep);
   const roleEntries = compositionRequests(draft)
     .map(request => ({ request, unit: unitById.get(request.unitId) }))
     .filter((entry): entry is { request: SaveFormationTemplateUnitRequest; unit: FormationTemplateUnitEntry } => Boolean(entry.unit))
@@ -578,11 +624,41 @@ export function CombatTab({
                     <div key={unit.id} className="tpl-battle-group-unit">
                       <img src={unitPortrait(unit)} alt="" className="tpl-battle-group-unit-icon" />
                       <span className="tpl-battle-group-unit-name">{unit.name}</span>
-                      <div className="tpl-stepper">
-                        <button type="button" className="tpl-step-btn" onMouseDown={() => onSetBattleGroupUnitCount(group.id, unit.id, count - 1)}>-</button>
-                        <span className="tpl-step-count">{fmt(count)}</span>
-                        <button type="button" className="tpl-step-btn" onMouseDown={() => onSetBattleGroupUnitCount(group.id, unit.id, count + 1)} disabled={!canIncrement}>+</button>
-                      </div>
+                      <Tooltip
+                        content={{
+                          title: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.543.22'),
+                          body: webUIText('Common.StepModifiersBody'),
+                        }}
+                        position="left"
+                        delay={200}
+                      >
+                        <div className="tpl-stepper">
+                          <button
+                            type="button"
+                            className="tpl-step-btn"
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              onSetBattleGroupUnitCount(group.id, unit.id, count - stepAmountFromEvent(event));
+                            }}
+                            aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25')}
+                          >
+                            {decrementLabel}
+                          </button>
+                          <span className="tpl-step-count">{fmt(count)}</span>
+                          <button
+                            type="button"
+                            className="tpl-step-btn"
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              onSetBattleGroupUnitCount(group.id, unit.id, count + stepAmountFromEvent(event));
+                            }}
+                            disabled={!canIncrement}
+                            aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.556.26')}
+                          >
+                            {incrementLabel}
+                          </button>
+                        </div>
+                      </Tooltip>
                     </div>
                   );
                 })}
@@ -590,11 +666,32 @@ export function CombatTab({
               {compatibleUnassigned.length > 0 && groupCount < maximumBattleGroupUnits && (
                 <div className="tpl-battle-group-add-list">
                   {compatibleUnassigned.map(({ unit, count }) => (
-                    <button key={unit.id} type="button" className="tpl-battle-group-add-unit" onMouseDown={() => onSetBattleGroupUnitCount(group.id, unit.id, (group.counts[unit.id] ?? 0) + 1)}>
-                      <img src={unitPortrait(unit)} alt="" className="tpl-battle-group-add-unit-icon" />
-                      <span>{unit.name}</span>
-                      <span>{fmt(count)}</span>
-                    </button>
+                    <Tooltip
+                      key={unit.id}
+                      content={{
+                        title: unit.name,
+                        body: webUIText('Common.StepModifiersBody'),
+                      }}
+                      position="left"
+                      delay={200}
+                    >
+                      <button
+                        type="button"
+                        className="tpl-battle-group-add-unit"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          onSetBattleGroupUnitCount(
+                            group.id,
+                            unit.id,
+                            (group.counts[unit.id] ?? 0) + stepAmountFromEvent(event),
+                          );
+                        }}
+                      >
+                        <img src={unitPortrait(unit)} alt="" className="tpl-battle-group-add-unit-icon" />
+                        <span>{unit.name}</span>
+                        <span>{fmt(count)}</span>
+                      </button>
+                    </Tooltip>
                   ))}
                 </div>
               )}

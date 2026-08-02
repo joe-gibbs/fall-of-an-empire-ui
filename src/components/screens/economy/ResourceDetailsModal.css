@@ -226,6 +226,18 @@
   gap: 0.55rem;
 }
 
+.erd-trade-btn-tooltip {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.erd-trade-btn-tooltip > .erd-trade__button,
+.erd-trade-btn-tooltip .erd-trade__button {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
 .erd-trade__button {
   flex: 1 1 0;
   min-height: 3.2rem;
@@ -292,8 +304,12 @@
 }
 
 .erd-threshold button {
-  width: 1.5rem;
+  min-width: 1.5rem;
   height: 1.45rem;
+  padding: 0 0.18rem;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .erd-threshold > div {

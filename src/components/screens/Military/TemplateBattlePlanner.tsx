@@ -7,6 +7,7 @@ import {
   battleFormationRoleIcon,
   newBattleFormationTooltip,
 } from '../../../utils/battleFormationNaming';
+import { stepAmountFromEvent } from '../../../utils/stepModifiers';
 import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
 import {
   battleGroupUnitCount,
@@ -127,27 +128,44 @@ export function TemplateBattlePlanner({
                         <img src={templateUnitPortrait(unit)} alt="" className="chart-template-battle-unit-icon" draggable={false} />
                       </Tooltip>
                       <span className="chart-template-battle-unit-name">{unit.name}</span>
-                      <span className="chart-template-unit-stepper">
-                        <button
-                          type="button"
-                          className="chart-template-stepper-button"
-                          onClick={() => onAdjustBattleGroupUnitCount(group.id, unit.id, -1)}
-                          disabled={!editable}
-                          aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25')}
-                        >
-                          <img src="/assets/icons/I_Minus.png" alt="" className="chart-template-stepper-icon" draggable={false} />
-                        </button>
-                        <span className="chart-template-unit-count">{formatNumber(count)}</span>
-                        <button
-                          type="button"
-                          className="chart-template-stepper-button"
-                          onClick={() => onAdjustBattleGroupUnitCount(group.id, unit.id, 1)}
-                          disabled={!canIncrement}
-                          aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.556.26')}
-                        >
-                          <img src="/assets/icons/I_Plus.png" alt="" className="chart-template-stepper-icon" draggable={false} />
-                        </button>
-                      </span>
+                      <Tooltip
+                        content={{
+                          title: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.543.22'),
+                          body: webUIText('Common.StepModifiersBody'),
+                        }}
+                        position="left"
+                        delay={200}
+                      >
+                        <span className="chart-template-unit-stepper">
+                          <button
+                            type="button"
+                            className="chart-template-stepper-button"
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              if (!editable) return;
+                              onAdjustBattleGroupUnitCount(group.id, unit.id, -stepAmountFromEvent(event));
+                            }}
+                            disabled={!editable}
+                            aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25')}
+                          >
+                            <img src="/assets/icons/I_Minus.png" alt="" className="chart-template-stepper-icon" draggable={false} />
+                          </button>
+                          <span className="chart-template-unit-count">{formatNumber(count)}</span>
+                          <button
+                            type="button"
+                            className="chart-template-stepper-button"
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              if (!canIncrement) return;
+                              onAdjustBattleGroupUnitCount(group.id, unit.id, stepAmountFromEvent(event));
+                            }}
+                            disabled={!canIncrement}
+                            aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.556.26')}
+                          >
+                            <img src="/assets/icons/I_Plus.png" alt="" className="chart-template-stepper-icon" draggable={false} />
+                          </button>
+                        </span>
+                      </Tooltip>
                     </div>
                   );
                 })}

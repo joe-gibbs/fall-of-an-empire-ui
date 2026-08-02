@@ -1,4 +1,13 @@
-import { memo } from 'react';
+import { memo, type MouseEvent } from 'react';
+import { useWebUIText } from '../../../localization/WebUITextContext';
+import {
+  noteModifierKeysFromEvent,
+  stepAmountFromEvent,
+  stepAmountFromMultiplier,
+  stepButtonLabel,
+  useStepMultiplier,
+} from '../../../utils/stepModifiers';
+import Tooltip from '../tooltips/Tooltip';
 import './NumberStepper.css';
 
 interface NumberStepperProps {
@@ -46,27 +55,45 @@ const NumberStepper = memo(function NumberStepper({
   formatValue = value => String(value),
   parseValue = defaultParseValue,
 }: NumberStepperProps) {
+  const t = useWebUIText();
+  const multiplier = useStepMultiplier();
+  const effectiveStep = stepAmountFromMultiplier(multiplier, step);
   const decrementDisabled = disabled || (min !== undefined && value <= min);
   const incrementDisabled = disabled || (max !== undefined && value >= max);
+  const modifierHint = t('Common.StepModifiersBody');
+  const decrementLabel = stepButtonLabel(-1, effectiveStep);
+  const incrementLabel = stepButtonLabel(1, effectiveStep);
 
   const apply = (next: number) => {
     if (disabled) return;
     onChange(bounded(next, min, max));
   };
 
+  const nudge = (event: MouseEvent<HTMLButtonElement>, direction: 1 | -1) => {
+    event.preventDefault();
+    apply(value + direction * stepAmountFromEvent(event, step));
+  };
+
   return (
-    <span className={classNames('number-stepper', className)}>
-      <button
-        type="button"
-        className={classNames('number-stepper__button', buttonClassName, decrementDisabled && 'number-stepper__button--disabled', decrementDisabled && buttonDisabledClassName)}
-        disabled={decrementDisabled}
-        onMouseDown={(event) => {
-          event.preventDefault();
-          apply(value - step);
-        }}
-      >
-        -
-      </button>
+    <span
+      className={classNames('number-stepper', className)}
+      onPointerEnter={noteModifierKeysFromEvent}
+      onPointerMove={noteModifierKeysFromEvent}
+    >
+      <Tooltip content={{ title: decrementLabel, body: modifierHint }} position="top" delay={200} wrapperClassName="number-stepper__tooltip">
+        <button
+          type="button"
+          className={classNames('number-stepper__button', buttonClassName, decrementDisabled && 'number-stepper__button--disabled', decrementDisabled && buttonDisabledClassName)}
+          disabled={decrementDisabled}
+          onMouseDown={(event) => {
+            if (decrementDisabled) return;
+            noteModifierKeysFromEvent(event);
+            nudge(event, -1);
+          }}
+        >
+          {decrementLabel}
+        </button>
+      </Tooltip>
       <input
         type="text"
         className={classNames('number-stepper__input', inputClassName)}
@@ -74,17 +101,20 @@ const NumberStepper = memo(function NumberStepper({
         disabled={disabled}
         onChange={event => apply(parseValue(event.currentTarget.value))}
       />
-      <button
-        type="button"
-        className={classNames('number-stepper__button', buttonClassName, incrementDisabled && 'number-stepper__button--disabled', incrementDisabled && buttonDisabledClassName)}
-        disabled={incrementDisabled}
-        onMouseDown={(event) => {
-          event.preventDefault();
-          apply(value + step);
-        }}
-      >
-        +
-      </button>
+      <Tooltip content={{ title: incrementLabel, body: modifierHint }} position="top" delay={200} wrapperClassName="number-stepper__tooltip">
+        <button
+          type="button"
+          className={classNames('number-stepper__button', buttonClassName, incrementDisabled && 'number-stepper__button--disabled', incrementDisabled && buttonDisabledClassName)}
+          disabled={incrementDisabled}
+          onMouseDown={(event) => {
+            if (incrementDisabled) return;
+            noteModifierKeysFromEvent(event);
+            nudge(event, 1);
+          }}
+        >
+          {incrementLabel}
+        </button>
+      </Tooltip>
     </span>
   );
 });

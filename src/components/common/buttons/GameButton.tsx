@@ -1,4 +1,4 @@
-import React, { type ReactNode } from 'react';
+import React, { type MouseEvent, type ReactNode } from 'react';
 import { playSound } from '../../../hooks/useSound';
 
 interface GameButtonProps {
@@ -6,7 +6,7 @@ interface GameButtonProps {
   fullWidth?: boolean;
   icon?: string;
   children?: ReactNode;
-  onClick?: () => void;
+  onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   disabled?: boolean;
   tutorialTarget?: string;
@@ -32,10 +32,10 @@ const GameButton: React.FC<GameButtonProps> = ({
       disabled={disabled}
       aria-label={ariaLabel}
       data-tutorial-target={tutorialTarget}
-      onMouseDown={() => {
+      onMouseDown={(event) => {
         if (disabled) return;
         playSound('click');
-        onClick?.();
+        onClick?.(event);
       }}
     >
       {icon && <img src={icon} className={`btn-icon${hasContent ? ' btn-icon--with-content' : ''}`} alt="" draggable={false} />}

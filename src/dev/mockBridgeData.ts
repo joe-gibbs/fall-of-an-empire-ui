@@ -3243,8 +3243,6 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
     otherExpense: 0,
     treasuryAdjustment: 0,
     tradeTransactionAmount: 100,
-    tradeShiftMultiplier: 5,
-    tradeControlShiftMultiplier: 10,
     autoSellThresholdStep: 500,
     totalFood: 1285,
     foodProduction: 148,

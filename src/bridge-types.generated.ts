@@ -1929,8 +1929,6 @@ export interface EconomyOverviewVassalRow {
 
 export interface GetEconomyOverviewResponse {
   tradeTransactionAmount: number;
-  tradeShiftMultiplier: number;
-  tradeControlShiftMultiplier: number;
   autoSellThresholdStep: number;
   gold: number;
   netIncome: number;

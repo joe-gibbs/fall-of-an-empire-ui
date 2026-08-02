@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, type Key, type MouseEvent, type ReactNode } from 'react';
+import { memo, useMemo, useState, type Key, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
@@ -37,6 +37,12 @@ import type {
 import { useBridgeQuery } from '../../../bridge/core/useBridgeQuery';
 import type { CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
+import {
+  noteModifierKeysFromEvent,
+  stepAmountFromEvent,
+  stepAmountFromMultiplier,
+  useStepMultiplier,
+} from '../../../utils/stepModifiers';
 import type { SortDirection } from '../../common/layout/tables/sortUtils';
 import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../localization/WebUITextContext';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
@@ -157,17 +163,6 @@ function ratePercent(value: number | undefined): number {
 
 function displayRate(value: number | undefined): string {
   return `${fmt1(ratePercent(value))}%`;
-}
-
-function tradeAmountFromEvent(
-  event: MouseEvent<HTMLButtonElement>,
-  baseAmount: number,
-  shiftMultiplier: number,
-  controlShiftMultiplier: number,
-): number {
-  if (event.ctrlKey && event.shiftKey) return baseAmount * controlShiftMultiplier;
-  if (event.shiftKey) return baseAmount * shiftMultiplier;
-  return baseAmount;
 }
 
 function metric(data: GetEconomyOverviewResponse | null, key: EconomyMetricKey): number {
@@ -1042,23 +1037,26 @@ function TradeControls({
   resource,
   gold,
   tradeAmount,
-  shiftMultiplier,
-  controlShiftMultiplier,
 }: {
   resource: EconomyOverviewResourceRow;
   gold: number;
   tradeAmount: number;
-  shiftMultiplier: number;
-  controlShiftMultiplier: number;
 }) {
   const t = useWebUIText();
-  const buyCost = Math.ceil(tradeAmount * resource.buyPrice);
-  const sellReturn = Math.floor(Math.min(tradeAmount, resource.amount) * resource.sellPrice);
+  const multiplier = useStepMultiplier();
+  const effectiveTradeAmount = stepAmountFromMultiplier(multiplier, tradeAmount);
+  const buyCost = Math.ceil(effectiveTradeAmount * resource.buyPrice);
+  const sellUnits = Math.min(effectiveTradeAmount, resource.amount);
+  const sellReturn = Math.floor(sellUnits * resource.sellPrice);
   const canBuy = buyCost > 0 && gold >= buyCost;
   const canSell = sellReturn > 0;
 
   return (
-    <div className="econ-trade-btns">
+    <div
+      className="econ-trade-btns"
+      onPointerEnter={noteModifierKeysFromEvent}
+      onPointerMove={noteModifierKeysFromEvent}
+    >
       <Tooltip
         content={{ title: t('Economy.Buy'), body: t('Economy.BuyTradeTooltip') }}
         position="top"
@@ -1073,10 +1071,11 @@ function TradeControls({
           onMouseDown={(event) => {
             event.preventDefault();
             event.stopPropagation();
+            noteModifierKeysFromEvent(event);
             if (!canBuy) return;
             buyEconomyResourceBridge(
               resource.id,
-              tradeAmountFromEvent(event, tradeAmount, shiftMultiplier, controlShiftMultiplier),
+              stepAmountFromEvent(event, tradeAmount),
             ).catch(() => undefined);
           }}
         >
@@ -1099,10 +1098,11 @@ function TradeControls({
           onMouseDown={(event) => {
             event.preventDefault();
             event.stopPropagation();
+            noteModifierKeysFromEvent(event);
             if (!canSell) return;
             sellEconomyResourceBridge(
               resource.id,
-              tradeAmountFromEvent(event, tradeAmount, shiftMultiplier, controlShiftMultiplier),
+              stepAmountFromEvent(event, tradeAmount),
             ).catch(() => undefined);
           }}
         >
@@ -1542,8 +1542,6 @@ function ResourcesTab({ data, onOpenResource }: { data: GetEconomyOverviewRespon
           resource={row}
           gold={data?.gold ?? 0}
           tradeAmount={tradeAmount}
-          shiftMultiplier={data?.tradeShiftMultiplier ?? 0}
-          controlShiftMultiplier={data?.tradeControlShiftMultiplier ?? 0}
         />
       ),
     },
