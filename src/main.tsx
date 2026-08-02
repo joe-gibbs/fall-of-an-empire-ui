@@ -2,6 +2,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/game-ui.css'
+import { installReactErrorDecoder } from './utils/reactErrorDecoder'
+
+// Expand minified React production codes (e.g. #185) in Unreal/Webkiln logs.
+installReactErrorDecoder()
 
 // Publish the mod SDK on window.FOAE. Must run before builtins (so the
 // registry functions exist on the global) and before any mod is loaded.
