@@ -2138,7 +2138,11 @@ export interface FactionPolicyDailyEntry {
 export interface GetFactionDailyDataResponse {
   id: string;
   population: number;
+  directPopulation: number;
+  subjectPopulation: number;
+  populationMonthlyChange: number;
   settlements: number;
+  subjectSettlements: number;
   armies: number;
   usesLevies: boolean;
   levyStrength: number;
@@ -2177,6 +2181,11 @@ export interface FactionTreatyEntry {
 
 export interface FactionOpinionModifier {
   label: string;
+  value: number;
+}
+
+export interface FactionPopulationGrowthSource {
+  name: string;
   value: number;
 }
 
@@ -2281,7 +2290,12 @@ export interface GetFactionDataResponse {
   rulerPortrait: string;
   rulerPortraitLayers: PortraitLayerData;
   population: number;
+  directPopulation: number;
+  subjectPopulation: number;
+  populationMonthlyChange: number;
+  populationGrowthBreakdown: FactionPopulationGrowthSource[];
   settlements: number;
+  subjectSettlements: number;
   armies: number;
   usesLevies: boolean;
   levyStrength: number;
@@ -2574,6 +2588,8 @@ export interface GetHeirCandidatesResponse {
 export interface IncomeEntry {
   name: string;
   amount: number;
+  id: string;
+  linkType: string;
 }
 
 export interface CommandUpkeepEntry {
@@ -2581,6 +2597,7 @@ export interface CommandUpkeepEntry {
   parentId: string;
   name: string;
   commandName: string;
+  militaryId: string;
   upkeep: number;
   maintenance: number;
 }
@@ -2610,6 +2627,8 @@ export interface GetIncomeBreakdownResponse {
   powerBlocExpense: number;
   autoAssignCommanderExpense: number;
   otherExpense: number;
+  leakageCorruptOfficials: IncomeEntry[];
+  leakageRetainedPercent: number;
   settlements: IncomeEntry[];
   settlementTaxes: IncomeEntry[];
   settlementTrades: IncomeEntry[];

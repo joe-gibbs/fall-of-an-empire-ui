@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, type ReactNode } from 'react';
 import Tooltip from '../common/tooltips/Tooltip';
 import type { TooltipContent, TooltipLine } from '../common/tooltips/Tooltip';
+import EntityLink from '../common/entities/EntityLink';
 import { useGameState } from '../../context/GameContext';
 import { useBridgeQuery } from '../../bridge/core/useBridgeQuery';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
@@ -16,14 +17,23 @@ interface CommandUpkeepTreeNode extends CommandUpkeepEntry {
   children: CommandUpkeepTreeNode[];
 }
 
-function entriesToSubTooltip(title: string, entries: IncomeEntry[], negate = false): { title: string; lines: TooltipLine[] } | undefined {
+function entityLabel(name: string, id?: string, linkType?: string): ReactNode {
+  if (!id || !linkType) return name;
+  return (
+    <EntityLink type={linkType} id={id} inline className="tt-entity-link">
+      {name}
+    </EntityLink>
+  );
+}
+
+function entriesToSubTooltip(title: string, entries: IncomeEntry[], negate = false): TooltipContent | undefined {
   if (entries.length === 0) return undefined;
   return {
     title,
     lines: entries.map(e => {
       const v = negate ? -e.amount : e.amount;
       return {
-        label: e.name,
+        label: entityLabel(e.name, e.id, e.linkType),
         value: formatSignedNumber(v),
         valueColor: v >= 0 ? 'var(--green)' : 'var(--red)',
         valueIcon: goldIcon,
@@ -52,29 +62,99 @@ function buildCommandTree(entries: CommandUpkeepEntry[]): CommandUpkeepTreeNode[
   return roots;
 }
 
-function commandNodeToLine(node: CommandUpkeepTreeNode): TooltipLine {
-  const v = -node.upkeep;
+function commandNodeToLine(node: CommandUpkeepTreeNode, mode: 'upkeep' | 'maintenance'): TooltipLine | null {
+  const amount = mode === 'upkeep' ? node.upkeep : node.maintenance;
+  if (mode === 'maintenance' && amount === 0 && node.children.length === 0) {
+    return null;
+  }
+
+  const childLines = node.children
+    .map(child => commandNodeToLine(child, mode))
+    .filter((line): line is TooltipLine => line !== null);
+
+  if (mode === 'maintenance' && amount === 0 && childLines.length === 0) {
+    return null;
+  }
+
+  const displayAmount = mode === 'upkeep'
+    ? -Math.max(amount, 0)
+    : amount !== 0
+      ? -amount
+      : undefined;
+
   const line: TooltipLine = {
-    get label() { return node.name || webUIText("Common.Unassigned"); },
-    value: formatSignedNumber(v),
-    valueColor: 'var(--red)',
-    valueIcon: goldIcon,
+    label: entityLabel(
+      node.name || webUIText('Common.Unassigned'),
+      node.militaryId || undefined,
+      node.militaryId ? 'military' : undefined,
+    ),
   };
-  if (node.children.length > 0) {
+
+  if (displayAmount !== undefined) {
+    line.value = formatSignedNumber(displayAmount);
+    line.valueColor = 'var(--red)';
+    line.valueIcon = goldIcon;
+  }
+
+  if (childLines.length > 0) {
     line.subTooltip = {
-      get title() { return node.name || webUIText("Common.Subordinates"); },
-      lines: node.children.map(commandNodeToLine),
+      title: node.name || webUIText('Common.Subordinates'),
+      lines: childLines,
     };
   }
   return line;
 }
 
-function commandEntriesToSubTooltip(title: string, entries: CommandUpkeepEntry[]): { title: string; lines: TooltipLine[] } | undefined {
-  if (entries.length === 0) return undefined;
+function commandEntriesToSubTooltip(
+  title: string,
+  entries: CommandUpkeepEntry[],
+  mode: 'upkeep' | 'maintenance',
+  body?: string,
+): TooltipContent | undefined {
+  if (entries.length === 0 && !body) return undefined;
   const nodes = buildCommandTree(entries);
+  const lines = nodes
+    .map(node => commandNodeToLine(node, mode))
+    .filter((line): line is TooltipLine => line !== null);
+  if (lines.length === 0 && !body) return undefined;
   return {
     title,
-    lines: nodes.map(commandNodeToLine),
+    body,
+    lines,
+  };
+}
+
+function buildLeakageSubTooltip(data: GetIncomeBreakdownResponse): TooltipContent {
+  const lines: TooltipLine[] = [
+    {
+      label: webUIText('Economy.LeakageRetained', { Percent: data.leakageRetainedPercent }),
+      stacked: true,
+    },
+  ];
+
+  if (data.leakageCorruptOfficials.length > 0) {
+    lines.push({
+      label: webUIText('Economy.LeakageCorruptOfficials'),
+      isHeader: true,
+    });
+    for (const official of data.leakageCorruptOfficials) {
+      lines.push({
+        label: entityLabel(official.name, official.id, official.linkType || 'person'),
+        value: webUIText('Economy.LeakageCorruptOfficial'),
+        valueColor: 'var(--red)',
+      });
+    }
+  } else {
+    lines.push({
+      label: webUIText('Economy.LeakageNoCorruptOfficials'),
+      stacked: true,
+    });
+  }
+
+  return {
+    title: webUIText('Economy.Leakage'),
+    body: webUIText('Economy.LeakageTooltip'),
+    lines,
   };
 }
 
@@ -91,7 +171,7 @@ function buildIncomeTooltip(data: GetIncomeBreakdownResponse): TooltipContent {
     });
   }
 
-  if (data.tradeIncome !== 0)
+  if (data.tradeIncome !== 0) {
     lines.push({
       label: webUIText('Economy.Trade'),
       value: formatSignedNumber(data.tradeIncome),
@@ -99,10 +179,17 @@ function buildIncomeTooltip(data: GetIncomeBreakdownResponse): TooltipContent {
       valueIcon: goldIcon,
       subTooltip: entriesToSubTooltip(webUIText('Economy.Trade'), data.settlementTrades),
     });
+  }
 
-  if (data.resourceSalesIncome !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.96.2'), value: formatSignedNumber(data.resourceSalesIncome), valueColor: 'var(--green)', valueIcon: goldIcon });
-  if (data.vassalTributeIncome !== 0)
+  if (data.resourceSalesIncome !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.96.2'),
+      value: formatSignedNumber(data.resourceSalesIncome),
+      valueColor: 'var(--green)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.vassalTributeIncome !== 0) {
     lines.push({
       label: webUIText('Economy.SubjectTribute'),
       value: formatSignedNumber(data.vassalTributeIncome),
@@ -110,52 +197,161 @@ function buildIncomeTooltip(data: GetIncomeBreakdownResponse): TooltipContent {
       valueIcon: goldIcon,
       subTooltip: entriesToSubTooltip(webUIText('Economy.SubjectTribute'), data.vassals),
     });
-  if (data.treatyTributeIncome !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.106.4'), value: formatSignedNumber(data.treatyTributeIncome), valueColor: 'var(--green)', valueIcon: goldIcon });
-  if (data.eventIncome !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.108.5'), value: formatSignedNumber(data.eventIncome), valueColor: 'var(--green)', valueIcon: goldIcon });
-  if (data.lootingIncome !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.110.6'), value: formatSignedNumber(data.lootingIncome), valueColor: 'var(--green)', valueIcon: goldIcon });
-  if (data.otherIncome !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.112.7'), value: formatSignedNumber(data.otherIncome), valueColor: 'var(--green)', valueIcon: goldIcon });
+  }
+  if (data.treatyTributeIncome !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.106.4'),
+      value: formatSignedNumber(data.treatyTributeIncome),
+      valueColor: 'var(--green)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.eventIncome !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.108.5'),
+      value: formatSignedNumber(data.eventIncome),
+      valueColor: 'var(--green)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.lootingIncome !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.110.6'),
+      value: formatSignedNumber(data.lootingIncome),
+      valueColor: 'var(--green)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.otherIncome !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.112.7'),
+      value: formatSignedNumber(data.otherIncome),
+      valueColor: 'var(--green)',
+      valueIcon: goldIcon,
+    });
+  }
 
-  // Expenses (shown as negative)
-  if (data.armyExpense !== 0)
+  if (data.armyExpense !== 0) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.117.8'),
       value: formatSignedNumber(-data.armyExpense),
       valueColor: 'var(--red)',
       valueIcon: goldIcon,
-      subTooltip: commandEntriesToSubTooltip('Army Upkeep', data.armies),
+      subTooltip: commandEntriesToSubTooltip(
+        webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.117.8'),
+        data.armies,
+        'upkeep',
+        webUIText('Economy.ArmyUpkeepTooltip'),
+      ),
     });
-  if (data.commandMaintenanceExpense !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.124.9'), value: formatSignedNumber(-data.commandMaintenanceExpense), valueColor: 'var(--red)', valueIcon: goldIcon });
-  if (data.treasuryDampeningExpense !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.126.10'), value: formatSignedNumber(-data.treasuryDampeningExpense), valueColor: 'var(--red)', valueIcon: goldIcon });
-  if (data.replenishmentExpense !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.128.11'), value: formatSignedNumber(-data.replenishmentExpense), valueColor: 'var(--red)', valueIcon: goldIcon });
-  if (data.buildingExpense !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.130.12'), value: formatSignedNumber(-data.buildingExpense), valueColor: 'var(--red)', valueIcon: goldIcon });
-  if (data.tributePaidToLiege !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.132.13'), value: formatSignedNumber(-data.tributePaidToLiege), valueColor: 'var(--red)', valueIcon: goldIcon });
-  if (data.treatyTributePaid !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.134.14'), value: formatSignedNumber(-data.treatyTributePaid), valueColor: 'var(--red)', valueIcon: goldIcon });
-  if (data.eventExpense !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.136.15'), value: formatSignedNumber(-data.eventExpense), valueColor: 'var(--red)', valueIcon: goldIcon });
-  if (data.powerBlocExpense !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.138.16'), value: formatSignedNumber(-data.powerBlocExpense), valueColor: 'var(--red)', valueIcon: goldIcon });
-  if (data.autoAssignCommanderExpense !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.140.17'), value: formatSignedNumber(-data.autoAssignCommanderExpense), valueColor: 'var(--red)', valueIcon: goldIcon });
-  if (data.otherExpense !== 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.142.18'), value: formatSignedNumber(-data.otherExpense), valueColor: 'var(--red)', valueIcon: goldIcon });
+  }
+  if (data.commandMaintenanceExpense !== 0) {
+    lines.push({
+      label: webUIText('Economy.CommandMaintenance'),
+      value: formatSignedNumber(-data.commandMaintenanceExpense),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+      subTooltip: commandEntriesToSubTooltip(
+        webUIText('Economy.CommandMaintenance'),
+        data.armies,
+        'maintenance',
+        webUIText('Economy.CommandMaintenanceTooltip'),
+      ),
+    });
+  }
+  if (data.treasuryDampeningExpense !== 0) {
+    lines.push({
+      label: webUIText('Economy.Leakage'),
+      value: formatSignedNumber(-data.treasuryDampeningExpense),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+      subTooltip: buildLeakageSubTooltip(data),
+    });
+  }
+  if (data.replenishmentExpense !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.128.11'),
+      value: formatSignedNumber(-data.replenishmentExpense),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.buildingExpense !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.130.12'),
+      value: formatSignedNumber(-data.buildingExpense),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.tributePaidToLiege !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.132.13'),
+      value: formatSignedNumber(-data.tributePaidToLiege),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.treatyTributePaid !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.134.14'),
+      value: formatSignedNumber(-data.treatyTributePaid),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.eventExpense !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.136.15'),
+      value: formatSignedNumber(-data.eventExpense),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.powerBlocExpense !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.138.16'),
+      value: formatSignedNumber(-data.powerBlocExpense),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.autoAssignCommanderExpense !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.140.17'),
+      value: formatSignedNumber(-data.autoAssignCommanderExpense),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+    });
+  }
+  if (data.otherExpense !== 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.142.18'),
+      value: formatSignedNumber(-data.otherExpense),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+    });
+  }
 
-  if (data.treasuryAdjustment < 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.154.19'), value: formatSignedNumber(data.treasuryAdjustment), valueColor: 'var(--red)', valueIcon: goldIcon });
-  else if (data.treasuryAdjustment > 0)
-    lines.push({ label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.156.20'), value: formatSignedNumber(data.treasuryAdjustment), valueColor: 'var(--green)', valueIcon: goldIcon });
+  if (data.treasuryAdjustment < 0) {
+    lines.push({
+      label: webUIText('Economy.Leakage'),
+      value: formatSignedNumber(data.treasuryAdjustment),
+      valueColor: 'var(--red)',
+      valueIcon: goldIcon,
+      subTooltip: buildLeakageSubTooltip(data),
+    });
+  } else if (data.treasuryAdjustment > 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsTopbarResourceDisplay.156.20'),
+      value: formatSignedNumber(data.treasuryAdjustment),
+      valueColor: 'var(--green)',
+      valueIcon: goldIcon,
+    });
+  }
 
   return {
-    get title() { return webUIText("Auto.Prop.componentstopbarResourceDisplay.160.1", { Value1: formatNumber(data.gold) }); },
+    get title() { return webUIText('Auto.Prop.componentstopbarResourceDisplay.160.1', { Value1: formatNumber(data.gold) }); },
     lines,
   };
 }
@@ -215,7 +411,7 @@ const ResourceDisplay: React.FC = () => {
     <div className="resource-display">
       {showFpsCounter === true && (
         <>
-          <span className="resource-fps">{webUIText("TopbarResource.Fps", { Value1: formatNumber(fps) })}</span>
+          <span className="resource-fps">{webUIText('TopbarResource.Fps', { Value1: formatNumber(fps) })}</span>
           <div className="resource-separator" />
         </>
       )}

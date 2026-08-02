@@ -560,6 +560,21 @@
   white-space: nowrap;
 }
 
+.econ-money-detail__note {
+  padding: 0.28rem 0.52rem 0.2rem;
+  color: var(--muted, #b8b0a0);
+  font-size: 0.88em;
+  line-height: 1.35;
+}
+
+.econ-money-detail__note p {
+  margin: 0 0 0.28rem;
+}
+
+.econ-money-detail__note p:last-child {
+  margin-bottom: 0;
+}
+
 .econ-money-detail__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

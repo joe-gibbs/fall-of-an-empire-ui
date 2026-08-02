@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, type Key, type ReactNode } from 'react';
+import { Fragment, memo, useMemo, useState, type Key, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
@@ -96,7 +96,7 @@ const INCOME_ROWS: MetricDef[] = [
 const EXPENSE_ROWS: MetricDef[] = [
   { key: 'armyExpense', labelKey: 'Economy.ArmyUpkeep' },
   { key: 'commandMaintenanceExpense', labelKey: 'Economy.Commanders' },
-  { key: 'treasuryDampeningExpense', labelKey: 'Economy.TreasuryDampening' },
+  { key: 'treasuryDampeningExpense', labelKey: 'Economy.Leakage' },
   { key: 'buildingExpense', labelKey: 'Economy.Buildings' },
   { key: 'replenishmentExpense', labelKey: 'Economy.Replenishment' },
   { key: 'tributePaidToLiege', labelKey: 'Economy.ImperialTribute' },
@@ -507,7 +507,7 @@ function BreakdownColumn({
   if (tone === 'income' && adjustment > 0) {
     entries.push({ key: 'treasuryAdjustmentIncome', labelKey: 'Economy.DebtRelief', value: adjustment });
   } else if (tone === 'expense' && adjustment < 0) {
-    entries.push({ key: 'treasuryAdjustmentExpense', labelKey: 'Economy.TreasuryDampening', value: Math.abs(adjustment) });
+    entries.push({ key: 'treasuryAdjustmentExpense', labelKey: 'Economy.Leakage', value: Math.abs(adjustment) });
   }
   const total = tone === 'income' ? data?.incomeTotal ?? 0 : data?.expenseTotal ?? 0;
   const valueTone = tone === 'income' ? 'econ-positive' : 'econ-negative';
@@ -555,6 +555,8 @@ function BreakdownColumn({
 interface MoneyFlowDetailEntry {
   name: string;
   amount: number;
+  id?: string;
+  linkType?: string;
 }
 
 interface CommandCostTreeNode extends CommandUpkeepEntry {
@@ -563,7 +565,12 @@ interface CommandCostTreeNode extends CommandUpkeepEntry {
 }
 
 function incomeEntries(entries: IncomeEntry[]): MoneyFlowDetailEntry[] {
-  return entries.map(entry => ({ name: entry.name, amount: entry.amount }));
+  return entries.map(entry => ({
+    name: entry.name,
+    amount: entry.amount,
+    id: entry.id || undefined,
+    linkType: entry.linkType || undefined,
+  }));
 }
 
 function buildCommandCostTree(entries: CommandUpkeepEntry[]): CommandCostTreeNode[] {
@@ -606,7 +613,10 @@ function CommandCostNode({
 }) {
   const hasChildren = node.children.length > 0;
   const expanded = hasChildren && expandedIds.has(node.id);
-  const label = mode === 'maintenance' ? node.commandName || node.name : node.name || node.commandName;
+  const rawLabel = mode === 'maintenance' ? node.commandName || node.name : node.name || node.commandName;
+  const label = node.militaryId
+    ? <EntityLink type="military" id={node.militaryId} inline>{rawLabel}</EntityLink>
+    : rawLabel;
   const amount = mode === 'maintenance' ? node.maintenanceTotal : node.upkeep;
   const content = (
     <>
@@ -710,17 +720,20 @@ function MoneyFlowDetail({
   const definition = [...INCOME_ROWS, ...EXPENSE_ROWS].find(row => row.key === selectedMetric)
     ?? (selectedMetric === 'treasuryAdjustmentIncome'
       ? { key: selectedMetric, labelKey: 'Economy.DebtRelief' }
-      : { key: selectedMetric, labelKey: 'Economy.TreasuryDampening' });
+      : { key: selectedMetric, labelKey: 'Economy.Leakage' });
   const label = t(definition.labelKey);
   const total = metric(data, selectedMetric);
   const expense = selectedMetric === 'treasuryAdjustmentExpense'
     || EXPENSE_ROWS.some(row => row.key === selectedMetric);
+  const isLeakage = selectedMetric === 'treasuryDampeningExpense'
+    || selectedMetric === 'treasuryAdjustmentExpense';
   const commandCostMode = selectedMetric === 'armyExpense'
     ? 'upkeep'
     : selectedMetric === 'commandMaintenanceExpense' ? 'maintenance' : null;
   const commandEntries = details?.armies ?? [];
   const showCommandTree = commandCostMode !== null && commandEntries.length > 0;
   const entries = detailEntriesForMetric(selectedMetric, details, total, label);
+  const corruptOfficials = details?.leakageCorruptOfficials ?? [];
 
   return (
     <div className="econ-money-detail" id="economy-flow-detail">
@@ -731,12 +744,37 @@ function MoneyFlowDetail({
           {expense ? '-' : '+'}{fmt(total)}{t('Economy.PerMonth')}
         </strong>
       </div>
+      {isLeakage && (
+        <div className="econ-money-detail__note">
+          <p>{t('Economy.LeakageTooltip')}</p>
+          {details && total > 0 && (
+            <p>{t('Economy.LeakageRetained', { Percent: details.leakageRetainedPercent })}</p>
+          )}
+          {corruptOfficials.length > 0 && (
+            <p className="econ-money-detail__officials">
+              <span>{t('Economy.LeakageCorruptOfficials')}: </span>
+              {corruptOfficials.map((official, index) => (
+                <Fragment key={`${official.id}:${index}`}>
+                  {index > 0 ? ', ' : null}
+                  <EntityLink type={official.linkType || 'person'} id={official.id} inline>
+                    {official.name}
+                  </EntityLink>
+                </Fragment>
+              ))}
+            </p>
+          )}
+        </div>
+      )}
       <div className={`econ-money-detail__grid${showCommandTree ? ' econ-money-detail__grid--tree' : ''}`}>
         {showCommandTree && commandCostMode ? (
           <CommandCostTree entries={commandEntries} mode={commandCostMode} />
         ) : entries.map((entry, index) => (
           <div className="econ-money-detail__row" key={`${entry.name}:${index}`}>
-            <span>{entry.name}</span>
+            <span>
+              {entry.id && entry.linkType
+                ? <EntityLink type={entry.linkType} id={entry.id} inline>{entry.name}</EntityLink>
+                : entry.name}
+            </span>
             <strong className={expense ? 'econ-negative' : 'econ-positive'}>
               <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />
               {expense ? '-' : '+'}{fmt(entry.amount)}

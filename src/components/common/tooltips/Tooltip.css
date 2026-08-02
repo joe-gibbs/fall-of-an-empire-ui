@@ -266,7 +266,7 @@
 }
 
 .tt-line--has-sub {
-  cursor: auto;
+  cursor: help;
 }
 
 .tt-line--has-sub:hover {
@@ -347,6 +347,18 @@
   overflow-wrap: break-word;
 }
 
+.tt-line-label .entity-link,
+.tt-line-label .tt-entity-link {
+  min-width: 0;
+  max-width: 100%;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.tt-line-label .entity-link__label {
+  color: inherit;
+}
+
 .tt-line-label-icon {
   width: 0.923rem;
   height: 0.923rem;
@@ -354,9 +366,16 @@
 }
 
 .tt-line--has-sub .tt-line-label {
-  color: var(--gold-light);
-  text-decoration: underline;
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: rgba(180, 170, 145, 0.55);
+  text-decoration-thickness: 0.077rem;
   text-underline-offset: 0.154rem;
+}
+
+.tt-line--has-sub:hover .tt-line-label {
+  text-decoration-color: rgba(180, 170, 145, 0.9);
 }
 
 .tt-line-value {
