@@ -142,6 +142,9 @@ interface CandidateListPaneProps<TItem, TSort extends string> {
   countLabel: string;
   emptyLabel: string;
   headerAction?: ReactNode;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
   renderRow: (item: TItem, active: boolean) => ReactNode;
 }
 
@@ -156,6 +159,9 @@ export function CandidateListPane<TItem, TSort extends string>({
   countLabel,
   emptyLabel,
   headerAction,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder,
   renderRow,
 }: CandidateListPaneProps<TItem, TSort>) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -179,6 +185,7 @@ export function CandidateListPane<TItem, TSort extends string>({
   const bottomSpacer = useVirtualRows ? Math.max(0, items.length - endIndex) * rowHeight : 0;
   const visibleItems = useVirtualRows ? items.slice(startIndex, endIndex) : items;
   const bodyContentSignal = `${items.length}:${useVirtualRows ? 1 : 0}:${rowHeight}`;
+  const showSearch = typeof onSearchChange === 'function';
 
   const handleScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
     setScrollTop(event.currentTarget.scrollTop);
@@ -212,7 +219,7 @@ export function CandidateListPane<TItem, TSort extends string>({
     }, 0);
 
     return () => window.clearTimeout(id);
-  }, [activeSort, items.length, useVirtualRows]);
+  }, [activeSort, items.length, searchValue, useVirtualRows]);
 
   return (
     <div className={`${prefix}-list-pane`}>
@@ -232,6 +239,19 @@ export function CandidateListPane<TItem, TSort extends string>({
           ))}
         </div>
       </div>
+
+      {showSearch && (
+        <div className={`${prefix}-list-search`}>
+          <input
+            type="search"
+            className={`${prefix}-list-search-input`}
+            value={searchValue ?? ''}
+            onChange={event => onSearchChange?.(event.target.value)}
+            placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
+          />
+        </div>
+      )}
 
       <div ref={scrollFrameRef} className="candidate-list-scroll-frame styled-scroll-area styled-scroll-area--fill">
         <div

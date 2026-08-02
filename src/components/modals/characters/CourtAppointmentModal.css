@@ -470,11 +470,56 @@
   font-size: 0.9rem;
 }
 
-.cam-person-selection-modal .cam-list-sort-btn {
-  flex-shrink: 1;
+.cam-list-search {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0.4rem 0.55rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  background-color: rgba(8, 12, 17, 0.28);
+}
+
+.cam-list-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 1.85rem;
+  padding: 0.28rem 0.55rem;
+  border: 0.077rem solid rgba(201, 168, 76, 0.18);
+  background-color: rgba(8, 12, 17, 0.55);
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.cam-list-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.cam-list-search-input:focus {
+  outline: none;
+  border-color: rgba(201, 168, 76, 0.42);
+}
+
+.cam-person-selection-modal .cam-list-head {
+  flex-wrap: wrap;
+  min-height: 2.35rem;
+}
+
+.cam-person-selection-modal .cam-list-sort-group {
+  flex-wrap: wrap;
+  justify-content: flex-start;
   min-width: 0;
-  padding: 0 0.34rem;
-  font-size: 0.64rem;
+}
+
+.cam-person-selection-modal .cam-list-sort-btn {
+  flex-shrink: 0;
+  min-width: auto;
+  padding: 0 0.55rem;
+  font-size: 0.7rem;
+  white-space: nowrap;
 }
 
 .cam-person-selection-modal .cam-list-count {
@@ -506,6 +551,10 @@
 
 .cam-person-selection-note {
   color: var(--text-muted);
+}
+
+.cam-detail-body .cam-person-selection-note + .cam-person-selection-note {
+  margin-top: 0.35rem;
 }
 
 .cam-action-error {

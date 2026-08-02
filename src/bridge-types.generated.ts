@@ -3194,8 +3194,16 @@ export interface PersonInteractionInitiatorCandidate {
   id: string;
   name: string;
   title: string;
+  portrait: string;
+  portraitLayers: PortraitLayerData;
   age: number;
   activity: string;
+  factionName: string;
+  relationToPlayer: string;
+  relationToTarget: string;
+  isRelatedToPlayer: boolean;
+  isRelatedToTarget: boolean;
+  sortPriority: number;
   tactics: number;
   authority: number;
   cunning: number;

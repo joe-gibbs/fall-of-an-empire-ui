@@ -7,9 +7,10 @@ import type {
   PersonInteractionEntry,
   StartPersonInteractionResponse,
 } from '../../bridge-types.generated.ts';
-import type { DisplayTextLine } from '../../data/types';
+import type { DisplayTextLine, PortraitLayerData } from '../../data/types';
 import { WebkilnAssetPath, interactionAssetPath } from '../../utils/assets';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
+import { mapPortraitLayers, mapPortraitPath } from './portraitMapping';
 
 export type InteractionAvailability = 'available' | 'greyed' | 'hidden';
 
@@ -17,8 +18,16 @@ export interface PersonInteractionCandidateView {
   id: string;
   name: string;
   title: string;
+  portrait?: string;
+  portraitLayers?: PortraitLayerData;
   age: number;
   activity: string;
+  factionName: string;
+  relationToPlayer: string;
+  relationToTarget: string;
+  isRelatedToPlayer: boolean;
+  isRelatedToTarget: boolean;
+  sortPriority: number;
   tactics: number;
   authority: number;
   cunning: number;
@@ -180,8 +189,16 @@ export function mapPersonInteractionEntry(entry: PersonInteractionEntry): Person
       id: candidate.id,
       name: candidate.name,
       title: candidate.title,
+      portrait: mapPortraitPath(candidate.portrait) || undefined,
+      portraitLayers: mapPortraitLayers(candidate.portraitLayers),
       age: candidate.age,
       activity: candidate.activity,
+      factionName: candidate.factionName ?? '',
+      relationToPlayer: candidate.relationToPlayer ?? '',
+      relationToTarget: candidate.relationToTarget ?? '',
+      isRelatedToPlayer: Boolean(candidate.isRelatedToPlayer),
+      isRelatedToTarget: Boolean(candidate.isRelatedToTarget),
+      sortPriority: candidate.sortPriority ?? candidate.successChancePercent ?? 0,
       tactics: candidate.tactics,
       authority: candidate.authority,
       cunning: candidate.cunning,

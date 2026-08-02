@@ -39,12 +39,12 @@ interface Props {
 
 const EMPTY_CANDIDATES: PersonInteractionCandidateView[] = [];
 
-type SortKey = 'chance' | 'authority' | 'cunning' | 'governance' | 'name';
+type SortKey = 'priority' | 'chance' | 'name';
 
 function sortValue(candidate: PersonInteractionCandidateView, sort: SortKey): string | number {
   if (sort === 'name') return candidate.name;
   if (sort === 'chance') return candidate.successChancePercent;
-  return candidate[sort];
+  return candidate.sortPriority;
 }
 
 function chanceTier(percent: number): string {
@@ -61,6 +61,28 @@ function chanceFillClass(percent: number): string {
   return 'cam-chance-bar-fill--low';
 }
 
+function candidateRelationLabel(candidate: PersonInteractionCandidateView): string {
+  return candidate.relationToPlayer
+    || candidate.relationToTarget
+    || candidate.title
+    || webUIText('Common.Candidates.Courtier');
+}
+
+function candidateMatchesQuery(candidate: PersonInteractionCandidateView, query: string): boolean {
+  if (!query) return true;
+  const haystack = [
+    candidate.name,
+    candidate.title,
+    candidate.factionName,
+    candidate.relationToPlayer,
+    candidate.relationToTarget,
+    formatPersonActivity(candidate.activity),
+  ]
+    .join(' ')
+    .toLocaleLowerCase();
+  return haystack.includes(query);
+}
+
 export default function PersonInteractionInitiatorModal({
   interaction,
   targetPersonId,
@@ -69,7 +91,8 @@ export default function PersonInteractionInitiatorModal({
   onConfirm,
 }: Props) {
   const { openRightSidebar } = useGameActions();
-  const [sort, setSort] = useState<SortKey>('chance');
+  const [sort, setSort] = useState<SortKey>('priority');
+  const [search, setSearch] = useState('');
   const [selectionState, setSelectionState] = useState<{ key: string; selectedId: string | null }>({
     key: '',
     selectedId: interaction?.initiatorCandidates[0]?.id ?? null,
@@ -92,7 +115,10 @@ export default function PersonInteractionInitiatorModal({
   const error = errorState.key === modalKey ? errorState.message : null;
 
   const candidates = useMemo(() => {
-    const next = (activeInteraction?.initiatorCandidates ?? EMPTY_CANDIDATES).slice();
+    const query = search.trim().toLocaleLowerCase();
+    const next = (activeInteraction?.initiatorCandidates ?? EMPTY_CANDIDATES)
+      .filter(candidate => candidateMatchesQuery(candidate, query))
+      .slice();
     next.sort((a, b) => {
       const av = sortValue(a, sort);
       const bv = sortValue(b, sort);
@@ -100,7 +126,7 @@ export default function PersonInteractionInitiatorModal({
       return Number(bv) - Number(av);
     });
     return next;
-  }, [activeInteraction, sort]);
+  }, [activeInteraction, search, sort]);
 
   const handleClose = useCallback(() => {
     if (submitting) return;
@@ -126,17 +152,16 @@ export default function PersonInteractionInitiatorModal({
     close();
   }, [close, modalKey, onConfirm, selected, submitting]);
 
-  const handleView = useCallback(() => {
-    if (!selected) return;
-    openRightSidebar('character', selected.id);
-    close();
-  }, [close, openRightSidebar, selected]);
+  const handleView = useCallback((personId: string) => {
+    openRightSidebar('character', personId);
+  }, [openRightSidebar]);
 
   if (!mounted || !activeInteraction) return null;
   if (typeof document === 'undefined') return null;
 
   const selectedChance = selected?.successChancePercent ?? 0;
   const selectedActivity = selected ? formatPersonActivity(selected.activity) : '';
+  const selectedRelation = selected ? candidateRelationLabel(selected) : '';
   const durationText = activeInteraction.durationDays > 0
     ? webUIText("PersonInteractionInitiator.Duration", {
         Value1: formatNumber(activeInteraction.durationDays),
@@ -181,20 +206,23 @@ export default function PersonInteractionInitiatorModal({
           getId={candidate => candidate.id}
           activeSort={sort}
           sortOptions={[
+            { id: 'priority', label: webUIText('PersonInteractionInitiator.SortBest') },
             { id: 'chance', label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.310.10') },
-            { id: 'authority', label: webUIText('Common.Authority') },
-            { id: 'cunning', label: webUIText('Common.Cunning') },
-            { id: 'governance', label: webUIText('Common.Governance') },
             { id: 'name', label: webUIText('Common.Name') },
           ]}
           onSortChange={setSort}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={webUIText('PersonInteractionInitiator.SearchPlaceholder')}
           countLabel={webUIText("PersonInteractionInitiator.Eligible", {
             EligibleCandidateCount: eligibleCandidateCount,
             Value2: candidates.length === 1
               ? webUIText("PersonInteractionInitiator.Candidate")
               : webUIText("PersonInteractionInitiator.Candidates"),
           })}
-          emptyLabel={webUIText('Auto.ComponentsModalsPersonInteractionInitiatorModal.217.5')}
+          emptyLabel={search.trim()
+            ? webUIText('PersonInteractionInitiator.NoSearchMatches')
+            : webUIText('Auto.ComponentsModalsPersonInteractionInitiatorModal.217.5')}
           renderRow={(candidate, active) => (
             <CandidateRow
               key={candidate.id}
@@ -204,19 +232,20 @@ export default function PersonInteractionInitiatorModal({
                 setSelectionState({ key: modalKey, selectedId: candidate.id });
                 setErrorState({ key: modalKey, message: null });
               }}
-              onViewCharacter={() => {
-                openRightSidebar('character', candidate.id);
-                close();
-              }}
+              onViewCharacter={() => handleView(candidate.id)}
               personId={candidate.id}
-              resolvePerson
+              resolvePerson={!candidate.portrait && !candidate.portraitLayers}
+              portraitSrc={candidate.portrait}
+              portraitLayers={candidate.portraitLayers}
               portraitName={candidate.name}
               name={candidate.name}
               activity={candidate.activity}
               subParts={[
-                candidate.title || webUIText("Common.Candidates.Courtier"),
+                candidateRelationLabel(candidate),
                 webUIText('AgentSelect.CandidateAge', { Age: formatNumber(candidate.age) }),
-                formatPersonActivity(candidate.activity) || webUIText("PersonInteractionInitiator.InCourt"),
+                candidate.factionName
+                  || formatPersonActivity(candidate.activity)
+                  || webUIText("PersonInteractionInitiator.InCourt"),
               ]}
               score={formatPercent(candidate.successChancePercent)}
               scoreColor={successChanceColour(candidate.successChancePercent)}
@@ -230,9 +259,11 @@ export default function PersonInteractionInitiatorModal({
               <CandidateHero
                 prefix="cam"
                 personId={selected.id}
-                resolvePerson
+                resolvePerson={!selected.portrait && !selected.portraitLayers}
+                portraitSrc={selected.portrait}
+                portraitLayers={selected.portraitLayers}
                 name={selected.name}
-                title={selected.title || webUIText("Common.Candidates.Courtier")}
+                title={selectedRelation}
               />
 
               <div className="cam-detail-body">
@@ -257,21 +288,18 @@ export default function PersonInteractionInitiatorModal({
                         label: webUIText('Common.Authority'),
                         icon: statIconPath('authority'),
                         value: selected.authority,
-                        primary: sort === 'authority',
                       },
                       {
                         key: 'cunning',
                         label: webUIText('Common.Cunning'),
                         icon: statIconPath('cunning'),
                         value: selected.cunning,
-                        primary: sort === 'cunning',
                       },
                       {
                         key: 'governance',
                         label: webUIText('Common.Governance'),
                         icon: statIconPath('governance'),
                         value: selected.governance,
-                        primary: sort === 'governance',
                       },
                       {
                         key: 'loyalty',
@@ -290,6 +318,24 @@ export default function PersonInteractionInitiatorModal({
                   />
                 </CandidateSection>
 
+                <CandidateSection prefix="cam" title={webUIText('Common.Relation')}>
+                  <span className="cam-person-selection-note">
+                    {selected.relationToPlayer
+                      ? webUIText('PersonInteractionInitiator.RelationToYou', { Relation: selected.relationToPlayer })
+                      : selected.relationToTarget
+                        ? webUIText('PersonInteractionInitiator.RelationToTarget', {
+                            Relation: selected.relationToTarget,
+                            Target: targetPersonName,
+                          })
+                        : selectedRelation}
+                  </span>
+                  {selected.factionName && (
+                    <span className="cam-person-selection-note">
+                      {selected.factionName}
+                    </span>
+                  )}
+                </CandidateSection>
+
                 <CandidateSection prefix="cam" title={webUIText('Auto.Attr.ComponentsSidebarsCharacterSidebar.1266.48')}>
                   <span className="cam-person-selection-note">
                     {selectedActivity || webUIText("PersonInteractionInitiator.InCourt")}
@@ -300,13 +346,17 @@ export default function PersonInteractionInitiatorModal({
               </div>
 
               <CandidateFooter prefix="cam">
-                <GameButton variant="outline" onClick={handleView}>{webUIText('Common.View')}</GameButton>
+                <GameButton variant="outline" onClick={() => handleView(selected.id)}>{webUIText('Common.View')}</GameButton>
                 <GameButton variant="outline" onClick={handleClose}>{webUIText('Auto.ComponentsModalsPersonInteractionInitiatorModal.223.6')}</GameButton>
                 <GameButton variant="burgundy" onClick={handleConfirm} disabled={!selected || submitting}>{activeInteraction.name}</GameButton>
               </CandidateFooter>
             </>
           ) : (
-            <div className="cam-empty">{webUIText('Auto.ComponentsModalsPersonInteractionInitiatorModal.217.5')}</div>
+            <div className="cam-empty">
+              {search.trim()
+                ? webUIText('PersonInteractionInitiator.NoSearchMatches')
+                : webUIText('Auto.ComponentsModalsPersonInteractionInitiatorModal.217.5')}
+            </div>
           )}
         </CandidateDetailPane>
       </CandidateBody>

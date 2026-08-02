@@ -22,7 +22,7 @@ import type { Character, CharacterRelationship, StatKey } from '../../../data/ty
 import { STAT_ICONS } from '../../../utils/iconMaps';
 import { characterStatEffectLines } from '../../../utils/characterStatEffects';
 import { useGameActions, useGameState } from '../../../context/GameContext';
-import { bridgeCall } from '../../../bridge-types.generated.ts';
+import { bridgeCall, type StartPersonInteractionResponse } from '../../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { dispatchPersonData } from '../../../bridge/characters/usePersonBridge';
 import { usePinnedItemsBridge, zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
@@ -87,10 +87,19 @@ import '../shared/Sidebar.css';
 import './CharacterSidebar.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
+interface InitiatorModalSession {
+  interaction: PersonInteractionView;
+  targetPersonId: string;
+  targetPersonName: string;
+}
+
 interface CharacterSidebarProps {
   character: Character;
   onClose: () => void;
   side?: 'left' | 'right';
+  initiatorModalSession?: InitiatorModalSession | null;
+  onOpenInitiatorModal?: (session: InitiatorModalSession) => void;
+  onCloseInitiatorModal?: () => void;
 }
 
 const CHARACTER_HEADER_NAME_MIN_FONT_REM = 0.82;
@@ -136,7 +145,14 @@ function CharacterHeaderName({ name }: { name: string }) {
   return <span ref={nameRef} className="char-header-name">{name}</span>;
 }
 
-const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose, side = 'left' }) => {
+const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
+  character,
+  onClose,
+  side = 'left',
+  initiatorModalSession = null,
+  onOpenInitiatorModal,
+  onCloseInitiatorModal,
+}) => {
   const { openSidebar, openScreen, showAdvisor, addNotification, navigateSidebarHistory } = useGameActions();
   const { debugMode, sidebarNavigation, gameDay } = useGameState();
   const playerFactionId = usePlayerFactionId();
@@ -156,10 +172,33 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
   const canNavigateBack = (characterNavigation?.back.length ?? 0) > 0;
   const canNavigateForward = (characterNavigation?.forward.length ?? 0) > 0;
   const [relationshipSearch, setRelationshipSearch] = React.useState('');
-  const [initiatorModalInteraction, setInitiatorModalInteraction] = React.useState<PersonInteractionView | null>(null);
+  const [localInitiatorModal, setLocalInitiatorModal] = React.useState<InitiatorModalSession | null>(null);
   const [giftModalInteraction, setGiftModalInteraction] = React.useState<PersonInteractionView | null>(null);
   const lastDayRefreshRef = React.useRef<{ personId: string; gameDay: number } | null>(null);
   const fullDetailsPersonRef = React.useRef<string | null>(null);
+  const initiatorModalInteraction = onOpenInitiatorModal
+    ? (initiatorModalSession?.interaction ?? null)
+    : (localInitiatorModal?.interaction ?? null);
+  const initiatorModalTargetId = onOpenInitiatorModal
+    ? (initiatorModalSession?.targetPersonId ?? character.id)
+    : (localInitiatorModal?.targetPersonId ?? character.id);
+  const initiatorModalTargetName = onOpenInitiatorModal
+    ? (initiatorModalSession?.targetPersonName ?? character.name)
+    : (localInitiatorModal?.targetPersonName ?? character.name);
+  const openInitiatorModal = React.useCallback((session: InitiatorModalSession) => {
+    if (onOpenInitiatorModal) {
+      onOpenInitiatorModal(session);
+      return;
+    }
+    setLocalInitiatorModal(session);
+  }, [onOpenInitiatorModal]);
+  const closeInitiatorModal = React.useCallback(() => {
+    if (onCloseInitiatorModal) {
+      onCloseInitiatorModal();
+      return;
+    }
+    setLocalInitiatorModal(null);
+  }, [onCloseInitiatorModal]);
 
   React.useEffect(() => {
     if (activeTab === 'general' || fullDetailsPersonRef.current === character.id) return;
@@ -349,15 +388,22 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
   }, [interactions]);
 
   const closeInteractionModals = React.useCallback(() => {
-    setInitiatorModalInteraction(null);
+    closeInitiatorModal();
     setGiftModalInteraction(null);
-  }, []);
+  }, [closeInitiatorModal]);
 
   React.useEffect(() => {
-    closeInteractionModals();
-  }, [character.id, closeInteractionModals]);
+    // Gift choices belong to the open character; initiator selection is kept
+    // alive while browsing candidates so View does not cancel the proposal.
+    setGiftModalInteraction(null);
+    if (!onOpenInitiatorModal) {
+      setLocalInitiatorModal(current => (
+        current && current.targetPersonId !== character.id ? null : current
+      ));
+    }
+  }, [character.id, onOpenInitiatorModal]);
 
-  const isInteractionModalOpen = initiatorModalInteraction !== null || giftModalInteraction !== null;
+  const isInteractionModalOpen = Boolean(initiatorModalInteraction) || giftModalInteraction !== null;
   React.useEffect(() => {
     if (!isInteractionModalOpen) return;
 
@@ -398,7 +444,11 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
       }
 
       setGiftModalInteraction(null);
-      setInitiatorModalInteraction(loaded);
+      openInitiatorModal({
+        interaction: loaded,
+        targetPersonId: character.id,
+        targetPersonName: character.name,
+      });
       return;
     }
 
@@ -409,20 +459,46 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
         return;
       }
 
-      setInitiatorModalInteraction(null);
+      closeInitiatorModal();
       setGiftModalInteraction(loaded);
       return;
     }
 
     await startSimpleInteraction(interaction.id);
-  }, [loadInteractionOptions, notifyInteractionFailure, startSimpleInteraction]);
+  }, [
+    character.id,
+    character.name,
+    closeInitiatorModal,
+    loadInteractionOptions,
+    notifyInteractionFailure,
+    openInitiatorModal,
+    startSimpleInteraction,
+  ]);
 
   const handleInitiatorConfirm = React.useCallback(async (candidateId: string) => {
     if (!initiatorModalInteraction) {
       return webUIText('CharacterSidebar.ActionUnavailable');
     }
 
-    const response = await startInteraction(initiatorModalInteraction.id, { initiatorPersonId: candidateId });
+    // Confirm against the original marriage/interaction target, not whichever
+    // candidate character is currently open in the sidebar after View.
+    let response: StartPersonInteractionResponse | null = null;
+    if (initiatorModalTargetId === character.id) {
+      response = await startInteraction(initiatorModalInteraction.id, { initiatorPersonId: candidateId });
+    } else {
+      try {
+        response = await bridgeCall('game.start_person_interaction', {
+          personId: initiatorModalTargetId,
+          interactionId: initiatorModalInteraction.id,
+          initiatorPersonId: candidateId,
+          giftTypeIndex: -1,
+        });
+      } catch (error) {
+        acknowledgeBridgeFailure(error);
+        response = null;
+      }
+    }
+
     if (!response) {
       return webUIText('CharacterSidebar.ActionStartFailed');
     }
@@ -432,7 +508,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
     }
 
     return null;
-  }, [initiatorModalInteraction, startInteraction]);
+  }, [character.id, initiatorModalInteraction, initiatorModalTargetId, startInteraction]);
 
   const handleGiftConfirm = React.useCallback(async (giftTypeIndex: number) => {
     if (!giftModalInteraction) {
@@ -1006,13 +1082,13 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
         )}
       </StyledScrollArea>
 
-      {initiatorModalInteraction && (
+      {!onOpenInitiatorModal && initiatorModalInteraction && (
         <PersonInteractionInitiatorModal
-          key={initiatorModalInteraction.id}
+          key={`${initiatorModalTargetId}:${initiatorModalInteraction.id}`}
           interaction={initiatorModalInteraction}
-          targetPersonId={character.id}
-          targetPersonName={character.name}
-          onClose={() => setInitiatorModalInteraction(null)}
+          targetPersonId={initiatorModalTargetId}
+          targetPersonName={initiatorModalTargetName}
+          onClose={closeInitiatorModal}
           onConfirm={handleInitiatorConfirm}
         />
       )}
@@ -1039,8 +1115,61 @@ export default React.memo(CharacterSidebar);
 
 function CharacterSidebarSlot({ sidebarId, onClose }: { sidebarId: string | null; onClose: () => void }) {
   const character = usePerson(sidebarId);
-  if (!character) return null;
-  return <CharacterSidebar character={character} onClose={onClose} side="right" />;
+  const [initiatorModalSession, setInitiatorModalSession] = React.useState<InitiatorModalSession | null>(null);
+  const targetPersonForConfirm = usePerson(initiatorModalSession?.targetPersonId ?? null);
+
+  const handleInitiatorConfirm = React.useCallback(async (candidateId: string) => {
+    if (!initiatorModalSession) {
+      return webUIText('CharacterSidebar.ActionUnavailable');
+    }
+
+    try {
+      const response = await bridgeCall('game.start_person_interaction', {
+        personId: initiatorModalSession.targetPersonId,
+        interactionId: initiatorModalSession.interaction.id,
+        initiatorPersonId: candidateId,
+        giftTypeIndex: -1,
+      });
+      if (!response.started) {
+        return response.message || webUIText('CharacterSidebar.ActionStartFailed');
+      }
+      if (targetPersonForConfirm) {
+        dispatchPersonData(await bridgeCall('game.get_person_data', {
+          personId: initiatorModalSession.targetPersonId,
+          scope: 'summary',
+        }));
+      }
+      return null;
+    } catch (error) {
+      acknowledgeBridgeFailure(error);
+      return webUIText('CharacterSidebar.ActionStartFailed');
+    }
+  }, [initiatorModalSession, targetPersonForConfirm]);
+
+  return (
+    <>
+      {character && (
+        <CharacterSidebar
+          character={character}
+          onClose={onClose}
+          side="right"
+          initiatorModalSession={initiatorModalSession}
+          onOpenInitiatorModal={setInitiatorModalSession}
+          onCloseInitiatorModal={() => setInitiatorModalSession(null)}
+        />
+      )}
+      {initiatorModalSession && (
+        <PersonInteractionInitiatorModal
+          key={`${initiatorModalSession.targetPersonId}:${initiatorModalSession.interaction.id}`}
+          interaction={initiatorModalSession.interaction}
+          targetPersonId={initiatorModalSession.targetPersonId}
+          targetPersonName={initiatorModalSession.targetPersonName}
+          onClose={() => setInitiatorModalSession(null)}
+          onConfirm={handleInitiatorConfirm}
+        />
+      )}
+    </>
+  );
 }
 
 registerSidebar({
