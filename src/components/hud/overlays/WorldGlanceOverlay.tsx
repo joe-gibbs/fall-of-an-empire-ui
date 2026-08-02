@@ -1081,7 +1081,7 @@ function NativeWorldGlanceInputOverlay() {
 
   const updateAnchor = useCallback((frame: WorldGlancesFrameResponse | null, target = hoveredRef.current) => {
     if (!frame || !target) {
-      setAnchor(null);
+      setAnchor(current => (current === null ? current : null));
       return;
     }
 
@@ -1093,15 +1093,22 @@ function NativeWorldGlanceInputOverlay() {
       makeWorldGlanceFrameEntryScratch(),
     );
     if (!entry || !frameEntryInteractive(entry)) {
-      setAnchor(null);
+      setAnchor(current => (current === null ? current : null));
       return;
     }
 
-    setAnchor(frameScreenPosition(
+    const next = frameScreenPosition(
       entry,
       { width: window.innerWidth, height: window.innerHeight },
       worldGlanceFrameViewportWidth(frame),
       worldGlanceFrameViewportHeight(frame),
+    );
+    setAnchor(current => (
+      current
+      && Math.abs(current.x - next.x) < 0.25
+      && Math.abs(current.y - next.y) < 0.25
+        ? current
+        : next
     ));
   }, []);
 

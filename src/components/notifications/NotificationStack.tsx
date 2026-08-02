@@ -111,6 +111,29 @@ function buildWorldSettlementAnchorMap(frame: WorldGlancesFrameResponse): Settle
   return anchors;
 }
 
+function settlementAnchorsEqual(
+  left: SettlementNotificationAnchor | undefined,
+  right: SettlementNotificationAnchor | undefined,
+): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  return left.screenX === right.screenX
+    && left.screenY === right.screenY
+    && left.viewportWidth === right.viewportWidth
+    && left.viewportHeight === right.viewportHeight
+    && left.zOrder === right.zOrder;
+}
+
+function settlementAnchorMapsEqual(left: SettlementAnchorMap, right: SettlementAnchorMap): boolean {
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  if (leftKeys.length !== rightKeys.length) return false;
+  for (const key of leftKeys) {
+    if (!settlementAnchorsEqual(left[key], right[key])) return false;
+  }
+  return true;
+}
+
 function notificationCountdownProgress(notification: Notification, currentGameDay: number): number | null {
   if ((notification.style ?? 'regular') === 'cinematic') return null;
   const { createdOnDay, expiresOnDay, durationDays } = notification;
@@ -203,6 +226,8 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
   const exitTimersRef = useRef<Record<string, number>>({});
   const notificationsRef = useRef<Notification[]>(notifications);
   const anchorsEnabledRef = useRef(anchorsEnabled);
+  notificationsRef.current = notifications;
+  anchorsEnabledRef.current = anchorsEnabled;
 
   const settlementNotifications = useMemo(
     () => notifications.filter((n) => shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
@@ -241,12 +266,27 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
     onDismiss(id);
   }, [onDismiss]);
 
+  const settlementAnchorsRef = useRef(settlementAnchors);
+  const settlementExitAnchorsRef = useRef(settlementExitAnchors);
+  const worldSettlementAnchorsRef = useRef(worldSettlementAnchors);
+  const settlementMissingAnchorIdsRef = useRef(settlementMissingAnchorIds);
+  settlementAnchorsRef.current = settlementAnchors;
+  settlementExitAnchorsRef.current = settlementExitAnchors;
+  worldSettlementAnchorsRef.current = worldSettlementAnchors;
+  settlementMissingAnchorIdsRef.current = settlementMissingAnchorIds;
+
   const beginExit = useCallback((id: string, options?: { releaseBridge?: boolean }) => {
     if (exitTimersRef.current[id] !== undefined) return;
 
-    const notification = notifications.find(n => n.id === id);
+    const notification = notificationsRef.current.find(n => n.id === id);
     if (notification) {
-      const anchor = settlementAnchorFor(notification, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds);
+      const anchor = settlementAnchorFor(
+        notification,
+        settlementAnchorsRef.current,
+        settlementExitAnchorsRef.current,
+        worldSettlementAnchorsRef.current,
+        settlementMissingAnchorIdsRef.current,
+      );
       if (anchor) {
         setSettlementExitAnchors(prev => {
           if (prev[id]) return prev;
@@ -275,7 +315,7 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
       () => finishExit(id),
       UI_MOTION.notificationRemovalFallbackMs,
     );
-  }, [finishExit, notifications, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds]);
+  }, [finishExit]);
 
   const handleDecision = useCallback((id: string, accepted: boolean) => {
     const notification = notifications.find(n => n.id === id);
@@ -352,14 +392,8 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
   }, [stackNotifications.length]);
 
   useEffect(() => {
-    notificationsRef.current = notifications;
-  }, [notifications]);
-
-  useEffect(() => {
-    anchorsEnabledRef.current = anchorsEnabled;
-  }, [anchorsEnabled]);
-
-  useEffect(() => {
+    let previousAnchors: SettlementAnchorMap = {};
+    let previousMissingKey = '';
     return onNotificationAnchorsFrame((frame) => {
       if (!anchorsEnabledRef.current) {
         return;
@@ -372,18 +406,31 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
           missingAnchorIds.add(notification.id);
         }
       }
-      setSettlementAnchors(anchors);
-      setSettlementMissingAnchorIds(missingAnchorIds);
+      const missingKey = Array.from(missingAnchorIds).sort().join('\0');
+      if (!settlementAnchorMapsEqual(previousAnchors, anchors)) {
+        previousAnchors = anchors;
+        setSettlementAnchors(anchors);
+      }
+      if (missingKey !== previousMissingKey) {
+        previousMissingKey = missingKey;
+        setSettlementMissingAnchorIds(missingAnchorIds);
+      }
     });
   }, []);
 
   useEffect(() => {
+    let previousAnchors: SettlementAnchorMap = {};
     return onWorldGlancesFrame((frame) => {
       if (!anchorsEnabledRef.current) {
         return;
       }
 
-      setWorldSettlementAnchors(buildWorldSettlementAnchorMap(frame));
+      const anchors = buildWorldSettlementAnchorMap(frame);
+      if (settlementAnchorMapsEqual(previousAnchors, anchors)) {
+        return;
+      }
+      previousAnchors = anchors;
+      setWorldSettlementAnchors(anchors);
     });
   }, []);
 

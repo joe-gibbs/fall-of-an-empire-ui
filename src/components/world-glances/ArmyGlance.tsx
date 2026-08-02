@@ -1,4 +1,4 @@
-import { useCallback, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../common/tooltips/Tooltip';
 import type { ArmyGlanceData, NavyGlanceData } from './WorldGlanceTypes';
 import { bridgeCall, type GetMilitaryDataResponse } from '../../bridge-types.generated.ts';
@@ -178,21 +178,39 @@ interface MilitaryTooltipProps extends ArmyGlanceProps {
 function MilitaryTooltip({ data, isNavy = false, children, open, passive = false, wrapperStyle }: MilitaryTooltipProps) {
   const { debugMode } = useGameState();
   const [tooltipDetail, setTooltipDetail] = useState<GetMilitaryDataResponse | null>(null);
+  const detailForIdRef = useRef<string | null>(null);
+  const requestInFlightRef = useRef(false);
   const blockading = isNavy && (data as NavyGlanceData).blockading;
-  const requestTooltipDetail = useCallback(() => {
+
+  useEffect(() => {
+    detailForIdRef.current = null;
+    requestInFlightRef.current = false;
     setTooltipDetail(null);
+  }, [data.id]);
+
+  const requestTooltipDetail = useCallback(() => {
+    if (detailForIdRef.current === data.id || requestInFlightRef.current) return;
+    requestInFlightRef.current = true;
     bridgeCall('game.get_military_data', { militaryId: data.id, subscriptionId: '', subscribe: false })
       .then((response) => {
-        if (response.found) {
-          setTooltipDetail(response);
-        }
+        requestInFlightRef.current = false;
+        if (!response.found) return;
+        detailForIdRef.current = data.id;
+        setTooltipDetail(response);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        requestInFlightRef.current = false;
+      });
   }, [data.id]);
+
+  const content = useMemo(
+    () => (tooltipDetail ? militaryTooltip(data, tooltipDetail, isNavy, Boolean(blockading), debugMode) : null),
+    [blockading, data, debugMode, isNavy, tooltipDetail],
+  );
 
   return (
     <Tooltip
-      content={tooltipDetail ? militaryTooltip(data, tooltipDetail, isNavy, Boolean(blockading), debugMode) : null}
+      content={content}
       open={open}
       position="top"
       delay={520}
