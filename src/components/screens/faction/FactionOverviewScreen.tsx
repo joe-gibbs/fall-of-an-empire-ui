@@ -29,6 +29,7 @@ import type { Faction } from '../../../data/types';
 import { formatPersonActivity } from '../../../utils/displayLabels';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { displayTextToPlain } from '../../../utils/displayText';
+import { cultureIconPath } from '../../../utils/cultureIcons';
 import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../localization/WebUITextContext';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import { CourtPositionsPanel, FactionModifierCard, PolicyEntry } from './FactionOverviewShared';
@@ -200,7 +201,12 @@ function FactionHeader({
           <div className="fov-identity-row">
             <CultureTooltip info={faction.cultureInfo} fallbackName={faction.culture} fallbackId={faction.cultureId}>
               <span className="fov-identity-item">
-                <img className="fov-identity-icon" src="/assets/icons/I_Cultures.png" alt="" draggable={false} />
+                <img
+                  className="fov-identity-icon"
+                  src={cultureIconPath(faction.cultureId || faction.cultureInfo?.id)}
+                  alt=""
+                  draggable={false}
+                />
                 {faction.culture || t('FactionOverview.NoCulture')}
               </span>
             </CultureTooltip>

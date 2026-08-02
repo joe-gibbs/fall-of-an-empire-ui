@@ -1,7 +1,7 @@
 import React from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from './Tooltip';
 import type { CultureInfo } from '../../../data/types';
-import { WebkilnAssetPath } from '../../../utils/assets';
+import { cultureIconPath } from '../../../utils/cultureIcons';
 import './IdentityTooltip.css';
 
 import { webUIText } from '../../../localization/WebUITextContext';
@@ -17,7 +17,7 @@ interface CultureTooltipProps {
 }
 
 function cultureIconUrl(id?: string): string | undefined {
-  return id ? WebkilnAssetPath(`/assets/cultures/${id}.png`) : undefined;
+  return id ? cultureIconPath(id) : undefined;
 }
 
 function cultureTooltipContent({ info, fallbackName, fallbackId }: Omit<CultureTooltipProps, 'children' | 'position' | 'delay'>): TooltipContent {

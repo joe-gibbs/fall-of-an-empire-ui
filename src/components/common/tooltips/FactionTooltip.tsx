@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import Tooltip from './Tooltip';
 import CultureTooltip from './CultureTooltip';
 import ReligionTooltip from './ReligionTooltip';
+import { cultureIconPath } from '../../../utils/cultureIcons';
 import FactionRoundel from '../entities/FactionRoundel';
 import type { TooltipContent } from './Tooltip';
 import { useFaction } from '../../../data-source/index';
@@ -24,6 +25,7 @@ interface FactionTooltipData {
   rulerName?: string;
   description?: string;
   culture?: string;
+  cultureId?: string;
   cultureInfo?: CultureInfo;
   religion?: string;
   religionInfo?: ReligionInfo;
@@ -111,6 +113,7 @@ function mapFaction(faction: Faction): Partial<FactionTooltipData> {
     rulerName: faction.rulerName,
     description: faction.description,
     culture: faction.culture,
+    cultureId: faction.cultureId,
     cultureInfo: faction.cultureInfo,
     religion: faction.religion,
     religionInfo: faction.religionInfo,
@@ -266,9 +269,18 @@ function FactionTooltipContent({ faction }: { faction: FactionTooltipData }) {
       {hasIdentity && (
         <div className="ftt-identity">
           {faction.culture && (
-            <CultureTooltip info={faction.cultureInfo} fallbackName={faction.culture}>
+            <CultureTooltip
+              info={faction.cultureInfo}
+              fallbackName={faction.culture}
+              fallbackId={faction.cultureId || faction.cultureInfo?.id}
+            >
               <div className="ftt-identity-row">
-                <img src="/assets/icons/I_Cultures.png" alt="" className="ftt-identity-icon" draggable={false} />
+                <img
+                  src={cultureIconPath(faction.cultureId || faction.cultureInfo?.id)}
+                  alt=""
+                  className="ftt-identity-icon"
+                  draggable={false}
+                />
                 <span>{faction.culture}</span>
               </div>
             </CultureTooltip>

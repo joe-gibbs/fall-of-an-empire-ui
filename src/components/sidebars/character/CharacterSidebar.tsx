@@ -14,6 +14,7 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipLine } from '../../common/tooltips/Tooltip';
 import CultureTooltip from '../../common/tooltips/CultureTooltip';
 import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
+import { cultureIconPath } from '../../../utils/cultureIcons';
 import { TraitIcon } from '../../common/entities/TraitIcon';
 import PersonInteractionInitiatorModal from '../../modals/people/PersonInteractionInitiatorModal';
 import PersonInteractionGiftModal from '../../modals/people/PersonInteractionGiftModal';
@@ -647,9 +648,9 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
         {activeTab === 'general' && <>
         {/* Culture / Religion - side by side */}
         <div className="char-identity-pair">
-          <CultureTooltip info={character.cultureInfo} fallbackName={character.culture}>
+          <CultureTooltip info={character.cultureInfo} fallbackName={character.culture} fallbackId={character.cultureInfo?.id}>
             <div className="char-identity-row">
-              <img src="/assets/icons/I_Cultures.png" alt="" className="char-identity-icon" />
+              <img src={cultureIconPath(character.cultureInfo?.id)} alt="" className="char-identity-icon" />
               <span className="char-identity-label"><WebUIText textKey="Auto.ComponentsSidebarsCharacterSidebar.1155.1" /></span>
               <span className="char-identity-value">{character.culture}</span>
             </div>

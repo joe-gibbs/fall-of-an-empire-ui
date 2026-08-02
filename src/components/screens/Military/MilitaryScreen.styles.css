@@ -3627,6 +3627,53 @@
   min-width: 0;
 }
 
+.chart-unit-picker-cell--culture > .tooltip-wrapper {
+  width: 100%;
+  min-width: 0;
+}
+
+.chart-unit-picker-culture {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.chart-unit-picker-culture-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+  object-fit: contain;
+}
+
+.chart-unit-picker-culture-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.chart-unit-picker-culture-copy strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.15;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.chart-unit-picker-culture-copy span {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
 .chart-unit-picker-table-head .chart-unit-picker-cell:hover,
 .chart-unit-picker-table-head .sortable-header-button--active {
   color: var(--gold-light);
@@ -3733,11 +3780,40 @@
   margin-right: 0.1rem;
 }
 
+.chart-unit-picker-foot-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-right: auto;
+  min-width: 0;
+}
+
+.chart-unit-picker-capacity {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.chart-unit-picker-capacity-label {
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.chart-unit-picker-capacity--full {
+  color: var(--red, #c45b5b);
+}
+
 .chart-unit-picker-total-cost {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  margin-right: auto;
   color: var(--gold-light);
   font-family: var(--font-header);
   font-size: 1.05rem;

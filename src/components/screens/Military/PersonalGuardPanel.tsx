@@ -253,6 +253,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
       immuneToDesertAttrition: false,
       availableSettlementCount: 0,
       availableSettlements: [],
+      availableManpower: 0,
       upgradeUnitId: '',
       downgradeUnitId: '',
     } as FormationTemplateUnitEntry
@@ -263,17 +264,48 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
     setEstablishOpen(true);
   };
 
-  const handleAddDraft = (unitId: string) => {
-    if (draftUnitIds.length >= guard.companyCapacity) return;
-    setDraftUnitIds(current => [...current, unitId]);
+  const handleAddDraft = (unitId: string, amount = 1) => {
+    setDraftUnitIds(current => {
+      const unit = unitById.get(unitId);
+      if (!unit) return current;
+
+      const room = Math.max(0, guard.companyCapacity - current.length);
+      let toAdd = Math.min(Math.max(0, amount), room);
+      if (toAdd <= 0) return current;
+
+      const cultureKey = unit.cultureId || unit.cultureName || unit.id;
+      const usedManpower = current.reduce((sum, id) => {
+        const draftUnit = unitById.get(id);
+        if (!draftUnit) return sum;
+        const draftCulture = draftUnit.cultureId || draftUnit.cultureName || draftUnit.id;
+        if (draftCulture !== cultureKey) return sum;
+        return sum + Math.max(0, draftUnit.maxStrength || 0);
+      }, 0);
+      const availableManpower = Math.max(0, unit.availableManpower ?? 0);
+      const unitStrength = Math.max(0, unit.maxStrength || 0);
+      // availableManpower 0 means the host has not reported a culture pool yet.
+      if (unitStrength > 0 && availableManpower > 0) {
+        const remainingManpower = Math.max(0, availableManpower - usedManpower);
+        toAdd = Math.min(toAdd, Math.floor(remainingManpower / unitStrength));
+      }
+      if (toAdd <= 0) return current;
+
+      const next = current.slice();
+      for (let index = 0; index < toAdd; index += 1) next.push(unitId);
+      return next;
+    });
   };
 
-  const handleRemoveDraft = (unitId: string) => {
+  const handleRemoveDraft = (unitId: string, amount = 1) => {
     setDraftUnitIds(current => {
-      const index = current.lastIndexOf(unitId);
-      if (index < 0) return current;
+      let remaining = Math.max(0, amount);
+      if (remaining <= 0) return current;
       const next = current.slice();
-      next.splice(index, 1);
+      for (let index = next.length - 1; index >= 0 && remaining > 0; index -= 1) {
+        if (next[index] !== unitId) continue;
+        next.splice(index, 1);
+        remaining -= 1;
+      }
       return next;
     });
   };
@@ -464,7 +496,10 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
           }}
           title={webUIText('Military.PersonalGuard.Form')}
           doneLabel={webUIText('Military.PersonalGuard.Form')}
+          doneTutorialTarget="ConfirmPersonalGuardButton"
           totalCost={draftCost}
+          maxUnits={guard.companyCapacity}
+          enforceAvailableManpower
           doneDisabled={formBusy || draftUnitIds.length === 0}
           onDone={handleEstablishDone}
         />
@@ -475,7 +510,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
           mode="single"
           units={eligibleUnits}
           currentCounts={compareUnit ? { [compareUnit.id]: 1 } : {}}
-          onAdd={handleReplace}
+          onAdd={(unitId) => handleReplace(unitId)}
           onRemove={() => undefined}
           onClose={() => setReplaceSlot(null)}
           title={webUIText(

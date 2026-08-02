@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import CloseButton from '../../common/buttons/CloseButton';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
@@ -30,7 +30,9 @@ import type { Army } from '../../../data/types';
 import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import { useDraggableOffset } from '../../../hooks/useDraggableOffset';
 import { formatNumber } from '../../../utils/numberFormat';
+import { stepAmountFromEvent } from '../../../utils/stepModifiers';
 import { WebkilnAssetPath } from '../../../utils/assets';
+import { cultureIconPath } from '../../../utils/cultureIcons';
 import {
   FORMATION_TEMPLATE_ICON_OPTIONS,
   getFormationTemplateIcon,
@@ -71,7 +73,7 @@ const SAVE_ICON = '/assets/icons/I_SaveFolder.png';
 const DUPLICATE_ICON = '/assets/icons/I_DuplicateTemplate.png';
 const DELETE_ICON = '/assets/icons/I_Close.png';
 const RENAME_ICON = '/assets/icons/I_Rename.png';
-type UnitCatalogueColumnKey = 'unit' | 'type' | 'tier' | 'strength' | 'cost' | 'upkeep' | 'settlements' | 'add';
+type UnitCatalogueColumnKey = 'unit' | 'culture' | 'type' | 'tier' | 'strength' | 'cost' | 'upkeep' | 'settlements' | 'add';
 type UnitCatalogueFilterKey = 'type' | 'culture';
 
 const CATALOGUE_ALL_FILTER = '__all__';
@@ -130,6 +132,13 @@ function templateResourceCosts(unit: FormationTemplateUnitEntry, kind: 'raise' |
 export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count: number): UnitTooltipData {
   const settlements = availableSettlementNames(unit);
   const buildabilitySettlements = availableSettlementEntries(unit);
+  const culturePopulation = Math.max(0, unit.availableManpower ?? 0);
+  const cultureLabel = unit.cultureName
+    ? webUIText('FormationTemplate.CulturePopulation', {
+      Culture: unit.cultureName,
+      Population: formatNumber(culturePopulation),
+    })
+    : unit.cultureName;
   return {
     name: unit.name,
     description: unit.description,
@@ -137,7 +146,7 @@ export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count:
     typeLabel: templateUnitTypeLabel(unit),
     typeIcon: templateUnitTypeIcon(unit),
     tier: unit.tier,
-    culture: unit.cultureName,
+    culture: cultureLabel,
     cultureIcon: unit.cultureId ? `/assets/cultures/${unit.cultureId}.png` : undefined,
     maxStrength: unit.maxStrength,
     price: unit.price,
@@ -269,6 +278,11 @@ function unitCanBuildInAnySettlement(unit: FormationTemplateUnitEntry): boolean 
   return availableSettlementEntries(unit).length > 0;
 }
 
+function templateUnitCultureIcon(unit: FormationTemplateUnitEntry): string {
+  if (!unit.cultureId) return '';
+  return cultureIconPath(unit.cultureId);
+}
+
 function catalogueFilterOptions(
   units: FormationTemplateUnitEntry[],
   allLabel: string,
@@ -333,22 +347,30 @@ export function TemplateUnitSelectorModal({
   mode = 'multi',
   title,
   doneLabel,
+  doneTutorialTarget,
   onDone,
   doneDisabled,
   totalCost,
+  maxUnits,
+  enforceAvailableManpower = false,
   compareUnit,
 }: {
   units: FormationTemplateUnitEntry[];
   currentCounts: Record<string, number>;
-  onAdd: (unitId: string) => void;
-  onRemove: (unitId: string) => void;
+  onAdd: (unitId: string, amount: number) => void;
+  onRemove: (unitId: string, amount: number) => void;
   onClose: () => void;
   mode?: 'multi' | 'single';
   title?: string;
   doneLabel?: string;
+  doneTutorialTarget?: string;
   onDone?: () => void;
   doneDisabled?: boolean;
   totalCost?: number;
+  /** When set in multi mode, blocks further + once the selected total reaches this limit. */
+  maxUnits?: number;
+  /** When true, blocks adds that exceed each unit culture's available manpower. */
+  enforceAvailableManpower?: boolean;
   compareUnit?: FormationTemplateUnitEntry | null;
 }) {
   const [query, setQuery] = useState('');
@@ -358,6 +380,41 @@ export function TemplateUnitSelectorModal({
   const [closing, setClosing] = useState(false);
   const closeTimerRef = useRef<number | undefined>(undefined);
   const isSingle = mode === 'single';
+  const selectedUnitTotal = useMemo(
+    () => Object.values(currentCounts).reduce((sum, count) => sum + Math.max(0, count), 0),
+    [currentCounts],
+  );
+  const hasUnitCap = !isSingle && typeof maxUnits === 'number' && maxUnits > 0;
+  const atUnitCap = hasUnitCap && selectedUnitTotal >= maxUnits;
+  const unitById = useMemo(() => {
+    const map = new Map<string, FormationTemplateUnitEntry>();
+    for (const unit of units) map.set(unit.id, unit);
+    return map;
+  }, [units]);
+  const usedManpowerByCulture = useMemo(() => {
+    const used: Record<string, number> = {};
+    if (!enforceAvailableManpower) return used;
+    for (const [unitId, count] of Object.entries(currentCounts)) {
+      const unit = unitById.get(unitId);
+      if (!unit || count <= 0) continue;
+      const cultureKey = unit.cultureId || unit.cultureName || unit.id;
+      used[cultureKey] = (used[cultureKey] ?? 0) + Math.max(0, unit.maxStrength || 0) * count;
+    }
+    return used;
+  }, [currentCounts, enforceAvailableManpower, unitById]);
+
+  const canAddUnit = useCallback((unit: FormationTemplateUnitEntry, amount = 1): boolean => {
+    if (isSingle) return true;
+    if (atUnitCap) return false;
+    if (!enforceAvailableManpower) return true;
+    const cultureKey = unit.cultureId || unit.cultureName || unit.id;
+    const used = usedManpowerByCulture[cultureKey] ?? 0;
+    const available = Math.max(0, unit.availableManpower ?? 0);
+    // Host has not reported a culture pool yet - leave the soft cap off.
+    if (available <= 0) return true;
+    const cost = Math.max(0, unit.maxStrength || 0) * Math.max(0, amount);
+    return cost <= 0 || used + cost <= available;
+  }, [atUnitCap, enforceAvailableManpower, isSingle, usedManpowerByCulture]);
   const {
     offsetStyle,
     rootRef: dialogRef,
@@ -403,19 +460,39 @@ export function TemplateUnitSelectorModal({
     unit => templateUnitTypeLabel(unit),
     unit => templateUnitTypeIcon(unit),
   ), [units]);
+  const culturePopulationByKey = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const unit of units) {
+      const key = unit.cultureId || unit.cultureName;
+      if (!key) continue;
+      const pop = Math.max(0, unit.availableManpower ?? 0);
+      const existing = map.get(key);
+      if (existing === undefined || pop > existing) {
+        map.set(key, pop);
+      }
+    }
+    return map;
+  }, [units]);
   const cultureOptions = useMemo(() => catalogueFilterOptions(
     units,
     webUIText('Common.All'),
     unit => unit.cultureId || unit.cultureName,
-    unit => unit.cultureName,
-    undefined,
-    unit => unit.cultureColour,
-  ), [units]);
+    unit => {
+      const key = unit.cultureId || unit.cultureName;
+      const pop = culturePopulationByKey.get(key);
+      if (pop === undefined || !unit.cultureName) return unit.cultureName;
+      return webUIText('FormationTemplate.CulturePopulation', {
+        Culture: unit.cultureName,
+        Population: formatNumber(pop),
+      });
+    },
+    unit => templateUnitCultureIcon(unit),
+  ), [culturePopulationByKey, units]);
   const unitColumns = useMemo<Array<DataTableColumn<FormationTemplateUnitEntry, UnitCatalogueColumnKey>>>(() => [
     {
       id: 'unit',
       label: webUIText('Common.Unit'),
-      width: isSingle ? '28%' : '24%',
+      width: isSingle ? '24%' : '20%',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--unit',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--unit',
       render: unit => {
@@ -446,12 +523,52 @@ export function TemplateUnitSelectorModal({
         );
       },
       sortValue: unit => unit.name,
-      searchValue: unit => `${unit.name} ${templateUnitTypeLabel(unit)} ${unit.description}`,
+      searchValue: unit => `${unit.name} ${templateUnitTypeLabel(unit)} ${unit.cultureName} ${unit.description}`,
+    },
+    {
+      id: 'culture',
+      label: webUIText('MainMenu.Culture'),
+      width: isSingle ? '14%' : '13%',
+      className: 'chart-unit-picker-cell chart-unit-picker-cell--culture',
+      headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--culture',
+      render: unit => {
+        const pop = Math.max(0, unit.availableManpower ?? 0);
+        const cultureLabel = unit.cultureName || webUIText('Common.Unknown');
+        return (
+          <Tooltip
+            inline
+            position="left"
+            content={{
+              title: cultureLabel,
+              body: webUIText('FormationTemplate.CulturePopulationTooltip', {
+                Population: formatNumber(pop),
+              }),
+            }}
+          >
+            <span className="chart-unit-picker-culture">
+              {unit.cultureId && (
+                <img
+                  src={templateUnitCultureIcon(unit)}
+                  alt=""
+                  className="chart-unit-picker-culture-icon"
+                  draggable={false}
+                />
+              )}
+              <span className="chart-unit-picker-culture-copy">
+                <strong>{cultureLabel}</strong>
+                <span>{formatNumber(pop)}</span>
+              </span>
+            </span>
+          </Tooltip>
+        );
+      },
+      sortValue: unit => unit.availableManpower ?? 0,
+      searchValue: unit => unit.cultureName,
     },
     {
       id: 'type',
       label: webUIText('Economy.Type'),
-      width: '11%',
+      width: '10%',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--type',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--type',
       render: unit => (
@@ -471,7 +588,7 @@ export function TemplateUnitSelectorModal({
           <span>{webUIText('Auto.Prop.ComponentsScreensEncyclopediaScreen.863.6')}</span>
         </span>
       ),
-      width: '7%',
+      width: '6%',
       align: 'centre',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--tier',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--tier',
@@ -486,7 +603,7 @@ export function TemplateUnitSelectorModal({
           <span>{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.433.5')}</span>
         </span>
       ),
-      width: '9%',
+      width: '8%',
       align: 'right',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--number',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--number',
@@ -512,7 +629,7 @@ export function TemplateUnitSelectorModal({
           <span>{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.442.8')}</span>
         </span>
       ),
-      width: '9%',
+      width: '8%',
       align: 'right',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--number',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--number',
@@ -538,7 +655,7 @@ export function TemplateUnitSelectorModal({
           <span>{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.451.11')}</span>
         </span>
       ),
-      width: '9%',
+      width: '8%',
       align: 'right',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--number',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--number',
@@ -564,7 +681,7 @@ export function TemplateUnitSelectorModal({
           <span>{webUIText('PeaceNegotiation.Tooltip.Settlements')}</span>
         </span>
       ),
-      width: '14%',
+      width: '12%',
       align: 'right',
       className: 'chart-unit-picker-cell chart-unit-picker-cell--settlements',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--settlements',
@@ -599,7 +716,7 @@ export function TemplateUnitSelectorModal({
     {
       id: 'add',
       label: '',
-      width: isSingle ? '13%' : '17%',
+      width: isSingle ? '12%' : '15%',
       align: 'centre',
       sortable: false,
       className: 'chart-unit-picker-cell chart-unit-picker-cell--add',
@@ -617,27 +734,38 @@ export function TemplateUnitSelectorModal({
                 type="button"
                 className="chart-unit-picker-add chart-unit-picker-add--select"
                 onMouseDown={event => event.stopPropagation()}
-                onClick={() => onAdd(unit.id)}
+                onClick={() => onAdd(unit.id, 1)}
               >
                 <WebUIText textKey="Military.PersonalGuard.SelectReplacement" />
               </button>
             </Tooltip>
           );
         }
+        const manpowerBlocked = enforceAvailableManpower && !canAddUnit(unit, 1);
+        const addDisabled = atUnitCap || manpowerBlocked;
+        const addBody = atUnitCap
+          ? webUIText('Military.PersonalGuard.CompanyCapacityFull')
+          : manpowerBlocked
+            ? webUIText('Military.PersonalGuard.InsufficientPopulation')
+            : webUIText('Common.StepModifiersBody');
+        const removeBody = webUIText('Common.StepModifiersBody');
         return (
           <span className="chart-unit-picker-actions chart-unit-picker-actions--with-count">
             <span className="chart-unit-picker-unit-count">{formatNumber(count)}</span>
             <Tooltip
               inline
               position="left"
-              content={{ title: unit.name, body: webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25') }}
+              content={{ title: unit.name, body: removeBody }}
             >
               <button
                 type="button"
                 className="chart-unit-picker-add"
                 disabled={count <= 0}
-                onMouseDown={event => event.stopPropagation()}
-                onClick={() => onRemove(unit.id)}
+                onMouseDown={(event) => {
+                  event.stopPropagation();
+                  if (count <= 0) return;
+                  onRemove(unit.id, stepAmountFromEvent(event));
+                }}
                 aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.554.25')}
               >
                 <img src="/assets/icons/I_Minus.png" alt="" className="chart-unit-picker-add-icon" draggable={false} />
@@ -646,14 +774,18 @@ export function TemplateUnitSelectorModal({
             <Tooltip
               inline
               position="left"
-              content={{ title: unit.name, body: webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.616.2') }}
+              content={{ title: unit.name, body: addBody }}
             >
               <button
                 type="button"
                 className="chart-unit-picker-add"
-                onMouseDown={event => event.stopPropagation()}
-                onClick={() => onAdd(unit.id)}
-                aria-label={webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.616.2')}
+                disabled={addDisabled}
+                onMouseDown={(event) => {
+                  event.stopPropagation();
+                  if (addDisabled) return;
+                  onAdd(unit.id, stepAmountFromEvent(event));
+                }}
+                aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.556.26')}
               >
                 <img src="/assets/icons/I_Plus.png" alt="" className="chart-unit-picker-add-icon" draggable={false} />
               </button>
@@ -662,7 +794,7 @@ export function TemplateUnitSelectorModal({
         );
       },
     },
-  ], [compareUnit, currentCounts, isSingle, onAdd, onRemove]);
+  ], [atUnitCap, canAddUnit, compareUnit, currentCounts, enforceAvailableManpower, isSingle, onAdd, onRemove]);
   const filterUnit = (unit: FormationTemplateUnitEntry) => {
     const unitType = unit.type || unit.category;
     const unitCulture = unit.cultureId || unit.cultureName;
@@ -719,7 +851,14 @@ export function TemplateUnitSelectorModal({
               rows={units}
               columns={unitColumns}
               rowKey={unit => unit.id}
-              onRowClick={unit => onAdd(unit.id)}
+              onRowClick={unit => {
+                if (isSingle) {
+                  onAdd(unit.id, 1);
+                  return;
+                }
+                if (!canAddUnit(unit, 1)) return;
+                onAdd(unit.id, 1);
+              }}
               searchValue={query}
               onSearchChange={setQuery}
               searchPlaceholder={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.627.29')}
@@ -773,16 +912,45 @@ export function TemplateUnitSelectorModal({
             />
           </div>
           <div className="chart-unit-picker-foot">
-            {!isSingle && typeof totalCost === 'number' && (
-              <span className="chart-unit-picker-total-cost">
-                <img src={GOLD_ICON} alt="" draggable={false} />
-                <strong>{formatNumber(totalCost)}</strong>
-              </span>
+            {!isSingle && (hasUnitCap || typeof totalCost === 'number') && (
+              <div className="chart-unit-picker-foot-meta">
+                {hasUnitCap && (
+                  <Tooltip
+                    content={{
+                      title: webUIText('Military.PersonalGuard.CompanyCapacityLabel'),
+                      body: atUnitCap
+                        ? webUIText('Military.PersonalGuard.CompanyCapacityFull')
+                        : webUIText('Military.PersonalGuard.CompanyCapacity', {
+                          Selected: formatNumber(selectedUnitTotal),
+                          Capacity: formatNumber(maxUnits),
+                        }),
+                    }}
+                  >
+                    <span className={`chart-unit-picker-capacity${atUnitCap ? ' chart-unit-picker-capacity--full' : ''}`}>
+                      <span className="chart-unit-picker-capacity-label">
+                        {webUIText('Military.PersonalGuard.CompanyCapacityLabel')}
+                      </span>
+                      <strong>
+                        {webUIText('Military.PersonalGuard.CompanyCapacity', {
+                          Selected: formatNumber(selectedUnitTotal),
+                          Capacity: formatNumber(maxUnits),
+                        })}
+                      </strong>
+                    </span>
+                  </Tooltip>
+                )}
+                {typeof totalCost === 'number' && (
+                  <span className="chart-unit-picker-total-cost">
+                    <img src={GOLD_ICON} alt="" draggable={false} />
+                    <strong>{formatNumber(totalCost)}</strong>
+                  </span>
+                )}
+              </div>
             )}
             <GameButton
               variant="burgundy"
               className="chart-unit-picker-done"
-              tutorialTarget={onDone ? 'FormPersonalGuardButton' : 'CloseUnitCatalogueButton'}
+              tutorialTarget={doneTutorialTarget ?? (onDone ? 'FormPersonalGuardButton' : 'CloseUnitCatalogueButton')}
               disabled={doneDisabled}
               onClick={() => {
                 if (onDone) onDone();
@@ -977,7 +1145,7 @@ function TemplateEditor({
   };
 
   const adjustBattleGroupUnitCount = (groupId: string, unitId: string, delta: number) => {
-    if (!editable) return;
+    if (!editable || delta === 0) return;
     const unit = unitById.get(unitId);
     if (!unit) return;
 
@@ -987,10 +1155,16 @@ function TemplateEditor({
       if (targetIndex < 0) return current;
       const targetGroup = current.battleGroups[targetIndex];
       const currentCount = targetGroup.counts[unitId] ?? 0;
-      if (delta > 0 && battleGroupUnitCount(targetGroup) >= maximumBattleGroupUnits) return current;
+      const groupCount = battleGroupUnitCount(targetGroup);
+      if (delta > 0 && groupCount >= maximumBattleGroupUnits) return current;
       if (delta < 0 && currentCount <= 0) return current;
 
-      const nextCount = currentCount + delta;
+      const room = Math.max(0, maximumBattleGroupUnits - groupCount);
+      const nextCount = delta > 0
+        ? Math.min(currentCount + delta, currentCount + room)
+        : Math.max(0, currentCount + delta);
+      if (nextCount === currentCount) return current;
+
       const counts = { ...targetGroup.counts };
       if (nextCount > 0) counts[unitId] = nextCount;
       else delete counts[unitId];
@@ -1273,8 +1447,8 @@ function TemplateEditor({
         <TemplateUnitSelectorModal
           units={catalogueUnits}
           currentCounts={catalogueGroup.counts}
-          onAdd={(unitId) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, 1)}
-          onRemove={(unitId) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, -1)}
+          onAdd={(unitId, amount) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, amount)}
+          onRemove={(unitId, amount) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, -amount)}
           onClose={() => setCatalogueGroupId(null)}
         />
       )}

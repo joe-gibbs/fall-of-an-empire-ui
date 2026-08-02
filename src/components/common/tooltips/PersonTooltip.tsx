@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Tooltip, { type TooltipLine, type TooltipContent } from './Tooltip';
 import CultureTooltip from './CultureTooltip';
 import ReligionTooltip from './ReligionTooltip';
+import { cultureIconPath } from '../../../utils/cultureIcons';
 import { TraitIcon } from '../entities/TraitIcon';
 import type { Character, CharacterStatModifier, StatKey } from '../../../data/types';
 import { useGameActions, useGameState } from '../../../context/GameContext';
@@ -317,9 +318,9 @@ function PersonTooltipContent({ character: c, initialAltHeld }: { character: Cha
           <div className="ptt-strip-relation">{titleParts.relation}</div>
         )}
         <div className="ptt-strip-meta">
-          <CultureTooltip info={c.cultureInfo} fallbackName={c.culture}>
+          <CultureTooltip info={c.cultureInfo} fallbackName={c.culture} fallbackId={c.cultureInfo?.id}>
             <span className="ptt-meta-chip">
-              <img src="/assets/icons/I_Cultures.png" alt="" className="ptt-meta-icon" draggable={false} />
+              <img src={cultureIconPath(c.cultureInfo?.id)} alt="" className="ptt-meta-icon" draggable={false} />
               <span>{c.culture}</span>
             </span>
           </CultureTooltip>

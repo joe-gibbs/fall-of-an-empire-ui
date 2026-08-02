@@ -28,6 +28,7 @@ import type { AppointmentContestView } from '../../../bridge/characters/useCourt
 import { runCourtOfficeAction, runGovernorMissionAction, type ProvinceModeCourtOfficeAction, type ProvinceModeMissionStatus, type ProvinceModeOverview } from '../../../bridge/provinces/useProvinceModeOverviewBridge';
 import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
 import Tooltip from '../../common/tooltips/Tooltip';
+import { cultureIconPath } from '../../../utils/cultureIcons';
 import { registerScreen } from '../../../registry/index';
 import { useWebUIText } from '../../../localization/WebUITextContext';
 import { CourtPositionsPanel, FactionModifierCard, PolicyEntry } from './FactionOverviewShared';
@@ -538,7 +539,12 @@ function EmpireTab({ overview, onOpenCharacter }: { overview: ProvinceModeOvervi
                 <div className="gfov-empire-faction-name">{summary?.name ?? ''}</div>
                 <div className="gfov-empire-identity-items">
                   <span className="gfov-empire-identity-item">
-                    <img className="gfov-empire-identity-icon" src="/assets/icons/I_Cultures.png" alt="" draggable={false} />
+                    <img
+                      className="gfov-empire-identity-icon"
+                      src={cultureIconPath(imperialFaction?.cultureId || imperialFaction?.cultureInfo?.id)}
+                      alt=""
+                      draggable={false}
+                    />
                     {summary?.culture ?? ''}
                   </span>
                   <span className="gfov-empire-identity-item">

@@ -31,6 +31,7 @@ import { formatTreatyType } from '../../../utils/displayLabels';
 import { canNegotiateDiplomacyWith } from '../../../utils/diplomacyAuthority';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
+import { cultureIconPath } from '../../../utils/cultureIcons';
 import { usePerson, useFaction, usePlayerFactionId } from '../../../data-source/index';
 import { bridgeCall } from '../../../bridge-types.generated.ts';
 import type {
@@ -381,7 +382,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
   const showDiplomaticActionArea = !faction.isPlayer && liveDiplomaticInteractions.length > 0;
   const showSpyActionArea = !faction.isPlayer && liveSpyInteractions.length > 0;
 
-  const cultureIcon = WebkilnAssetPath(faction.cultureId ? `/assets/cultures/${faction.cultureId}.png` : '/assets/icons/I_Cultures.png');
+  const cultureIcon = cultureIconPath(faction.cultureId || faction.cultureInfo?.id);
   const religionIcon = WebkilnAssetPath(faction.religionId ? `/assets/religions/${faction.religionId}.png` : '/assets/icons/I_Religions.png');
 
   // Opinion is ~-100 to +100 (unbounded in extreme cases). The bar pivots at 0.

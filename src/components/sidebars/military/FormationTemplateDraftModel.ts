@@ -9,6 +9,7 @@ import type {
 } from '../../../bridge-types.generated.ts';
 import { formatNumber } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
+import { webUIText } from '../../../localization/WebUITextContext';
 
 export type TemplateType = 'land' | 'naval';
 export type TemplateTab = 'composition' | 'combat';
@@ -215,6 +216,7 @@ function availableSettlementEntries(unit: FormationTemplateUnitEntry): { id: str
 export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number): UnitTooltipData {
   const buildabilitySettlements = availableSettlementEntries(unit);
   const availableSettlementCount = unit.availableSettlementCount || buildabilitySettlements.length;
+  const culturePopulation = Math.max(0, unit.availableManpower ?? 0);
   return {
     name: unit.name,
     description: unit.description,
@@ -222,6 +224,13 @@ export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number)
     typeLabel: unit.unitTypeLabel,
     typeIcon: unitTypeIcon(unit.type, unit.category),
     tier: unit.tier,
+    culture: unit.cultureName
+      ? webUIText('FormationTemplate.CulturePopulation', {
+        Culture: unit.cultureName,
+        Population: formatNumber(culturePopulation),
+      })
+      : unit.cultureName,
+    cultureIcon: unit.cultureId ? `/assets/cultures/${unit.cultureId}.png` : undefined,
     maxStrength: unit.maxStrength,
     price: unit.price,
     buildTime: unit.buildTimeDays,
