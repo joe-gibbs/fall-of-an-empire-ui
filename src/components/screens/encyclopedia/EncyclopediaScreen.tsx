@@ -8,7 +8,7 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import type { UnitTooltipData } from '../../common/tooltips/UnitTooltip';
 import BuildingEffects from '../../common/content/BuildingEffects';
-import glossary from '../../../data/glossary';
+import { getGlossaryEntry } from '../../../data/glossary';
 import { useEncyclopediaBridge } from '../../../bridge/settlements-economy/useEncyclopediaBridge';
 import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBottomBarOperationsBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
@@ -704,26 +704,6 @@ function decodeMarkdownUrlValue(value: string): string {
   }
 }
 
-function normaliseGlossaryKey(term: string): string {
-  return decodeMarkdownUrlValue(term)
-    .replace(/[_-]+/g, ' ')
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .trim();
-}
-
-type GlossaryEntryValue = (typeof glossary)[keyof typeof glossary];
-
-function getGlossaryEntry(term: string): GlossaryEntryValue | undefined {
-  const decoded = decodeMarkdownUrlValue(term);
-  const normalised = normaliseGlossaryKey(term);
-  const direct = glossary[decoded as keyof typeof glossary] ?? glossary[normalised as keyof typeof glossary];
-  if (direct) return direct;
-
-  const lower = normalised.toLowerCase();
-  const key = Object.keys(glossary).find(k => k.toLowerCase() === lower);
-  return key ? glossary[key as keyof typeof glossary] : undefined;
-}
-
 const CONCEPT_ICON_OVERRIDES: Record<string, string> = {
   Gold: 'I_Coins',
 };
@@ -796,10 +776,10 @@ function renderMarkdownInline(
           } else if (url.startsWith('glossary://')) {
             const term = url.slice('glossary://'.length);
             const entry = getGlossaryEntry(term);
-            const content = entry ?? { title: normaliseGlossaryKey(term) || linkText };
+            const content = entry ?? { title: decodeMarkdownUrlValue(term).replace(/[_-]+/g, ' ').trim() || linkText };
             nodes.push(
               <Tooltip key={nodes.length} content={content} position="top" inline>
-                <span className="enc-article-def enc-md-inline">
+                <span className="enc-article-def text-with-help enc-md-inline">
                   {renderMarkdownInline(linkText, entries, onNavigate)}
                 </span>
               </Tooltip>,

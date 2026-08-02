@@ -545,9 +545,6 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
 
 .event-paragraph .rich-def {
   display: inline;
-  border-bottom-width: 0.0909rem;
-  border-bottom-style: solid;
-  border-bottom-color: var(--border-light);
 }
 
 .event-paragraph br {
@@ -571,6 +568,7 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
   color: var(--gold-light);
   font-weight: 600;
   text-decoration-line: underline;
+  text-decoration-style: solid;
   text-decoration-color: rgba(201, 168, 76, 0.35);
   text-underline-offset: 0.1818rem;
   overflow-wrap: break-word;

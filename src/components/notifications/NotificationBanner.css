@@ -825,7 +825,8 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
 
 .rich-link--clickable {
   cursor: pointer;
-  text-decoration: underline;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
   text-decoration-color: rgba(201, 168, 76, 0.35);
   text-underline-offset: 0.1818rem;
 }
@@ -848,8 +849,4 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   letter-spacing: 0.05em;
 }
 
-.rich-def {
-  border-bottom-width: 0.0909rem;
-  border-bottom-style: solid;
-  border-bottom-color: var(--border-light);
-}
+/* .rich-def hover-help styling lives in game-ui.css */

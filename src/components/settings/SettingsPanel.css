@@ -169,14 +169,7 @@
   letter-spacing: 0.02em;
 }
 
-.settings-row__label--help {
-  cursor: help;
-  text-decoration-line: underline;
-  text-decoration-style: solid;
-  text-decoration-color: rgba(201, 168, 76, 0.42);
-  text-decoration-thickness: 0.077rem;
-  text-underline-offset: 0.154rem;
-}
+/* Hover-help underline comes from shared .text-with-help in game-ui.css */
 
 .settings-row__desc {
   font-size: 0.82rem;

@@ -1469,3 +1469,25 @@
   font-size: 0.7rem;
   line-height: 1.2;
 }
+
+/* --------------------------------------------------------------------------
+   Tooltip-only terms vs clickable links
+   Links use solid gold underlines and pointer. Hover-only glossary / help
+   terms use a quieter dotted underline and the help cursor.
+   -------------------------------------------------------------------------- */
+
+.text-with-help,
+.rich-def {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: rgba(180, 170, 145, 0.55);
+  text-decoration-thickness: 0.077rem;
+  text-underline-offset: 0.15rem;
+  cursor: help;
+}
+
+.text-with-help:hover,
+.rich-def:hover {
+  text-decoration-color: rgba(180, 170, 145, 0.9);
+}

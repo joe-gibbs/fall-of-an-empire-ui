@@ -61,6 +61,12 @@ const BLOCKED_TARGET_SELECTOR = [
 ].join(',');
 
 const HELP_TARGET_SELECTOR = [
+  '.text-with-help',
+  '.rich-def',
+  '.enc-article-def',
+  '.settings-row__label--help',
+  '.tt-line--has-sub',
+  '.operation-header--tooltip',
   '.diplo-agent-network',
 ].join(',');
 

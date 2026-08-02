@@ -1,12 +1,43 @@
 import { webUIText } from '../localization/WebUITextContext';
 /**
- * Glossary definitions extracted from the base game's Glossary.csv.
+ * Glossary definitions extracted from the base game's Glossary data.
  * Used to power tooltips across the UI, matching the game's in-built glossary system.
  */
 
 export interface GlossaryEntry {
   title: string;
   body: string;
+}
+
+function normaliseGlossaryKey(term: string): string {
+  return term
+    .trim()
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .trim();
+}
+
+/** Resolve a `<def id="...">` / glossary term to its entry, case-insensitively. */
+export function getGlossaryEntry(term: string | null | undefined): GlossaryEntry | undefined {
+  if (!term) return undefined;
+
+  let decoded = term.trim();
+  try {
+    decoded = decodeURIComponent(decoded);
+  } catch {
+    // Keep the raw term when it is not URI-encoded.
+  }
+
+  const normalised = normaliseGlossaryKey(decoded);
+  if (!normalised) return undefined;
+
+  const direct = glossary[decoded as keyof typeof glossary]
+    ?? glossary[normalised as keyof typeof glossary];
+  if (direct) return direct;
+
+  const lower = normalised.toLowerCase();
+  const key = Object.keys(glossary).find((candidate) => candidate.toLowerCase() === lower);
+  return key ? glossary[key as keyof typeof glossary] : undefined;
 }
 
 const glossary: Record<string, GlossaryEntry> = {
@@ -329,6 +360,30 @@ const glossary: Record<string, GlossaryEntry> = {
   Compliance: {
     get title() { return webUIText('Auto.TopProp.DataGlossary.329.159'); },
     get body() { return webUIText('Auto.TopProp.DataGlossary.330.160'); },
+  },
+  Corruption: {
+    get title() { return webUIText('Glossary.Corruption.Title'); },
+    get body() { return webUIText('Glossary.Corruption.Body'); },
+  },
+  Disease: {
+    get title() { return webUIText('Glossary.Disease.Title'); },
+    get body() { return webUIText('Glossary.Disease.Body'); },
+  },
+  Dynasty: {
+    get title() { return webUIText('Glossary.Dynasty.Title'); },
+    get body() { return webUIText('Glossary.Dynasty.Body'); },
+  },
+  Heir: {
+    get title() { return webUIText('Glossary.Heir.Title'); },
+    get body() { return webUIText('Glossary.Heir.Body'); },
+  },
+  Rebellion: {
+    get title() { return webUIText('Glossary.Rebellion.Title'); },
+    get body() { return webUIText('Glossary.Rebellion.Body'); },
+  },
+  Succession: {
+    get title() { return webUIText('Glossary.Succession.Title'); },
+    get body() { return webUIText('Glossary.Succession.Body'); },
   },
 };
 

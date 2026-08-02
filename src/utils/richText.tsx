@@ -1,4 +1,5 @@
 import React from 'react';
+import GlossaryDef from '../components/common/tooltips/GlossaryDef';
 import { WebkilnAssetPath } from './assets';
 
 export interface RichTextOptions {
@@ -6,7 +7,7 @@ export interface RichTextOptions {
   onLinkDoubleClick?: (type: string, id: string) => void;
   /**
    * Render `<def>` contents without the definition span. Use this on compact
-   * HUD surfaces where glossary hover styling would break line flow.
+   * HUD surfaces where the dotted hover-help styling would break line flow.
    */
   plainDefinitions?: boolean;
   /**
@@ -161,7 +162,11 @@ function wrapFrame(frame: Frame, opts: RichTextOptions, key: string): React.Reac
       if (opts.plainDefinitions) {
         return <React.Fragment key={key}>{frame.children}</React.Fragment>;
       }
-      return <span key={key} className="rich-def">{frame.children}</span>;
+      return (
+        <GlossaryDef key={key} termId={frame.attrs.id ?? ''}>
+          {frame.children}
+        </GlossaryDef>
+      );
     default:
       return <React.Fragment key={key}>{frame.children}</React.Fragment>;
   }

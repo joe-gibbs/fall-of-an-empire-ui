@@ -453,6 +453,7 @@
   text-decoration-line: underline;
   text-decoration-style: solid;
   text-decoration-color: var(--gold-muted);
+  text-decoration-thickness: 0.077rem;
   cursor: pointer;
   transition: color 0.15s, text-decoration-color 0.15s;
 }
@@ -492,9 +493,12 @@
 }
 
 .enc-article-content h3 .enc-md-token,
-.enc-article-content .enc-article-link .enc-md-token,
-.enc-article-content .enc-article-def .enc-md-token {
+.enc-article-content .enc-article-link .enc-md-token {
   color: var(--gold);
+}
+
+.enc-article-content .enc-article-def .enc-md-token {
+  color: inherit;
 }
 
 .enc-article-content blockquote .enc-md-token {
@@ -577,10 +581,6 @@
 
 .enc-article-def {
   max-width: 100%;
-  color: var(--gold);
-  border-bottom-width: 0.077rem;
-  border-bottom-style: solid;
-  border-bottom-color: rgba(201, 168, 76, 0.48);
 }
 
 .enc-md-flow > .tooltip-wrapper-inline,
