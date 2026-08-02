@@ -10,6 +10,9 @@ export const UI_PRESENTATION = {
   tooltip: {
     // Minimum delay before a tooltip may open, before the player's preference is applied.
     minimumDelayMs: 450,
+    // Grace period after the pointer leaves a tooltip surface before closing.
+    // Long enough to travel between a parent tooltip and a nested child without dismissing.
+    hideGraceMs: 350,
     // Minimum distance maintained between a tooltip and the viewport edge.
     viewportPaddingPx: 8,
     // Standard gap between a tooltip and its target.
