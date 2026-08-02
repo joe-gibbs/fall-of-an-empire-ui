@@ -4,9 +4,11 @@ import CloseButton from '../../common/buttons/CloseButton';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
+import ModalDragHandle from '../../common/layout/shell/ModalDragHandle';
 import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import ResourceLink from '../../common/resources/ResourceLink';
+import { useDraggableOffset } from '../../../hooks/useDraggableOffset';
 import type {
   FormationTemplateAssignedForce,
   FormationTemplateUnitEntry,
@@ -253,6 +255,25 @@ export function Picker({
 }) {
   const [query, setQuery] = useState('');
   const [activeType, setActiveType] = useState('all');
+  const {
+    offsetStyle,
+    rootRef: dialogRef,
+    onHandleMouseDown,
+    onSurfaceMouseDown,
+  } = useDraggableOffset({
+    blockClassNames: [
+      'styled-scroll-area',
+      'tooltip-wrapper',
+      'dropdown-select',
+      'search-field',
+      'search-input',
+      'tpl-picker-controls',
+      'tpl-picker-tabs',
+      'tpl-picker-body',
+      'tpl-picker-foot',
+      'tpl-picker-list',
+    ],
+  });
   const trimmedQuery = query.trim().toLowerCase();
   const queriedClasses = useMemo(() => (
     Array.from(availableClasses.entries())
@@ -304,82 +325,92 @@ export function Picker({
         event.stopPropagation();
       }}
     >
-      <div className="tpl-picker-dialog" onMouseDown={event => event.stopPropagation()}>
-        <div className="tpl-picker-head">
-          <div className="tpl-picker-title-block">
-            <span className="tpl-picker-title"><WebUIText textKey="FormationTemplate.UnitCatalogue" /></span>
-            <span className="tpl-picker-subtitle">{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.618.1", { Value1: fmt(visibleCount) })}</span>
-          </div>
-          <CloseButton size="sm" onClick={onCancel} />
-        </div>
-        <div className="tpl-picker-controls">
-          <input
-            className="search-input tpl-picker-search"
-            value={query}
-            onChange={event => setQuery(event.target.value)}
-            placeholder={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.627.29')}
-            autoFocus
-          />
-        </div>
-        <div className="tpl-picker-tabs">
-          {typeTabs.map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`tpl-picker-tab${tab.id === effectiveActiveType ? ' tpl-picker-tab--active' : ''}`}
-              onMouseDown={() => setActiveType(tab.id)}
-            >
-              <img src={tab.icon} alt="" className="tpl-picker-tab-icon" />
-              <span className="tpl-picker-tab-label">{tab.label}</span>
-              <span className="tpl-picker-tab-count">{fmt(tab.count)}</span>
-            </button>
-          ))}
-        </div>
-        <StyledScrollArea className="tpl-picker-body" viewportClassName="tpl-picker-body-viewport">
-          {filteredClasses.length === 0 ? (
-            <div className="tpl-picker-empty"><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.632.3" /></div>
-          ) : filteredClasses.map(({ type, units }) => (
-            <div key={type} className="tpl-picker-section">
-              <div className="tpl-picker-section-heading">
-                <img src={unitTypeIcon(type, units[0]?.category)} alt="" className="tpl-picker-section-icon" />
-                <span>{unitTypeLabel(type)}</span>
-                <span>{fmt(units.length)}</span>
-              </div>
-              <div className="tpl-picker-list">
-                {units.map(unit => {
-                  const count = currentCounts[unit.id] ?? 0;
-                  return (
-                    <Tooltip key={unit.id} content={{ afterLines: <UnitTooltip data={unitTooltipData(unit, count)} /> }} position="left" delay={200}>
-                      <button
-                        type="button"
-                        className="tpl-picker-row"
-                        data-tutorial-target="DynamicUnit"
-                        data-tutorial-unit-id={unit.id}
-                        data-tutorial-unit-count={count}
-                        onMouseDown={() => onAdd(unit.id)}
-                      >
-                        <img src={unitPortrait(unit)} alt="" className="tpl-picker-row-icon" />
-                        <span className="tpl-picker-row-copy">
-                          <strong>{unit.name}</strong>
-                          <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.650.1", { Value1: unitTypeLabel(unit.type), Value2: fmt(unit.tier) })}</span>
-                        </span>
-                        <span className="tpl-picker-row-stats">
-                          <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.653.1", { Value1: fmt(unit.maxStrength) })}</span>
-                          <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.654.1", { Value1: fmt(unit.price) })}</span>
-                        </span>
-                        <span className="tpl-picker-row-count">{count > 0 ? fmt(count) : '-'}</span>
-                        <span className="tpl-picker-row-add">+</span>
-                      </button>
-                    </Tooltip>
-                  );
-                })}
-              </div>
+      <div className="modal-drag-frame" style={offsetStyle}>
+        <div
+          ref={dialogRef}
+          className="tpl-picker-dialog"
+          onMouseDown={event => {
+            event.stopPropagation();
+            onSurfaceMouseDown(event);
+          }}
+        >
+          <ModalDragHandle onMouseDown={onHandleMouseDown} />
+          <div className="tpl-picker-head">
+            <div className="tpl-picker-title-block">
+              <span className="tpl-picker-title"><WebUIText textKey="FormationTemplate.UnitCatalogue" /></span>
+              <span className="tpl-picker-subtitle">{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.618.1", { Value1: fmt(visibleCount) })}</span>
             </div>
-          ))}
-        </StyledScrollArea>
-        <div className="tpl-picker-foot">
-          <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.667.1", { Value1: fmt(visibleCount) })}</span>
-          <button type="button" className="tpl-picker-done" onMouseDown={onCancel}><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" /></button>
+            <CloseButton size="sm" onClick={onCancel} />
+          </div>
+          <div className="tpl-picker-controls">
+            <input
+              className="search-input tpl-picker-search"
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+              placeholder={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.627.29')}
+              autoFocus
+            />
+          </div>
+          <div className="tpl-picker-tabs">
+            {typeTabs.map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`tpl-picker-tab${tab.id === effectiveActiveType ? ' tpl-picker-tab--active' : ''}`}
+                onMouseDown={() => setActiveType(tab.id)}
+              >
+                <img src={tab.icon} alt="" className="tpl-picker-tab-icon" />
+                <span className="tpl-picker-tab-label">{tab.label}</span>
+                <span className="tpl-picker-tab-count">{fmt(tab.count)}</span>
+              </button>
+            ))}
+          </div>
+          <StyledScrollArea className="tpl-picker-body" viewportClassName="tpl-picker-body-viewport">
+            {filteredClasses.length === 0 ? (
+              <div className="tpl-picker-empty"><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.632.3" /></div>
+            ) : filteredClasses.map(({ type, units }) => (
+              <div key={type} className="tpl-picker-section">
+                <div className="tpl-picker-section-heading">
+                  <img src={unitTypeIcon(type, units[0]?.category)} alt="" className="tpl-picker-section-icon" />
+                  <span>{unitTypeLabel(type)}</span>
+                  <span>{fmt(units.length)}</span>
+                </div>
+                <div className="tpl-picker-list">
+                  {units.map(unit => {
+                    const count = currentCounts[unit.id] ?? 0;
+                    return (
+                      <Tooltip key={unit.id} content={{ afterLines: <UnitTooltip data={unitTooltipData(unit, count)} /> }} position="left" delay={200}>
+                        <button
+                          type="button"
+                          className="tpl-picker-row"
+                          data-tutorial-target="DynamicUnit"
+                          data-tutorial-unit-id={unit.id}
+                          data-tutorial-unit-count={count}
+                          onMouseDown={() => onAdd(unit.id)}
+                        >
+                          <img src={unitPortrait(unit)} alt="" className="tpl-picker-row-icon" />
+                          <span className="tpl-picker-row-copy">
+                            <strong>{unit.name}</strong>
+                            <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.650.1", { Value1: unitTypeLabel(unit.type), Value2: fmt(unit.tier) })}</span>
+                          </span>
+                          <span className="tpl-picker-row-stats">
+                            <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.653.1", { Value1: fmt(unit.maxStrength) })}</span>
+                            <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.654.1", { Value1: fmt(unit.price) })}</span>
+                          </span>
+                          <span className="tpl-picker-row-count">{count > 0 ? fmt(count) : '-'}</span>
+                          <span className="tpl-picker-row-add">+</span>
+                        </button>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </StyledScrollArea>
+          <div className="tpl-picker-foot">
+            <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.667.1", { Value1: fmt(visibleCount) })}</span>
+            <button type="button" className="tpl-picker-done" onMouseDown={onCancel}><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" /></button>
+          </div>
         </div>
       </div>
     </div>,

@@ -1,15 +1,16 @@
-import { Fragment, useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode, type UIEvent } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode, type UIEvent } from 'react';
 import Portrait, { type PortraitBorderTier } from '../../common/portraits/Portrait';
 import Tooltip from '../../common/tooltips/Tooltip';
 import CloseButton from '../../common/buttons/CloseButton';
 import { StyledScrollbar } from '../../common/layout/scrolling/StyledScrollArea';
+import ModalDragHandle from '../../common/layout/shell/ModalDragHandle';
 import { TraitIcon } from '../../common/entities/TraitIcon';
 import type { CharacterTrait, PortraitLayerData } from '../../../data/types';
 import { getStatColor } from '../../../utils/colorFormatters';
-import { toRootRem } from '../../../utils/cssUnits';
 import { formatNumber } from '../../../utils/numberFormat';
 import { UI_PERFORMANCE } from '../../../config/uiPerformance';
 import { UI_PRESENTATION } from '../../../config/presentation';
+import { useDraggableOffset } from '../../../hooks/useDraggableOffset';
 import type { CandidateModalPrefix } from './CandidateSelectionUtils';
 import './CandidateSelectionModal.css';
 
@@ -43,43 +44,7 @@ export function CandidateModalFrame({
   modalClassName,
   children,
 }: CandidateModalFrameProps) {
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const dragRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
-
-  const beginDrag = useCallback((event: ReactMouseEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || closing) return;
-    event.preventDefault();
-    event.stopPropagation();
-    dragRef.current = {
-      startX: event.clientX,
-      startY: event.clientY,
-      originX: offset.x,
-      originY: offset.y,
-    };
-  }, [closing, offset.x, offset.y]);
-
-  useEffect(() => {
-    const handleMove = (event: MouseEvent) => {
-      const drag = dragRef.current;
-      if (!drag) return;
-
-      setOffset({
-        x: drag.originX + event.clientX - drag.startX,
-        y: drag.originY + event.clientY - drag.startY,
-      });
-    };
-
-    const endDrag = () => {
-      dragRef.current = null;
-    };
-
-    document.addEventListener('mousemove', handleMove);
-    document.addEventListener('mouseup', endDrag);
-    return () => {
-      document.removeEventListener('mousemove', handleMove);
-      document.removeEventListener('mouseup', endDrag);
-    };
-  }, []);
+  const { offsetStyle, onHandleMouseDown } = useDraggableOffset({ disabled: closing });
 
   return (
     <div
@@ -97,18 +62,13 @@ export function CandidateModalFrame({
         event.stopPropagation();
       }}
     >
-      <div
-        className="candidate-modal-drag-frame"
-        style={{ transform: `translate(${toRootRem(offset.x)}, ${toRootRem(offset.y)})` }}
-      >
+      <div className="modal-drag-frame" style={offsetStyle}>
         <div
           className={`modal ${prefix}-modal${modalClassName ? ` ${modalClassName}` : ''}${closing ? ` ${prefix}-modal--closing` : ''}`}
           onMouseDown={event => event.stopPropagation()}
           onClick={event => event.stopPropagation()}
         >
-          <div className={`${prefix}-drag-handle candidate-drag-handle`} onMouseDown={beginDrag} aria-hidden="true">
-            <span className="candidate-drag-handle__mark" />
-          </div>
+          <ModalDragHandle className={`${prefix}-drag-handle`} onMouseDown={onHandleMouseDown} />
           <CandidateModalHeader prefix={prefix} icon={headerIcon} title={title} onClose={onClose} />
           {children}
         </div>

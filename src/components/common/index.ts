@@ -22,6 +22,7 @@ export { default as ResourceLabel } from './data-display/stats/ResourceLabel';
 export { default as InteractionCard } from './interactions/InteractionCard';
 export { default as CloseButton } from './buttons/CloseButton';
 export { default as ScreenShell } from './layout/shell/ScreenShell';
+export { default as ModalDragHandle } from './layout/shell/ModalDragHandle';
 export { default as GameButton } from './buttons/GameButton';
 export { default as GameCard } from './layout/shell/GameCard';
 export { default as InfoRow } from './data-display/stats/InfoRow';

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import type { Event, EventChoiceInputs, EventPersonNameInput, EventRegnalNameInput } from '../../data/types';
 import { playSound } from '../../hooks/useSound';
-import { toRootRem } from '../../utils/cssUnits';
+import { useDraggableOffset } from '../../hooks/useDraggableOffset';
 import { renderEventTextChunk } from '../../utils/eventTextFlow';
 import { renderRichText } from '../../utils/richText';
 import Portrait from '../common/portraits/Portrait';
@@ -81,39 +81,6 @@ function getRegnalNumberText(input: EventRegnalNameInput | undefined, value: str
   return toRomanNumeral((previous?.count || 0) + 1);
 }
 
-function isDragBlocked(target: EventTarget | null, root: HTMLElement | null): boolean {
-  if (!target || !root) return true;
-
-  let element = target as HTMLElement | null;
-  while (element && element !== root) {
-    const tagName = element.tagName ? element.tagName.toLowerCase() : '';
-    if (
-      tagName === 'button'
-      || tagName === 'input'
-      || tagName === 'select'
-      || tagName === 'textarea'
-    ) {
-      return true;
-    }
-
-    const className = typeof element.className === 'string' ? element.className : '';
-    if (
-      className.indexOf('event-link') >= 0
-      || className.indexOf('event-content-scroll') >= 0
-      || className.indexOf('styled-scroll-area') >= 0
-      || className.indexOf('event-options') >= 0
-      || className.indexOf('event-option') >= 0
-      || className.indexOf('tooltip-wrapper') >= 0
-    ) {
-      return true;
-    }
-
-    element = element.parentElement;
-  }
-
-  return false;
-}
-
 function splitEventParagraphs(body: string): string[] {
   const paragraphs: string[] = [];
   let current: string[] = [];
@@ -144,14 +111,26 @@ const EventPopup: React.FC<EventPopupProps> = ({
   onOptionSelect,
   onLinkClick,
 }) => {
-  const popupRef = useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [closing, setClosing] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [regnalName, setRegnalName] = useState(event.regnalNameInput?.value || '');
   const [personName, setPersonName] = useState(event.personNameInput?.value || '');
   const [chainIndex, setChainIndex] = useState(event.previousEvents.length);
-  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const {
+    offsetStyle,
+    rootRef: popupRef,
+    onSurfaceMouseDown,
+  } = useDraggableOffset({
+    disabled: closing,
+    blockClassNames: [
+      'event-link',
+      'event-content-scroll',
+      'styled-scroll-area',
+      'event-options',
+      'event-option',
+      'tooltip-wrapper',
+    ],
+  });
   const regnalNameCycleIndexRef = useRef(0);
   const personNameCycleIndexRef = useRef(0);
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -208,47 +187,6 @@ const EventPopup: React.FC<EventPopupProps> = ({
   useEffect(() => () => {
     clearTimeout(flashTimerRef.current);
     clearTimeout(closeTimerRef.current);
-  }, []);
-
-  const beginDrag = useCallback((clientX: number, clientY: number) => {
-    dragRef.current = {
-      startX: clientX,
-      startY: clientY,
-      origX: offset.x,
-      origY: offset.y,
-    };
-  }, [offset]);
-
-  const handlePopupMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.button !== 0 || closing) return;
-    if (isDragBlocked(e.target, popupRef.current)) return;
-    e.preventDefault();
-    beginDrag(e.clientX, e.clientY);
-  }, [beginDrag, closing]);
-
-  useEffect(() => {
-    const moveTo = (clientX: number, clientY: number) => {
-      if (!dragRef.current) return;
-      const dx = clientX - dragRef.current.startX;
-      const dy = clientY - dragRef.current.startY;
-      setOffset({
-        x: dragRef.current.origX + dx,
-        y: dragRef.current.origY + dy,
-      });
-    };
-
-    const endDrag = () => {
-      dragRef.current = null;
-    };
-
-    const handleMouseMove = (e: MouseEvent) => moveTo(e.clientX, e.clientY);
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', endDrag);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', endDrag);
-    };
   }, []);
 
   const handleRandomRegnalName = useCallback((mouseEvent: React.MouseEvent<HTMLButtonElement>) => {
@@ -336,10 +274,8 @@ const EventPopup: React.FC<EventPopupProps> = ({
         <div
           ref={popupRef}
           className={popupClassName}
-          style={{
-            transform: `translate(${toRootRem(offset.x)}, ${toRootRem(offset.y)})`,
-          }}
-          onMouseDown={handlePopupMouseDown}
+          style={offsetStyle}
+          onMouseDown={onSurfaceMouseDown}
         >
           <div className={`event-toolbar${hasChainHistory ? ' event-toolbar--navigation' : ''}`}>
             {hasChainHistory && (

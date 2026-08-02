@@ -5,6 +5,7 @@ import DataTable, { type DataTableColumn } from '../../common/layout/tables/Data
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import GameButton from '../../common/buttons/GameButton';
+import ModalDragHandle from '../../common/layout/shell/ModalDragHandle';
 import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip, { type UnitTooltipData } from '../../common/tooltips/UnitTooltip';
 import { useGameActions } from '../../../context/GameContext';
@@ -26,6 +27,7 @@ import type {
 } from '../../../bridge-types.generated.ts';
 import type { Army } from '../../../data/types';
 import { useEscapeStackEntry } from '../../../context/EscapeStack';
+import { useDraggableOffset } from '../../../hooks/useDraggableOffset';
 import { formatNumber } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import {
@@ -333,6 +335,25 @@ export function TemplateUnitSelectorModal({
   const [cultureFilter, setCultureFilter] = useState(CATALOGUE_ALL_FILTER);
   const [closing, setClosing] = useState(false);
   const closeTimerRef = useRef<number | undefined>(undefined);
+  const {
+    offsetStyle,
+    rootRef: dialogRef,
+    onHandleMouseDown,
+    onSurfaceMouseDown,
+  } = useDraggableOffset({
+    disabled: closing,
+    blockClassNames: [
+      'styled-scroll-area',
+      'tooltip-wrapper',
+      'dropdown-select',
+      'search-field',
+      'search-input',
+      'data-table',
+      'chart-unit-picker-body',
+      'chart-unit-picker-foot',
+      'chart-unit-picker-table',
+    ],
+  });
 
   const requestClose = () => {
     if (closing) return;
@@ -581,73 +602,80 @@ export function TemplateUnitSelectorModal({
         event.stopPropagation();
       }}
     >
-      <div
-        className={`chart-unit-picker-dialog${closing ? ' chart-unit-picker-dialog--closing' : ''}`}
-        onMouseDown={event => event.stopPropagation()}
-      >
-        <div className="chart-unit-picker-head">
-          <div className="chart-unit-picker-title-block">
-            <span className="chart-unit-picker-title"><WebUIText textKey="FormationTemplate.UnitCatalogue" /></span>
+      <div className="modal-drag-frame" style={offsetStyle}>
+        <div
+          ref={dialogRef}
+          className={`chart-unit-picker-dialog${closing ? ' chart-unit-picker-dialog--closing' : ''}`}
+          onMouseDown={event => {
+            event.stopPropagation();
+            onSurfaceMouseDown(event);
+          }}
+        >
+          <ModalDragHandle onMouseDown={onHandleMouseDown} />
+          <div className="chart-unit-picker-head">
+            <div className="chart-unit-picker-title-block">
+              <span className="chart-unit-picker-title"><WebUIText textKey="FormationTemplate.UnitCatalogue" /></span>
+            </div>
+            <CloseButton size="sm" onClick={requestClose} />
           </div>
-          <CloseButton size="sm" onClick={requestClose} />
-        </div>
-        <div className="chart-unit-picker-body">
-          <DataTable
-            rows={units}
-            columns={unitColumns}
-            rowKey={unit => unit.id}
-            onRowClick={unit => onAdd(unit.id)}
-            searchValue={query}
-            onSearchChange={setQuery}
-            searchPlaceholder={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.627.29')}
-            toolsExtra={(
-              <div className="chart-unit-picker-filters">
-                <CatalogueFilterSelect
-                  id="type"
-                  label={webUIText('Economy.Type')}
-                  value={typeFilter}
-                  options={typeOptions}
-                  onChange={setTypeFilter}
-                />
-                <CatalogueFilterSelect
-                  id="culture"
-                  label={webUIText('MainMenu.Culture')}
-                  value={cultureFilter}
-                  options={cultureOptions}
-                  onChange={setCultureFilter}
-                />
-              </div>
-            )}
-            filterPredicate={filterUnit}
-            defaultSortKey="tier"
-            defaultSortDirection="asc"
-            emptyLabel={<WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.632.3" />}
-            className="chart-unit-picker-table-block"
-            toolsClassName="chart-unit-picker-table-tools"
-            searchWrapClassName="chart-unit-picker-search-wrap"
-            searchClassName="chart-unit-picker-search"
-            wrapperClassName="chart-unit-picker-table-wrapper"
-            tableClassName="chart-unit-picker-table"
-            headerRowClassName="chart-unit-picker-table-head"
-            bodyClassName="chart-unit-picker-table-body"
-            bodyScrollFrameClassName="chart-unit-picker-table-scroll"
-            rowClassName="chart-unit-picker-table-row"
-            bodyCellClassName="chart-unit-picker-table-cell"
-            headerContentClassName="chart-unit-picker-header-content"
-            virtualRowHeightRem={4.15}
-            emptyClassName="chart-unit-picker-empty"
-            styledScrollbar
-          />
-        </div>
-        <div className="chart-unit-picker-foot">
-          <GameButton
-            variant="burgundy"
-            className="chart-unit-picker-done"
-            tutorialTarget="CloseUnitCatalogueButton"
-            onClick={requestClose}
-          >
-            <WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" />
-          </GameButton>
+          <div className="chart-unit-picker-body">
+            <DataTable
+              rows={units}
+              columns={unitColumns}
+              rowKey={unit => unit.id}
+              onRowClick={unit => onAdd(unit.id)}
+              searchValue={query}
+              onSearchChange={setQuery}
+              searchPlaceholder={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.627.29')}
+              toolsExtra={(
+                <div className="chart-unit-picker-filters">
+                  <CatalogueFilterSelect
+                    id="type"
+                    label={webUIText('Economy.Type')}
+                    value={typeFilter}
+                    options={typeOptions}
+                    onChange={setTypeFilter}
+                  />
+                  <CatalogueFilterSelect
+                    id="culture"
+                    label={webUIText('MainMenu.Culture')}
+                    value={cultureFilter}
+                    options={cultureOptions}
+                    onChange={setCultureFilter}
+                  />
+                </div>
+              )}
+              filterPredicate={filterUnit}
+              defaultSortKey="tier"
+              defaultSortDirection="asc"
+              emptyLabel={<WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.632.3" />}
+              className="chart-unit-picker-table-block"
+              toolsClassName="chart-unit-picker-table-tools"
+              searchWrapClassName="chart-unit-picker-search-wrap"
+              searchClassName="chart-unit-picker-search"
+              wrapperClassName="chart-unit-picker-table-wrapper"
+              tableClassName="chart-unit-picker-table"
+              headerRowClassName="chart-unit-picker-table-head"
+              bodyClassName="chart-unit-picker-table-body"
+              bodyScrollFrameClassName="chart-unit-picker-table-scroll"
+              rowClassName="chart-unit-picker-table-row"
+              bodyCellClassName="chart-unit-picker-table-cell"
+              headerContentClassName="chart-unit-picker-header-content"
+              virtualRowHeightRem={4.15}
+              emptyClassName="chart-unit-picker-empty"
+              styledScrollbar
+            />
+          </div>
+          <div className="chart-unit-picker-foot">
+            <GameButton
+              variant="burgundy"
+              className="chart-unit-picker-done"
+              tutorialTarget="CloseUnitCatalogueButton"
+              onClick={requestClose}
+            >
+              <WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" />
+            </GameButton>
+          </div>
         </div>
       </div>
     </div>,
