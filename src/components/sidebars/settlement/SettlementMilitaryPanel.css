@@ -112,9 +112,11 @@
 }
 
 .mil-queue-next-icon {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top center;
 }
 
 .mil-queue-next-tier {
@@ -333,6 +335,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top center;
 }
 
 .mil-pending-unit-count {
@@ -480,9 +483,11 @@
 }
 
 .mil-formation-slot-portrait {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top center;
 }
 
 .mil-formation--locked .mil-formation-slot-portrait {
@@ -679,6 +684,7 @@
   height: 100%;
   display: block;
   object-fit: cover;
+  object-position: top center;
 }
 
 .mil-cap-locked-text {
