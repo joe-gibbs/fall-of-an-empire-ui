@@ -175,6 +175,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
   const [commanderModalOpen, setCommanderModalOpen] = useState(false);
   const [establishOpen, setEstablishOpen] = useState(false);
   const [draftUnitIds, setDraftUnitIds] = useState<string[]>([]);
+  const [formError, setFormError] = useState('');
   const [replaceSlot, setReplaceSlot] = useState<number | null>(null);
 
   const companies = useMemo(() => {
@@ -261,10 +262,12 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
 
   const openEstablish = () => {
     setDraftUnitIds([]);
+    setFormError('');
     setEstablishOpen(true);
   };
 
   const handleAddDraft = (unitId: string, amount = 1) => {
+    setFormError('');
     setDraftUnitIds(current => {
       const unit = unitById.get(unitId);
       if (!unit) return current;
@@ -297,6 +300,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
   };
 
   const handleRemoveDraft = (unitId: string, amount = 1) => {
+    setFormError('');
     setDraftUnitIds(current => {
       let remaining = Math.max(0, amount);
       if (remaining <= 0) return current;
@@ -313,17 +317,24 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
   const handleEstablishDone = () => {
     if (formBusy || draftUnitIds.length === 0) return;
     setFormBusy(true);
+    setFormError('');
     void bridgeCall('game.form_personal_guard', { unitIds: draftUnitIds })
       .then((response) => {
         if (!response.success) {
-          acknowledgeBridgeFailure(response.message || 'game.form_personal_guard failed', 'game.form_personal_guard');
+          const message = response.message || webUIText('Military.PersonalGuard.FormUnavailable');
+          setFormError(message);
+          acknowledgeBridgeFailure(message, 'game.form_personal_guard');
           return;
         }
         setEstablishOpen(false);
         setDraftUnitIds([]);
+        setFormError('');
         return refreshGuardAndMilitary();
       })
-      .catch((error: unknown) => acknowledgeBridgeFailure(error, 'game.form_personal_guard'))
+      .catch((error: unknown) => {
+        setFormError(webUIText('Military.PersonalGuard.FormUnavailable'));
+        acknowledgeBridgeFailure(error, 'game.form_personal_guard');
+      })
       .finally(() => setFormBusy(false));
   };
 
@@ -493,6 +504,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
           onClose={() => {
             setEstablishOpen(false);
             setDraftUnitIds([]);
+            setFormError('');
           }}
           title={webUIText('Military.PersonalGuard.Form')}
           doneLabel={webUIText('Military.PersonalGuard.Form')}
@@ -501,6 +513,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
           maxUnits={guard.companyCapacity}
           enforceAvailableManpower
           doneDisabled={formBusy || draftUnitIds.length === 0}
+          statusMessage={formError}
           onDone={handleEstablishDone}
         />
       )}

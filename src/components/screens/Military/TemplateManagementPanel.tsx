@@ -354,6 +354,7 @@ export function TemplateUnitSelectorModal({
   maxUnits,
   enforceAvailableManpower = false,
   compareUnit,
+  statusMessage,
 }: {
   units: FormationTemplateUnitEntry[];
   currentCounts: Record<string, number>;
@@ -372,6 +373,8 @@ export function TemplateUnitSelectorModal({
   /** When true, blocks adds that exceed each unit culture's available manpower. */
   enforceAvailableManpower?: boolean;
   compareUnit?: FormationTemplateUnitEntry | null;
+  /** Optional status or failure text shown in the footer. */
+  statusMessage?: string;
 }) {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState(CATALOGUE_ALL_FILTER);
@@ -912,7 +915,7 @@ export function TemplateUnitSelectorModal({
             />
           </div>
           <div className="chart-unit-picker-foot">
-            {!isSingle && (hasUnitCap || typeof totalCost === 'number') && (
+            {!isSingle && (hasUnitCap || typeof totalCost === 'number' || Boolean(statusMessage)) && (
               <div className="chart-unit-picker-foot-meta">
                 {hasUnitCap && (
                   <Tooltip
@@ -945,7 +948,17 @@ export function TemplateUnitSelectorModal({
                     <strong>{formatNumber(totalCost)}</strong>
                   </span>
                 )}
+                {statusMessage && (
+                  <span className="chart-unit-picker-status" role="status">
+                    {statusMessage}
+                  </span>
+                )}
               </div>
+            )}
+            {isSingle && statusMessage && (
+              <span className="chart-unit-picker-status chart-unit-picker-status--solo" role="status">
+                {statusMessage}
+              </span>
             )}
             <GameButton
               variant="burgundy"

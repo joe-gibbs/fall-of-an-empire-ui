@@ -3955,16 +3955,30 @@
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: auto;
-  height: 3rem;
-  padding: 0 0.9rem;
+  min-height: 3rem;
+  padding: 0.35rem 0.9rem;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 0.65rem;
   color: var(--text-muted);
   border-top-width: 0.077rem;
   border-top-style: solid;
   border-top-color: rgba(201, 168, 76, 0.2);
   font-size: 0.82rem;
+}
+
+.chart-unit-picker-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--gold-light);
+  font-size: 0.78rem;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.chart-unit-picker-status--solo {
+  margin-right: auto;
 }
 
 .chart-unit-picker-empty {
