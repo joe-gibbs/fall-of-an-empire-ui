@@ -4,6 +4,7 @@ import type { ProvinceTooltipModeData } from '../shared/types';
 function relationText(data: ProvinceTooltipModeData): string {
   if (data.warWithPlayer) return 'At war';
   if (data.faction.relation === 'own') return 'Own territory';
+  if (data.faction.relation === 'subject') return 'Subject territory';
   if (data.faction.relation === 'ally') return 'Ally';
   if (data.faction.relation === 'enemy') return 'Enemy';
   return 'Neutral';
@@ -11,7 +12,7 @@ function relationText(data: ProvinceTooltipModeData): string {
 
 function relationTone(data: ProvinceTooltipModeData): 'positive' | 'negative' | 'muted' | 'warning' | undefined {
   if (data.warWithPlayer || data.faction.relation === 'enemy') return 'negative';
-  if (data.faction.relation === 'own' || data.faction.relation === 'ally') return 'positive';
+  if (data.faction.relation === 'own' || data.faction.relation === 'subject' || data.faction.relation === 'ally') return 'positive';
   return 'muted';
 }
 

@@ -11,7 +11,9 @@ import { webUIText } from '../../localization/WebUITextContext';
 
 function relationColour(r: FactionRelation): string {
   switch (r) {
-    case 'own': return '#6ba84a';
+    case 'own':
+    case 'subject':
+      return '#6ba84a';
     case 'ally': return '#4a78c8';
     case 'neutral': return '#c9a042';
     case 'enemy': return '#d04048';

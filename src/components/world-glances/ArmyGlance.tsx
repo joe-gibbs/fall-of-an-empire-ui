@@ -38,21 +38,21 @@ function tierTexture(tier: number): string {
 }
 
 function relationBackgroundColour(relation: ArmyGlanceData['faction']['relation']): string {
-  if (relation === 'own') return 'rgba(32, 20, 27, 0.82)';
+  if (relation === 'own' || relation === 'subject') return 'rgba(32, 20, 27, 0.82)';
   if (relation === 'ally') return 'rgba(18, 38, 28, 0.82)';
   if (relation === 'enemy') return 'rgba(46, 18, 17, 0.84)';
   return 'rgba(20, 20, 21, 0.76)';
 }
 
 function relationTargetBackgroundColour(relation: ArmyGlanceData['faction']['relation']): string {
-  if (relation === 'own') return 'rgba(42, 24, 32, 0.88)';
+  if (relation === 'own' || relation === 'subject') return 'rgba(42, 24, 32, 0.88)';
   if (relation === 'ally') return 'rgba(20, 50, 35, 0.88)';
   if (relation === 'enemy') return 'rgba(58, 20, 18, 0.9)';
   return 'rgba(30, 29, 27, 0.86)';
 }
 
 function relationLabelBackgroundColour(relation: ArmyGlanceData['faction']['relation']): string {
-  if (relation === 'own') return 'rgba(29, 15, 22, 0.9)';
+  if (relation === 'own' || relation === 'subject') return 'rgba(29, 15, 22, 0.9)';
   if (relation === 'ally') return 'rgba(11, 30, 22, 0.9)';
   if (relation === 'enemy') return 'rgba(42, 13, 12, 0.92)';
   return 'rgba(13, 13, 14, 0.88)';

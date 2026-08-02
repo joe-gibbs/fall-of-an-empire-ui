@@ -1,4 +1,4 @@
-export type FactionRelation = 'own' | 'ally' | 'neutral' | 'enemy';
+export type FactionRelation = 'own' | 'subject' | 'ally' | 'neutral' | 'enemy';
 export type WorldGlanceDetailClass = 'detail-flag' | 'detail-name' | 'detail-detailed' | 'detail-location-faded';
 
 export interface GlanceFactionStub {

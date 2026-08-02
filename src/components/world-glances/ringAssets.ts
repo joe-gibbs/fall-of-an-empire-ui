@@ -20,7 +20,7 @@ function ringBucket(value: number, segments: number): number {
 }
 
 function strengthTone(relation: string): string {
-  if (relation === 'own' || relation === 'self') return 'own';
+  if (relation === 'own' || relation === 'self' || relation === 'subject') return 'own';
   if (relation === 'ally') return 'ally';
   if (relation === 'enemy') return 'enemy';
   return 'neutral';

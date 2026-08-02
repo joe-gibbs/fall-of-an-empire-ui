@@ -164,20 +164,21 @@ function settlementBadgeLayerPath(type: SettlementType, layer: SettlementBadgeLa
 function relationLabel(relation: SettlementGlanceData['faction']['relation'], atWar?: boolean): string {
   if (atWar || relation === 'enemy') return webUIText('WorldGlances.Relation.Hostile');
   if (relation === 'own') return webUIText('WorldGlances.Relation.Own');
+  if (relation === 'subject') return webUIText('WorldGlances.Relation.Subject');
   if (relation === 'ally') return webUIText('WorldGlances.Relation.Allied');
   return webUIText('WorldGlances.Relation.Neutral');
 }
 
 function relationColour(relation: SettlementGlanceData['faction']['relation'], atWar?: boolean): string {
   if (atWar || relation === 'enemy') return 'var(--red)';
-  if (relation === 'own') return 'var(--gold-light)';
+  if (relation === 'own' || relation === 'subject') return 'var(--gold-light)';
   if (relation === 'ally') return 'var(--green-light)';
   return 'var(--text-bright)';
 }
 
 function relationBackgroundColour(relation: SettlementGlanceData['faction']['relation'], atWar?: boolean): string {
   if (atWar || relation === 'enemy') return 'rgba(82, 30, 25, 0.9)';
-  if (relation === 'own') return 'rgba(64, 38, 48, 0.88)';
+  if (relation === 'own' || relation === 'subject') return 'rgba(64, 38, 48, 0.88)';
   if (relation === 'ally') return 'rgba(32, 66, 44, 0.88)';
   return 'rgba(48, 45, 39, 0.86)';
 }
