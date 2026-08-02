@@ -1,4 +1,5 @@
 import { recordUIPerfBridgeCall } from '../../perf/uiPerfProfiler';
+import { webUIText } from '../../localization/WebUITextContext';
 
 export interface runtimeEngine {
   call: (name: string, ...args: unknown[]) => unknown | Promise<unknown>;
@@ -78,7 +79,7 @@ function bridgeErrorMessage(error: unknown): string {
   if (typeof error === 'string') {
     return error;
   }
-  return 'Unknown bridge failure';
+  return webUIText('Runtime.UnknownBridgeFailure');
 }
 
 function isTransientGameplayReadinessError(error: unknown): boolean {

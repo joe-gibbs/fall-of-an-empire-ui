@@ -1871,7 +1871,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   }, [activeTab, bringBuildingIntoView, chainTrees]);
 
   const panelLockReason = data?.canBuild === false
-    ? (data.cannotBuildReason || 'Construction is not available right now.')
+    ? (data.cannotBuildReason || webUIText('SettlementBuildings.ConstructionUnavailable'))
     : '';
 
   return (

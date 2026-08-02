@@ -47,15 +47,20 @@ const COMPLIANCE_SEGMENTS: {
   { get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.46.11'); }, fill: 'green', min: 30, max: 100 },
 ];
 
-const IMPRISONMENT_REASON_LABELS: Record<string, string> = {
-  EnemyCombatant: 'Captured in battle',
-  SiegeCapture: 'Captured in siege',
-  Rebel: 'Rebel',
-  Traitor: 'Traitor',
-  Hostage: 'Hostage',
-  Event: 'Imprisoned',
-  None: 'Held without cause',
+const IMPRISONMENT_REASON_KEYS: Record<string, string> = {
+  EnemyCombatant: 'Character.Imprisonment.EnemyCombatant',
+  SiegeCapture: 'Character.Imprisonment.SiegeCapture',
+  Rebel: 'Character.Imprisonment.Rebel',
+  Traitor: 'Character.Imprisonment.Traitor',
+  Hostage: 'Character.Imprisonment.Hostage',
+  Event: 'Character.Imprisonment.Event',
+  None: 'Character.Imprisonment.None',
 };
+
+function imprisonmentReasonLabel(reason: string): string {
+  const key = IMPRISONMENT_REASON_KEYS[reason] ?? IMPRISONMENT_REASON_KEYS.None;
+  return webUIText(key);
+}
 
 function isAltKeyEvent(event: KeyboardEvent): boolean {
   return event.key === 'Alt' || event.code === 'AltLeft' || event.code === 'AltRight';
@@ -94,9 +99,14 @@ interface TitleParts {
 
 function formatTitleWithRelation(character: Character): TitleParts | null {
   const title = character.shortTitle?.trim() || null;
-  if (character.isPlayerCharacter) return { relation: 'You', title };
+  if (character.isPlayerCharacter) return { relation: webUIText('Character.Relation.You'), title };
   const rel = character.relationToPlayer?.trim();
-  if (rel) return { relation: `Your ${rel.toLowerCase()}`, title };
+  if (rel) {
+    return {
+      relation: webUIText('Character.Relation.Your', { Relation: rel.toLowerCase() }),
+      title,
+    };
+  }
   return title ? { relation: null, title } : null;
 }
 
@@ -147,7 +157,7 @@ function temporaryModifierTooltipLines(modifiers: CharacterStatModifier[]): Tool
 function imprisonmentSummary(c: Character): string | null {
   if (!c.isImprisoned) return null;
   return [
-    IMPRISONMENT_REASON_LABELS[c.imprisonmentReason ?? 'None'] ?? 'Imprisoned',
+    imprisonmentReasonLabel(c.imprisonmentReason ?? 'None'),
     c.imprisonedBy ? `held by ${c.imprisonedBy}` : null,
     c.imprisonedAt ? `in ${c.imprisonedAt}` : null,
   ].filter(Boolean).join(' - ');

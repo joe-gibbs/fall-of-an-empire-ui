@@ -1,5 +1,6 @@
 import { ModeRow, ModeRows } from '../shared/ModeLayout';
 import { oneDecimal } from '../shared/format';
+import { webUIText } from '../../../../localization/WebUITextContext';
 import type { ProvinceTooltipModeData } from '../shared/types';
 
 export default function ResourcesTooltip({ data }: { data: ProvinceTooltipModeData }) {
@@ -10,7 +11,7 @@ export default function ResourcesTooltip({ data }: { data: ProvinceTooltipModeDa
   if (resources.length === 0) {
     return (
       <ModeRows>
-        <ModeRow label="Resources:" value="None" tone="muted" />
+        <ModeRow label={webUIText('ProvinceTooltip.ResourcesLabel')} value={webUIText('ProvinceTooltip.None')} tone="muted" />
       </ModeRows>
     );
   }

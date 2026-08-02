@@ -1,5 +1,6 @@
 import { ModeRow, ModeRows } from '../shared/ModeLayout';
 import { oneDecimal } from '../shared/format';
+import { webUIText } from '../../../../localization/WebUITextContext';
 import type { ProvinceTooltipModeData } from '../shared/types';
 
 export default function StockpilesTooltip({ data }: { data: ProvinceTooltipModeData }) {
@@ -11,7 +12,7 @@ export default function StockpilesTooltip({ data }: { data: ProvinceTooltipModeD
   if (stockpiles.length === 0) {
     return (
       <ModeRows>
-        <ModeRow label="Stockpiles:" value="None" tone="muted" />
+        <ModeRow label={webUIText('ProvinceTooltip.StockpilesLabel')} value={webUIText('ProvinceTooltip.None')} tone="muted" />
       </ModeRows>
     );
   }
@@ -21,7 +22,7 @@ export default function StockpilesTooltip({ data }: { data: ProvinceTooltipModeD
       {stockpiles.map((resource) => (
         <ModeRow key={resource.label} label={resource.label} value={oneDecimal(resource.amount)} icon={resource.icon} />
       ))}
-      <ModeRow label="Total:" value={oneDecimal(total)} />
+      <ModeRow label={webUIText('ProvinceTooltip.TotalLabel')} value={oneDecimal(total)} />
     </ModeRows>
   );
 }

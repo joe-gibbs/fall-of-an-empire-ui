@@ -272,37 +272,39 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       const byId = new Map(forcesRef.current.map(f => [f.id, f]));
       const src = byId.get(srcId);
       const tgt = byId.get(tgtId);
-      if (!src || !tgt) return { ok: false, reason: 'Unknown target' };
+      if (!src || !tgt) return { ok: false, reason: webUIText('Military.Command.UnknownTarget') };
       if (src.isPersonalGuard || tgt.isPersonalGuard) {
         return { ok: false, reason: webUIText('Military.PersonalGuard.CommandRestriction') };
       }
-      if (!src.isPlayerControlled) return { ok: false, reason: 'You do not command this military' };
-      if (!tgt.isPlayerControlled) return { ok: false, reason: 'You do not command the parent military' };
-      if (srcId === tgtId) return { ok: false, reason: 'Cannot report to itself' };
+      if (!src.isPlayerControlled) return { ok: false, reason: webUIText('Military.Command.NotCommandingSource') };
+      if (!tgt.isPlayerControlled) return { ok: false, reason: webUIText('Military.Command.NotCommandingParent') };
+      if (srcId === tgtId) return { ok: false, reason: webUIText('Military.Command.CannotReportToSelf') };
 
       let cur: Force | undefined = tgt;
       while (cur) {
-        if (cur.id === srcId) return { ok: false, reason: 'Cannot report to a subordinate' };
+        if (cur.id === srcId) return { ok: false, reason: webUIText('Military.Command.CannotReportToSubordinate') };
         cur = cur.parentId ? byId.get(cur.parentId) : undefined;
       }
 
-      if (src.parentId === tgtId) return { ok: false, reason: 'Already reports here' };
+      if (src.parentId === tgtId) return { ok: false, reason: webUIText('Military.Command.AlreadyReportsHere') };
       if (src.isNavy !== tgt.isNavy) {
-        return { ok: false, reason: 'Land and naval commands cannot mix' };
+        return { ok: false, reason: webUIText('Military.Command.LandNavalMix') };
       }
 
       const srcTier = RANK_META[src.rank].tier;
       const tgtTier = RANK_META[tgt.rank].tier;
       if (srcTier >= tgtTier) {
+        const sourceRank = rankLabel(src);
+        const targetRank = rankLabel(tgt);
         return {
           ok: false,
           reason: srcTier === tgtTier
-            ? `A ${rankLabel(src)} cannot report to another ${rankLabel(tgt)}`
-            : `A ${rankLabel(src)} cannot report to a ${rankLabel(tgt)}`,
+            ? webUIText('Military.Command.SameRankCannotReport', { Rank: sourceRank })
+            : webUIText('Military.Command.LowerRankCannotReport', { SourceRank: sourceRank, TargetRank: targetRank }),
         };
       }
 
-      return { ok: true, reason: `Reports to ${tgt.name}` };
+      return { ok: true, reason: webUIText('Military.Command.ReportsTo', { Name: tgt.name }) };
     };
 
     const isValidDrop = (srcId: string, tgtId: string): boolean => validateDrop(srcId, tgtId).ok;

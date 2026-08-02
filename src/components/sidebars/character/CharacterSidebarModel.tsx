@@ -313,9 +313,9 @@ export function buildInteractionTooltip(interaction: PersonInteractionView, targ
 
   let footer: string | undefined;
   if (interaction.needsGiftSelection) {
-    footer = 'Choose the gift from the modal before starting this action.';
+    footer = webUIText('CharacterSidebar.ChooseGift');
   } else if (interaction.needsInitiatorSelection && !hasInitiatorRequirementReason) {
-    footer = initiatorRequirement || 'Choose who will carry out this action.';
+    footer = initiatorRequirement || webUIText('CharacterSidebar.ChooseInitiator');
   }
 
   const body = interaction.inProgress && interaction.remainingDays > 0

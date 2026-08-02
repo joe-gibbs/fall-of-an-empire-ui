@@ -1,4 +1,5 @@
 import { ModeRow, ModeRows } from '../shared/ModeLayout';
+import { webUIText } from '../../../../localization/WebUITextContext';
 import type { ProvinceTooltipModeData } from '../shared/types';
 
 function focusedTone(mapModeId: string, rowId: string): 'warning' | undefined {
@@ -6,11 +7,24 @@ function focusedTone(mapModeId: string, rowId: string): 'warning' | undefined {
 }
 
 export default function AdminTooltip({ data }: { data: ProvinceTooltipModeData }) {
+  const unassigned = webUIText('ProvinceTooltip.Unassigned');
   return (
     <ModeRows>
-      <ModeRow label="Region:" value={data.regionName || 'Unassigned'} tone={focusedTone(data.mapModeId, 'adminRegion') || (data.regionName ? undefined : 'muted')} />
-      <ModeRow label="Land:" value={data.landName || 'Unassigned'} tone={focusedTone(data.mapModeId, 'adminLand') || (data.landName ? undefined : 'muted')} />
-      <ModeRow label="Domain:" value={data.domainName || 'Unassigned'} tone={focusedTone(data.mapModeId, 'adminDomain') || (data.domainName ? undefined : 'muted')} />
+      <ModeRow
+        label={webUIText('ProvinceTooltip.RegionLabel')}
+        value={data.regionName || unassigned}
+        tone={focusedTone(data.mapModeId, 'adminRegion') || (data.regionName ? undefined : 'muted')}
+      />
+      <ModeRow
+        label={webUIText('ProvinceTooltip.LandLabel')}
+        value={data.landName || unassigned}
+        tone={focusedTone(data.mapModeId, 'adminLand') || (data.landName ? undefined : 'muted')}
+      />
+      <ModeRow
+        label={webUIText('ProvinceTooltip.DomainLabel')}
+        value={data.domainName || unassigned}
+        tone={focusedTone(data.mapModeId, 'adminDomain') || (data.domainName ? undefined : 'muted')}
+      />
     </ModeRows>
   );
 }

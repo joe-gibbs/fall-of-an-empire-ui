@@ -1,5 +1,6 @@
 import { ModeRow, ModeRows } from '../shared/ModeLayout';
 import { oneDecimal } from '../shared/format';
+import { webUIText } from '../../../../localization/WebUITextContext';
 import type { ProvinceTooltipModeData } from '../shared/types';
 
 export default function TradeTooltip({ data }: { data: ProvinceTooltipModeData }) {
@@ -7,9 +8,13 @@ export default function TradeTooltip({ data }: { data: ProvinceTooltipModeData }
 
   return (
     <ModeRows>
-      <ModeRow label="Trade value:" value={oneDecimal(data.tradeValue)} tone={tradeTone} />
-      <ModeRow label="Port:" value={data.portStatus || 'Inland settlement'} tone={data.portStatus ? undefined : 'muted'} />
-      <ModeRow label="Population:" value={data.populationValue} />
+      <ModeRow label={webUIText('ProvinceTooltip.TradeValueLabel')} value={oneDecimal(data.tradeValue)} tone={tradeTone} />
+      <ModeRow
+        label={webUIText('ProvinceTooltip.PortLabel')}
+        value={data.portStatus || webUIText('ProvinceTooltip.InlandSettlement')}
+        tone={data.portStatus ? undefined : 'muted'}
+      />
+      <ModeRow label={webUIText('ProvinceTooltip.PopulationLabel')} value={data.populationValue} />
     </ModeRows>
   );
 }
