@@ -132,7 +132,7 @@ function StatCell({
   className?: string;
   tone?: 'gold' | 'positive' | 'negative';
 }) {
-  const valueClass = `fov-stat-val${tone ? ` fov-stat-val--${tone}` : ''}`;
+  const valueClass = `fov-stat-val${tone ? ` fov-stat-val--${tone}` : ''}${delta ? ' fov-stat-val--has-delta' : ''}`;
   const deltaClass = deltaTone ? `fov-stat-delta fov-stat-delta--${deltaTone}` : 'fov-stat-delta';
   return (
     <Tooltip content={tooltip} delay={200}>
@@ -141,7 +141,7 @@ function StatCell({
         <div className="fov-stat-copy">
           <span className="fov-stat-label">{label}</span>
           <span className={valueClass}>
-            {value}
+            <span className="fov-stat-main">{value}</span>
             {delta ? <span className={deltaClass}>{delta}</span> : null}
           </span>
         </div>

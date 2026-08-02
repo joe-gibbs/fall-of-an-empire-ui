@@ -237,6 +237,7 @@
   border-width: 0.077rem;
   border-style: solid;
   border-color: rgba(201, 168, 76, 0.16);
+  overflow: hidden;
 }
 
 .fov-stat-icon {
@@ -250,7 +251,9 @@
 .fov-stat-copy {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .fov-stat-label {
@@ -264,17 +267,29 @@
 }
 
 .fov-stat-val {
-  font-family: var(--font-header);
-  font-size: 0.95rem;
-  color: var(--text);
-}
-
-.fov-stat-val {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  max-width: 100%;
   font-family: var(--font-header);
   font-size: 0.98rem;
   color: var(--text);
   line-height: 1.1;
+}
+
+/* Keep growth on its own line so large totals never shove it past the card edge */
+.fov-stat-val--has-delta {
+  flex-direction: column;
+  align-items: flex-start;
+  row-gap: 0.04rem;
+}
+
+.fov-stat-main {
+  min-width: 0;
+  max-width: 100%;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .fov-stat-val--gold {
@@ -1401,12 +1416,17 @@
   border-color: rgba(201, 168, 76, 0.16);
 }
 
-/* Inline projected change next to a stat value */
+/* Monthly change under the main figure */
 .fov-stat-delta {
+  min-width: 0;
+  max-width: 100%;
   font-family: var(--font-body);
   font-size: 0.75rem;
-  margin-left: 0.28rem;
+  line-height: 1.1;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .fov-stat-delta--positive {
