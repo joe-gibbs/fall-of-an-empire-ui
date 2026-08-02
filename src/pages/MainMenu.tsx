@@ -634,7 +634,7 @@ const MainMenu: React.FC = () => {
               <div className="mm-mod-info">
                 <span className="mm-mod-name">
                   {mod.name}
-                  {mod.version ? <span className="mm-mod-version">{webUIText("Auto.Fix.Expr.pagesMainMenu.396.1", { Version: mod.version })}</span> : null}
+                  {mod.version ? <span className="mm-mod-version">{webUIText("MainMenu.V", { Version: mod.version })}</span> : null}
                 </span>
                 {mod.author && <span className="mm-mod-author">{webUIText('MainMenu.ModAuthor', { Author: mod.author })}</span>}
                 {mod.description && <span className="mm-mod-desc">{mod.description}</span>}

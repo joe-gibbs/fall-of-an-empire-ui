@@ -80,7 +80,7 @@ function familyEntryFromCharacter(character: Character): FamilyGraphEntry {
   return {
     id: character.id,
     name: character.name,
-    get label() { return character.shortTitle || character.title || webUIText("Auto.Fix.PropExprFallback.componentssidebarsCharacterSidebar.424.1"); },
+    get label() { return character.shortTitle || character.title || webUIText("CharacterSidebar.Selected"); },
     portrait: character.portrait,
     portraitLayers: character.portraitLayers,
     isAlive: character.isAlive,
@@ -187,10 +187,10 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
       pushRow('grandparents', 'Grandparents', grandparentIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Grandparent'))));
       pushRow('parents', 'Parents', parentIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Parent'))));
       const householdTitle = spouseIds.length > 1
-        ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsCharacterSidebar.524.1")
+        ? webUIText("CharacterSidebar.Spouses")
         : spouseIds.length === 1
-          ? webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsCharacterSidebar.525.1")
-          : webUIText("Auto.Fix.PropExprFallback.componentssidebarsCharacterSidebar.424.1");
+          ? webUIText("CharacterSidebar.Spouse")
+          : webUIText("CharacterSidebar.Selected");
       pushRow('household', householdTitle, [
         familyEntryFromPerson(person, person.shortTitle || person.title || 'Selected', true),
         ...spouseIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Spouse'))),
@@ -215,10 +215,10 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
   pushRow('parents', 'Parents', byType(['Father', 'Mother', 'Parent']));
   const fallbackSpouses = byType(['Husband', 'Wife', 'Spouse', 'Consort']);
   const fallbackHouseholdTitle = fallbackSpouses.length > 1
-    ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsCharacterSidebar.551.1")
+    ? webUIText("CharacterSidebar.Spouses")
     : fallbackSpouses.length === 1
-      ? webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsCharacterSidebar.552.1")
-      : webUIText("Auto.Fix.PropExprFallback.componentssidebarsCharacterSidebar.424.1");
+      ? webUIText("CharacterSidebar.Spouse")
+      : webUIText("CharacterSidebar.Selected");
   pushRow('household', fallbackHouseholdTitle, [
     familyEntryFromCharacter(character),
     ...fallbackSpouses,

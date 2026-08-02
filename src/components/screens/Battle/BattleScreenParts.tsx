@@ -483,10 +483,10 @@ export function SideBlock({
                 className="battle-screen-side-faction battle-screen-side-link"
                 onMouseDown={(event) => openLinkedSidebar(event, 'diplomacy', participantFactionId)}
               >
-                {participant.faction.name || webUIText("Auto.Fix.ExprFallback.componentsscreensBattleBattleScreen.346.1")}
+                {participant.faction.name || webUIText("BattleScreen.UnknownForce")}
               </button>
             ) : (
-              <span className="battle-screen-side-faction">{participant?.faction.name || webUIText("Auto.Fix.ExprFallback.componentsscreensBattleBattleScreen.346.1")}</span>
+              <span className="battle-screen-side-faction">{participant?.faction.name || webUIText("BattleScreen.UnknownForce")}</span>
             )}
           </div>
           <span className="battle-screen-side-strength">{formatStrength(summary.totalStrength)}</span>

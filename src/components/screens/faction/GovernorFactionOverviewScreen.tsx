@@ -1276,7 +1276,7 @@ function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => vo
         </div>
 
         {governors.length === 0 ? (
-          <div className="gfov-reggov-empty">{diplomacy?.governorEmptyReason || t('Auto.Fix.ExprFallback.componentsscreensInternalPoliticsScreen.841.1')}</div>
+          <div className="gfov-reggov-empty">{diplomacy?.governorEmptyReason || t('InternalPolitics.NoRegionalGovernors')}</div>
         ) : (
           governors.map((row, rowIndex) => {
             const corruptionTone = row.corruptionPercent >= 25 ? 'bad' : row.corruptionPercent >= 12 ? 'muted' : 'good';

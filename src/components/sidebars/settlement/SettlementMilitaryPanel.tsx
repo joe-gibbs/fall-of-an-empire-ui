@@ -197,7 +197,7 @@ function TrainingQueue({
 
   const formationInfo = active.formationId
     ? {
-        get name() { return active.formationName ?? webUIText("Auto.Fix.PropExprFallback.componentssidebarsSettlementMilitaryPanel.102.1"); },
+        get name() { return active.formationName ?? webUIText("SettlementMilitary.Formation"); },
         completed: active.formationProgress?.completed ?? 0,
         total: active.formationProgress?.total ?? 0,
       }
@@ -211,7 +211,7 @@ function TrainingQueue({
     <div className="mil-queue">
       <InteractionCard
         title={title}
-        description={formationInfo ? webUIText("Auto.Fix.ExprTrue.componentssidebarsSettlementMilitaryPanel.117.1", { Value1: n(formationInfo.completed + 1), Value2: n(formationInfo.total) }) : webUIText("Auto.Fix.ExprFalse.componentssidebarsSettlementMilitaryPanel.118.1")}
+        description={formationInfo ? webUIText("SettlementMilitary.RaisingUnitOf", { Value1: n(formationInfo.completed + 1), Value2: n(formationInfo.total) }) : webUIText("SettlementMilitary.Training")}
         image={active.portrait}
         durationDays={active.durationDays}
         remainingDays={active.remainingDays ?? active.durationDays}
@@ -227,7 +227,7 @@ function TrainingQueue({
                 ? { afterLines: <UnitTooltip data={unitTooltipData(unit)} /> }
                 : {
                     title: item.name,
-                    get body() { return item.formationName ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementMilitaryPanel.134.1", { FormationName: item.formationName }) : webUIText("Auto.Fix.PropExprFalse.componentssidebarsSettlementMilitaryPanel.134.1"); },
+                    get body() { return item.formationName ? webUIText("SettlementMilitary.PartOf", { FormationName: item.formationName }) : webUIText("SettlementMilitary.SingleRecruit"); },
                     lines: [
                       { label: webUIText('Auto.Prop.ComponentsSidebarsSettlementMilitaryPanel.136.1'), value: n(item.tier), valueColor: 'var(--gold)' },
                       { label: webUIText('Auto.Prop.ComponentsSidebarsSettlementMilitaryPanel.137.2'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementMilitaryPanel.137.1", { Value1: n(item.durationDays) }); } },
@@ -403,7 +403,7 @@ function FormationCard({
             <span className="mil-formation-name">{f.name}</span>
           </span>
           <span className="mil-formation-type">
-            {f.type === 'land' ? webUIText("Auto.Fix.ExprTrue.componentssidebarsSettlementMilitaryPanel.190.1") : webUIText("Auto.Fix.ExprFalse.componentssidebarsSettlementMilitaryPanel.190.1")}
+            {f.type === 'land' ? webUIText("SettlementMilitary.Legion") : webUIText("Common.Fleet")}
           </span>
         </div>
         <div className="mil-formation-body">
@@ -434,7 +434,7 @@ function FormationCard({
           {locked ? (
             <div className="mil-formation-locked">
               <img src={asset('/assets/icons/I_Locked.png')} alt="" className="mil-locked-icon" />
-              <span>{lockReasons[0] ?? webUIText("Auto.Fix.ExprFallback.componentssidebarsSettlementMilitaryPanel.221.1")}</span>
+              <span>{lockReasons[0] ?? webUIText("SettlementMilitary.UnavailableAtThis")}</span>
             </div>
           ) : (
             <button
@@ -469,7 +469,7 @@ function FormationSlotIcon({
         afterLines: (
           <div>
             <div className="mil-formation-slot-tooltip-count">
-              {webUIText("Auto.Fix.Expr.componentssidebarsSettlementMilitaryPanel.247.1", { Value1: n(slot.count) })}
+              {webUIText("SettlementMilitary.UnitInFormationCount", { Value1: n(slot.count) })}
             </div>
             <UnitTooltip data={unitTooltipData(unit)} />
           </div>
@@ -640,7 +640,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
               const available = list.filter(e => e.available).map(e => e.unit);
               const rowTooltip: TooltipContent = {
                 title: TYPE_LABELS[type],
-                get body() { return locked ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementMilitaryPanel.339.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsSettlementMilitaryPanel.340.1", { Value1: n(cap as number) }); },
+                get body() { return locked ? webUIText("SettlementMilitary.CannotTrainHere") : webUIText("SettlementMilitary.UpToTier", { Value1: n(cap as number) }); },
                 lines: locked
                   ? undefined
                   : available.map(u => ({

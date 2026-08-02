@@ -526,7 +526,7 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
 
   return (
     <ScreenShell
-      title={data?.factionName ? webUIText("Auto.Fix.ExprTrue.componentsscreensCharactersScreen.271.1", { FactionName: data.factionName }) : webUIText("Auto.Fix.ExprFalse.componentsscreensCharactersScreen.271.1")}
+      title={data?.factionName ? webUIText("CharactersScreen.Characters", { FactionName: data.factionName }) : webUIText("Common.Characters")}
       onClose={onClose}
       advisorTopic="charactersScreen"
       tabs={<SidebarTabBar tabs={filterTabs} activeTab={filter} onTabChange={setFilter} />}

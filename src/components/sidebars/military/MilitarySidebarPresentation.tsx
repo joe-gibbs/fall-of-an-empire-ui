@@ -334,9 +334,9 @@ export function formatResourceAmount(value: number): string {
 }
 
 export function formatSupplyWindow(days: number): string {
-  if (days <= 0) return webUIText("Auto.Fix.Return.componentssidebarsMilitarySidebar.256.1");
-  if (days >= 120) return webUIText("Auto.Fix.Return.componentssidebarsMilitarySidebar.257.1");
-  return webUIText("Auto.Fix.Return.componentssidebarsMilitarySidebar.258.1", { Value1: formatNumber(days) });
+  if (days <= 0) return webUIText("MilitarySidebar.Empty");
+  if (days >= 120) return webUIText("MilitarySidebar.Long");
+  return webUIText("MilitarySidebar.Days", { Value1: formatNumber(days) });
 }
 
 export function buildResourceRows(army: Army): MilitaryResource[] {

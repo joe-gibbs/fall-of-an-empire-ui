@@ -208,8 +208,8 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
               delay={200}
               extraLines={[
                 { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.134.10'), value: religion.clergyTitle },
-                { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.135.11'), get value() { return religion.leadingFactionName || webUIText("Auto.Fix.PropExprFallback.componentsscreensReligionScreen.135.1"); } },
-                { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.136.12'), get value() { return religion.canManage ? webUIText("Auto.Fix.PropExprTrue.componentsscreensReligionScreen.136.1") : webUIText("Auto.Fix.PropExprFalse.componentsscreensReligionScreen.136.1"); }, valueColor: religion.canManage ? 'var(--green)' : 'var(--text-muted)' },
+                { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.135.11'), get value() { return religion.leadingFactionName || webUIText("Common.None"); } },
+                { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.136.12'), get value() { return religion.canManage ? webUIText("ReligionScreen.Manageable") : webUIText("ReligionScreen.ForeignLed"); }, valueColor: religion.canManage ? 'var(--green)' : 'var(--text-muted)' },
               ]}
             >
               <button
@@ -240,7 +240,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
               >
                 <div className="rel-summary-title-main">
                   <img src={dioceses?.iconPath || RELIGION_FALLBACK_ICON} alt="" className="rel-cell-icon" draggable={false} />
-                  <span className="rel-summary-title">{dioceses?.religionName || webUIText("Auto.Fix.ExprFallback.componentsscreensReligionScreen.161.1")}</span>
+                  <span className="rel-summary-title">{dioceses?.religionName || webUIText("ReligionScreen.NoOrganisedReligion")}</span>
                   {dioceses?.canManage && <span className="rel-summary-state-mark"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.161.2" /></span>}
                 </div>
               </ReligionTooltip>
@@ -269,7 +269,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className="rel-summary-separator" />
                 <div className="rel-summary-stat">
-                  <span className="rel-summary-stat-value">{dioceses?.leadingFactionName || webUIText("Auto.Fix.ExprFallback.componentsscreensReligionScreen.189.1")}</span>
+                  <span className="rel-summary-stat-value">{dioceses?.leadingFactionName || webUIText("Common.None")}</span>
                   <span className="rel-summary-stat-label"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.189.5" /></span>
                 </div>
               </div>

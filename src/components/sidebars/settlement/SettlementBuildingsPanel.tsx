@@ -340,8 +340,8 @@ function addBuildingRequirementLines(lines: TooltipLine[], requiredBuildings?: B
       label: requirement.name,
       labelIcon: requirement.icon,
       value: requirement.met
-        ? webUIText('Auto.Fix.PropExprTrue.componentssidebarsSettlementBuildingsPanel.367.1')
-        : webUIText('Auto.Fix.PropExprFalse.componentssidebarsSettlementBuildingsPanel.368.1'),
+        ? webUIText('SettlementBuildings.CrossChainRequirement')
+        : webUIText('SettlementBuildings.ThisCrossChain'),
       valueColor: requirement.met ? 'var(--green)' : 'var(--red)',
     });
   }
@@ -380,7 +380,7 @@ function builtTooltip(
       : condition >= 50 ? 'var(--gold)'
       : condition >= 20 ? 'var(--orange)'
       : 'var(--red)';
-    const label = condition >= 80 ? webUIText("Auto.Fix.VarExprTrue.componentssidebarsSettlementBuildingsPanel.253.1") : condition >= 50 ? webUIText("Auto.Fix.VarExprFalseTrue.componentssidebarsSettlementBuildingsPanel.254.1") : condition >= 20 ? webUIText("Auto.Fix.VarExprFalseFalseTrue.componentssidebarsSettlementBuildingsPanel.255.1") : webUIText("Auto.Fix.VarExprFalseFalseFalse.componentssidebarsSettlementBuildingsPanel.256.1");
+    const label = condition >= 80 ? webUIText("SettlementBuildings.Pristine") : condition >= 50 ? webUIText("SettlementBuildings.Worn") : condition >= 20 ? webUIText("SettlementBuildings.Dilapidated") : webUIText("SettlementBuildings.Ruin2");
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.261.4'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.257.1", { Value1: n(condition), Value2: label }); }, valueColor: color });
   }
   if (b.maintenanceGovernanceThreshold !== undefined) {
@@ -607,7 +607,7 @@ function RequiresRow({ items }: { items: BuildingRequirement[] }) {
             key={r.assetKey}
             content={{
               title: r.name,
-              get body() { return r.met ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementBuildingsPanel.367.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsSettlementBuildingsPanel.368.1"); },
+              get body() { return r.met ? webUIText("SettlementBuildings.CrossChainRequirement") : webUIText("SettlementBuildings.ThisCrossChain"); },
               footer: webUIText('SettlementBuildings.ViewRequirement', { Name: r.name }),
             }}
             position="bottom"
@@ -628,7 +628,7 @@ function RequiresRow({ items }: { items: BuildingRequirement[] }) {
               }}
             >
               {r.icon && <img src={r.icon} alt="" className="bld-requires-icon" />}
-              <span className="bld-requires-mark">{r.met ? '+' : webUIText("Auto.Fix.ExprFalse.componentssidebarsSettlementBuildingsPanel.375.1")}</span>
+              <span className="bld-requires-mark">{r.met ? '+' : webUIText("SettlementBuildings.Times")}</span>
             </button>
           </Tooltip>
         ))}
@@ -1059,7 +1059,7 @@ function AvailCard({
           )}
           <div className="bld-node-meta">
             <span className="bld-node-meta-item">
-              {webUIText("Auto.Fix.Expr.componentssidebarsSettlementBuildingsPanel.545.1", { Value1: n(a.buildTime) })}
+              {webUIText("SettlementBuildings.Days", { Value1: n(a.buildTime) })}
             </span>
             {a.upkeep > 0 && (
               <span className="bld-node-meta-item bld-node-meta-item--muted">
@@ -1233,7 +1233,7 @@ function QueueItemCard({
         <img src={item.icon ?? GENERIC_ICON} alt="" className="bld-queue-card-icon" draggable={false} />
         <span className="bld-queue-card-order">{n(order)}</span>
         {item.kind === 'upgrade' && (
-          <span className="bld-queue-card-level">{webUIText("Auto.Fix.Expr.componentssidebarsSettlementBuildingsPanel.654.1", { Value1: n(item.toLevel) })}</span>
+          <span className="bld-queue-card-level">{webUIText("SettlementBuildings.Lv", { Value1: n(item.toLevel) })}</span>
         )}
         {item.kind === 'rebuild' && (
           <span className="bld-queue-card-level">{webUIText('SettlementBuildings.Rebuild')}</span>
@@ -1275,7 +1275,7 @@ function QueueItemCard({
             {n(item.goldCost)}
           </span>
           <span className="bld-node-meta-item">
-            {item.remainingDays !== undefined ? webUIText("Auto.Fix.ExprTrue.componentssidebarsSettlementBuildingsPanel.694.1", { Value1: n(item.remainingDays), Value2: n(item.durationDays) }) : webUIText("Auto.Fix.ExprFalse.componentssidebarsSettlementBuildingsPanel.695.1", { Value1: n(item.durationDays) })}
+            {item.remainingDays !== undefined ? webUIText("SettlementBuildings.Days2", { Value1: n(item.remainingDays), Value2: n(item.durationDays) }) : webUIText("SettlementBuildings.Days", { Value1: n(item.durationDays) })}
           </span>
         </div>
 

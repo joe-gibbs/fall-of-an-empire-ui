@@ -86,7 +86,7 @@ const TopBar: React.FC<TopBarProps> = ({
   const playerCharacterId = playerFaction?.rulerId ?? null;
 
   const speed: Speed = isPaused ? 0 : (contextSpeed as Speed);
-  const playerCharacterName = playerFaction?.rulerName ?? playerFaction?.name ?? webUIText("Auto.Fix.VarExprFallback.componentstopbarTopBar.51.1");
+  const playerCharacterName = playerFaction?.rulerName ?? playerFaction?.name ?? webUIText("TopBar.YourCharacter");
 
   const handleSpeedChange = (newSpeed: Speed) => {
     if (newSpeed === 0) {

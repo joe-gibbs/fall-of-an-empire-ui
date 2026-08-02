@@ -149,7 +149,7 @@ function SideReport({
             <span className="battle-aar-side-label">{side.label}</span>
           )}
         </div>
-        <span className="battle-aar-side-result">{side.won ? webUIText("Auto.Fix.ExprTrue.componentsnotificationsBattleAfterActionModal.63.1") : webUIText("Auto.Fix.ExprFalse.componentsnotificationsBattleAfterActionModal.63.1")}</span>
+        <span className="battle-aar-side-result">{side.won ? webUIText("BattleAfterAction.Won") : webUIText("BattleAfterAction.Lost")}</span>
       </div>
       <div className="battle-aar-side-names">
         {renderBattleAARRichText(side.names, onLinkClick)}
@@ -293,7 +293,7 @@ function DamageList({
               <span className="battle-aar-damage-source">{unit.militaryName || unit.factionName}</span>
             </div>
             <div className="battle-aar-unit-card-status">
-              {unit.destroyed ? webUIText("Auto.Fix.ExprTrue.componentsnotificationsBattleAfterActionModal.127.1") : webUIText("Auto.Fix.ExprFalse.componentsnotificationsBattleAfterActionModal.127.1", { Value1: formatNumber(unit.remainingStrength) })}
+              {unit.destroyed ? webUIText("BattleAfterAction.Destroyed") : webUIText("BattleAfterAction.Left", { Value1: formatNumber(unit.remainingStrength) })}
             </div>
             <div className="battle-aar-unit-card-stats">
               <div className="battle-aar-unit-card-stat">

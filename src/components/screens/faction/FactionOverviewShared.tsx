@@ -41,7 +41,7 @@ function statLabel(stat: string, t: WebUITextFormatter): string {
 }
 
 function statIcon(stat: string): string {
-  const label = STAT_ICON_LABELS[stat] ?? webUIText("Auto.Fix.VarExprFallback.componentsscreensFactionOverviewScreen.1021.1");
+  const label = STAT_ICON_LABELS[stat] ?? webUIText("Common.Authority");
   return `/assets/icons/StatIcons/I_${label}.png`;
 }
 

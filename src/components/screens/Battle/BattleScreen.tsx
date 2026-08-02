@@ -631,7 +631,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
 
   return (
     <ScreenShell
-      title={battle?.title || webUIText("Auto.Fix.ExprFallback.componentsscreensBattleBattleScreen.859.1")}
+      title={battle?.title || webUIText("BattleScreen.Battle")}
       onClose={closeBattleScreen}
       advisorTopic="battleView"
       className={`battle-screen${expanded ? ' battle-screen--expanded' : ''}`}
@@ -688,7 +688,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
                   <div className={`battle-actions-panel${selectedCommandable.length > 1 ? ' battle-actions-panel--multi' : ''}`}>
                     <div className="battle-actions-info">
                       <div className="battle-actions-info-name">
-                        {selectedActionFormation ? selectedActionFormation.name : webUIText("Auto.Fix.ExprFalse.componentsscreensBattleBattleScreen.922.1", { Length: selectedCommandable.length })}
+                        {selectedActionFormation ? selectedActionFormation.name : webUIText("BattleScreen.FormationsSelected", { Length: selectedCommandable.length })}
                       </div>
                       <div className="battle-actions-info-meta">
                         {selectedActionFormation ? (

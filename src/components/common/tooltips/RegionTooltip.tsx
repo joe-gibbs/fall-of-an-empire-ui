@@ -89,7 +89,7 @@ const RegionTooltip: React.FC<RegionTooltipProps> = ({ tier, regionKey, name, po
   if (data) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsCommonRegionTooltip.89.1'), value: formatNumber(data.totalPopulation) });
     if (data.children.length > 0) {
-      lines.push({ get label() { return CHILD_HEADING[data.childTier] ?? webUIText("Auto.Fix.PropExprFallback.componentscommonRegionTooltip.92.1"); }, isHeader: true });
+      lines.push({ get label() { return CHILD_HEADING[data.childTier] ?? webUIText("RegionTooltip.Contains"); }, isHeader: true });
       for (const child of data.children) {
         lines.push({ label: child.name, value: formatNumber(child.population) });
       }

@@ -170,7 +170,7 @@ export default function CourtAppointmentModal({
   if (!mounted && renderedPosition !== null) setRenderedPosition(null);
 
   const statKey = (renderedPosition?.primaryStat ?? 'authority') as StatKey;
-  const primaryStatLabel = STAT_LABELS[statKey] ?? webUIText("Auto.Fix.VarExprFallback.componentsmodalsCourtAppointmentModal.74.1");
+  const primaryStatLabel = STAT_LABELS[statKey] ?? webUIText("Common.Authority");
   const primaryStatIcon = statIconPath(statKey);
 
   const fetched = useCourtCandidates(open && renderedPosition ? renderedPosition.key : null);
@@ -270,7 +270,7 @@ export default function CourtAppointmentModal({
             { id: 'age', label: webUIText('Auto.Prop.ComponentsModalsCourtAppointmentModal.135.3') },
           ]}
           onSortChange={setSort}
-          countLabel={webUIText("Auto.Fix.Expr.componentsmodalsCourtAppointmentModal.138.1", { Value1: formatNumber(candidates.length) })}
+          countLabel={webUIText("CourtAppointment.Candidates", { Value1: formatNumber(candidates.length) })}
           emptyLabel={webUIText('Auto.ExtraAttr.ComponentsModalsCourtAppointmentModal.139.2')}
           headerAction={recruitButton}
           renderRow={({ character, stat }, active) => (

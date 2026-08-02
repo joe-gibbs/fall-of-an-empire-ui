@@ -138,11 +138,11 @@ export default function PersonInteractionInitiatorModal({
   const selectedChance = selected?.successChancePercent ?? 0;
   const selectedActivity = selected ? formatPersonActivity(selected.activity) : '';
   const durationText = activeInteraction.durationDays > 0
-    ? webUIText("Auto.Fix.Expr.componentsmodalsPersonInteractionInitiatorModal.133.1", {
+    ? webUIText("PersonInteractionInitiator.Duration", {
         Value1: formatNumber(activeInteraction.durationDays),
         Value2: activeInteraction.durationDays === 1
-          ? webUIText("Auto.Fix.ExprArgTrue.componentsmodalsPersonInteractionInitiatorModal.133.1")
-          : webUIText("Auto.Fix.ExprArgFalse.componentsmodalsPersonInteractionInitiatorModal.133.1"),
+          ? webUIText("Common.Day")
+          : webUIText("Common.Days"),
       })
     : '';
 
@@ -188,11 +188,11 @@ export default function PersonInteractionInitiatorModal({
             { id: 'name', label: webUIText('Common.Name') },
           ]}
           onSortChange={setSort}
-          countLabel={webUIText("Auto.Fix.Expr.componentsmodalsPersonInteractionInitiatorModal.143.1", {
+          countLabel={webUIText("PersonInteractionInitiator.Eligible", {
             EligibleCandidateCount: eligibleCandidateCount,
             Value2: candidates.length === 1
-              ? webUIText("Auto.Fix.ExprArgTrue.componentsmodalsPersonInteractionInitiatorModal.143.1")
-              : webUIText("Auto.Fix.ExprArgFalse.componentsmodalsPersonInteractionInitiatorModal.143.1"),
+              ? webUIText("PersonInteractionInitiator.Candidate")
+              : webUIText("PersonInteractionInitiator.Candidates"),
           })}
           emptyLabel={webUIText('Auto.ComponentsModalsPersonInteractionInitiatorModal.217.5')}
           renderRow={(candidate, active) => (
@@ -214,9 +214,9 @@ export default function PersonInteractionInitiatorModal({
               name={candidate.name}
               activity={candidate.activity}
               subParts={[
-                candidate.title || webUIText("Auto.Fix.ExprArgFallback.componentsmodalsPersonInteractionInitiatorModal.159.1"),
+                candidate.title || webUIText("Common.Candidates.Courtier"),
                 webUIText('AgentSelect.CandidateAge', { Age: formatNumber(candidate.age) }),
-                formatPersonActivity(candidate.activity) || webUIText("Auto.Fix.ExprFallback.componentsmodalsPersonInteractionInitiatorModal.191.1"),
+                formatPersonActivity(candidate.activity) || webUIText("PersonInteractionInitiator.InCourt"),
               ]}
               score={formatPercent(candidate.successChancePercent)}
               scoreColor={successChanceColour(candidate.successChancePercent)}
@@ -232,7 +232,7 @@ export default function PersonInteractionInitiatorModal({
                 personId={selected.id}
                 resolvePerson
                 name={selected.name}
-                title={selected.title || webUIText("Auto.Fix.ExprFallback.componentsmodalsPersonInteractionInitiatorModal.177.1")}
+                title={selected.title || webUIText("Common.Candidates.Courtier")}
               />
 
               <div className="cam-detail-body">
@@ -292,7 +292,7 @@ export default function PersonInteractionInitiatorModal({
 
                 <CandidateSection prefix="cam" title={webUIText('Auto.Attr.ComponentsSidebarsCharacterSidebar.1266.48')}>
                   <span className="cam-person-selection-note">
-                    {selectedActivity || webUIText("Auto.Fix.ExprFallback.componentsmodalsPersonInteractionInitiatorModal.191.1")}
+                    {selectedActivity || webUIText("PersonInteractionInitiator.InCourt")}
                   </span>
                 </CandidateSection>
 

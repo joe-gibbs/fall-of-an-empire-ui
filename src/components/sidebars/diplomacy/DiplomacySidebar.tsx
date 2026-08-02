@@ -323,7 +323,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
   const hasBuildFocus = isProvinceSubject && Boolean(faction.buildFocus);
   const focusKey = focusKeyForFaction(faction);
   const canSetBuildFocus = hasBuildFocus && Boolean(faction.canSetBuildFocus);
-  const buildFocusBlockedReason = faction.buildFocusBlockedReason || webUIText('Auto.Fix.VarExprFalse.componentsscreensInternalPoliticsScreen.416.1');
+  const buildFocusBlockedReason = faction.buildFocusBlockedReason || webUIText('InternalPolitics.NotUnderYourControl');
   const peaceNegotiationTargetFactionId = faction.peaceNegotiationTargetFactionId || faction.id;
   const hasDiplomaticAuthority = canNegotiateDiplomacyWith(playerFaction, faction);
   const canNegotiatePeace = faction.diplomaticStatus === 'war'
@@ -571,7 +571,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
           },
         ]}
         actionButtons={[
-          { icon: isPinned ? '/assets/icons/I_Pin_Pinned.png' : '/assets/icons/I_Pin_Unpinned.png', get tooltip() { return isPinned ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsDiplomacySidebar.297.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsDiplomacySidebar.297.1"); }, get tooltipBody() { return isPinned ? webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.297.21') : webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.297.22'); }, onClick: () => togglePin('faction', faction.id), isActive: isPinned },
+          { icon: isPinned ? '/assets/icons/I_Pin_Pinned.png' : '/assets/icons/I_Pin_Unpinned.png', get tooltip() { return isPinned ? webUIText("DiplomacySidebar.UnpinFaction") : webUIText("DiplomacySidebar.PinFaction"); }, get tooltipBody() { return isPinned ? webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.297.21') : webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.297.22'); }, onClick: () => togglePin('faction', faction.id), isActive: isPinned },
           { icon: '/assets/icons/I_ZoomTo.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.298.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.298.23'); }, onClick: () => zoomToBridge('faction', faction.id) },
           { icon: '/assets/ui/I_HelpIcon.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.299.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.299.24'); }, onClick: () => showAdvisor('diplomacySidebar', { force: true }) },
         ]}
@@ -848,7 +848,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                     content={{
                       title: option.label,
                       body: option.body,
-                      get footer() { return canSetBuildFocus ? option.id === focusKey ? webUIText("Auto.Fix.PropExprTrueTrue.componentsscreensInternalPoliticsScreen.483.1") : webUIText("Auto.Fix.PropExprTrueFalse.componentsscreensInternalPoliticsScreen.483.1") : buildFocusBlockedReason; },
+                      get footer() { return canSetBuildFocus ? option.id === focusKey ? webUIText("InternalPolitics.CurrentBuildFocus") : webUIText("InternalPolitics.SetBuildFocusBody") : buildFocusBlockedReason; },
                     }}
                   >
                     <button
@@ -969,7 +969,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
               </PersonTooltip>
               <div className="diplo-ruler-info">
                 <div className="diplo-ruler-name">{faction.rulerName}</div>
-                <div className="diplo-ruler-title">{rulerCharacter?.shortTitle || webUIText("Auto.Fix.ExprFallback.componentssidebarsDiplomacySidebar.502.1")}</div>
+                <div className="diplo-ruler-title">{rulerCharacter?.shortTitle || webUIText("DiplomacySidebar.Ruler")}</div>
                 {rulerCharacter && (
                   <div className="diplo-ruler-stats">
                     {statMeta.map(s => {
@@ -1388,7 +1388,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             const hasSpy = !!faction.assignedSpy;
             const tooltip: TooltipContent = {
               title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.714.52'),
-              get body() { return strength >= 100 ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsDiplomacySidebar.716.1") : hasSpy ? webUIText("Auto.Fix.PropExprFalseTrue.componentssidebarsDiplomacySidebar.718.1") : webUIText("Auto.Fix.PropExprFalseFalse.componentssidebarsDiplomacySidebar.719.1"); },
+              get body() { return strength >= 100 ? webUIText("DiplomacySidebar.MaxInfluenceReached") : hasSpy ? webUIText("DiplomacySidebar.EachDayYour") : webUIText("DiplomacySidebar.NetworkStallsWithout"); },
               lines: hasSpy
                 ? [
                     { label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.722.53'), get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.722.1", { StrengthText: strengthText }); }, valueColor: 'var(--gold)' },
@@ -1396,7 +1396,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                     { label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.723.54'), value: formatNumber(net.spyCunning), valueColor: 'var(--gold)' },
                     {
                       label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.725.55'),
-                      get value() { return strength >= 100 ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsDiplomacySidebar.726.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsDiplomacySidebar.726.1", { Value1: formatSignedNumber(growth, { maximumFractionDigits: 1 }) }); },
+                      get value() { return strength >= 100 ? webUIText("DiplomacySidebar.Capped") : webUIText("DiplomacySidebar.Month", { Value1: formatSignedNumber(growth, { maximumFractionDigits: 1 }) }); },
                       valueColor: strength >= 100 ? 'var(--text-muted)' : 'var(--green)',
                     },
                   ]

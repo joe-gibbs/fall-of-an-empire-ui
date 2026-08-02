@@ -104,7 +104,7 @@ function buildCardTooltip(force: Force, allForces: Force[]) {
 
     { isHeader: true, label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.241.6') },
     {
-      get label() { return force.delegated ? webUIText("Auto.Fix.PropExprTrue.componentsscreensMilitaryMilitaryScreen.243.1") : webUIText("Auto.Fix.PropExprFalse.componentsscreensMilitaryMilitaryScreen.243.1"); },
+      get label() { return force.delegated ? webUIText("MilitaryScreen.Delegated") : webUIText("MilitaryScreen.DirectControl"); },
       labelIcon: force.delegated ? DELEGATION_ICON : DIRECT_ICON,
       value: force.delegated ? dm.label : undefined,
       valueIcon: force.delegated ? dm.icon : '/assets/icons/I_Minus.png',
@@ -115,7 +115,7 @@ function buildCardTooltip(force: Force, allForces: Force[]) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.252.7'),
       labelIcon: SQUASH_ICON,
-      get value() { return force.autoSquashRebels ? webUIText("Auto.Fix.PropExprTrue.componentsscreensMilitaryMilitaryScreen.254.1") : webUIText("Auto.Fix.PropExprFalse.componentsscreensMilitaryMilitaryScreen.254.1"); },
+      get value() { return force.autoSquashRebels ? webUIText("MilitaryScreen.StandingOrders") : webUIText("MilitaryScreen.Ignored"); },
       valueColor: force.autoSquashRebels ? 'var(--green-light)' : 'var(--text-muted)',
     });
   }
@@ -234,8 +234,8 @@ export function NodeCard({
           </div>
           <div className="chart-node-command-row">
             <Tooltip content={{
-              get title() { return force.delegated ? webUIText("Auto.Fix.PropExprTrue.componentsscreensMilitaryMilitaryScreen.352.1") : webUIText("Auto.Fix.PropExprFalse.componentsscreensMilitaryMilitaryScreen.352.1"); },
-              get body() { return force.delegated ? webUIText("Auto.Fix.PropExprTrue.componentsscreensMilitaryMilitaryScreen.354.1") : webUIText("Auto.Fix.PropExprFalse.componentsscreensMilitaryMilitaryScreen.355.1"); },
+              get title() { return force.delegated ? webUIText("MilitaryScreen.Delegated") : webUIText("MilitaryScreen.DirectControl"); },
+              get body() { return force.delegated ? webUIText("MilitaryScreen.DelegatedDoctrineBody") : webUIText("MilitaryScreen.DirectControlBody"); },
             }}>
               <span className={`chart-node-command-mark${force.delegated ? ' is-on' : ''}`}>
                 <img
@@ -244,7 +244,7 @@ export function NodeCard({
                   alt=""
                   draggable={false}
                 />
-                <span className="chart-node-command-text">{force.delegated ? webUIText("Auto.Fix.ExprTrue.componentsscreensMilitaryMilitaryScreen.364.1") : webUIText("Auto.Fix.ExprFalse.componentsscreensMilitaryMilitaryScreen.364.1")}</span>
+                <span className="chart-node-command-text">{force.delegated ? webUIText("MilitaryScreen.Delegated") : webUIText("MilitaryScreen.Direct")}</span>
               </span>
             </Tooltip>
             <Tooltip content={{ get title() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.367.1", { Label: dm.label }); }, body: dm.desc }}>

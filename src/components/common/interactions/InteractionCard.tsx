@@ -188,11 +188,11 @@ const InteractionCard: React.FC<InteractionCardProps> = ({
       <div className="interaction-card-body">
         <div className="interaction-card-header">
           <span className="interaction-card-title">
-            {flash === 'success' ? webUIText("Auto.Fix.ExprTrue.componentscommonInteractionCard.148.1") : flash === 'failure' ? webUIText("Auto.Fix.ExprFalseTrue.componentscommonInteractionCard.148.1") : title}
+            {flash === 'success' ? webUIText("InteractionCard.Succeeded") : flash === 'failure' ? webUIText("InteractionCard.Failed") : title}
           </span>
           {onCooldown && (
             <span className="interaction-card-cooldown-status">
-              {formatNumber(cooldownDaysLeft)} {cooldownDaysLeft === 1 ? webUIText("Auto.Fix.ExprTrue.componentscommonInteractionCard.152.1") : webUIText("Auto.Fix.ExprFalse.componentscommonInteractionCard.152.1")}
+              {formatNumber(cooldownDaysLeft)} {cooldownDaysLeft === 1 ? webUIText("Common.Day") : webUIText("Common.Days")}
             </span>
           )}
           {!inProgress && !flash && !onCooldown && cooldown && (
@@ -217,14 +217,14 @@ const InteractionCard: React.FC<InteractionCardProps> = ({
         )}
         {inProgress && (
           <p className="interaction-card-desc interaction-card-desc--progress">
-            {durationDays > 0 ? webUIText("Auto.Fix.ExprTrue.componentscommonInteractionCard.167.1") : webUIText("Auto.Fix.ExprFalse.componentscommonInteractionCard.167.1")}
+            {durationDays > 0 ? webUIText("InteractionCard.InProgress") : webUIText("InteractionCard.Executing")}
           </p>
         )}
         {flash === 'success' && (
           <p className="interaction-card-desc interaction-card-desc--success">{flashOutcomeText ?? title}</p>
         )}
         {flash === 'failure' && (
-          <p className="interaction-card-desc interaction-card-desc--failure">{flashOutcomeText ?? webUIText("Auto.Fix.Expr.componentscommonInteractionCard.174.1", { Title: title })}</p>
+          <p className="interaction-card-desc interaction-card-desc--failure">{flashOutcomeText ?? webUIText("InteractionCard.TheAttemptFailed", { Title: title })}</p>
         )}
         {!flash && meta && (
           <div className="interaction-card-meta">{meta}</div>

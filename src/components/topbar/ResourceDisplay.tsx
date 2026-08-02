@@ -55,14 +55,14 @@ function buildCommandTree(entries: CommandUpkeepEntry[]): CommandUpkeepTreeNode[
 function commandNodeToLine(node: CommandUpkeepTreeNode): TooltipLine {
   const v = -node.upkeep;
   const line: TooltipLine = {
-    get label() { return node.name || webUIText("Auto.Fix.PropExprFallback.componentstopbarResourceDisplay.58.1"); },
+    get label() { return node.name || webUIText("Common.Unassigned"); },
     value: formatSignedNumber(v),
     valueColor: 'var(--red)',
     valueIcon: goldIcon,
   };
   if (node.children.length > 0) {
     line.subTooltip = {
-      get title() { return node.name || webUIText("Auto.Fix.PropExprFallback.componentstopbarResourceDisplay.65.1"); },
+      get title() { return node.name || webUIText("Common.Subordinates"); },
       lines: node.children.map(commandNodeToLine),
     };
   }
@@ -215,7 +215,7 @@ const ResourceDisplay: React.FC = () => {
     <div className="resource-display">
       {showFpsCounter === true && (
         <>
-          <span className="resource-fps">{webUIText("Auto.Fix.Expr.componentstopbarResourceDisplay.219.1", { Value1: formatNumber(fps) })}</span>
+          <span className="resource-fps">{webUIText("TopbarResource.Fps", { Value1: formatNumber(fps) })}</span>
           <div className="resource-separator" />
         </>
       )}

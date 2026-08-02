@@ -339,9 +339,9 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   ];
 
   const garrisonAction: MilitaryAction | null = army.garrisonedAt ? {
-    get label() { return army.isNavy ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.486.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.486.1"); },
+    get label() { return army.isNavy ? webUIText("MilitarySidebar.Undock") : webUIText("MilitarySidebar.Ungarrison"); },
     icon: '/assets/icons/I_Ungarrison.png',
-    get description() { return army.isNavy ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.489.1", { GarrisonedAt: army.garrisonedAt }) : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.490.1", { GarrisonedAt: army.garrisonedAt }); },
+    get description() { return army.isNavy ? webUIText("MilitarySidebar.LeavePortBody", { GarrisonedAt: army.garrisonedAt }) : webUIText("MilitarySidebar.LeaveGarrisonBody", { GarrisonedAt: army.garrisonedAt }); },
     disabled: !isPlayerControlled,
     onClick: () => {
       ungarrisonMilitaryBridge(army.id).catch(acknowledgeBridgeFailure);
@@ -367,7 +367,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   } : null;
 
   const forcedMarchAction: MilitaryAction = {
-    get label() { return isForcedMarching ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.509.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.509.1"); },
+    get label() { return isForcedMarching ? webUIText("MilitarySidebar.EndMarch") : webUIText("MilitarySidebar.ForcedMarch"); },
     icon: '/assets/icons/I_Speed.png',
     description: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.511.8'),
     isActive: isForcedMarching,
@@ -395,16 +395,16 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const replenishCost = army.replenishCost ?? 0;
   const canUseReplenish = isReplenishing || (isPlayerControlled && !!army.formationTemplate && !!army.canReplenish && replenishCost > 0);
   const replenishTooltip: TooltipContent = {
-    get title() { return isReplenishing ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.521.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.521.1"); },
-    get body() { return army.formationTemplate ? (isReplenishing ? webUIText("Auto.Fix.PropExprTrueTrue.componentssidebarsMilitarySidebar.524.1") : webUIText("Auto.Fix.PropExprTrueFalse.componentssidebarsMilitarySidebar.524.1")) : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.525.1"); },
+    get title() { return isReplenishing ? webUIText("MilitarySidebar.CancelReplenish") : webUIText("MilitarySidebar.Replenish"); },
+    get body() { return army.formationTemplate ? (isReplenishing ? webUIText("MilitarySidebar.CancelReplenishmentBody") : webUIText("MilitarySidebar.QueueReplenishmentBody")) : webUIText("MilitarySidebar.AssignFormationBeforeReplenish"); },
     lines: [
       { label: webUIText('Common.Cost'), value: formatNumber(replenishCost), valueIcon: '/assets/icons/I_Coins.png', valueColor: 'var(--gold)' },
     ],
   };
   const replenishAction: MilitaryAction = {
-    get label() { return isReplenishing ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.521.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.521.1"); },
+    get label() { return isReplenishing ? webUIText("MilitarySidebar.CancelReplenish") : webUIText("MilitarySidebar.Replenish"); },
     icon: '/assets/icons/I_Replenish.png',
-    get description() { return army.formationTemplate ? (isReplenishing ? webUIText("Auto.Fix.PropExprTrueTrue.componentssidebarsMilitarySidebar.524.1") : webUIText("Auto.Fix.PropExprTrueFalse.componentssidebarsMilitarySidebar.524.1")) : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.525.1"); },
+    get description() { return army.formationTemplate ? (isReplenishing ? webUIText("MilitarySidebar.CancelReplenishmentBody") : webUIText("MilitarySidebar.QueueReplenishmentBody")) : webUIText("MilitarySidebar.AssignFormationBeforeReplenish"); },
     tooltip: replenishTooltip,
     isActive: isReplenishing,
     stateLabel: replenishCost > 0 ? formatNumber(replenishCost) : undefined,
@@ -415,9 +415,9 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   };
 
   const destructiveAction: MilitaryAction = {
-    get label() { return army.isFoederatiAuxiliary ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.542.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.542.1"); },
+    get label() { return army.isFoederatiAuxiliary ? webUIText("MilitarySidebar.StandDown") : webUIText("MilitarySidebar.Disband"); },
     icon: army.isFoederatiAuxiliary ? '/assets/icons/I_Retreat.png' : '/assets/icons/I_DisbandUnits.png',
-    get description() { return army.isFoederatiAuxiliary ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.545.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.546.1"); },
+    get description() { return army.isFoederatiAuxiliary ? webUIText("MilitarySidebar.ReleaseAuxiliaryBody") : webUIText("MilitarySidebar.DisbandThisForce"); },
     tone: 'danger',
     disabled: !isPlayerControlled,
     onClick: army.isFoederatiAuxiliary && army.foederatiOriginFactionId
@@ -450,18 +450,18 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
 
   const formationActions: MilitaryAction[] = army.isPersonalGuard ? [] : [
     {
-      get label() { return webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.557.1"); },
+      get label() { return webUIText("Common.Assign"); },
       icon: '/assets/icons/I_NewTemplate.png',
-      get description() { return webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.561.1"); },
+      get description() { return webUIText("MilitarySidebar.AssignAFormation"); },
       disabled: !isPlayerControlled,
       onClick: () => {
         openScreen('military', `assign:${encodeURIComponent(army.id)}`);
       },
     },
     ...(army.formationTemplate ? [{
-      get label() { return webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.557.1"); },
+      get label() { return webUIText("MilitarySidebar.Edit"); },
       icon: '/assets/icons/I_Template.png',
-      get description() { return webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.560.1"); },
+      get description() { return webUIText("MilitarySidebar.EditTemplateBody"); },
       disabled: !isPlayerControlled,
       onClick: () => {
         if (army.formationTemplate) openScreen('military', `template:${encodeURIComponent(army.formationTemplate)}`);
@@ -504,7 +504,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       id: 'supply',
       label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.615.19'),
       icon: '/assets/icons/I_RequisitionSupplies.png',
-      get value() { return army.supplyDays != null ? formatSupplyWindow(army.supplyDays) : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.617.1"); },
+      get value() { return army.supplyDays != null ? formatSupplyWindow(army.supplyDays) : webUIText("Common.Unknown"); },
       percent: Math.min(100, ((army.supplyDays ?? 0) / 90) * 100),
       color: (army.supplyDays ?? 0) > 30 ? 'green' : 'red',
       valueColor: (army.supplyDays ?? 0) > 30 ? 'var(--green)' : 'var(--red)',
@@ -527,7 +527,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     },
     {
       id: 'pressure',
-      get label() { return army.isNavy ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.638.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.638.1"); },
+      get label() { return army.isNavy ? webUIText("MilitarySidebar.Capacity") : webUIText("MilitarySidebar.Siege"); },
       icon: army.isNavy ? '/assets/icons/I_Capacity.png' : '/assets/icons/I_SiegePower.png',
       value: army.isNavy && army.capacity != null
         ? `${formatNumber(army.usedCapacity ?? 0)}/${formatNumber(army.capacity)}`
@@ -637,7 +637,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
             <Tooltip
               content={{
                 title: army.parentCommand,
-                get body() { return webUIText("Auto.Fix.ExprTrue.componentssidebarsMilitarySidebar.930.1", { ParentCommand: army.parentCommand }); },
+                get body() { return webUIText("MilitarySidebar.Under", { ParentCommand: army.parentCommand }); },
                 lines: [
                   { label: webUIText('Military.Command.TacticsBonus'), value: formatPercent((army.hierarchyTacticsBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
                   { label: webUIText('Military.Command.MoraleBonus'), value: formatPercent((army.hierarchyMoraleBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
@@ -652,7 +652,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 onMouseDown={() => { if (army.parentCommandId) openSidebar('military', army.parentCommandId); }}
               >
                 <img src="/assets/icons/I_AttachCommand.png" alt="" className="mil-parent-command-icon" />
-                <span className="mil-parent-command-name">{webUIText("Auto.Fix.ExprTrue.componentssidebarsMilitarySidebar.930.1", { ParentCommand: army.parentCommand })}</span>
+                <span className="mil-parent-command-name">{webUIText("MilitarySidebar.Under", { ParentCommand: army.parentCommand })}</span>
                 {army.parentCommandId && <img src="/assets/icons/I_NavNext.png" alt="" className="mil-parent-command-jump" />}
               </div>
             </Tooltip>
@@ -681,7 +681,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 <Tooltip
                   content={{
                     title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.967.40'),
-                    get body() { return autoSquash ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.969.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.970.1"); },
+                    get body() { return autoSquash ? webUIText("MilitarySidebar.IdleSubordinatesMarch") : webUIText("MilitarySidebar.WhenEnabledIdle"); },
                   }}
                   position="bottom"
                   delay={150}
@@ -760,7 +760,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
           })}
           {collapsible && (
             <button type="button" className="mil-sub-toggle" onClick={() => setSubsExpanded((current) => !current)}>
-              {subsExpanded ? webUIText("Auto.Fix.ExprTrue.componentssidebarsMilitarySidebar.1053.1") : webUIText("Auto.Fix.ExprFalse.componentssidebarsMilitarySidebar.1053.1", { Value1: formatNumber(subordinateRows.length) })}
+              {subsExpanded ? webUIText("MilitarySidebar.ShowLess") : webUIText("MilitarySidebar.ShowAll", { Value1: formatNumber(subordinateRows.length) })}
             </button>
           )}
         </div>
@@ -819,7 +819,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
           { icon: '/assets/icons/I_NavNext.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.680.1"); }, onClick: () => { if (nextMilitaryId) openSidebar('military', nextMilitaryId); } },
         ]}
         actionButtons={[
-          { icon: isPinned ? '/assets/icons/I_Pin_Pinned.png' : '/assets/icons/I_Pin_Unpinned.png', get tooltip() { return isPinned ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.683.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.683.1"); }, onClick: () => togglePin('military', army.id), isActive: isPinned },
+          { icon: isPinned ? '/assets/icons/I_Pin_Pinned.png' : '/assets/icons/I_Pin_Unpinned.png', get tooltip() { return isPinned ? webUIText("MilitarySidebar.Unpin") : webUIText("MilitarySidebar.Pin"); }, onClick: () => togglePin('military', army.id), isActive: isPinned },
           { icon: '/assets/icons/I_ZoomTo.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.684.1"); }, onClick: () => zoomToBridge('military', army.id) },
           { icon: '/assets/icons/I_Diplomacy.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.685.1"); }, onClick: () => openSidebar('diplomacy', army.factionId ?? army.faction) },
           { icon: '/assets/ui/I_HelpIcon.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.686.1"); }, onClick: () => showAdvisor('militarySidebar', { force: true }) },
@@ -855,8 +855,8 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                   <span className="mil-header-commander-name">{army.commanderName || webUIText('Common.NoCommander')}</span>
                   <Tooltip
                     content={{
-                      get title() { return army.commanderId ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.771.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.771.1"); },
-                      get body() { return isPlayerControlled ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.773.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.774.1"); },
+                      get title() { return army.commanderId ? webUIText("MilitarySidebar.ReplaceCommander") : webUIText("MilitarySidebar.AssignCommander"); },
+                      get body() { return isPlayerControlled ? webUIText("MilitarySidebar.ChooseCommanderBody") : webUIText("MilitarySidebar.OnlyYourOwn"); },
                     }}
                     position="bottom"
                     delay={150}
@@ -864,7 +864,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                     <button
                       type="button"
                       className={`mil-header-commander-action${!isPlayerControlled ? ' is-disabled' : ''}`}
-                      aria-label={army.commanderId ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.771.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.771.1")}
+                      aria-label={army.commanderId ? webUIText("MilitarySidebar.ReplaceCommander") : webUIText("MilitarySidebar.AssignCommander")}
                       disabled={!isPlayerControlled}
                       onMouseDown={() => { if (isPlayerControlled) setCommanderAssignmentOpen(true); }}
                     >
@@ -1047,7 +1047,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                     <Tooltip
                       content={{
                         title: army.formationTemplate,
-                        body: webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.560.1"),
+                        body: webUIText("MilitarySidebar.EditTemplateBody"),
                       }}
                       position="bottom"
                       delay={150}
@@ -1061,7 +1061,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                       </button>
                     </Tooltip>
                   ) : (
-                    <span className="mil-formation-name">{army.formationTemplate || webUIText("Auto.Fix.ExprFallback.componentssidebarsMilitarySidebar.899.1")}</span>
+                    <span className="mil-formation-name">{army.formationTemplate || webUIText("MilitarySidebar.NoFormationAssigned")}</span>
                   )}
                 </div>
               </div>
@@ -1093,7 +1093,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                     key={row.id}
                     content={{
                       title: row.name,
-                      get body() { return row.monthlyUsage > 0 ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsMilitarySidebar.858.1", { Value1: formatResourceAmount(row.amount), Value2: formatResourceAmount(row.monthlyUsage) }) : webUIText("Auto.Fix.PropExprFalse.componentssidebarsMilitarySidebar.859.1", { Value1: formatResourceAmount(row.amount) }); },
+                      get body() { return row.monthlyUsage > 0 ? webUIText("MilitarySidebar.StoredConsumesMonthly", { Value1: formatResourceAmount(row.amount), Value2: formatResourceAmount(row.monthlyUsage) }) : webUIText("MilitarySidebar.StoredNoCurrent", { Value1: formatResourceAmount(row.amount) }); },
                     }}
                     position="bottom"
                     delay={150}
@@ -1108,8 +1108,8 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                         {row.capacity > 0 && <PaintedBar percent={fillPercent} color={fillColor} className="mil-resource-progress" />}
                         {row.monthlyUsage > 0 && <PaintedBar percent={resourceReservePercent(row)} color={row.daysRemaining >= resourceReserveTargetDays(row) ? 'green' : fillColor} className="mil-resource-progress mil-resource-window-progress" />}
                         <div className="mil-resource-foot">
-                          <span className="mil-resource-burn">{row.monthlyUsage > 0 ? webUIText("Auto.Fix.ExprTrue.componentssidebarsMilitarySidebar.868.1", { Value1: formatResourceAmount(row.monthlyUsage) }) : webUIText("Auto.Fix.ExprFalse.componentssidebarsMilitarySidebar.868.1")}</span>
-                          <span className="mil-resource-days">{row.monthlyUsage > 0 ? formatSupplyWindow(row.daysRemaining) : webUIText("Auto.Fix.ExprFalse.componentssidebarsMilitarySidebar.869.1")}</span>
+                          <span className="mil-resource-burn">{row.monthlyUsage > 0 ? webUIText("MilitarySidebar.PerMonthDelta", { Value1: formatResourceAmount(row.monthlyUsage) }) : webUIText("MilitarySidebar.Stable")}</span>
+                          <span className="mil-resource-days">{row.monthlyUsage > 0 ? formatSupplyWindow(row.daysRemaining) : webUIText("MilitarySidebar.Stored")}</span>
                         </div>
                       </div>
                     </div>

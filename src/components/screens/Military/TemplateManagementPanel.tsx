@@ -574,12 +574,12 @@ export function TemplateUnitSelectorModal({
         const settlementTooltipBody = settlementNames.length > 0
           ? settlementNames.join(', ')
           : settlementCount > 0
-            ? webUIText('Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.618.1', { Value1: formatNumber(settlementCount) })
+            ? webUIText('FormationTemplateSidebar.Available', { Value1: formatNumber(settlementCount) })
             : webUIText('Common.NoneAvailable');
         const label = settlementNames.length > 0
           ? (settlementNames.length <= 2
             ? settlementNames.join(', ')
-            : webUIText('Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.618.1', { Value1: formatNumber(settlementCount) }))
+            : webUIText('FormationTemplateSidebar.Available', { Value1: formatNumber(settlementCount) }))
           : formatNumber(settlementCount);
         return (
           <Tooltip
@@ -819,8 +819,8 @@ function TemplateAssignedForces({
         const role = force.commanderName
           || force.rank
           || (force.isNavy
-            ? webUIText('Auto.Fix.ExprFallbackTrue.componentssidebarsFormationTemplateSidebar.685.1')
-            : webUIText('Auto.Fix.ExprFallbackFalse.componentssidebarsFormationTemplateSidebar.685.1'));
+            ? webUIText('Common.Fleet')
+            : webUIText('Common.Army'));
         return (
           <button
             key={force.id}
@@ -1197,7 +1197,7 @@ function TemplateEditor({
               <strong>{webUIText('Common.DayAbbrevValue', { Days: formatNumber(totals.days) })}</strong>
             </div>
             <div className="chart-template-total-row">
-              <span className="chart-template-total-label"><img src={SUPPLY_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('Auto.Fix.PropExprTrue.componentssidebarsFormationTemplateSidebar.469.1')}</span>
+              <span className="chart-template-total-label"><img src={SUPPLY_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('FormationTemplateSidebar.Food')}</span>
               <strong className="chart-template-total-bad">{webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.452.1", { Value1: formatNumber(totals.food, { maximumFractionDigits: 1 }) })}</strong>
             </div>
             <div className="chart-template-total-row">
@@ -1265,7 +1265,7 @@ function TemplateEditor({
             saveDraft(draft);
           }}
         >
-          <WebUIText textKey="Auto.Fix.VarExprTrue.componentsscreensSaveGameDialog.71.1" />
+          <WebUIText textKey="SaveGame.Save" />
         </GameButton>
       </div>
 
@@ -1432,7 +1432,7 @@ export function TemplatesPanel({
     setPendingDeleteTemplateId(null);
     void saveFormationTemplateBridge({
       templateId: '',
-      name: webUIText("Auto.Fix.VarExprTrue.componentssidebarsFormationTemplateSidebar.976.1", { Value1: sourceTemplate.name.trim() }),
+      name: webUIText("FormationTemplateSidebar.Copy", { Value1: sourceTemplate.name.trim() }),
       iconId: sourceTemplate.iconId,
       type: normaliseTemplateType(sourceTemplate.type),
       units: sourceTemplate.units

@@ -208,11 +208,11 @@ function filterLineageData(data: FamilyTreeData | null): FamilyTreeData | null {
 }
 
 function relationLabel(person: FamilyTreePerson): string {
-  if (person.isFocus && !person.isRuler) return person.shortTitle || person.title || person.relationToRuler || webUIText("Auto.Fix.PropExprFallback.componentssidebarsCharacterSidebar.424.1");
+  if (person.isFocus && !person.isRuler) return person.shortTitle || person.title || person.relationToRuler || webUIText("CharacterSidebar.Selected");
   if (person.isRuler) return webUIText("Auto.Return.componentsscreensFamilyTreeScreen.152.1");
   if (person.isDesignatedHeir) return webUIText("Auto.Return.componentsscreensFamilyTreeScreen.153.1");
   if (person.isHeir) return webUIText("Auto.Return.componentsscreensFamilyTreeScreen.154.1");
-  return person.shortTitle || person.title || person.relationToRuler || person.role || (person.gender === 'Female' ? webUIText("Auto.Fix.ReturnFallbackTrue.componentsscreensFamilyTreeScreen.155.1") : webUIText("Auto.Fix.ReturnFallbackFalse.componentsscreensFamilyTreeScreen.155.1"));
+  return person.shortTitle || person.title || person.relationToRuler || person.role || (person.gender === 'Female' ? webUIText("FamilyTree.Kinswoman") : webUIText("FamilyTree.Kinsman"));
 }
 
 function nodeClass(person: FamilyTreePerson, selectedId: string | null): string {
@@ -675,7 +675,7 @@ function FamilyNodeView({
   onOpen: (id: string) => void;
 }) {
   const person = node.person;
-  const deceasedText = webUIText("Auto.Fix.VarExprFalse.componentsscreensFamilyTreeScreen.617.1");
+  const deceasedText = webUIText("Common.Deceased");
   const title = relationLabel(person);
   const ageLabel = person.age > 0 ? formatNumber(person.age) : '';
 
@@ -905,7 +905,7 @@ function PatronageNodeView({
   onOpen: (id: string) => void;
 }) {
   const person = node.person;
-  const title = node.isFocus ? relationLabel(person) : person.shortTitle || person.role || (node.linkToPatron ? webUIText("Auto.Fix.VarExprFalseFallbackTrue.componentsscreensFamilyTreeScreen.816.1") : webUIText("Auto.Fix.VarExprFalseFallbackFalse.componentsscreensFamilyTreeScreen.816.1"));
+  const title = node.isFocus ? relationLabel(person) : person.shortTitle || person.role || (node.linkToPatron ? webUIText("FamilyTree.Client") : webUIText("FamilyTree.Patron"));
   const status = webUIText("Auto.Var.componentsscreensFamilyTreeScreen.817.1", { Value1: patronageStatus(node.linkToPatron), Value2: node.linkToPatron?.isInherited ? ' - inherited' : '' });
   const ageLabel = person.age > 0 ? formatNumber(person.age) : '';
 
@@ -918,7 +918,7 @@ function PatronageNodeView({
       onClick={event => {
         if (event.detail === 0) onOpen(person.id);
       }}
-      aria-label={person.isAlive ? person.name : `${person.name}, ${webUIText("Auto.Fix.VarExprFalse.componentsscreensFamilyTreeScreen.617.1")}`}
+      aria-label={person.isAlive ? person.name : `${person.name}, ${webUIText("Common.Deceased")}`}
     >
       <PersonTooltip characterId={person.id} position="right" delay={150}>
         <div className="ft-patron-node-portrait">

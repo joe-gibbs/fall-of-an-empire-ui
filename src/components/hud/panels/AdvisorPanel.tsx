@@ -89,7 +89,7 @@ function AdvisorPanel({
               className="advisor-card__btn advisor-card__btn--primary"
               onMouseDown={() => { playSound(isLastPage ? 'confirm' : 'click'); (isLastPage ? onDismiss : onNext)?.(); }}
             >
-              {isLastPage ? webUIText("Auto.Fix.ExprTrue.componentshudAdvisorPanel.94.1") : webUIText("Auto.Fix.ExprFalse.componentshudAdvisorPanel.94.1")}
+              {isLastPage ? webUIText("AdvisorPanel.Understood") : webUIText("AdvisorPanel.Next")}
             </button>
           </div>
         </div>

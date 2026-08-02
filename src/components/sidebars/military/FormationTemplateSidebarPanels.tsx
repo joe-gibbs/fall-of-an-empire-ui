@@ -128,11 +128,11 @@ export function TotalsBlock({ derived, isNaval }: { derived: DerivedTotals; isNa
     {
       key: isNaval ? 'food' : 'siege',
       icon: isNaval ? '/assets/icons/I_Food.png' : '/assets/icons/I_SiegePower.png',
-      get label() { return isNaval ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsFormationTemplateSidebar.469.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsFormationTemplateSidebar.469.1"); },
+      get label() { return isNaval ? webUIText("FormationTemplateSidebar.Food") : webUIText("FormationTemplateSidebar.Siege"); },
       value: isNaval ? `-${fmt(derived.food, 1)}` : fmt(derived.siegePower, 1),
       color: isNaval ? 'var(--orange)' : 'var(--text-bright)',
-      get title() { return isNaval ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsFormationTemplateSidebar.472.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsFormationTemplateSidebar.472.1"); },
-      get body() { return isNaval ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsFormationTemplateSidebar.473.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsFormationTemplateSidebar.473.1"); },
+      get title() { return isNaval ? webUIText("FormationTemplateSidebar.MonthlyFood") : webUIText("FormationTemplateSidebar.SiegePower"); },
+      get body() { return isNaval ? webUIText("FormationTemplateSidebar.MonthlyFoodBody") : webUIText("FormationTemplateSidebar.SiegePowerBody"); },
     },
   ];
 
@@ -350,7 +350,7 @@ export function Picker({
           <div className="tpl-picker-head">
             <div className="tpl-picker-title-block">
               <span className="tpl-picker-title"><WebUIText textKey="FormationTemplate.UnitCatalogue" /></span>
-              <span className="tpl-picker-subtitle">{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.618.1", { Value1: fmt(visibleCount) })}</span>
+              <span className="tpl-picker-subtitle">{webUIText("FormationTemplateSidebar.Available", { Value1: fmt(visibleCount) })}</span>
             </div>
             <CloseButton size="sm" onClick={onCancel} />
           </div>
@@ -413,11 +413,11 @@ export function Picker({
                           <img src={unitPortrait(unit)} alt="" className="tpl-picker-row-icon" />
                           <span className="tpl-picker-row-copy">
                             <strong>{unit.name}</strong>
-                            <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.650.1", { Value1: unitTypeLabel(unit.type), Value2: fmt(unit.tier) })}</span>
+                            <span>{webUIText("FormationTemplateSidebar.Tier", { Value1: unitTypeLabel(unit.type), Value2: fmt(unit.tier) })}</span>
                           </span>
                           <span className="tpl-picker-row-stats">
-                            <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.653.1", { Value1: fmt(unit.maxStrength) })}</span>
-                            <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.654.1", { Value1: fmt(unit.price) })}</span>
+                            <span>{webUIText("FormationTemplateSidebar.Strength", { Value1: fmt(unit.maxStrength) })}</span>
+                            <span>{webUIText("FormationTemplateSidebar.Gold", { Value1: fmt(unit.price) })}</span>
                           </span>
                           <span className="tpl-picker-row-count">{count > 0 ? fmt(count) : '-'}</span>
                           <span className="tpl-picker-row-add">+</span>
@@ -430,7 +430,7 @@ export function Picker({
             ))}
           </StyledScrollArea>
           <div className="tpl-picker-foot">
-            <span>{webUIText("Auto.Fix.Expr.componentssidebarsFormationTemplateSidebar.667.1", { Value1: fmt(visibleCount) })}</span>
+            <span>{webUIText("FormationTemplateSidebar.UnitsShown", { Value1: fmt(visibleCount) })}</span>
             <button type="button" className="tpl-picker-done" onMouseDown={onCancel}><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" /></button>
           </div>
         </div>
@@ -446,7 +446,7 @@ export function AssignedForces({ forces, openForce }: { forces: FormationTemplat
       {forces.length === 0 ? (
         <div className="tpl-empty"><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.679.5" /></div>
       ) : forces.map(force => {
-        const role = force.commanderName || force.rank || (force.isNavy ? webUIText("Auto.Fix.ExprFallbackTrue.componentssidebarsFormationTemplateSidebar.685.1") : webUIText("Auto.Fix.ExprFallbackFalse.componentssidebarsFormationTemplateSidebar.685.1"));
+        const role = force.commanderName || force.rank || (force.isNavy ? webUIText("Common.Fleet") : webUIText("Common.Army"));
         return (
           <button key={force.id} type="button" className="tpl-force-row" onMouseDown={() => openForce(force.id)}>
             <span className="tpl-force-line tpl-force-line--primary">

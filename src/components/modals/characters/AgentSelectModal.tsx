@@ -338,7 +338,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
                       />
                     )}
                     <span style={{ flex: 1 }}>{o.label}</span>
-                    {f && <span style={{ fontSize: '0.72rem', color: 'var(--text-dark)' }}>{webUIText("Auto.Fix.Expr.componentsmodalsAgentSelectModal.340.1", { Value1: formatNumber(f.opinion) })}</span>}
+                    {f && <span style={{ fontSize: '0.72rem', color: 'var(--text-dark)' }}>{webUIText("AgentSelect.Opinion", { Value1: formatNumber(f.opinion) })}</span>}
                   </>
                 );
               }}
@@ -359,7 +359,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
               { id: 'stat', label: primaryStatLabel },
             ]}
             onSortChange={setSort}
-            countLabel={webUIText("Auto.Fix.Expr.componentsmodalsAgentSelectModal.361.1", { Value1: formatNumber(candidates.length) })}
+            countLabel={webUIText("AgentSelect.Candidates", { Value1: formatNumber(candidates.length) })}
             emptyLabel={webUIText('Auto.ExtraAttr.ComponentsModalsAgentSelectModal.362.1')}
             headerAction={recruitButton}
             renderRow={({ character: c, fit }, active) => {
@@ -428,7 +428,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
                     if (!busy) return null;
                     return (
                       <div className="asm-activity asm-activity--busy">
-                        {webUIText("Auto.Fix.Expr.componentsmodalsAgentSelectModal.426.1", { Value1: formatPersonActivity(selected.character.activity).toLowerCase() })}
+                        {webUIText("AgentSelect.ServingElsewhereRecall", { Value1: formatPersonActivity(selected.character.activity).toLowerCase() })}
                       </div>
                     );
                   })()}
@@ -497,7 +497,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
                       ))}
                       <BreakdownRow
                         icon={role === 'diplomat' ? "/assets/icons/I_OpinionNeutral.png" : "/assets/icons/I_Spy.png"}
-                        label={role === 'diplomat' ? webUIText("Auto.Fix.ExprTrue.componentsmodalsAgentSelectModal.495.1") : webUIText("Auto.Fix.ExprFalse.componentsmodalsAgentSelectModal.495.1")}
+                        label={role === 'diplomat' ? webUIText("AgentSelect.TargetOpinion") : webUIText("AgentSelect.DiplomaticPosture")}
                         value={selected.fit.opinion}
                         className={selected.fit.traits.length === 0 ? 'asm-breakdown-row--last' : ''}
                       />

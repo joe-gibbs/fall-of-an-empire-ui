@@ -53,11 +53,11 @@ const PRIMARY_STAT: StatKey = 'authority';
 type SortKey = 'fit' | 'name' | 'age';
 
 function fitTier(stat: number): string {
-  if (stat >= 15) return webUIText("Auto.Fix.Return.componentsmodalsBishopAppointmentModal.50.1");
-  if (stat >= 12) return webUIText("Auto.Fix.Return.componentsmodalsBishopAppointmentModal.51.1");
-  if (stat >= 8) return webUIText("Auto.Fix.Return.componentsmodalsBishopAppointmentModal.52.1");
-  if (stat >= 5) return webUIText("Auto.Fix.Return.componentsmodalsBishopAppointmentModal.53.1");
-  return webUIText("Auto.Fix.Return.componentsmodalsBishopAppointmentModal.54.1");
+  if (stat >= 15) return webUIText("BishopAppointment.PillarOfTheFaith");
+  if (stat >= 12) return webUIText("BishopAppointment.WorthyPrelate");
+  if (stat >= 8) return webUIText("BishopAppointment.CapableShepherd");
+  if (stat >= 5) return webUIText("Common.Candidates.MarginalPick");
+  return webUIText("Common.Candidates.PoorFit");
 }
 
 export default function BishopAppointmentModal({
@@ -158,7 +158,7 @@ export default function BishopAppointmentModal({
     >
       <CandidateMissionBar prefix="bam">
         <CandidateMissionDescription prefix="bam">
-          {webUIText("Auto.Fix.Expr.componentsmodalsBishopAppointmentModal.123.1", { ReligionName: religionName, LandName: renderedAssignment.landName })}
+          {webUIText("BishopAppointment.ShepherdDescription", { ReligionName: religionName, LandName: renderedAssignment.landName })}
         </CandidateMissionDescription>
         <CandidateMissionStat prefix="bam" label={webUIText('Auto.Attr.ComponentsModalsBishopAppointmentModal.125.1')} value={formatNumber(renderedAssignment.followers)} />
         <CandidateMissionStat prefix="bam" label={webUIText('Auto.Attr.ComponentsModalsBishopAppointmentModal.126.2')} value={formatPercent(renderedAssignment.followerPercent * 100)} />
@@ -184,7 +184,7 @@ export default function BishopAppointmentModal({
             { id: 'age', label: webUIText('Auto.Prop.ComponentsModalsBishopAppointmentModal.146.5') },
           ]}
           onSortChange={setSort}
-          countLabel={webUIText("Auto.Fix.Expr.componentsmodalsBishopAppointmentModal.149.1", { Value1: formatNumber(candidates.length) })}
+          countLabel={webUIText("BishopAppointment.Candidates", { Value1: formatNumber(candidates.length) })}
           emptyLabel={webUIText('Auto.ExtraAttr.ComponentsModalsBishopAppointmentModal.150.2')}
           headerAction={recruitButton}
           renderRow={({ character, stat }, active) => (

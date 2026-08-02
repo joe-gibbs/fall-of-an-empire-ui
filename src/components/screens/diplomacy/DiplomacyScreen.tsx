@@ -601,7 +601,7 @@ function Treaties({ rows }: { rows: FactionTreaty[] }) {
           </TableCell>
           <TableCell className="dps-table-col--wide"><TreatyTypeCell type={row.type} /></TableCell>
           <TableCell className="dps-table-col--short">
-            {row.isPerpetual ? webUIText('Diplomacy.TreatyPerpetual') : row.daysRemaining && row.daysRemaining > 0 ? webUIText("Auto.Fix.ExprTrue.componentsscreensDiplomacyScreen.353.1", { Value1: formatNumber(row.daysRemaining) }) : webUIText("Auto.Fix.ExprFalse.componentsscreensDiplomacyScreen.353.1")}
+            {row.isPerpetual ? webUIText('Diplomacy.TreatyPerpetual') : row.daysRemaining && row.daysRemaining > 0 ? webUIText("DiplomacyScreen.Turns", { Value1: formatNumber(row.daysRemaining) }) : webUIText("DiplomacyScreen.Ongoing")}
           </TableCell>
           <TableCell className="dps-table-col--actions">
             <div className="dps-row-actions">
@@ -655,7 +655,7 @@ function ActiveWars({ rows }: { rows: ActiveWar[] }) {
             <div className="dps-war-side">
               <FactionNameCell
                 id={row.ourLeader.id}
-                name={row.ourLeader.name || webUIText("Auto.Fix.ExprFallback.componentsscreensDiplomacyScreen.383.1")}
+                name={row.ourLeader.name || webUIText("DiplomacyScreen.OurSide")}
                 colour={row.ourLeader.colour}
                 secondaryColour={row.ourLeader.secondaryColour}
                 cultureGroup={row.ourLeader.cultureGroup}
@@ -669,7 +669,7 @@ function ActiveWars({ rows }: { rows: ActiveWar[] }) {
             <div className="dps-war-side">
               <FactionNameCell
                 id={row.theirLeader.id}
-                name={row.theirLeader.name || webUIText("Auto.Fix.ExprFallback.componentsscreensDiplomacyScreen.397.1")}
+                name={row.theirLeader.name || webUIText("DiplomacyScreen.TheirSide")}
                 colour={row.theirLeader.colour}
                 secondaryColour={row.theirLeader.secondaryColour}
                 cultureGroup={row.theirLeader.cultureGroup}

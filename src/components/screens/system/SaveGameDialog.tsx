@@ -70,13 +70,13 @@ const SaveGameDialog: React.FC<SaveGameDialogProps> = ({
   const title = mode === 'saveAndQuit'
     ? webUIText("Auto.ComponentsScreensPauseMenu.309.7")
     : mode === 'save'
-      ? webUIText("Auto.Fix.VarExprTrue.componentsscreensSaveGameDialog.70.1")
-      : webUIText("Auto.Fix.VarExprFalse.componentsscreensSaveGameDialog.70.1");
+      ? webUIText("SaveGame.SaveGame")
+      : webUIText("SaveGame.RenameSave");
   const confirmLabel = mode === 'saveAndQuit'
     ? webUIText("Auto.ComponentsScreensPauseMenu.309.7")
     : mode === 'save'
-      ? webUIText("Auto.Fix.VarExprTrue.componentsscreensSaveGameDialog.71.1")
-      : webUIText("Auto.Fix.VarExprFalse.componentsscreensSaveGameDialog.71.1");
+      ? webUIText("SaveGame.Save")
+      : webUIText("SaveGame.Rename");
 
   const overlayCls = closing
     ? 'save-dialog-overlay save-dialog-overlay--closing'

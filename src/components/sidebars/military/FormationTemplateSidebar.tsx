@@ -508,7 +508,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
           { icon: '/assets/icons/I_NewTemplate.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.1059.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1059.7'); }, onClick: beginCreate },
           { icon: '/assets/icons/I_DuplicateTemplate.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.1060.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1060.8'); }, onClick: duplicateTemplate, disabled: unitCount === 0 },
           { icon: '/assets/icons/DeselectAll.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.1061.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1061.9'); }, onClick: clearComposition, disabled: unitCount === 0 },
-          { icon: '/assets/icons/I_Close.png', get tooltip() { return confirmDeleteId === selected?.id ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsFormationTemplateSidebar.1062.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsFormationTemplateSidebar.1062.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1062.10'); }, onClick: deleteTemplate, disabled: !selected?.canDelete },
+          { icon: '/assets/icons/I_Close.png', get tooltip() { return confirmDeleteId === selected?.id ? webUIText("FormationTemplateSidebar.ConfirmDelete") : webUIText("FormationTemplateSidebar.DeleteTemplate"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1062.10'); }, onClick: deleteTemplate, disabled: !selected?.canDelete },
         ]}
         onClose={onClose}
         closePosition="start"
@@ -518,7 +518,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
         <img src={headerImage} alt="" className="tpl-header-bg" />
         <div className="tpl-header-scrim" style={{ '--template-tint': headerTint } as React.CSSProperties} />
         <div className="tpl-header-content">
-          <Tooltip content={{ title: templateKind(draft.type), get body() { return isNaval ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsFormationTemplateSidebar.1072.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsFormationTemplateSidebar.1072.1"); } }} position="bottom" delay={200}>
+          <Tooltip content={{ title: templateKind(draft.type), get body() { return isNaval ? webUIText("FormationTemplateSidebar.NavalCompositionBody") : webUIText("FormationTemplateSidebar.LandCompositionBody"); } }} position="bottom" delay={200}>
             <div className="tpl-header-roundel">
               <img src={typeIcon} alt="" className="tpl-header-type-icon" />
             </div>
@@ -547,7 +547,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
                 />
               ) : (
                 <>
-                  <span className="tpl-header-name">{draft.name || webUIText("Auto.Fix.ExprFallback.componentssidebarsFormationTemplateSidebar.1097.1")}</span>
+                  <span className="tpl-header-name">{draft.name || webUIText("FormationTemplateSidebar.NewTemplate")}</span>
                   <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12'), body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.587.13') }} position="bottom" delay={150}>
                     <button type="button" className="tpl-header-rename-btn" onClick={() => setRenaming(true)}>
                       <img src="/assets/icons/I_Rename.png" alt="" className="tpl-header-edit-pencil" />
@@ -661,14 +661,14 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
         )}
         {selected && !assignmentTarget && (
           <button type="button" className="tpl-footer-btn tpl-footer-btn--danger" onMouseDown={deleteTemplate} disabled={!selected.canDelete}>
-            {confirmDeleteId === selected.id ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsFormationTemplateSidebar.1062.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsFormationTemplateSidebar.1062.1")}
+            {confirmDeleteId === selected.id ? webUIText("FormationTemplateSidebar.ConfirmDelete") : webUIText("FormationTemplateSidebar.DeleteTemplate")}
           </button>
         )}
         <button type="button" className="tpl-footer-btn tpl-footer-btn--secondary" onMouseDown={revertDraft} disabled={!isDirty || !baseline}>
           <WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.1176.9" />
         </button>
         <button type="button" className="tpl-footer-btn tpl-footer-btn--primary" onMouseDown={saveDraft} disabled={!canSave}>
-          {isDirty ? webUIText("Auto.Fix.ExprTrue.componentssidebarsFormationTemplateSidebar.1180.1") : baseline ? webUIText("Auto.Fix.ExprFalseTrue.componentssidebarsFormationTemplateSidebar.1180.1") : webUIText("Auto.Fix.ExprFalseFalse.componentssidebarsFormationTemplateSidebar.1180.1", { Value1: templateTypeName(draft.type) })}
+          {isDirty ? webUIText("FormationTemplateSidebar.SaveChanges") : baseline ? webUIText("FormationTemplateSidebar.Saved") : webUIText("FormationTemplateSidebar.Save", { Value1: templateTypeName(draft.type) })}
         </button>
       </div>
     </div>

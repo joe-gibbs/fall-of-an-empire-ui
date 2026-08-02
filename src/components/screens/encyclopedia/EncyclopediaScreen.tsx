@@ -1034,7 +1034,7 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
                                 {portrait ? <img src={portrait} alt="" draggable={false} /> : building.name.charAt(0)}
                               </div>
                               <span className="enc-bldg-name">{building.name}</span>
-                              <span className="enc-bldg-level">{webUIText('Auto.Fix.Expr.componentsscreensEncyclopediaScreen.701.1', { Value1: formatNumber(chainLevel) })}</span>
+                              <span className="enc-bldg-level">{webUIText('EncyclopediaScreen.Level', { Value1: formatNumber(chainLevel) })}</span>
                             </div>
                           </Tooltip>
                           <div className="enc-bldg-place-wrap">

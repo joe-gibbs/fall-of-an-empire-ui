@@ -104,7 +104,7 @@ const settlementTypeHeaderBg: Record<string, string> = {
 function buildInteractionTooltip(i: SettlementInteractionView, settlementId: string): TooltipContent {
   const lines: TooltipLine[] = [];
 
-  lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.99.1'), labelIcon: i.scope === 'region' ? '/assets/icons/I_Region.png' : '/assets/icons/I_City.png', get value() { return i.scope === 'region' ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementSidebar.99.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsSettlementSidebar.99.1"); } });
+  lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.99.1'), labelIcon: i.scope === 'region' ? '/assets/icons/I_Region.png' : '/assets/icons/I_City.png', get value() { return i.scope === 'region' ? webUIText("SettlementSidebar.Region") : webUIText("SettlementSidebar.Settlement"); } });
 
   if (i.goldCost > 0) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.102.2'), value: formatNumber(i.goldCost), valueIcon: '/assets/icons/I_Coins.png' });
@@ -361,7 +361,7 @@ function ShareTooltipPanel({
               <img src={bishopric.religionIcon} alt="" className="settle-share-clergy-empty-icon" />
             )}
             <div className="settle-share-clergy-copy">
-              <span className="settle-share-clergy-name">{bishopric.bishop ? bishopric.bishop.name : webUIText("Auto.Fix.ExprFalse.componentssidebarsSettlementSidebar.336.1", { ClergyTitle: bishopric.clergyTitle })}</span>
+              <span className="settle-share-clergy-name">{bishopric.bishop ? bishopric.bishop.name : webUIText("SettlementSidebar.No", { ClergyTitle: bishopric.clergyTitle })}</span>
               <span className="settle-share-clergy-meta">{formatNumber(bishopric.landFollowers)} <WebUIText textKey="Auto.ComponentsSidebarsSettlementSidebar.336.1" /> {followerPercent}</span>
             </div>
             {canManage && (
@@ -474,7 +474,7 @@ function buildResourceTooltip(r: Resource): TooltipContent {
   if (r.siegeHalted) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.460.29'), value: '', valueColor: 'var(--red)' });
   } else if (r.productionSources && r.productionSources.length > 0) {
-    lines.push({ get label() { return potential > r.production + 0.05 ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementSidebar.462.1", { ProdStr: prodStr, PotentialStr: potentialStr }) : webUIText("Auto.Fix.PropExprFalse.componentssidebarsSettlementSidebar.462.1", { ProdStr: prodStr }); }, isHeader: true });
+    lines.push({ get label() { return potential > r.production + 0.05 ? webUIText("SettlementSidebar.ProductionRate", { ProdStr: prodStr, PotentialStr: potentialStr }) : webUIText("SettlementSidebar.ProductionMo", { ProdStr: prodStr }); }, isHeader: true });
     r.productionSources.forEach(s => {
       lines.push({ label: s.name, get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.464.1", { Value1: formatSignedNumber(s.value, { maximumFractionDigits: 1 }) }); }, valueColor: 'var(--green)' });
     });
@@ -502,7 +502,7 @@ function buildResourceTooltip(r: Resource): TooltipContent {
 
   return {
     title: r.name,
-    get body() { return r.isNatural ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementSidebar.490.1", { Value1: r.categoryName ? r.categoryName.toLowerCase() : webUIText("Auto.Fix.PropExprTrueArgFalse.componentssidebarsSettlementSidebar.490.1") }) : r.categoryName; },
+    get body() { return r.isNatural ? webUIText("SettlementSidebar.NaturalResourceOfRegion", { Value1: r.categoryName ? r.categoryName.toLowerCase() : webUIText("SettlementSidebar.Resource") }) : r.categoryName; },
     lines,
   };
 }
@@ -851,7 +851,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
           { icon: '/assets/icons/I_NavNext.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.819.1"); }, onClick: () => handleNavigate(1), disabled: !settlement.canNavigateSettlements },
         ]}
         actionButtons={[
-          { icon: isPinned ? '/assets/icons/I_Pin_Pinned.png' : '/assets/icons/I_Pin_Unpinned.png', get tooltip() { return isPinned ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementSidebar.822.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsSettlementSidebar.822.1"); }, onClick: () => togglePin('settlement', settlement.id), isActive: isPinned },
+          { icon: isPinned ? '/assets/icons/I_Pin_Pinned.png' : '/assets/icons/I_Pin_Unpinned.png', get tooltip() { return isPinned ? webUIText("SettlementSidebar.UnpinSettlement") : webUIText("SettlementSidebar.PinSettlement"); }, onClick: () => togglePin('settlement', settlement.id), isActive: isPinned },
           { icon: '/assets/icons/I_ZoomTo.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.823.1"); }, onClick: () => zoomToBridge('settlement', settlement.id) },
           ...(settlement.showSetCapital ? [{
             icon: '/assets/icons/I_Capital.png',
@@ -1019,7 +1019,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                   <span className="settle-disease-name">{settlement.disease.name}</span>
                   <span className="settle-disease-meta">
                     {settlement.disease.severityLabel}
-                    {settlement.disease.deaths > 0 ? webUIText("Auto.Fix.ExprTrue.componentssidebarsSettlementSidebar.1111.1", { Value1: formatNumber(settlement.disease.deaths) }) : ''}
+                    {settlement.disease.deaths > 0 ? webUIText("SettlementSidebar.Dead", { Value1: formatNumber(settlement.disease.deaths) }) : ''}
                   </span>
                 </div>
               </div>
@@ -1106,7 +1106,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                 const totalStr = m.isPercent ? formatNumber(total, { maximumFractionDigits: 1 }) : formatNumber(total);
                 const tooltip: TooltipContent = hasNumeric ? {
                   title: m.label,
-                  get body() { return m.description || webUIText("Auto.Fix.PropExprFallback.componentssidebarsSettlementSidebar.1198.1", { Value1: total >= 0 ? '+' : '', TotalStr: totalStr, Value3: m.isPercent ? '%' : '' }); },
+                  get body() { return m.description || webUIText("SettlementSidebar.Total", { Value1: total >= 0 ? '+' : '', TotalStr: totalStr, Value3: m.isPercent ? '%' : '' }); },
                   lines: m.sources?.map(s => ({
                     label: s.name,
                     value: formatSignedNumber(s.value, { maximumFractionDigits: m.isPercent ? 1 : 0 }) + (m.isPercent ? '%' : ''),
@@ -1198,7 +1198,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                 });
                 tooltipLines.push({
                   label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1265.72'),
-                  get value() { return monthlyGrowth === 0 ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementSidebar.1269.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsSettlementSidebar.1269.1", { Value1: formatSignedNumber(monthlyGrowth) }); },
+                  get value() { return monthlyGrowth === 0 ? webUIText("SettlementSidebar.Stable") : webUIText("SettlementSidebar.PerMonth", { Value1: formatSignedNumber(monthlyGrowth) }); },
                   valueColor: monthlyGrowth > 0 ? 'var(--green)' : monthlyGrowth < 0 ? 'var(--red)' : 'var(--text-muted)',
                 });
                 const growthLines = breakdownLines(p.growthBreakdown, v => formatNumber(v, { maximumFractionDigits: 0 }));
@@ -1247,7 +1247,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
               })}
               {settlement.pops.length > 3 && (
                 <button className="settle-pop-toggle" onClick={() => setShowAllPops(!showAllPops)}>
-                  {showAllPops ? webUIText("Auto.Fix.ExprTrue.componentssidebarsSettlementSidebar.1318.1") : webUIText("Auto.Fix.ExprFalse.componentssidebarsSettlementSidebar.1318.1", { Value1: formatNumber(settlement.pops.length) })}
+                  {showAllPops ? webUIText("SettlementSidebar.ShowLess") : webUIText("SettlementSidebar.ShowAllGroups", { Value1: formatNumber(settlement.pops.length) })}
                 </button>
               )}
             </div>
@@ -1264,7 +1264,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                 const categoryPotential = category.potentialProduction;
                 const categoryTooltip: TooltipContent = {
                   title: category.name,
-                  get body() { return category.isCapitalStockpile ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementSidebar.1335.1") : undefined; },
+                  get body() { return category.isCapitalStockpile ? webUIText("SettlementSidebar.CapitalStockpileDraws") : undefined; },
                   lines: [
                     {
                       label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1335.76'),
@@ -1275,7 +1275,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
                     },
                     {
                       label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1342.77'),
-                      get value() { return categoryPotential > category.production + 0.05 ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsSettlementSidebar.1347.1", { Value1: formatNumber(category.production, { maximumFractionDigits: 1 }), Value2: formatNumber(categoryPotential, { maximumFractionDigits: 1 }) }) : webUIText("Auto.Fix.PropExprFalse.componentssidebarsSettlementSidebar.1348.1", { Value1: formatNumber(category.production, { maximumFractionDigits: 1 }) }); },
+                      get value() { return categoryPotential > category.production + 0.05 ? webUIText("SettlementSidebar.PerMonthRange", { Value1: formatNumber(category.production, { maximumFractionDigits: 1 }), Value2: formatNumber(categoryPotential, { maximumFractionDigits: 1 }) }) : webUIText("SettlementSidebar.PerMonth", { Value1: formatNumber(category.production, { maximumFractionDigits: 1 }) }); },
                       valueColor: categoryPotential > category.production + 0.05 ? 'var(--orange)' : 'var(--green)',
                     },
                     { label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1348.78'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1351.1", { Value1: formatNumber(category.consumption, { maximumFractionDigits: 1 }) }); }, valueColor: category.consumption > 0 ? 'var(--red)' : 'var(--text-muted)' },

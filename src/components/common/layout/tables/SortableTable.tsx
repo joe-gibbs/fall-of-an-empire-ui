@@ -37,7 +37,7 @@ function SortableTable<T extends Record<string, unknown>>({
   data,
   onRowClick,
   rowKey,
-  emptyLabel = webUIText("Auto.Fix.Default.componentscommonSortableTable.39.1"),
+  emptyLabel = webUIText("SortableTable.NoRows"),
   virtualized = false,
   virtualizeThreshold = 0,
   virtualRowHeight = 32,

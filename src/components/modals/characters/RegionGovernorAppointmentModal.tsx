@@ -55,11 +55,11 @@ const PRIMARY_STAT: StatKey = 'governance';
 type SortKey = 'fit' | 'name' | 'age';
 
 function fitTier(stat: number): string {
-  if (stat >= 15) return webUIText("Auto.Fix.Return.componentsmodalsRegionGovernorAppointmentModal.53.1");
-  if (stat >= 12) return webUIText("Auto.Fix.Return.componentsmodalsRegionGovernorAppointmentModal.54.1");
-  if (stat >= 8) return webUIText("Auto.Fix.Return.componentsmodalsRegionGovernorAppointmentModal.55.1");
-  if (stat >= 5) return webUIText("Auto.Fix.Return.componentsmodalsRegionGovernorAppointmentModal.56.1");
-  return webUIText("Auto.Fix.Return.componentsmodalsRegionGovernorAppointmentModal.57.1");
+  if (stat >= 15) return webUIText("RegionGovernor.ExceptionalGovernor");
+  if (stat >= 12) return webUIText("Common.Candidates.StrongCandidate");
+  if (stat >= 8) return webUIText("Common.Candidates.CapableHand");
+  if (stat >= 5) return webUIText("Common.Candidates.MarginalPick");
+  return webUIText("Common.Candidates.PoorFit");
 }
 
 function candidateSortValue(candidate: RegionGovernorCandidateView, sort: SortKey): string | number {
@@ -176,7 +176,7 @@ export default function RegionGovernorAppointmentModal({
     >
       <CandidateMissionBar prefix="cam">
         <CandidateMissionDescription prefix="cam">
-          {webUIText("Auto.Fix.Expr.componentsmodalsRegionGovernorAppointmentModal.142.1", { Value1: regionName || settlementName })}
+          {webUIText("RegionGovernor.AppointDescription", { Value1: regionName || settlementName })}
         </CandidateMissionDescription>
         <CandidateMissionStat prefix="cam" icon={primaryStatIcon} label={webUIText('Auto.Attr.ComponentsModalsRegionGovernorAppointmentModal.144.1')} value={primaryStatLabel} />
       </CandidateMissionBar>
@@ -194,7 +194,7 @@ export default function RegionGovernorAppointmentModal({
             { id: 'age', label: webUIText('Auto.Prop.ComponentsModalsRegionGovernorAppointmentModal.157.3') },
           ]}
           onSortChange={setSort}
-          countLabel={webUIText("Auto.Fix.Expr.componentsmodalsRegionGovernorAppointmentModal.160.1", { Value1: formatNumber(candidates.length) })}
+          countLabel={webUIText("RegionGovernor.Candidates", { Value1: formatNumber(candidates.length) })}
           emptyLabel={webUIText('Auto.ExtraAttr.ComponentsModalsRegionGovernorAppointmentModal.161.2')}
           headerAction={recruitButton}
           renderRow={(candidate, active) => {
@@ -234,7 +234,7 @@ export default function RegionGovernorAppointmentModal({
                 portraitSrc={selected.portrait}
                 portraitLayers={selected.portraitLayers}
                 name={selected.name}
-                title={selected.isCurrentGovernor ? webUIText("Auto.Fix.ExprTrue.componentsmodalsRegionGovernorAppointmentModal.197.1") : webUIText("Auto.Fix.ExprFalse.componentsmodalsRegionGovernorAppointmentModal.197.1")}
+                title={selected.isCurrentGovernor ? webUIText("RegionGovernor.CurrentGovernor2") : webUIText("RegionGovernor.Candidate")}
               />
 
               <div className="cam-detail-body">
@@ -275,7 +275,7 @@ export default function RegionGovernorAppointmentModal({
                     delay={150}
                     content={{
                       title: webUIText('Auto.Prop.ComponentsModalsRegionGovernorAppointmentModal.237.5'),
-                      get body() { return governorCouldRebel ? webUIText("Auto.Fix.PropExprTrue.componentsmodalsRegionGovernorAppointmentModal.239.1") : webUIText("Auto.Fix.PropExprFalse.componentsmodalsRegionGovernorAppointmentModal.240.1"); },
+                      get body() { return governorCouldRebel ? webUIText("RegionGovernor.ThisGovernorIs") : webUIText("RegionGovernor.RemoveGovernorBody"); },
                     }}
                   >
                     <GameButton variant="outline" onClick={handleRemove}><WebUIText textKey="Auto.ComponentsModalsRegionGovernorAppointmentModal.242.1" /></GameButton>

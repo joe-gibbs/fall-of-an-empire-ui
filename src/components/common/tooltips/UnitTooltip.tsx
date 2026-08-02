@@ -143,7 +143,7 @@ function ResourceList({ title, items, perContext }: { title: string; items: Buil
               delay={150}
               content={{
                 title: r.displayName || r.name,
-                body: r.description || r.effects || webUIText("Auto.Fix.PropExprFallback.componentscommonUnitTooltip.156.1"),
+                body: r.description || r.effects || webUIText("UnitTooltip.StrategicResource"),
                 lines: [
                   { label: perContext, value: valueLabel, valueIcon: r.icon, valueColor: 'var(--gold-light)' },
                 ],
@@ -345,7 +345,7 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
         {d.buildTime !== undefined && (
           <div className="tt-line">
             <span className="tt-line-label"><WebUIText textKey="Auto.ComponentsCommonUnitTooltip.340.7" /></span>
-              <span className="tt-line-value">{webUIText("Auto.Fix.Expr.componentscommonUnitTooltip.342.1", { Value1: n(d.buildTime) })}</span>
+              <span className="tt-line-value">{webUIText("UnitTooltip.Days", { Value1: n(d.buildTime) })}</span>
           </div>
         )}
         <div className="tt-line">
@@ -436,7 +436,7 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
                           setShowAllBuildabilitySettlements(true);
                         }}
                       >
-                        {webUIText("Auto.Fix.Expr.componentsscreensMilitaryMilitaryScreen.518.1", { Value1: n(hiddenBuildabilitySettlementCount) })}
+                        {webUIText("MilitaryScreen.More", { Value1: n(hiddenBuildabilitySettlementCount) })}
                       </button>
                     </span>
                   )}

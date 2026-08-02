@@ -260,7 +260,7 @@ function FactionTooltipContent({ faction }: { faction: FactionTooltipData }) {
         )}
       </div>
 
-      {faction.rulerName && <div className="ftt-ruler">{webUIText("Auto.Fix.Expr.componentscommonFactionTooltip.136.1", { RulerName: faction.rulerName })}</div>}
+      {faction.rulerName && <div className="ftt-ruler">{webUIText("FactionTooltip.RuledBy", { RulerName: faction.rulerName })}</div>}
       {faction.description && <div className="ftt-description">{faction.description}</div>}
 
       {hasIdentity && (
@@ -323,7 +323,7 @@ function FactionTooltipContent({ faction }: { faction: FactionTooltipData }) {
       {hasTags && (
         <div className="ftt-tags">
           {faction.buildFocus && faction.buildFocus !== 'Balanced' && (
-            <span className="ftt-tag">{webUIText("Auto.Fix.Expr.componentscommonFactionTooltip.199.1", { BuildFocus: faction.buildFocus })}</span>
+            <span className="ftt-tag">{webUIText("FactionTooltip.Focus", { BuildFocus: faction.buildFocus })}</span>
           )}
           {treaties.length > 0 && (
             <div className="ftt-treaties">

@@ -1032,7 +1032,7 @@ function PeaceNegotiationScreenContent({
   const warScore = preview?.currentWarScore ?? 0;
   const warScoreScale = Math.min(1, Math.abs(warScore) / 100).toFixed(3);
   const canSubmit = (!sourceOfferSelector || sourceOfferHydrated) && Boolean(preview?.canSubmit);
-  const screenTitle = state?.found ? (state.warName || webUIText("Auto.Fix.VarExprTrueFallback.componentsscreensPeaceNegotiationScreen.756.1")) : webUIText("Auto.Fix.VarExprFalse.componentsscreensPeaceNegotiationScreen.756.1");
+  const screenTitle = state?.found ? (state.warName || webUIText("PeaceNegotiation.WarSettlement")) : webUIText("PeaceNegotiation.PeaceTreaty");
   const warScoreBreakdown: TooltipContent = {
     title: webUIText('Diplomacy.WarScoreBreakdown'),
     body: webUIText('Diplomacy.WarScoreBreakdownBody'),
@@ -1112,7 +1112,7 @@ function PeaceNegotiationScreenContent({
 
   const acceptabilityBreakdown: TooltipContent = useMemo(() => ({
     title: webUIText('Auto.Prop.ComponentsScreensPeaceNegotiationScreen.804.13'),
-    body: renderAcceptabilityBreakdown(preview?.breakdown || webUIText("Auto.Fix.PropExprFallback.componentsscreensPeaceNegotiationScreen.805.1")),
+    body: renderAcceptabilityBreakdown(preview?.breakdown || webUIText("PeaceNegotiation.HowLikelyThe")),
   }), [preview]);
 
   const participantHeader = state?.found ? (
@@ -1236,7 +1236,7 @@ function PeaceNegotiationScreenContent({
     </Panel>
   ) : state && !state.found ? (
     <Panel title={webUIText('Auto.Attr.ComponentsScreensPeaceNegotiationScreen.876.15')} className="pns-panel pns-panel--empty">
-      <div className="pns-empty-state">{state.emptyReason || webUIText("Auto.Fix.ExprFallback.componentsscreensPeaceNegotiationScreen.877.1")}</div>
+      <div className="pns-empty-state">{state.emptyReason || webUIText("PeaceNegotiation.NoPeaceNegotiation")}</div>
     </Panel>
   ) : state ? (
     <div className="pns-board">
@@ -1251,7 +1251,7 @@ function PeaceNegotiationScreenContent({
         <div className="pns-selected-columns">
           <TermsColumn
             title={webUIText('Auto.Attr.ComponentsScreensPeaceNegotiationScreen.890.17')}
-            targetLabel={ourLead?.faction.name ? webUIText("Auto.Fix.ExprTrue.componentsscreensPeaceNegotiationScreen.891.1", { Name: ourLead.faction.name }) : ''}
+            targetLabel={ourLead?.faction.name ? webUIText("PeaceNegotiation.ByName", { Name: ourLead.faction.name }) : ''}
             direction="concession"
             selectedTerms={selectedConcessions}
             stateTerms={liveTerms}
@@ -1265,7 +1265,7 @@ function PeaceNegotiationScreenContent({
 
           <TermsColumn
             title={webUIText('Auto.Attr.ComponentsScreensPeaceNegotiationScreen.901.18')}
-            targetLabel={theirLead?.faction.name ? webUIText("Auto.Fix.ExprTrue.componentsscreensPeaceNegotiationScreen.902.1", { Name: theirLead.faction.name }) : ''}
+            targetLabel={theirLead?.faction.name ? webUIText("PeaceNegotiation.FromName", { Name: theirLead.faction.name }) : ''}
             direction="demand"
             selectedTerms={selectedDemands}
             stateTerms={liveTerms}
@@ -1283,7 +1283,7 @@ function PeaceNegotiationScreenContent({
             <div className="pns-acceptance-header">
               <Tooltip content={acceptabilityBreakdown} position="left" delay={200} variant="sidebar" bubbleClassName="pns-acceptability-tooltip">
                 <span className={`pns-acceptance-label pns-acceptance-label--${acceptTone}`}>
-                  {preview?.verdictLabel || webUIText("Auto.Fix.ExprFallback.componentsscreensPeaceNegotiationScreen.917.1")}
+                  {preview?.verdictLabel || webUIText("PeaceNegotiation.NoOffer")}
                 </span>
               </Tooltip>
               <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensPeaceNegotiationScreen.920.19'), body: webUIText('Auto.Prop.ComponentsScreensPeaceNegotiationScreen.920.20') }} position="top" delay={200}>

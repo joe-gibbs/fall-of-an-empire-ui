@@ -311,7 +311,7 @@ function PersonTooltipContent({ character: c, initialAltHeld }: { character: Cha
         <div className="ptt-strip-name-row">
           {titleParts?.title && <span className="ptt-strip-title">{titleParts.title}</span>}
           <span className="ptt-strip-name">{c.name}</span>
-          <span className="ptt-strip-age">{formatNumber(c.age)}{!isAlive ? webUIText("Auto.Fix.ExprTrue.componentscommonPersonTooltip.304.1") : ''}</span>
+          <span className="ptt-strip-age">{formatNumber(c.age)}{!isAlive ? webUIText("PersonTooltip.Deceased") : ''}</span>
         </div>
         {titleParts?.relation && (
           <div className="ptt-strip-relation">{titleParts.relation}</div>
@@ -423,7 +423,7 @@ function PersonTooltipContent({ character: c, initialAltHeld }: { character: Cha
       {expanded && c.traits.length > 0 && (
         <div className="ptt-strip-traits">
           {c.traits.map((trait) => {
-            const footer = trait.isTemporary && trait.remainingDays !== undefined ? webUIText("Auto.Fix.VarExprTrue.componentscommonPersonTooltip.415.1", { Value1: formatNumber(trait.remainingDays), Value2: trait.remainingDays === 1 ? webUIText("Auto.Fix.VarExprTrueArgTrue.componentscommonPersonTooltip.415.1") : webUIText("Auto.Fix.VarExprTrueArgFalse.componentscommonPersonTooltip.415.1") }) : undefined;
+            const footer = trait.isTemporary && trait.remainingDays !== undefined ? webUIText("PersonTooltip.ExpiresIn", { Value1: formatNumber(trait.remainingDays), Value2: trait.remainingDays === 1 ? webUIText("Common.Day") : webUIText("Common.Days") }) : undefined;
             return (
               <Tooltip
                 key={trait.id}

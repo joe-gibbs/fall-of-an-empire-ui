@@ -373,7 +373,7 @@ function GoldValue({ value, monthly = false, signed = false }: { value: number |
   return (
     <span className="ips-gold-value">
       <img className="ips-gold-icon" src={GOLD_ICON} alt={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.326.1')} />
-      <span>{monthly ? webUIText("Auto.Fix.ExprTrue.componentsscreensInternalPoliticsScreen.327.1", { Amount: amount }) : amount}</span>
+      <span>{monthly ? webUIText("InternalPolitics.AmountPerMonth", { Amount: amount }) : amount}</span>
     </span>
   );
 }
@@ -402,7 +402,7 @@ function BlocLine({ bloc }: { bloc?: PowerBloc }) {
       className="ips-bloc-line ips-bloc-link"
       icon={bloc.iconKey ? <img className="ips-bloc-icon" src={bloc.iconKey} alt="" /> : null}
     >
-      {webUIText("Auto.Fix.Expr.componentsscreensInternalPoliticsScreen.353.1", { Name: bloc.name })}
+      {webUIText("InternalPolitics.Bloc", { Name: bloc.name })}
     </EntityLink>
   );
 }
@@ -485,7 +485,7 @@ function InternalFactionRow({
     ? FOCUS_OPTIONS
     : FOCUS_OPTIONS.filter(option => option.id === focusKey);
   const buildFocusBlockedReason = row.buildFocusBlockedReason
-    || (row.isAtWar ? webUIText("Auto.Fix.VarExprTrue.componentsscreensInternalPoliticsScreen.416.1") : webUIText("Auto.Fix.VarExprFalse.componentsscreensInternalPoliticsScreen.416.1"));
+    || (row.isAtWar ? webUIText("InternalPolitics.LockedWhileAtWar") : webUIText("InternalPolitics.NotUnderYourControl"));
   const taxRate = normalisedRate(economy?.taxRate ?? tax?.effectiveRate ?? row.taxRate);
   const showTaxControls = !row.isRebel;
   const canLowerTax = showTaxControls && taxRate !== undefined && taxRate > 0.1001;
@@ -530,7 +530,7 @@ function InternalFactionRow({
       <div className="ips-faction-cell ips-faction-cell--ruler">
         <PersonPortrait character={character} personId={row.rulerId || undefined} name={row.rulerName || row.name} />
         <div className="ips-faction-ruler-copy">
-          <EntityLink type="character" id={row.rulerId} className="ips-ruler-name ips-entity-link" fallbackClassName="ips-ruler-name">{row.rulerName || webUIText("Auto.Fix.ExprFallback.componentsscreensInternalPoliticsScreen.458.1")}</EntityLink>
+          <EntityLink type="character" id={row.rulerId} className="ips-ruler-name ips-entity-link" fallbackClassName="ips-ruler-name">{row.rulerName || webUIText("InternalPolitics.NoRuler")}</EntityLink>
           <BlocLine bloc={bloc} />
         </div>
       </div>
@@ -538,7 +538,7 @@ function InternalFactionRow({
       <div className="ips-faction-cell ips-faction-cell--compliance">
         <ComplianceStateLabel value={compliance} />
         <GameBar value={complianceMeterValue(compliance)} max={100} colour={complianceTone} size="sm" />
-        <span className="ips-compliance-opinion" style={{ color: opinionTone }}>{webUIText("Auto.Fix.Expr.componentsscreensInternalPoliticsScreen.466.1", { Value1: formatSignedNumber(row.opinion) })}</span>
+        <span className="ips-compliance-opinion" style={{ color: opinionTone }}>{webUIText("InternalPolitics.Opinion", { Value1: formatSignedNumber(row.opinion) })}</span>
       </div>
 
       <div className="ips-faction-cell ips-faction-cell--focus">
@@ -554,7 +554,7 @@ function InternalFactionRow({
               content={{
                 title: option.label,
                 body: option.body,
-                get footer() { return canSetBuildFocus ? option.id === focusKey ? webUIText("Auto.Fix.PropExprTrueTrue.componentsscreensInternalPoliticsScreen.483.1") : webUIText("Auto.Fix.PropExprTrueFalse.componentsscreensInternalPoliticsScreen.483.1") : buildFocusBlockedReason; },
+                get footer() { return canSetBuildFocus ? option.id === focusKey ? webUIText("InternalPolitics.CurrentBuildFocus") : webUIText("InternalPolitics.SetBuildFocusBody") : buildFocusBlockedReason; },
               }}
             >
               <button
@@ -584,7 +584,7 @@ function InternalFactionRow({
               position="bottom"
               content={{
                 title: webUIText('Auto.Prop.ComponentsScreensInternalPoliticsScreen.512.2'),
-                get body() { return canLowerTax ? webUIText("Auto.Fix.PropExprTrue.componentsscreensInternalPoliticsScreen.514.1") : webUIText("Auto.Fix.PropExprFalse.componentsscreensInternalPoliticsScreen.515.1"); },
+                get body() { return canLowerTax ? webUIText("InternalPolitics.LowerThisSubject") : webUIText("InternalPolitics.TaxRateAlreadyMax"); },
               }}
             >
               <button
@@ -605,7 +605,7 @@ function InternalFactionRow({
               position="bottom"
               content={{
                 title: webUIText('Auto.Prop.ComponentsScreensInternalPoliticsScreen.535.3'),
-                get body() { return canRaiseTax ? webUIText("Auto.Fix.PropExprTrue.componentsscreensInternalPoliticsScreen.537.1") : webUIText("Auto.Fix.PropExprFalse.componentsscreensInternalPoliticsScreen.538.1"); },
+                get body() { return canRaiseTax ? webUIText("InternalPolitics.RaiseThisSubject") : webUIText("InternalPolitics.TaxRateAlreadyMin"); },
               }}
             >
               <button
@@ -630,8 +630,8 @@ function InternalFactionRow({
       </div>
       <div className="ips-faction-cell ips-faction-cell--scale">
         <span className="ips-faction-cell-label"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.560.5" /></span>
-        <span>{webUIText("Auto.Fix.Expr.componentsscreensInternalPoliticsScreen.562.1", { Value1: formatCompactNumber(row.population) })}</span>
-        <small>{webUIText("Auto.Fix.Expr.componentsscreensInternalPoliticsScreen.563.1", { Value1: formatNumber(row.settlements) })}</small>
+        <span>{webUIText("InternalPolitics.Pop", { Value1: formatCompactNumber(row.population) })}</span>
+        <small>{webUIText("InternalPolitics.Settlements", { Value1: formatNumber(row.settlements) })}</small>
       </div>
     </div>
   );
@@ -653,7 +653,7 @@ function GovernorRow({ row, characters, blocs }: { row: RegionalGovernor; charac
       <div className="ips-governor-cell ips-governor-cell--governor">
         <PersonPortrait character={character} personId={row.governorId || undefined} name={row.governorName || row.regionName} />
         <div className="ips-governor-copy">
-          <EntityLink type="character" id={row.governorId} className="ips-governor-name ips-entity-link" fallbackClassName="ips-governor-name">{row.governorName || webUIText("Auto.Fix.ExprFallback.componentsscreensInternalPoliticsScreen.584.1")}</EntityLink>
+          <EntityLink type="character" id={row.governorId} className="ips-governor-name ips-entity-link" fallbackClassName="ips-governor-name">{row.governorName || webUIText("InternalPolitics.NoGovernor")}</EntityLink>
           {row.governorId ? <BlocLine bloc={bloc} /> : <span className="ips-governor-bloc"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.584.7" /></span>}
         </div>
       </div>
@@ -681,11 +681,11 @@ function ProvinceCandidateCard({ row, leaderCandidates }: { row: ProvinceCandida
   const [leaderModalOpen, setLeaderModalOpen] = useState(false);
   const controlTone = row.controlPercent >= 100 ? 'var(--green)' : row.controlPercent >= 75 ? 'var(--yellow)' : 'var(--red-light)';
   const createProvinceThroughputLine = bureaucraticTooltipLine(row.bureaucraticLoadChange);
-  const statusText = row.canCreate ? webUIText("Auto.Fix.ExprTrue.componentsscreensInternalPoliticsScreen.626.1") : webUIText("Auto.Fix.ExprFalse.componentsscreensInternalPoliticsScreen.626.1");
+  const statusText = row.canCreate ? webUIText("InternalPolitics.Ready") : webUIText("InternalPolitics.NotReady");
   const statusIcon = row.canCreate ? READY_ICON : BLOCKED_ICON;
   const canCreateProvince = row.canCreate && leaderCandidates.length > 0;
   const createBlockedReason = !row.canCreate
-    ? row.blockedReason || webUIText("Auto.Fix.PropExprFalseFallback.componentsscreensInternalPoliticsScreen.636.1")
+    ? row.blockedReason || webUIText("InternalPolitics.ThisLandCannot")
     : webUIText('InternalPolitics.NoEligibleProvinceLeaders');
   return (
     <>
@@ -779,7 +779,7 @@ function CommandHeadRow({ summary, characters, blocs }: { summary: CommandHeadSu
   const relationshipIcon = compliance === undefined ? undefined : character?.hasCompliance ? getComplianceState(compliance).icon : STAT_ICONS.loyalty;
   const totalStrengthPercent = totalMaxStrength > 0 ? Math.round(totalStrength / totalMaxStrength * 100) : 0;
   const strengthTone = totalStrengthPercent >= 80 ? 'var(--green)' : totalStrengthPercent >= 55 ? 'var(--yellow)' : 'var(--red-light)';
-  const relationshipLabel = character?.hasCompliance ? webUIText("Auto.Fix.VarExprTrue.componentsscreensInternalPoliticsScreen.666.1") : webUIText("Auto.Fix.VarExprFalse.componentsscreensInternalPoliticsScreen.666.1");
+  const relationshipLabel = character?.hasCompliance ? webUIText("InternalPolitics.Compliance") : webUIText("Common.Loyalty");
   const bloc = blocForPerson(force.commanderId, blocs);
   const subordinateLabel = webUIText(
     subordinateCount === 1 ? 'InternalPolitics.CommandSubordinateCountOne' : 'InternalPolitics.CommandSubordinateCountMany',
@@ -800,7 +800,7 @@ function CommandHeadRow({ summary, characters, blocs }: { summary: CommandHeadSu
         <span className="ips-command-detail">{subordinateLabel}</span>
       </div>
       <div className="ips-command-cell ips-command-cell--type">
-        <span>{force.isNavy ? webUIText("Auto.Fix.ExprTrue.componentsscreensInternalPoliticsScreen.682.1") : webUIText("Auto.Fix.ExprFalse.componentsscreensInternalPoliticsScreen.682.1")}</span>
+        <span>{force.isNavy ? webUIText("Common.Fleet") : webUIText("Common.Army")}</span>
       </div>
       <div className="ips-command-cell ips-command-cell--strength">
         <span className="ips-command-strength">{formatNumber(totalStrength)}</span>
@@ -831,7 +831,7 @@ function FoederatiRow({
   const { openSidebar } = useGameActions();
   const activeText = entry.isCalledUp ? formatNumber(entry.activeStrength) : '-';
   const canToggle = entry.isCalledUp || entry.canCall;
-  const actionLabel = entry.isCalledUp ? webUIText("Auto.Fix.VarExprTrue.componentsscreensInternalPoliticsScreen.708.1") : entry.canCall ? webUIText("Auto.Fix.VarExprFalseTrue.componentsscreensInternalPoliticsScreen.708.1") : webUIText("Auto.Fix.VarExprFalseFalse.componentsscreensInternalPoliticsScreen.708.1");
+  const actionLabel = entry.isCalledUp ? webUIText("InternalPolitics.StandDown") : entry.canCall ? webUIText("InternalPolitics.CallUp") : webUIText("InternalPolitics.WillRefuse");
   const rulerId = entry.rulerId || faction?.rulerId || undefined;
   const bloc = blocForPerson(rulerId, blocs);
   const character = rulerId ? characters.get(rulerId) : undefined;
@@ -884,7 +884,7 @@ function FoederatiRow({
           position="left"
           content={{
             title: actionLabel,
-            get body() { return entry.isCalledUp ? webUIText("Auto.Fix.PropExprTrue.componentsscreensInternalPoliticsScreen.751.1") : entry.canCall ? webUIText("Auto.Fix.PropExprFalseTrue.componentsscreensInternalPoliticsScreen.753.1") : webUIText("Auto.Fix.PropExprFalseFalse.componentsscreensInternalPoliticsScreen.754.1"); },
+            get body() { return entry.isCalledUp ? webUIText("InternalPolitics.StandDownThis") : entry.canCall ? webUIText("InternalPolitics.CallUpThis") : webUIText("InternalPolitics.ThisFoederatiForce"); },
           }}
         >
           <button
@@ -990,7 +990,7 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
               items={sortedGovernors}
               getKey={row => row.regionId || row.regionName}
               renderItem={row => <GovernorRow row={row} characters={charactersById} blocs={blocs} />}
-              empty={<div className="ips-empty">{diplomacy?.governorEmptyReason || webUIText("Auto.Fix.ExprFallback.componentsscreensInternalPoliticsScreen.841.1")}</div>}
+              empty={<div className="ips-empty">{diplomacy?.governorEmptyReason || webUIText("InternalPolitics.NoRegionalGovernors")}</div>}
               className="ips-row-scroll-frame"
               viewportClassName="ips-table-body ips-governor-table-body ips-row-viewport"
               itemClassName="ips-row-frame"
@@ -1012,7 +1012,7 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
             items={provinceCandidates}
             getKey={row => row.landId || row.landName}
             renderItem={row => <ProvinceCandidateCard row={row} leaderCandidates={sortedProvinceLeaderCandidates} />}
-            empty={<div className="ips-empty">{diplomacy?.provinceEmptyReason || webUIText("Auto.Fix.ExprFallback.componentsscreensInternalPoliticsScreen.856.1")}</div>}
+            empty={<div className="ips-empty">{diplomacy?.provinceEmptyReason || webUIText("InternalPolitics.NoProvinceCandidates")}</div>}
             className="ips-row-scroll-frame"
             viewportClassName="ips-tab-list ips-province-list ips-row-viewport"
             itemClassName="ips-row-frame"

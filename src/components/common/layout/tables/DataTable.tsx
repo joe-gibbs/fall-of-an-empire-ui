@@ -185,7 +185,7 @@ function DataTable<T, TKey extends string = string>({
   rows,
   columns,
   rowKey,
-  emptyLabel = webUIText("Auto.Fix.Default.componentscommonDataTable.164.1"),
+  emptyLabel = webUIText("DataTable.NoRows"),
   onRowClick,
   rowTutorialTarget,
 
@@ -213,7 +213,7 @@ function DataTable<T, TKey extends string = string>({
 
   searchValue,
   onSearchChange,
-  searchPlaceholder = webUIText("Auto.Fix.Default.componentscommonDataTable.191.1"),
+  searchPlaceholder = webUIText("DataTable.SearchPlaceholder"),
   searchLabel,
   searchPredicate,
   filterPredicate,

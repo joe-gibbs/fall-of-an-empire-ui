@@ -232,7 +232,7 @@ export default function PersonInteractionGiftModal({
                     <div className="pig-option__copy">
                       <span className="pig-option__name">{option.name}</span>
                       <span className="pig-option__desc">{option.description}</span>
-                      {!affordable && <span className="pig-option__shortfall">{webUIText("Auto.Fix.Expr.componentsmodalsPersonInteractionGiftModal.231.1", { Value1: formatNumber(shortfall) })}</span>}
+                      {!affordable && <span className="pig-option__shortfall">{webUIText("PersonInteractionGift.Short", { Value1: formatNumber(shortfall) })}</span>}
                     </div>
                     {option.iconPath && (
                       <img src={option.iconPath} alt="" className="pig-option__mark" draggable={false} />

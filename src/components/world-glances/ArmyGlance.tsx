@@ -102,7 +102,7 @@ function militaryTooltip(
   const lines: TooltipLine[] = [
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.157.1'),
-      get value() { return isNavy ? webUIText("Auto.Fix.PropExprTrue.componentsworldglancesArmyGlance.159.1") : webUIText("Auto.Fix.PropExprFalse.componentsworldglancesArmyGlance.159.1"); },
+      get value() { return isNavy ? webUIText("ArmyGlance.Navy") : webUIText("Common.Army"); },
       valueIcon: isNavy ? '/assets/icons/I_Port.png' : '/assets/icons/I_Swords.png',
     },
     {
@@ -111,7 +111,7 @@ function militaryTooltip(
       valueIcon: blockading ? '/assets/icons/I_Siege.png' : detail.isRaiding ? '/assets/icons/I_RaidingTorch.png' : undefined,
     },
     {
-      get label() { return isNavy ? webUIText("Auto.Fix.PropExprTrue.componentsworldglancesArmyGlance.163.1") : webUIText("Auto.Fix.PropExprFalse.componentsworldglancesArmyGlance.163.1"); },
+      get label() { return isNavy ? webUIText("ArmyGlance.Ships") : webUIText("ArmyGlance.Soldiers"); },
       value: strengthValueLabel(detail),
       valueColor: strengthColour(strengthFraction(detail)),
       valueIcon: isNavy ? '/assets/icons/I_Port.png' : '/assets/icons/I_Swords.png',

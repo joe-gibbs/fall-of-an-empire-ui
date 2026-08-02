@@ -374,7 +374,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
   const notifyInteractionFailure = React.useCallback((message?: string) => {
     addNotification({
       title: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.941.30'),
-      get description() { return message || webUIText("Auto.Fix.PropExprFallback.componentssidebarsCharacterSidebar.942.1"); },
+      get description() { return message || webUIText("CharacterSidebar.TheActionCould"); },
       type: 'character',
     });
   }, [addNotification]);
@@ -506,7 +506,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
           },
         ]}
         actionButtons={[
-          { icon: isPinned ? '/assets/icons/I_Pin_Pinned.png' : '/assets/icons/I_Pin_Unpinned.png', get tooltip() { return isPinned ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsCharacterSidebar.1041.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsCharacterSidebar.1041.1"); }, get tooltipBody() { return isPinned ? webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1029.1') : webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1029.2'); }, onClick: () => togglePin('character', character.id), isActive: isPinned },
+          { icon: isPinned ? '/assets/icons/I_Pin_Pinned.png' : '/assets/icons/I_Pin_Unpinned.png', get tooltip() { return isPinned ? webUIText("CharacterSidebar.UnpinCharacter") : webUIText("CharacterSidebar.PinCharacter"); }, get tooltipBody() { return isPinned ? webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1029.1') : webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1029.2'); }, onClick: () => togglePin('character', character.id), isActive: isPinned },
           { icon: '/assets/icons/I_Family.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1042.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1030.3'); }, onClick: () => openScreen('familyTree', `tree:${character.id}`) },
           { icon: '/assets/icons/I_Diplomacy.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1043.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1031.4'); }, onClick: () => openScreen('familyTree', `patronage:${character.id}`) },
           { icon: '/assets/icons/I_ZoomTo.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1044.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1032.5'); }, onClick: () => zoomToBridge('character', character.id) },
@@ -547,7 +547,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
         {!isAlive && (
           <Tooltip content={{
             title: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1059.31'),
-            get body() { return character.deathCause && character.deathDate ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsCharacterSidebar.1061.1", { DeathCause: character.deathCause, DeathDate: character.deathDate }) : character.deathCause ? webUIText("Auto.Fix.PropExprFalseTrue.componentssidebarsCharacterSidebar.1063.1", { DeathCause: character.deathCause }) : webUIText("Auto.Fix.PropExprFalseFalse.componentssidebarsCharacterSidebar.1064.1"); },
+            get body() { return character.deathCause && character.deathDate ? webUIText("CharacterSidebar.DiedOfCauseOnDate", { DeathCause: character.deathCause, DeathDate: character.deathDate }) : character.deathCause ? webUIText("CharacterSidebar.DiedOf", { DeathCause: character.deathCause }) : webUIText("CharacterSidebar.ThisCharacterIs"); },
           }} position="bottom" delay={200}>
             <div className="char-header-dead-overlay">
               <img src="/assets/icons/I_Dread.png" alt="" className="char-header-dead-icon" />
@@ -666,7 +666,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
         {/* Traits */}
         <div className="char-trait-strip">
           {character.traits.map((trait) => {
-            const footer = trait.isTemporary && trait.remainingDays !== undefined ? webUIText("Auto.Fix.VarExprTrue.componentssidebarsCharacterSidebar.1173.1", { RemainingDays: trait.remainingDays, Value2: trait.remainingDays === 1 ? webUIText("Auto.Fix.VarExprTrueArgTrue.componentssidebarsCharacterSidebar.1173.1") : webUIText("Auto.Fix.VarExprTrueArgFalse.componentssidebarsCharacterSidebar.1173.1") }) : undefined;
+            const footer = trait.isTemporary && trait.remainingDays !== undefined ? webUIText("CharacterSidebar.ExpiresIn", { RemainingDays: trait.remainingDays, Value2: trait.remainingDays === 1 ? webUIText("Common.Day") : webUIText("Common.Days") }) : undefined;
             return (
               <Tooltip key={trait.id} position="bottom" delay={100} content={{ title: trait.name, body: trait.description, footer, lines: (trait.effects ?? []).map(e => ({ label: e.label, labelIcon: STAT_ICONS[e.stat], value: e.value, valueColor: e.isPositive ? 'var(--green)' : 'var(--red)' })) }}>
                 <TraitIcon trait={trait} className="char-trait-icon" />
@@ -853,7 +853,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ character, onClose,
                     title: slot.name,
                     get body() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1312.1", { Provided: slot.provided, Required: slot.required }); },
                     lines: [
-                      { label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1314.56'), get value() { return isSatisfied ? webUIText("Auto.Fix.PropExprTrue.componentssidebarsCharacterSidebar.1314.1") : webUIText("Auto.Fix.PropExprFalse.componentssidebarsCharacterSidebar.1314.1"); }, valueColor: isSatisfied ? 'var(--green)' : 'var(--red)' },
+                      { label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1314.56'), get value() { return isSatisfied ? webUIText("CharacterSidebar.Satisfied") : webUIText("CharacterSidebar.Shortage"); }, valueColor: isSatisfied ? 'var(--green)' : 'var(--red)' },
                       ...(!isSatisfied ? [{ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1315.57'), get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1315.1", { Value1: (slot.required - slot.provided) * 20 }); }, valueColor: 'var(--red)' }] : []),
                     ],
                   }} position="bottom" delay={200}>

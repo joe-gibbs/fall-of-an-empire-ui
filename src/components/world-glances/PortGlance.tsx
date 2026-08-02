@@ -68,7 +68,7 @@ function portTooltip(data: PortGlanceData, detail: GetWorldGlanceTooltipResponse
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesPortGlance.51.5'),
-      get value() { return detail.blockaded ? webUIText("Auto.Fix.PropExprTrue.componentsworldglancesPortGlance.53.1") : webUIText("Auto.Fix.PropExprFalse.componentsworldglancesPortGlance.53.1"); },
+      get value() { return detail.blockaded ? webUIText("PortGlance.Blockaded") : webUIText("PortGlance.Open"); },
       valueColor: detail.blockaded ? 'var(--red)' : 'var(--green)',
     },
   ];
@@ -98,7 +98,7 @@ function portTooltip(data: PortGlanceData, detail: GetWorldGlanceTooltipResponse
 
   return {
     title: detail.name,
-    get body() { return detail.blockaded ? webUIText("Auto.Fix.PropExprTrue.componentsworldglancesPortGlance.84.1", { SettlementName: detail.settlementName }) : webUIText("Auto.Fix.PropExprFalse.componentsworldglancesPortGlance.85.1", { SettlementName: detail.settlementName }); },
+    get body() { return detail.blockaded ? webUIText("PortGlance.HarbourBlockadedBody", { SettlementName: detail.settlementName }) : webUIText("PortGlance.HarbourOpenBody", { SettlementName: detail.settlementName }); },
     lines,
   };
 }

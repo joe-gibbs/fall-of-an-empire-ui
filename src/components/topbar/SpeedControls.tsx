@@ -48,7 +48,7 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
       >
         <img
           src={isPaused ? '/assets/ui-shadowed/T_Paused_Active.png' : '/assets/ui-shadowed/T_Play_Active.png'}
-          alt={isPaused ? webUIText("Auto.Fix.ExprTrue.componentstopbarSpeedControls.49.1") : webUIText("Auto.Fix.ExprFalse.componentstopbarSpeedControls.49.1")}
+          alt={isPaused ? webUIText("TopbarSpeed.Paused") : webUIText("TopbarSpeed.Playing")}
           className="speed-btn-img"
         />
       </button>
@@ -61,7 +61,7 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
       >
         <img
           src={speedIcons[speed]}
-          alt={isPaused ? webUIText("Auto.Fix.ExprTrue.componentstopbarSpeedControls.58.1") : webUIText("Auto.Fix.ExprFalse.componentstopbarSpeedControls.58.1", { Speed: speed })}
+          alt={isPaused ? webUIText("TopbarSpeed.Speed") : webUIText("TopbarSpeed.SpeedMultiplier", { Speed: speed })}
           className="speed-btn-img speed-btn-img--wide"
         />
       </button>

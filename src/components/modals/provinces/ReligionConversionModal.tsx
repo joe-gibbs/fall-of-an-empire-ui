@@ -329,7 +329,7 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
                         <span className="rcm-option-name">{option.name}</span>
                         <span className="rcm-option-desc">{option.description}</span>
                       </span>
-                      <span className="rcm-option-followers">{webUIText('Auto.Fix.Expr.componentsmodalsReligionConversionModal.94.1', { Value1: formatPercent(option.realmShare * 100) })}</span>
+                      <span className="rcm-option-followers">{webUIText('ReligionConversion.Followers', { Value1: formatPercent(option.realmShare * 100) })}</span>
                     </button>
                   </ReligionTooltip>
                 ))}

@@ -374,7 +374,7 @@ function CurrentDemandSection({
         <div className="powerbloc-panel-heading">{webUIText('PowerBlocs.CurrentDemand')}</div>
         <div className="powerbloc-demand-title">{demand.title}</div>
         <div className="powerbloc-demand-days" style={{ color: timeColour }}>
-          {webUIText('Auto.Fix.Expr.componentsscreensPowerBlocsScreen.122.1', { Value1: fmtDays(daysRemaining) })}
+          {webUIText('PowerBlocsScreen.Remaining', { Value1: fmtDays(daysRemaining) })}
         </div>
         <div className="powerbloc-demand-rule" />
         <div className="powerbloc-demand-progress">
@@ -677,7 +677,7 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
           <div className="powerbloc-hero-meta">
             <span style={{ color: typeColour }}>{typeLabel}</span>
             <span className="powerbloc-hero-dot" />
-            <span>{webUIText("Auto.Fix.Expr.componentssidebarsPowerBlocSidebar.158.1", { Value1: formatNumber(bloc.memberCount) })}</span>
+            <span>{webUIText("PowerBlocSidebar.Members", { Value1: formatNumber(bloc.memberCount) })}</span>
           </div>
           <p className="powerbloc-description">{bloc.description}</p>
         </div>

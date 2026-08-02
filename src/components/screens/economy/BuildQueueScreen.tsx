@@ -146,7 +146,7 @@ function QueueRow({
 }) {
   const hasProgress = item.hasActiveItem && item.state === 'building';
   const progressWidth = Math.max(0, Math.min(100, item.progressPercent));
-  const countLabel = item.count > 1 ? webUIText("Auto.Fix.VarExprTrue.componentsscreensBuildQueueScreen.185.1", { Value1: n(item.count) }) : '';
+  const countLabel = item.count > 1 ? webUIText("BuildQueue.Multiplier", { Value1: n(item.count) }) : '';
   const statusClass = item.state ? ` buildq-status--${item.state}` : '';
   const cancelClass = `buildq-cancel${pending ? ' buildq-cancel--pending' : ''}`;
 
@@ -168,7 +168,7 @@ function QueueRow({
           </div>
           <div className={`buildq-status${statusClass}`}>
             <span className="buildq-kind">{item.itemKindLabel}</span>
-            <span className="buildq-status-label">{item.statusLabel || webUIText("Auto.Fix.ExprFallback.componentsscreensBuildQueueScreen.207.1")}</span>
+            <span className="buildq-status-label">{item.statusLabel || webUIText("BuildQueue.Queued")}</span>
           </div>
         </div>
 
@@ -209,7 +209,7 @@ function QueueRow({
         disabled={pending}
       >
         <img src="/assets/icons/I_Close.png" alt="" className="buildq-cancel-icon" draggable={false} />
-        <span>{pending ? webUIText("Auto.Fix.ExprTrue.componentsscreensBuildQueueScreen.248.1") : webUIText("Auto.Fix.ExprFalse.componentsscreensBuildQueueScreen.248.1")}</span>
+        <span>{pending ? webUIText("BuildQueue.Cancelling") : webUIText("Common.Cancel")}</span>
       </button>
     </div>
   );

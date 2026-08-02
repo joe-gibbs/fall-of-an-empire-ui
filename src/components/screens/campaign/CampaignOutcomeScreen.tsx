@@ -90,12 +90,12 @@ function CampaignLedger({ history }: { history: CampaignOutcomeHistoryPoint[] })
       <div className="outcome-section-title"><WebUIText textKey="Auto.ComponentsScreensCampaignOutcomeScreen.77.1" /></div>
       <LedgerRow
         label={webUIText('Auto.Attr.ComponentsScreensCampaignOutcomeScreen.80.1')}
-        value={webUIText("Auto.Fix.Expr.componentsscreensCampaignOutcomeScreen.81.1", { Value1: formatNumber(final.settlements) })}
+        value={webUIText("CampaignOutcome.Settlements", { Value1: formatNumber(final.settlements) })}
         detail={webUIText("Auto.Attr.componentsscreensCampaignOutcomeScreen.82.1", { Value1: formatPopulation(final.population), Value2: final.label })}
       />
       <LedgerRow
         label={webUIText('Auto.Attr.ComponentsScreensCampaignOutcomeScreen.85.2')}
-        value={webUIText("Auto.Fix.Expr.componentsscreensCampaignOutcomeScreen.86.1", { Value1: formatNumber(peakSettlements.settlements) })}
+        value={webUIText("CampaignOutcome.Settlements", { Value1: formatNumber(peakSettlements.settlements) })}
         detail={webUIText("Auto.Attr.componentsscreensCampaignOutcomeScreen.87.1", { Value1: formatPopulation(peakPopulation.population), Value2: peakPopulation.label })}
       />
       <LedgerRow

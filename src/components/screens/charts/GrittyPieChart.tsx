@@ -148,7 +148,7 @@ const GrittyPieChart: React.FC<GrittyPieChartProps> = ({ segments, size = 72 }) 
   return (
     <div className="gritty-pie-tooltip-frame" style={{ width: chartSize, height: chartSize }}>
       <Tooltip
-        content={activeSegment ? grittyPieTooltip(activeSegment, total) : webUIText("Auto.Fix.ExprFalse.componentsscreensGrittyPieChart.163.1")}
+        content={activeSegment ? grittyPieTooltip(activeSegment, total) : webUIText("GrittyPieChart.ReligionShare")}
         position="top"
         delay={150}
         bubbleClassName="tt-bubble--passive"

@@ -316,7 +316,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
         visible={deleteTarget !== null}
         title={webUIText('Auto.Attr.ComponentsScreensLoadGameModal.415.1')}
         message={
-          deleteTarget ? webUIText("Auto.Fix.ExprTrue.componentsscreensLoadGameModal.418.1", { Value1: displayNameFor(deleteTarget) }) : ''
+          deleteTarget ? webUIText("LoadGame.DeleteConfirmBody", { Value1: displayNameFor(deleteTarget) }) : ''
         }
         confirmText={webUIText('Auto.ExtraAttr.ComponentsScreensLoadGameModal.421.1')}
         cancelText={webUIText('Auto.ExtraAttr.ComponentsScreensLoadGameModal.422.2')}

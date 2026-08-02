@@ -50,7 +50,7 @@ const STAT_ICON: Record<StatKey, string> = {
   constitution: '/assets/icons/StatIcons/I_Constitution.png',
 };
 
-function formatRange(r: StatRange): string { return webUIText("Auto.Fix.Return.componentsmodalsCourtierPromotionModal.53.1", { Value1: formatNumber(r.min), Value2: formatNumber(r.max) }); }
+function formatRange(r: StatRange): string { return webUIText("CourtierPromotion.Range", { Value1: formatNumber(r.min), Value2: formatNumber(r.max) }); }
 function rangeMid(r: StatRange): number { return (r.min + r.max) / 2; }
 
 function statTint(mid: number): string {
@@ -153,7 +153,7 @@ export default function CourtierPromotionModal({
             <span className="cpm-cost-label"><WebUIText textKey="Auto.ComponentsModalsCourtierPromotionModal.138.2" /></span>
             <span className="cpm-cost-value">{formatNumber(promotionCost)}</span>
             <span className="cpm-cost-sep" />
-            <span className="cpm-cost-wallet">{webUIText("Auto.Fix.Expr.componentsmodalsCourtierPromotionModal.142.1", { Value1: formatNumber(playerGold) })}</span>
+            <span className="cpm-cost-wallet">{webUIText("CourtierPromotion.Treasury", { Value1: formatNumber(playerGold) })}</span>
           </div>
           <div className="cpm-footer-actions">
             <GameButton variant="outline" onClick={close}><WebUIText textKey="Auto.ComponentsModalsCourtierPromotionModal.144.3" /></GameButton>
@@ -163,7 +163,7 @@ export default function CourtierPromotionModal({
               disabled={!selected || !canAfford || promoting}
               onMouseDown={() => { if (selected && canAfford && !promoting) handlePromote(); }}
             >
-              {selected ? webUIText("Auto.Fix.ExprTrue.componentsmodalsCourtierPromotionModal.152.1", { Title: selected.title }) : webUIText("Auto.Fix.ExprFalse.componentsmodalsCourtierPromotionModal.152.1")}
+              {selected ? webUIText("CourtierPromotion.PromoteWithTitle", { Title: selected.title }) : webUIText("CourtierPromotion.Promote")}
             </button>
           </div>
         </div>

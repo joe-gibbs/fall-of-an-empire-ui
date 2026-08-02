@@ -93,13 +93,13 @@ function EmpireStats({
   const strength = isNaval ? totalNavyStrength : totalArmyStrength;
   const maxStrength = isNaval ? totalNavyMaxStrength : totalArmyMaxStrength;
   const reservePct = maxStrength > 0 ? (strength / maxStrength) * 100 : 0;
-  const strengthLabel = isNaval ? webUIText("Auto.Fix.VarExprTrue.componentsscreensMilitaryMilitaryScreen.642.1") : webUIText("Auto.Fix.VarExprFalse.componentsscreensMilitaryMilitaryScreen.642.1");
-  const strengthTooltip = isNaval ? webUIText("Auto.Fix.VarExprTrue.componentsscreensMilitaryMilitaryScreen.644.1", { Value1: fmt(maxStrength), Value2: formatPercent(reservePct) }) : webUIText("Auto.Fix.VarExprFalse.componentsscreensMilitaryMilitaryScreen.645.1", { Value1: fmt(maxStrength), Value2: formatPercent(reservePct) });
+  const strengthLabel = isNaval ? webUIText("MilitaryScreen.Crews") : webUIText("MilitaryScreen.Strength");
+  const strengthTooltip = isNaval ? webUIText("MilitaryScreen.NavalManpowerBody", { Value1: fmt(maxStrength), Value2: formatPercent(reservePct) }) : webUIText("MilitaryScreen.LandManpowerBody", { Value1: fmt(maxStrength), Value2: formatPercent(reservePct) });
 
   return (
     <div className="chart-empire-stats">
       <Tooltip content={{
-        get title() { return isNaval ? webUIText("Auto.Fix.PropExprTrue.componentsscreensMilitaryMilitaryScreen.650.1") : webUIText("Auto.Fix.PropExprFalse.componentsscreensMilitaryMilitaryScreen.650.1"); },
+        get title() { return isNaval ? webUIText("MilitaryScreen.NavalStrength") : webUIText("MilitaryScreen.LandStrength"); },
         body: strengthTooltip,
       }}>
         <div className="chart-empire-stats-main">

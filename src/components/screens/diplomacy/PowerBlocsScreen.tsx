@@ -209,7 +209,7 @@ function DemandRows({ demand, currentGameDay }: { demand: PowerBlocDemand; curre
 }
 
 function BlocIdentity({ bloc, size = 'md', showLeader = true }: { bloc: PowerBloc; size?: 'sm' | 'md'; showLeader?: boolean }) {
-  const leaderLabel = bloc.leaderName || webUIText('Auto.Fix.ExprFallback.componentsscreensPowerBlocsScreen.169.1');
+  const leaderLabel = bloc.leaderName || webUIText('PowerBlocsScreen.NoLeader');
 
   return (
     <div className={`pbs-identity pbs-identity--${size}`}>
@@ -226,7 +226,7 @@ function BlocIdentity({ bloc, size = 'md', showLeader = true }: { bloc: PowerBlo
 }
 
 function LeaderCell({ bloc }: { bloc: PowerBloc }) {
-  const leaderLabel = bloc.leaderName || webUIText('Auto.Fix.ExprFallback.componentsscreensPowerBlocsScreen.169.1');
+  const leaderLabel = bloc.leaderName || webUIText('PowerBlocsScreen.NoLeader');
 
   return (
     <div className="pbs-leader-cell">
@@ -262,7 +262,7 @@ function DemandCard({
       <div className="pbs-demand-bloc">
         <BlocIdentity bloc={bloc} />
         <div className="pbs-demand-bloc-meta">
-          <span>{webUIText('Auto.Fix.Expr.componentsscreensPowerBlocsScreen.167.1', { Value1: formatNumber(bloc.memberCount) })}</span>
+          <span>{webUIText('PowerBlocsScreen.Members', { Value1: formatNumber(bloc.memberCount) })}</span>
           <span style={{ color: happinessColour }}>{formatPercent(bloc.happiness)}</span>
           <span>{formatNumber(bloc.strength)}</span>
         </div>
@@ -337,7 +337,7 @@ function BlocTable({
         className: cellClass('leader'),
         headerClassName: cellClass('leader'),
         render: bloc => <LeaderCell bloc={bloc} />,
-        sortValue: bloc => bloc.leaderName || webUIText('Auto.Fix.ExprFallback.componentsscreensPowerBlocsScreen.169.1'),
+        sortValue: bloc => bloc.leaderName || webUIText('PowerBlocsScreen.NoLeader'),
         searchValue: bloc => bloc.leaderName,
       },
       {

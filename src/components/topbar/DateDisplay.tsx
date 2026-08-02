@@ -204,7 +204,7 @@ const DateDisplay: React.FC = () => {
           {dateText}
         </span>
         <span className={`date-display-status ${isPaused ? 'date-display-status--paused' : ''}`}>
-          {isPaused ? webUIText("Auto.Fix.ExprTrue.componentstopbarDateDisplay.85.1") : webUIText("Auto.Fix.ExprFalse.componentstopbarDateDisplay.85.1", { Speed: speed })}
+          {isPaused ? webUIText("TopbarDate.Paused") : webUIText("TopbarDate.SpeedMultiplier", { Speed: speed })}
         </span>
       </div>
     </Tooltip>
