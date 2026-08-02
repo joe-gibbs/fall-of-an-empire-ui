@@ -362,10 +362,69 @@ export function formatResourceStock(row: MilitaryResource): string {
     : formatResourceAmount(row.amount);
 }
 
+export function unitRowSourceLabels(row: ArmyUnitRow): string[] {
+  return row.sources.map(source => (
+    source.count > 1 ? `${source.name} x${formatNumber(source.count)}` : source.name
+  ));
+}
+
 export function unitRowSourceSummary(row: ArmyUnitRow): string {
-  return row.sources
-    .map(source => source.count > 1 ? `${source.name} x${formatNumber(source.count)}` : source.name)
-    .join(', ');
+  return unitRowSourceLabels(row).join(', ');
+}
+
+export function unitRowSourcePreview(row: ArmyUnitRow, maxVisible = 2): {
+  labels: string[];
+  remaining: number;
+  full: string;
+} {
+  const labels = unitRowSourceLabels(row);
+  const full = labels.join(', ');
+  if (labels.length <= maxVisible) {
+    return { labels, remaining: 0, full };
+  }
+  return {
+    labels: labels.slice(0, maxVisible),
+    remaining: labels.length - maxVisible,
+    full,
+  };
+}
+
+export function isUnitRowPending(rowType: ArmyUnitRow['rowType']): boolean {
+  return rowType !== 'existing';
+}
+
+export function isUnitRowProgressing(rowType: ArmyUnitRow['rowType']): boolean {
+  return rowType === 'beingBuilt' || rowType === 'inTransit';
+}
+
+export function unitRowStatusText(row: ArmyUnitRow): string {
+  switch (row.rowType) {
+    case 'beingBuilt':
+      return webUIText('Military.UnitRow.Raising');
+    case 'inTransit':
+      return webUIText('Military.UnitRow.InTransit');
+    case 'unbuildable':
+      return webUIText('Military.UnitRow.CannotBuild');
+    case 'replenishDisabled':
+      return webUIText('Military.UnitRow.ReplenishDisabled');
+    case 'pending':
+      return webUIText('Military.UnitRow.Pending');
+    default:
+      return row.statusLabel;
+  }
+}
+
+export function unitRowPortraitSrc(unit: ArmyUnit | ArmyUnitRow): string {
+  const pending = 'rowType' in unit && isUnitRowPending(unit.rowType);
+  if (pending || !unit.portrait) {
+    return unitTypeIconPath(unit.type);
+  }
+  return unit.portrait;
+}
+
+export function unitRowUsesTypePortrait(unit: ArmyUnit | ArmyUnitRow): boolean {
+  const pending = 'rowType' in unit && isUnitRowPending(unit.rowType);
+  return pending || !unit.portrait;
 }
 
 export function buildUnitTooltip(unit: ArmyUnit | ArmyUnitRow, maxStats: UnitStatCaps): TooltipContent {

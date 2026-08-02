@@ -2452,11 +2452,29 @@
   text-transform: uppercase;
 }
 
+.mil-battle-group-head > .mil-battle-group-meta {
+  display: flex;
+  align-items: baseline;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.mil-battle-group-meta > * + * {
+  margin-left: 0.42rem;
+}
+
 .mil-battle-group-count {
   flex-shrink: 0;
   color: var(--gold-light);
   font-family: var(--font-header);
   font-size: 0.78rem;
+}
+
+.mil-battle-group-strength {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 500;
 }
 
 .mil-battle-group-units,
@@ -2533,9 +2551,24 @@
   border-color: var(--gold-dark);
 }
 
+.mil-sidebar-unit-portrait--pending {
+  opacity: 0.72;
+  border-color: rgba(201, 168, 76, 0.28);
+  background-color: rgba(8, 12, 17, 0.55);
+}
+
+.mil-sidebar-unit-portrait--type {
+  object-fit: contain;
+  object-position: center;
+  padding: 0.18rem;
+  box-sizing: border-box;
+}
+
 .mil-unit-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .mil-unit-name {
@@ -2557,9 +2590,18 @@
 }
 
 .mil-unit-name > .mil-unit-count {
-  min-width: 2.8rem;
-  margin-left: auto;
-  text-align: center;
+  min-width: 0;
+  margin-left: 0.35rem;
+  padding: 0;
+  border-width: 0;
+  background-image: none;
+  background-color: transparent;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.74rem;
+  font-weight: 400;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .mil-unit-tier-icon {
@@ -2568,27 +2610,99 @@
   flex-shrink: 0;
 }
 
+.mil-unit-meta {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0.04rem;
+}
+
+.mil-unit-meta--status {
+  color: var(--gold);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .mil-unit-type {
   font-size: 0.74rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  display: flex;
-  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mil-unit-culture {
   color: var(--text-dark);
   margin-left: auto;
+  padding-left: 0.35rem;
   font-size: 0.7rem;
+  flex-shrink: 0;
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mil-unit-sources {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0.02rem;
+  color: var(--text-dark);
+  font-size: 0.66rem;
+}
+
+.mil-unit-sources-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mil-unit-sources-more {
+  flex-shrink: 0;
+  margin-left: 0.28rem;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 .mil-unit-bar {
   display: flex;
   align-items: center;
-
+  justify-content: flex-end;
   width: 8rem;
   flex-shrink: 0;
+}
+
+.mil-unit-bar--progress {
+  width: 5.9rem;
+}
+
+.mil-unit-bar--progress > .painted-bar-track {
+  flex: 1;
+  min-width: 2rem;
+  height: 0.36rem;
+}
+
+.mil-unit-progress {
+  flex-shrink: 0;
+  min-width: 2.2rem;
+  color: var(--gold-light);
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.mil-unit-strength--muted {
+  color: var(--text-dark);
+  font-weight: 500;
 }
 
 .mil-unit-stats {
@@ -4043,9 +4157,9 @@
 }
 
 .mil-comp-row {
-  min-height: 3.05rem;
-  padding: 0.42rem 0.5rem;
-  margin-bottom: 0.25rem;
+  min-height: 2.2rem;
+  padding: 0.28rem 0.42rem;
+  margin-bottom: 0.18rem;
   border-width: 0.154rem;
   border-style: solid;
   border-color: transparent;
@@ -4061,7 +4175,7 @@
 }
 
 .mil-comp-count {
-  min-width: 5.4rem;
+  min-width: 0;
   background-image: none;
   background-color: transparent;
   border-color: rgba(201, 168, 76, 0.22);
@@ -4281,27 +4395,33 @@
 .mil-composition {
   display: flex;
   flex-wrap: wrap;
-  padding: 0.3rem 0.5rem 0.12rem;
+  align-items: stretch;
+  padding: 0.18rem 0.5rem 0.08rem;
 }
 
 .mil-composition > .tooltip-wrapper {
-  width: 24%;
+  width: auto;
+  min-width: 4.4rem;
   margin-right: 0.22rem;
-  margin-bottom: 0.22rem;
+  margin-bottom: 0.18rem;
+}
+
+.mil-composition--compact > .tooltip-wrapper {
+  min-width: 0;
 }
 
 .mil-comp-row {
   width: 100%;
-  min-height: 2.15rem;
-  justify-content: center;
-  padding: 0.24rem 0.3rem;
+  min-height: 1.85rem;
+  justify-content: flex-start;
+  padding: 0.18rem 0.34rem;
   margin-bottom: 0;
 }
 
 .mil-comp-icon {
-  width: 1.15rem;
-  height: 1.15rem;
-  margin-right: 0.32rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-right: 0.28rem;
 }
 
 .mil-comp-count {
@@ -4311,7 +4431,7 @@
   background-image: none;
   background-color: transparent;
   color: var(--gold-light);
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   text-align: left;
 }
 
@@ -4658,26 +4778,30 @@
 }
 
 .mil-unit-bar {
-  width: 6.65rem;
+  width: 5.7rem;
 }
 
 .mil-unit-row {
   box-sizing: border-box;
+  align-items: flex-start;
+  padding-top: 0.32rem;
   padding-right: 0.28rem;
+  padding-bottom: 0.32rem;
 }
 
 .mil-unit-bar > .painted-bar-track {
-  min-width: 2.3rem;
+  min-width: 2.1rem;
 }
 
 .mil-unit-strength {
-  min-width: 3.65rem;
+  min-width: 0;
+  width: auto;
   font-size: 0.66rem;
   text-align: right;
 }
 
 .mil-unit-name > .mil-unit-count {
-  min-width: 2.1rem;
+  min-width: 0;
 }
 
 .mil-resource-window-progress {
@@ -4787,15 +4911,47 @@
 
 .mil-unit-row .mil-unit-bar {
   width: 5.7rem;
+  margin-top: 0.18rem;
 }
 
-.mil-unit-row .mil-unit-bar > .painted-bar-track {
+.mil-unit-row .mil-unit-bar--strength > .painted-bar-track,
+.mil-unit-row .mil-unit-bar--pending > .painted-bar-track {
   display: none;
 }
 
-.mil-unit-strength {
+.mil-unit-row .mil-unit-bar--progress {
   width: 5.7rem;
+  align-self: center;
+  margin-top: 0;
+}
+
+.mil-unit-row .mil-unit-bar--progress > .painted-bar-track {
+  display: block;
+  height: 0.34rem;
+  box-sizing: border-box;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.26);
+  border-radius: 0.18rem;
+  background-image:
+    linear-gradient(180deg, rgba(6, 9, 12, 0.88) 0%, rgba(31, 37, 43, 0.74) 100%),
+    url('/assets/bar-track.png');
+  background-repeat: repeat, repeat-x;
+  background-size: auto, auto 0.34rem;
+  background-color: #11171d;
+}
+
+.mil-unit-row .mil-sidebar-unit-portrait {
+  margin-top: 0.08rem;
+}
+
+.mil-unit-strength {
+  width: auto;
   min-width: 0;
+  font-size: 0.62rem;
+}
+
+.mil-unit-progress {
   font-size: 0.62rem;
 }
 
