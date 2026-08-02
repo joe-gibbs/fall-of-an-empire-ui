@@ -292,6 +292,7 @@ function factionMatchesSearch(faction: ScenarioMapFactionDto, query: string): bo
     faction.displayName.toLowerCase().includes(query) ||
     faction.realm.toLowerCase().includes(query) ||
     faction.cultureDisplayName.toLowerCase().includes(query) ||
+    faction.cultureInfo.groupDisplayName.toLowerCase().includes(query) ||
     faction.religionDisplayName.toLowerCase().includes(query) ||
     faction.capitalSettlementName.toLowerCase().includes(query)
   );
@@ -320,19 +321,6 @@ function belongsToPlayableRealm(
   }
 
   return false;
-}
-
-function factionListHeaderName(faction: ScenarioMapFactionDto): string {
-  if (
-    !faction.overlordBaseName &&
-    faction.realm &&
-    faction.realm !== faction.displayName &&
-    faction.realm.toLowerCase().includes('empire')
-  ) {
-    return faction.realm;
-  }
-
-  return faction.displayName;
 }
 
 function buildFactionGroups(
@@ -500,7 +488,8 @@ function translateFactionSelectionData(
       displayName: translatedName(t, faction.displayName),
       realm: translatedName(t, faction.realm),
       cultureDisplayName: translatedName(t, faction.cultureDisplayName),
-      cultureGroup: translatedName(t, faction.cultureGroup),
+      // cultureGroup is a stable culture-group id from Culture::Group; keep it raw.
+      cultureGroup: faction.cultureGroup,
       cultureInfo: {
         ...faction.cultureInfo,
         name: translatedName(t, faction.cultureInfo.name),
@@ -1387,7 +1376,7 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
             {renderRoundelSymbol(faction)}
           </span>
           <span className="fs-faction-copy">
-            <span className="fs-faction-name">{row.kind === 'sovereign' ? factionListHeaderName(faction) : faction.displayName}</span>
+            <span className="fs-faction-name">{faction.displayName}</span>
             {(row.kind === 'subject' || !row.hasMembers) && (
               <span className="fs-faction-sub">
                 {faction.capitalSettlementName || faction.realm || '-'}
