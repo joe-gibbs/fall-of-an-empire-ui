@@ -993,6 +993,7 @@ export interface FormationTemplateUnitEntry {
   immuneToDesertAttrition: boolean;
   availableSettlementCount: number;
   availableSettlements: FormationTemplateEligibleSettlementEntry[];
+  availableManpower: number;
   upgradeUnitId: string;
   downgradeUnitId: string;
 }
@@ -6046,6 +6047,11 @@ export interface SetSpeedRequest {
   speedLevel: number;
 }
 
+export interface SetSpeedResponse {
+  isPaused: boolean;
+  speedLevel: number;
+}
+
 export interface ShowScreenRequest {
   screen: string;
 }
@@ -6241,6 +6247,11 @@ export interface BrowseSteamWorkshopResponse {
 
 export interface SteamWorkshopItemOperationRequest {
   publishedFileId: string;
+}
+
+export interface TogglePauseRequest {
+  absolute: boolean;
+  isPaused: boolean;
 }
 
 export interface TogglePauseResponse {
@@ -6568,7 +6579,7 @@ export interface BridgeActions {
   'game.set_resource_priority': { request: SetResourcePriorityRequest; response: void };
   'game.set_settlement_capital': { request: SetSettlementCapitalRequest; response: SetSettlementCapitalResponse };
   'game.set_settlement_sidebar_ambient': { request: SetSettlementSidebarAmbientRequest; response: void };
-  'game.set_speed': { request: SetSpeedRequest; response: void };
+  'game.set_speed': { request: SetSpeedRequest; response: SetSpeedResponse };
   'game.show_military_sidebar': { request: MilitaryTargetingRequest; response: void };
   'game.start_battle_action': { request: StartBattleActionRequest; response: StartBattleActionResponse };
   'game.start_bloc_interaction': { request: StartBlocInteractionRequest; response: StartBlocInteractionResponse };
@@ -6586,7 +6597,7 @@ export interface BridgeActions {
   'game.submit_peace_negotiation': { request: SubmitPeaceNegotiationRequest; response: SubmitPeaceNegotiationResponse };
   'game.subscribe_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.toggle_foederati_callup': { request: ToggleFoederatiCallupRequest; response: void };
-  'game.toggle_pause': { request: void; response: TogglePauseResponse };
+  'game.toggle_pause': { request: TogglePauseRequest; response: TogglePauseResponse };
   'game.toggle_pin': { request: TogglePinRequest; response: TogglePinResponse };
   'game.tutorial_spotlight': { request: TutorialSpotlightRequest; response: TutorialSpotlightResponse };
   'game.ungarrison_military': { request: UngarrisonMilitaryRequest; response: void };

@@ -4449,6 +4449,7 @@ function formationUnit(id: string, name: string, type: string, category: string,
     availableSettlements: category === 'naval'
       ? [{ id: 'mock-settlement-namaris', name: 'Namaris', available: true }, { id: 'mock-settlement-harbour-watch', name: 'Harbour Watch', available: true }]
       : [{ id: 'mock-settlement-aurelion', name: 'Aurelion', available: true }, { id: 'mock-settlement-rephsia', name: 'Rephsia', available: true }],
+    availableManpower: Math.max(maxStrength * 8, 400),
     upgradeUnitId: '',
     downgradeUnitId: '',
   };
@@ -5291,14 +5292,18 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         emit('game.get_bureaucratic_throughput', bureaucraticThroughput());
         return response;
       }
-      case 'game.toggle_pause':
+      case 'game.toggle_pause': {
+        const pausePayload = payload as { absolute?: boolean; isPaused?: boolean } | undefined;
         if (state.pauseMenuOpen) {
           state.isPaused = true;
+        } else if (pausePayload?.absolute) {
+          state.isPaused = Boolean(pausePayload.isPaused);
         } else {
           state.isPaused = !state.isPaused;
         }
         emitGameState(emit);
         return { isPaused: state.isPaused } satisfies BridgeResponse<'game.toggle_pause'>;
+      }
       case 'game.set_pause_menu_open': {
         const open = Boolean((payload as { open?: boolean } | undefined)?.open);
         state.pauseMenuOpen = open;
@@ -5306,11 +5311,12 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         emitGameState(emit);
         return undefined;
       }
-      case 'game.set_speed':
+      case 'game.set_speed': {
         state.speedLevel = payloadNumber(payload, 'speedLevel', 1);
         state.isPaused = state.pauseMenuOpen ? true : false;
         emitGameState(emit);
-        return undefined;
+        return { isPaused: state.isPaused, speedLevel: state.speedLevel } satisfies BridgeResponse<'game.set_speed'>;
+      }
       case 'game.get_player_faction':
         {
           const faction = currentPlayerFactionData(state.provinceMode);

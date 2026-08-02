@@ -3,6 +3,7 @@ import { getAdvisorHintKey, type AdvisorTopicId } from '../data/advisorTopics';
 import { playSound } from '../hooks/useSound';
 import type { Notification, Warning } from '../data/types';
 import { useBridgeState } from '../bridge/core/useBridgeState';
+import { publishBridgeEvent } from '../bridge/core/bridgeEvents';
 import { acknowledgeBridgeFailure } from '../bridge/core/runtimeEngine';
 import { GAMEPLAY_CONTEXT_RESET_EVENT } from '../bridge/core/gameplayCacheReset';
 import { useHintEventsBridge, type HintEventHandlers } from '../bridge/app/useHintEventsBridge';
@@ -49,15 +50,25 @@ function shouldClearMilitarySelectionOnClose(type: LeftSidebarType): boolean {
   return type === 'military' || type === 'military-selection';
 }
 
+/** Local pause/speed intent while a bridge call is in flight. Wins over stale bridge snapshots. */
+type SpeedControlOverride = {
+  isPaused?: boolean;
+  speed?: 1 | 2 | 4;
+};
+
 export function GameProvider({ children }: { children: ReactNode }) {
   // Start empty; the bridge fills in live game state.
   // Nothing in here should be a plausible-looking fake value.
   const [state, setState] = useState<GameState>(() => createInitialGameState());
+  const [speedControlOverride, setSpeedControlOverride] = useState<SpeedControlOverride | null>(null);
+  const speedControlGenerationRef = useRef(0);
   const dismissedWarningsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const handleReset = () => {
       dismissedWarningsRef.current.clear();
+      speedControlGenerationRef.current += 1;
+      setSpeedControlOverride(null);
       setState(createInitialGameState());
     };
 
@@ -67,32 +78,42 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // Bridge integration: derive HUD values from live game state when available.
   const bridgeState = useBridgeState();
+
+  // Authoritative refresh after a speed control call so the icon cannot stick on a
+  // local intent while spacebar/notifications/pause-menu change the real pause state.
+  const syncSpeedControlFromGame = useCallback(async () => {
+    const gs = await bridgeCall('game.get_game_state');
+    publishBridgeEvent('game.get_game_state', gs);
+  }, []);
+
   const visibleState = useMemo<GameState>(() => {
-    if (!bridgeState) return state;
+    if (!bridgeState && !speedControlOverride) return state;
     return {
       ...state,
-      isPaused: bridgeState.isPaused ?? state.isPaused,
-      speed: (bridgeState.speed || state.speed || 1) as 1 | 2 | 4,
-      date: bridgeState.date ?? state.date,
-      dateText: bridgeState.dateText ?? state.dateText,
-      season: bridgeState.season ?? state.season,
-      gameDay: bridgeState.gameDay ?? state.gameDay,
-      calendarKey: bridgeState.calendarKey ?? state.calendarKey,
-      daysInYear: bridgeState.daysInYear ?? state.daysInYear,
-      daysInMonth: bridgeState.daysInMonth ?? state.daysInMonth,
-      debugMode: bridgeState.debugMode ?? state.debugMode,
-      climateTrend: bridgeState.climateTrend ?? state.climateTrend,
-      climateDescription: bridgeState.climateDescription ?? state.climateDescription,
-      saveSerial: bridgeState.saveSerial ?? state.saveSerial,
-      hasDemoTimeLimit: bridgeState.hasDemoTimeLimit ?? state.hasDemoTimeLimit,
-      demoDaysRemaining: bridgeState.demoDaysRemaining ?? state.demoDaysRemaining,
-      demoEndDateText: bridgeState.demoEndDateText ?? state.demoEndDateText,
-      gold: bridgeState.gold ?? state.gold,
-      goldDelta: bridgeState.goldDelta ?? state.goldDelta,
-      population: bridgeState.population ?? state.population,
-      populationDelta: bridgeState.populationDelta ?? state.populationDelta,
+      // In-flight button presses must win over a lagging get_game_state push, or the
+      // pause/play icon stays on the old state and a second click toggles the game the wrong way.
+      isPaused: speedControlOverride?.isPaused ?? bridgeState?.isPaused ?? state.isPaused,
+      speed: (speedControlOverride?.speed ?? bridgeState?.speed ?? state.speed ?? 1) as 1 | 2 | 4,
+      date: bridgeState?.date ?? state.date,
+      dateText: bridgeState?.dateText ?? state.dateText,
+      season: bridgeState?.season ?? state.season,
+      gameDay: bridgeState?.gameDay ?? state.gameDay,
+      calendarKey: bridgeState?.calendarKey ?? state.calendarKey,
+      daysInYear: bridgeState?.daysInYear ?? state.daysInYear,
+      daysInMonth: bridgeState?.daysInMonth ?? state.daysInMonth,
+      debugMode: bridgeState?.debugMode ?? state.debugMode,
+      climateTrend: bridgeState?.climateTrend ?? state.climateTrend,
+      climateDescription: bridgeState?.climateDescription ?? state.climateDescription,
+      saveSerial: bridgeState?.saveSerial ?? state.saveSerial,
+      hasDemoTimeLimit: bridgeState?.hasDemoTimeLimit ?? state.hasDemoTimeLimit,
+      demoDaysRemaining: bridgeState?.demoDaysRemaining ?? state.demoDaysRemaining,
+      demoEndDateText: bridgeState?.demoEndDateText ?? state.demoEndDateText,
+      gold: bridgeState?.gold ?? state.gold,
+      goldDelta: bridgeState?.goldDelta ?? state.goldDelta,
+      population: bridgeState?.population ?? state.population,
+      populationDelta: bridgeState?.populationDelta ?? state.populationDelta,
     };
-  }, [state, bridgeState]);
+  }, [state, bridgeState, speedControlOverride]);
 
   const notificationAndWarningHandlers = useMemo(() => ({
     onNotificationShown: (n: Notification) => {
@@ -158,29 +179,53 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }), []);
   useHintEventsBridge(hintEventHandlers);
 
+  // TopBar only calls this when the player wants to pause (play uses setSpeed).
+  // Set pause absolutely so a stale UI/bridge snapshot cannot flip the game the wrong way.
   const togglePause = useCallback(() => {
-    const previousPaused = visibleState.isPaused;
-    const nextPaused = !previousPaused;
-    setState(s => ({ ...s, isPaused: nextPaused }));
-    bridgeCall('game.toggle_pause').catch((error) => {
-      acknowledgeBridgeFailure(error);
-      setState(s => (s.isPaused === nextPaused ? { ...s, isPaused: previousPaused } : s));
-    });
-  }, [visibleState.isPaused]);
+    const generation = ++speedControlGenerationRef.current;
+    setSpeedControlOverride(prev => ({ ...prev, isPaused: true }));
+    void (async () => {
+      try {
+        const response = await bridgeCall('game.toggle_pause', { absolute: true, isPaused: true });
+        if (generation !== speedControlGenerationRef.current) return;
+        setSpeedControlOverride(prev => ({ ...prev, isPaused: response.isPaused }));
+        await syncSpeedControlFromGame();
+      } catch (error) {
+        if (generation === speedControlGenerationRef.current) {
+          acknowledgeBridgeFailure(error);
+        }
+      } finally {
+        if (generation === speedControlGenerationRef.current) {
+          setSpeedControlOverride(null);
+        }
+      }
+    })();
+  }, [syncSpeedControlFromGame]);
 
   const setSpeed = useCallback((speed: 1 | 2 | 4) => {
-    const previousSpeed = visibleState.speed;
-    const previousPaused = visibleState.isPaused;
-    setState(s => ({ ...s, speed, isPaused: false }));
-    bridgeCall('game.set_speed', { speedLevel: speed }).catch((error) => {
-      acknowledgeBridgeFailure(error);
-      setState(s => (
-        s.speed === speed
-          ? { ...s, speed: previousSpeed, isPaused: previousPaused }
-          : s
-      ));
-    });
-  }, [visibleState.isPaused, visibleState.speed]);
+    const generation = ++speedControlGenerationRef.current;
+    setSpeedControlOverride({ isPaused: false, speed });
+    void (async () => {
+      try {
+        const response = await bridgeCall('game.set_speed', { speedLevel: speed });
+        if (generation !== speedControlGenerationRef.current) return;
+        const resolvedSpeed = (response.speedLevel > 0 ? response.speedLevel : speed) as 1 | 2 | 4;
+        setSpeedControlOverride({
+          isPaused: response.isPaused,
+          speed: resolvedSpeed,
+        });
+        await syncSpeedControlFromGame();
+      } catch (error) {
+        if (generation === speedControlGenerationRef.current) {
+          acknowledgeBridgeFailure(error);
+        }
+      } finally {
+        if (generation === speedControlGenerationRef.current) {
+          setSpeedControlOverride(null);
+        }
+      }
+    })();
+  }, [syncSpeedControlFromGame]);
 
   const openLeftSidebar = useCallback((type: LeftSidebarType, id?: string) => {
     preloadSidebarAssets(type);
