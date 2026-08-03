@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import CloseButton from '../../common/buttons/CloseButton';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
@@ -51,6 +51,8 @@ import {
   draftCompositionRequests,
   draftTotals,
   draftUnitCount,
+  draftUsedManpowerByCulture,
+  manpowerRoomForUnit,
   normaliseBattleRole,
   normaliseTemplateType,
   romanTier,
@@ -73,6 +75,8 @@ const SAVE_ICON = '/assets/icons/I_SaveFolder.png';
 const DUPLICATE_ICON = '/assets/icons/I_DuplicateTemplate.png';
 const DELETE_ICON = '/assets/icons/I_Close.png';
 const RENAME_ICON = '/assets/icons/I_Rename.png';
+const CONFIRM_ICON = '/assets/ui/I_TickIcon.png';
+const CANCEL_ICON = '/assets/ui/I_CloseIcon.png';
 type UnitCatalogueColumnKey = 'unit' | 'culture' | 'type' | 'tier' | 'strength' | 'cost' | 'upkeep' | 'settlements' | 'add';
 type UnitCatalogueFilterKey = 'type' | 'culture';
 
@@ -369,6 +373,14 @@ export function TemplateUnitSelectorModal({
   totalCost,
   maxUnits,
   enforceAvailableManpower = false,
+  /**
+   * When set with enforceAvailableManpower, culture manpower is measured against these
+   * counts (e.g. whole template) instead of only the current battle-group selection.
+   */
+  manpowerCounts,
+  /** Extra unit definitions used when resolving manpowerCounts for units outside the visible catalogue. */
+  manpowerUnits,
+  capacityFullMessage,
   compareUnit,
   statusMessage,
 }: {
@@ -388,6 +400,10 @@ export function TemplateUnitSelectorModal({
   maxUnits?: number;
   /** When true, blocks adds that exceed each unit culture's available manpower. */
   enforceAvailableManpower?: boolean;
+  manpowerCounts?: Record<string, number>;
+  manpowerUnits?: FormationTemplateUnitEntry[];
+  /** Tooltip when the company cap is full. Defaults to the personal-guard wording. */
+  capacityFullMessage?: string;
   compareUnit?: FormationTemplateUnitEntry | null;
   /** Optional status or failure text shown in the footer. */
   statusMessage?: string;
@@ -405,22 +421,31 @@ export function TemplateUnitSelectorModal({
   );
   const hasUnitCap = !isSingle && typeof maxUnits === 'number' && maxUnits > 0;
   const atUnitCap = hasUnitCap && selectedUnitTotal >= maxUnits;
+  const capacityFullBody = capacityFullMessage
+    ?? webUIText('Military.PersonalGuard.CompanyCapacityFull');
   const unitById = useMemo(() => {
     const map = new Map<string, FormationTemplateUnitEntry>();
     for (const unit of units) map.set(unit.id, unit);
     return map;
   }, [units]);
+  const manpowerLookup = useMemo(() => {
+    if (!manpowerUnits || manpowerUnits.length === 0) return unitById;
+    const map = new Map(unitById);
+    for (const unit of manpowerUnits) map.set(unit.id, unit);
+    return map;
+  }, [manpowerUnits, unitById]);
+  const manpowerSourceCounts = manpowerCounts ?? currentCounts;
   const usedManpowerByCulture = useMemo(() => {
     const used: Record<string, number> = {};
     if (!enforceAvailableManpower) return used;
-    for (const [unitId, count] of Object.entries(currentCounts)) {
-      const unit = unitById.get(unitId);
+    for (const [unitId, count] of Object.entries(manpowerSourceCounts)) {
+      const unit = manpowerLookup.get(unitId);
       if (!unit || count <= 0) continue;
       const cultureKey = unit.cultureId || unit.cultureName || unit.id;
       used[cultureKey] = (used[cultureKey] ?? 0) + Math.max(0, unit.maxStrength || 0) * count;
     }
     return used;
-  }, [currentCounts, enforceAvailableManpower, unitById]);
+  }, [enforceAvailableManpower, manpowerLookup, manpowerSourceCounts]);
 
   const canAddUnit = useCallback((unit: FormationTemplateUnitEntry, amount = 1): boolean => {
     if (isSingle) return true;
@@ -471,6 +496,33 @@ export function TemplateUnitSelectorModal({
     onClose: requestClose,
     allowFromInput: true,
   });
+
+  // Tutorial unit spotlights ask the open catalogue to surface the target row.
+  useEffect(() => {
+    const normalise = (value: string) => {
+      const tail = value.split('/').pop()?.split('.').pop() ?? value;
+      return tail.replace(/_C$/i, '').replace(/^U(?=[A-Z])/, '').toLowerCase();
+    };
+
+    const handler = (event: Event) => {
+      const detail = String((event as CustomEvent).detail ?? '');
+      if (!detail) return;
+      const expected = normalise(detail);
+      const match = units.find(unit => normalise(unit.id) === expected);
+      if (!match) return;
+
+      // Clear filters that may be hiding the unit row.
+      setQuery('');
+      setTypeFilter(CATALOGUE_ALL_FILTER);
+      setCultureFilter(CATALOGUE_ALL_FILTER);
+      if (!unitCanBuildInAnySettlement(match) && (currentCounts[match.id] ?? 0) <= 0) {
+        setShowUnavailable(true);
+      }
+    };
+
+    window.addEventListener('tutorial:unit-target-request', handler);
+    return () => window.removeEventListener('tutorial:unit-target-request', handler);
+  }, [currentCounts, units]);
 
   const typeOptions = useMemo(() => catalogueFilterOptions(
     units,
@@ -763,7 +815,7 @@ export function TemplateUnitSelectorModal({
         const manpowerBlocked = enforceAvailableManpower && !canAddUnit(unit, 1);
         const addDisabled = atUnitCap || manpowerBlocked;
         const addBody = atUnitCap
-          ? webUIText('Military.PersonalGuard.CompanyCapacityFull')
+          ? capacityFullBody
           : manpowerBlocked
             ? webUIText('Military.PersonalGuard.InsufficientPopulation')
             : webUIText('Common.StepModifiersBody');
@@ -799,6 +851,9 @@ export function TemplateUnitSelectorModal({
                 type="button"
                 className="chart-unit-picker-add"
                 disabled={addDisabled}
+                data-tutorial-target="DynamicUnit"
+                data-tutorial-unit-id={unit.id}
+                data-tutorial-unit-count={count}
                 onMouseDown={(event) => {
                   event.stopPropagation();
                   if (addDisabled) return;
@@ -813,7 +868,7 @@ export function TemplateUnitSelectorModal({
         );
       },
     },
-  ], [atUnitCap, canAddUnit, compareUnit, currentCounts, enforceAvailableManpower, isSingle, onAdd, onRemove]);
+  ], [atUnitCap, canAddUnit, capacityFullBody, compareUnit, currentCounts, enforceAvailableManpower, isSingle, onAdd, onRemove]);
   const filterUnit = (unit: FormationTemplateUnitEntry) => {
     const unitType = unit.type || unit.category;
     const unitCulture = unit.cultureId || unit.cultureName;
@@ -938,7 +993,7 @@ export function TemplateUnitSelectorModal({
                     content={{
                       title: webUIText('Military.PersonalGuard.CompanyCapacityLabel'),
                       body: atUnitCap
-                        ? webUIText('Military.PersonalGuard.CompanyCapacityFull')
+                        ? capacityFullBody
                         : webUIText('Military.PersonalGuard.CompanyCapacity', {
                           Selected: formatNumber(selectedUnitTotal),
                           Capacity: formatNumber(maxUnits),
@@ -1068,17 +1123,6 @@ function TemplateAssignedForces({
   );
 }
 
-function draftUnitSummaryText(
-  draftUnits: Array<{ unit: FormationTemplateUnitEntry; count: number }>,
-): string {
-  const units = draftUnits.slice(0, 3).map(({ unit, count }) => `${formatNumber(count)} ${unit.name}`);
-  const hidden = Math.max(0, draftUnits.length - units.length);
-  if (units.length === 0) return '';
-  return hidden > 0
-    ? webUIText('FormationTemplate.UnitsAndMore', { Units: units.join(', '), Count: formatNumber(hidden) })
-    : units.join(', ');
-}
-
 function TemplateEditor({
   template,
   type,
@@ -1108,10 +1152,14 @@ function TemplateEditor({
   const [catalogueGroupId, setCatalogueGroupId] = useState<string | null>(null);
   const [actionActive, setActionActive] = useState(false);
   const [renamingTitle, setRenamingTitle] = useState(!template);
+  const [renameDraft, setRenameDraft] = useState(() => buildTemplateDraft(template, type).name);
+  const [renameFieldDirty, setRenameFieldDirty] = useState(false);
   const [nameEdited, setNameEdited] = useState(Boolean(template));
   const titleInputRef = useRef<HTMLInputElement>(null);
   const automaticNameRequestRef = useRef(0);
+  const renameFieldDirtyRef = useRef(false);
   const gameActions = useGameActions();
+  renameFieldDirtyRef.current = renameFieldDirty;
   const unitById = useMemo(() => {
     const map = new Map<string, FormationTemplateUnitEntry>();
     unitCatalogue.forEach(unit => map.set(unit.id, unit));
@@ -1160,11 +1208,42 @@ function TemplateEditor({
   const raiseCost = template?.creationCost ?? totals.cost;
   const beginRename = () => {
     if (!editable) return;
+    setRenameDraft(draft.name);
+    setRenameFieldDirty(false);
     setRenamingTitle(true);
     window.setTimeout(() => {
       titleInputRef.current?.focus();
       titleInputRef.current?.select();
     }, 0);
+  };
+
+  const confirmRename = () => {
+    const nextName = renameDraft.trim();
+    if (!nextName) return;
+    setRenameFieldDirty(false);
+    setRenamingTitle(false);
+    if (nextName !== draft.name) {
+      automaticNameRequestRef.current += 1;
+      setNameEdited(true);
+      setDraft(current => ({ ...current, name: nextName }));
+    }
+  };
+
+  const cancelRename = () => {
+    // New templates always need a name field until saved; cancel only reverts text.
+    setRenameDraft(draft.name);
+    setRenameFieldDirty(false);
+    if (template) setRenamingTitle(false);
+  };
+
+  const handleRenameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      confirmRename();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelRename();
+    }
   };
 
   const addBattleGroup = (role: BattleFormationRole) => {
@@ -1182,6 +1261,14 @@ function TemplateEditor({
   };
 
   useEffect(() => {
+    if (template || !renamingTitle) return;
+    window.setTimeout(() => {
+      titleInputRef.current?.focus();
+      titleInputRef.current?.select();
+    }, 0);
+  }, [renamingTitle, template]);
+
+  useEffect(() => {
     if (template || nameEdited) return;
 
     const requestId = automaticNameRequestRef.current + 1;
@@ -1192,9 +1279,13 @@ function TemplateEditor({
     void generateFormationTemplateNameBridge(draft.type, units)
       .then(response => {
         if (cancelled || automaticNameRequestRef.current !== requestId) return;
-        setDraft(current => current.templateId || current.name === response.name
-          ? current
-          : { ...current, name: response.name });
+        setDraft(current => {
+          if (current.templateId || current.name === response.name) return current;
+          return { ...current, name: response.name };
+        });
+        if (!renameFieldDirtyRef.current) {
+          setRenameDraft(response.name);
+        }
       })
       .catch(acknowledgeBridgeFailure);
 
@@ -1227,10 +1318,17 @@ function TemplateEditor({
       if (delta > 0 && groupCount >= maximumBattleGroupUnits) return current;
       if (delta < 0 && currentCount <= 0) return current;
 
-      const room = Math.max(0, maximumBattleGroupUnits - groupCount);
-      const nextCount = delta > 0
-        ? Math.min(currentCount + delta, currentCount + room)
-        : Math.max(0, currentCount + delta);
+      let nextCount: number;
+      if (delta > 0) {
+        const room = Math.max(0, maximumBattleGroupUnits - groupCount);
+        let toAdd = Math.min(delta, room);
+        const usedManpower = draftUsedManpowerByCulture(current, unitById);
+        toAdd = Math.min(toAdd, manpowerRoomForUnit(unit, usedManpower));
+        if (toAdd <= 0) return current;
+        nextCount = currentCount + toAdd;
+      } else {
+        nextCount = Math.max(0, currentCount + delta);
+      }
       if (nextCount === currentCount) return current;
 
       const counts = { ...targetGroup.counts };
@@ -1308,7 +1406,6 @@ function TemplateEditor({
     allowFromInput: true,
   });
 
-  const compositionSummary = draftUnitSummaryText(draftUnits);
   const assignedForceCount = template?.assignedForces.length ?? 0;
 
   return (
@@ -1354,64 +1451,80 @@ function TemplateEditor({
                 )}
               </div>
               {renamingTitle ? (
-                <input
-                  ref={titleInputRef}
-                  className="chart-template-title-input"
-                  data-tutorial-target="FormationNameInput"
-                  value={draft.name}
-                  onChange={event => {
-                    automaticNameRequestRef.current += 1;
-                    setNameEdited(true);
-                    setDraft(current => ({ ...current, name: event.target.value }));
-                  }}
-                  onBlur={() => {
-                    if (draft.name.trim().length > 0 && template) setRenamingTitle(false);
-                  }}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter' && draft.name.trim().length > 0 && template) {
-                      setRenamingTitle(false);
-                    }
-                  }}
-                  placeholder={createTitle}
-                  aria-label={webUIText('Common.Name')}
-                  disabled={!editable}
-                />
-              ) : (
-                <div className="chart-template-title-label">
-                  {draft.name || createTitle}
+                <div className="chart-template-rename-row">
+                  <input
+                    ref={titleInputRef}
+                    className="chart-template-title-input"
+                    data-tutorial-target="FormationNameInput"
+                    value={renameDraft}
+                    onChange={event => {
+                      setRenameFieldDirty(true);
+                      setRenameDraft(event.target.value);
+                    }}
+                    onKeyDown={handleRenameKeyDown}
+                    autoFocus={!template}
+                    placeholder={createTitle}
+                    aria-label={webUIText('Common.Name')}
+                    disabled={!editable}
+                  />
+                  <Tooltip
+                    content={{ title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.875.47') }}
+                    position="bottom"
+                    delay={150}
+                    inline
+                  >
+                    <button
+                      type="button"
+                      className="chart-template-rename-action"
+                      onClick={confirmRename}
+                    >
+                      <img src={CONFIRM_ICON} alt="" className="chart-template-rename-action-icon" draggable={false} />
+                    </button>
+                  </Tooltip>
+                  <Tooltip
+                    content={{ title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.880.48') }}
+                    position="bottom"
+                    delay={150}
+                    inline
+                  >
+                    <button
+                      type="button"
+                      className="chart-template-rename-action"
+                      onClick={cancelRename}
+                    >
+                      <img src={CANCEL_ICON} alt="" className="chart-template-rename-action-icon" draggable={false} />
+                    </button>
+                  </Tooltip>
                 </div>
+              ) : (
+                <>
+                  <div className="chart-template-title-label">
+                    {draft.name || createTitle}
+                  </div>
+                  {editable && (
+                    <Tooltip
+                      content={{
+                        title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12'),
+                        body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.587.13'),
+                      }}
+                      position="bottom"
+                      delay={150}
+                      inline
+                    >
+                      <button
+                        type="button"
+                        className="chart-template-rename-button"
+                        aria-label={webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12')}
+                        onClick={beginRename}
+                      >
+                        <img src={RENAME_ICON} alt="" className="chart-template-rename-icon" draggable={false} />
+                      </button>
+                    </Tooltip>
+                  )}
+                </>
               )}
-              <Tooltip
-                content={{
-                  title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12'),
-                  body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.587.13'),
-                }}
-                position="bottom"
-                delay={150}
-                inline
-                disabled={!editable}
-              >
-                <button
-                  type="button"
-                  className="chart-template-rename-button"
-                  aria-label={webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12')}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    beginRename();
-                  }}
-                  disabled={!editable}
-                >
-                  <img src={RENAME_ICON} alt="" className="chart-template-rename-icon" draggable={false} />
-                </button>
-              </Tooltip>
             </div>
           </div>
-
-          {compositionSummary && (
-            <div className="chart-template-composition-strip">
-              <div className="chart-template-composition-units">{compositionSummary}</div>
-            </div>
-          )}
 
           <section className="chart-template-battle-workbench">
             <TemplateBattlePlanner
@@ -1550,6 +1663,13 @@ function TemplateEditor({
           onAdd={(unitId, amount) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, amount)}
           onRemove={(unitId, amount) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, -amount)}
           onClose={() => setCatalogueGroupId(null)}
+          maxUnits={maximumBattleGroupUnits}
+          enforceAvailableManpower
+          manpowerCounts={Object.fromEntries(
+            draftCompositionRequests(draft).map(request => [request.unitId, request.count]),
+          )}
+          manpowerUnits={unitCatalogue}
+          capacityFullMessage={webUIText('FormationTemplate.BattlePlan.CompanyCapacityFull')}
         />
       )}
     </section>
@@ -1573,7 +1693,8 @@ export function TemplatesPanel({
   maximumFormationTemplates: number;
   onCloseScreen: () => void;
 }) {
-  const [catalogueRequested, setCatalogueRequested] = useState(false);
+  // Prefetch the unit catalogue while browsing templates so Add Melee can open it immediately.
+  const [catalogueRequested, setCatalogueRequested] = useState(true);
   const catalogueData = useFormationTemplateCatalogueBridge(catalogueRequested);
   const landUnitCatalogue = catalogueData?.landUnitCatalogue ?? [];
   const navalUnitCatalogue = catalogueData?.navalUnitCatalogue ?? [];

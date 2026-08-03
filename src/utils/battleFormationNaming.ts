@@ -57,6 +57,18 @@ export function newBattleFormationTooltip(role: BattleFormationRole, formationTy
   };
 }
 
+export function addBattleFormationLabel(role: BattleFormationRole, formationType: FormationType): string {
+  if (formationType === 'naval') {
+    if (role === 'siege') return webUIText('FormationTemplate.BattlePlan.AddBombardment');
+    if (role === 'ranged') return webUIText('FormationTemplate.BattlePlan.AddSkirmish');
+    return webUIText('FormationTemplate.BattlePlan.AddAssault');
+  }
+
+  if (role === 'siege') return webUIText('FormationTemplate.BattlePlan.AddSiege');
+  if (role === 'ranged') return webUIText('FormationTemplate.BattlePlan.AddRanged');
+  return webUIText('FormationTemplate.BattlePlan.AddMelee');
+}
+
 export function battleFormationRoleIcon(role: BattleFormationRole, formationType: FormationType): string {
   if (formationType === 'naval') {
     if (role === 'siege') return '/assets/icons/UnitTypes/I_NavySiege.png';
@@ -67,6 +79,14 @@ export function battleFormationRoleIcon(role: BattleFormationRole, formationType
   if (role === 'siege') return '/assets/icons/UnitTypes/I_ArmySiege.png';
   if (role === 'ranged') return '/assets/icons/UnitTypes/I_ArmyRanged.png';
   return '/assets/icons/I_Swords.png';
+}
+
+const ROMAN_GROUP_INDEX = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
+export function numberedBattleFormationName(name: string, occurrence: number, totalWithName: number): string {
+  if (totalWithName <= 1) return name;
+  const index = ROMAN_GROUP_INDEX[occurrence] ?? String(occurrence + 1);
+  return webUIText('FormationTemplate.BattlePlan.GroupNameNumbered', { Name: name, Index: index });
 }
 
 export function battleFormationDisplayName(

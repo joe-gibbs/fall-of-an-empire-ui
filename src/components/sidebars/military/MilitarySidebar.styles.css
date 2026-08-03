@@ -428,14 +428,12 @@
   display: flex;
   align-items: center;
   padding: 0.12rem 0.28rem;
-  border-width: 0.154rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/modifier-frame.png');
-  border-image-slice: 3;
-  border-image-width: 0.154rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-color: #151b20;
   background-image: url('/assets/baked/card-charcoal.png');
   background-repeat: repeat;
@@ -1183,14 +1181,12 @@
   align-items: center;
   margin: 0 0.462rem 0.462rem;
   padding: 0.45rem;
-  border-width: 0.231rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-color: #162018;
   background-image: url('/assets/baked/card-green.png');
   background-repeat: repeat;
@@ -1266,12 +1262,12 @@
   align-items: center;
   justify-content: center;
   padding: 0.38rem 0.15rem;
-  border-width: 0.154rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(80, 92, 104, 0.3);
-  border-bottom-color: rgba(80, 92, 104, 0.34);
-  border-left-color: rgba(80, 92, 104, 0.3);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%),
     url('/assets/baked/texture-overlay-heavy.png'),
@@ -1292,10 +1288,10 @@
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
   background-color: #20272d;
-  border-top-color: rgba(201, 168, 76, 0.4);
-  border-right-color: rgba(201, 168, 76, 0.3);
-  border-bottom-color: rgba(201, 168, 76, 0.3);
-  border-left-color: rgba(201, 168, 76, 0.3);
+  border-top-color: rgba(255, 255, 255, 0.14);
+  border-right-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.1);
 }
 
 .mil-command-mode.is-active {
@@ -2122,14 +2118,12 @@
   align-items: flex-start;
   gap: 0.55rem;
   padding: 0.5rem 0.6rem;
-  border-width: 0.231rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-color: #201414;
   background-image: url('/assets/baked/card-red.png');
   background-repeat: repeat;
@@ -2168,14 +2162,12 @@
 .mil-command-stats > div {
   min-width: 0;
   padding: 0.42rem;
-  border-width: 0.154rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/modifier-frame.png');
-  border-image-slice: 3;
-  border-image-width: 0.154rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-color: #151b20;
   background-image: url('/assets/baked/card-charcoal.png');
   background-repeat: repeat;
@@ -2246,12 +2238,12 @@
   align-items: center;
   padding: 0.48rem 0.6rem;
   margin-bottom: 0.55rem;
-  border: 0.077rem solid rgba(201, 168, 76, 0.4);
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.154rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
   background: rgba(18, 24, 29, 0.82);
   color: var(--gold);
   font-family: var(--font-body);
@@ -2437,14 +2429,12 @@
     url('/assets/baked/card-charcoal.png');
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
-  border-width: 0.231rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
 
@@ -3449,10 +3439,10 @@
   padding: 0;
   border-width: 0.077rem;
   border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.22);
-  border-right-color: rgba(70, 82, 93, 0.62);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
   border-bottom-color: rgba(8, 12, 16, 0.92);
-  border-left-color: rgba(70, 82, 93, 0.62);
+  border-left-color: rgba(255, 255, 255, 0.07);
   background-image:
     linear-gradient(180deg, rgba(48, 55, 61, 0.34) 0%, rgba(14, 19, 24, 0.72) 100%),
     url('/assets/baked/texture-overlay-heavy.png'),
@@ -3464,10 +3454,10 @@
 }
 
 .mil-order-command:hover {
-  border-top-color: rgba(201, 168, 76, 0.45);
-  border-right-color: rgba(201, 168, 76, 0.28);
-  border-bottom-color: rgba(201, 168, 76, 0.22);
-  border-left-color: rgba(201, 168, 76, 0.28);
+  border-top-color: rgba(255, 255, 255, 0.16);
+  border-right-color: rgba(255, 255, 255, 0.12);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.12);
   background-image:
     linear-gradient(180deg, rgba(61, 69, 76, 0.38) 0%, rgba(21, 28, 34, 0.78) 100%),
     url('/assets/baked/texture-overlay-heavy.png'),
@@ -3519,10 +3509,10 @@
   position: relative;
   border-width: 0.077rem;
   border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.2);
-  border-right-color: rgba(201, 168, 76, 0.2);
-  border-bottom-color: rgba(201, 168, 76, 0.2);
-  border-left-color: rgba(201, 168, 76, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-image: none;
   background-color: rgba(8, 12, 17, 0.3);
   color: var(--text-bright);
@@ -3620,12 +3610,6 @@
   padding: 0.12rem 0.32rem;
 }
 
-.mil-command-mode-grid--subordinates .mil-command-mode,
-.mil-order-command {
-  border-width: 0.538rem;
-  border-image-width: 0.538rem;
-}
-
 .mil-sub-toggle {
   min-height: 2.5rem;
   padding: 0.1rem 0.35rem;
@@ -3709,10 +3693,10 @@
   padding: 0;
   border-width: 0.077rem;
   border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.2);
-  border-right-color: rgba(201, 168, 76, 0.2);
-  border-bottom-color: rgba(201, 168, 76, 0.2);
-  border-left-color: rgba(201, 168, 76, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-image: none;
   background-color: rgba(8, 12, 17, 0.3);
   cursor: pointer;
@@ -3769,14 +3753,12 @@
   justify-content: center;
   min-height: 1.45rem;
   padding: 0 0.18rem;
-  border-width: 0.154rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/modifier-frame.png');
-  border-image-slice: 3;
-  border-image-width: 0.154rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-color: #151b20;
   background-image: url('/assets/baked/card-charcoal.png');
   background-repeat: repeat;
@@ -4000,14 +3982,12 @@
   align-items: center;
   min-height: 2.85rem;
   padding: 0.36rem 0.45rem;
-  border-width: 0.154rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/modifier-frame.png');
-  border-image-slice: 3;
-  border-image-width: 0.154rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-image: url('/assets/baked/card-charcoal.png');
   background-repeat: repeat;
   background-size: 17.4545rem 8.7273rem;
@@ -4200,14 +4180,12 @@
   min-height: 2.2rem;
   padding: 0.28rem 0.42rem;
   margin-bottom: 0.18rem;
-  border-width: 0.154rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/modifier-frame.png');
-  border-image-slice: 3;
-  border-image-width: 0.154rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-image: url('/assets/baked/card-charcoal.png');
   background-repeat: repeat;
   background-size: 17.4545rem 8.7273rem;
@@ -4552,7 +4530,6 @@
   border-right-width: 0;
   border-bottom-width: 0;
   border-left-width: 0;
-  border-image-source: none;
   background-image: none;
   background-color: transparent;
   color: var(--gold-muted);
@@ -4561,7 +4538,6 @@
 
 .mil-sub-toggle:hover,
 .mil-sub-toggle:active {
-  border-image-source: none;
   background-image: none;
   background-color: transparent;
   color: var(--gold);

@@ -88,7 +88,9 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
   const [baseline, setBaseline] = useState<DraftTemplate | null>(null);
   const [activeTab, setActiveTab] = useState<TemplateTab>('composition');
   const [renaming, setRenaming] = useState(false);
+  const [renameDraft, setRenameDraft] = useState('');
   const [nameEdited, setNameEdited] = useState(false);
+  const titleInputRef = React.useRef<HTMLInputElement>(null);
   const automaticNameRequestRef = React.useRef(0);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [catalogueRequested, setCatalogueRequested] = useState(false);
@@ -109,10 +111,12 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
   useEffect(() => {
     if (newTemplateType) {
       const timer = window.setTimeout(() => {
+        const nextDraft = emptyDraft(newTemplateType);
         setSelectedId(null);
-        setDraft(emptyDraft(newTemplateType));
+        setDraft(nextDraft);
         setBaseline(null);
-        setRenaming(true);
+        setRenameDraft(nextDraft.name);
+        setRenaming(false);
         setNameEdited(false);
         setPickerOpen(false);
         setMessage('');
@@ -130,10 +134,12 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
     if (!next) {
       if (assignmentTemplateType && !baseline) {
         const timer = window.setTimeout(() => {
+          const nextDraft = emptyDraft(assignmentTemplateType);
           setSelectedId(null);
-          setDraft(emptyDraft(assignmentTemplateType));
+          setDraft(nextDraft);
           setBaseline(null);
-          setRenaming(true);
+          setRenameDraft(nextDraft.name);
+          setRenaming(false);
           setNameEdited(false);
           setPickerOpen(false);
           setMessage('');
@@ -149,7 +155,12 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
       if (!shouldStartRenaming) return;
 
       const timer = window.setTimeout(() => {
+        setRenameDraft(baseline?.name ?? next.name);
         setRenaming(true);
+        window.setTimeout(() => {
+          titleInputRef.current?.focus();
+          titleInputRef.current?.select();
+        }, 0);
       }, 0);
 
       return () => window.clearTimeout(timer);
@@ -160,11 +171,18 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
       setSelectedId(next.id);
       setDraft(nextDraft);
       setBaseline(nextDraft);
+      setRenameDraft(nextDraft.name);
       setRenaming(shouldStartRenaming);
       setNameEdited(true);
       setPickerOpen(false);
       setMessage('');
       setConfirmDeleteId(null);
+      if (shouldStartRenaming) {
+        window.setTimeout(() => {
+          titleInputRef.current?.focus();
+          titleInputRef.current?.select();
+        }, 0);
+      }
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -250,12 +268,48 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
     };
   }, [automaticNameSignature, draft.templateId, draft.type, nameEdited]);
 
+  const beginRename = (currentName: string = draft.name) => {
+    setRenameDraft(currentName);
+    setRenaming(true);
+    window.setTimeout(() => {
+      titleInputRef.current?.focus();
+      titleInputRef.current?.select();
+    }, 0);
+  };
+
+  const confirmRename = () => {
+    const nextName = renameDraft.trim();
+    if (!nextName) return;
+    setRenaming(false);
+    if (nextName !== draft.name) {
+      automaticNameRequestRef.current += 1;
+      setNameEdited(true);
+      setDraft(current => ({ ...current, name: nextName }));
+    }
+  };
+
+  const cancelRename = () => {
+    setRenameDraft(draft.name);
+    setRenaming(false);
+  };
+
+  const handleRenameKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      confirmRename();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelRename();
+    }
+  };
+
   const loadTemplate = (template: FormationTemplateEntry) => {
     const nextDraft = buildDraft(template);
     setSelectedId(template.id);
     setDraft(nextDraft);
     setBaseline(nextDraft);
     setRenaming(false);
+    setRenameDraft(nextDraft.name);
     setNameEdited(true);
     setPickerOpen(false);
     setMessage('');
@@ -263,10 +317,12 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
   };
 
   const beginCreate = () => {
+    const nextDraft = emptyDraft(assignmentTemplateType ?? draft.type);
     setSelectedId(null);
-    setDraft(emptyDraft(assignmentTemplateType ?? draft.type));
+    setDraft(nextDraft);
     setBaseline(null);
-    setRenaming(true);
+    setRenameDraft(nextDraft.name);
+    setRenaming(false);
     setNameEdited(false);
     setPickerOpen(false);
     setMessage('');
@@ -406,6 +462,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
       if (!savedDraft.templateId && newTemplateType) {
         openSidebar('template', response.templateId);
       }
+      setRenameDraft(nextDraft.name);
       setRenaming(false);
       setNameEdited(true);
       setPickerOpen(false);
@@ -483,6 +540,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
   const revertDraft = () => {
     if (!baseline) return;
     setDraft(baseline);
+    setRenameDraft(baseline.name);
     setRenaming(false);
     setPickerOpen(false);
     setMessage('');
@@ -526,30 +584,31 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
           <div className="tpl-header-info">
             <div className="tpl-header-name-row">
               {renaming ? (
-                <input
-                  className="tpl-header-name-input"
-                  autoFocus
-                  value={draft.name}
-                  onChange={event => {
-                    automaticNameRequestRef.current += 1;
-                    setNameEdited(true);
-                    setDraft(current => ({ ...current, name: event.target.value }));
-                  }}
-                  onBlur={() => {
-                    setDraft(current => ({ ...current, name: current.name.trim() }));
-                    setRenaming(false);
-                  }}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter') event.currentTarget.blur();
-                    if (event.key === 'Escape') setRenaming(false);
-                  }}
-                  maxLength={64}
-                />
+                <div className="tpl-rename-row">
+                  <input
+                    ref={titleInputRef}
+                    className="tpl-header-name-input"
+                    value={renameDraft}
+                    onChange={event => setRenameDraft(event.target.value)}
+                    onKeyDown={handleRenameKeyDown}
+                    maxLength={64}
+                  />
+                  <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.875.47') }} position="bottom" delay={150}>
+                    <button type="button" className="tpl-header-rename-btn" onClick={confirmRename}>
+                      <img src="/assets/ui/I_TickIcon.png" alt="" className="tpl-header-edit-pencil" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.880.48') }} position="bottom" delay={150}>
+                    <button type="button" className="tpl-header-rename-btn" onClick={cancelRename}>
+                      <img src="/assets/ui/I_CloseIcon.png" alt="" className="tpl-header-edit-pencil" />
+                    </button>
+                  </Tooltip>
+                </div>
               ) : (
                 <>
                   <span className="tpl-header-name">{draft.name || webUIText("FormationTemplateSidebar.NewTemplate")}</span>
                   <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.585.12'), body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.587.13') }} position="bottom" delay={150}>
-                    <button type="button" className="tpl-header-rename-btn" onClick={() => setRenaming(true)}>
+                    <button type="button" className="tpl-header-rename-btn" onClick={() => beginRename()}>
                       <img src="/assets/icons/I_Rename.png" alt="" className="tpl-header-edit-pencil" />
                     </button>
                   </Tooltip>

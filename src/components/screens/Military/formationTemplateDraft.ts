@@ -138,6 +138,14 @@ export function draftUnitCount(draft: TemplateDraft): number {
   return draftCompositionRequests(draft).reduce((sum, unit) => sum + unit.count, 0);
 }
 
+export function draftRoleCounts(draft: TemplateDraft): Record<BattleFormationRole, number> {
+  const counts: Record<BattleFormationRole, number> = { melee: 0, ranged: 0, siege: 0 };
+  draft.battleGroups.forEach(group => {
+    counts[group.role] += battleGroupUnitCount(group);
+  });
+  return counts;
+}
+
 export function templateDraftsEqual(left: TemplateDraft, right: TemplateDraft): boolean {
   if (left.templateId !== right.templateId || left.name !== right.name || left.iconId !== right.iconId || left.type !== right.type) return false;
   const leftGroups = draftBattleGroupRequests(left);
@@ -201,6 +209,51 @@ export function battleGroupsValid(
       return unit ? battleRoleForUnit(unit) === group.role : false;
     });
   });
+}
+
+/** Culture key used when summing recruitment manpower for a unit class. */
+export function unitCultureKey(unit: FormationTemplateUnitEntry): string {
+  return unit.cultureId || unit.cultureName || unit.id;
+}
+
+/** Strength already committed to each culture across the whole draft. */
+export function draftUsedManpowerByCulture(
+  draft: TemplateDraft,
+  unitById: Map<string, FormationTemplateUnitEntry>,
+): Record<string, number> {
+  const used: Record<string, number> = {};
+  for (const request of draftCompositionRequests(draft)) {
+    const unit = unitById.get(request.unitId);
+    if (!unit || request.count <= 0) continue;
+    const key = unitCultureKey(unit);
+    used[key] = (used[key] ?? 0) + Math.max(0, unit.maxStrength || 0) * request.count;
+  }
+  return used;
+}
+
+/**
+ * How many more companies of this unit culture manpower can still support.
+ * availableManpower 0 means the host has not reported a culture pool yet, so leave the soft cap off.
+ */
+export function manpowerRoomForUnit(
+  unit: FormationTemplateUnitEntry,
+  usedManpowerByCulture: Record<string, number>,
+): number {
+  const available = Math.max(0, unit.availableManpower ?? 0);
+  if (available <= 0) return Number.MAX_SAFE_INTEGER;
+  const strength = Math.max(0, unit.maxStrength || 0);
+  if (strength <= 0) return Number.MAX_SAFE_INTEGER;
+  const used = usedManpowerByCulture[unitCultureKey(unit)] ?? 0;
+  return Math.floor(Math.max(0, available - used) / strength);
+}
+
+export function canAddUnitForManpower(
+  unit: FormationTemplateUnitEntry,
+  usedManpowerByCulture: Record<string, number>,
+  amount = 1,
+): boolean {
+  if (amount <= 0) return true;
+  return manpowerRoomForUnit(unit, usedManpowerByCulture) >= amount;
 }
 
 
