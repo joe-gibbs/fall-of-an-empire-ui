@@ -462,14 +462,19 @@ export function useSettlementBridge(settlementId: string | null): Settlement | n
     payload: settlementId ? { settlementId } : null,
     map: mapSettlement,
     matchPush: (data) => data.id === settlementId,
+    // Keep the current settlement visible while the next one loads so sidebar
+    // tab / panel state is not torn down when navigating between settlements.
+    keepPreviousData: true,
   });
   const [siegePatch, setSiegePatch] = useState<GetSettlementSiegeDataResponse | null>(null);
 
   useEffect(() => {
     if (!settlementId) {
+      setSiegePatch(null);
       return undefined;
     }
 
+    setSiegePatch(null);
     return onBridgeEvent('game.get_settlement_siege_data', (data) => {
       if (data.id === settlementId) {
         setSiegePatch(data);
@@ -477,5 +482,15 @@ export function useSettlementBridge(settlementId: string | null): Settlement | n
     });
   }, [settlementId]);
 
-  return useMemo(() => applySiegePatch(settlement, siegePatch), [settlement, siegePatch]);
+  // Only apply siege patches that belong to the settlement currently shown.
+  // While keepPreviousData still shows the previous settlement, ignore the
+  // next settlement's siege push until the main data has swapped over.
+  const siegeForSettlement = settlement && siegePatch && siegePatch.id === settlement.id
+    ? siegePatch
+    : null;
+
+  return useMemo(
+    () => applySiegePatch(settlement, siegeForSettlement),
+    [settlement, siegeForSettlement],
+  );
 }

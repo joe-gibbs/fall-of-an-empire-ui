@@ -20,6 +20,7 @@ import type { SettlementInteractionView } from '../../../bridge/settlements-econ
 import { usePinnedItemsBridge, zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import { bridgeCall } from '../../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
+import { bridgeEvents } from '../../../bridge/core/bridgeEvents';
 import { consumePendingSidebarTab } from '../../../bridge/core/useBridgeSidebarEvents';
 import {
   navigateSettlementBridge,
@@ -49,9 +50,13 @@ import './SettlementSidebar.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 import { formatSettlementType } from '../../../utils/displayLabels';
+type SettlementSidebarTab = 'general' | 'buildings' | 'military' | 'garrison';
+
 interface SettlementSidebarProps {
   settlement: Settlement;
   onClose: () => void;
+  activeTab: SettlementSidebarTab;
+  onTabChange: (tab: SettlementSidebarTab) => void;
 }
 
 function getUnrestColor(unrest: number): string {
@@ -676,8 +681,6 @@ function HintSectionHeading({ title, hintKey }: { title: string; hintKey?: strin
   );
 }
 
-type SettlementSidebarTab = 'general' | 'buildings' | 'military' | 'garrison';
-
 function settlementTabFromIndex(tabIndex: number | undefined): SettlementSidebarTab | null {
   if (tabIndex === 0) return 'general';
   if (tabIndex === 1) return 'buildings';
@@ -686,10 +689,14 @@ function settlementTabFromIndex(tabIndex: number | undefined): SettlementSidebar
   return null;
 }
 
-const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClose }) => {
+const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
+  settlement,
+  onClose,
+  activeTab,
+  onTabChange,
+}) => {
   const { showAdvisor, openSidebar } = useGameActions();
   const { debugMode } = useGameState();
-  const [activeTab, setActiveTab] = React.useState<SettlementSidebarTab>('general');
   const [showAllPops, setShowAllPops] = React.useState(false);
   const [popSort, setPopSort] = React.useState<SortState<PopSortKey>>({ key: 'population', direction: 'desc' });
   const [isRenaming, setIsRenaming] = React.useState(false);
@@ -714,22 +721,6 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
     setBishopModal(null);
     setShowAllPops(false);
   }, [settlement.id, settlement.name]);
-
-  React.useEffect(() => {
-    const pendingTab = settlementTabFromIndex(consumePendingSidebarTab('settlement', settlement.id));
-    if (pendingTab) setActiveTab(pendingTab);
-
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent).detail as { type?: string; id?: string; tabIndex?: number } | undefined;
-      if (!detail || detail.type !== 'settlement' || detail.id !== settlement.id) return;
-
-      const tab = settlementTabFromIndex(detail.tabIndex);
-      if (tab) setActiveTab(tab);
-    };
-
-    bridgeEvents.addEventListener('ui.sidebar_tab_event', handler);
-    return () => bridgeEvents.removeEventListener('ui.sidebar_tab_event', handler);
-  }, [settlement.id]);
 
   const foodNet = settlement.foodProduction - settlement.foodConsumption;
   const foodColor = getFoodColor(settlement.foodProduction, settlement.foodConsumption);
@@ -973,7 +964,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({ settlement, onClo
           { id: 'garrison', label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.959.53') },
         ]}
         activeTab={activeTab}
-        onTabChange={id => setActiveTab(id as SettlementSidebarTab)}
+        onTabChange={id => onTabChange(id as SettlementSidebarTab)}
       />
 
       <StyledScrollArea className="sidebar-content sidebar-content--textured settle-content">
@@ -1563,8 +1554,38 @@ export default React.memo(SettlementSidebar);
 
 function SettlementSidebarSlot({ sidebarId, onClose }: { sidebarId: string | null; onClose: () => void }) {
   const settlement = useSettlement(sidebarId);
+  // Keep the selected tab on the slot so switching settlements (which briefly
+  // unmounts SettlementSidebar while the next settlement loads) does not reset
+  // the player back to General.
+  const [activeTab, setActiveTab] = React.useState<SettlementSidebarTab>('general');
+
+  React.useEffect(() => {
+    if (!sidebarId) return;
+
+    const pendingTab = settlementTabFromIndex(consumePendingSidebarTab('settlement', sidebarId));
+    if (pendingTab) setActiveTab(pendingTab);
+
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent).detail as { type?: string; id?: string; tabIndex?: number } | undefined;
+      if (!detail || detail.type !== 'settlement' || detail.id !== sidebarId) return;
+
+      const tab = settlementTabFromIndex(detail.tabIndex);
+      if (tab) setActiveTab(tab);
+    };
+
+    bridgeEvents.addEventListener('ui.sidebar_tab_event', handler);
+    return () => bridgeEvents.removeEventListener('ui.sidebar_tab_event', handler);
+  }, [sidebarId]);
+
   if (!settlement) return null;
-  return <SettlementSidebar settlement={settlement} onClose={onClose} />;
+  return (
+    <SettlementSidebar
+      settlement={settlement}
+      onClose={onClose}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    />
+  );
 }
 
 registerSidebar({

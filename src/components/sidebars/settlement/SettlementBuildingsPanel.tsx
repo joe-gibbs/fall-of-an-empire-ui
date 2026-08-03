@@ -135,6 +135,24 @@ function nodeChainName(node: TreeNode): string {
   return node.a.chainName ?? node.a.name;
 }
 
+function nodeSearchHaystack(node: TreeNode): string {
+  if (node.kind === 'built') {
+    return [node.b.name, node.b.chainName, node.b.description]
+      .filter(Boolean)
+      .join(' ')
+      .toLocaleLowerCase();
+  }
+  return [node.a.name, node.a.chainName, node.a.description]
+    .filter(Boolean)
+    .join(' ')
+    .toLocaleLowerCase();
+}
+
+function nodeMatchesSearch(node: TreeNode, query: string): boolean {
+  if (!query) return true;
+  return nodeSearchHaystack(node).includes(query);
+}
+
 function findScrollViewport(element: HTMLElement): HTMLElement | null {
   return element.closest('.styled-scroll-area__viewport') as HTMLElement | null;
 }
@@ -809,13 +827,17 @@ function BuiltCard({
       : b.condition >= 50 ? 'gold'
       : 'red';
   const showCondition = b.condition !== undefined && b.condition < 80;
+  const multiLevel = b.maxLevel !== undefined && b.maxLevel > 1;
   const levelText = ruined
     ? webUIText('SettlementBuildings.Ruin')
     : b.maxLevel !== undefined && queuedToLevel !== undefined && queuedToLevel > b.level
     ? `${n(b.level)} -> ${n(queuedToLevel)} / ${n(b.maxLevel)}`
     : maxed
-      ? 'Max'
+      ? webUIText('SettlementBuildings.Max')
       : (b.maxLevel !== undefined ? `${n(b.level)} / ${n(b.maxLevel)}` : undefined);
+  const builtStatusLabel = ruined
+    ? webUIText('SettlementBuildings.Ruin')
+    : webUIText('SettlementBuildings.Built');
   const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (event.button === 0) {
       if (actionable) onQueue?.(b.id, event.currentTarget);
@@ -896,16 +918,24 @@ function BuiltCard({
       >
         <div className="bld-node-icon-wrap">
           <img src={b.icon ?? GENERIC_ICON} alt="" className="bld-node-icon" />
+          {!ruined && (
+            <img
+              src="/assets/icons/I_GoalMet.png"
+              alt=""
+              className="bld-node-built-mark"
+              draggable={false}
+            />
+          )}
         </div>
         <div className="bld-node-body">
           <div className="bld-node-header">
             <span className="bld-node-name">{b.name}</span>
             <span className="bld-node-header-right">
-              {b.maxLevel !== undefined && b.maxLevel > 1 ? (
+              {multiLevel ? (
                 <span className="bld-node-level">
                   <LevelPips
                     level={b.level}
-                    maxLevel={b.maxLevel}
+                    maxLevel={b.maxLevel!}
                     queuedToLevel={queuedToLevel}
                   />
                   {levelText && (
@@ -914,7 +944,23 @@ function BuiltCard({
                     </span>
                   )}
                 </span>
-              ) : null}
+              ) : (
+                <span
+                  className={
+                    `bld-node-status${ruined ? ' bld-node-status--ruin' : ' bld-node-status--built'}`
+                  }
+                >
+                  {!ruined && (
+                    <img
+                      src="/assets/icons/I_GoalMet.png"
+                      alt=""
+                      className="bld-node-status-icon"
+                      draggable={false}
+                    />
+                  )}
+                  {builtStatusLabel}
+                </span>
+              )}
               <MapPlaceButton
                 buildingId={b.id}
                 buildingName={b.name}
@@ -1485,6 +1531,24 @@ function ConstructionSection({
 // Tabs disabled when no buildings in that category for this settlement.
 // ---------------------------------------------------------------------------
 
+interface CategoryCount {
+  built: number;
+  total: number;
+}
+
+function emptyCategoryCounts(): Record<BuildingCategory, CategoryCount> {
+  return {
+    economic: { built: 0, total: 0 },
+    military: { built: 0, total: 0 },
+    defensive: { built: 0, total: 0 },
+    infrastructure: { built: 0, total: 0 },
+    cultural: { built: 0, total: 0 },
+    administrative: { built: 0, total: 0 },
+    naval: { built: 0, total: 0 },
+    other: { built: 0, total: 0 },
+  };
+}
+
 function CategoryTabs({
   active,
   counts,
@@ -1492,7 +1556,7 @@ function CategoryTabs({
   onChange,
 }: {
   active: BuildingCategory;
-  counts: Record<BuildingCategory, number>;
+  counts: Record<BuildingCategory, CategoryCount>;
   disabledCategories: Set<BuildingCategory>;
   onChange: (c: BuildingCategory) => void;
 }) {
@@ -1500,7 +1564,7 @@ function CategoryTabs({
     <div className="bld-cat-tabs">
       {CATEGORY_ORDER.map(cat => {
         const count = counts[cat];
-        const disabled = disabledCategories.has(cat) || count === 0;
+        const disabled = disabledCategories.has(cat) || count.total === 0;
         const isActive = active === cat;
         return (
           <button
@@ -1514,7 +1578,7 @@ function CategoryTabs({
             disabled={disabled}
           >
             <span className="bld-cat-tab-label">{CATEGORY_LABELS[cat]}</span>
-            <span className="bld-cat-tab-count">{n(count)}</span>
+            <span className="bld-cat-tab-count">{n(count.built)}/{n(count.total)}</span>
           </button>
         );
       })}
@@ -1645,6 +1709,13 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const hasPort = data?.hasPort ?? false;
   const queue = React.useMemo(() => data?.construction.queue ?? [], [data]);
   const queueSummaries = React.useMemo(() => buildQueueSummaries(queue), [queue]);
+  const [buildingSearch, setBuildingSearch] = React.useState('');
+  const [searchSettlementId, setSearchSettlementId] = React.useState(settlement.id);
+  if (searchSettlementId !== settlement.id) {
+    setSearchSettlementId(settlement.id);
+    setBuildingSearch('');
+  }
+  const searchQuery = buildingSearch.trim().toLocaleLowerCase();
 
   const bringBuildingIntoView = React.useCallback((buildingId: string) => {
     const element = findBuildingNode(buildingId);
@@ -1718,18 +1789,22 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     return out;
   }, [built, available, hasPort]);
 
-  // Counts per category for tab badges.
+  const visibleNodes = React.useMemo(() => {
+    if (!searchQuery) return nodes;
+    return nodes.filter(node => nodeMatchesSearch(node, searchQuery));
+  }, [nodes, searchQuery]);
+
+  // Counts per category for tab badges (respect search filter).
   const counts = React.useMemo(() => {
-    const c: Record<BuildingCategory, number> = {
-      economic: 0, military: 0, defensive: 0, infrastructure: 0,
-      cultural: 0, administrative: 0, naval: 0, other: 0,
-    };
-    for (const node of nodes) {
+    const c = emptyCategoryCounts();
+    for (const node of visibleNodes) {
       const cat = nodeCategory(node);
-      if (cat) c[cat]++;
+      if (!cat) continue;
+      c[cat].total += 1;
+      if (node.kind === 'built') c[cat].built += 1;
     }
     return c;
-  }, [nodes]);
+  }, [visibleNodes]);
 
   const disabledCategories = React.useMemo(() => {
     const s = new Set<BuildingCategory>();
@@ -1740,7 +1815,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   // Default tab: first category with buildings.
   const [activeTab, setActiveTab] = React.useState<BuildingCategory>(() => {
     for (const cat of CATEGORY_ORDER) {
-      if (counts[cat] > 0 && !disabledCategories.has(cat)) return cat;
+      if (counts[cat].total > 0 && !disabledCategories.has(cat)) return cat;
     }
     return 'economic';
   });
@@ -1750,6 +1825,9 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     const targetCategory = targetNode ? nodeCategory(targetNode) : undefined;
     if (!targetCategory || disabledCategories.has(targetCategory)) return;
 
+    // Clear search so requirement links can surface buildings outside the
+    // current filter, then switch category / scroll into view.
+    setBuildingSearch('');
     pendingBuildingTargetRef.current = target;
     if (targetCategory !== activeTab) {
       setActiveTab(targetCategory);
@@ -1831,16 +1909,16 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     findRequirementTargets,
   }), [findRequirementTargets, navigateToBuilding]);
 
-  // Filter nodes to active category, then build per-chain trees.
+  // Filter nodes to active category (and search), then build per-chain trees.
   const chainTrees = React.useMemo(() => {
-    const inCat = nodes.filter(n => nodeCategory(n) === activeTab);
+    const inCat = visibleNodes.filter(n => nodeCategory(n) === activeTab);
     return buildChainTrees(inCat);
-  }, [nodes, activeTab]);
+  }, [visibleNodes, activeTab]);
 
   React.useEffect(() => {
-    if (counts[activeTab] > 0 && !disabledCategories.has(activeTab)) return;
+    if (counts[activeTab].total > 0 && !disabledCategories.has(activeTab)) return;
     for (const cat of CATEGORY_ORDER) {
-      if (counts[cat] > 0 && !disabledCategories.has(cat)) {
+      if (counts[cat].total > 0 && !disabledCategories.has(cat)) {
         setActiveTab(cat);
         return;
       }
@@ -1897,6 +1975,19 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
               reordering={reorderingQueue}
             />
 
+            <div className="bld-search-row">
+              <div className="search-field bld-search-field">
+                <img src="/assets/icons/I_Search.png" alt="" className="search-field__icon" draggable={false} />
+                <input
+                  type="text"
+                  className="search-field__input bld-search-input"
+                  placeholder={webUIText('SettlementBuildings.SearchPlaceholder')}
+                  value={buildingSearch}
+                  onChange={event => setBuildingSearch(event.target.value)}
+                />
+              </div>
+            </div>
+
             <CategoryTabs
               active={activeTab}
               counts={counts}
@@ -1905,7 +1996,13 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
             />
 
             {chainTrees.length === 0 && (
-              <div className="sidebar-placeholder"><WebUIText textKey="Auto.ComponentsSidebarsSettlementBuildingsPanel.963.9" /></div>
+              <div className="sidebar-placeholder">
+                <WebUIText
+                  textKey={searchQuery
+                    ? 'SettlementBuildings.NoSearchResults'
+                    : 'Auto.ComponentsSidebarsSettlementBuildingsPanel.963.9'}
+                />
+              </div>
             )}
 
             {chainTrees.map(tree => (

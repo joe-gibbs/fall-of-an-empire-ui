@@ -541,6 +541,26 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
     return source.filter(formation => formation.type !== 'naval');
   }, [r, templateData, settlement.hasPort]);
 
+  const [templateSearch, setTemplateSearch] = React.useState('');
+  const [searchSettlementId, setSearchSettlementId] = React.useState(settlement.id);
+  if (searchSettlementId !== settlement.id) {
+    setSearchSettlementId(settlement.id);
+    setTemplateSearch('');
+  }
+  const templateSearchQuery = templateSearch.trim().toLocaleLowerCase();
+
+  const visibleFormations = React.useMemo(() => {
+    if (!templateSearchQuery) return formations;
+    return formations.filter(formation => {
+      const typeLabel = formation.type === 'land'
+        ? webUIText('SettlementMilitary.Legion')
+        : webUIText('Common.Fleet');
+      const unitNames = formation.composition.map(slot => slot.unitName).join(' ');
+      const haystack = `${formation.name} ${typeLabel} ${unitNames}`.toLocaleLowerCase();
+      return haystack.includes(templateSearchQuery);
+    });
+  }, [formations, templateSearchQuery]);
+
   const newTemplateType = React.useMemo(() => {
     if (!r) return 'land';
     const canRaiseLand = TYPE_ORDER.some(type => type !== 'navy' && (r.maxTier[type] ?? 0) > 0);
@@ -612,12 +632,26 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
       ))}
 
       <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsSettlementMilitaryPanel.318.8')} />
+      {formations.length > 0 && (
+        <div className="mil-search-row">
+          <div className="search-field mil-search-field">
+            <img src="/assets/icons/I_Search.png" alt="" className="search-field__icon" draggable={false} />
+            <input
+              type="text"
+              className="search-field__input mil-search-input"
+              placeholder={webUIText('SettlementMilitary.SearchTemplatesPlaceholder')}
+              value={templateSearch}
+              onChange={event => setTemplateSearch(event.target.value)}
+            />
+          </div>
+        </div>
+      )}
       <div className="mil-formation-list">
         <button type="button" className="mil-new-template-btn" onMouseDown={openNewTemplate}>
           <span className="mil-new-template-plus">+</span>
           <span><WebUIText textKey="Auto.ComponentsSidebarsSettlementMilitaryPanel.321.7" /></span>
         </button>
-        {formations.map(f => (
+        {visibleFormations.map(f => (
           <FormationCard
             key={f.id}
               f={f}
@@ -627,6 +661,11 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
             onOpen={openTemplate}
           />
         ))}
+        {templateSearchQuery && visibleFormations.length === 0 && (
+          <div className="sidebar-placeholder">
+            <WebUIText textKey="SettlementMilitary.NoSearchResults" />
+          </div>
+        )}
       </div>
 
       {r && (

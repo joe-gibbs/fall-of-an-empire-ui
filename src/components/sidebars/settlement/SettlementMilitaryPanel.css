@@ -139,6 +139,24 @@
   border-left-color: var(--gold-dark);
 }
 
+/* ============ Template search ============ */
+
+.mil-search-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.mil-search-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.mil-search-input {
+  width: 100%;
+}
+
 /* ============ Formation list ============ */
 
 .mil-formation-list {
