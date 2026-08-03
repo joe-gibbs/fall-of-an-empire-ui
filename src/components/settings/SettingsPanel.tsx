@@ -460,7 +460,17 @@ export const SettingsSlider: React.FC<{ label: string; desc?: string; tooltip?: 
 
 /* ── Notifications Tab ── */
 
-const NOTIFICATION_CATEGORY_ORDER = ['Military', 'Diplomatic', 'Political', 'Character', 'Settlement', 'General'];
+/** Category ids from GetSettingsAction::NotificationCategoryToString, in display order. */
+const NOTIFICATION_CATEGORY_LABEL_KEYS: Record<string, string> = {
+  military: 'Settings.NotificationCategory.Military',
+  diplomatic: 'Settings.NotificationCategory.Diplomatic',
+  political: 'Settings.NotificationCategory.Political',
+  character: 'Settings.NotificationCategory.Character',
+  settlement: 'Settings.NotificationCategory.Settlement',
+  general: 'Settings.NotificationCategory.General',
+};
+
+const NOTIFICATION_CATEGORY_ORDER = Object.keys(NOTIFICATION_CATEGORY_LABEL_KEYS);
 
 const NotificationsTab: React.FC<{
   notifications: NotificationTypeDTO[];
@@ -480,9 +490,6 @@ const NotificationsTab: React.FC<{
   }, [notifications]);
 
   const categories = NOTIFICATION_CATEGORY_ORDER.filter(c => grouped.has(c));
-  for (const c of grouped.keys()) {
-    if (!categories.includes(c)) categories.push(c);
-  }
 
   return (
     <div className="settings-panel">
@@ -497,7 +504,7 @@ const NotificationsTab: React.FC<{
       />
       {categories.map(cat => (
         <React.Fragment key={cat}>
-          <SectionHeading title={cat} variant="ornate" />
+          <SectionHeading title={webUIText(NOTIFICATION_CATEGORY_LABEL_KEYS[cat])} variant="ornate" />
           {(grouped.get(cat) ?? []).map(n => (
             <Toggle
               key={n.id}
@@ -517,6 +524,20 @@ const NotificationsTab: React.FC<{
 };
 
 /* ── Controls Tab ── */
+
+/** Category ids from GetSettingsAction::GetActionCategory, in display order. */
+const CONTROL_CATEGORY_LABEL_KEYS: Record<string, string> = {
+  selection: 'Settings.ControlCategory.Selection',
+  camera: 'Settings.ControlCategory.Camera',
+  gameSpeed: 'Settings.ControlCategory.GameSpeed',
+  system: 'Settings.ControlCategory.System',
+  screens: 'Settings.ControlCategory.Screens',
+  mapModes: 'Settings.ControlCategory.MapModes',
+  production: 'Settings.ControlCategory.Production',
+  other: 'Settings.ControlCategory.Other',
+};
+
+const CONTROL_CATEGORY_ORDER = Object.keys(CONTROL_CATEGORY_LABEL_KEYS);
 
 interface PendingRebind {
   index: number;
@@ -716,9 +737,9 @@ const ControlsTab: React.FC<{
     const map = new Map<string, ControlListItem[]>();
     const controlGroups = new Map<string, Extract<ControlListItem, { kind: 'group' }>>();
     for (const c of filteredControls) {
-      const arr = map.get(c.description) ?? [];
+      const arr = map.get(c.category) ?? [];
       if (c.groupName) {
-        const groupKey = `${c.description}:${c.groupName}`;
+        const groupKey = `${c.category}:${c.groupName}`;
         let group = controlGroups.get(groupKey);
         if (!group) {
           group = { kind: 'group', key: groupKey, label: c.groupLabel || c.label, controls: [] };
@@ -729,16 +750,12 @@ const ControlsTab: React.FC<{
       } else {
         arr.push({ kind: 'control', control: c });
       }
-      map.set(c.description, arr);
+      map.set(c.category, arr);
     }
     return map;
   }, [filteredControls]);
 
-  const categoryOrder = ['Selection', 'Camera', 'Game Speed', 'System', 'Screens', 'Map Modes', 'Production', 'Other'];
-  const categories = categoryOrder.filter(c => grouped.has(c));
-  for (const c of grouped.keys()) {
-    if (!categories.includes(c)) categories.push(c);
-  }
+  const categories = CONTROL_CATEGORY_ORDER.filter(c => grouped.has(c));
 
   const movementSort = (a: ControlBindingDTO, b: ControlBindingDTO) => {
     const order = (control: ControlBindingDTO) => {
@@ -875,7 +892,7 @@ const ControlsTab: React.FC<{
       )}
       {categories.map(cat => (
         <React.Fragment key={cat}>
-          <SectionHeading title={cat} variant="ornate" />
+          <SectionHeading title={webUIText(CONTROL_CATEGORY_LABEL_KEYS[cat])} variant="ornate" />
           {(grouped.get(cat) ?? []).map(renderControlItem)}
         </React.Fragment>
       ))}
@@ -906,8 +923,8 @@ export const EventModelSelection: React.FC<{
 }) => {
   const formatMB = (mb: number): string => {
     if (mb <= 0) return webUIText('Settings.Unknown');
-    if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
-    return `${mb.toFixed(0)} MB`;
+    if (mb >= 1024) return webUIText('Settings.Gigabytes', { Value: (mb / 1024).toFixed(1) });
+    return webUIText('Settings.Megabytes', { Value: mb.toFixed(0) });
   };
   const modelVramShortfall = (model: LlmModelDTO): number => (
     model.vramRequirementMB > 0 && hardware.videoMemoryMB > 0
