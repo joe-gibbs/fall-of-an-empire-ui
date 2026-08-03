@@ -343,7 +343,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       ghost = document.createElement('div');
       ghost.className = `chart-drag-ghost${subCount > 0 ? ' is-stacked' : ''}`;
       const tail = subCount > 0
-        ? `<span class="chart-drag-ghost-sub">+ ${formatNumber(subCount)} subordinate${subCount === 1 ? '' : 's'}</span>`
+        ? `<span class="chart-drag-ghost-sub">${webUIText('Military.DragGhostSubordinates', { Count: formatNumber(subCount), Unit: webUIText(subCount === 1 ? 'Common.Subordinate' : 'Common.Subordinates') })}</span>`
         : '';
       ghost.innerHTML =
         `<span class="chart-drag-ghost-rank">${rankLabel(src)}</span>` +

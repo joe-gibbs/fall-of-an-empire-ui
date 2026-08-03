@@ -94,9 +94,9 @@ function militaryTooltip(
   debugMode: boolean,
 ): TooltipContent {
   const statuses: string[] = [];
-  if (detail.isRaiding) statuses.push('Raiding');
-  if (data.attrition) statuses.push('Attrition');
-  if (blockading) statuses.push('Blockading');
+  if (detail.isRaiding) statuses.push(webUIText('WorldGlances.Military.Raiding'));
+  if (data.attrition) statuses.push(webUIText('WorldGlances.Military.Attrition'));
+  if (blockading) statuses.push(webUIText('WorldGlances.Military.Blockading'));
   const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
 
   const lines: TooltipLine[] = [

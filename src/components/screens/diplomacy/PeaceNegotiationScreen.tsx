@@ -312,9 +312,9 @@ function renderAcceptabilityBreakdown(input: string): ReactNode {
 function fmtWarScore(value: number): string {
   const rounded = Math.round(value * 10) / 10;
   const formatted = fmtSigned(rounded);
-  if (value > 0) return `${formatted} (Winning)`;
-  if (value < 0) return `${formatted} (Losing)`;
-  return `${formatted} (Stalemate)`;
+  if (value > 0) return webUIText('PeaceNegotiation.WarScoreWinning', { Score: formatted });
+  if (value < 0) return webUIText('PeaceNegotiation.WarScoreLosing', { Score: formatted });
+  return webUIText('PeaceNegotiation.WarScoreStalemate', { Score: formatted });
 }
 
 function fmtWarDuration(days: number | undefined, daysInYear: number, daysInMonth: number): string {
@@ -1222,7 +1222,7 @@ function PeaceNegotiationScreenContent({
     if (result.state?.found) setSubmitState(result.state);
 
     if (result.result === 'accepted') {
-      setAcceptedMessage(result.message || 'Accepted');
+      setAcceptedMessage(result.message || webUIText('PeaceNegotiation.Accepted'));
       if (acceptedCloseTimerRef.current !== null) {
         window.clearTimeout(acceptedCloseTimerRef.current);
       }

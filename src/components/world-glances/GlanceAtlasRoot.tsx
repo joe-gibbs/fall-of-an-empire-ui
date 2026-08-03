@@ -141,11 +141,11 @@ function reserveSizeForSection(section: AtlasSection, remPx: number, settlementB
   return undefined;
 }
 
-const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detail, selected, targeted, hovered, buildItemFrame, remPx, rasterScale, plateRef, atlasVisible }: {
+const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detailClassName, selected, targeted, hovered, buildItemFrame, remPx, rasterScale, plateRef, atlasVisible }: {
   section: AtlasSection;
   id: string;
   entry: unknown;
-  detail: WorldGlanceDetailClass;
+  detailClassName: WorldGlanceDetailClass;
   selected: boolean;
   targeted: boolean;
   hovered: boolean;
@@ -171,7 +171,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   const reserveSize = reserveSizeForSection(section, remPx, settlementBleedRem, garrisonIndex);
   const anchorAttributes = {
     'data-webkiln-anchor': anchorKey,
-    'data-webkiln-anchor-point': anchorPointFor(section, detail, remPx, settlementBleedRem),
+    'data-webkiln-anchor-point': anchorPointFor(section, detailClassName, remPx, settlementBleedRem),
     'data-webkiln-anchor-raster-scale': rasterScale,
     ...(section === 'notification'
       ? { 'data-webkiln-anchor-persistent': true }
@@ -239,7 +239,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
     'world-glance',
     'world-glance-node',
     `world-glance-node--${section}`,
-    detail,
+    detailClassName,
     'glance-atlas-plate',
   ];
   if (selected) classes.push('is-selected');
@@ -481,7 +481,7 @@ export default function GlanceAtlasRoot() {
               section={section}
               id={entry.id}
               entry={cached}
-              detail={detailByKey.get(key) ?? 'detail-flag'}
+              detailClassName={detailByKey.get(key) ?? 'detail-flag'}
               selected={flags?.selected === true}
               targeted={flags?.targeted === true}
               hovered={hoveredKeys.has(key)}

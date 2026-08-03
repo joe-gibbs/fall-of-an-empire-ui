@@ -104,7 +104,7 @@ export default function PersonInteractionGiftModal({
     try {
       maybeError = await onConfirm(selected.index);
     } catch {
-      maybeError = 'The action could not be started.';
+      maybeError = webUIText('Interactions.ActionCouldNotStart');
     }
     setSubmitting(false);
     if (maybeError) {

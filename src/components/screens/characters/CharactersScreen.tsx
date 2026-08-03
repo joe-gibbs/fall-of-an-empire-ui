@@ -172,7 +172,7 @@ function isStatColumn(id: SortKey): boolean {
 }
 
 function categoryLabel(category: string): string {
-  return FILTERS.find(filter => filter.id === category)?.label ?? 'Other';
+  return FILTERS.find(filter => filter.id === category)?.label ?? webUIText('Common.Other');
 }
 
 function activityText(character: CharacterListEntry): string {

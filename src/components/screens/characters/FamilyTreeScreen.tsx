@@ -906,7 +906,9 @@ function PatronageNodeView({
 }) {
   const person = node.person;
   const title = node.isFocus ? relationLabel(person) : person.shortTitle || person.role || (node.linkToPatron ? webUIText("FamilyTree.Client") : webUIText("FamilyTree.Patron"));
-  const status = webUIText("Auto.Var.componentsscreensFamilyTreeScreen.817.1", { Value1: patronageStatus(node.linkToPatron), Value2: node.linkToPatron?.isInherited ? ' - inherited' : '' });
+  const status = node.linkToPatron?.isInherited
+    ? webUIText('FamilyTree.PatronageStatusInherited', { Status: patronageStatus(node.linkToPatron) })
+    : patronageStatus(node.linkToPatron);
   const ageLabel = person.age > 0 ? formatNumber(person.age) : '';
 
   return (

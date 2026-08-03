@@ -102,9 +102,16 @@ function fmtDuration(days: number | undefined, daysInYear: number): string {
   const total = Math.max(0, Math.round(days ?? 0));
   const years = Math.floor(total / daysInYear);
   const remainder = total % daysInYear;
-  const dayText = `${fmt(remainder)} day${remainder === 1 ? '' : 's'}`;
+  const dayText = webUIText('Common.CountWithUnit', {
+    Count: fmt(remainder),
+    Unit: webUIText(remainder === 1 ? 'Common.Day' : 'Common.Days'),
+  });
   if (years <= 0) return dayText;
-  return `${fmt(years)} year${years === 1 ? '' : 's'}, ${dayText}`;
+  return webUIText('Common.YearsAndDays', {
+    Years: fmt(years),
+    YearUnit: webUIText(years === 1 ? 'Common.Year' : 'Common.Years'),
+    DayText: dayText,
+  });
 }
 
 function signedValueClass(value: number | undefined): string {

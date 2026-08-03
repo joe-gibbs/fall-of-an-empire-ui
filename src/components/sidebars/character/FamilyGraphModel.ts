@@ -184,24 +184,24 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
       const spouseIds = sortPeopleByAge(spousesById.get(character.id) ?? [], people);
       const childIds = sortPeopleByAge(childrenByParent.get(character.id) ?? [], people);
 
-      pushRow('grandparents', 'Grandparents', grandparentIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Grandparent'))));
-      pushRow('parents', 'Parents', parentIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Parent'))));
+      pushRow('grandparents', webUIText('CharacterSidebar.Grandparents'), grandparentIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Grandparent'))));
+      pushRow('parents', webUIText('CharacterSidebar.Parents'), parentIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Parent'))));
       const householdTitle = spouseIds.length > 1
         ? webUIText("CharacterSidebar.Spouses")
         : spouseIds.length === 1
           ? webUIText("CharacterSidebar.Spouse")
           : webUIText("CharacterSidebar.Selected");
       pushRow('household', householdTitle, [
-        familyEntryFromPerson(person, person.shortTitle || person.title || 'Selected', true),
+        familyEntryFromPerson(person, person.shortTitle || person.title || webUIText('CharacterSidebar.Selected'), true),
         ...spouseIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Spouse'))),
       ]);
-      pushRow('children', 'Children', childIds.map(id => {
+      pushRow('children', webUIText('CharacterSidebar.Children'), childIds.map(id => {
         const entry = familyEntryFromPerson(people.get(id)!, directLabel(id, 'Child'));
         const descendants = sortPeopleByAge(childrenByParent.get(id) ?? [], people)
           .filter(descendantId => people.has(descendantId))
           .map(descendantId => familyEntryFromPerson(people.get(descendantId)!, directLabel(descendantId, 'Grandchild')));
         return descendants.length > 0 ? { ...entry, descendants } : entry;
-      }), 'Grandchildren');
+      }), webUIText('CharacterSidebar.Grandchildren'));
 
       return { rows, ids };
     }
@@ -211,8 +211,8 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
     .filter(rel => types.includes(rel.type))
     .map(familyEntryFromRelationship);
 
-  pushRow('grandparents', 'Grandparents', byType(['Grandfather', 'Grandmother', 'Grandparent']));
-  pushRow('parents', 'Parents', byType(['Father', 'Mother', 'Parent']));
+  pushRow('grandparents', webUIText('CharacterSidebar.Grandparents'), byType(['Grandfather', 'Grandmother', 'Grandparent']));
+  pushRow('parents', webUIText('CharacterSidebar.Parents'), byType(['Father', 'Mother', 'Parent']));
   const fallbackSpouses = byType(['Husband', 'Wife', 'Spouse', 'Consort']);
   const fallbackHouseholdTitle = fallbackSpouses.length > 1
     ? webUIText("CharacterSidebar.Spouses")
@@ -223,8 +223,8 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
     familyEntryFromCharacter(character),
     ...fallbackSpouses,
   ]);
-  pushRow('children', 'Children', byType(['Son', 'Daughter', 'Child']));
-  pushRow('grandchildren', 'Grandchildren', byType(['Grandson', 'Granddaughter', 'Grandchild']));
+  pushRow('children', webUIText('CharacterSidebar.Children'), byType(['Son', 'Daughter', 'Child']));
+  pushRow('grandchildren', webUIText('CharacterSidebar.Grandchildren'), byType(['Grandson', 'Granddaughter', 'Grandchild']));
 
   return { rows, ids };
 }

@@ -158,8 +158,8 @@ function imprisonmentSummary(c: Character): string | null {
   if (!c.isImprisoned) return null;
   return [
     imprisonmentReasonLabel(c.imprisonmentReason ?? 'None'),
-    c.imprisonedBy ? `held by ${c.imprisonedBy}` : null,
-    c.imprisonedAt ? `in ${c.imprisonedAt}` : null,
+    c.imprisonedBy ? webUIText('Character.ImprisonedBy', { Name: c.imprisonedBy }) : null,
+    c.imprisonedAt ? webUIText('Character.ImprisonedAt', { Location: c.imprisonedAt }) : null,
   ].filter(Boolean).join(' - ');
 }
 

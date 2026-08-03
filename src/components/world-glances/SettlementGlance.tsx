@@ -266,7 +266,7 @@ function renderResourceInfo(data: SettlementGlanceData, showStock: boolean) {
 }
 
 function renderGeographicInfo(icon: string, value: string | undefined) {
-  return renderInfoRow(icon, value || 'Unassigned', value ? undefined : 'var(--text-muted)');
+  return renderInfoRow(icon, value || webUIText('Common.Unassigned'), value ? undefined : 'var(--text-muted)');
 }
 
 function renderInfo(data: SettlementGlanceData) {
@@ -308,11 +308,11 @@ function renderInfo(data: SettlementGlanceData) {
     case 'adminDomain':
       return renderGeographicInfo('/assets/icons/I_Domain.png', data.domainName);
     case 'disease':
-      if (data.diseased) return renderInfoRow('/assets/icons/I_Skull.png', 'Disease', 'var(--red)');
-      if (data.starving) return renderInfoRow('/assets/icons/I_StarvationApple.png', 'Starvation', 'var(--red)');
-      return renderInfoRow('/assets/icons/I_Skull.png', 'Healthy', 'var(--green)');
+      if (data.diseased) return renderInfoRow('/assets/icons/I_Skull.png', webUIText('WorldGlances.Settlement.Disease'), 'var(--red)');
+      if (data.starving) return renderInfoRow('/assets/icons/I_StarvationApple.png', webUIText('WorldGlances.Settlement.Starvation'), 'var(--red)');
+      return renderInfoRow('/assets/icons/I_Skull.png', webUIText('WorldGlances.Settlement.Healthy'), 'var(--green)');
     case 'regionGovernor':
-      return renderInfoRow('/assets/icons/I_Characters.png', data.governorName || 'No governor', data.governorName ? undefined : 'var(--red)');
+      return renderInfoRow('/assets/icons/I_Characters.png', data.governorName || webUIText('WorldGlances.Settlement.NoGovernor'), data.governorName ? undefined : 'var(--red)');
     case 'corruption':
       return renderInfoRow('/assets/traits/Corrupt.png', formatPercent(data.corruption * 100), corruptionColour(data.corruption), true);
     case 'trade':

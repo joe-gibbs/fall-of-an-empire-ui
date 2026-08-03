@@ -1,3 +1,4 @@
+import { webUIText } from '../../localization/WebUITextContext';
 import './KeyGlyph.css';
 
 export type KeyGlyphProps = {
@@ -38,11 +39,11 @@ const GLYPH_LABELS: Record<string, string> = {
 
 function formatTextChord(props: KeyGlyphProps): string {
   const parts: string[] = [];
-  if (props.ctrl) parts.push('Ctrl');
-  if (props.shift) parts.push('Shift');
-  if (props.alt) parts.push('Alt');
-  if (props.cmd) parts.push('Cmd');
-  parts.push(props.keyDisplay || 'Unbound');
+  if (props.ctrl) parts.push(webUIText('Settings.KeyModifier.Ctrl'));
+  if (props.shift) parts.push(webUIText('Settings.KeyModifier.Shift'));
+  if (props.alt) parts.push(webUIText('Settings.KeyModifier.Alt'));
+  if (props.cmd) parts.push(webUIText('Settings.KeyModifier.Cmd'));
+  parts.push(props.keyDisplay || webUIText('Settings.KeyUnbound'));
   return parts.join(' + ');
 }
 

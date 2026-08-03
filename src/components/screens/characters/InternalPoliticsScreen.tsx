@@ -140,27 +140,17 @@ function complianceMeterValue(value: number | undefined): number {
   return Math.max(0, Math.min(100, (value + 100) / 2));
 }
 
-function cleanPoliticalLabel(value: string | undefined, fallback: string): string {
-  if (!value) return fallback;
-  return value
-    .replace(/Vassalage/g, 'Subject Pact')
-    .replace(/vassalage/g, 'subject pact')
-    .replace(/Vassal/g, 'Subject')
-    .replace(/vassal/g, 'subject');
-}
-
 function subjectTypeLabel(row: InternalFaction): string {
   if (row.isRebel && !row.subjectType) return webUIText("Auto.Return.componentsscreensInternalPoliticsScreen.134.1");
-  return cleanPoliticalLabel(row.subjectType || row.diplomaticStatusLabel || row.diplomaticStatus, 'Dependent');
+  return row.subjectType || row.diplomaticStatusLabel;
 }
 
 function statusLabel(row: InternalFaction): string {
-  return cleanPoliticalLabel(row.diplomaticStatusLabel || row.diplomaticStatus || row.subjectType, 'Internal');
+  return row.diplomaticStatusLabel;
 }
 
 function isFoederati(row: InternalFaction): boolean {
-  const text = `${row.subjectSubtype} ${row.subjectType} ${row.diplomaticStatusLabel} ${row.diplomaticStatus}`.toLowerCase();
-  return text.indexOf('foederati') >= 0 || text.indexOf('march') >= 0;
+  return row.subjectSubtype === 'foederati';
 }
 
 function isProvince(row: InternalFaction): boolean {

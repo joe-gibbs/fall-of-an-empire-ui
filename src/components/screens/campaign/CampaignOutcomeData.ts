@@ -141,7 +141,7 @@ const DEFAULT_VICTORY: ResolvedCampaignOutcomeSummary = {
   get subtitle() { return webUIText('Auto.TopProp.ComponentsScreensCampaignOutcomeData.142.6'); },
   get description() { return webUIText('Auto.TopProp.ComponentsScreensCampaignOutcomeData.143.7'); },
   get factionName() { return webUIText('Auto.TopProp.ComponentsScreensCampaignOutcomeData.144.25'); },
-  endDate: '17 Summer 784',
+  get endDate() { return webUIText('CampaignOutcome.DefaultEndDate'); },
   get totalTimeRuled() { return webUIText('Auto.TopProp.ComponentsScreensCampaignOutcomeData.146.26'); },
   totalBattlesWon: 46,
   totalBattlesLost: 10,
