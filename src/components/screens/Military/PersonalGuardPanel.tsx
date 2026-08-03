@@ -242,6 +242,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
       resourceCost: [],
       monthlyConsumption: [],
       speed: 0,
+      attackSpeed: 0,
       range: 0,
       siegePower: 0,
       pierceDamage: 0,
@@ -252,6 +253,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
       slashArmour: 0,
       immuneToWinterAttrition: false,
       immuneToDesertAttrition: false,
+      canAttackWhileMoving: false,
       availableSettlementCount: 0,
       availableSettlements: [],
       availableManpower: 0,
@@ -261,7 +263,14 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
     : null;
 
   const openEstablish = () => {
-    setDraftUnitIds([]);
+    // After destruction the household template keeps its roster; offer it again so
+    // re-establishment does not force re-picking every company from scratch.
+    const existingRoster = guard.companies
+      .slice()
+      .sort((a, b) => a.slotNumber - b.slotNumber)
+      .map(company => company.unitId)
+      .filter((unitId): unitId is string => Boolean(unitId));
+    setDraftUnitIds(existingRoster);
     setFormError('');
     setEstablishOpen(true);
   };
