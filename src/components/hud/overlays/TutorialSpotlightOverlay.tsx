@@ -95,7 +95,8 @@ function clamp(value: number, min: number, max: number): number {
 
 function normaliseIdentifier(value: string): string {
   const tail = value.split('/').pop()?.split('.').pop() ?? value;
-  return tail.replace(/_C$/i, '').toLowerCase();
+  // Match building-target normalisation: strip Blueprint _C and optional UCLASS U prefix.
+  return tail.replace(/_C$/i, '').replace(/^U(?=[A-Z])/, '').toLowerCase();
 }
 
 function targetTokens(element: Element): string[] {
@@ -174,6 +175,7 @@ function findSpotlightTarget(spotlight: TutorialSpotlightResponse): HTMLElement 
   if (spotlight.isUnitTarget && spotlight.targetDetail) {
     const unit = findByDetail('data-tutorial-unit-id', spotlight.targetDetail);
     if (unit) return unit;
+    window.dispatchEvent(new CustomEvent('tutorial:unit-target-request', { detail: spotlight.targetDetail }));
     return null;
   }
 
@@ -356,6 +358,10 @@ export default function TutorialSpotlightOverlay({
       }
 
       const element = findSpotlightTarget(spotlight);
+      if (!revealedTarget && spotlight.isUnitTarget && element) {
+        element.scrollIntoView({ block: 'center', inline: 'nearest' });
+        revealedTarget = true;
+      }
       targetElementRef.current = element;
       const nextRect = rectForElement(element);
       setTargetRect(previous => (rectsEqual(previous, nextRect) ? previous : nextRect));
@@ -400,18 +406,33 @@ export default function TutorialSpotlightOverlay({
     }
 
     const handler = (event: MouseEvent) => {
-      const target = targetElementRef.current;
-      if (!target || !(event.target instanceof Node) || !target.contains(event.target)) return;
+      if (!(event.target instanceof Node)) return;
       if (spotlight.target.startsWith('OrderTarget:') && event.button !== 2) return;
-
       if (spotlight.isBuildingTarget) return;
 
-      window.setTimeout(() => {
-        if (spotlight.isUnitTarget) {
-          const latestTarget = findSpotlightTarget(spotlight);
-          if (elementUnitCount(latestTarget) < spotlight.requiredUnitCount) return;
+      if (spotlight.isUnitTarget && spotlight.targetDetail) {
+        // Unit rows put the id on the name cell and the +/- controls. Accept any of them.
+        const unitHost = event.target instanceof Element
+          ? event.target.closest('[data-tutorial-unit-id]')
+          : null;
+        if (!(unitHost instanceof HTMLElement)) return;
+        if (normaliseIdentifier(unitHost.getAttribute('data-tutorial-unit-id') ?? '')
+          !== normaliseIdentifier(spotlight.targetDetail)) {
+          return;
         }
 
+        window.setTimeout(() => {
+          const latestTarget = findSpotlightTarget(spotlight) ?? unitHost;
+          if (elementUnitCount(latestTarget) < spotlight.requiredUnitCount) return;
+          onResolve(eventId);
+        }, 0);
+        return;
+      }
+
+      const target = targetElementRef.current;
+      if (!target || !target.contains(event.target)) return;
+
+      window.setTimeout(() => {
         onResolve(eventId);
       }, 0);
     };

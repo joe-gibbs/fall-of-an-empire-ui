@@ -34,6 +34,9 @@ function normaliseSpotlight(next: TutorialSpotlightResponse | null | undefined):
   if (spotlight.isBuildingTarget && spotlight.targetDetail) {
     window.dispatchEvent(new CustomEvent('tutorial:building-target-request', { detail: spotlight.targetDetail }));
   }
+  if (spotlight.isUnitTarget && spotlight.targetDetail) {
+    window.dispatchEvent(new CustomEvent('tutorial:unit-target-request', { detail: spotlight.targetDetail }));
+  }
   return spotlight;
 }
 
