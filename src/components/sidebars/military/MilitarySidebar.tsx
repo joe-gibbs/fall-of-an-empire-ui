@@ -43,7 +43,6 @@ import './MilitarySidebar.css';
 import {
   MilitaryUnitsTab,
   renderUnitTypeCounts,
-  renderUnitTypeStrengths,
 } from './MilitaryUnitsTab';
 import {
   buildCommanderStatEntry,
@@ -62,13 +61,16 @@ import {
   getMoraleColor,
   getStrengthBarColor,
   getStrengthColor,
+  isResourceUrgent,
   modifierValueColor,
   QUELL_ICON,
+  resolveCurrentOrderLabel,
   resourceFillPercent,
   resourceIconPath,
   resourceReservePercent,
   resourceReserveTargetDays,
   resolveUnitStats,
+  sortResourceRowsByUrgency,
   type CommandMode,
   type CompositionSummaryRow,
   type MilitaryAction,
@@ -132,7 +134,9 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const canHaveSubordinates = army.commandRank === 'Dux' || army.commandRank === 'Praefectus';
   const headerBg = army.isNavy ? '/assets/events/naval-battle.png' : '/assets/events/cavalry-charge.png';
   const isPlayerControlled = army.isPlayerControlled;
-  const resourceRows = buildResourceRows(army);
+  const resourceRows = sortResourceRowsByUrgency(buildResourceRows(army));
+  const urgentResourceRows = resourceRows.filter(isResourceUrgent);
+  const currentOrderLabel = resolveCurrentOrderLabel(army);
   const subordinateRows = army.subordinates ?? [];
   const attritionSources = army.attritionSources ?? [];
   const embarkedRows = army.embarkedArmies ?? [];
@@ -514,7 +518,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const moraleReadiness = readinessCards[0];
   const supplyReadiness = readinessCards[1];
 
-  const unitStatTiles = [
+  const marchStatTiles = [
     {
       id: 'movement',
       label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.625.22'),
@@ -536,13 +540,26 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
         ? { title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.649.24'), get body() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.649.1", { Value1: formatNumber(army.usedCapacity ?? 0), Value2: formatNumber(army.capacity) }); } }
         : { title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.650.25'), body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.650.26') },
     },
-    { id: 'upkeep', label: webUIText('Auto.ComponentsSidebarsMilitarySidebar.311.2'), icon: '/assets/icons/I_Coins.png', value: formatNumber(derived.upkeep), tooltip: { title: webUIText('Auto.ComponentsSidebarsMilitarySidebar.311.2') } },
-    { id: 'slashDmg', label: webUIText('Auto.TopProp.DataGlossary.285.137'), icon: '/assets/icons/I_Damage_Slash.png', value: formatNumber(derived.slashDmg), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.285.137'), body: webUIText('Auto.TopProp.DataGlossary.286.138') } },
-    { id: 'pierceDmg', label: webUIText('Auto.TopProp.DataGlossary.277.133'), icon: '/assets/icons/I_Damage_Pierce.png', value: formatNumber(derived.pierceDmg), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.277.133'), body: webUIText('Auto.TopProp.DataGlossary.278.134') } },
-    { id: 'crushDmg', label: webUIText('Auto.TopProp.DataGlossary.281.135'), icon: '/assets/icons/I_Damage_Crush.png', value: formatNumber(derived.crushDmg), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.281.135'), body: webUIText('Auto.TopProp.DataGlossary.282.136') } },
-    { id: 'slashArmour', label: webUIText('Auto.TopProp.DataGlossary.289.139'), icon: '/assets/icons/I_Armour_Slash.png', value: formatNumber(derived.slashArmour), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.289.139') } },
-    { id: 'pierceArmour', label: webUIText('Auto.TopProp.DataGlossary.293.141'), icon: '/assets/icons/I_Armour_Pierce.png', value: formatNumber(derived.pierceArmour), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.293.141') } },
-    { id: 'crushArmour', label: webUIText('Auto.TopProp.DataGlossary.297.143'), icon: '/assets/icons/I_Armour_Crush.png', value: formatNumber(derived.crushArmour), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.297.143') } },
+    {
+      id: 'upkeep',
+      label: webUIText('Auto.ComponentsSidebarsMilitarySidebar.311.2'),
+      icon: '/assets/icons/I_Coins.png',
+      value: formatNumber(derived.upkeep),
+      tooltip: { title: webUIText('Auto.ComponentsSidebarsMilitarySidebar.311.2') },
+    },
+  ];
+
+  // Short type names under Damage/Armour headers - full names live in tooltips only.
+  const damageStatTiles = [
+    { id: 'slashDmg', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.364.3'), icon: '/assets/icons/I_Damage_Slash.png', value: formatNumber(derived.slashDmg), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.285.137'), body: webUIText('Auto.TopProp.DataGlossary.286.138') } },
+    { id: 'pierceDmg', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.362.1'), icon: '/assets/icons/I_Damage_Pierce.png', value: formatNumber(derived.pierceDmg), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.277.133'), body: webUIText('Auto.TopProp.DataGlossary.278.134') } },
+    { id: 'crushDmg', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.363.2'), icon: '/assets/icons/I_Damage_Crush.png', value: formatNumber(derived.crushDmg), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.281.135'), body: webUIText('Auto.TopProp.DataGlossary.282.136') } },
+  ];
+
+  const armourStatTiles = [
+    { id: 'slashArmour', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.370.6'), icon: '/assets/icons/I_Armour_Slash.png', value: formatNumber(derived.slashArmour), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.297.143'), body: webUIText('Auto.TopProp.DataGlossary.298.144') } },
+    { id: 'pierceArmour', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.368.4'), icon: '/assets/icons/I_Armour_Pierce.png', value: formatNumber(derived.pierceArmour), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.289.139'), body: webUIText('Auto.TopProp.DataGlossary.290.140') } },
+    { id: 'crushArmour', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.369.5'), icon: '/assets/icons/I_Armour_Crush.png', value: formatNumber(derived.crushArmour), tooltip: { title: webUIText('Auto.TopProp.DataGlossary.293.141'), body: webUIText('Auto.TopProp.DataGlossary.294.142') } },
   ];
 
   const handleCommandMode = (mode: CommandMode) => {
@@ -568,18 +585,66 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
 
   const renderCommandAction = (action: MilitaryAction) => (
     <Tooltip key={action.label} content={action.tooltip ?? { title: action.label, body: action.description }} position="bottom" delay={150}>
-      <GameButton
-        variant="outline"
-        fullWidth
-        icon={action.icon}
-        tutorialTarget={action.tutorialTarget}
+      <button
+        type="button"
+        data-tutorial-target={action.tutorialTarget}
+        className={`mil-action-chip${action.disabled ? ' is-disabled' : ''}`}
         disabled={action.disabled}
-        ariaLabel={action.label}
-        onClick={action.onClick}
+        aria-label={action.label}
+        onMouseDown={() => { if (!action.disabled && action.onClick) action.onClick(); }}
       >
-        {action.label}
-      </GameButton>
+        <img src={action.icon} alt="" className="mil-action-chip-icon" />
+        <span className="mil-action-chip-label">{action.label}</span>
+      </button>
     </Tooltip>
+  );
+
+  const renderFormationPanel = () => (
+    <div className="mil-formation-panel mil-formation-panel--embedded">
+      <div className="mil-formation-main">
+        <img src="/assets/icons/I_Template.png" alt="" />
+        <div>
+          {army.formationTemplate && !army.isPersonalGuard ? (
+            <Tooltip
+              content={{
+                title: army.formationTemplate,
+                body: webUIText('MilitarySidebar.EditTemplateBody'),
+              }}
+              position="bottom"
+              delay={150}
+            >
+              <button
+                type="button"
+                className="mil-formation-name-button"
+                onMouseDown={() => openScreen('military', `template:${encodeURIComponent(army.formationTemplate || '')}`)}
+              >
+                <span className="mil-formation-name">{army.formationTemplate}</span>
+              </button>
+            </Tooltip>
+          ) : (
+            <span className="mil-formation-name">{army.formationTemplate || webUIText('MilitarySidebar.NoFormationAssigned')}</span>
+          )}
+        </div>
+      </div>
+      {formationActions.length > 0 && (
+        <div className="mil-action-strip mil-action-strip--compact">
+          {formationActions.map((action) => (
+            <Tooltip key={action.label} content={action.tooltip ?? { title: action.label, body: action.description }} position="bottom" delay={150}>
+              <button
+                type="button"
+                className={`mil-action-chip${action.disabled ? ' is-disabled' : ''}`}
+                disabled={action.disabled}
+                aria-label={action.label}
+                onMouseDown={() => { if (!action.disabled && action.onClick) action.onClick(); }}
+              >
+                <img src={action.icon} alt="" className="mil-action-chip-icon" />
+                <span className="mil-action-chip-label">{action.label}</span>
+              </button>
+            </Tooltip>
+          ))}
+        </div>
+      )}
+    </div>
   );
 
   const renderOrderCommand = (action: MilitaryAction) => (
@@ -602,16 +667,53 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     </Tooltip>
   );
 
-  const renderSubordinates = () => {
-    if (!canHaveSubordinates && subordinateRows.length === 0 && !army.parentCommand && commandActions.length === 0) return null;
-
+  const renderCommandAndFormation = () => {
+    const hasHierarchy = canHaveSubordinates || subordinateRows.length > 0 || !!army.parentCommand || commandActions.length > 0;
     const collapsible = subordinateRows.length > 3;
     const visibleSubs = collapsible && !subsExpanded ? subordinateRows.slice(0, 3) : subordinateRows;
 
     return (
       <>
         <SectionHeading variant="ornate" title={webUIText('Auto.ComponentsSidebarsMilitarySidebar.934.15')} />
-        <div className="mil-subordinates">
+        <div className="mil-command-group">
+          {(army.parentCommand || commandActions.length > 0) && (
+            <div className="mil-command-top-row">
+              {army.parentCommand ? (
+                <Tooltip
+                  content={{
+                    title: army.parentCommand,
+                    get body() { return webUIText('MilitarySidebar.Under', { ParentCommand: army.parentCommand }); },
+                    lines: [
+                      { label: webUIText('Military.Command.TacticsBonus'), value: formatPercent((army.hierarchyTacticsBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
+                      { label: webUIText('Military.Command.MoraleBonus'), value: formatPercent((army.hierarchyMoraleBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
+                      { label: webUIText('Military.Command.SpeedBonus'), value: formatPercent((army.hierarchySpeedBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
+                    ],
+                  }}
+                  position="right"
+                  delay={150}
+                >
+                  <div
+                    className={`mil-parent-command-row${army.parentCommandId ? ' is-clickable' : ''}`}
+                    onMouseDown={() => { if (army.parentCommandId) openSidebar('military', army.parentCommandId); }}
+                  >
+                    <img src="/assets/icons/I_AttachCommand.png" alt="" className="mil-parent-command-icon" />
+                    <span className="mil-parent-command-name">{webUIText('MilitarySidebar.Under', { ParentCommand: army.parentCommand })}</span>
+                    {army.parentCommandId && <img src="/assets/icons/I_NavNext.png" alt="" className="mil-parent-command-jump" />}
+                  </div>
+                </Tooltip>
+              ) : (
+                <div className="mil-command-top-spacer" />
+              )}
+              {commandActions.length > 0 && (
+                <div className="mil-command-actions mil-command-actions--compact">
+                  {commandActions.map((action) => renderCommandAction(action))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {renderFormationPanel()}
+
           {canHaveSubordinates && (
             <div className="mil-command-stats">
               <div>
@@ -628,35 +730,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
               </div>
             </div>
           )}
-          {commandActions.length > 0 && (
-            <div className="mil-command-actions">
-              {commandActions.map((action) => renderCommandAction(action))}
-            </div>
-          )}
-          {army.parentCommand && (
-            <Tooltip
-              content={{
-                title: army.parentCommand,
-                get body() { return webUIText("MilitarySidebar.Under", { ParentCommand: army.parentCommand }); },
-                lines: [
-                  { label: webUIText('Military.Command.TacticsBonus'), value: formatPercent((army.hierarchyTacticsBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
-                  { label: webUIText('Military.Command.MoraleBonus'), value: formatPercent((army.hierarchyMoraleBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
-                  { label: webUIText('Military.Command.SpeedBonus'), value: formatPercent((army.hierarchySpeedBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
-                ],
-              }}
-              position="right"
-              delay={150}
-            >
-              <div
-                className={`mil-parent-command-row${army.parentCommandId ? ' is-clickable' : ''}`}
-                onMouseDown={() => { if (army.parentCommandId) openSidebar('military', army.parentCommandId); }}
-              >
-                <img src="/assets/icons/I_AttachCommand.png" alt="" className="mil-parent-command-icon" />
-                <span className="mil-parent-command-name">{webUIText("MilitarySidebar.Under", { ParentCommand: army.parentCommand })}</span>
-                {army.parentCommandId && <img src="/assets/icons/I_NavNext.png" alt="" className="mil-parent-command-jump" />}
-              </div>
-            </Tooltip>
-          )}
+
           {canHaveSubordinates && (
             <div className="mil-sub-command">
               <div className="mil-sub-command-title">
@@ -681,7 +755,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 <Tooltip
                   content={{
                     title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.967.40'),
-                    get body() { return autoSquash ? webUIText("MilitarySidebar.IdleSubordinatesMarch") : webUIText("MilitarySidebar.WhenEnabledIdle"); },
+                    get body() { return autoSquash ? webUIText('MilitarySidebar.IdleSubordinatesMarch') : webUIText('MilitarySidebar.WhenEnabledIdle'); },
                   }}
                   position="bottom"
                   delay={150}
@@ -709,7 +783,8 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
               </div>
             </div>
           )}
-          {visibleSubs.map((sub) => {
+
+          {hasHierarchy && visibleSubs.map((sub) => {
             const ratio = sub.maxStrength > 0 ? sub.strength / sub.maxStrength : 0;
             const force = sub.id ? militaryForceById.get(sub.id) : undefined;
             const subMeta = sub.commanderName;
@@ -719,7 +794,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 key={sub.id ?? sub.name}
                 content={{
                   title: sub.name,
-                  get body() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.1033.1", { CommanderName: sub.commanderName }); },
+                  get body() { return webUIText('Auto.Prop.componentssidebarsMilitarySidebar.1033.1', { CommanderName: sub.commanderName }); },
                   lines: [
                     { label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.1033.43'), value: formatStrength(sub.strength, sub.maxStrength), valueColor: getStrengthColor(ratio) },
                     ...(force ? [
@@ -738,7 +813,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 delay={200}
               >
                 <div className={`mil-sub-row${sub.depth > 0 ? ' mil-sub-row--nested' : ''}${sub.withinCommandRange ? '' : ' mil-sub-row--out-of-range'}${sub.id ? ' is-clickable' : ''}`} onClick={sub.id ? () => openSidebar('military', sub.id) : undefined}>
-                  <img src={army.isNavy ? "/assets/icons/I_NaviesQuickButton.png" : "/assets/icons/I_ArmiesQuickButton.png"} alt="" className="mil-sub-icon" />
+                  <img src={army.isNavy ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/I_ArmiesQuickButton.png'} alt="" className="mil-sub-icon" />
                   <div className="mil-sub-info">
                     <span className="mil-sub-name">{sub.name}</span>
                     <span className="mil-sub-commander">{subMeta}</span>
@@ -760,7 +835,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
           })}
           {collapsible && (
             <button type="button" className="mil-sub-toggle" onClick={() => setSubsExpanded((current) => !current)}>
-              {subsExpanded ? webUIText("MilitarySidebar.ShowLess") : webUIText("MilitarySidebar.ShowAll", { Value1: formatNumber(subordinateRows.length) })}
+              {subsExpanded ? webUIText('MilitarySidebar.ShowLess') : webUIText('MilitarySidebar.ShowAll', { Value1: formatNumber(subordinateRows.length) })}
             </button>
           )}
         </div>
@@ -852,7 +927,10 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
               <div className="mil-header-name">{army.name}</div>
               <div className="mil-header-subtitle">
                 <div className="mil-header-commander-line">
-                  <span className="mil-header-commander-name">{army.commanderName || webUIText('Common.NoCommander')}</span>
+                  <div className="mil-header-commander-copy">
+                    <span className="mil-header-commander-name">{army.commanderName || webUIText('Common.NoCommander')}</span>
+                    <span className="mil-header-commander-title">{army.commanderTitle || army.commandRank}</span>
+                  </div>
                   <Tooltip
                     content={{
                       get title() { return army.commanderId ? webUIText("MilitarySidebar.ReplaceCommander") : webUIText("MilitarySidebar.AssignCommander"); },
@@ -872,7 +950,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                     </button>
                   </Tooltip>
                 </div>
-                <span className="mil-header-commander-title">{army.commanderTitle || army.commandRank}</span>
               </div>
               {commanderStats.length > 0 && (
                 <div className="mil-header-commander-stats">
@@ -901,31 +978,28 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                   <PaintedBar percent={strengthRatio * 100} color="gold" />
                 </div>
               </Tooltip>
-              {compositionSummary.length > 0 && (
-                <div className="mil-header-type-strengths">
-                  {renderUnitTypeStrengths(compositionSummary)}
-                </div>
-              )}
-              <Tooltip content={moraleReadiness.tooltip} position="bottom" delay={200} wrapperClassName="mil-header-status-tooltip">
-                <div className="mil-header-morale-wrap">
-                  <span className="mil-header-morale-label" style={{ color: moraleReadiness.valueColor }}>
-                    <img src={moraleReadiness.icon} alt="" className="mil-header-morale-icon" />
-                    {moraleReadiness.label}
-                  </span>
-                  <span className="mil-header-morale-value" style={{ color: moraleReadiness.valueColor }}>{moraleReadiness.value}</span>
-                  <PaintedBar percent={moraleReadiness.percent} color={moraleReadiness.color} />
-                </div>
-              </Tooltip>
-              <Tooltip content={supplyReadiness.tooltip} position="bottom" delay={200} wrapperClassName="mil-header-status-tooltip">
-                <div className="mil-header-morale-wrap mil-header-supply-wrap">
-                  <span className="mil-header-morale-label" style={{ color: supplyReadiness.valueColor }}>
-                    <img src={supplyReadiness.icon} alt="" className="mil-header-morale-icon" />
-                    {supplyReadiness.label}
-                  </span>
-                  <span className="mil-header-morale-value" style={{ color: supplyReadiness.valueColor }}>{supplyReadiness.value}</span>
-                  <PaintedBar percent={supplyReadiness.percent} color={supplyReadiness.color} />
-                </div>
-              </Tooltip>
+              <div className="mil-header-vitals">
+                <Tooltip content={moraleReadiness.tooltip} position="bottom" delay={200} wrapperClassName="mil-header-status-tooltip">
+                  <div className="mil-header-morale-wrap">
+                    <span className="mil-header-morale-label" style={{ color: moraleReadiness.valueColor }}>
+                      <img src={moraleReadiness.icon} alt="" className="mil-header-morale-icon" />
+                      {moraleReadiness.label}
+                    </span>
+                    <span className="mil-header-morale-value" style={{ color: moraleReadiness.valueColor }}>{moraleReadiness.value}</span>
+                    <PaintedBar percent={moraleReadiness.percent} color={moraleReadiness.color} />
+                  </div>
+                </Tooltip>
+                <Tooltip content={supplyReadiness.tooltip} position="bottom" delay={200} wrapperClassName="mil-header-status-tooltip">
+                  <div className="mil-header-morale-wrap mil-header-supply-wrap">
+                    <span className="mil-header-morale-label" style={{ color: supplyReadiness.valueColor }}>
+                      <img src={supplyReadiness.icon} alt="" className="mil-header-morale-icon" />
+                      {supplyReadiness.label}
+                    </span>
+                    <span className="mil-header-morale-value" style={{ color: supplyReadiness.valueColor }}>{supplyReadiness.value}</span>
+                    <PaintedBar percent={supplyReadiness.percent} color={supplyReadiness.color} />
+                  </div>
+                </Tooltip>
+              </div>
             </div>
             <div className="mil-header-emblems">
               <FactionTooltip factionId={army.factionId} factionName={army.faction} delay={150}>
@@ -951,27 +1025,35 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       <StyledScrollArea className="sidebar-content sidebar-content--textured mil-content">
         {activeTab === 'overview' && (
           <div className="mil-overview">
-            {army.embarkedNavyId && army.embarkedNavyName && (
-              <button
-                type="button"
-                className="mil-embarked-status"
-                onPointerDown={() => openSidebar('military', army.embarkedNavyId!)}
-              >
-                <img src="/assets/icons/I_NaviesQuickButton.png" alt="" />
-                <span>{webUIText('Military.EmbarkedIn', { Navy: army.embarkedNavyName })}</span>
-              </button>
-            )}
-            <SectionHeading variant="ornate" title={webUIText('Common.Stats')} />
-            <div className="mil-unit-stat-summary">
-              {unitStatTiles.map((tile) => (
-                <Tooltip key={tile.id} content={tile.tooltip} position="bottom" delay={150}>
-                  <div className="mil-unit-stat-tile">
-                    <img src={tile.icon} alt="" className="mil-unit-stat-tile-icon" />
-                    <span className="mil-unit-stat-tile-label">{tile.label}</span>
-                    <strong>{tile.value}</strong>
-                  </div>
-                </Tooltip>
-              ))}
+            <div className={`mil-status-strip${isForcedMarching || attritionSources.length > 0 ? ' mil-status-strip--warning' : ''}`}>
+              <div className="mil-status-order">
+                <span className="mil-status-order-label">{webUIText('Auto.ComponentsSidebarsMilitarySidebar.837.12')}</span>
+                <strong className="mil-status-order-value">{currentOrderLabel}</strong>
+              </div>
+              <div className="mil-status-flags">
+                {isForcedMarching && (
+                  <span className="mil-status-flag mil-status-flag--warn">
+                    <img src="/assets/icons/I_Speed.png" alt="" />
+                    {webUIText('MilitarySidebar.ForcedMarchActive')}
+                  </span>
+                )}
+                {isReplenishing && (
+                  <span className="mil-status-flag">
+                    <img src="/assets/icons/I_Replenish.png" alt="" />
+                    {webUIText('MilitarySidebar.ReplenishingActive')}
+                  </span>
+                )}
+                {army.embarkedNavyId && army.embarkedNavyName && (
+                  <button
+                    type="button"
+                    className="mil-status-flag mil-status-flag--link"
+                    onPointerDown={() => openSidebar('military', army.embarkedNavyId!)}
+                  >
+                    <img src="/assets/icons/I_NaviesQuickButton.png" alt="" />
+                    <span>{webUIText('Military.EmbarkedIn', { Navy: army.embarkedNavyName })}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {attritionSources.length > 0 && (
@@ -1023,8 +1105,112 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
               </>
             )}
 
-            {renderSubordinates()}
+            {renderCommandAndFormation()}
             {renderEmbarkedArmies()}
+
+            <SectionHeading variant="ornate" title={webUIText('MilitarySidebar.Combat')} />
+            <div className="mil-combat-panel">
+              <div className="mil-march-strip">
+                {marchStatTiles.map((tile) => (
+                  <Tooltip key={tile.id} content={tile.tooltip} position="bottom" delay={150}>
+                    <div className="mil-march-tile">
+                      <img src={tile.icon} alt="" />
+                      <span className="mil-march-tile-label">{tile.label}</span>
+                      <strong>{tile.value}</strong>
+                    </div>
+                  </Tooltip>
+                ))}
+              </div>
+              <div className="mil-combat-grid">
+                <div className="mil-combat-col">
+                  <span className="mil-combat-col-label">{webUIText('Auto.ComponentsSidebarsMilitarySidebar.319.6')}</span>
+                  {damageStatTiles.map((tile) => (
+                    <Tooltip key={tile.id} content={tile.tooltip} position="bottom" delay={150}>
+                      <div className="mil-combat-stat">
+                        <img src={tile.icon} alt="" />
+                        <span className="mil-combat-stat-label">{tile.label}</span>
+                        <strong>{tile.value}</strong>
+                      </div>
+                    </Tooltip>
+                  ))}
+                </div>
+                <div className="mil-combat-col">
+                  <span className="mil-combat-col-label">{webUIText('Auto.ComponentsSidebarsMilitarySidebar.334.7')}</span>
+                  {armourStatTiles.map((tile) => (
+                    <Tooltip key={tile.id} content={tile.tooltip} position="bottom" delay={150}>
+                      <div className="mil-combat-stat">
+                        <img src={tile.icon} alt="" />
+                        <span className="mil-combat-stat-label">{tile.label}</span>
+                        <strong>{tile.value}</strong>
+                      </div>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <SectionHeading
+              variant="ornate"
+              title={webUIText('Auto.Attr.ComponentsSidebarsMilitarySidebar.849.36')}
+              count={urgentResourceRows.length > 0 ? urgentResourceRows.length : undefined}
+            />
+            {resourceRows.length === 0 ? (
+              <div className="mil-resource-empty">{webUIText('MilitarySidebar.StockpilesHealthy')}</div>
+            ) : (
+              <div className="mil-resource-list">
+                {resourceRows.map((row) => {
+                  const fillPercent = resourceFillPercent(row);
+                  const urgent = isResourceUrgent(row);
+                  const fillColor = urgent || fillPercent <= 25 ? 'red' : 'gold';
+                  const reserveOk = row.daysRemaining >= resourceReserveTargetDays(row);
+                  return (
+                    <Tooltip
+                      key={row.id}
+                      content={{
+                        title: row.name,
+                        get body() {
+                          return row.monthlyUsage > 0
+                            ? webUIText('MilitarySidebar.StoredConsumesMonthly', { Value1: formatResourceAmount(row.amount), Value2: formatResourceAmount(row.monthlyUsage) })
+                            : webUIText('MilitarySidebar.StoredNoCurrent', { Value1: formatResourceAmount(row.amount) });
+                        },
+                      }}
+                      position="bottom"
+                      delay={150}
+                    >
+                      <div className={`mil-resource-row${urgent ? ' mil-resource-row--urgent' : ' mil-resource-row--stable'}`}>
+                        <img src={resourceIconPath(row.id)} alt="" className="mil-resource-icon" />
+                        <div className="mil-resource-main">
+                          <div className="mil-resource-top">
+                            <span className="mil-resource-name">{row.name}</span>
+                            <span className="mil-resource-amount">{formatResourceStock(row)}</span>
+                          </div>
+                          {(urgent || row.capacity > 0) && row.capacity > 0 && (
+                            <PaintedBar percent={fillPercent} color={fillColor} className="mil-resource-progress" />
+                          )}
+                          {row.monthlyUsage > 0 && (urgent || !reserveOk) && (
+                            <PaintedBar
+                              percent={resourceReservePercent(row)}
+                              color={reserveOk ? 'green' : fillColor}
+                              className="mil-resource-progress mil-resource-window-progress"
+                            />
+                          )}
+                          <div className="mil-resource-foot">
+                            <span className={`mil-resource-burn${row.monthlyUsage > 0 ? ' is-consuming' : ''}`}>
+                              {row.monthlyUsage > 0
+                                ? webUIText('MilitarySidebar.PerMonthDelta', { Value1: formatResourceAmount(row.monthlyUsage) })
+                                : webUIText('MilitarySidebar.Stable')}
+                            </span>
+                            <span className={`mil-resource-days${urgent ? ' is-urgent' : ''}`}>
+                              {row.monthlyUsage > 0 ? formatSupplyWindow(row.daysRemaining) : webUIText('MilitarySidebar.Stored')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            )}
 
             {debugMode && (
               <>
@@ -1037,87 +1223,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 </div>
               </>
             )}
-
-            <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsMilitarySidebar.894.38')} />
-            <div className="mil-formation-panel">
-              <div className="mil-formation-main">
-                <img src="/assets/icons/I_Template.png" alt="" />
-                <div>
-                  {army.formationTemplate && !army.isPersonalGuard ? (
-                    <Tooltip
-                      content={{
-                        title: army.formationTemplate,
-                        body: webUIText("MilitarySidebar.EditTemplateBody"),
-                      }}
-                      position="bottom"
-                      delay={150}
-                    >
-                      <button
-                        type="button"
-                        className="mil-formation-name-button"
-                        onMouseDown={() => openScreen('military', `template:${encodeURIComponent(army.formationTemplate || '')}`)}
-                      >
-                        <span className="mil-formation-name">{army.formationTemplate}</span>
-                      </button>
-                    </Tooltip>
-                  ) : (
-                    <span className="mil-formation-name">{army.formationTemplate || webUIText("MilitarySidebar.NoFormationAssigned")}</span>
-                  )}
-                </div>
-              </div>
-              <div className="mil-action-strip mil-action-strip--compact">
-                {formationActions.map((action) => (
-                  <Tooltip key={action.label} content={action.tooltip ?? { title: action.label, body: action.description }} position="bottom" delay={150}>
-                    <button
-                      type="button"
-                      className={`mil-action-chip${action.disabled ? ' is-disabled' : ''}`}
-                      disabled={action.disabled}
-                      aria-label={action.label}
-                      onMouseDown={() => { if (!action.disabled && action.onClick) action.onClick(); }}
-                    >
-                      <img src={action.icon} alt="" className="mil-action-chip-icon" />
-                      <span className="mil-action-chip-label">{action.label}</span>
-                    </button>
-                  </Tooltip>
-                ))}
-              </div>
-            </div>
-
-            <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsMilitarySidebar.849.36')} count={resourceRows.length} />
-            <div className="mil-resource-list">
-              {resourceRows.map((row) => {
-                const fillPercent = resourceFillPercent(row);
-                const fillColor = fillPercent > 25 ? 'gold' : 'red';
-                return (
-                  <Tooltip
-                    key={row.id}
-                    content={{
-                      title: row.name,
-                      get body() { return row.monthlyUsage > 0 ? webUIText("MilitarySidebar.StoredConsumesMonthly", { Value1: formatResourceAmount(row.amount), Value2: formatResourceAmount(row.monthlyUsage) }) : webUIText("MilitarySidebar.StoredNoCurrent", { Value1: formatResourceAmount(row.amount) }); },
-                    }}
-                    position="bottom"
-                    delay={150}
-                  >
-                    <div className="mil-resource-row">
-                      <img src={resourceIconPath(row.id)} alt="" className="mil-resource-icon" />
-                      <div className="mil-resource-main">
-                        <div className="mil-resource-top">
-                          <span className="mil-resource-name">{row.name}</span>
-                          <span className="mil-resource-amount">{formatResourceStock(row)}</span>
-                        </div>
-                        {row.capacity > 0 && <PaintedBar percent={fillPercent} color={fillColor} className="mil-resource-progress" />}
-                        {row.monthlyUsage > 0 && <PaintedBar percent={resourceReservePercent(row)} color={row.daysRemaining >= resourceReserveTargetDays(row) ? 'green' : fillColor} className="mil-resource-progress mil-resource-window-progress" />}
-                        <div className="mil-resource-foot">
-                          <span className="mil-resource-burn">{row.monthlyUsage > 0 ? webUIText("MilitarySidebar.PerMonthDelta", { Value1: formatResourceAmount(row.monthlyUsage) }) : webUIText("MilitarySidebar.Stable")}</span>
-                          <span className="mil-resource-days">{row.monthlyUsage > 0 ? formatSupplyWindow(row.daysRemaining) : webUIText("MilitarySidebar.Stored")}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Tooltip>
-                );
-              })}
-            </div>
-
           </div>
         )}
 

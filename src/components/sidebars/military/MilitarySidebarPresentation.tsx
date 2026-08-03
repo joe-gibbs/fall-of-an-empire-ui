@@ -356,10 +356,47 @@ export function resourceReservePercent(row: MilitaryResource): number {
   return Math.min(100, (row.daysRemaining / resourceReserveTargetDays(row)) * 100);
 }
 
+/** True when stock is short enough that the player should notice it first. */
+export function isResourceUrgent(row: MilitaryResource): boolean {
+  if (row.monthlyUsage <= 0) {
+    return row.capacity > 0 && row.amount / row.capacity <= 0.25;
+  }
+  return row.daysRemaining < resourceReserveTargetDays(row) * 0.35;
+}
+
+export function resourceUrgencyScore(row: MilitaryResource): number {
+  if (row.monthlyUsage > 0) return row.daysRemaining;
+  if (row.capacity > 0) return (row.amount / row.capacity) * 1000;
+  return 1000 + row.amount;
+}
+
+/** Shortages first, then remaining days / fill ascending. */
+export function sortResourceRowsByUrgency(rows: MilitaryResource[]): MilitaryResource[] {
+  return [...rows].sort((a, b) => {
+    const aUrgent = isResourceUrgent(a) ? 0 : 1;
+    const bUrgent = isResourceUrgent(b) ? 0 : 1;
+    if (aUrgent !== bUrgent) return aUrgent - bUrgent;
+    return resourceUrgencyScore(a) - resourceUrgencyScore(b);
+  });
+}
+
 export function formatResourceStock(row: MilitaryResource): string {
   return row.capacity > 0
     ? `${formatResourceAmount(row.amount)} / ${formatResourceAmount(row.capacity)}`
     : formatResourceAmount(row.amount);
+}
+
+export function resolveCurrentOrderLabel(army: Army): string {
+  if (army.currentOrder && army.currentOrder.trim().length > 0) {
+    return army.currentOrder;
+  }
+  if (army.garrisonedAt) {
+    return webUIText('MilitarySidebar.GarrisonedAt', { Settlement: army.garrisonedAt });
+  }
+  if (army.isReplenishing) {
+    return webUIText('MilitarySidebar.ReplenishingActive');
+  }
+  return webUIText('MilitarySidebar.Idle');
 }
 
 export function unitRowSourceLabels(row: ArmyUnitRow): string[] {

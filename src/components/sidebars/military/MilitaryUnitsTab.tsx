@@ -9,7 +9,6 @@ import { webUIText } from '../../../localization/WebUITextContext';
 import { battleFormationRoleIcon } from '../../../utils/battleFormationNaming';
 import {
   buildUnitTooltip,
-  formatLargeNumber,
   formatStrength,
   formatUnitTypeName,
   getStrengthColor,
@@ -47,30 +46,6 @@ export function renderUnitTypeCounts(unitTypes: ArmyUnitTypeStrength[]): React.R
         <img src={unitTypeIconPath(entry.type)} alt="" className="mil-sub-type-icon" />
         <span className="mil-sub-type-value">{formatNumber(entry.count)}</span>
       </span>
-    );
-  });
-}
-
-export function renderUnitTypeStrengths(unitTypes: CompositionSummaryRow[]): React.ReactNode {
-  return unitTypes.map((entry) => {
-    const typeLabel = formatUnitTypeName(entry.type);
-    return (
-      <Tooltip
-        key={entry.type}
-        content={{
-          title: typeLabel,
-          lines: [
-            { label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.1033.43'), value: formatStrength(entry.strength, entry.maxStrength), valueColor: getStrengthColor(entry.maxStrength > 0 ? entry.strength / entry.maxStrength : 0) },
-          ],
-        }}
-        position="bottom"
-        delay={100}
-      >
-        <span className="mil-header-type-strength" aria-label={`${typeLabel} ${formatLargeNumber(entry.strength)}`}>
-          <img src={unitTypeIconPath(entry.type)} alt="" className="mil-header-type-strength-icon" />
-          <span className="mil-header-type-strength-value">{formatLargeNumber(entry.strength)}</span>
-        </span>
-      </Tooltip>
     );
   });
 }
