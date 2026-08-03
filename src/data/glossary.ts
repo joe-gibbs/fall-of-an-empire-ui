@@ -345,6 +345,10 @@ const glossary: Record<string, GlossaryEntry> = {
     get title() { return webUIText('Auto.TopProp.DataGlossary.313.151'); },
     get body() { return webUIText('Auto.TopProp.DataGlossary.314.152'); },
   },
+  'Attack speed': {
+    get title() { return webUIText('Glossary.AttackSpeed.Title'); },
+    get body() { return webUIText('Glossary.AttackSpeed.Body'); },
+  },
   'Military Alliance': {
     get title() { return webUIText('Auto.TopProp.DataGlossary.317.153'); },
     get body() { return webUIText('Auto.TopProp.DataGlossary.318.154'); },

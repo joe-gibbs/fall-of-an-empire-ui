@@ -74,6 +74,8 @@ export interface UnitTooltipData {
   upkeep: number;
   foodConsumption: number;
   speed: number;
+  /** Attacks per second. */
+  attackSpeed: number;
   /** 0.0 - 1.0 (garrison only). */
   veterancy?: number;
   damage: { pierce: number; crush: number; slash: number };
@@ -87,6 +89,8 @@ export interface UnitTooltipData {
   /** Appended to the description like the AS tooltip does. */
   immuneToWinterAttrition?: boolean;
   immuneToDesertAttrition?: boolean;
+  /** Shown when this unit can fire or strike while manoeuvring. */
+  canAttackWhileMoving?: boolean;
   /** Number of merged same-class units represented by this row. */
   count?: number;
   /** Per-axis modifiers. When present, bars render segmented (base + positive
@@ -109,6 +113,11 @@ const GAME_WIDE_MAXES = {
   damage: { pierce: 40, crush: 50, slash: 35 },
   armour: { pierce: 18, crush: 20, slash: 18 },
   speed: 280,
+  /**
+   * Attacks per second. Highest current roster value is 1.4
+   * ((Speed 280) / 100 * 0.5). Keep this in sync when unit data changes.
+   */
+  attackSpeed: 1.4,
 };
 
 /** Soft minimum fill so low-tier stats still show a readable stub. */
@@ -378,7 +387,9 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
     : 1;
   const strengthColor = ratio > 0.5 ? 'var(--green)' : 'var(--red)';
 
-  const hasDescription = Boolean(d.description || d.immuneToWinterAttrition || d.immuneToDesertAttrition);
+  const hasDescription = Boolean(
+    d.description || d.immuneToWinterAttrition || d.immuneToDesertAttrition || d.canAttackWhileMoving,
+  );
   const allBuildabilitySettlements = d.buildability?.settlements ?? [];
   const buildabilitySettlements = showAllBuildabilitySettlements
     ? allBuildabilitySettlements
@@ -570,6 +581,15 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
           format={n}
           modifiers={d.modifiers?.speed}
         />
+        <Bar
+          icon="/assets/icons/I_Swords.png"
+          label={webUIText('UnitTooltip.AttackSpeed')}
+          glossaryKey="Attack speed"
+          value={d.attackSpeed}
+          max={GAME_WIDE_MAXES.attackSpeed}
+          color="red"
+          format={(v) => formatNumber(v, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}
+        />
         {d.veterancy !== undefined && (
           <Bar
             icon={tierIconPath || TIER_ICONS[1]}
@@ -742,6 +762,12 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
             <>
               {d.description ? ' ' : null}
               <WebUIText textKey="Auto.ComponentsCommonUnitTooltip.311.3" />
+            </>
+          )}
+          {d.canAttackWhileMoving && (
+            <>
+              {(d.description || d.immuneToWinterAttrition || d.immuneToDesertAttrition) ? ' ' : null}
+              <WebUIText textKey="UnitTooltip.CanAttackWhileMoving" />
             </>
           )}
         </div>

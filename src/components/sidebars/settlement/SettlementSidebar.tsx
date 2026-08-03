@@ -472,7 +472,14 @@ function buildResourceTooltip(r: Resource): TooltipContent {
   }
   if (r.depleting) {
     const months = r.monthsUntilDepletion ?? 0;
-    const depletion = months <= 0 ? 'Depleted' : months < 1 ? '< 1 month' : `${formatNumber(months, { maximumFractionDigits: 1 })} months`;
+    const depletion = months <= 0
+      ? webUIText('SettlementSidebar.Depleted')
+      : months < 1
+        ? webUIText('SettlementSidebar.DepletionUnderOneMonth')
+        : webUIText('Common.CountWithUnit', {
+          Count: formatNumber(months, { maximumFractionDigits: 1 }),
+          Unit: webUIText(months === 1 ? 'Common.Month' : 'Common.Months'),
+        });
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.456.28'), value: depletion, valueColor: months > 0 && months >= 6 ? 'var(--text-muted)' : 'var(--orange)' });
   }
 
@@ -1477,6 +1484,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                         upkeep: unit.upkeep,
                         foodConsumption: unit.foodConsumption,
                         speed: unit.speed,
+                        attackSpeed: unit.attackSpeed,
                         veterancy: unit.veterancy,
                         damage: { pierce: unit.pierceDmg, crush: unit.crushDmg, slash: unit.slashDmg },
                         armour: { pierce: unit.pierceArm, crush: unit.crushArm, slash: unit.slashArm },

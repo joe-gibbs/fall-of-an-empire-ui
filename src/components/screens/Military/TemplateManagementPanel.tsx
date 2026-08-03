@@ -98,7 +98,9 @@ function templateUnitSummary(template: FormationTemplateEntry): string {
     .map((unit) => `${formatNumber(unit.count)} ${unit.name}`);
   const hidden = Math.max(0, template.units.filter((unit) => unit.count > 0).length - units.length);
   if (units.length === 0) return webUIText('Military.NoUnitsAssigned');
-  return hidden > 0 ? `${units.join(', ')} + ${formatNumber(hidden)} more` : units.join(', ');
+  return hidden > 0
+    ? webUIText('FormationTemplate.UnitsAndMore', { Units: units.join(', '), Count: formatNumber(hidden) })
+    : units.join(', ');
 }
 
 function templateUnitTypeLabel(unit: FormationTemplateUnitEntry): string {
@@ -154,6 +156,7 @@ export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count:
     upkeep: unit.upkeep,
     foodConsumption: unit.foodConsumption,
     speed: unit.speed,
+    attackSpeed: unit.attackSpeed,
     damage: {
       pierce: unit.pierceDamage,
       crush: unit.crushDamage,
@@ -168,6 +171,7 @@ export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count:
     monthlyConsumption: templateResourceCosts(unit, 'monthly'),
     immuneToWinterAttrition: unit.immuneToWinterAttrition,
     immuneToDesertAttrition: unit.immuneToDesertAttrition,
+    canAttackWhileMoving: unit.canAttackWhileMoving,
     count,
     buildability: {
       count: unit.availableSettlementCount || settlements.length,
@@ -203,7 +207,7 @@ function TemplateListItem({
     : webUIText('FormationTemplate.DeleteButton');
 
   return (
-    <div className={`chart-template-list-item${selected ? ' chart-template-list-item--selected' : ''}`}>
+    <div className={`chart-template-list-item${selected ? ' chart-template-list-item--selected' : ''}${deletePending ? ' chart-template-list-item--delete-pending' : ''}`}>
       <button
         type="button"
         className="chart-template-list-select"
@@ -213,49 +217,61 @@ function TemplateListItem({
         <span className="chart-template-list-copy">
           <span className="chart-template-list-name">{template.name}</span>
           <span className="chart-template-list-summary">{templateUnitSummary(template)}</span>
+          <span className="chart-template-list-stats">
+            <span className="chart-template-list-stat">
+              <img src={SWORDS_ICON} alt="" draggable={false} />
+              <span>{formatNumber(template.totalStrength)}</span>
+            </span>
+            <span className="chart-template-list-stat">
+              <img src={GOLD_ICON} alt="" draggable={false} />
+              <span>{formatNumber(template.creationCost)}</span>
+            </span>
+          </span>
         </span>
       </button>
-      <Tooltip
-        content={{
-          title: duplicateTitle,
-          body: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1060.8'),
-        }}
-        position="right"
-      >
-        <button
-          type="button"
-          className="chart-template-list-duplicate"
-          aria-label={duplicateTitle}
-          disabled={duplicateDisabled}
-          onMouseDown={event => {
-            event.stopPropagation();
-            onDuplicate(template.id);
+      <div className="chart-template-list-actions">
+        <Tooltip
+          content={{
+            title: duplicateTitle,
+            body: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1060.8'),
           }}
+          position="right"
         >
-          <img src={DUPLICATE_ICON} alt="" className="chart-template-list-duplicate-icon" draggable={false} />
-        </button>
-      </Tooltip>
-      <Tooltip
-        content={{
-          title: deleteTitle,
-          body: deletePending ? webUIText('FormationTemplate.DeleteConfirmMessage') : template.name,
-        }}
-        position="right"
-      >
-        <button
-          type="button"
-          className={`chart-template-list-delete${deletePending ? ' chart-template-list-delete--confirm' : ''}`}
-          aria-label={deleteTitle}
-          disabled={!template.canDelete || deleteDisabled}
-          onMouseDown={event => event.stopPropagation()}
-          onClick={event => {
-            event.stopPropagation();
-            onDelete(template.id);
+          <button
+            type="button"
+            className="chart-template-list-duplicate"
+            aria-label={duplicateTitle}
+            disabled={duplicateDisabled}
+            onMouseDown={event => {
+              event.stopPropagation();
+              onDuplicate(template.id);
+            }}
+          >
+            <img src={DUPLICATE_ICON} alt="" className="chart-template-list-duplicate-icon" draggable={false} />
+          </button>
+        </Tooltip>
+        <Tooltip
+          content={{
+            title: deleteTitle,
+            body: deletePending ? webUIText('FormationTemplate.DeleteConfirmMessage') : template.name,
           }}
+          position="right"
         >
-          <img src={DELETE_ICON} alt="" className="chart-template-list-delete-icon" draggable={false} />
-        </button>
-      </Tooltip>
+          <button
+            type="button"
+            className={`chart-template-list-delete${deletePending ? ' chart-template-list-delete--confirm' : ''}`}
+            aria-label={deleteTitle}
+            disabled={!template.canDelete || deleteDisabled}
+            onMouseDown={event => event.stopPropagation()}
+            onClick={event => {
+              event.stopPropagation();
+              onDelete(template.id);
+            }}
+          >
+            <img src={DELETE_ICON} alt="" className="chart-template-list-delete-icon" draggable={false} />
+          </button>
+        </Tooltip>
+      </div>
     </div>
   );
 }
@@ -980,6 +996,8 @@ export function TemplateUnitSelectorModal({
   );
 }
 
+const ASSIGNED_FORCES_PREVIEW = 5;
+
 function TemplateAssignedForces({
   forces,
   onOpenForce,
@@ -987,41 +1005,78 @@ function TemplateAssignedForces({
   forces: FormationTemplateAssignedForce[];
   onOpenForce: (forceId: string) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
   if (forces.length === 0) {
     return <div className="chart-template-empty-inline"><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.679.5" /></div>;
   }
 
+  const visibleForces = expanded || forces.length <= ASSIGNED_FORCES_PREVIEW
+    ? forces
+    : forces.slice(0, ASSIGNED_FORCES_PREVIEW);
+  const hiddenCount = Math.max(0, forces.length - visibleForces.length);
+
   return (
-    <StyledScrollArea
-      className="chart-template-force-scroll"
-      viewportClassName="chart-template-force-list"
-    >
-      {forces.map(force => {
-        const role = force.commanderName
-          || force.rank
-          || (force.isNavy
-            ? webUIText('Common.Fleet')
-            : webUIText('Common.Army'));
-        return (
-          <button
-            key={force.id}
-            type="button"
-            className="chart-template-force-row"
-            onMouseDown={() => onOpenForce(force.id)}
-          >
-            <span className="chart-template-force-primary">
-              <span className="chart-template-force-name">{force.name}</span>
-              <span className="chart-template-force-strength">{formatNumber(force.strength)}/{formatNumber(force.maxStrength)}</span>
-            </span>
-            <span className="chart-template-force-secondary">
-              <span>{role}</span>
-              <span>{force.location || force.rank}</span>
-            </span>
-          </button>
-        );
-      })}
-    </StyledScrollArea>
+    <>
+      <StyledScrollArea
+        className="chart-template-force-scroll"
+        viewportClassName="chart-template-force-list"
+      >
+        {visibleForces.map(force => {
+          const atFullStrength = force.strength >= force.maxStrength && force.maxStrength > 0;
+          const location = force.location || force.rank || '';
+          const commander = force.commanderName || force.rank || (
+            force.isNavy
+              ? webUIText('Common.Fleet')
+              : webUIText('Common.Army')
+          );
+          return (
+            <button
+              key={force.id}
+              type="button"
+              className="chart-template-force-row"
+              onMouseDown={() => onOpenForce(force.id)}
+            >
+              <span className="chart-template-force-primary">
+                <span className="chart-template-force-name">{force.name}</span>
+                {!atFullStrength && (
+                  <span className="chart-template-force-strength">
+                    {formatNumber(force.strength)}/{formatNumber(force.maxStrength)}
+                  </span>
+                )}
+              </span>
+              <span className="chart-template-force-secondary">
+                <span className="chart-template-force-location">{location || commander}</span>
+                {location && <span className="chart-template-force-commander">{commander}</span>}
+              </span>
+            </button>
+          );
+        })}
+      </StyledScrollArea>
+      {(hiddenCount > 0 || expanded) && forces.length > ASSIGNED_FORCES_PREVIEW && (
+        <button
+          type="button"
+          className="chart-template-force-toggle"
+          onMouseDown={() => setExpanded(value => !value)}
+        >
+          {expanded
+            ? webUIText('FormationTemplate.ShowFewerForces')
+            : webUIText('FormationTemplate.ShowAllForces', { Count: formatNumber(forces.length) })}
+        </button>
+      )}
+    </>
   );
+}
+
+function draftUnitSummaryText(
+  draftUnits: Array<{ unit: FormationTemplateUnitEntry; count: number }>,
+): string {
+  const units = draftUnits.slice(0, 3).map(({ unit, count }) => `${formatNumber(count)} ${unit.name}`);
+  const hidden = Math.max(0, draftUnits.length - units.length);
+  if (units.length === 0) return '';
+  return hidden > 0
+    ? webUIText('FormationTemplate.UnitsAndMore', { Units: units.join(', '), Count: formatNumber(hidden) })
+    : units.join(', ');
 }
 
 function TemplateEditor({
@@ -1253,6 +1308,9 @@ function TemplateEditor({
     allowFromInput: true,
   });
 
+  const compositionSummary = draftUnitSummaryText(draftUnits);
+  const assignedForceCount = template?.assignedForces.length ?? 0;
+
   return (
     <section className="chart-template-workbench" onMouseDown={() => {
       if (iconPickerOpen) setIconPickerOpen(false);
@@ -1349,6 +1407,12 @@ function TemplateEditor({
             </div>
           </div>
 
+          {compositionSummary && (
+            <div className="chart-template-composition-strip">
+              <div className="chart-template-composition-units">{compositionSummary}</div>
+            </div>
+          )}
+
           <section className="chart-template-battle-workbench">
             <TemplateBattlePlanner
               draft={draft}
@@ -1367,34 +1431,42 @@ function TemplateEditor({
         <aside className="chart-template-side-rail">
           <div className="chart-template-rail-section">
             <h4><WebUIText textKey="FormationTemplate.TemplateTotals" /></h4>
-            <div className="chart-template-total-row">
-              <span className="chart-template-total-label"><img src={SWORDS_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.433.5')}</span>
-              <strong>{formatNumber(totals.strength)}</strong>
+            <div className="chart-template-totals-primary">
+              <div className="chart-template-total-row chart-template-total-row--primary">
+                <span className="chart-template-total-label"><img src={SWORDS_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.433.5')}</span>
+                <strong>{formatNumber(totals.strength)}</strong>
+              </div>
+              <div className="chart-template-total-row chart-template-total-row--primary">
+                <span className="chart-template-total-label"><img src={GOLD_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.442.8')}</span>
+                <strong>{formatNumber(totals.cost)}</strong>
+              </div>
+              <div className="chart-template-total-row chart-template-total-row--primary">
+                <span className="chart-template-total-label"><img src={UPKEEP_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.451.11')}</span>
+                <strong className="chart-template-total-bad">{webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.452.1", { Value1: formatNumber(totals.upkeep) })}</strong>
+              </div>
+              <div className="chart-template-total-row chart-template-total-row--primary">
+                <span className="chart-template-total-label"><img src={SUPPLY_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('FormationTemplateSidebar.Food')}</span>
+                <strong className="chart-template-total-bad">{webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.452.1", { Value1: formatNumber(totals.food, { maximumFractionDigits: 1 }) })}</strong>
+              </div>
             </div>
-            <div className="chart-template-total-row">
-              <span className="chart-template-total-label"><img src={GOLD_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.442.8')}</span>
-              <strong>{formatNumber(totals.cost)}</strong>
-            </div>
-            <div className="chart-template-total-row">
-              <span className="chart-template-total-label"><img src={UPKEEP_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.451.11')}</span>
-              <strong className="chart-template-total-good">{webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.452.1", { Value1: formatNumber(totals.upkeep) })}</strong>
-            </div>
-            <div className="chart-template-total-row">
-              <span className="chart-template-total-label"><img src={TRAINING_ICON} alt="" className="chart-template-total-icon" draggable={false} /><WebUIText textKey="Auto.ComponentsCommonUnitTooltip.340.7" /></span>
-              <strong>{webUIText('Common.DayAbbrevValue', { Days: formatNumber(totals.days) })}</strong>
-            </div>
-            <div className="chart-template-total-row">
-              <span className="chart-template-total-label"><img src={SUPPLY_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('FormationTemplateSidebar.Food')}</span>
-              <strong className="chart-template-total-bad">{webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.452.1", { Value1: formatNumber(totals.food, { maximumFractionDigits: 1 }) })}</strong>
-            </div>
-            <div className="chart-template-total-row">
-              <span className="chart-template-total-label"><img src={SPEED_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.460.14')}</span>
-              <strong>{formatNumber(totals.speed)}</strong>
+            <div className="chart-template-totals-secondary">
+              <div className="chart-template-total-row chart-template-total-row--secondary">
+                <span className="chart-template-total-label"><img src={TRAINING_ICON} alt="" className="chart-template-total-icon" draggable={false} /><WebUIText textKey="Auto.ComponentsCommonUnitTooltip.340.7" /></span>
+                <strong>{webUIText('Common.DayAbbrevValue', { Days: formatNumber(totals.days) })}</strong>
+              </div>
+              <div className="chart-template-total-row chart-template-total-row--secondary">
+                <span className="chart-template-total-label"><img src={SPEED_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.460.14')}</span>
+                <strong>{formatNumber(totals.speed)}</strong>
+              </div>
             </div>
           </div>
 
           <div className="chart-template-rail-section chart-template-rail-section--forces">
-            <h4><WebUIText textKey="Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.1156.36" /></h4>
+            <h4>
+              {assignedForceCount > 0
+                ? webUIText('FormationTemplate.AssignedForcesCount', { Count: formatNumber(assignedForceCount) })
+                : webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.1156.36')}
+            </h4>
             <TemplateAssignedForces
               forces={template?.assignedForces ?? []}
               onOpenForce={(forceId) => gameActions.openSidebar('military', forceId)}
@@ -1404,56 +1476,71 @@ function TemplateEditor({
       </div>
 
       <div className="chart-template-action-bar">
-        {assignmentTarget && (
-          <Tooltip content={{
-            title: webUIText('FormationTemplate.AssignButton', { Name: assignmentTarget.name }),
-            body: template
-              ? webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1053.4', { Name: assignmentTarget.name })
-              : webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1053.5'),
-          }}>
+        <div className="chart-template-action-status">
+          {dirty && (
+            <span className="chart-template-action-dirty">
+              {webUIText('FormationTemplate.UnsavedChanges')}
+            </span>
+          )}
+        </div>
+        <div className="chart-template-action-buttons">
+          {assignmentTarget && (
+            <Tooltip
+              content={{
+                title: webUIText('FormationTemplate.AssignButton', { Name: assignmentTarget.name }),
+                body: template
+                  ? webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1053.4', { Name: assignmentTarget.name })
+                  : webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1053.5'),
+              }}
+              wrapperClassName="chart-template-action-tooltip"
+            >
+              <GameButton
+                variant="burgundy"
+                icon={TEMPLATE_ICON}
+                className="chart-template-action-button"
+                disabled={!canAssign}
+                onClick={() => {
+                  if (template) onAssignTemplate?.(template.id);
+                }}
+              >
+                {webUIText('FormationTemplate.AssignButton', { Name: assignmentTarget.name })}
+              </GameButton>
+            </Tooltip>
+          )}
+          <Tooltip
+            content={{ title: webUIText('MilitaryScreen.RaiseTemplate'), body: raiseTooltip }}
+            wrapperClassName="chart-template-action-tooltip"
+          >
             <GameButton
               variant="burgundy"
-              icon={TEMPLATE_ICON}
-              className="chart-template-action-button"
-              disabled={!canAssign}
+              icon={RAISE_ICON}
+              className="chart-template-action-button chart-template-action-button--raise"
+              tutorialTarget="RaiseFormationButton"
+              disabled={!canRaise}
               onClick={() => {
-                if (template) onAssignTemplate?.(template.id);
+                if (template) onRaiseTemplate(template.id);
               }}
             >
-              {webUIText('FormationTemplate.AssignButton', { Name: assignmentTarget.name })}
+              <WebUIText textKey="MilitaryScreen.RaiseTemplate" />
+              <span className="chart-template-action-cost">
+                <img src={GOLD_ICON} alt="" className="chart-template-action-cost-icon" draggable={false} />
+                <span className="chart-template-action-cost-value">{formatNumber(raiseCost)}</span>
+              </span>
             </GameButton>
           </Tooltip>
-        )}
-        <Tooltip content={{ title: webUIText('MilitaryScreen.RaiseTemplate'), body: raiseTooltip }}>
           <GameButton
             variant="burgundy"
-            icon={RAISE_ICON}
-            className="chart-template-action-button"
-            tutorialTarget="RaiseFormationButton"
-            disabled={!canRaise}
+            icon={SAVE_ICON}
+            className={`chart-template-action-button chart-template-action-button--save${canSave ? ' chart-template-action-button--ready' : ''}`}
+            tutorialTarget="SaveFormationButton"
+            disabled={!canSave}
             onClick={() => {
-              if (template) onRaiseTemplate(template.id);
+              saveDraft(draft);
             }}
           >
-            <WebUIText textKey="MilitaryScreen.RaiseTemplate" />
-            <span className="chart-template-action-cost">
-              <img src={GOLD_ICON} alt="" className="chart-template-action-cost-icon" draggable={false} />
-              <span className="chart-template-action-cost-value">{formatNumber(raiseCost)}</span>
-            </span>
+            <WebUIText textKey="SaveGame.Save" />
           </GameButton>
-        </Tooltip>
-        <GameButton
-          variant="burgundy"
-          icon={SAVE_ICON}
-          className="chart-template-action-button chart-template-action-button--save"
-          tutorialTarget="SaveFormationButton"
-          disabled={!canSave}
-          onClick={() => {
-            saveDraft(draft);
-          }}
-        >
-          <WebUIText textKey="SaveGame.Save" />
-        </GameButton>
+        </div>
       </div>
 
       {catalogueGroup && (

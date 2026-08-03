@@ -167,6 +167,7 @@ function unitTooltipData(unit: EncyclopediaUnitDTO): UnitTooltipData {
     upkeep: unit.upkeep,
     foodConsumption: unit.foodConsumption,
     speed: unit.speed,
+    attackSpeed: unit.attackSpeed,
     damage: {
       pierce: unit.pierceDamage,
       crush: unit.crushDamage,
@@ -181,6 +182,7 @@ function unitTooltipData(unit: EncyclopediaUnitDTO): UnitTooltipData {
     monthlyConsumption: resourceCosts(unit.monthlyConsumption),
     immuneToWinterAttrition: unit.immuneToWinterAttrition,
     immuneToDesertAttrition: unit.immuneToDesertAttrition,
+    canAttackWhileMoving: unit.canAttackWhileMoving,
   };
 }
 
@@ -1197,6 +1199,7 @@ function UnitCard({ unit }: { unit: EncyclopediaUnitDTO }) {
         <div className="enc-unit-stats-row">
           <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={WebkilnAssetPath('/assets/icons/I_Damage_Slash.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.attack)}</span></span>
           <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={WebkilnAssetPath('/assets/icons/I_Armour_Slash.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.armour)}</span></span>
+          <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={WebkilnAssetPath('/assets/icons/I_Swords.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.attackSpeed, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}</span></span>
           <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={WebkilnAssetPath('/assets/icons/I_Speed.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.speed)}</span></span>
         </div>
       </div>

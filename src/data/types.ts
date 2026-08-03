@@ -679,6 +679,8 @@ export interface RecruitableUnit {
   foodConsumption: number;
   maxStrength: number;
   speed: number;
+  /** Attacks per second. */
+  attackSpeed: number;
   damage: UnitStatTriplet;
   armour: UnitStatTriplet;
   /** Strategic resources consumed per recruit (Weapons, Armour, Horses...).
@@ -691,6 +693,8 @@ export interface RecruitableUnit {
   immuneToWinterAttrition?: boolean;
   /** True if the unit ignores desert attrition (UArmyUnit.bImmuneToDesertAttrition). */
   immuneToDesertAttrition?: boolean;
+  /** True if this unit may complete attacks while its formation is moving. */
+  canAttackWhileMoving?: boolean;
   /** Asset key of the building that gates this unit (e.g. "Barracks"). */
   sourceBuilding?: string;
   /** Asset key of the class this unit upgrades into, if any. */
@@ -777,6 +781,8 @@ export interface GarrisonUnit {
   upkeep: number;
   foodConsumption: number;
   speed: number;
+  /** Attacks per second. */
+  attackSpeed: number;
   pierceDmg: number;
   crushDmg: number;
   slashDmg: number;
@@ -1067,6 +1073,8 @@ export interface ArmyUnit {
   upkeep: number;
   foodConsumption: number;
   speed: number;
+  /** Attacks per second. */
+  attackSpeed: number;
   siegePower: number;
   pierceDmg: number;
   crushDmg: number;
@@ -1076,6 +1084,8 @@ export interface ArmyUnit {
   slashArmour: number;
   immuneToWinterAttrition?: boolean;
   immuneToDesertAttrition?: boolean;
+  /** True if this unit may complete attacks while its formation is moving. */
+  canAttackWhileMoving?: boolean;
 }
 
 export type ArmyUnitRowType = 'existing' | 'beingBuilt' | 'inTransit' | 'pending' | 'unbuildable' | 'replenishDisabled';

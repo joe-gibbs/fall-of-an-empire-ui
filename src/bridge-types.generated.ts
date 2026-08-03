@@ -234,6 +234,7 @@ export interface BattleFormationDetail {
   rotation: number;
   zIndex: number;
   speed: number;
+  attackSpeed: number;
   attackRange: number;
   minimumAttackRange: number;
   collisionRadius: number;
@@ -981,6 +982,7 @@ export interface FormationTemplateUnitEntry {
   resourceCost: FormationTemplateResourceCost[];
   monthlyConsumption: FormationTemplateResourceCost[];
   speed: number;
+  attackSpeed: number;
   range: number;
   siegePower: number;
   pierceDamage: number;
@@ -991,6 +993,7 @@ export interface FormationTemplateUnitEntry {
   slashArmour: number;
   immuneToWinterAttrition: boolean;
   immuneToDesertAttrition: boolean;
+  canAttackWhileMoving: boolean;
   availableSettlementCount: number;
   availableSettlements: FormationTemplateEligibleSettlementEntry[];
   availableManpower: number;
@@ -2090,6 +2093,7 @@ export interface EncyclopediaUnitDTO {
   resourceCost: EncyclopediaResourceCostDTO[];
   monthlyConsumption: EncyclopediaResourceCostDTO[];
   speed: number;
+  attackSpeed: number;
   pierceDamage: number;
   crushDamage: number;
   slashDamage: number;
@@ -2103,6 +2107,7 @@ export interface EncyclopediaUnitDTO {
   maxShips: number;
   immuneToWinterAttrition: boolean;
   immuneToDesertAttrition: boolean;
+  canAttackWhileMoving: boolean;
   description: string;
 }
 
@@ -3794,7 +3799,7 @@ export interface ControlBindingDTO {
   scale: number;
   actionName: string;
   label: string;
-  description: string;
+  category: string;
   groupName: string;
   groupLabel: string;
   groupItemLabel: string;
@@ -4077,6 +4082,7 @@ export interface SettlementGarrisonUnit {
   crushArmour: number;
   slashArmour: number;
   speed: number;
+  attackSpeed: number;
   culture: string;
 }
 
@@ -5037,6 +5043,7 @@ export interface MilitaryUnitEntry {
   upkeep: number;
   foodConsumption: number;
   speed: number;
+  attackSpeed: number;
   siegePower: number;
   pierceDamage: number;
   crushDamage: number;
@@ -5046,6 +5053,7 @@ export interface MilitaryUnitEntry {
   slashArmour: number;
   immuneToWinterAttrition: boolean;
   immuneToDesertAttrition: boolean;
+  canAttackWhileMoving: boolean;
   existingCount: number;
   pendingCount: number;
   targetCount: number;

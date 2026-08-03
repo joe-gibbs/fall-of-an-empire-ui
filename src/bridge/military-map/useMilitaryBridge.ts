@@ -144,6 +144,7 @@ function mapUnit(unit: GetMilitaryDataResponse['units'][number]): ArmyUnit {
     upkeep: unit.upkeep,
     foodConsumption: unit.foodConsumption,
     speed: unit.speed,
+    attackSpeed: unit.attackSpeed,
     siegePower: unit.siegePower,
     pierceDmg: unit.pierceDamage,
     crushDmg: unit.crushDamage,
@@ -153,6 +154,7 @@ function mapUnit(unit: GetMilitaryDataResponse['units'][number]): ArmyUnit {
     slashArmour: unit.slashArmour,
     immuneToWinterAttrition: unit.immuneToWinterAttrition,
     immuneToDesertAttrition: unit.immuneToDesertAttrition,
+    canAttackWhileMoving: unit.canAttackWhileMoving,
   };
 }
 

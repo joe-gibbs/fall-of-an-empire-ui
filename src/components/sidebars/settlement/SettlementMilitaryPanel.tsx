@@ -92,6 +92,7 @@ function templateUnitAsRecruitable(unit: FormationTemplateUnitEntry): Recruitabl
     foodConsumption: unit.foodConsumption,
     maxStrength: unit.maxStrength,
     speed: unit.speed,
+    attackSpeed: unit.attackSpeed,
     damage: {
       pierce: unit.pierceDamage,
       crush: unit.crushDamage,
@@ -106,6 +107,7 @@ function templateUnitAsRecruitable(unit: FormationTemplateUnitEntry): Recruitabl
     monthlyConsumption: resourceCosts(unit.monthlyConsumption),
     immuneToWinterAttrition: unit.immuneToWinterAttrition,
     immuneToDesertAttrition: unit.immuneToDesertAttrition,
+    canAttackWhileMoving: unit.canAttackWhileMoving,
   };
 }
 
@@ -159,12 +161,14 @@ function unitTooltipData(u: RecruitableUnit): UnitTooltipData {
     upkeep: u.upkeep,
     foodConsumption: u.foodConsumption,
     speed: u.speed,
+    attackSpeed: u.attackSpeed,
     damage: u.damage,
     armour: u.armour,
     resourceCost: u.resourceCost,
     monthlyConsumption: u.monthlyConsumption,
     immuneToWinterAttrition: u.immuneToWinterAttrition,
     immuneToDesertAttrition: u.immuneToDesertAttrition,
+    canAttackWhileMoving: u.canAttackWhileMoving,
   };
 }
 
@@ -601,7 +605,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
   }, [openScreen]);
 
   const blockedReason = settlement.canBuild === false
-    ? (settlement.cannotBuildReason || 'Recruitment is not available right now.')
+    ? (settlement.cannotBuildReason || webUIText('Settlement.RecruitmentUnavailable'))
     : '';
   const formationBlockedReason = blockedReason || targetPendingFormation?.blockReason || '';
 

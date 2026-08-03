@@ -973,6 +973,11 @@
   white-space: nowrap;
 }
 
+/* Speed + attack speed labels are longer than combat-axis labels. */
+.unit-tt-movement .settle-unit-stat-label {
+  width: 5.6rem;
+}
+
 .settle-unit-stat-bar {
   flex: 1;
   min-width: 0;

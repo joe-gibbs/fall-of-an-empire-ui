@@ -152,11 +152,11 @@ export function decodeSidebarToken(value: string): string {
 }
 
 export function templateKind(type: TemplateType): string {
-  return type === 'naval' ? 'Fleet Template' : 'Legion Template';
+  return webUIText(type === 'naval' ? 'FormationTemplate.FleetTemplate' : 'FormationTemplate.LegionTemplate');
 }
 
 export function templateTypeName(type: TemplateType): string {
-  return type === 'naval' ? 'Fleet' : 'Legion';
+  return webUIText(type === 'naval' ? 'FormationTemplate.Fleet' : 'FormationTemplate.Legion');
 }
 
 export function unitTypeLabel(type: string): string {
@@ -237,6 +237,7 @@ export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number)
     upkeep: unit.upkeep,
     foodConsumption: unit.foodConsumption,
     speed: unit.speed,
+    attackSpeed: unit.attackSpeed,
     damage: {
       pierce: unit.pierceDamage,
       crush: unit.crushDamage,
@@ -251,6 +252,7 @@ export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number)
     monthlyConsumption: resourceCosts(unit.monthlyConsumption),
     immuneToWinterAttrition: unit.immuneToWinterAttrition,
     immuneToDesertAttrition: unit.immuneToDesertAttrition,
+    canAttackWhileMoving: unit.canAttackWhileMoving,
     count,
     buildability: {
       count: availableSettlementCount,

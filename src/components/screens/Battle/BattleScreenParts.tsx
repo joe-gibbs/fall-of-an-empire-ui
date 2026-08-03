@@ -683,6 +683,7 @@ export function FormationCounter({
               valueColor: 'var(--red)',
             }] : []),
             { label: webUIText('Battle.UnitTooltip.Speed'), labelIcon: '/assets/icons/I_Speed.png', value: fmt(Math.round(formation.speed)) },
+            { label: webUIText('Battle.UnitTooltip.AttackSpeed'), labelIcon: '/assets/icons/I_Swords.png', value: formatNumber(formation.attackSpeed ?? 0, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) },
             ...(stance ? [{ label: webUIText('Auto.Prop.ComponentsScreensBattleBattleScreen.415.8'), labelIcon: stance.icon, value: stance.label }] : []),
             ...(formation.activeActionName ? [{ label: webUIText('Battle.UnitTooltip.Action'), value: formation.activeActionName }] : []),
             ...(formation.attackRange > 0 ? [{ label: webUIText('Battle.UnitTooltip.Range'), value: fmt(Math.round(formation.attackRange)) }] : []),

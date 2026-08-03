@@ -2762,7 +2762,7 @@
 .mil-unit-stat-label {
   font-size: 0.75rem;
   color: var(--text-muted);
-  width: 4.2rem;
+  width: 5.6rem;
   flex-shrink: 0;
   white-space: nowrap;
 }

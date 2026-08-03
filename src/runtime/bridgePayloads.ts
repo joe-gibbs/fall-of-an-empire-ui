@@ -570,6 +570,7 @@ export function nativeBattleDataPayload(
       agentCount: formationNumbers[numberOffset + 15] ?? 0,
       attackSequence: formationNumbers[numberOffset + 16] ?? 0,
       shipCount: formationNumbers[numberOffset + 17] ?? 0,
+      attackSpeed: formationNumbers[numberOffset + 18] ?? 0,
       targetFormationId: formationStrings[stringOffset + 15] ?? '',
       targetFormationName: formationStrings[stringOffset + 16] ?? '',
       activeActionId: formationStrings[stringOffset + 17] ?? '',

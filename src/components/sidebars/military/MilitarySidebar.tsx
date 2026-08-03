@@ -299,8 +299,9 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       crushArmour: Math.max(acc.crushArmour, stats.crushArmour),
       slashArmour: Math.max(acc.slashArmour, stats.slashArmour),
       speed: Math.max(acc.speed, stats.speed),
+      attackSpeed: Math.max(acc.attackSpeed, stats.attackSpeed),
     };
-  }, { pierceDmg: 0, crushDmg: 0, slashDmg: 0, pierceArmour: 0, crushArmour: 0, slashArmour: 0, speed: 0 });
+  }, { pierceDmg: 0, crushDmg: 0, slashDmg: 0, pierceArmour: 0, crushArmour: 0, slashArmour: 0, speed: 0, attackSpeed: 0 });
 
   const compositionSummary = Array.from(
     army.units.reduce((groups, unit) => {
@@ -526,7 +527,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       value: formatNumber(movementSpeed),
       tooltip: {
         title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.632.23'),
-        get body() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.633.1", { Value1: isForcedMarching ? ' Forced march is currently increasing that speed.' : '' }); },
+        get body() { return webUIText(isForcedMarching ? 'MilitarySidebar.MovementSpeedBodyForcedMarch' : 'MilitarySidebar.MovementSpeedBody'); },
       },
     },
     {

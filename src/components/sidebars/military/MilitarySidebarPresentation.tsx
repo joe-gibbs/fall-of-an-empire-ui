@@ -83,6 +83,7 @@ export interface UnitStats {
   upkeep: number;
   foodConsumption: number;
   speed: number;
+  attackSpeed: number;
   siegePower: number;
   pierceDmg: number;
   crushDmg: number;
@@ -91,6 +92,7 @@ export interface UnitStats {
   crushArmour: number;
   slashArmour: number;
   attritionImmunity?: string;
+  canAttackWhileMoving?: boolean;
 }
 
 export function resolveUnitStats(unit: ArmyUnit): UnitStats {
@@ -108,6 +110,7 @@ export function resolveUnitStats(unit: ArmyUnit): UnitStats {
     upkeep: unit.upkeep,
     foodConsumption: unit.foodConsumption,
     speed: unit.speed,
+    attackSpeed: unit.attackSpeed,
     siegePower: unit.siegePower,
     pierceDmg: unit.pierceDmg,
     crushDmg: unit.crushDmg,
@@ -116,6 +119,7 @@ export function resolveUnitStats(unit: ArmyUnit): UnitStats {
     crushArmour: unit.crushArmour,
     slashArmour: unit.slashArmour,
     attritionImmunity,
+    canAttackWhileMoving: unit.canAttackWhileMoving,
   };
 }
 
@@ -127,6 +131,7 @@ export interface UnitStatCaps {
   crushArmour: number;
   slashArmour: number;
   speed: number;
+  attackSpeed: number;
 }
 
 export interface MilitaryAction {
@@ -555,18 +560,32 @@ export function buildUnitTooltip(unit: ArmyUnit | ArmyUnitRow, maxStats: UnitSta
           <span className="mil-unit-stat-val">{formatNumber(stats.speed)}</span>
         </div>
         <div className="mil-unit-stat-row">
+          <img src="/assets/icons/I_Swords.png" alt="" className="mil-unit-stat-icon" />
+          <span className="mil-unit-stat-label"><WebUIText textKey="UnitTooltip.AttackSpeed" /></span>
+          <PaintedBar percent={maxStats.attackSpeed > 0 ? (stats.attackSpeed / maxStats.attackSpeed) * 100 : 0} color="red" className="mil-unit-stat-bar" />
+          <span className="mil-unit-stat-val">{formatNumber(stats.attackSpeed, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}</span>
+        </div>
+        <div className="mil-unit-stat-row">
           <img src={TIER_ICONS[stats.tier] || TIER_ICONS[1]} alt="" className="mil-unit-stat-icon" />
           <span className="mil-unit-stat-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.358.9" /></span>
           <PaintedBar percent={veterancy} color="gold" className="mil-unit-stat-bar" />
           <span className="mil-unit-stat-val">{formatPercent(veterancy)}</span>
         </div>
       </div>
-      {stats.attritionImmunity && (
+      {(stats.attritionImmunity || stats.canAttackWhileMoving) && (
         <div className="tt-lines mil-unit-tooltip-special">
-          <div className="tt-line">
-            <span className="tt-line-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.366.10" /></span>
-            <span className="tt-line-value" style={{ color: 'var(--green)' }}>{stats.attritionImmunity}</span>
-          </div>
+          {stats.attritionImmunity && (
+            <div className="tt-line">
+              <span className="tt-line-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.366.10" /></span>
+              <span className="tt-line-value" style={{ color: 'var(--green)' }}>{stats.attritionImmunity}</span>
+            </div>
+          )}
+          {stats.canAttackWhileMoving && (
+            <div className="tt-line">
+              <span className="tt-line-label"><WebUIText textKey="UnitTooltip.CanAttackWhileMovingLabel" /></span>
+              <span className="tt-line-value" style={{ color: 'var(--green)' }}><WebUIText textKey="UnitTooltip.CanAttackWhileMoving" /></span>
+            </div>
+          )}
         </div>
       )}
       </div>

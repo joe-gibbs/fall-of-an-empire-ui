@@ -120,6 +120,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       upkeep: u.upkeep,
       foodConsumption: u.foodConsumption,
       speed: u.speed,
+      attackSpeed: u.attackSpeed,
       pierceDmg: u.pierceDamage,
       crushDmg: u.crushDamage,
       slashDmg: u.slashDamage,
