@@ -1,5 +1,6 @@
 import React from 'react';
 import { WebkilnAssetPath } from '../../../../utils/assets';
+import { conceptIconPath } from '../../../../utils/iconMaps';
 
 export interface DisplayTextSegment {
   text: string;
@@ -48,7 +49,7 @@ function Segment({
   transformText?: (text: string, key: string) => React.ReactNode;
 }) {
   const icon = segment.conceptId && !segment.text
-    ? <img className="structured-text-concept" src={WebkilnAssetPath(`/assets/icons/I_${segment.conceptId}.png`)} alt="" draggable={false} />
+    ? <img className="structured-text-concept" src={WebkilnAssetPath(conceptIconPath(segment.conceptId))} alt="" draggable={false} />
     : null;
   const content = icon ?? (transformText ? transformText(segment.text, indexKey) : segment.text);
   const className = [

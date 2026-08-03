@@ -1,6 +1,7 @@
 import StructuredDisplayText, { type DisplayTextLine } from '../layout/content/StructuredDisplayText';
 import { webUIText } from '../../../localization/WebUITextContext';
 import { WebkilnAssetPath } from '../../../utils/assets';
+import { conceptIconPath } from '../../../utils/iconMaps';
 import './InteractionEffectsTooltip.css';
 
 interface InteractionEffectsTooltipProps {
@@ -28,7 +29,7 @@ export default function InteractionEffectsTooltip({ lines = [] }: InteractionEff
               <div className="interaction-effects-tooltip__effect" key={index}>
                 <div className="interaction-effects-tooltip__effect-icon" aria-hidden="true">
                   {line.conceptId ? (
-                    <img src={WebkilnAssetPath(`/assets/icons/I_${line.conceptId}.png`)} alt="" draggable={false} />
+                    <img src={WebkilnAssetPath(conceptIconPath(line.conceptId))} alt="" draggable={false} />
                   ) : (
                     <span className="interaction-effects-tooltip__effect-marker" />
                   )}

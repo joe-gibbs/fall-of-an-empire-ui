@@ -1,6 +1,7 @@
 import React from 'react';
 import GlossaryDef from '../components/common/tooltips/GlossaryDef';
 import { WebkilnAssetPath } from './assets';
+import { conceptIconPath } from './iconMaps';
 
 export interface RichTextOptions {
   onLinkClick?: (type: string, id: string) => void;
@@ -50,7 +51,10 @@ type Token =
   | { kind: 'self'; tag: string; attrs: Record<string, string>; flags: Set<string> }
   | { kind: 'close' };
 
-const TAG_RE = /<\/>|<([a-z]+)((?:\s[^>]*)?)(\/)?>/gi;
+// Capture the full interior of a tag; self-closing is detected separately so a
+// trailing "/" after attributes (e.g. <concept id="Gold"/>) is not swallowed by
+// the attribute group and misread as an open tag.
+const TAG_RE = /<\/>|<([a-z]+)([^>]*)>/gi;
 const ATTR_RE = /([a-zA-Z][a-zA-Z0-9_-]*)(?:=(?:"([^"]*)"|'([^']*)'))?/g;
 
 const COLOUR_MAP: Record<string, string> = {
@@ -90,9 +94,11 @@ function tokenize(input: string): Token[] {
     if (m[0] === '</>') {
       tokens.push({ kind: 'close' });
     } else {
-      const { attrs, flags } = parseAttrs(m[2] ?? '');
+      const rawAttrs = m[2] ?? '';
+      const selfClosing = /\/\s*$/.test(rawAttrs);
+      const { attrs, flags } = parseAttrs(selfClosing ? rawAttrs.replace(/\/\s*$/, '') : rawAttrs);
       tokens.push({
-        kind: m[3] ? 'self' : 'open',
+        kind: selfClosing ? 'self' : 'open',
         tag: m[1].toLowerCase(),
         attrs,
         flags,
@@ -237,7 +243,7 @@ export function renderRichText(input: string | null | undefined, opts: RichTextO
           <img
             key={nextKey()}
             className="rich-concept"
-            src={WebkilnAssetPath(`/assets/icons/I_${id}.png`)}
+            src={WebkilnAssetPath(conceptIconPath(id))}
             alt={id}
           />,
         );

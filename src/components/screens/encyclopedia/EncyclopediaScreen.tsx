@@ -15,7 +15,7 @@ import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import type { EncyclopediaEntryDTO, EncyclopediaBuildingDTO, EncyclopediaCultureDTO, EncyclopediaResourceCostDTO, EncyclopediaUnitDTO } from '../../../bridge-types.generated.ts';
 import { formatNumber } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
-import { TIER_ICONS } from '../../../utils/iconMaps';
+import { conceptIconPath, TIER_ICONS } from '../../../utils/iconMaps';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import './EncyclopediaScreen.css';
 
@@ -704,13 +704,8 @@ function decodeMarkdownUrlValue(value: string): string {
   }
 }
 
-const CONCEPT_ICON_OVERRIDES: Record<string, string> = {
-  Gold: 'I_Coins',
-};
-
 function getConceptIconPath(conceptId: string): string {
-  const fileName = CONCEPT_ICON_OVERRIDES[conceptId] ?? `I_${conceptId}`;
-  return `/assets/icons/${fileName}.png`;
+  return conceptIconPath(conceptId);
 }
 
 function renderMarkdownInline(
