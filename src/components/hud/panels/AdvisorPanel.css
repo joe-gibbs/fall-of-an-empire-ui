@@ -15,6 +15,10 @@
   transform: translateX(-50%);
 }
 
+.advisor-drag-frame {
+  pointer-events: auto;
+}
+
 .advisor-card {
   position: relative;
   width: 32rem;
@@ -26,6 +30,8 @@
   pointer-events: auto;
   overflow: hidden;
   isolation: isolate;
+  cursor: grab;
+  user-select: none;
   background-color: #20272d;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
@@ -232,6 +238,10 @@
   margin-left: 0;
 }
 
+.advisor-card:active {
+  cursor: grabbing;
+}
+
 .advisor-card__btn {
   border: 0.077rem solid transparent;
   padding: 0.42rem 0.85rem;
@@ -239,6 +249,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  cursor: pointer;
   transition-property: border-color, background-color, color, transform;
   transition-duration: 140ms, 140ms, 140ms, 0.1s;
   transition-timing-function: ease, ease, ease, var(--ease-snap);
@@ -246,6 +257,7 @@
 
 .advisor-card__btn:active {
   transform: scale(0.97);
+  cursor: pointer;
 }
 
 .advisor-card__btn--ghost {

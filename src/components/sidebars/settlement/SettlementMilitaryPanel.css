@@ -20,14 +20,16 @@
   background-size: auto, 5.538rem 5.538rem;
   border-width: 0.0909rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.38);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
   color: var(--gold-light);
   font-size: 0.78rem;
   line-height: 1.25;
 }
 
 .mil-panel-status--warning {
-  border-image-source: url('/assets/gold-frame.png');
 }
 
 /* ============ Sticky training queue ============ */
@@ -76,7 +78,10 @@
   background-size: auto, 5.538rem 5.538rem;
   border-width: 0.077rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.24);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
 }
 
 .mil-queue-next-label {
@@ -133,10 +138,10 @@
   color: var(--text-bright);
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
 }
 
 /* ============ Template search ============ */
@@ -179,10 +184,10 @@
   background-size: auto, 5.538rem 5.538rem, auto;
   border-width: 0.1818rem;
   border-style: solid;
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: var(--gold-muted);
-  border-left-color: var(--gold-muted);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
   color: var(--gold-light);
   font-family: var(--font-header);
   font-size: 0.82rem;
@@ -191,10 +196,10 @@
 }
 
 .mil-new-template-btn:hover {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
+  border-top-color: rgba(255, 255, 255, 0.16);
+  border-right-color: rgba(255, 255, 255, 0.12);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  border-left-color: rgba(255, 255, 255, 0.12);
   background-color: #20272d;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
@@ -223,14 +228,12 @@
     linear-gradient(180deg, rgba(36, 42, 48, 0.68), rgba(13, 18, 24, 0.92));
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, auto;
-  border-width: 0.231rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
 
@@ -243,11 +246,12 @@
   background-image: url('/assets/baked/texture-overlay-heavy.png');
   background-repeat: repeat;
   background-size: 7.385rem 7.385rem;
-  border: 0.231rem solid transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-repeat: round;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
 }
 
 .mil-pending-header {
@@ -257,7 +261,7 @@
   background-image: url('/assets/baked/texture-overlay-heavy.png');
   background-repeat: repeat;
   background-size: 5.538rem 5.538rem;
-  border-bottom: 0.0909rem solid var(--gold-muted);
+  border-bottom: 0.077rem solid rgba(255, 255, 255, 0.08);
 }
 
 .mil-pending-formation-icon {
@@ -310,7 +314,12 @@
   background-image: url('/assets/baked/texture-overlay-heavy.png');
   background-repeat: repeat;
   background-size: 4.923rem 4.923rem;
-  border: 0.077rem solid var(--gold-dark);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
 }
 
 .mil-pending-progress-fill,
@@ -336,7 +345,12 @@
   background-image: url('/assets/baked/texture-overlay-heavy.png');
   background-repeat: repeat;
   background-size: 4.923rem 4.923rem;
-  border: 0.077rem solid var(--gold-dark);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
 }
 
 .mil-pending-unit-portrait-wrap {
@@ -345,7 +359,12 @@
   width: 2.1rem;
   height: 2.1rem;
   flex-shrink: 0;
-  border: 0.077rem solid var(--gold-dark);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
 }
 
 .mil-pending-unit-portrait {
@@ -366,7 +385,12 @@
   font-size: 0.58rem;
   font-weight: 700;
   line-height: 1.15;
-  border: 0.077rem solid var(--gold-dark);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
 }
 
 .mil-pending-unit-body {
@@ -428,7 +452,7 @@
   background-size: auto, 5.538rem 5.538rem;
   border-bottom-width: 0.0909rem;
   border-bottom-style: solid;
-  border-bottom-color: var(--gold-muted);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 .mil-formation-name {
@@ -493,10 +517,10 @@
   background-size: auto, 4.923rem 4.923rem;
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
   overflow: hidden;
 }
 
@@ -526,10 +550,10 @@
   color: var(--text-bright);
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
 }
 
 .mil-formation-meta {
@@ -571,10 +595,10 @@
   color: var(--text-bright);
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
+  border-top-color: rgba(255, 255, 255, 0.16);
+  border-right-color: rgba(255, 255, 255, 0.12);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  border-left-color: rgba(255, 255, 255, 0.12);
   font-family: var(--font-header);
   font-size: 0.82rem;
   letter-spacing: 0.06em;
@@ -584,10 +608,10 @@
 
 .mil-raise-btn:hover {
   background-color: var(--burgundy-light);
-  border-top-color: var(--gold-light);
-  border-right-color: var(--gold-light);
-  border-bottom-color: var(--gold-light);
-  border-left-color: var(--gold-light);
+  border-top-color: rgba(255, 255, 255, 0.18);
+  border-right-color: rgba(255, 255, 255, 0.14);
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+  border-left-color: rgba(255, 255, 255, 0.14);
 }
 
 .mil-formation-locked {
@@ -614,7 +638,7 @@
   margin-bottom: 0.25rem;
   border-bottom-width: 0.0909rem;
   border-bottom-style: solid;
-  border-bottom-color: var(--gold-muted);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ============ Training capacity ============
@@ -634,10 +658,10 @@
   background-color: var(--bg-card);
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: var(--gold-muted);
-  border-left-color: var(--gold-muted);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
 }
 
 .mil-cap--locked {
@@ -690,10 +714,10 @@
   background: rgba(8, 12, 17, 0.3);
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
   overflow: hidden;
 }
 
@@ -812,14 +836,12 @@
     linear-gradient(180deg, rgba(36, 42, 48, 0.68), rgba(13, 18, 24, 0.92));
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, auto;
-  border-width: 0.231rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   overflow: hidden;
   min-height: 4.4rem;
   transition: transform 0.15s ease-out;
@@ -1006,10 +1028,10 @@
   background-size: auto, 4.923rem 4.923rem;
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
   color: var(--text);
   font-size: 0.7rem;
 }
@@ -1033,20 +1055,20 @@
   height: 0.6364rem;
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
   background: transparent;
   border-radius: 50%;
 }
 
 .mil-tier-pip--on {
   background-color: var(--gold);
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
+  border-top-color: rgba(255, 255, 255, 0.16);
+  border-right-color: rgba(255, 255, 255, 0.12);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  border-left-color: rgba(255, 255, 255, 0.12);
 }
 
 /* Settlement Military Panel

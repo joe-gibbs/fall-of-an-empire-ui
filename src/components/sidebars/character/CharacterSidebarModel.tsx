@@ -150,13 +150,13 @@ export const settlementTierLabelKeys: Record<SettlementTier, string> = {
 };
 
 export const interactionCategoryLabels: Record<string, string> = {
-  diplomacy: 'Diplomacy',
-  intrigue: 'Intrigue',
-  personal: 'Personal',
-  military: 'Military',
-  economic: 'Economic',
-  marriage: 'Marriage',
-  family: 'Family',
+  get diplomacy() { return webUIText('CharacterSidebar.InteractionCategory.Diplomacy'); },
+  get intrigue() { return webUIText('CharacterSidebar.InteractionCategory.Intrigue'); },
+  get personal() { return webUIText('CharacterSidebar.InteractionCategory.Personal'); },
+  get military() { return webUIText('CharacterSidebar.InteractionCategory.Military'); },
+  get economic() { return webUIText('CharacterSidebar.InteractionCategory.Economic'); },
+  get marriage() { return webUIText('CharacterSidebar.InteractionCategory.Marriage'); },
+  get family() { return webUIText('CharacterSidebar.InteractionCategory.Family'); },
 };
 
 export const interactionCategoryOrder = [

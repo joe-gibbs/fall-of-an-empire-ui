@@ -1332,7 +1332,6 @@ function QueueItemCard({
         {showBuildProgress && (
           <div className="bld-queue-card-progress-block">
             <div className="bld-queue-card-progress-label">
-              <span className="bld-queue-card-progress-title"><WebUIText textKey="Auto.ComponentsSidebarsSettlementBuildingsPanel.722.5" /></span>
               <span className="bld-queue-card-progress-value">{n(buildProgressPercent)}%</span>
             </div>
             <PaintedBar percent={Math.round(buildProgressPercent)} color="green" />

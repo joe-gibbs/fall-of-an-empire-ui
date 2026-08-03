@@ -10,6 +10,11 @@ export interface UseDraggableOffsetOptions {
   /** When true, drag start is ignored. */
   disabled?: boolean;
   /**
+   * When this value changes, the drag offset resets to the origin. Useful when
+   * a panel reopens with new content but keeps the same component instance.
+   */
+  resetKey?: string | number | null;
+  /**
    * Class name fragments that block free-surface drag when present on the event
    * target or an ancestor inside the root. Used by surface drag mode only.
    */
@@ -85,23 +90,31 @@ export function isDragBlockedTarget(
  * unit catalogue, and similar dialogs). Transform is applied by the caller so
  * entrance/exit animations on the panel can stay on a nested element.
  */
+interface OffsetState extends DraggableOffset {
+  key: string | number | null;
+}
+
 export function useDraggableOffset(options: UseDraggableOffsetOptions = {}): UseDraggableOffsetResult {
-  const { disabled = false, blockClassNames = DEFAULT_BLOCK_CLASS_NAMES } = options;
+  const { disabled = false, resetKey = null, blockClassNames = DEFAULT_BLOCK_CLASS_NAMES } = options;
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const [offset, setOffset] = useState<DraggableOffset>({ x: 0, y: 0 });
+  const [offsetState, setOffsetState] = useState<OffsetState>({ x: 0, y: 0, key: resetKey });
   const dragRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
-  const offsetRef = useRef(offset);
+  const offsetRef = useRef<DraggableOffset>({ x: offsetState.x, y: offsetState.y });
 
-  useEffect(() => {
-    offsetRef.current = offset;
-  }, [offset]);
+  if (offsetState.key !== resetKey) {
+    setOffsetState({ x: 0, y: 0, key: resetKey });
+  }
 
-  const beginDrag = useCallback((clientX: number, clientY: number) => {
+  const offset: DraggableOffset = offsetState.key === resetKey
+    ? { x: offsetState.x, y: offsetState.y }
+    : { x: 0, y: 0 };
+
+  const beginDrag = useCallback((clientX: number, clientY: number, origin: DraggableOffset) => {
     dragRef.current = {
       startX: clientX,
       startY: clientY,
-      originX: offsetRef.current.x,
-      originY: offsetRef.current.y,
+      originX: origin.x,
+      originY: origin.y,
     };
   }, []);
 
@@ -109,24 +122,34 @@ export function useDraggableOffset(options: UseDraggableOffsetOptions = {}): Use
     if (event.button !== 0 || disabled) return;
     event.preventDefault();
     event.stopPropagation();
-    beginDrag(event.clientX, event.clientY);
+    beginDrag(event.clientX, event.clientY, offsetRef.current);
   }, [beginDrag, disabled]);
 
   const onSurfaceMouseDown = useCallback((event: ReactMouseEvent<HTMLElement>) => {
     if (event.button !== 0 || disabled) return;
     if (isDragBlockedTarget(event.target, rootRef.current, blockClassNames)) return;
     event.preventDefault();
-    beginDrag(event.clientX, event.clientY);
+    beginDrag(event.clientX, event.clientY, offsetRef.current);
   }, [beginDrag, blockClassNames, disabled]);
+
+  useEffect(() => {
+    offsetRef.current = { x: offset.x, y: offset.y };
+  }, [offset.x, offset.y]);
+
+  useEffect(() => {
+    // Drop any in-progress drag when the panel content identity changes.
+    dragRef.current = null;
+  }, [resetKey]);
 
   useEffect(() => {
     const handleMove = (event: MouseEvent) => {
       const drag = dragRef.current;
       if (!drag) return;
-      setOffset({
+      setOffsetState(previous => ({
+        key: previous.key,
         x: drag.originX + event.clientX - drag.startX,
         y: drag.originY + event.clientY - drag.startY,
-      });
+      }));
     };
 
     const endDrag = () => {

@@ -70,12 +70,12 @@
   min-width: 1.35rem;
   height: 1.35rem;
   padding: 0 0.28rem;
-  border-width: 0.0909rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
   background-color: rgba(13, 18, 24, 0.56);
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
@@ -105,14 +105,12 @@
     linear-gradient(180deg, rgba(36, 42, 48, 0.68), rgba(13, 18, 24, 0.92));
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, auto;
-  border-width: 0.231rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
 
@@ -227,10 +225,10 @@
   background-size: auto, 4.923rem 4.923rem;
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.1);
   color: var(--text-bright);
   font-size: 0.64rem;
   text-align: center;
@@ -359,7 +357,10 @@
   padding: 0.24rem 0.34rem;
   border-width: 0.077rem;
   border-style: solid;
-  border-color: rgba(201, 168, 76, 0.24);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background: rgba(8, 12, 17, 0.22);
 }
 
@@ -372,16 +373,8 @@
 .bld-queue-card-progress-label {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-
+  justify-content: flex-end;
   font-size: 0.74rem;
-}
-
-.bld-queue-card-progress-title {
-  display: flex;
-  align-items: center;
-
-  color: var(--text);
 }
 
 .bld-queue-card-progress-value {
@@ -429,16 +422,16 @@
   margin: 0.1rem 0 0.45rem;
   border-width: 0.077rem;
   border-style: solid;
-  border-top-color: rgba(129, 101, 45, 0.42);
-  border-right-color: rgba(79, 65, 36, 0.55);
-  border-bottom-color: rgba(79, 65, 36, 0.55);
-  border-left-color: rgba(79, 65, 36, 0.55);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   background-image:
     url('/assets/baked/texture-overlay-heavy.png'),
-    linear-gradient(180deg, rgba(39, 31, 19, 0.82) 0%, rgba(20, 18, 13, 0.92) 100%);
+    linear-gradient(180deg, rgba(28, 32, 36, 0.88) 0%, rgba(16, 18, 22, 0.94) 100%);
   background-repeat: repeat, repeat;
   background-size: 7.385rem 7.385rem, auto;
-  background-color: #1d1911;
+  background-color: #171b1f;
 }
 
 .bld-cat-tab {
@@ -452,17 +445,17 @@
   padding: 0.32rem 0.2rem;
   background-image:
     url('/assets/baked/texture-overlay-heavy.png'),
-    linear-gradient(180deg, rgba(37, 31, 20, 0.95) 0%, rgba(22, 19, 14, 0.98) 100%);
+    linear-gradient(180deg, rgba(32, 36, 40, 0.95) 0%, rgba(18, 22, 26, 0.98) 100%);
   background-repeat: repeat, repeat;
   background-size: 7.385rem 7.385rem, auto;
-  background-color: #211b13;
+  background-color: #1a1f24;
   color: var(--text-muted);
   border-width: 0.077rem;
   border-style: solid;
-  border-top-color: rgba(160, 124, 58, 0.22);
-  border-right-color: rgba(103, 82, 42, 0.34);
-  border-bottom-color: rgba(103, 82, 42, 0.34);
-  border-left-color: rgba(103, 82, 42, 0.34);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   cursor: pointer;
   font-family: var(--font-header);
   min-height: 2.45rem;
@@ -477,15 +470,15 @@
 .bld-cat-tab:hover {
   background-image:
     url('/assets/baked/texture-overlay-heavy.png'),
-    linear-gradient(180deg, rgba(49, 39, 23, 0.96) 0%, rgba(29, 24, 16, 0.98) 100%);
+    linear-gradient(180deg, rgba(42, 48, 54, 0.96) 0%, rgba(24, 28, 34, 0.98) 100%);
   background-repeat: repeat, repeat;
   background-size: 7.385rem 7.385rem, auto;
-  background-color: #302719;
+  background-color: #242a30;
   color: var(--text);
-  border-top-color: rgba(201, 168, 76, 0.42);
-  border-right-color: rgba(201, 168, 76, 0.3);
-  border-bottom-color: rgba(201, 168, 76, 0.3);
-  border-left-color: rgba(201, 168, 76, 0.3);
+  border-top-color: rgba(255, 255, 255, 0.14);
+  border-right-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.1);
 }
 
 .bld-cat-tab--active {
@@ -496,10 +489,10 @@
   background-size: 7.385rem 7.385rem, auto;
   background-color: #653a24;
   color: var(--text-header);
-  border-top-color: var(--gold);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.14);
+  border-right-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.1);
 }
 
 .bld-cat-tab--active:hover {
@@ -550,11 +543,11 @@
   padding: 0.02rem 0.18rem;
   border-width: 0.077rem;
   border-style: solid;
-  border-top-color: rgba(201, 168, 76, 0.18);
-  border-right-color: rgba(201, 168, 76, 0.18);
-  border-bottom-color: rgba(201, 168, 76, 0.18);
-  border-left-color: rgba(201, 168, 76, 0.18);
-  background-color: rgba(12, 11, 9, 0.34);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(8, 12, 17, 0.34);
   font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
@@ -658,14 +651,12 @@
     linear-gradient(180deg, rgba(36, 42, 48, 0.68), rgba(13, 18, 24, 0.92));
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, auto;
-  border-width: 0.231rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
   overflow: hidden;
   transition-property: opacity;
   transition-duration: 0.15s;
@@ -889,7 +880,7 @@
   bottom: 0;
   left: 0;
   z-index: 4;
-  border: 0.18rem solid var(--gold);
+  border: 0.18rem solid rgba(255, 255, 255, 0.14);
   background-color: rgba(201, 168, 76, 0.28);
   pointer-events: none;
   animation-name: bld-node-navigation-target;
@@ -1063,7 +1054,7 @@
   padding: 0.45rem 0.615rem 0.5rem;
   border-top-width: 0.0909rem;
   border-top-style: solid;
-  border-top-color: var(--gold-muted);
+  border-top-color: rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
 }
@@ -1107,11 +1098,6 @@
   border-right-color: transparent;
   border-bottom-color: transparent;
   border-left-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
   background-color: #20272d;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
@@ -1287,12 +1273,12 @@
     url('/assets/baked/texture-overlay-heavy.png');
   background-repeat: repeat, repeat;
   background-size: auto, 4.923rem 4.923rem;
-  border-width: 0.0909rem;
+  border-width: 0.077rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  border-left-color: rgba(255, 255, 255, 0.07);
   color: var(--text);
   font-size: 0.7rem;
 }
@@ -1315,7 +1301,7 @@
   padding: 0.15rem 0;
   border-top-width: 0.0909rem;
   border-top-style: solid;
-  border-top-color: var(--gold-muted);
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 .bld-requires-label {
@@ -1352,10 +1338,10 @@
   background-size: auto, 4.923rem 4.923rem;
   border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.1);
 }
 
 .bld-requires-item:hover,
