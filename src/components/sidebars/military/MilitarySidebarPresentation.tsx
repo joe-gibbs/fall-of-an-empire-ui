@@ -457,16 +457,14 @@ export function unitRowStatusText(row: ArmyUnitRow): string {
 }
 
 export function unitRowPortraitSrc(unit: ArmyUnit | ArmyUnitRow): string {
-  const pending = 'rowType' in unit && isUnitRowPending(unit.rowType);
-  if (pending || !unit.portrait) {
-    return unitTypeIconPath(unit.type);
+  if (unit.portrait) {
+    return unit.portrait;
   }
-  return unit.portrait;
+  return unitTypeIconPath(unit.type);
 }
 
 export function unitRowUsesTypePortrait(unit: ArmyUnit | ArmyUnitRow): boolean {
-  const pending = 'rowType' in unit && isUnitRowPending(unit.rowType);
-  return pending || !unit.portrait;
+  return !unit.portrait;
 }
 
 export function buildUnitTooltip(unit: ArmyUnit | ArmyUnitRow, maxStats: UnitStatCaps): TooltipContent {
@@ -488,6 +486,10 @@ export function buildUnitTooltip(unit: ArmyUnit | ArmyUnitRow, maxStats: UnitSta
     { id: 'slash', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.370.6'), value: stats.slashArmour, max: maxStats.slashArmour, icon: '/assets/icons/I_Armour_Slash.png' },
   ];
 
+  const portraitSrc = unitRowPortraitSrc(unit);
+  const usesTypePortrait = unitRowUsesTypePortrait(unit);
+  const sourceSummary = row ? unitRowSourceSummary(row) : '';
+
   return {
     afterLines: (
       <div className="mil-unit-tooltip">
@@ -497,7 +499,12 @@ export function buildUnitTooltip(unit: ArmyUnit | ArmyUnitRow, maxStats: UnitSta
         {TIER_ICONS[stats.tier] && <img src={TIER_ICONS[stats.tier]} alt="" className="mil-unit-tooltip-tier-icon" />}
       </div>
       <div className="mil-unit-tooltip-header">
-        <img src={unit.portrait} alt="" className="mil-unit-tooltip-portrait" draggable={false} />
+        <img
+          src={portraitSrc}
+          alt=""
+          className={`mil-unit-tooltip-portrait${usesTypePortrait ? ' mil-unit-tooltip-portrait--type' : ''}`}
+          draggable={false}
+        />
         <div className="mil-unit-tooltip-info">
           <div className="mil-unit-tooltip-meta">
             <span className="tt-body">{typeLabel}</span>
@@ -508,11 +515,11 @@ export function buildUnitTooltip(unit: ArmyUnit | ArmyUnitRow, maxStats: UnitSta
           <div className="tt-body mil-unit-tooltip-description">{stats.description}</div>
         </div>
       </div>
-      {row && row.rowType !== 'existing' && row.statusLabel && (
+      {row && row.rowType !== 'existing' && (row.statusLabel || sourceSummary) && (
         <div className="tt-lines mil-unit-tooltip-special">
-          <div className="tt-line">
-            <span className="tt-line-label">{row.statusLabel}</span>
-            <span className="tt-line-value">{unitRowSourceSummary(row)}</span>
+          <div className="tt-line tt-line--stacked">
+            {row.statusLabel ? <span className="tt-line-label">{row.statusLabel}</span> : null}
+            {sourceSummary ? <span className="tt-line-value">{sourceSummary}</span> : null}
           </div>
         </div>
       )}

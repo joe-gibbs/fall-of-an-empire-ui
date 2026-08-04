@@ -2376,6 +2376,15 @@
   border-left-color: var(--border);
   flex-shrink: 0;
   object-fit: cover;
+  object-position: top center;
+  background-color: rgba(8, 12, 17, 0.35);
+}
+
+.mil-unit-tooltip-portrait--type {
+  object-fit: contain;
+  object-position: center;
+  padding: 0.35rem;
+  box-sizing: border-box;
 }
 
 .mil-unit-tooltip-info {
