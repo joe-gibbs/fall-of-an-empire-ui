@@ -39,6 +39,15 @@ function hasRichTextMarkup(text: string): boolean {
   return RICH_TAG_RE.test(text);
 }
 
+/**
+ * Multi-line notification bodies (peace offers, demand lists, etc.) arrive with
+ * plain newlines. HTML collapses those, so convert them to rich-text breaks the
+ * same way tooltips do.
+ */
+function prepareNotificationBody(text: string): string {
+  return text.replace(/\r?\n/g, '<br/>');
+}
+
 function renderNotificationRichText(
   text: string,
   keyPrefix: string,
@@ -217,7 +226,8 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
 
   const hasCountdown = typeof countdownProgress === 'number' && Number.isFinite(countdownProgress);
   const countdownFill = hasCountdown ? Math.max(0, Math.min(1, countdownProgress ?? 0)) : 0;
-  const description = notification.description;
+  const description = notification.description ?? '';
+  const preparedDescription = prepareNotificationBody(description);
   const title = hasRichTextMarkup(notification.title) ? (
     <span className="notification-title notification-title-flow">
       {renderNotificationRichText(notification.title, `notification-title-${notification.id}`, onLinkClick)}
@@ -225,9 +235,9 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   ) : (
     <span className="notification-title">{notification.title}</span>
   );
-  const descriptionContent = hasRichTextMarkup(description) ? (
+  const descriptionContent = hasRichTextMarkup(preparedDescription) ? (
     <span className="notification-rich-flow">
-      {renderNotificationRichText(description, `notification-description-${notification.id}`, onLinkClick)}
+      {renderNotificationRichText(preparedDescription, `notification-description-${notification.id}`, onLinkClick)}
     </span>
   ) : description;
 

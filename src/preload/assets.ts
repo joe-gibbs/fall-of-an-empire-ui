@@ -160,6 +160,7 @@ const IN_GAME_ASSETS = [
   '/assets/ui-shadowed/T_Speedx4_Active.png',
   '/assets/notification-scroll-edge-left.png',
   '/assets/notification-scroll-edge-right.png',
+  '/assets/notification-scroll-shadow.png',
 ] as const;
 
 const retainedImages = new Map<string, HTMLImageElement>();

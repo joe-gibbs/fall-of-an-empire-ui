@@ -239,14 +239,34 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   min-height: 5.1rem;
   background: none;
   border: none;
+  box-shadow: none;
 }
 
 .notification-banner.notification-banner--style-cinematic:hover {
   background: none;
   border-color: transparent;
+  box-shadow: none;
 }
 
-.notification-banner--style-cinematic::before,
+/* Baked soft cast under the parchment body (rollers carry their own shadow). */
+.notification-banner--style-cinematic::before {
+  content: '';
+  position: absolute;
+  left: 1.1rem;
+  right: 1.1rem;
+  top: auto;
+  bottom: 0.15rem;
+  height: 1.55rem;
+  opacity: 0.9;
+  background-color: transparent;
+  background-image: url('/assets/notification-scroll-shadow.png');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .notification-banner--style-cinematic::after,
 .notification-banner--style-cinematic .notification-edge {
   opacity: 0;
@@ -254,10 +274,11 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
 
 .notification-scroll-roller {
   position: relative;
-  width: 1.45rem;
-  min-width: 1.45rem;
-  margin-top: 0.12rem;
-  margin-bottom: 0.12rem;
+  /* Wider than the old 1.45rem so padded shadow canvas keeps the rod at ~1.45rem. */
+  width: 2.55rem;
+  min-width: 2.55rem;
+  margin-top: 0;
+  margin-bottom: 0;
   background-color: transparent;
   background-position: center center;
   background-repeat: no-repeat;
@@ -267,12 +288,12 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
 }
 
 .notification-scroll-roller--left {
-  margin-right: -0.55rem;
+  margin-right: -1.05rem;
   background-image: url('/assets/notification-scroll-edge-left.png');
 }
 
 .notification-scroll-roller--right {
-  margin-left: -0.55rem;
+  margin-left: -1.05rem;
   background-image: url('/assets/notification-scroll-edge-right.png');
 }
 
@@ -298,6 +319,8 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   border-color: rgba(98, 54, 24, 0.75);
   transform-origin: center center;
   overflow: hidden;
+  box-shadow: none;
+  z-index: 1;
 }
 
 .notification-scroll-sheet::before {
@@ -577,6 +600,12 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
 
 .notification-banner:hover .notification-description {
   max-height: 4rem;
+  opacity: 1;
+}
+
+/* Decision offers (peace terms, etc.) must show the body immediately. */
+.notification-banner--decision .notification-description {
+  max-height: 12rem;
   opacity: 1;
 }
 
