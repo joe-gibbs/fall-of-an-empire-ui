@@ -874,37 +874,38 @@ button.econ-command-cost__row:focus-visible {
   min-width: 0;
 }
 
+/* Fit the 60rem economy panel: rebalanced so full headers fit and trade stays on-screen. */
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(1) {
-  flex-basis: 18%;
-  width: 18%;
+  flex-basis: 12%;
+  width: 12%;
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(2) {
-  flex-basis: 9%;
-  width: 9%;
+  flex-basis: 12%;
+  width: 12%;
 }
 
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(3) {
-  flex-basis: 9%;
-  width: 9%;
-}
-
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(3),
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(4),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(5),
+.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(5) {
+  flex-basis: 10%;
+  width: 10%;
+}
+
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(6) {
-  flex-basis: 8%;
-  width: 8%;
+  flex-basis: 6%;
+  width: 6%;
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(7),
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(9) {
-  flex-basis: 7%;
-  width: 7%;
+  flex-basis: 8%;
+  width: 8%;
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(8) {
-  flex-basis: 9%;
-  width: 9%;
+  flex-basis: 7%;
+  width: 7%;
 }
 
 .econ-table--resources .econ-table-row > .econ-table-cell:nth-child(10) {
@@ -1210,8 +1211,8 @@ button.econ-command-cost__row:focus-visible {
 .econ-resource-table-header-label {
   display: block;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
 }
 
@@ -1820,10 +1821,7 @@ button.econ-command-cost__row:focus-visible {
 .econ-table--tax-losses .econ-table-row,
 .econ-table--settlements .econ-table-row,
 .econ-table--military .econ-table-row,
-.econ-table--vassals .econ-table-row {
-  min-width: 58rem;
-}
-
+.econ-table--vassals .econ-table-row,
 .econ-table--resources .econ-table-row {
   min-width: 58rem;
 }
@@ -1839,6 +1837,12 @@ button.econ-command-cost__row:focus-visible {
 
 .econ-table--resources .econ-table-cell {
   min-width: 0;
+}
+
+.econ-table--resources .econ-table-header-cell .sortable-header-label,
+.econ-table--resources .econ-resource-table-header-label {
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .econ-resource-cell {

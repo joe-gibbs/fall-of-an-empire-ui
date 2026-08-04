@@ -1552,9 +1552,9 @@ function ResourcesTab({ data, onOpenResource }: { data: GetEconomyOverviewRespon
   const columns: EconomyColumn<EconomyOverviewResourceRow>[] = [
     { id: 'name', label: <ResourceTableHeader label={t('Economy.Resource')} shortLabel={t('Economy.Resource')} />, render: row => <ResourceName row={row} onOpen={onOpenResource} />, sortValue: row => row.name },
     { id: 'stockpile', label: <ResourceTableHeader label={t('Economy.Stockpile')} shortLabel={t('Economy.Stockpile')} />, align: 'right', render: row => fmt1(row.amount), sortValue: row => row.amount },
-    { id: 'production', label: <ResourceTableHeader label={t('Economy.Produced')} shortLabel={t('Economy.ProductionShort')} />, align: 'right', className: 'econ-positive', render: row => `+${fmt1(row.production)}`, sortValue: row => row.production },
-    { id: 'vassals', label: <ResourceTableHeader label={t('Economy.Subjects')} shortLabel={t('Economy.SubjectsShort')} />, align: 'right', render: row => `+${fmt1(row.vassalContribution)}`, sortValue: row => row.vassalContribution },
-    { id: 'treaties', label: <ResourceTableHeader label={t('Economy.Treaties')} shortLabel={t('Economy.TreatiesShort')} />, align: 'right', render: row => `+${fmt1(row.treatyIncome)}`, sortValue: row => row.treatyIncome },
+    { id: 'production', label: <ResourceTableHeader label={t('Economy.Produced')} shortLabel={t('Economy.Produced')} />, align: 'right', className: 'econ-positive', render: row => `+${fmt1(row.production)}`, sortValue: row => row.production },
+    { id: 'vassals', label: <ResourceTableHeader label={t('Economy.Subjects')} shortLabel={t('Economy.Subjects')} />, align: 'right', render: row => `+${fmt1(row.vassalContribution)}`, sortValue: row => row.vassalContribution },
+    { id: 'treaties', label: <ResourceTableHeader label={t('Economy.Treaties')} shortLabel={t('Economy.Treaties')} />, align: 'right', render: row => `+${fmt1(row.treatyIncome)}`, sortValue: row => row.treatyIncome },
     {
       id: 'use',
       label: <ResourceTableHeader label={t('Economy.Use')} shortLabel={t('Economy.Use')} />,
