@@ -90,7 +90,6 @@ const MIN_ZOOM = 1;
 const MAX_ZOOM = 2.4;
 const ZOOM_STEP = 1.15;
 const MAP_BORDER_CANVAS_MAX_DIMENSION = 1024;
-const FACTION_GEOMETRY_DEFER_MS = 150;
 const FACTION_SELECTION_MAP_MODES: FactionSelectionMapMode[] = [
   'political',
   'diplomaticRelation',
@@ -2019,7 +2018,6 @@ function useFactionSelectionData(
     initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '',
   );
   const [loadError, setLoadError] = useState<string | null>(null);
-  const geometryRequestMapIdRef = useRef('');
 
   useEffect(() => {
     if (data?.mapId === mapId) {
@@ -2027,7 +2025,6 @@ function useFactionSelectionData(
     }
 
     let cancelled = false;
-
     const request = initialSelectionData
       ? Promise.resolve(initialSelectionData)
       : loadFactionSelection
@@ -2057,38 +2054,26 @@ function useFactionSelectionData(
     };
   }, [data?.mapId, initialSelectionData, loadFactionSelection, mapId, t]);
 
+  // Load map overlays once per map. Depend on mapId only so applying geometry does not re-trigger.
   useEffect(() => {
-    if (!data || geometryRequestMapIdRef.current === data.mapId) {
+    if (!data) {
       return;
     }
 
-    const hasInitialGeometry = data.factions.some(
-      (faction) => faction.geometry.fillPath || faction.geometry.borderPath,
-    );
-    if (hasInitialGeometry) {
-      geometryRequestMapIdRef.current = data.mapId;
-      return;
-    }
-
-    geometryRequestMapIdRef.current = data.mapId;
     let cancelled = false;
-    const timer = window.setTimeout(() => {
-      void bridgeCall('game.get_new_game_map_faction_geometry', { mapId: data.mapId })
-        .then((response) => {
-          if (cancelled) {
-            return;
-          }
-
-          setData((current) => current ? applyFactionGeometry(current, response) : current);
-        })
-        .catch(acknowledgeBridgeFailure);
-    }, FACTION_GEOMETRY_DEFER_MS);
+    void bridgeCall('game.get_new_game_map_faction_geometry', { mapId: data.mapId })
+      .then((response) => {
+        if (cancelled) {
+          return;
+        }
+        setData((current) => (current ? applyFactionGeometry(current, response) : current));
+      })
+      .catch(acknowledgeBridgeFailure);
 
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
     };
-  }, [data]);
+  }, [data?.mapId]);
 
   const displayData = useMemo(
     () => data ? translateFactionSelectionData(data, t) : null,
