@@ -341,12 +341,20 @@ let worldGlancesStoreStop: (() => void) | null = null;
 let worldGlancesStoreGeneration = 0;
 let worldGlancesRefreshInFlight = false;
 let worldGlancesRefreshTimer: number | null = null;
-let worldGlancesStoreNotifyDepth = 0;
-let worldGlancesStoreNeedsRenotify = false;
+let worldGlancesStoreNotifyScheduled = false;
 const worldGlancesStoreListeners = new Set<WorldGlancesStoreListener>();
 
 function getWorldGlancesStoreSnapshot(): GetWorldGlancesResponse | null {
   return worldGlancesStoreData;
+}
+
+function flushWorldGlancesStoreListeners() {
+  worldGlancesStoreNotifyScheduled = false;
+  // Re-read listeners at flush time so unsubscribes between schedule and run are honoured.
+  const listeners = Array.from(worldGlancesStoreListeners);
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 function publishWorldGlancesStoreData(next: GetWorldGlancesResponse | null) {
@@ -354,29 +362,18 @@ function publishWorldGlancesStoreData(next: GetWorldGlancesResponse | null) {
     return;
   }
 
+  // Always keep the latest snapshot immediately so getSnapshot() is correct for any render
+  // already in flight. Defer listener notify so a burst of catalogue deltas / frame merges in
+  // one native turn coalesces to a single React update wave. Notifying useSyncExternalStore
+  // synchronously per delta nests SyncLane re-renders until React error #185.
   worldGlancesStoreData = next;
 
-  // useSyncExternalStore listeners force SyncLane re-renders. If a listener (or a nested
-  // catalogue/frame apply during that render) publishes again, collapse those into one more
-  // notify with the final snapshot instead of nesting React updates until error #185.
-  if (worldGlancesStoreNotifyDepth > 0) {
-    worldGlancesStoreNeedsRenotify = true;
+  if (worldGlancesStoreNotifyScheduled) {
     return;
   }
 
-  worldGlancesStoreNotifyDepth = 1;
-  try {
-    do {
-      worldGlancesStoreNeedsRenotify = false;
-      const listeners = Array.from(worldGlancesStoreListeners);
-      for (const listener of listeners) {
-        listener();
-      }
-    } while (worldGlancesStoreNeedsRenotify);
-  } finally {
-    worldGlancesStoreNotifyDepth = 0;
-    worldGlancesStoreNeedsRenotify = false;
-  }
+  worldGlancesStoreNotifyScheduled = true;
+  queueMicrotask(flushWorldGlancesStoreListeners);
 }
 
 function startWorldGlancesStore() {
