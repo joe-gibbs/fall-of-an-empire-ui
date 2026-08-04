@@ -5276,6 +5276,17 @@ export const WEBUI_TEXT_SOURCE = {
   "PeaceNegotiation.WarScoreStalemate": "{Score} (Stalemate)",
   "Settings.Gigabytes": "{Value} GB",
   "Settings.Megabytes": "{Value} MB",
+  "WorldSearch.Title": "Search",
+  "WorldSearch.Placeholder": "Search factions, settlements, armies, navies, or characters",
+  "WorldSearch.Hint": "Type a name to search the world.",
+  "WorldSearch.Searching": "Searching...",
+  "WorldSearch.NoResults": "No matches found.",
+  "WorldSearch.Close": "Close",
+  "WorldSearch.Type.Faction": "Faction",
+  "WorldSearch.Type.Settlement": "Settlement",
+  "WorldSearch.Type.Character": "Character",
+  "WorldSearch.Type.Army": "Army",
+  "WorldSearch.Type.Navy": "Navy",
 } as const;
 
 export type WebUITextKey = keyof typeof WEBUI_TEXT_SOURCE;

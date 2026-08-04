@@ -4293,7 +4293,8 @@ function settingsResponse(): BridgeResponse<'game.get_settings'> {
       { index: 2, isAxis: false, scale: 0, actionName: 'Select', label: 'Select', category: 'selection', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_FaceButton_Bottom', keyDisplay: 'A Button', glyphId: 'gamepad_a', shift: false, ctrl: false, alt: false, cmd: false },
       { index: 3, isAxis: false, scale: 0, actionName: 'Command', label: 'Command', category: 'selection', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_FaceButton_Left', keyDisplay: 'X Button', glyphId: 'gamepad_x', shift: false, ctrl: false, alt: false, cmd: false },
       { index: 4, isAxis: false, scale: 0, actionName: 'SelectAllMilitaries', label: 'Select All Military', category: 'selection', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'A', keyDisplay: 'A', glyphId: '', shift: false, ctrl: true, alt: false, cmd: false },
-      { index: 5, isAxis: false, scale: 0, actionName: 'MapMode_AdminDomain', label: 'Map: Administrative Domains', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Three', keyDisplay: '3', glyphId: '', shift: false, ctrl: true, alt: false, cmd: false },
+      { index: 5, isAxis: false, scale: 0, actionName: 'WorldSearch', label: 'World Search', category: 'system', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'F', keyDisplay: 'F', glyphId: '', shift: false, ctrl: true, alt: false, cmd: false },
+      { index: 6, isAxis: false, scale: 0, actionName: 'MapMode_AdminDomain', label: 'Map: Administrative Domains', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Three', keyDisplay: '3', glyphId: '', shift: false, ctrl: true, alt: false, cmd: false },
       { index: 0, isAxis: true, scale: 1, actionName: 'MoveForward', label: 'Move Forward', category: 'camera', groupName: 'CameraMovement', groupLabel: 'Movement', groupItemLabel: 'Forward', keyName: 'W', keyDisplay: 'W', glyphId: '', shift: false, ctrl: false, alt: false, cmd: false },
       { index: 1, isAxis: true, scale: -1, actionName: 'MoveForward', label: 'Move Backward', category: 'camera', groupName: 'CameraMovement', groupLabel: 'Movement', groupItemLabel: 'Back', keyName: 'S', keyDisplay: 'S', glyphId: '', shift: false, ctrl: false, alt: false, cmd: false },
       { index: 2, isAxis: true, scale: 1, actionName: 'MoveForward', label: 'Move Forward', category: 'camera', groupName: 'CameraMovement', groupLabel: 'Movement', groupItemLabel: 'Forward', keyName: 'Gamepad_LeftY', keyDisplay: 'Left Stick', glyphId: 'gamepad_lstick', shift: false, ctrl: false, alt: false, cmd: false },
@@ -6781,6 +6782,31 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return undefined;
       case 'game.zoom_to':
         return { zoomed: true } satisfies BridgeResponse<'game.zoom_to'>;
+      case 'game.world_search': {
+        const query = payloadString(payload, 'query').trim().toLowerCase();
+        if (!query) {
+          return { results: [] } satisfies BridgeResponse<'game.world_search'>;
+        }
+        const maxResults = Math.max(1, payloadNumber(payload, 'maxResults', 24));
+        const catalogue: Array<{ itemType: string; itemId: string; name: string; detail: string; factionId: string; kind: string }> = [
+          { itemType: 'faction', itemId: MOCK_IDS.playerFaction, name: 'Rephsian Empire', detail: 'Emperor Valerius', factionId: MOCK_IDS.playerFaction, kind: 'faction' },
+          { itemType: 'faction', itemId: MOCK_IDS.rivalFaction, name: 'Aurestian League', detail: 'Archon Helia', factionId: MOCK_IDS.rivalFaction, kind: 'faction' },
+          { itemType: 'settlement', itemId: MOCK_IDS.settlement, name: 'Rephsia', detail: 'Rephsian Empire', factionId: MOCK_IDS.playerFaction, kind: 'settlement' },
+          { itemType: 'settlement', itemId: MOCK_IDS.portSettlement, name: 'Ara Salimba', detail: 'Rephsian Empire', factionId: MOCK_IDS.playerFaction, kind: 'settlement' },
+          { itemType: 'military', itemId: MOCK_IDS.military, name: 'I Legio Rephsia', detail: 'Rephsian Empire', factionId: MOCK_IDS.playerFaction, kind: 'army' },
+          { itemType: 'military', itemId: MOCK_IDS.navy, name: 'Classis Orientalis', detail: 'Rephsian Empire', factionId: MOCK_IDS.playerFaction, kind: 'navy' },
+          { itemType: 'character', itemId: MOCK_IDS.character, name: 'Emperor Valerius', detail: 'Rephsian Empire', factionId: MOCK_IDS.playerFaction, kind: 'character' },
+          { itemType: 'character', itemId: MOCK_IDS.heir, name: 'Prince Marcus', detail: 'Rephsian Empire', factionId: MOCK_IDS.playerFaction, kind: 'character' },
+        ];
+        const results = catalogue
+          .filter((entry) => entry.name.toLowerCase().includes(query) || entry.detail.toLowerCase().includes(query))
+          .slice(0, maxResults)
+          .map((entry, index) => ({
+            ...entry,
+            score: 1000 - index,
+          }));
+        return { results } satisfies BridgeResponse<'game.world_search'>;
+      }
       case 'game.save_game':
         state.saveSerial += 1;
         emitGameState(emit);
@@ -6983,6 +7009,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'ui.open_external_url':
       case 'ui.open_external_link':
       case 'ui.escape_pressed':
+      case 'ui.open_world_search':
         return undefined;
       case 'game.create_province_from_candidate':
         if (payloadBoolean(payload, 'playAsProvince') && !state.provinceMode) {

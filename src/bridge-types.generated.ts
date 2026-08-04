@@ -6414,6 +6414,25 @@ export interface WebUIDisplayLine {
   segments: WebUIDisplaySegment[];
 }
 
+export interface WorldSearchRequest {
+  query: string;
+  maxResults: number;
+}
+
+export interface WorldSearchResultEntry {
+  itemType: string;
+  itemId: string;
+  name: string;
+  detail: string;
+  factionId: string;
+  kind: string;
+  score: number;
+}
+
+export interface WorldSearchResponse {
+  results: WorldSearchResultEntry[];
+}
+
 export interface ZoomToRequest {
   itemType: string;
   itemId: string;
@@ -6642,6 +6661,7 @@ export interface BridgeActions {
   'game.upload_mod_to_workshop': { request: UploadModToWorkshopRequest; response: UploadModToWorkshopResponse };
   'game.warning_events': { request: WarningEventsRequest; response: void };
   'game.withdraw_battle_formation': { request: WithdrawBattleFormationRequest; response: WithdrawBattleFormationResponse };
+  'game.world_search': { request: WorldSearchRequest; response: WorldSearchResponse };
   'game.zoom_to': { request: ZoomToRequest; response: ZoomToResponse };
   'ui.ally_call_dialog': { request: AllyCallDialogRequest; response: AllyCallDialogEvent };
   'ui.campaign_outcome_events': { request: void; response: void };
@@ -6653,6 +6673,7 @@ export interface BridgeActions {
   'ui.hide_sidebars': { request: void; response: void };
   'ui.open_external_link': { request: OpenExternalLinkRequest; response: void };
   'ui.open_external_url': { request: OpenExternalUrlRequest; response: void };
+  'ui.open_world_search': { request: void; response: void };
   'ui.show_screen': { request: ShowScreenRequest; response: ShowScreenResponse };
   'ui.sidebar_event': { request: void; response: void };
 }

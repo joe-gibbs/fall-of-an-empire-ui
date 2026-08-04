@@ -1,0 +1,246 @@
+/* ===== World Search (Ctrl+F) ===== */
+
+.world-search {
+  position: fixed;
+  top: calc(var(--topbar-height) + 1.1rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(38rem, calc(100vw - 2rem));
+  z-index: 120;
+  pointer-events: auto;
+  animation: world-search-enter 0.18s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes world-search-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-0.55rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.world-search--exiting {
+  animation: world-search-exit 0.12s ease-in both;
+  pointer-events: none;
+}
+
+@keyframes world-search-exit {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-0.45rem);
+  }
+}
+
+.world-search-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: min(32rem, calc(100vh - var(--topbar-height) - 3rem));
+  overflow: hidden;
+  background-image: url('/assets/baked/screen-charcoal.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+  background-color: #1a1d22;
+  box-shadow: var(--shadow-panel);
+  border: 0.154rem solid rgba(80, 85, 100, 0.22);
+}
+
+.world-search-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.1818rem;
+  background: url('/assets/gold-line.png') repeat-x;
+  background-size: auto 100%;
+  z-index: 1;
+}
+
+.world-search-panel::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1.2rem;
+  background: url('/assets/meander.png') repeat-x left bottom;
+  background-size: 2.538rem 1.538rem;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.world-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 0.85rem 0.65rem;
+  flex-shrink: 0;
+}
+
+.world-search-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.world-search-field-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  opacity: 0.85;
+}
+
+.world-search-input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.world-search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.world-search-close {
+  width: 1.85rem;
+  height: 1.85rem;
+  flex-shrink: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.world-search-close:hover {
+  color: var(--text);
+}
+
+.world-search-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Frame max-height is required so inline StyledScrollArea can inherit it and show the track. */
+  max-height: min(24rem, calc(100vh - var(--topbar-height) - 8rem));
+}
+
+.world-search-body > .styled-scroll-area__viewport {
+  padding: 0 1.1rem 1.4rem 0.45rem;
+}
+
+.world-search-body > .styled-scroll-area__track {
+  top: 0.35rem;
+  bottom: 1.15rem;
+  right: 0.3rem;
+}
+
+.world-search-empty {
+  padding: 0.95rem 0.75rem 1.2rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.world-search-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.48rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.world-search-row > * + * {
+  margin-left: 0.55rem;
+}
+
+.world-search-row:hover,
+.world-search-row--active {
+  background-image:
+    linear-gradient(180deg, rgba(90, 70, 40, 0.18) 0%, rgba(90, 70, 40, 0.18) 100%),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem;
+}
+
+.world-search-row-media {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+}
+
+.world-search-row-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.world-search-row-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.world-search-row-name {
+  font-size: 1rem;
+  line-height: 1.25;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.world-search-row-detail {
+  font-size: 0.82rem;
+  line-height: 1.25;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  align-self: flex-start;
+}
+
+.world-search-row-detail--link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.12rem;
+}
+
+.world-search-row-detail--link:hover {
+  color: var(--gold);
+}
+
+.world-search-row-type {
+  flex-shrink: 0;
+  min-width: 4.5rem;
+  font-size: 0.78rem;
+  color: var(--gold);
+  opacity: 0.85;
+  letter-spacing: 0.02rem;
+  text-align: right;
+}

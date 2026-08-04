@@ -6,6 +6,7 @@ import AdvisorPanel from '../hud/panels/AdvisorPanel';
 import TutorialProgress from '../hud/tutorial/TutorialProgress';
 import TutorialSpotlightOverlay from '../hud/overlays/TutorialSpotlightOverlay';
 import PinnedItemsBar from '../hud/panels/PinnedItemsBar';
+import WorldSearchBar from '../hud/panels/WorldSearchBar';
 import VictoryConditionsDropdown from '../hud/panels/VictoryConditionsDropdown';
 import WorldGlanceOverlay from '../hud/overlays/WorldGlanceOverlay';
 import { isWorldGlanceTutorialTarget } from '../hud/overlays/worldGlanceTutorialTarget';
@@ -471,6 +472,9 @@ export default function GameUIRoot() {
             pinnedItems.filter(i => i.itemType === type).forEach(i => togglePin(i.itemType, i.itemId));
           }}
         />
+      </Profiler>
+      <Profiler id="overlay:world-search" onRender={recordUIPerfReactRender}>
+        <WorldSearchBar />
       </Profiler>
       <VictoryConditionsDropdown
         isOpen={showVictoryConditions}
