@@ -8,7 +8,7 @@
     "dev:mock": "vite --mode mock",
     "optimize-images": "python scripts/optimize-images.py",
     "typecheck": "tsc -p tsconfig.app.json --pretty false --incremental && tsc -p tsconfig.node.json --pretty false --incremental",
-    "build": "python ../Automation/generate_webui_text.py && python ../Automation/lint_fname_case_contracts.py && npm run typecheck --silent && vite build --logLevel warn && python scripts/optimize-images.py && npm run compile:runtime-css --silent",
+    "build": "python ../Automation/generate_webui_text.py && python ../Automation/lint_fname_case_contracts.py && npm run typecheck --silent && vite build --logLevel warn && npm run compile:runtime-css --silent && python scripts/optimize-images.py",
     "compile:runtime-css": "node ../Automation/compile_gameui_css.cjs --input ../UIResources/foae/assets/style.css --output ../UIResources/foae/assets/style.css --cache-dir .vite/runtime-css-cache",
     "refresh:runtime-capabilities": "python ../Automation/generate_gameui_runtime_capabilities.py --run-unreal",
     "lint": "python ../Automation/generate_gameui_runtime_capabilities.py --check && python ../Automation/generate_webui_text.py --check && python ../Automation/find_unlocalised.py --webui-only --check --webui-dir src --webui-csv ../Content/Localization/WebUI.csv && python ../Automation/lint_gameui_css.py && python ../Automation/lint_fname_case_contracts.py && npm run typecheck --silent && eslint . --cache --cache-location .vite/eslint-cache",

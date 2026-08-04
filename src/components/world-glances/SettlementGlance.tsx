@@ -56,6 +56,7 @@ function useAnimatedProgress(target: number, enabled: boolean, resetKey: string)
   const [displayedProgress, setDisplayedProgress] = useState(target);
   const [displayedResetKey, setDisplayedResetKey] = useState(resetKey);
   const displayedRef = useRef(target);
+  const committedRef = useRef(target);
   const frameRef = useRef<number | null>(null);
   const needsReset = displayedResetKey !== resetKey;
 
@@ -67,6 +68,7 @@ function useAnimatedProgress(target: number, enabled: boolean, resetKey: string)
 
     if (!enabled) {
       displayedRef.current = target;
+      committedRef.current = target;
       return;
     }
 
@@ -74,6 +76,7 @@ function useAnimatedProgress(target: number, enabled: boolean, resetKey: string)
       displayedRef.current = target;
       frameRef.current = window.requestAnimationFrame(() => {
         displayedRef.current = target;
+        committedRef.current = target;
         setDisplayedProgress(target);
         setDisplayedResetKey(resetKey);
         frameRef.current = null;
@@ -82,6 +85,15 @@ function useAnimatedProgress(target: number, enabled: boolean, resetKey: string)
     }
 
     let previousTimestamp = 0;
+
+    const commitProgress = (value: number) => {
+      displayedRef.current = value;
+      if (Math.abs(committedRef.current - value) <= PROGRESS_EPSILON) {
+        return;
+      }
+      committedRef.current = value;
+      setDisplayedProgress(value);
+    };
 
     const tick = (timestamp: number) => {
       if (previousTimestamp === 0) {
@@ -94,8 +106,7 @@ function useAnimatedProgress(target: number, enabled: boolean, resetKey: string)
       const current = displayedRef.current;
       const delta = target - current;
       if (Math.abs(delta) <= PROGRESS_EPSILON) {
-        displayedRef.current = target;
-        setDisplayedProgress(target);
+        commitProgress(target);
         frameRef.current = null;
         return;
       }
@@ -105,8 +116,7 @@ function useAnimatedProgress(target: number, enabled: boolean, resetKey: string)
         ? target
         : current + (delta > 0 ? step : -step);
 
-      displayedRef.current = next;
-      setDisplayedProgress(next);
+      commitProgress(next);
       frameRef.current = window.requestAnimationFrame(tick);
     };
 

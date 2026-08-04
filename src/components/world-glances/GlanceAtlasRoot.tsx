@@ -73,9 +73,71 @@ const SETTLEMENT_ANCHOR_Y_REM = 2.1364;
 type AtlasSection = WorldGlanceFrameSection | 'notification';
 const ATLAS_SECTIONS: readonly AtlasSection[] = [...WORLD_GLANCE_FRAME_SECTIONS, 'notification'];
 
-interface SettlementBuildItemFrame {
-  hasBuildItem: boolean;
-  progress: number;
+interface SettlementFrameOverlay {
+  besieged?: boolean;
+  siegeProgress?: number;
+  hasBuildItem?: boolean;
+  buildProgress?: number;
+}
+
+interface BattleFrameOverlay {
+  attackerStrength: number;
+  attackerMorale: number;
+  attackerLastLosses: number;
+  defenderStrength: number;
+  defenderMorale: number;
+  defenderLastLosses: number;
+}
+
+const SETTLEMENT_FRAME_PROGRESS_EPSILON = 0.0001;
+const BATTLE_FRAME_MORALE_EPSILON = 0.001;
+
+function finiteUnit(value: unknown, fallback = 0): number {
+  const numeric = typeof value === 'number' ? value : Number.NaN;
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(0, Math.min(1, numeric));
+}
+
+function settlementFrameOverlayChanged(
+  previous: SettlementFrameOverlay | undefined,
+  next: SettlementFrameOverlay,
+): boolean {
+  if (!previous) {
+    return true;
+  }
+  if (previous.besieged !== next.besieged || previous.hasBuildItem !== next.hasBuildItem) {
+    return true;
+  }
+  if (
+    typeof next.siegeProgress === 'number'
+    && Math.abs((previous.siegeProgress ?? 0) - next.siegeProgress) > SETTLEMENT_FRAME_PROGRESS_EPSILON
+  ) {
+    return true;
+  }
+  if (
+    typeof next.buildProgress === 'number'
+    && Math.abs((previous.buildProgress ?? 0) - next.buildProgress) > SETTLEMENT_FRAME_PROGRESS_EPSILON
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function battleFrameOverlayChanged(
+  previous: BattleFrameOverlay | undefined,
+  next: BattleFrameOverlay,
+): boolean {
+  if (!previous) {
+    return true;
+  }
+  return previous.attackerStrength !== next.attackerStrength
+    || Math.abs(previous.attackerMorale - next.attackerMorale) > BATTLE_FRAME_MORALE_EPSILON
+    || previous.attackerLastLosses !== next.attackerLastLosses
+    || previous.defenderStrength !== next.defenderStrength
+    || Math.abs(previous.defenderMorale - next.defenderMorale) > BATTLE_FRAME_MORALE_EPSILON
+    || previous.defenderLastLosses !== next.defenderLastLosses;
 }
 
 // Anchor keys are the modder-facing contract with the engine compositor: an engine placement
@@ -141,7 +203,7 @@ function reserveSizeForSection(section: AtlasSection, remPx: number, settlementB
   return undefined;
 }
 
-const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detailClassName, selected, targeted, hovered, buildItemFrame, remPx, rasterScale, plateRef, atlasVisible }: {
+const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, detailClassName, selected, targeted, hovered, settlementFrame, battleFrame, remPx, rasterScale, plateRef, atlasVisible }: {
   section: AtlasSection;
   id: string;
   entry: unknown;
@@ -149,7 +211,8 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   selected: boolean;
   targeted: boolean;
   hovered: boolean;
-  buildItemFrame?: SettlementBuildItemFrame;
+  settlementFrame?: SettlementFrameOverlay;
+  battleFrame?: BattleFrameOverlay;
   remPx: number;
   rasterScale: number;
   plateRef: (key: string, node: HTMLDivElement | null) => void;
@@ -230,14 +293,21 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   let content: ReactNode = null;
   if (section === 'settlement') {
     const settlementData = mapSettlement(entry as GetWorldGlancesResponse['settlements'][number]);
-    if (buildItemFrame) {
-      settlementData.buildItem = buildItemFrame.hasBuildItem && settlementData.buildItem
-        ? {
-            label: settlementData.buildItem.label,
-            icon: settlementData.buildItem.icon,
-            progress: buildItemFrame.progress,
-          }
-        : undefined;
+    if (settlementFrame) {
+      if (typeof settlementFrame.besieged === 'boolean') {
+        settlementData.besieged = settlementFrame.besieged;
+        settlementData.siegeProgress = settlementFrame.siegeProgress ?? 0;
+        settlementData.health = settlementFrame.besieged ? 1 - settlementData.siegeProgress : 1;
+      }
+      if (typeof settlementFrame.hasBuildItem === 'boolean') {
+        settlementData.buildItem = settlementFrame.hasBuildItem && settlementData.buildItem
+          ? {
+              label: settlementData.buildItem.label,
+              icon: settlementData.buildItem.icon,
+              progress: settlementFrame.buildProgress ?? settlementData.buildItem.progress,
+            }
+          : undefined;
+      }
     }
     content = <SettlementGlance data={settlementData} />;
   }
@@ -245,7 +315,24 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   else if (section === 'convoy') content = <ConvoyGlance data={mapConvoy(entry as GetWorldGlancesResponse['convoys'][number])} />;
   else if (section === 'army') content = <ArmyGlance data={mapMilitary(entry as GetWorldGlancesResponse['armies'][number])} />;
   else if (section === 'navy') content = <NavyGlance data={mapNavy(entry as GetWorldGlancesResponse['navies'][number])} />;
-  else content = <BattleGlance data={mapBattle(entry as GetWorldGlancesResponse['battles'][number])} />;
+  else {
+    const battleData = mapBattle(entry as GetWorldGlancesResponse['battles'][number]);
+    if (battleFrame) {
+      battleData.attacker = {
+        ...battleData.attacker,
+        totalStrength: battleFrame.attackerStrength,
+        morale: battleFrame.attackerMorale,
+        lastLosses: battleFrame.attackerLastLosses,
+      };
+      battleData.defender = {
+        ...battleData.defender,
+        totalStrength: battleFrame.defenderStrength,
+        morale: battleFrame.defenderMorale,
+        lastLosses: battleFrame.defenderLastLosses,
+      };
+    }
+    content = <BattleGlance data={battleData} />;
+  }
 
   const classes = [
     'world-glance',
@@ -274,7 +361,8 @@ export default function GlanceAtlasRoot() {
 
   const detailByKeyRef = useRef<Map<string, WorldGlanceDetailClass>>(new Map());
   const flagsByKeyRef = useRef<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
-  const buildItemFrameByKeyRef = useRef<Map<string, SettlementBuildItemFrame>>(new Map());
+  const settlementFrameByKeyRef = useRef<Map<string, SettlementFrameOverlay>>(new Map());
+  const battleFrameByKeyRef = useRef<Map<string, BattleFrameOverlay>>(new Map());
   const plateNodesRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const visibleAtlasKeysRef = useRef<Set<string>>(new Set());
   const notificationContentSignatureRef = useRef('');
@@ -284,7 +372,8 @@ export default function GlanceAtlasRoot() {
 
   const [detailByKey, setDetailByKey] = useState<Map<string, WorldGlanceDetailClass>>(new Map());
   const [flagsByKey, setFlagsByKey] = useState<Map<string, { selected: boolean; targeted: boolean }>>(new Map());
-  const [buildItemFrameByKey, setBuildItemFrameByKey] = useState<Map<string, SettlementBuildItemFrame>>(new Map());
+  const [settlementFrameByKey, setSettlementFrameByKey] = useState<Map<string, SettlementFrameOverlay>>(new Map());
+  const [battleFrameByKey, setBattleFrameByKey] = useState<Map<string, BattleFrameOverlay>>(new Map());
   const [hoveredKeys, setHoveredKeys] = useState<Set<string>>(new Set());
   const [visibleAtlasKeys, setVisibleAtlasKeys] = useState<Set<string>>(new Set());
   const [entryCache, setEntryCache] = useState<Map<AtlasSection, Map<string, { id: string }>>>(new Map());
@@ -387,14 +476,14 @@ export default function GlanceAtlasRoot() {
 
   // Frame events drive admission, detail level, and selection/target styling. The catalogue DOM
   // remains stable while the double-buffered atlas admits the camera-visible subset.
-  // Demand must track the live frame only: sticky off-screen demand filled the atlas after a
-  // zoom-in and stranded the plates that were still on camera.
   useEffect(() => {
     const scratch = makeWorldGlanceFrameEntryScratch();
+    const opacityThreshold = UI_PRESENTATION.worldAnchors.visibleOpacityThreshold;
     return onWorldGlancesFrame((frame) => {
       let detailChanged = false;
       let flagsChanged = false;
-      let constructionChanged = false;
+      let settlementFrameChanged = false;
+      let battleFrameChanged = false;
       const nextVisibleKeys = new Set<string>();
       for (const section of WORLD_GLANCE_FRAME_SECTIONS) {
         const count = worldGlanceFrameEntryCount(frame, section);
@@ -402,25 +491,61 @@ export default function GlanceAtlasRoot() {
           const entry = readWorldGlanceFrameEntry(frame, section, index, scratch);
           if (!entry || !entry.id) continue;
           const key = worldAnchorKey(section, entry.id);
-          // Frame membership alone drives atlas demand. Host placements already apply opacity
-          // (including zoom fade).
-          nextVisibleKeys.add(key);
+          // Armies/navies/battles always demand when framed. Settlements/ports/convoys only demand
+          // when their zoom-fade opacity is high enough to paint - faded settlement plates were
+          // filling the atlas and stranding military glances that should stay visible.
+          const alwaysDemand = section === 'army' || section === 'navy' || section === 'battle';
+          if (alwaysDemand || (entry.opacity ?? 0) > opacityThreshold) {
+            nextVisibleKeys.add(key);
+          }
 
-          if (section === 'settlement' && typeof entry.hasBuildItem === 'boolean') {
-            const nextBuildItemFrame = {
-              hasBuildItem: entry.hasBuildItem,
-              progress: Math.max(0, Math.min(1, entry.buildItemProgress!)),
+          if (section === 'settlement') {
+            const nextSettlementFrame: SettlementFrameOverlay = {
+              besieged: typeof entry.besieged === 'boolean' ? entry.besieged : undefined,
+              siegeProgress: typeof entry.siegeProgress === 'number'
+                ? finiteUnit(entry.siegeProgress)
+                : undefined,
+              hasBuildItem: typeof entry.hasBuildItem === 'boolean' ? entry.hasBuildItem : undefined,
+              buildProgress: typeof entry.buildItemProgress === 'number'
+                ? finiteUnit(entry.buildItemProgress)
+                : undefined,
             };
-            const buildItemFrame = buildItemFrameByKeyRef.current.get(key);
-            if (!buildItemFrame
-              || buildItemFrame.hasBuildItem !== nextBuildItemFrame.hasBuildItem
-              || buildItemFrame.progress !== nextBuildItemFrame.progress) {
+            const previousSettlementFrame = settlementFrameByKeyRef.current.get(key);
+            if (settlementFrameOverlayChanged(previousSettlementFrame, nextSettlementFrame)) {
               const node = plateNodesRef.current.get(key);
               if (node) {
                 prepareWorldAnchorContentChange(node);
               }
-              buildItemFrameByKeyRef.current.set(key, nextBuildItemFrame);
-              constructionChanged = true;
+              settlementFrameByKeyRef.current.set(key, nextSettlementFrame);
+              settlementFrameChanged = true;
+            }
+          }
+
+          if (
+            section === 'battle'
+            && entry.attackerStrength !== undefined
+            && entry.attackerMorale !== undefined
+            && entry.attackerLastLosses !== undefined
+            && entry.defenderStrength !== undefined
+            && entry.defenderMorale !== undefined
+            && entry.defenderLastLosses !== undefined
+          ) {
+            const nextBattleFrame: BattleFrameOverlay = {
+              attackerStrength: entry.attackerStrength,
+              attackerMorale: entry.attackerMorale,
+              attackerLastLosses: entry.attackerLastLosses,
+              defenderStrength: entry.defenderStrength,
+              defenderMorale: entry.defenderMorale,
+              defenderLastLosses: entry.defenderLastLosses,
+            };
+            const previousBattleFrame = battleFrameByKeyRef.current.get(key);
+            if (battleFrameOverlayChanged(previousBattleFrame, nextBattleFrame)) {
+              const node = plateNodesRef.current.get(key);
+              if (node) {
+                prepareWorldAnchorContentChange(node);
+              }
+              battleFrameByKeyRef.current.set(key, nextBattleFrame);
+              battleFrameChanged = true;
             }
           }
 
@@ -455,8 +580,11 @@ export default function GlanceAtlasRoot() {
       if (flagsChanged) {
         setFlagsByKey(new Map(flagsByKeyRef.current));
       }
-      if (constructionChanged) {
-        setBuildItemFrameByKey(new Map(buildItemFrameByKeyRef.current));
+      if (settlementFrameChanged) {
+        setSettlementFrameByKey(new Map(settlementFrameByKeyRef.current));
+      }
+      if (battleFrameChanged) {
+        setBattleFrameByKey(new Map(battleFrameByKeyRef.current));
       }
       if (visibilityChanged) {
         setVisibleAtlasKeys(nextVisibleKeys);
@@ -497,7 +625,8 @@ export default function GlanceAtlasRoot() {
               selected={flags?.selected === true}
               targeted={flags?.targeted === true}
               hovered={hoveredKeys.has(key)}
-              buildItemFrame={section === 'settlement' ? buildItemFrameByKey.get(key) : undefined}
+              settlementFrame={section === 'settlement' ? settlementFrameByKey.get(key) : undefined}
+              battleFrame={section === 'battle' ? battleFrameByKey.get(key) : undefined}
               remPx={remPx}
               rasterScale={rasterScale}
               plateRef={plateRef}

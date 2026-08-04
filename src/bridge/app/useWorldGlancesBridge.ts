@@ -164,166 +164,8 @@ function frameHasEntries(frame: WorldGlancesFrameResponse): boolean {
   return WORLD_GLANCE_FRAME_SECTIONS.some(section => worldGlanceFrameEntryCount(frame, section) > 0);
 }
 
-const FRAME_SETTLEMENT_PROGRESS_EPSILON = 0.0001;
-const FRAME_BATTLE_MORALE_EPSILON = 0.001;
 const WORLD_GLANCE_FRAME_HEADER_NUMBER_COUNT = NATIVE_BRIDGE_PROTOCOL.strides.worldGlanceFrameHeaderNumbers;
 const WORLD_GLANCE_FRAME_BATTLE_NUMBER_STRIDE = NATIVE_BRIDGE_PROTOCOL.strides.worldGlanceBattleNumbers;
-
-function clampUnit(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-
-  return Math.max(0, Math.min(1, value));
-}
-
-function mergeFrameSettlementProgress(
-  data: GetWorldGlancesResponse | null,
-  frame: WorldGlancesFrameResponse,
-): GetWorldGlancesResponse | null {
-  const settlementCount = worldGlanceFrameEntryCount(frame, 'settlement');
-  if (!data || settlementCount === 0) {
-    return data;
-  }
-
-  const frameSettlementById = new Map<string, { besieged?: boolean; siegeProgress?: number }>();
-  const scratch = makeWorldGlanceFrameEntryScratch();
-  for (let index = 0; index < settlementCount; index += 1) {
-    const entry = readWorldGlanceFrameEntry(frame, 'settlement', index, scratch);
-    if (!entry) {
-      continue;
-    }
-    const id = worldGlanceFrameEntryIdFromSnapshot(data, frame, 'settlement', index);
-    if (!id) {
-      continue;
-    }
-    if (typeof entry.besieged === 'boolean' || typeof entry.siegeProgress === 'number') {
-      frameSettlementById.set(id, {
-        besieged: entry.besieged,
-        siegeProgress: entry.siegeProgress,
-      });
-    }
-  }
-
-  if (frameSettlementById.size === 0) {
-    return data;
-  }
-
-  let changed = false;
-  const settlements = data.settlements.map((settlement) => {
-    const frameEntry = frameSettlementById.get(settlement.id);
-    if (!frameEntry) {
-      return settlement;
-    }
-
-    const besieged = typeof frameEntry.besieged === 'boolean' ? frameEntry.besieged : settlement.besieged;
-    const siegeProgress = typeof frameEntry.siegeProgress === 'number'
-      ? clampUnit(frameEntry.siegeProgress)
-      : settlement.siegeProgress;
-    const health = besieged ? 1 - siegeProgress : 1;
-
-    if (
-      settlement.besieged === besieged
-      && Math.abs(settlement.siegeProgress - siegeProgress) <= FRAME_SETTLEMENT_PROGRESS_EPSILON
-      && Math.abs(settlement.health - health) <= FRAME_SETTLEMENT_PROGRESS_EPSILON
-    ) {
-      return settlement;
-    }
-
-    changed = true;
-    return {
-      ...settlement,
-      besieged,
-      siegeProgress,
-      health,
-    };
-  });
-
-  return changed ? { ...data, settlements } : data;
-}
-
-function mergeFrameBattleValues(
-  data: GetWorldGlancesResponse | null,
-  frame: WorldGlancesFrameResponse,
-): GetWorldGlancesResponse | null {
-  const battleCount = worldGlanceFrameEntryCount(frame, 'battle');
-  if (!data || battleCount === 0) {
-    return data;
-  }
-
-  const frameBattleById = new Map<string, Required<Pick<WorldGlanceFrameEntry,
-    | 'attackerStrength'
-    | 'attackerMorale'
-    | 'attackerLastLosses'
-    | 'defenderStrength'
-    | 'defenderMorale'
-    | 'defenderLastLosses'
-  >>>();
-  const scratch = makeWorldGlanceFrameEntryScratch();
-  for (let index = 0; index < battleCount; index += 1) {
-    const entry = readWorldGlanceFrameEntry(frame, 'battle', index, scratch);
-    const id = worldGlanceFrameEntryIdFromSnapshot(data, frame, 'battle', index);
-    if (
-      !entry
-      || !id
-      || entry.attackerStrength === undefined
-      || entry.attackerMorale === undefined
-      || entry.attackerLastLosses === undefined
-      || entry.defenderStrength === undefined
-      || entry.defenderMorale === undefined
-      || entry.defenderLastLosses === undefined
-    ) {
-      continue;
-    }
-
-    frameBattleById.set(id, {
-      attackerStrength: entry.attackerStrength,
-      attackerMorale: entry.attackerMorale,
-      attackerLastLosses: entry.attackerLastLosses,
-      defenderStrength: entry.defenderStrength,
-      defenderMorale: entry.defenderMorale,
-      defenderLastLosses: entry.defenderLastLosses,
-    });
-  }
-
-  let changed = false;
-  const battles = data.battles.map((battle) => {
-    const values = frameBattleById.get(battle.id);
-    if (!values) {
-      return battle;
-    }
-
-    if (
-      battle.attacker.totalStrength === values.attackerStrength
-      && Math.abs(battle.attacker.morale - values.attackerMorale) <= FRAME_BATTLE_MORALE_EPSILON
-      && battle.attacker.lastLosses === values.attackerLastLosses
-      && battle.defender.totalStrength === values.defenderStrength
-      && Math.abs(battle.defender.morale - values.defenderMorale) <= FRAME_BATTLE_MORALE_EPSILON
-      && battle.defender.lastLosses === values.defenderLastLosses
-    ) {
-      return battle;
-    }
-
-    changed = true;
-    return {
-      ...battle,
-      attacker: {
-        ...battle.attacker,
-        totalStrength: values.attackerStrength,
-        morale: values.attackerMorale,
-        lastLosses: values.attackerLastLosses,
-      },
-      defender: {
-        ...battle.defender,
-        totalStrength: values.defenderStrength,
-        morale: values.defenderMorale,
-        lastLosses: values.defenderLastLosses,
-      },
-    };
-  });
-
-  return changed ? { ...data, battles } : data;
-}
 
 function cachedWorldGlancesSnapshot(): GetWorldGlancesResponse | null {
   return normaliseWorldGlancesSnapshot(getCachedBridgeEvent('game.get_world_glances'));
@@ -362,10 +204,13 @@ function publishWorldGlancesStoreData(next: GetWorldGlancesResponse | null) {
     return;
   }
 
-  // Always keep the latest snapshot immediately so getSnapshot() is correct for any render
-  // already in flight. Defer listener notify so a burst of catalogue deltas / frame merges in
-  // one native turn coalesces to a single React update wave. Notifying useSyncExternalStore
-  // synchronously per delta nests SyncLane re-renders until React error #185.
+  // Keep the latest snapshot immediately so getSnapshot() is correct for any render already in
+  // flight. Defer listener notify so a burst of catalogue deltas in one native turn coalesces to
+  // a single React update wave. Notifying useSyncExternalStore synchronously per delta nests
+  // SyncLane re-renders until React error #185.
+  //
+  // Live siege/battle progress must not publish through this store: those values change every
+  // camera/simulation frame. Consumers apply frame overlays locally instead.
   worldGlancesStoreData = next;
 
   if (worldGlancesStoreNotifyScheduled) {
@@ -528,12 +373,8 @@ function startWorldGlancesStore() {
   bridgeEvents.addEventListener('game.world_glances_catalogue_delta', catalogueDeltaHandler);
 
   const unsubscribeFrame = onWorldGlancesFrame((frame) => {
-    const settlementData = mergeFrameSettlementProgress(worldGlancesStoreData, frame);
-    const nextData = mergeFrameBattleValues(settlementData, frame);
-    if (nextData !== worldGlancesStoreData) {
-      publishWorldGlancesStoreData(nextData);
-    }
-
+    // Frames only drive placement/progress overlays in the atlas layer. The catalogue store stays
+    // on full snapshots and catalogue deltas so high-frequency frames cannot flood React.
     if (!worldGlancesStoreData && frameHasEntries(frame)) {
       queueRefresh();
     }
