@@ -7,6 +7,8 @@ import {
   stepButtonLabel,
   useStepMultiplier,
 } from '../../../utils/stepModifiers';
+import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
+import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
 import Tooltip from '../tooltips/Tooltip';
 import './NumberStepper.css';
 
@@ -56,11 +58,13 @@ const NumberStepper = memo(function NumberStepper({
   parseValue = defaultParseValue,
 }: NumberStepperProps) {
   const t = useWebUIText();
+  const { settings } = useSettingsBridge();
   const multiplier = useStepMultiplier();
   const effectiveStep = stepAmountFromMultiplier(multiplier, step);
   const decrementDisabled = disabled || (min !== undefined && value <= min);
   const incrementDisabled = disabled || (max !== undefined && value >= max);
-  const modifierHint = t('Common.StepModifiersBody');
+  const batchKey = formatActionBinding(settings?.controls, 'IncreaseUnitProduction');
+  const modifierHint = stepModifiersHelpText(t, batchKey);
   const decrementLabel = stepButtonLabel(-1, effectiveStep);
   const incrementLabel = stepButtonLabel(1, effectiveStep);
 

@@ -210,7 +210,7 @@ const DEFINITIONS: Record<string, MapModeTooltipDefinition> = {
 function buildTooltips(definitions: Record<string, MapModeTooltipDefinition>): Record<string, ReactNode> {
   const tooltips: Record<string, ReactNode> = {};
   Object.keys(definitions).forEach(id => {
-    tooltips[id] = <LocalizedMapModeTooltip key={id} definition={definitions[id]} />;
+    tooltips[id] = <LocalizedMapModeTooltip key={id} modeId={id} definition={definitions[id]} />;
   });
   return tooltips;
 }

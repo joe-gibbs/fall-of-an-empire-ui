@@ -5287,6 +5287,19 @@ export const WEBUI_TEXT_SOURCE = {
   "WorldSearch.Type.Character": "Character",
   "WorldSearch.Type.Army": "Army",
   "WorldSearch.Type.Navy": "Navy",
+  "Topbar.PinnedItemsTooltipLineTwo": "Press {Key} to search the world for factions, settlements, armies, and characters.",
+  "Topbar.WorldSearchFallback": "World Search",
+  "TopbarSpeed.PauseTitle": "Pause",
+  "TopbarSpeed.ResumeTitle": "Resume",
+  "TopbarSpeed.PauseBody": "Stop the passage of time while you issue orders.",
+  "TopbarSpeed.ResumeBody": "Resume the game at normal speed.",
+  "TopbarSpeed.CycleTitle": "Game Speed",
+  "TopbarSpeed.CycleBody": "Cycle through faster and slower game speeds.",
+  "TopbarSpeed.FasterLabel": "Faster",
+  "TopbarSpeed.SlowerLabel": "Slower",
+  "TopbarSpeed.FasterKey": "Faster: {Key}",
+  "TopbarSpeed.SlowerKey": "Slower: {Key}",
+  "Common.StepModifiersWithBatchKey": "Hold Shift for 5x, Ctrl for 10x, or Ctrl+Shift for 50x. Batch production: {Key}.",
 } as const;
 
 export type WebUITextKey = keyof typeof WEBUI_TEXT_SOURCE;

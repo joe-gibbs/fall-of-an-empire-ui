@@ -17,6 +17,8 @@ import { playSound } from '../../hooks/useSound';
 import './TopBar.css';
 
 import { webUIText } from '../../localization/WebUITextContext';
+import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
+import { formatActionBinding } from '../../utils/actionBindings';
 
 interface ActionButtonConfig {
   id: 'build' | 'victory' | 'pinned';
@@ -24,6 +26,8 @@ interface ActionButtonConfig {
   icon: string;
   tooltipBodyKey: string;
   tooltipLineKeys?: readonly string[];
+  /** When set, the line text is formatted with the live binding for this action. */
+  tooltipLineKeysWithBinding?: ReadonlyArray<{ textKey: string; actionName: string }>;
   tutorialTarget: string;
   factionMode?: 'all' | 'independent' | 'subject';
 }
@@ -52,6 +56,9 @@ const actionButtons: readonly ActionButtonConfig[] = [
     icon: '/assets/icons/I_Pin_Pinned.png',
     tooltipBodyKey: 'Topbar.PinnedItemsTooltipBody',
     tooltipLineKeys: ['Topbar.PinnedItemsTooltipLineOne'],
+    tooltipLineKeysWithBinding: [
+      { textKey: 'Topbar.PinnedItemsTooltipLineTwo', actionName: 'WorldSearch' },
+    ],
     tutorialTarget: 'PinnedItemsToggleButton',
   },
 ];
@@ -81,6 +88,7 @@ const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const { isPaused, speed: contextSpeed, saveSerial } = useGameState();
   const { togglePause, setSpeed: contextSetSpeed, openSidebar } = useGameActions();
+  const { settings } = useSettingsBridge();
   const playerFaction = usePlayerFactionSummary();
   const subjectMode = playerFaction?.diplomaticStatus === 'subject';
   const playerCharacterId = playerFaction?.rulerId ?? null;
@@ -113,7 +121,18 @@ const TopBar: React.FC<TopBarProps> = ({
   };
 
   const actionTooltip = (button: ActionButtonConfig): TooltipContent => {
-    const lines = button.tooltipLineKeys?.map<TooltipLine>(key => ({ label: webUIText(key) })) ?? [];
+    const lines: TooltipLine[] = [];
+    button.tooltipLineKeys?.forEach((key) => {
+      lines.push({ label: webUIText(key) });
+    });
+    button.tooltipLineKeysWithBinding?.forEach((entry) => {
+      const binding = formatActionBinding(settings?.controls, entry.actionName);
+      lines.push({
+        label: binding
+          ? webUIText(entry.textKey, { Key: binding })
+          : webUIText(entry.textKey, { Key: webUIText('Topbar.WorldSearchFallback') }),
+      });
+    });
     return {
       title: webUIText(button.labelKey),
       body: <ScreenButtonTooltipBody body={webUIText(button.tooltipBodyKey)} lines={lines} />,

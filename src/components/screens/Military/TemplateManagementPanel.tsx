@@ -31,6 +31,8 @@ import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import { useDraggableOffset } from '../../../hooks/useDraggableOffset';
 import { formatNumber } from '../../../utils/numberFormat';
 import { stepAmountFromEvent } from '../../../utils/stepModifiers';
+import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
+import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { cultureIconPath } from '../../../utils/cultureIcons';
 import {
@@ -414,6 +416,11 @@ export function TemplateUnitSelectorModal({
   const [showUnavailable, setShowUnavailable] = useState(false);
   const [closing, setClosing] = useState(false);
   const closeTimerRef = useRef<number | undefined>(undefined);
+  const { settings } = useSettingsBridge();
+  const stepModifiersBody = stepModifiersHelpText(
+    webUIText,
+    formatActionBinding(settings?.controls, 'IncreaseUnitProduction'),
+  );
   const isSingle = mode === 'single';
   const selectedUnitTotal = useMemo(
     () => Object.values(currentCounts).reduce((sum, count) => sum + Math.max(0, count), 0),
@@ -818,8 +825,8 @@ export function TemplateUnitSelectorModal({
           ? capacityFullBody
           : manpowerBlocked
             ? webUIText('Military.PersonalGuard.InsufficientPopulation')
-            : webUIText('Common.StepModifiersBody');
-        const removeBody = webUIText('Common.StepModifiersBody');
+            : stepModifiersBody;
+        const removeBody = stepModifiersBody;
         return (
           <span className="chart-unit-picker-actions chart-unit-picker-actions--with-count">
             <span className="chart-unit-picker-unit-count">{formatNumber(count)}</span>
@@ -868,7 +875,7 @@ export function TemplateUnitSelectorModal({
         );
       },
     },
-  ], [atUnitCap, canAddUnit, capacityFullBody, compareUnit, currentCounts, enforceAvailableManpower, isSingle, onAdd, onRemove]);
+  ], [atUnitCap, canAddUnit, capacityFullBody, compareUnit, currentCounts, enforceAvailableManpower, isSingle, onAdd, onRemove, stepModifiersBody]);
   const filterUnit = (unit: FormationTemplateUnitEntry) => {
     const unitType = unit.type || unit.category;
     const unitCulture = unit.cultureId || unit.cultureName;

@@ -61,6 +61,7 @@ export default function WorldSearchBar() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const requestIdRef = useRef(0);
+  const focusAttemptsRef = useRef(0);
   const presence = useAnimatedPresence(open, { durationMs: EXIT_DURATION_MS });
 
   const close = useCallback(() => {
@@ -69,26 +70,44 @@ export default function WorldSearchBar() {
     setResults([]);
     setActiveIndex(0);
     setSearching(false);
+    focusAttemptsRef.current = 0;
   }, []);
 
   const focusInput = useCallback(() => {
-    const focus = () => {
-      const input = inputRef.current;
-      if (!input) return false;
-      // preventScroll avoids CEF jumping the page when focusing a fixed overlay.
-      input.focus({ preventScroll: true });
+    const input = inputRef.current;
+    if (!input) return false;
+    // preventScroll avoids CEF jumping the page when focusing a fixed overlay.
+    input.focus({ preventScroll: true });
+    if (typeof input.select === 'function') {
       input.select();
-      return document.activeElement === input;
-    };
-    // Mount + CEF host focus both lag the open event; retry across a few frames.
-    window.requestAnimationFrame(() => {
-      if (focus()) return;
-      window.setTimeout(() => {
-        if (focus()) return;
-        window.setTimeout(focus, 50);
-      }, 0);
-    });
+    }
+    return document.activeElement === input;
   }, []);
+
+  const scheduleFocusRetries = useCallback(() => {
+    focusAttemptsRef.current = 0;
+    const delays = [0, 16, 32, 64, 120, 200, 350, 500];
+    delays.forEach((delay) => {
+      window.setTimeout(() => {
+        if (!inputRef.current) return;
+        if (document.activeElement === inputRef.current) return;
+        focusAttemptsRef.current += 1;
+        focusInput();
+      }, delay);
+    });
+  }, [focusInput]);
+
+  const setInputRef = useCallback((node: HTMLInputElement | null) => {
+    inputRef.current = node;
+    if (node) {
+      // Focus as soon as the input is attached to the DOM.
+      node.focus({ preventScroll: true });
+      if (typeof node.select === 'function') {
+        node.select();
+      }
+      scheduleFocusRetries();
+    }
+  }, [scheduleFocusRetries]);
 
   const openSearch = useCallback(() => {
     setOpen(true);
@@ -108,15 +127,17 @@ export default function WorldSearchBar() {
   useEffect(() => {
     const unsub = onBridgeEvent('ui.open_world_search', () => {
       openSearch();
+      // If already open, re-run focus retries (e.g. pressing Ctrl+F again).
+      scheduleFocusRetries();
     });
     return unsub;
-  }, [openSearch]);
+  }, [openSearch, scheduleFocusRetries]);
 
-  // Focus only after the overlay has actually mounted the input into the DOM.
+  // Focus after presence finishes mounting (callback ref may run first).
   useEffect(() => {
     if (!open || !presence.mounted || presence.closing) return;
-    focusInput();
-  }, [open, presence.mounted, presence.closing, focusInput]);
+    scheduleFocusRetries();
+  }, [open, presence.mounted, presence.closing, scheduleFocusRetries]);
 
   useEffect(() => {
     if (!open) return;
@@ -245,7 +266,7 @@ export default function WorldSearchBar() {
               draggable={false}
             />
             <input
-              ref={inputRef}
+              ref={setInputRef}
               type="text"
               className="search-field__input world-search-input"
               value={query}

@@ -412,6 +412,33 @@
   font-style: italic;
 }
 
+/* Keycap shortcut rows stay upright; labels beside them can stay italic. */
+.tt-footer-shortcut {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-style: normal;
+}
+
+.tt-footer-shortcuts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.28rem;
+  font-style: normal;
+}
+
+.tt-footer-shortcut-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tt-footer-shortcut-label {
+  font-style: italic;
+  color: var(--text-dark);
+}
+
 /* ---- Sub-tooltip (nested) - same style ---- */
 .tt-sub {
   position: absolute;

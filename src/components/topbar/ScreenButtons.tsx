@@ -12,6 +12,9 @@ import { getAllTopbarButtons, isVisibleForFactionMode } from '../../registry/ind
 import type { TopbarButtonRegistration } from '../../registry/index';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { useWebUIText, type WebUITextFormatter } from '../../localization/WebUITextContext';
+import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
+import { findActionBinding, TOPBAR_SCREEN_ACTIONS } from '../../utils/actionBindings';
+import { actionBindingFooter } from '../common/ActionKeyGlyph';
 import { ScreenButtonTooltipBody } from './ScreenButtonTooltip';
 import './ScreenButtons.css';
 
@@ -52,8 +55,16 @@ function localizeButtonLabel(button: Pick<TopbarButtonRegistration, 'label' | 'l
   return button.labelKey ? t(button.labelKey) : button.label;
 }
 
-function screenTooltipContent(button: Pick<TopbarButtonRegistration, 'label' | 'labelKey' | 'tooltip'>, t: WebUITextFormatter): React.ReactNode | TooltipContent {
-  if (!button.tooltip) return localizeButtonLabel(button, t);
+function screenTooltipContent(
+  button: Pick<TopbarButtonRegistration, 'id' | 'label' | 'labelKey' | 'tooltip'>,
+  t: WebUITextFormatter,
+  shortcut?: React.ReactNode,
+): React.ReactNode | TooltipContent {
+  if (!button.tooltip) {
+    return shortcut
+      ? { title: localizeButtonLabel(button, t), footer: shortcut }
+      : localizeButtonLabel(button, t);
+  }
 
   const title = button.tooltip.titleKey ? t(button.tooltip.titleKey) : button.tooltip.title;
   const body = button.tooltip.bodyKey ? t(button.tooltip.bodyKey) : button.tooltip.body;
@@ -66,7 +77,8 @@ function screenTooltipContent(button: Pick<TopbarButtonRegistration, 'label' | '
     valueIcon: line.valueIcon,
     isHeader: line.isHeader,
   }));
-  const footer = button.tooltip.footerKey ? t(button.tooltip.footerKey) : button.tooltip.footer;
+  const staticFooter = button.tooltip.footerKey ? t(button.tooltip.footerKey) : button.tooltip.footer;
+  const footer = shortcut ?? staticFooter;
   const useScreenButtonFlow = lines?.length && lines.every(line => (
     !line.labelIcon
     && !line.value
@@ -109,6 +121,7 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
   placement = 'left',
 }) => {
   const t = useWebUIText();
+  const { settings } = useSettingsBridge();
   const playerFaction = usePlayerFactionSummary();
   const [steamAchievementsAvailable, setSteamAchievementsAvailable] = useState<boolean | null>(null);
 
@@ -177,21 +190,33 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
   return (
     <div className="screen-buttons">
       {placement === 'left' && showFactionButton && (
-        <FactionTooltip factionId={playerFactionId ?? undefined} factionName={playerFaction?.name} position="bottom" delay={200}>
+        <FactionTooltip
+          factionId={playerFactionId ?? undefined}
+          factionName={playerFaction?.name}
+          position="bottom"
+          delay={200}
+          footer={actionBindingFooter(findActionBinding(settings?.controls, TOPBAR_SCREEN_ACTIONS.faction))}
+        >
           {factionButtonNode}
         </FactionTooltip>
       )}
-      {buttons.map((btn) => (
-        <Tooltip key={btn.id} content={screenTooltipContent(btn, t)} position="bottom" delay={200} variant="sidebar" bubbleClassName="tt-bubble--screen-button">
-          <IconButton
-            icon={resolveScreenButtonIcon(btn, playerReligionId)}
-            label={localizeButtonLabel(btn, t)}
-            active={activeScreen === btn.id}
-            tutorialTarget={topbarButtonTargets(btn.id)}
-            onClick={() => onScreenChange?.(btn.id)}
-          />
-        </Tooltip>
-      ))}
+      {buttons.map((btn) => {
+        const actionName = TOPBAR_SCREEN_ACTIONS[btn.id];
+        const shortcut = actionName
+          ? actionBindingFooter(findActionBinding(settings?.controls, actionName))
+          : undefined;
+        return (
+          <Tooltip key={btn.id} content={screenTooltipContent(btn, t, shortcut)} position="bottom" delay={200} variant="sidebar" bubbleClassName="tt-bubble--screen-button">
+            <IconButton
+              icon={resolveScreenButtonIcon(btn, playerReligionId)}
+              label={localizeButtonLabel(btn, t)}
+              active={activeScreen === btn.id}
+              tutorialTarget={topbarButtonTargets(btn.id)}
+              onClick={() => onScreenChange?.(btn.id)}
+            />
+          </Tooltip>
+        );
+      })}
     </div>
   );
 };

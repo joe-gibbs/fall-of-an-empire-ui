@@ -1,6 +1,10 @@
 import React from 'react';
 import { playSound } from '../../hooks/useSound';
 import { webUIText } from '../../localization/WebUITextContext';
+import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
+import { findActionBinding } from '../../utils/actionBindings';
+import { ActionKeyGlyph, actionBindingFooter } from '../common/ActionKeyGlyph';
+import Tooltip from '../common/tooltips/Tooltip';
 
 type Speed = 0 | 1 | 2 | 3 | 4;
 
@@ -22,7 +26,11 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
   speed = 0,
   onSpeedChange,
 }) => {
+  const { settings } = useSettingsBridge();
   const isPaused = speed === 0;
+  const pauseBinding = findActionBinding(settings?.controls, 'Pause');
+  const fasterBinding = findActionBinding(settings?.controls, 'IncreaseSpeed');
+  const slowerBinding = findActionBinding(settings?.controls, 'ReduceSpeed');
 
   const handlePauseToggle = () => {
     onSpeedChange?.(isPaused ? 1 : 0);
@@ -38,33 +46,66 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
     onSpeedChange?.(next);
   };
 
+  const speedFooter = (fasterBinding || slowerBinding) ? (
+    <div className="tt-footer-shortcuts">
+      {fasterBinding && (
+        <span className="tt-footer-shortcut-row">
+          <span className="tt-footer-shortcut-label">{webUIText('TopbarSpeed.FasterLabel')}</span>
+          <ActionKeyGlyph binding={fasterBinding} />
+        </span>
+      )}
+      {slowerBinding && (
+        <span className="tt-footer-shortcut-row">
+          <span className="tt-footer-shortcut-label">{webUIText('TopbarSpeed.SlowerLabel')}</span>
+          <ActionKeyGlyph binding={slowerBinding} />
+        </span>
+      )}
+    </div>
+  ) : undefined;
+
+  const pauseTooltip = {
+    title: isPaused ? webUIText('TopbarSpeed.ResumeTitle') : webUIText('TopbarSpeed.PauseTitle'),
+    body: isPaused
+      ? webUIText('TopbarSpeed.ResumeBody')
+      : webUIText('TopbarSpeed.PauseBody'),
+    footer: actionBindingFooter(pauseBinding),
+  };
+
+  const speedTooltip = {
+    title: webUIText('TopbarSpeed.CycleTitle'),
+    body: webUIText('TopbarSpeed.CycleBody'),
+    footer: speedFooter,
+  };
+
   return (
     <div className="speed-controls" data-tutorial-target="TimeControls">
-      {/* Pause/Play toggle */}
-      <button
-        className="speed-btn speed-btn--pause"
-        data-tutorial-target="PausePlayButton"
-        onMouseDown={() => { playSound('click'); handlePauseToggle(); }}
-      >
-        <img
-          src={isPaused ? '/assets/ui-shadowed/T_Paused_Active.png' : '/assets/ui-shadowed/T_Play_Active.png'}
-          alt={isPaused ? webUIText("TopbarSpeed.Paused") : webUIText("TopbarSpeed.Playing")}
-          className="speed-btn-img"
-        />
-      </button>
+      <Tooltip content={pauseTooltip} position="bottom" delay={200} variant="sidebar" bubbleClassName="tt-bubble--screen-button">
+        <button
+          className="speed-btn speed-btn--pause"
+          data-tutorial-target="PausePlayButton"
+          onMouseDown={() => { playSound('click'); handlePauseToggle(); }}
+        >
+          <img
+            src={isPaused ? '/assets/ui-shadowed/T_Paused_Active.png' : '/assets/ui-shadowed/T_Play_Active.png'}
+            alt={isPaused ? webUIText("TopbarSpeed.Paused") : webUIText("TopbarSpeed.Playing")}
+            className="speed-btn-img"
+          />
+        </button>
+      </Tooltip>
 
-      {/* Speed cycle button */}
-      <button
-        className="speed-btn speed-btn--cycle"
-        data-tutorial-target="SpeedButton"
-        onMouseDown={() => { playSound('click'); handleSpeedCycle(); }}
-      >
-        <img
-          src={speedIcons[speed]}
-          alt={isPaused ? webUIText("TopbarSpeed.Speed") : webUIText("TopbarSpeed.SpeedMultiplier", { Speed: speed })}
-          className="speed-btn-img speed-btn-img--wide"
-        />
-      </button>
+      <Tooltip content={speedTooltip} position="bottom" delay={200} variant="sidebar" bubbleClassName="tt-bubble--screen-button">
+        <button
+          className="speed-btn speed-btn--cycle"
+          data-tutorial-target="SpeedButton"
+          onMouseDown={() => { playSound('click'); handleSpeedCycle(); }}
+        >
+          <img
+            src={speedIcons[speed]}
+            alt={isPaused ? webUIText("TopbarSpeed.Speed") : webUIText("TopbarSpeed.SpeedMultiplier", { Speed: speed })}
+            className="speed-btn-img speed-btn-img--wide"
+          />
+        </button>
+      </Tooltip>
     </div>
   );
 };

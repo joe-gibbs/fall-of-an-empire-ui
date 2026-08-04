@@ -11,6 +11,8 @@ import {
   numberedBattleFormationName,
 } from '../../../utils/battleFormationNaming';
 import { stepAmountFromEvent } from '../../../utils/stepModifiers';
+import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
+import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
 import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
 import {
   battleGroupUnitCount,
@@ -87,6 +89,11 @@ export function TemplateBattlePlanner({
   const usedManpowerByCulture = useMemo(
     () => draftUsedManpowerByCulture(draft, unitById),
     [draft, unitById],
+  );
+  const { settings } = useSettingsBridge();
+  const stepModifiersBody = stepModifiersHelpText(
+    webUIText,
+    formatActionBinding(settings?.controls, 'IncreaseUnitProduction'),
   );
   const groupTitles = useMemo(() => {
     const baseNames = draft.battleGroups.map(group => battleFormationDisplayName(group, unitById, draft.type));
@@ -186,7 +193,7 @@ export function TemplateBattlePlanner({
                     ? webUIText('FormationTemplate.BattlePlan.CompanyCapacityFull')
                     : manpowerBlocked
                       ? webUIText('Military.PersonalGuard.InsufficientPopulation')
-                      : webUIText('Common.StepModifiersBody');
+                      : stepModifiersBody;
 
                   return (
                     <div key={unit.id} className="chart-template-battle-unit">

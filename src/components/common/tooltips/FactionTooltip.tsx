@@ -87,6 +87,8 @@ interface FactionTooltipProps {
   children: React.ReactNode;
   position?: 'top' | 'bottom' | 'left' | 'right';
   delay?: number;
+  /** Optional live key binding shown under the faction summary (e.g. open-faction shortcut). */
+  footer?: React.ReactNode;
 }
 
 const diplomaticStatusMeta: Record<Faction['diplomaticStatus'], { label: string; color: string }> = {
@@ -395,6 +397,7 @@ const FactionTooltip: React.FC<FactionTooltipProps> = ({
   children,
   position = 'right',
   delay = 200,
+  footer,
 }) => {
   const lookupId = factionId ?? factionName ?? null;
   const fallbackData = data ?? (factionName ? { name: factionName } : undefined);
@@ -408,11 +411,11 @@ const FactionTooltip: React.FC<FactionTooltipProps> = ({
   if (!resolved) {
     return (
       <Tooltip
-        content={null}
+        content={footer ? { title: factionName || webUIText('Topbar.Faction'), footer } : null}
         position={position}
         delay={delay}
         variant="sidebar"
-        disabled
+        disabled={!footer}
         onShowIntent={requestResolution}
       >
         <div className="ftt-trigger">
@@ -424,7 +427,7 @@ const FactionTooltip: React.FC<FactionTooltipProps> = ({
 
   return (
     <Tooltip
-      content={{ afterLines: <FactionTooltipContent faction={resolved} /> }}
+      content={{ afterLines: <FactionTooltipContent faction={resolved} />, footer }}
       position={position}
       delay={delay}
       variant="sidebar"

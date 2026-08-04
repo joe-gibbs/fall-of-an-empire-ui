@@ -26,7 +26,8 @@ interface TooltipContent {
   body?: React.ReactNode;
   lines?: TooltipLine[];
   afterLines?: React.ReactNode;
-  footer?: string;
+  /** Plain help text, or a keycap row via ActionKeyGlyph / actionBindingFooter. */
+  footer?: React.ReactNode;
 }
 
 interface TooltipProps {
@@ -292,6 +293,12 @@ function renderTooltipBody(body: React.ReactNode): React.ReactNode {
   return renderRichText(normalised.replace(/\r?\n/g, '<br/>'), { blockBullets: true });
 }
 
+function hasFooterContent(footer: React.ReactNode): boolean {
+  if (footer === null || footer === undefined || footer === false) return false;
+  if (typeof footer === 'string') return footer.trim().length > 0;
+  return true;
+}
+
 function hasTooltipContent(content: React.ReactNode | TooltipContent): boolean {
   if (content === null || content === undefined || content === false) return false;
   if (!isTooltipContent(content)) return true;
@@ -300,7 +307,7 @@ function hasTooltipContent(content: React.ReactNode | TooltipContent): boolean {
     || content.header
     || content.body
     || content.afterLines
-    || (content.footer && content.footer.trim().length > 0)
+    || hasFooterContent(content.footer)
     || (content.lines && content.lines.length > 0),
   );
 }
@@ -338,8 +345,10 @@ function TooltipBody({
         </div>
       )}
       {data.afterLines}
-      {sidebar && data.footer && <GoldRule />}
-      {data.footer && <div className={sidebar ? 'tt-footer tt-footer--sidebar' : 'tt-footer'}>{data.footer}</div>}
+      {sidebar && hasFooterContent(data.footer) && <GoldRule />}
+      {hasFooterContent(data.footer) && (
+        <div className={sidebar ? 'tt-footer tt-footer--sidebar' : 'tt-footer'}>{data.footer}</div>
+      )}
     </>
   );
 }

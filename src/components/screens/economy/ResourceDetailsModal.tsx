@@ -22,6 +22,8 @@ import {
   stepButtonLabel,
   useStepMultiplier,
 } from '../../../utils/stepModifiers';
+import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
+import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
 import CloseButton from '../../common/buttons/CloseButton';
 import GameButton from '../../common/buttons/GameButton';
 import EntityLink from '../../common/entities/EntityLink';
@@ -274,6 +276,7 @@ export default function ResourceDetailsModal({
   onClose,
 }: Props) {
   const t = useWebUIText();
+  const { settings } = useSettingsBridge();
   const details = useEconomyResourceDetailsBridge(resource?.id ?? null);
   const buildQueue = useBuildQueueBridge(!!resource);
   const [historyRange, setHistoryRange] = useState<HistoryRange>('12');
@@ -288,6 +291,10 @@ export default function ResourceDetailsModal({
   const multiplier = useStepMultiplier();
   const effectiveTradeAmount = stepAmountFromMultiplier(multiplier, tradeAmount);
   const effectiveThresholdStep = stepAmountFromMultiplier(multiplier, autoSellThresholdStep);
+  const stepModifiersBody = stepModifiersHelpText(
+    t,
+    formatActionBinding(settings?.controls, 'IncreaseUnitProduction'),
+  );
 
   const history = useMemo(() => {
     const points = details?.history ?? [];
@@ -477,7 +484,7 @@ export default function ResourceDetailsModal({
                   content={{
                     title: t('Economy.AutoSellReserve'),
                     body: t('Economy.AutoSellReserveExplanation'),
-                    footer: t('Common.StepModifiersBody'),
+                    footer: stepModifiersBody,
                   }}
                   position="left"
                   wrapperClassName="erd-threshold-tooltip"

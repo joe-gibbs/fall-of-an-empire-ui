@@ -1,11 +1,14 @@
 import React, { useRef } from 'react';
 import Tooltip from '../common/tooltips/Tooltip';
-import type { TooltipContent } from '../common/tooltips/Tooltip';
 import IconButton from '../common/buttons/IconButton';
+import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
 import { useMapModeBridge } from '../../bridge/military-map/useMapModeBridge';
+import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
 import type { MapModeEntry } from '../../bridge-types.generated.ts';
+import { findActionBinding, getMapModeActionName } from '../../utils/actionBindings';
 import { MAP_MODE_TOOLTIPS } from './mapModeTooltipContent';
 import { MAP_MODE_ICONS } from './mapModeIcons';
+import { MapModeTooltip, TTHeader } from './MapModeTooltip';
 import ConvoyFilterPanel from './ConvoyFilterPanel';
 import MapModeFilterPanel from './MapModeFilterPanel';
 import OperationBar from './OperationBar';
@@ -29,16 +32,37 @@ function mapModeIcon(id: string): string {
   return `/assets/map-modes/${id}.png`;
 }
 
-function mapModeTooltipContent(id: string, label: string, entry?: MapModeEntry): React.ReactNode | TooltipContent {
+/** Fallback tooltip for custom / uncatalogued map modes, with live KeyGlyph. */
+function FallbackMapModeTooltip({
+  id,
+  label,
+  entry,
+}: {
+  id: string;
+  label: string;
+  entry?: MapModeEntry;
+}) {
+  const { settings } = useSettingsBridge();
+  const binding = findActionBinding(settings?.controls, getMapModeActionName(id));
+  const body = entry?.tooltip || entry?.description;
+
+  return (
+    <MapModeTooltip>
+      <TTHeader>{label}</TTHeader>
+      {body && <p>{body}</p>}
+      {binding && (
+        <div className="mmtt-shortcut">
+          <ActionKeyGlyph binding={binding} />
+        </div>
+      )}
+    </MapModeTooltip>
+  );
+}
+
+function mapModeTooltipContent(id: string, label: string, entry?: MapModeEntry): React.ReactNode {
   const fixedContent = MAP_MODE_TOOLTIPS[id];
   if (fixedContent) return fixedContent;
-
-  const body = entry?.tooltip || entry?.description;
-  if (!body) return { title: label };
-
-  return entry?.shortcut
-    ? { title: label, body, footer: entry.shortcut }
-    : { title: label, body };
+  return <FallbackMapModeTooltip id={id} label={label} entry={entry} />;
 }
 
 const BottomBar: React.FC = () => {

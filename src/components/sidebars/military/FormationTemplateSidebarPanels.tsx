@@ -27,6 +27,8 @@ import {
   stepButtonLabel,
   useStepMultiplier,
 } from '../../../utils/stepModifiers';
+import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
+import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
 import {
   battleFormationRole,
   battleGroupUnitCount,
@@ -185,7 +187,9 @@ export function UnitRow({
   const downgrade = unit.downgradeUnitId ? unitById.get(unit.downgradeUnitId) : undefined;
   const strength = unit.maxStrength * count;
   const upkeep = unit.upkeep * count;
-  const stepModifiersBody = webUIText('Common.StepModifiersBody');
+  const { settings } = useSettingsBridge();
+  const batchKey = formatActionBinding(settings?.controls, 'IncreaseUnitProduction');
+  const stepModifiersBody = stepModifiersHelpText(webUIText, batchKey);
   const stepMultiplier = useStepMultiplier();
   const effectiveStep = stepAmountFromMultiplier(stepMultiplier);
   const decrementLabel = stepButtonLabel(-1, effectiveStep);
@@ -523,6 +527,9 @@ export function CombatTab({
   onRemoveBattleGroup: (groupId: string) => void;
   onSetBattleGroupUnitCount: (groupId: string, unitId: string, count: number) => void;
 }) {
+  const { settings } = useSettingsBridge();
+  const batchKey = formatActionBinding(settings?.controls, 'IncreaseUnitProduction');
+  const stepModifiersBody = stepModifiersHelpText(webUIText, batchKey);
   const stepMultiplier = useStepMultiplier();
   const effectiveStep = stepAmountFromMultiplier(stepMultiplier);
   const decrementLabel = stepButtonLabel(-1, effectiveStep);
@@ -627,7 +634,7 @@ export function CombatTab({
                       <Tooltip
                         content={{
                           title: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.543.22'),
-                          body: webUIText('Common.StepModifiersBody'),
+                          body: stepModifiersBody,
                         }}
                         position="left"
                         delay={200}
@@ -670,7 +677,7 @@ export function CombatTab({
                       key={unit.id}
                       content={{
                         title: unit.name,
-                        body: webUIText('Common.StepModifiersBody'),
+                        body: stepModifiersBody,
                       }}
                       position="left"
                       delay={200}
