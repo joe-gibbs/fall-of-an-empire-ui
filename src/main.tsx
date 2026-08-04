@@ -2,10 +2,13 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/game-ui.css'
-import { installReactErrorDecoder } from './utils/reactErrorDecoder'
+import { createReactRootErrorOptions, installReactErrorDecoder } from './utils/reactErrorDecoder'
 
 // Expand minified React production codes (e.g. #185) in Unreal/Webkiln logs.
+// Component identity for those errors comes from createRoot error options below.
 installReactErrorDecoder()
+
+const reactRootErrorOptions = createReactRootErrorOptions()
 
 // Publish the mod SDK on window.FOAE. Must run before builtins (so the
 // registry functions exist on the global) and before any mod is loaded.
@@ -357,7 +360,7 @@ async function bootstrap() {
   installImageAutosize();
   await modsReady;
 
-  createRoot(document.getElementById('root')!).render(
+  createRoot(document.getElementById('root')!, reactRootErrorOptions).render(
     <StrictMode>
       <App />
     </StrictMode>,
@@ -396,7 +399,7 @@ async function bootstrapWorldAnchors() {
     import('./context/EscapeStackProvider'),
     import('./context/WorldAnchorGameStateProvider'),
   ]);
-  createRoot(document.getElementById('root')!).render(
+  createRoot(document.getElementById('root')!, reactRootErrorOptions).render(
     <StrictMode>
       <WorldAnchorGameStateProvider>
         <EscapeStackProvider>

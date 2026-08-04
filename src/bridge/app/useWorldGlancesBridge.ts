@@ -91,6 +91,10 @@ function mergeCatalogueEntries<T extends { id: string }>(
   upserts: T[],
   removedIds: Set<string>,
 ): T[] {
+  if (upserts.length === 0 && removedIds.size === 0) {
+    return current;
+  }
+
   const upsertById = new Map(upserts.map(entry => [entry.id, entry]));
   const merged = current
     .filter(entry => !removedIds.has(entry.id))
@@ -102,7 +106,46 @@ function mergeCatalogueEntries<T extends { id: string }>(
       existingIds.add(entry.id);
     }
   }
+
+  // Keep the previous array when every retained entry is the same reference and no ids were
+  // added/removed. Empty or no-op deltas must not allocate a new catalogue snapshot.
+  if (
+    merged.length === current.length
+    && merged.every((entry, index) => entry === current[index])
+  ) {
+    return current;
+  }
+
   return merged;
+}
+
+function catalogueDeltaHasChanges(delta: {
+  upsertedSettlements?: unknown;
+  upsertedPorts?: unknown;
+  upsertedArmies?: unknown;
+  upsertedNavies?: unknown;
+  upsertedBattles?: unknown;
+  upsertedConvoys?: unknown;
+  removedSettlementIds?: unknown;
+  removedPortIds?: unknown;
+  removedArmyIds?: unknown;
+  removedNavyIds?: unknown;
+  removedBattleIds?: unknown;
+  removedConvoyIds?: unknown;
+}): boolean {
+  const hasEntries = (value: unknown) => Array.isArray(value) && value.length > 0;
+  return hasEntries(delta.upsertedSettlements)
+    || hasEntries(delta.upsertedPorts)
+    || hasEntries(delta.upsertedArmies)
+    || hasEntries(delta.upsertedNavies)
+    || hasEntries(delta.upsertedBattles)
+    || hasEntries(delta.upsertedConvoys)
+    || hasEntries(delta.removedSettlementIds)
+    || hasEntries(delta.removedPortIds)
+    || hasEntries(delta.removedArmyIds)
+    || hasEntries(delta.removedNavyIds)
+    || hasEntries(delta.removedBattleIds)
+    || hasEntries(delta.removedConvoyIds);
 }
 
 function snapshotSectionEntries(data: GetWorldGlancesResponse | null, section: WorldGlanceFrameSection): { id: string }[] {
@@ -298,6 +341,8 @@ let worldGlancesStoreStop: (() => void) | null = null;
 let worldGlancesStoreGeneration = 0;
 let worldGlancesRefreshInFlight = false;
 let worldGlancesRefreshTimer: number | null = null;
+let worldGlancesStoreNotifyDepth = 0;
+let worldGlancesStoreNeedsRenotify = false;
 const worldGlancesStoreListeners = new Set<WorldGlancesStoreListener>();
 
 function getWorldGlancesStoreSnapshot(): GetWorldGlancesResponse | null {
@@ -310,8 +355,27 @@ function publishWorldGlancesStoreData(next: GetWorldGlancesResponse | null) {
   }
 
   worldGlancesStoreData = next;
-  for (const listener of worldGlancesStoreListeners) {
-    listener();
+
+  // useSyncExternalStore listeners force SyncLane re-renders. If a listener (or a nested
+  // catalogue/frame apply during that render) publishes again, collapse those into one more
+  // notify with the final snapshot instead of nesting React updates until error #185.
+  if (worldGlancesStoreNotifyDepth > 0) {
+    worldGlancesStoreNeedsRenotify = true;
+    return;
+  }
+
+  worldGlancesStoreNotifyDepth = 1;
+  try {
+    do {
+      worldGlancesStoreNeedsRenotify = false;
+      const listeners = Array.from(worldGlancesStoreListeners);
+      for (const listener of listeners) {
+        listener();
+      }
+    } while (worldGlancesStoreNeedsRenotify);
+  } finally {
+    worldGlancesStoreNotifyDepth = 0;
+    worldGlancesStoreNeedsRenotify = false;
   }
 }
 
@@ -399,44 +463,69 @@ function startWorldGlancesStore() {
       return;
     }
 
+    const nextRevision = typeof delta.snapshotRevision === 'number' && delta.snapshotRevision > 0
+      ? delta.snapshotRevision
+      : current.snapshotRevision;
+    const hasCatalogueChanges = catalogueDeltaHasChanges(delta);
+    if (!hasCatalogueChanges && nextRevision === current.snapshotRevision) {
+      return;
+    }
+
     const removedIds = (value: unknown) => new Set(
       Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [],
     );
+    const settlements = mergeCatalogueEntries(
+      current.settlements,
+      snapshotEntries<GetWorldGlancesResponse['settlements'][number]>(delta.upsertedSettlements),
+      removedIds(delta.removedSettlementIds),
+    );
+    const ports = mergeCatalogueEntries(
+      current.ports,
+      snapshotEntries<GetWorldGlancesResponse['ports'][number]>(delta.upsertedPorts),
+      removedIds(delta.removedPortIds),
+    );
+    const armies = mergeCatalogueEntries(
+      current.armies,
+      snapshotEntries<GetWorldGlancesResponse['armies'][number]>(delta.upsertedArmies),
+      removedIds(delta.removedArmyIds),
+    );
+    const navies = mergeCatalogueEntries(
+      current.navies,
+      snapshotEntries<GetWorldGlancesResponse['navies'][number]>(delta.upsertedNavies),
+      removedIds(delta.removedNavyIds),
+    );
+    const battles = mergeCatalogueEntries(
+      current.battles,
+      snapshotEntries<GetWorldGlancesResponse['battles'][number]>(delta.upsertedBattles),
+      removedIds(delta.removedBattleIds),
+    );
+    const convoys = mergeCatalogueEntries(
+      current.convoys,
+      snapshotEntries<GetWorldGlancesResponse['convoys'][number]>(delta.upsertedConvoys),
+      removedIds(delta.removedConvoyIds),
+    );
+
+    if (
+      nextRevision === current.snapshotRevision
+      && settlements === current.settlements
+      && ports === current.ports
+      && armies === current.armies
+      && navies === current.navies
+      && battles === current.battles
+      && convoys === current.convoys
+    ) {
+      return;
+    }
+
     publishWorldGlancesStoreData({
       ...current,
-      snapshotRevision: typeof delta.snapshotRevision === 'number' && delta.snapshotRevision > 0
-        ? delta.snapshotRevision
-        : current.snapshotRevision,
-      settlements: mergeCatalogueEntries(
-        current.settlements,
-        snapshotEntries<GetWorldGlancesResponse['settlements'][number]>(delta.upsertedSettlements),
-        removedIds(delta.removedSettlementIds),
-      ),
-      ports: mergeCatalogueEntries(
-        current.ports,
-        snapshotEntries<GetWorldGlancesResponse['ports'][number]>(delta.upsertedPorts),
-        removedIds(delta.removedPortIds),
-      ),
-      armies: mergeCatalogueEntries(
-        current.armies,
-        snapshotEntries<GetWorldGlancesResponse['armies'][number]>(delta.upsertedArmies),
-        removedIds(delta.removedArmyIds),
-      ),
-      navies: mergeCatalogueEntries(
-        current.navies,
-        snapshotEntries<GetWorldGlancesResponse['navies'][number]>(delta.upsertedNavies),
-        removedIds(delta.removedNavyIds),
-      ),
-      battles: mergeCatalogueEntries(
-        current.battles,
-        snapshotEntries<GetWorldGlancesResponse['battles'][number]>(delta.upsertedBattles),
-        removedIds(delta.removedBattleIds),
-      ),
-      convoys: mergeCatalogueEntries(
-        current.convoys,
-        snapshotEntries<GetWorldGlancesResponse['convoys'][number]>(delta.upsertedConvoys),
-        removedIds(delta.removedConvoyIds),
-      ),
+      snapshotRevision: nextRevision,
+      settlements,
+      ports,
+      armies,
+      navies,
+      battles,
+      convoys,
     });
   };
   bridgeEvents.addEventListener('game.world_glances_catalogue_delta', catalogueDeltaHandler);
