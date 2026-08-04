@@ -6683,10 +6683,13 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return peaceState();
       case 'game.start_peace_settlement_selection': {
         const terms = payloadValue(payload, 'terms');
+        const cancelSelection = payloadValue(payload, 'cancelSelection') === true;
         return {
           targetFactionId: payloadString(payload, 'targetFactionId', MOCK_IDS.rivalFaction),
-          selectionActive: true,
-          terms: Array.isArray(terms) ? terms as BridgeResponse<'game.start_peace_settlement_selection'>['terms'] : [],
+          selectionActive: !cancelSelection,
+          terms: cancelSelection
+            ? []
+            : Array.isArray(terms) ? terms as BridgeResponse<'game.start_peace_settlement_selection'>['terms'] : [],
         } satisfies BridgeResponse<'game.start_peace_settlement_selection'>;
       }
       case 'game.submit_peace_negotiation':

@@ -20,7 +20,9 @@ export interface PeaceNegotiationBridge {
   statePending: boolean;
   draftPreview: PeaceNegotiationDraftPreview | null;
   submit: (terms: PeaceTermDraft[]) => Promise<PeaceNegotiationSubmitResult | null>;
+  /** Start or re-sync map settlement selection to match the given territory terms. */
   startSettlementSelection: (terms: PeaceTermDraft[]) => Promise<StartPeaceSettlementSelectionResponse | null>;
+  endSettlementSelection: () => Promise<StartPeaceSettlementSelectionResponse | null>;
 }
 
 export function usePeaceNegotiationBridge(
@@ -81,6 +83,7 @@ export function usePeaceNegotiationBridge(
       return await bridgeCall('game.start_peace_settlement_selection', {
         targetFactionId,
         terms: currentTerms,
+        cancelSelection: false,
       });
     } catch (error) {
       acknowledgeBridgeFailure(error, 'game.start_peace_settlement_selection');
@@ -88,5 +91,26 @@ export function usePeaceNegotiationBridge(
     }
   }, [targetFactionId]);
 
-  return { state: stateQuery.value, statePending: stateQuery.pending, draftPreview, submit, startSettlementSelection };
+  const endSettlementSelection = useCallback(async () => {
+    if (!targetFactionId) return null;
+    try {
+      return await bridgeCall('game.start_peace_settlement_selection', {
+        targetFactionId,
+        terms: [],
+        cancelSelection: true,
+      });
+    } catch (error) {
+      acknowledgeBridgeFailure(error, 'game.start_peace_settlement_selection');
+      return null;
+    }
+  }, [targetFactionId]);
+
+  return {
+    state: stateQuery.value,
+    statePending: stateQuery.pending,
+    draftPreview,
+    submit,
+    startSettlementSelection,
+    endSettlementSelection,
+  };
 }

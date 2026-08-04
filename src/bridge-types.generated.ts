@@ -5543,6 +5543,7 @@ export interface SubmitPeaceNegotiationResponse {
 export interface StartPeaceSettlementSelectionRequest {
   targetFactionId: string;
   terms: PeaceNegotiationTermDraft[];
+  cancelSelection: boolean;
 }
 
 export interface StartPeaceSettlementSelectionResponse {

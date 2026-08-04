@@ -10,7 +10,7 @@ import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/too
 import NumberStepper from '../../common/forms/NumberStepper';
 import { usePeaceNegotiationBridge, type PeaceNegotiationState, type PeaceTermDraft } from '../../../bridge/diplomacy/usePeaceNegotiationBridge';
 import { onBridgeEvent } from '../../../bridge-types.generated.ts';
-import { useGameActions, useGameState } from '../../../context/GameContext';
+import { useGameActions } from '../../../context/GameContext';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { renderRichText, stripRichTags } from '../../../utils/richText';
 import { registerScreen } from '../../../registry/index';
@@ -317,32 +317,6 @@ function fmtWarScore(value: number): string {
   return webUIText('PeaceNegotiation.WarScoreStalemate', { Score: formatted });
 }
 
-function fmtWarDuration(days: number | undefined, daysInYear: number, daysInMonth: number): string {
-  const totalDays = Math.max(0, Math.round(days ?? 0));
-  const years = Math.floor(totalDays / daysInYear);
-  const remainingDays = totalDays % daysInYear;
-  const months = Math.floor(remainingDays / daysInMonth);
-  const daysLeft = remainingDays % daysInMonth;
-
-  if (years > 0 && months > 0) {
-    return webUIText('Common.YearMonthDuration', {
-      Years: fmt(years),
-      YearUnit: webUIText(years === 1 ? 'Common.Year' : 'Common.Years'),
-      Months: fmt(months),
-      MonthUnit: webUIText(months === 1 ? 'Common.Month' : 'Common.Months'),
-    });
-  }
-  if (years > 0) {
-    return webUIText('Common.CountWithUnit', { Count: fmt(years), Unit: webUIText(years === 1 ? 'Common.Year' : 'Common.Years') });
-  }
-  if (months > 0) {
-    return webUIText('Common.CountWithUnit', { Count: fmt(months), Unit: webUIText(months === 1 ? 'Common.Month' : 'Common.Months') });
-  }
-
-  const shownDays = Math.max(1, daysLeft);
-  return webUIText('Common.CountWithUnit', { Count: fmt(shownDays), Unit: webUIText(shownDays === 1 ? 'Common.Day' : 'Common.Days') });
-}
-
 function fmtStrength(value: number | undefined): string {
   const strength = Math.round(value ?? 0);
   if (strength >= 1000) {
@@ -443,23 +417,6 @@ function optionGroupLabel(option: TermOption): string {
 function shouldGroupOptions(options: TermOption[]): boolean {
   if (options.length > 1) return true;
   return options[0]?.type === 'release_vassal';
-}
-
-function buildWarSummary(state: PeaceNegotiationState, daysInYear: number, daysInMonth: number): string {
-  const parts = [fmtWarDuration(state.warDurationDays, daysInYear, daysInMonth)];
-  if (state.battlesFought > 0) {
-    parts.push(webUIText(
-      state.battlesFought === 1 ? 'PeaceNegotiation.WarSummary.Battle' : 'PeaceNegotiation.WarSummary.Battles',
-      { Count: fmt(state.battlesFought) },
-    ));
-  }
-  if (state.settlementsCaptured > 0) {
-    parts.push(webUIText(
-      state.settlementsCaptured === 1 ? 'PeaceNegotiation.WarSummary.SettlementTaken' : 'PeaceNegotiation.WarSummary.SettlementsTaken',
-      { Count: fmt(state.settlementsCaptured) },
-    ));
-  }
-  return parts.join(' - ');
 }
 
 function ParticipantRow({
@@ -997,7 +954,6 @@ function PeaceNegotiationScreenContent({
   onClose: () => void;
 }) {
   const { openScreen, openSidebar } = useGameActions();
-  const { daysInYear, daysInMonth } = useGameState();
   const [terms, setTerms] = useState<PeaceTermDraft[]>([]);
   const [sourceOfferHydrated, setSourceOfferHydrated] = useState(false);
   const [submitState, setSubmitState] = useState<PeaceNegotiationState | null>(null);
@@ -1008,6 +964,7 @@ function PeaceNegotiationScreenContent({
   const [activeSettlementSelectionOptionId, setActiveSettlementSelectionOptionId] = useState<string | null>(null);
   const [initialSourceTerms, setInitialSourceTerms] = useState<PeaceTermDraft[] | null>(null);
   const acceptedCloseTimerRef = useRef<number | null>(null);
+  const settlementSelectionActiveRef = useRef(false);
   const bridgeTargetFactionId = sourceOfferSelector && !sourceOfferHydrated ? sourceOfferSelector : targetFactionId;
   const sourceOfferUnmodified = Boolean(
     sourceOfferSelector
@@ -1077,7 +1034,6 @@ function PeaceNegotiationScreenContent({
           ) : null}
         </div>
         <span className="pns-title-progress-value">{fmtWarScore(warScore)}</span>
-        <span className="pns-title-progress-summary">{buildWarSummary(state, daysInYear, daysInMonth)}</span>
       </div>
     </Tooltip>
   ) : undefined;
@@ -1102,7 +1058,16 @@ function PeaceNegotiationScreenContent({
   }) => {
     const selectionTargetFactionId = state?.targetFactionId || targetFactionId;
     if (!selectionTargetFactionId) return;
-    if (!selection.selectionActive || selection.targetFactionId !== selectionTargetFactionId) return;
+
+    settlementSelectionActiveRef.current = selection.selectionActive
+      && selection.targetFactionId === selectionTargetFactionId;
+
+    if (!selection.selectionActive || selection.targetFactionId !== selectionTargetFactionId) {
+      if (!selection.selectionActive) {
+        setActiveSettlementSelectionOptionId(null);
+      }
+      return;
+    }
 
     setOutcome(null);
     setAcceptedMessage(null);
@@ -1120,11 +1085,16 @@ function PeaceNegotiationScreenContent({
     onBridgeEvent('game.start_peace_settlement_selection', applySettlementSelection)
   ), [applySettlementSelection]);
 
+  const endSettlementSelection = bridge.endSettlementSelection;
   useEffect(() => () => {
     if (acceptedCloseTimerRef.current !== null) {
       window.clearTimeout(acceptedCloseTimerRef.current);
     }
-  }, []);
+    if (settlementSelectionActiveRef.current) {
+      settlementSelectionActiveRef.current = false;
+      void endSettlementSelection();
+    }
+  }, [endSettlementSelection]);
 
   const acceptabilityBreakdown: TooltipContent = useMemo(() => ({
     title: webUIText('Auto.Prop.ComponentsScreensPeaceNegotiationScreen.804.13'),
@@ -1168,6 +1138,22 @@ function PeaceNegotiationScreenContent({
     </div>
   ) : null;
 
+  const syncMapSelectionToTerms = (nextTerms: PeaceTermDraft[]) => {
+    if (!settlementSelectionActiveRef.current && !nextTerms.some(isTerritorySelectionTerm)) {
+      return;
+    }
+
+    void bridge.startSettlementSelection(nextTerms).then(selection => {
+      if (!selection) return;
+      settlementSelectionActiveRef.current = selection.selectionActive;
+      if (!selection.selectionActive) {
+        setActiveSettlementSelectionOptionId(null);
+      }
+      // Do not run applySettlementSelection here: the list already owns nextTerms.
+      // Re-applying map→list would fight a remove/reset that intentionally dropped terms.
+    });
+  };
+
   const addTerm = (option: TermOption) => {
     if (option.isSelected || selectedIds.has(option.optionId)) return;
     setOutcome(null);
@@ -1188,7 +1174,14 @@ function PeaceNegotiationScreenContent({
   const removeTerm = (termId: string) => {
     setOutcome(null);
     setAcceptedMessage(null);
-    setTerms(current => current.filter(term => (term.termId || termKey(term)) !== termId));
+    setTerms(current => {
+      const removed = current.find(term => (term.termId || termKey(term)) === termId);
+      const next = current.filter(term => (term.termId || termKey(term)) !== termId);
+      if (removed && isTerritorySelectionTerm(removed)) {
+        syncMapSelectionToTerms(next);
+      }
+      return next;
+    });
   };
 
   const updateTerm = (termId: string, patch: Partial<PeaceTermDraft>) => {
@@ -1203,14 +1196,15 @@ function PeaceNegotiationScreenContent({
     setOutcome(null);
     setAcceptedMessage(null);
     setSubmitState(null);
-    if (sourceOfferSelector && initialSourceTerms) {
-      setTerms(initialSourceTerms);
-    } else {
-      setTerms([]);
-    }
+    const nextTerms = sourceOfferSelector && initialSourceTerms ? initialSourceTerms : [];
+    const hadTerritory = terms.some(isTerritorySelectionTerm) || nextTerms.some(isTerritorySelectionTerm);
+    setTerms(nextTerms);
     setSelectedDemandTargetId(null);
     setSelectedConcessionGiverId(null);
     setActiveSettlementSelectionOptionId(null);
+    if (hadTerritory || settlementSelectionActiveRef.current) {
+      syncMapSelectionToTerms(nextTerms);
+    }
   };
 
   const handleSubmit = async () => {
