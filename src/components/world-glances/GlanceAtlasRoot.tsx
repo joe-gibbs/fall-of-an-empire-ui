@@ -169,13 +169,25 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
     : null;
   const garrisonIndex = militaryEntry?.garrisoned ? militaryEntry.garrisonIndex ?? 0 : 0;
   const reserveSize = reserveSizeForSection(section, remPx, settlementBleedRem, garrisonIndex);
+  // Armies and navies pack before dense settlement plates so a full atlas cannot strand a
+  // military glance that is on-camera while lower-priority cells keep retained slots.
+  const packPriority = section === 'army' || section === 'navy'
+    ? 20
+    : section === 'battle'
+      ? 15
+      : section === 'port' || section === 'convoy'
+        ? 5
+        : 0;
   const anchorAttributes = {
     'data-webkiln-anchor': anchorKey,
     'data-webkiln-anchor-point': anchorPointFor(section, detailClassName, remPx, settlementBleedRem),
     'data-webkiln-anchor-raster-scale': rasterScale,
     ...(section === 'notification'
       ? { 'data-webkiln-anchor-persistent': true }
-      : { 'data-webkiln-anchor-demand': atlasVisible ? 'visible' : 'hidden' }),
+      : {
+        'data-webkiln-anchor-demand': atlasVisible ? 'visible' : 'hidden',
+        'data-webkiln-anchor-priority': packPriority,
+      }),
     ...(reserveSize ? { 'data-webkiln-anchor-reserve-size': reserveSize } : {}),
   };
   const style = {
@@ -375,6 +387,8 @@ export default function GlanceAtlasRoot() {
 
   // Frame events drive admission, detail level, and selection/target styling. The catalogue DOM
   // remains stable while the double-buffered atlas admits the camera-visible subset.
+  // Demand must track the live frame only: sticky off-screen demand filled the atlas after a
+  // zoom-in and stranded the plates that were still on camera.
   useEffect(() => {
     const scratch = makeWorldGlanceFrameEntryScratch();
     return onWorldGlancesFrame((frame) => {
@@ -388,12 +402,9 @@ export default function GlanceAtlasRoot() {
           const entry = readWorldGlanceFrameEntry(frame, section, index, scratch);
           if (!entry || !entry.id) continue;
           const key = worldAnchorKey(section, entry.id);
-          const atlasVisible =
-            (entry.opacity ?? 0) > UI_PRESENTATION.worldAnchors.visibleOpacityThreshold;
-
-          if (atlasVisible) {
-            nextVisibleKeys.add(key);
-          }
+          // Frame membership alone drives atlas demand. Host placements already apply opacity
+          // (including zoom fade).
+          nextVisibleKeys.add(key);
 
           if (section === 'settlement' && typeof entry.hasBuildItem === 'boolean') {
             const nextBuildItemFrame = {
@@ -405,7 +416,7 @@ export default function GlanceAtlasRoot() {
               || buildItemFrame.hasBuildItem !== nextBuildItemFrame.hasBuildItem
               || buildItemFrame.progress !== nextBuildItemFrame.progress) {
               const node = plateNodesRef.current.get(key);
-              if (node && atlasVisible) {
+              if (node) {
                 prepareWorldAnchorContentChange(node);
               }
               buildItemFrameByKeyRef.current.set(key, nextBuildItemFrame);
@@ -416,7 +427,7 @@ export default function GlanceAtlasRoot() {
           const nextDetail = detailClass(entry.detailLevel);
           if (detailByKeyRef.current.get(key) !== nextDetail) {
             const node = plateNodesRef.current.get(key);
-            if (node && atlasVisible) {
+            if (node) {
               prepareWorldAnchorContentChange(node);
             }
             detailByKeyRef.current.set(key, nextDetail);
@@ -434,7 +445,8 @@ export default function GlanceAtlasRoot() {
       }
       const previousVisibleKeys = visibleAtlasKeysRef.current;
       const visibilityChanged = previousVisibleKeys.size !== nextVisibleKeys.size
-        || Array.from(nextVisibleKeys).some(key => !previousVisibleKeys.has(key));
+        || Array.from(nextVisibleKeys).some(key => !previousVisibleKeys.has(key))
+        || Array.from(previousVisibleKeys).some(key => !nextVisibleKeys.has(key));
       visibleAtlasKeysRef.current = nextVisibleKeys;
 
       if (detailChanged) {

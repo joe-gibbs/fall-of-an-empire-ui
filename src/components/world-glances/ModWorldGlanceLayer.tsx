@@ -151,9 +151,7 @@ function ModWorldGlanceNode({ registration, entry, atlas, glanceScale, worldAnch
         data-webkiln-anchor={entry.anchorKey}
         data-webkiln-anchor-point={anchorPoint}
         data-webkiln-anchor-raster-scale={rasterScale}
-        data-webkiln-anchor-demand={
-          entry.opacity > UI_PRESENTATION.worldAnchors.visibleOpacityThreshold ? 'visible' : 'hidden'
-        }
+        data-webkiln-anchor-demand="visible"
       >
         {content}
       </div>
