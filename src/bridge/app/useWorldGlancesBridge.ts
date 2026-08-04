@@ -178,12 +178,19 @@ function cachedWorldGlancesFrame(): WorldGlancesFrameResponse | null {
 
 type WorldGlancesStoreListener = () => void;
 
+// Published snapshot (what getSnapshot returns) and the pending latest catalogue must stay
+// separate. Mutating getSnapshot without calling onStoreChange in the same turn makes React's
+// useSyncExternalStore consistency check force-rerender forever (max update depth #185).
 let worldGlancesStoreData = cachedWorldGlancesSnapshot();
+let worldGlancesPendingData = worldGlancesStoreData;
 let worldGlancesStoreStop: (() => void) | null = null;
 let worldGlancesStoreGeneration = 0;
 let worldGlancesRefreshInFlight = false;
 let worldGlancesRefreshTimer: number | null = null;
 let worldGlancesStoreNotifyScheduled = false;
+let worldGlancesStoreFlushing = false;
+let worldGlancesStoreNeedsReflush = false;
+let worldGlancesStoreNotifyRaf: number | null = null;
 const worldGlancesStoreListeners = new Set<WorldGlancesStoreListener>();
 
 function getWorldGlancesStoreSnapshot(): GetWorldGlancesResponse | null {
@@ -192,33 +199,55 @@ function getWorldGlancesStoreSnapshot(): GetWorldGlancesResponse | null {
 
 function flushWorldGlancesStoreListeners() {
   worldGlancesStoreNotifyScheduled = false;
-  // Re-read listeners at flush time so unsubscribes between schedule and run are honoured.
-  const listeners = Array.from(worldGlancesStoreListeners);
-  for (const listener of listeners) {
-    listener();
+  worldGlancesStoreNotifyRaf = null;
+  worldGlancesStoreFlushing = true;
+  worldGlancesStoreNeedsReflush = false;
+
+  // Advance the published snapshot only when notifying. Catalogue merge/read always uses
+  // pending; subscribers only see a new getSnapshot value together with onStoreChange.
+  if (worldGlancesStoreData !== worldGlancesPendingData) {
+    worldGlancesStoreData = worldGlancesPendingData;
+    const listeners = Array.from(worldGlancesStoreListeners);
+    for (const listener of listeners) {
+      listener();
+    }
+  }
+
+  worldGlancesStoreFlushing = false;
+  // Publishes that land during a SyncLane re-render must not notify mid-flush (React #185).
+  // Coalesce to one follow-up frame instead.
+  if (worldGlancesStoreNeedsReflush) {
+    worldGlancesStoreNeedsReflush = false;
+    scheduleWorldGlancesStoreNotify();
   }
 }
 
-function publishWorldGlancesStoreData(next: GetWorldGlancesResponse | null) {
-  if (next === worldGlancesStoreData) {
-    return;
-  }
-
-  // Keep the latest snapshot immediately so getSnapshot() is correct for any render already in
-  // flight. Defer listener notify so a burst of catalogue deltas in one native turn coalesces to
-  // a single React update wave. Notifying useSyncExternalStore synchronously per delta nests
-  // SyncLane re-renders until React error #185.
-  //
-  // Live siege/battle progress must not publish through this store: those values change every
-  // camera/simulation frame. Consumers apply frame overlays locally instead.
-  worldGlancesStoreData = next;
-
+function scheduleWorldGlancesStoreNotify() {
   if (worldGlancesStoreNotifyScheduled) {
     return;
   }
-
   worldGlancesStoreNotifyScheduled = true;
-  queueMicrotask(flushWorldGlancesStoreListeners);
+  // rAF: at most one React subscriber wave per display frame, even when catalogue deltas
+  // arrive in bursts. Microtasks re-entered SyncLane updates and hit max depth.
+  worldGlancesStoreNotifyRaf = window.requestAnimationFrame(flushWorldGlancesStoreListeners);
+}
+
+function publishWorldGlancesStoreData(next: GetWorldGlancesResponse | null) {
+  if (next === worldGlancesPendingData) {
+    return;
+  }
+
+  // Stage the latest catalogue immediately for merge/read, but do not change getSnapshot until
+  // flush notifies. Live siege/battle progress must not publish through this store: those values
+  // change every camera/simulation frame. Consumers apply frame overlays locally instead.
+  worldGlancesPendingData = next;
+
+  if (worldGlancesStoreFlushing) {
+    worldGlancesStoreNeedsReflush = true;
+    return;
+  }
+
+  scheduleWorldGlancesStoreNotify();
 }
 
 function shouldApplySnapshot(
@@ -252,7 +281,7 @@ function startWorldGlancesStore() {
   const isActive = () => generation === worldGlancesStoreGeneration;
 
   const applySnapshot = (next: GetWorldGlancesResponse | null) => {
-    if (!isActive() || !shouldApplySnapshot(worldGlancesStoreData, next)) {
+    if (!isActive() || !shouldApplySnapshot(worldGlancesPendingData, next)) {
       return;
     }
     publishWorldGlancesStoreData(next);
@@ -323,7 +352,7 @@ function startWorldGlancesStore() {
         removedConvoyIds?: unknown;
       }
       : {};
-    const current = worldGlancesStoreData;
+    const current = worldGlancesPendingData;
     if (!current) {
       return;
     }
@@ -398,7 +427,7 @@ function startWorldGlancesStore() {
   const unsubscribeFrame = onWorldGlancesFrame((frame) => {
     // Frames only drive placement/progress overlays in the atlas layer. The catalogue store stays
     // on full snapshots and catalogue deltas so high-frequency frames cannot flood React.
-    if (!worldGlancesStoreData && frameHasEntries(frame)) {
+    if (!worldGlancesPendingData && frameHasEntries(frame)) {
       queueRefresh();
     }
   });
@@ -412,6 +441,13 @@ function startWorldGlancesStore() {
       window.clearTimeout(worldGlancesRefreshTimer);
       worldGlancesRefreshTimer = null;
     }
+    if (worldGlancesStoreNotifyRaf !== null) {
+      window.cancelAnimationFrame(worldGlancesStoreNotifyRaf);
+      worldGlancesStoreNotifyRaf = null;
+    }
+    worldGlancesStoreNotifyScheduled = false;
+    worldGlancesStoreFlushing = false;
+    worldGlancesStoreNeedsReflush = false;
     worldGlancesRefreshInFlight = false;
     unsubscribeSnapshot();
     unsubscribeFrame();
@@ -421,7 +457,7 @@ function startWorldGlancesStore() {
 
   // Catalogue deltas keep a live snapshot current. Only pull a full catalogue when empty so
   // re-subscribes cannot flood game.get_world_glances every render.
-  if (!worldGlancesStoreData) {
+  if (!worldGlancesPendingData) {
     refreshSnapshot();
   }
 }

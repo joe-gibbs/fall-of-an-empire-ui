@@ -390,8 +390,11 @@ export default function GlanceAtlasRoot() {
   };
 
   // Fold new catalogue entries into the persistent cache (see comment above).
+  // Drop ids that left the catalogue so un-garrisoned / destroyed entities cannot keep a
+  // stale plate (e.g. garrison chips after an army has marched out).
   useEffect(() => {
     let changed = false;
+    let removedKeys = false;
     for (const section of ATLAS_SECTIONS) {
       let sectionCache = entryCacheRef.current.get(section);
       if (!sectionCache) {
@@ -402,8 +405,10 @@ export default function GlanceAtlasRoot() {
       const entries = section === 'notification'
         ? notificationEntries
         : (data ? worldSectionEntries(data, section) : []);
+      const liveIds = new Set<string>();
       for (const entry of entries) {
         if (entry?.id) {
+          liveIds.add(entry.id);
           const previousEntry = sectionCache.get(entry.id);
           if (previousEntry !== entry) {
             const key = worldAnchorKey(section, entry.id);
@@ -416,11 +421,33 @@ export default function GlanceAtlasRoot() {
           sectionCache.set(entry.id, entry);
         }
       }
+      for (const id of Array.from(sectionCache.keys())) {
+        if (liveIds.has(id)) {
+          continue;
+        }
+        sectionCache.delete(id);
+        const key = worldAnchorKey(section, id);
+        detailByKeyRef.current.delete(key);
+        flagsByKeyRef.current.delete(key);
+        settlementFrameByKeyRef.current.delete(key);
+        battleFrameByKeyRef.current.delete(key);
+        visibleAtlasKeysRef.current.delete(key);
+        changed = true;
+        removedKeys = true;
+      }
     }
-    if (changed) {
-      setEntryCache(new Map(
-        Array.from(entryCacheRef.current.entries(), ([section, sectionCache]) => [section, new Map(sectionCache)]),
-      ));
+    if (!changed) {
+      return;
+    }
+    setEntryCache(new Map(
+      Array.from(entryCacheRef.current.entries(), ([section, sectionCache]) => [section, new Map(sectionCache)]),
+    ));
+    if (removedKeys) {
+      setDetailByKey(new Map(detailByKeyRef.current));
+      setFlagsByKey(new Map(flagsByKeyRef.current));
+      setSettlementFrameByKey(new Map(settlementFrameByKeyRef.current));
+      setBattleFrameByKey(new Map(battleFrameByKeyRef.current));
+      setVisibleAtlasKeys(new Set(visibleAtlasKeysRef.current));
     }
   }, [data, notificationEntries]);
 
@@ -478,7 +505,6 @@ export default function GlanceAtlasRoot() {
   // remains stable while the double-buffered atlas admits the camera-visible subset.
   useEffect(() => {
     const scratch = makeWorldGlanceFrameEntryScratch();
-    const opacityThreshold = UI_PRESENTATION.worldAnchors.visibleOpacityThreshold;
     let pendingDetail = false;
     let pendingFlags = false;
     let pendingSettlementFrame = false;
@@ -526,13 +552,11 @@ export default function GlanceAtlasRoot() {
           const entry = readWorldGlanceFrameEntry(frame, section, index, scratch);
           if (!entry || !entry.id) continue;
           const key = worldAnchorKey(section, entry.id);
-          // Armies/navies/battles always demand when framed. Settlements/ports/convoys only demand
-          // when their zoom-fade opacity is high enough to paint - faded settlement plates were
-          // filling the atlas and stranding military glances that should stay visible.
-          const alwaysDemand = section === 'army' || section === 'navy' || section === 'battle';
-          if (alwaysDemand || (entry.opacity ?? 0) > opacityThreshold) {
-            nextVisibleKeys.add(key);
-          }
+          // Frame membership alone drives atlas demand. The engine already omits zoom-faded
+          // settlement/port/convoy entries from the frame; a second opacity gate here was wrong
+          // because entry.opacity is scaled by WorldGlanceOpacity (0.8), so plates just inside
+          // the engine show band could fail the UI threshold and never pack.
+          nextVisibleKeys.add(key);
 
           if (section === 'settlement') {
             const nextSettlementFrame: SettlementFrameOverlay = {

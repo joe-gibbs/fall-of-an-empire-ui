@@ -3,12 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/game-ui.css'
 import { createReactRootErrorOptions, installReactErrorDecoder } from './utils/reactErrorDecoder'
-import { installReactUpdateDiagnostics } from './utils/reactUpdateDiagnostics'
 
 // React is built as the development bundle so thrown errors already carry full
-// text. Update diagnostics attribute setState storms to components; the decoder
-// formats createRoot / window errors with fiber paths for Unreal/Webkiln logs.
-installReactUpdateDiagnostics()
+// text. The decoder expands leftover minified codes and formats createRoot /
+// window errors with fiber paths for Unreal/Webkiln logs.
+//
+// Do not install setState/useSyncExternalStore wrappers for diagnostics here:
+// wrapping useSyncExternalStore re-subscribe paths previously restarted the
+// world-glances store every render and caused React #185 (blank atlas).
 installReactErrorDecoder()
 
 const reactRootErrorOptions = createReactRootErrorOptions()
