@@ -101,13 +101,15 @@ export function useDraggableOffset(options: UseDraggableOffsetOptions = {}): Use
   const dragRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
   const offsetRef = useRef<DraggableOffset>({ x: offsetState.x, y: offsetState.y });
 
+  // Adjust state during render when the panel identity changes (React-supported
+  // pattern). Bail when already keyed so re-renders cannot nest updates.
   if (offsetState.key !== resetKey) {
     setOffsetState({ x: 0, y: 0, key: resetKey });
   }
 
-  const offset: DraggableOffset = offsetState.key === resetKey
-    ? { x: offsetState.x, y: offsetState.y }
-    : { x: 0, y: 0 };
+  const offsetX = offsetState.key === resetKey ? offsetState.x : 0;
+  const offsetY = offsetState.key === resetKey ? offsetState.y : 0;
+  const offset: DraggableOffset = { x: offsetX, y: offsetY };
 
   const beginDrag = useCallback((clientX: number, clientY: number, origin: DraggableOffset) => {
     dragRef.current = {
@@ -133,8 +135,8 @@ export function useDraggableOffset(options: UseDraggableOffsetOptions = {}): Use
   }, [beginDrag, blockClassNames, disabled]);
 
   useEffect(() => {
-    offsetRef.current = { x: offset.x, y: offset.y };
-  }, [offset.x, offset.y]);
+    offsetRef.current = { x: offsetX, y: offsetY };
+  }, [offsetX, offsetY]);
 
   useEffect(() => {
     // Drop any in-progress drag when the panel content identity changes.

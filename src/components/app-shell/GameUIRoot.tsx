@@ -1,4 +1,4 @@
-import { Profiler, useEffect, useState, useCallback } from 'react';
+import { Profiler, useEffect, useRef, useState, useCallback } from 'react';
 import { useGame } from '../../context/GameContext';
 import TopBar from '../topbar/TopBar';
 import BottomBar from '../bottombar/BottomBar';
@@ -76,14 +76,15 @@ export default function GameUIRoot() {
   );
   useFactionBorderHighlightBridge(leftSidebar === 'diplomacy' ? leftSidebarId : null);
 
+  const playerFactionId = playerFaction?.id ?? null;
   useEffect(() => {
-    if (!playerFaction) return;
+    if (!playerFactionId) return;
     if (subjectMode && activeScreen === 'faction-overview') {
       openScreen('governor-faction-overview', activeScreenId ?? undefined);
     } else if (!subjectMode && activeScreen === 'governor-faction-overview') {
       openScreen('faction-overview', activeScreenId ?? undefined);
     }
-  }, [activeScreen, activeScreenId, openScreen, playerFaction, subjectMode]);
+  }, [activeScreen, activeScreenId, openScreen, playerFactionId, subjectMode]);
 
   // Current LLM/tutorial event pushed from the game (null when nothing is active).
   const { event: bridgeEvent, chooseOption: bridgeChooseOption } = useEventBridge();
@@ -328,8 +329,16 @@ export default function GameUIRoot() {
   else if (rightSidebarReg) autoAdvisorTopic = rightSidebarReg.advisorTopic ?? null;
   else if (leftSidebarReg) autoAdvisorTopic = leftSidebarReg.advisorTopic ?? null;
 
+  // Only re-request a hint when the topic actually changes. Repeated show calls
+  // push fresh hint events and re-render the whole HUD every time.
+  const lastAdvisorTopicRef = useRef<AdvisorTopicId | null | undefined>(undefined);
   useEffect(() => {
-    if (showPause || showVictory || showGameOver || showOutcomeLoad) return;
+    if (showPause || showVictory || showGameOver || showOutcomeLoad) {
+      lastAdvisorTopicRef.current = undefined;
+      return;
+    }
+    if (lastAdvisorTopicRef.current === autoAdvisorTopic) return;
+    lastAdvisorTopicRef.current = autoAdvisorTopic;
     if (autoAdvisorTopic) showAdvisor(autoAdvisorTopic);
     else dismissAdvisor();
   }, [showPause, showVictory, showGameOver, showOutcomeLoad, autoAdvisorTopic, showAdvisor, dismissAdvisor]);

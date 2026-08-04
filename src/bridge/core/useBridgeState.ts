@@ -85,6 +85,31 @@ function mapResources(res: GetResourcesResponse): Partial<BridgeGameState> {
   };
 }
 
+function bridgeGameStateEqual(a: BridgeGameState, b: BridgeGameState): boolean {
+  return a.isPaused === b.isPaused
+    && a.speed === b.speed
+    && a.date?.day === b.date?.day
+    && a.date?.month === b.date?.month
+    && a.date?.year === b.date?.year
+    && a.dateText === b.dateText
+    && a.season === b.season
+    && a.gameDay === b.gameDay
+    && a.calendarKey === b.calendarKey
+    && a.daysInYear === b.daysInYear
+    && a.daysInMonth === b.daysInMonth
+    && a.debugMode === b.debugMode
+    && a.climateTrend === b.climateTrend
+    && a.climateDescription === b.climateDescription
+    && a.saveSerial === b.saveSerial
+    && a.hasDemoTimeLimit === b.hasDemoTimeLimit
+    && a.demoDaysRemaining === b.demoDaysRemaining
+    && a.demoEndDateText === b.demoEndDateText
+    && a.gold === b.gold
+    && a.goldDelta === b.goldDelta
+    && a.population === b.population
+    && a.populationDelta === b.populationDelta;
+}
+
 /**
  * Hook that connects to the game bridge for core HUD state.
  */
@@ -96,7 +121,11 @@ export function useBridgeState(): BridgeGameState | null {
 
     const applyState = (nextState: Partial<BridgeGameState>) => {
       if (cancelled) return;
-      setState(prev => ({ ...(prev ?? {}), ...nextState }));
+      setState(prev => {
+        const merged: BridgeGameState = { ...(prev ?? {}), ...nextState };
+        if (prev && bridgeGameStateEqual(prev, merged)) return prev;
+        return merged;
+      });
     };
 
     const resetState = () => {
@@ -137,8 +166,7 @@ export function useBridgeState(): BridgeGameState | null {
     const handleDateChanged = (event: Event) => {
       const detail = (event as CustomEvent<unknown>).detail;
       if (!isGameDateChangedEvent(detail)) return;
-      setState(prev => ({
-        ...(prev ?? {}),
+      applyState({
         date: { day: detail.day, month: detail.month, year: detail.year },
         dateText: detail.dateText,
         season: detail.season,
@@ -147,7 +175,7 @@ export function useBridgeState(): BridgeGameState | null {
         daysInYear: detail.daysInYear,
         daysInMonth: detail.daysInMonth,
         demoDaysRemaining: detail.demoDaysRemaining,
-      }));
+      });
     };
     bridgeEvents.addEventListener('game.game_date_changed', handleDateChanged as EventListener);
 

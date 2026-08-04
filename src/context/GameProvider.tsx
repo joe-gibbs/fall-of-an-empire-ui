@@ -165,16 +165,28 @@ export function GameProvider({ children }: { children: ReactNode }) {
     onHintShown: (hint) => {
       const paragraphs = hint.paragraphs.filter(paragraph => paragraph.trim().length > 0);
       if (!hint.title && paragraphs.length === 0) return;
-      setState(s => ({
-        ...s,
-        advisorHint: {
-          hintKey: hint.hintKey,
-          title: hint.title,
-          paragraphs,
-        },
-        advisorStep: 0,
-        advisorVisible: true,
-      }));
+      setState(s => {
+        if (
+          s.advisorVisible
+          && s.advisorHint
+          && s.advisorHint.hintKey === hint.hintKey
+          && s.advisorHint.title === hint.title
+          && s.advisorHint.paragraphs.length === paragraphs.length
+          && s.advisorHint.paragraphs.every((paragraph, index) => paragraph === paragraphs[index])
+        ) {
+          return s;
+        }
+        return {
+          ...s,
+          advisorHint: {
+            hintKey: hint.hintKey,
+            title: hint.title,
+            paragraphs,
+          },
+          advisorStep: 0,
+          advisorVisible: true,
+        };
+      });
     },
   }), []);
   useHintEventsBridge(hintEventHandlers);
@@ -434,7 +446,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismissAdvisor = useCallback(() => {
-    setState(s => ({ ...s, advisorVisible: false }));
+    setState(s => (s.advisorVisible ? { ...s, advisorVisible: false } : s));
   }, []);
 
   const nextAdvisorPage = useCallback(() => {
@@ -447,10 +459,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const previousAdvisorPage = useCallback(() => {
-    setState(s => ({
-      ...s,
-      advisorStep: Math.max(0, s.advisorStep - 1),
-    }));
+    setState(s => {
+      if (s.advisorStep <= 0) return s;
+      return { ...s, advisorStep: s.advisorStep - 1 };
+    });
   }, []);
 
   const resetAdvisorHints = useCallback(() => {

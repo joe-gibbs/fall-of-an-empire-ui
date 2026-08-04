@@ -329,6 +329,14 @@ export default function TutorialSpotlightOverlay({
   const pageText = pageTotal > 1 ? `${spotlight.currentPage + 1}/${pageTotal}` : '';
   const bodyParagraphs = useMemo(() => splitSpotlightParagraphs(spotlight.body), [spotlight.body]);
 
+  const spotlightRef = useRef(spotlight);
+  const onResolveRef = useRef(onResolve);
+
+  useEffect(() => {
+    spotlightRef.current = spotlight;
+    onResolveRef.current = onResolve;
+  }, [onResolve, spotlight]);
+
   useEffect(() => {
     if (!spotlight.isVisible) {
       targetElementRef.current = null;
@@ -343,22 +351,23 @@ export default function TutorialSpotlightOverlay({
     let revealedTarget = false;
     let resolvedSatisfiedTarget = false;
     const tick = () => {
-      if (!resolvedSatisfiedTarget && !spotlight.canGoForward && isSpotlightTargetSatisfied(spotlight)) {
+      const current = spotlightRef.current;
+      if (!resolvedSatisfiedTarget && !current.canGoForward && isSpotlightTargetSatisfied(current)) {
         resolvedSatisfiedTarget = true;
-        onResolve(eventId);
+        onResolveRef.current(eventId);
         return;
       }
 
-      if (!revealedTarget && !spotlight.isBuildingTarget && !spotlight.isUnitTarget) {
-        const renderedTarget = findRenderedByTutorialToken(spotlight.target);
+      if (!revealedTarget && !current.isBuildingTarget && !current.isUnitTarget) {
+        const renderedTarget = findRenderedByTutorialToken(current.target);
         if (renderedTarget) {
           renderedTarget.scrollIntoView({ block: 'center', inline: 'nearest' });
           revealedTarget = true;
         }
       }
 
-      const element = findSpotlightTarget(spotlight);
-      if (!revealedTarget && spotlight.isUnitTarget && element) {
+      const element = findSpotlightTarget(current);
+      if (!revealedTarget && current.isUnitTarget && element) {
         element.scrollIntoView({ block: 'center', inline: 'nearest' });
         revealedTarget = true;
       }
@@ -372,7 +381,7 @@ export default function TutorialSpotlightOverlay({
 
     tick();
     return () => window.cancelAnimationFrame(frameId);
-  }, [eventId, onResolve, spotlight]);
+  }, [eventId, spotlight.isVisible, spotlight.target, spotlight.isBuildingTarget, spotlight.isUnitTarget, spotlight.canGoForward]);
 
   useEffect(() => {
     if (!spotlight.isVisible) return undefined;
@@ -398,7 +407,7 @@ export default function TutorialSpotlightOverlay({
         const target = targetElementRef.current;
         if (!(target instanceof HTMLInputElement) || event.target !== target) return;
         if (target.value.trim().length === 0) return;
-        onResolve(eventId);
+        onResolveRef.current(eventId);
       };
 
       document.addEventListener('input', inputHandler, true);
@@ -407,24 +416,26 @@ export default function TutorialSpotlightOverlay({
 
     const handler = (event: MouseEvent) => {
       if (!(event.target instanceof Node)) return;
-      if (spotlight.target.startsWith('OrderTarget:') && event.button !== 2) return;
-      if (spotlight.isBuildingTarget) return;
+      const current = spotlightRef.current;
+      if (current.target.startsWith('OrderTarget:') && event.button !== 2) return;
+      if (current.isBuildingTarget) return;
 
-      if (spotlight.isUnitTarget && spotlight.targetDetail) {
+      if (current.isUnitTarget && current.targetDetail) {
         // Unit rows put the id on the name cell and the +/- controls. Accept any of them.
         const unitHost = event.target instanceof Element
           ? event.target.closest('[data-tutorial-unit-id]')
           : null;
         if (!(unitHost instanceof HTMLElement)) return;
         if (normaliseIdentifier(unitHost.getAttribute('data-tutorial-unit-id') ?? '')
-          !== normaliseIdentifier(spotlight.targetDetail)) {
+          !== normaliseIdentifier(current.targetDetail)) {
           return;
         }
 
         window.setTimeout(() => {
-          const latestTarget = findSpotlightTarget(spotlight) ?? unitHost;
-          if (elementUnitCount(latestTarget) < spotlight.requiredUnitCount) return;
-          onResolve(eventId);
+          const latest = spotlightRef.current;
+          const latestTarget = findSpotlightTarget(latest) ?? unitHost;
+          if (elementUnitCount(latestTarget) < latest.requiredUnitCount) return;
+          onResolveRef.current(eventId);
         }, 0);
         return;
       }
@@ -433,13 +444,21 @@ export default function TutorialSpotlightOverlay({
       if (!target || !target.contains(event.target)) return;
 
       window.setTimeout(() => {
-        onResolve(eventId);
+        onResolveRef.current(eventId);
       }, 0);
     };
 
     document.addEventListener('mousedown', handler, true);
     return () => document.removeEventListener('mousedown', handler, true);
-  }, [eventId, onResolve, spotlight]);
+  }, [
+    eventId,
+    spotlight.isVisible,
+    spotlight.canGoForward,
+    spotlight.target,
+    spotlight.isBuildingTarget,
+    spotlight.isUnitTarget,
+    spotlight.targetDetail,
+  ]);
 
   const panels = useMemo<PanelSide[]>(() => (targetRect ? ['top', 'bottom', 'left', 'right'] : ['full']), [targetRect]);
   const needsResolvedTarget = spotlight.isBuildingTarget;

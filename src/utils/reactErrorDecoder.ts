@@ -66,8 +66,16 @@ export function installReactErrorDecoder(): void {
         ? decodeReactErrorMessage(source)
         : null;
     if (!decoded) return;
+    const error = event.error instanceof Error ? event.error : null;
+    const componentStack = error && 'componentStack' in error
+      ? String((error as Error & { componentStack?: string }).componentStack ?? '')
+      : '';
     // Log a clear second line; the original minified message is already on the console.
-    console.error(`[WebUI] ${decoded}`, event.error ?? event.message);
+    if (componentStack) {
+      console.error(`[WebUI] ${decoded}\n${componentStack}`, event.error ?? event.message);
+    } else {
+      console.error(`[WebUI] ${decoded}`, event.error ?? event.message);
+    }
   });
 
   window.addEventListener('unhandledrejection', (event) => {
