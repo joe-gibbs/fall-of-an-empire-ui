@@ -1,7 +1,7 @@
 /* ==========================================================================
    Courtier Promotion Modal - mirrors CourtierPromotion.as: a horizontal row
    of parallax cards, a gold cost line, and Promote / Close. No border-radius
-   (cards and frames stay sharp), no box-shadow, transform-only animation.
+   (cards and frames stay sharp), transform-only animation.
    ========================================================================== */
 
 .cpm-overlay {
@@ -20,6 +20,7 @@
 .cpm-modal {
   width: 70rem; max-width: 94vw;
   display: flex; flex-direction: column;
+  box-shadow: var(--shadow-panel);
   animation: cpm-modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes cpm-modal-in {

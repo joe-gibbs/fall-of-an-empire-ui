@@ -52,10 +52,12 @@
   border-right-width: 0.077rem;
   border-right-style: solid;
   border-right-color: rgba(201, 168, 76, 0.14);
+  box-shadow: var(--shadow-panel-left);
 }
 
 .sidebar--right {
   border-left-width: 0;
+  box-shadow: var(--shadow-panel-right);
 }
 
 /* --- Swoop-in entrance animations --- */

@@ -20,11 +20,18 @@
   border-width: 0.1818rem;
   border-style: solid;
   border-color: rgba(201, 168, 76, 0.45);
+  box-shadow: var(--shadow-panel);
   cursor: pointer;
   transition: transform 0.12s ease-out;
 }
 
+/* Wipe mask clips box-shadow; cast from the slot instead. */
+.notification-slot--regular {
+  filter: var(--filter-shadow-panel);
+}
+
 .notification-slot--regular .notification-banner {
+  box-shadow: none;
   mask-image: url('/assets/event-wipe-mask.png');
   mask-position: 0% 0%;
   mask-repeat: no-repeat;

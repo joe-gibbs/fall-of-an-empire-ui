@@ -38,6 +38,7 @@
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
   border: 0.154rem solid rgba(80, 85, 100, 0.35);
+  box-shadow: var(--shadow-panel);
   padding: 0;
   font-size: 0.9rem;
   line-height: 1.25;

@@ -20,6 +20,7 @@
   pointer-events: auto;
   background: url('/assets/ui/T_Minimap_Header.png') center/100% 100% no-repeat;
   padding: 0.462rem;
+  filter: var(--filter-shadow-panel);
 }
 
 .bottombar-tray > * + * {
@@ -110,6 +111,7 @@
   background-size: auto, 7.385rem 7.385rem;
   border: 1px solid rgba(191, 160, 96, 0.36);
   border-radius: 2px;
+  box-shadow: var(--shadow-panel);
   color: var(--text);
   animation: operation-bar-enter 0.18s cubic-bezier(0.2, 0, 0, 1) both;
 }

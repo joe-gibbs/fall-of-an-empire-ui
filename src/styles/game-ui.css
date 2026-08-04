@@ -30,6 +30,7 @@
   border-image-width: 0.231rem;
   border-image-outset: 0;
   border-image-repeat: round;
+  box-shadow: var(--shadow-panel);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1230,6 +1231,7 @@
   background-size: auto, 7.385rem 7.385rem, auto, 93.0909rem 93.0909rem;
   background-color: #242a30;
   border: 0.154rem solid rgba(80, 85, 100, 0.3);
+  box-shadow: var(--shadow-panel);
   max-width: 90vw;
   max-height: 85vh;
   display: flex;

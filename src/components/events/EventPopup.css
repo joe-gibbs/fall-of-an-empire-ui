@@ -20,6 +20,8 @@
   transform-origin: center center;
   animation: event-popup-motion-in 0.46s cubic-bezier(0.16, 0.84, 0.22, 1) both;
   pointer-events: none;
+  /* Masked event panel clips box-shadow; filter follows the wipe alpha. */
+  filter: var(--filter-shadow-panel);
 }
 
 .event-popup-wipe--closing {
@@ -56,6 +58,8 @@
     url('/assets/baked/modal-charcoal.png');
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
+  /* Parent wipe carries the cast shadow so the mask does not clip it. */
+  box-shadow: none;
   mask-image: url('/assets/event-wipe-mask.png');
   mask-position: 0% 0%;
   mask-repeat: no-repeat;

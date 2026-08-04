@@ -46,6 +46,7 @@
   border-image-width: 0.231rem;
   border-image-outset: 0;
   border-image-repeat: round;
+  box-shadow: var(--shadow-panel);
   animation-name: advisor-enter;
   animation-duration: 260ms;
   animation-timing-function: var(--ease-snap);

@@ -411,10 +411,14 @@ html.ui-reduce-motion hr {
   --ease-snap: cubic-bezier(0.2, 0, 0, 1);
   --ease-bounce: cubic-bezier(0.34, 1.4, 0.64, 1);
 
-  /* Simplified shadows for performance - single layer each */
-  --shadow-panel: 0 0.308rem 1.231rem rgba(8, 12, 17, 0.6);
+  /* Floating chrome lift - soft dark cast so panels sit off the map */
+  --shadow-panel: 0 0.385rem 1.385rem rgba(8, 12, 17, 0.62), 0 0.077rem 0.385rem rgba(8, 12, 17, 0.4);
+  --shadow-panel-left: 0.308rem 0 1.231rem rgba(8, 12, 17, 0.55);
+  --shadow-panel-right: -0.308rem 0 1.231rem rgba(8, 12, 17, 0.55);
+  --shadow-panel-up: 0 -0.231rem 1.077rem rgba(8, 12, 17, 0.5);
   --shadow-glow: 0 0 0.615rem rgba(201, 168, 76, 0.15);
   --shadow-bevel: inset 0 0.077rem 0 rgba(255, 220, 140, 0.06);
+  --filter-shadow-panel: drop-shadow(0 0.385rem 1.077rem rgba(8, 12, 17, 0.62));
 }
 
 html {

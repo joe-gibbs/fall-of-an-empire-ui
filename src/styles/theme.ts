@@ -78,8 +78,10 @@ export const theme = {
   },
 
   shadows: {
-    panel: '0 0.3636rem 1.8182rem rgba(8, 12, 17, 0.5), inset 0 0.0909rem 0 rgba(201, 168, 76, 0.1)',
-    glow: '0 0 1.0909rem rgba(201, 168, 76, 0.2)',
+    panel: '0 0.385rem 1.385rem rgba(8, 12, 17, 0.62), 0 0.077rem 0.385rem rgba(8, 12, 17, 0.4)',
+    panelLeft: '0.308rem 0 1.231rem rgba(8, 12, 17, 0.55)',
+    panelRight: '-0.308rem 0 1.231rem rgba(8, 12, 17, 0.55)',
+    glow: '0 0 0.615rem rgba(201, 168, 76, 0.15)',
     inset: 'inset 0 0.1818rem 0.5455rem rgba(8, 12, 17, 0.4)',
     text: '0 0.0909rem 0.2727rem rgba(8, 12, 17, 0.8)',
   },
