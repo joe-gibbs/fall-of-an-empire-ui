@@ -1925,11 +1925,11 @@ button.econ-command-cost__row:focus-visible {
 }
 
 .econ-trade-btn--buy {
-  color: var(--green);
+  color: var(--red-light);
 }
 
 .econ-trade-btn--sell {
-  color: var(--red-light);
+  color: var(--green);
 }
 
 .econ-trade-btn-mark,
