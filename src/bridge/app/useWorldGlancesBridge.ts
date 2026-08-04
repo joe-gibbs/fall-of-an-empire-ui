@@ -221,6 +221,28 @@ function publishWorldGlancesStoreData(next: GetWorldGlancesResponse | null) {
   queueMicrotask(flushWorldGlancesStoreListeners);
 }
 
+function shouldApplySnapshot(
+  current: GetWorldGlancesResponse | null,
+  next: GetWorldGlancesResponse | null,
+): boolean {
+  if (next === current) {
+    return false;
+  }
+  if (!next) {
+    return current !== null;
+  }
+  // Engine catalogue pushes always bump snapshotRevision when content changes. A same-revision
+  // payload is a redundant refresh/normalise and must not force React subscribers to re-render.
+  if (
+    current
+    && next.snapshotRevision > 0
+    && next.snapshotRevision === current.snapshotRevision
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function startWorldGlancesStore() {
   if (worldGlancesStoreStop) {
     return;
@@ -230,9 +252,10 @@ function startWorldGlancesStore() {
   const isActive = () => generation === worldGlancesStoreGeneration;
 
   const applySnapshot = (next: GetWorldGlancesResponse | null) => {
-    if (isActive()) {
-      publishWorldGlancesStoreData(next);
+    if (!isActive() || !shouldApplySnapshot(worldGlancesStoreData, next)) {
+      return;
     }
+    publishWorldGlancesStoreData(next);
   };
 
   const refreshSnapshot = () => {
@@ -396,7 +419,11 @@ function startWorldGlancesStore() {
     worldGlancesStoreStop = null;
   };
 
-  refreshSnapshot();
+  // Catalogue deltas keep a live snapshot current. Only pull a full catalogue when empty so
+  // re-subscribes cannot flood game.get_world_glances every render.
+  if (!worldGlancesStoreData) {
+    refreshSnapshot();
+  }
 }
 
 function subscribeWorldGlancesStore(listener: WorldGlancesStoreListener) {
@@ -404,9 +431,9 @@ function subscribeWorldGlancesStore(listener: WorldGlancesStoreListener) {
   startWorldGlancesStore();
   return () => {
     worldGlancesStoreListeners.delete(listener);
-    if (worldGlancesStoreListeners.size === 0) {
-      worldGlancesStoreStop?.();
-    }
+    // Keep the store alive for the page lifetime. Stopping on last unsubscribe made any
+    // unstable useSyncExternalStore subscribe identity restart the store and re-request full
+    // catalogues in a tight loop (max update depth + multi-request-per-frame stalls).
   };
 }
 

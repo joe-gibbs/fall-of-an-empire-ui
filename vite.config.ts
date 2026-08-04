@@ -300,9 +300,110 @@ function serveExternalMods(): Plugin {
   }
 }
 
+// Game UI runs locally in Webkiln/CEF and already ships unminified app modules
+// (minify: false). Resolve React to its development builds so Unreal logs show
+// full exception text and component stacks instead of "Minified React error #N".
+// Prefix-safe exact matches only — a bare "react" alias would also rewrite
+// "react/jsx-runtime" and break the package entrypoints.
+const nodeModulesDir = path.resolve(__dirname, 'node_modules')
+const reactDevelopmentAliases = [
+  {
+    find: /^react$/,
+    replacement: path.join(nodeModulesDir, 'react/cjs/react.development.js'),
+  },
+  {
+    find: /^react\/jsx-runtime$/,
+    replacement: path.join(nodeModulesDir, 'react/cjs/react-jsx-runtime.development.js'),
+  },
+  {
+    find: /^react\/jsx-dev-runtime$/,
+    replacement: path.join(nodeModulesDir, 'react/cjs/react-jsx-dev-runtime.development.js'),
+  },
+  {
+    find: /^react-dom$/,
+    replacement: path.join(nodeModulesDir, 'react-dom/cjs/react-dom.development.js'),
+  },
+  {
+    find: /^react-dom\/client$/,
+    replacement: path.join(nodeModulesDir, 'react-dom/cjs/react-dom-client.development.js'),
+  },
+  {
+    find: /^scheduler$/,
+    replacement: path.join(nodeModulesDir, 'scheduler/cjs/scheduler.development.js'),
+  },
+] as const
+
+const NESTED_UPDATE_DEPTH_MESSAGE =
+  'Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.'
+
+/**
+ * Annotate React's nested-update throw with the fiber path that scheduled the
+ * overflowing update. React clears that context before the Error reaches
+ * createRoot onUncaughtError, so without this the Unreal log only shows the
+ * generic message.
+ */
+function annotateReactNestedUpdateErrors(): Plugin {
+  return {
+    name: 'annotate-react-nested-update-errors',
+    enforce: 'pre',
+    transform(code, id) {
+      const normalised = id.replaceAll('\\', '/')
+      if (!normalised.includes('react-dom-client.development')) {
+        return null
+      }
+      if (code.includes('Culprit fiber:')) {
+        return null
+      }
+      if (!code.includes(NESTED_UPDATE_DEPTH_MESSAGE)) {
+        return null
+      }
+
+      const fiberPathHelper = `(function (fiber) {
+            var names = [];
+            for (var node = fiber; node != null && names.length < 16; node = node.return) {
+              var name = typeof getComponentNameFromFiber === "function"
+                ? getComponentNameFromFiber(node)
+                : null;
+              if (name && names[names.length - 1] !== name) {
+                names.push(name);
+              }
+            }
+            return names.length ? names.join(" < ") : "Unknown";
+          })(sourceFiber)`
+
+      const next = code.replace(
+        /Error\(\s*"Maximum update depth exceeded\. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate\. React limits the number of nested updates to prevent infinite loops\."\s*\)/,
+        `Error(${JSON.stringify(`${NESTED_UPDATE_DEPTH_MESSAGE} Culprit fiber: `)} + ${fiberPathHelper})`,
+      )
+
+      if (next === code) {
+        return null
+      }
+
+      return { code: next, map: null }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(() => ({
-  plugins: [cleanBuildOutputButKeepPublicFiles(), serveOptimisedAssetVariants(), react(), conciseBuildSummary(), serveExternalMods()],
+  plugins: [
+    annotateReactNestedUpdateErrors(),
+    cleanBuildOutputButKeepPublicFiles(),
+    serveOptimisedAssetVariants(),
+    react(),
+    conciseBuildSummary(),
+    serveExternalMods(),
+  ],
+  resolve: {
+    alias: [...reactDevelopmentAliases],
+  },
+  // Keep React's own development-branch checks enabled inside the development
+  // builds (extra warnings, invariant text). App code should still prefer
+  // import.meta.env.DEV / PROD for Vite mode checks.
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('development'),
+  },
   build: {
     modulePreload: { polyfill: false },
     outDir: path.resolve(__dirname, '../UIResources/foae'),

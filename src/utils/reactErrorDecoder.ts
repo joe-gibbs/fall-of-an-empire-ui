@@ -1,15 +1,20 @@
 /**
- * Decodes minified React production errors so Unreal/Webkiln console logs show
- * the real message instead of only "Minified React error #N".
+ * Formats React root / window errors for Unreal/Webkiln console logs.
  *
- * Also formats createRoot onUncaughtError / onCaughtError / onRecoverableError
- * payloads so component stacks (and the leaf component) appear in logs.
+ * The WebUI build resolves React to its development builds so thrown Errors
+ * already carry full messages. This module still:
+ * - rewrites any leftover "Minified React error #N" text in Error objects
+ * - formats createRoot onUncaughtError / onCaughtError / onRecoverableError
+ *   payloads so component stacks (and the leaf component) appear in logs
  *
  * Codes match https://react.dev/errors/<code> (React 19).
  */
 import type { RootOptions } from 'react-dom/client'
+import { getUpdateDepthDiagnosticReport } from './reactUpdateDiagnostics'
 
 const REACT_ERROR_MESSAGES: Record<number, string> = {
+  130: 'Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined.',
+  152: 'Too many re-renders. React limits the number of renders to prevent an infinite loop.',
   185: 'Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.',
   300: 'Rendered more hooks than during the previous render.',
   301: 'Rendered fewer hooks than expected. This may be caused by an accidental early return statement.',
@@ -23,7 +28,9 @@ const REACT_ERROR_MESSAGES: Record<number, string> = {
   425: 'Text content does not match server-rendered HTML.',
 }
 
-const MINIFIED_REACT_ERROR_RE = /Minified React error #(\d+)/i
+const MINIFIED_REACT_ERROR_RE = /Minified React error #(\d+)(?:; visit https:\/\/react\.dev\/errors\/\d+[^\s]*)?/i
+const MAX_UPDATE_DEPTH_RE = /Maximum update depth exceeded/i
+const CULPRIT_FIBER_RE = /Culprit fiber:\s*(.+)$/im
 const COMPONENT_STACK_FRAME_RE = /^\s*at\s+([^\s(]+)/gm
 const ANONYMOUS_FRAME_RE = /^(anonymous|Unknown|Object|Function|eval|Array|Promise)$/i
 const MAX_STACK_COMPONENTS = 12
@@ -34,6 +41,16 @@ const STACK_FN_NAME_RE = /^\s*at\s+(?:async\s+)?([^\s(]+)/
 
 export type ReactRootErrorKind = 'uncaught' | 'caught' | 'recoverable'
 
+function isMaxUpdateDepthError(message: string): boolean {
+  return MAX_UPDATE_DEPTH_RE.test(message) || /Minified React error #185\b/i.test(message)
+}
+
+function extractCulpritFiber(message: string): string | null {
+  const match = CULPRIT_FIBER_RE.exec(message)
+  const path = match?.[1]?.trim()
+  return path || null
+}
+
 export function decodeReactErrorMessage(message: string): string | null {
   const match = MINIFIED_REACT_ERROR_RE.exec(message)
   if (!match) return null
@@ -43,6 +60,28 @@ export function decodeReactErrorMessage(message: string): string | null {
     return `React error #${code}. See https://react.dev/errors/${code}`
   }
   return `React error #${code}: ${decoded}`
+}
+
+/**
+ * Rewrite minified React text on the Error itself so later log sinks (and the
+ * second console.error argument) show the expanded message rather than the code.
+ */
+export function expandMinifiedReactError(error: unknown): void {
+  if (!(error instanceof Error)) return
+  const decoded = decodeReactErrorMessage(error.message)
+  if (!decoded) return
+  try {
+    error.message = decoded
+  } catch {
+    // Some hosts freeze Error.message; formatting paths still expand text.
+  }
+  if (typeof error.stack === 'string' && MINIFIED_REACT_ERROR_RE.test(error.stack)) {
+    try {
+      error.stack = error.stack.replace(MINIFIED_REACT_ERROR_RE, decoded)
+    } catch {
+      // ignore non-writable stack
+    }
+  }
 }
 
 function errorMessageText(error: unknown): string {
@@ -137,17 +176,24 @@ export function formatReactRootError(
   error: unknown,
   errorInfo?: { componentStack?: string | null },
 ): string {
+  expandMinifiedReactError(error)
   const rawMessage = errorMessageText(error)
   const decoded = decodeReactErrorMessage(rawMessage) ?? rawMessage
   const componentStack = errorInfo?.componentStack?.trim() ?? ''
   const path = summariseComponentPath(componentStack)
+  const culpritFiber = extractCulpritFiber(rawMessage) ?? extractCulpritFiber(decoded)
   const leaf = extractComponentNames(componentStack)[0]
+    ?? culpritFiber?.split(' < ')[0]
   const appHints = componentStack ? [] : extractAppStackHints(error)
   const leafHint = leaf ?? appHints[0]?.match(/^([^\s(]+)/)?.[1]
+  const maxDepth = isMaxUpdateDepthError(rawMessage) || isMaxUpdateDepthError(decoded)
 
   const lines: string[] = [
     `[WebUI] React ${kind} error${leafHint ? ` in ${leafHint}` : ''}: ${decoded}`,
   ]
+  if (culpritFiber) {
+    lines.push(`  culprit fiber: ${culpritFiber}`)
+  }
   if (path) {
     lines.push(`  component path: ${path}`)
   }
@@ -158,8 +204,12 @@ export function formatReactRootError(
     for (const hint of appHints) {
       lines.push(`    ${hint}`)
     }
-  } else {
+  } else if (!culpritFiber) {
     lines.push('  (no component stack available from React)')
+  }
+  if (maxDepth) {
+    lines.push('  update-depth diagnostics:')
+    lines.push(getUpdateDepthDiagnosticReport())
   }
   if (error instanceof Error && error.stack) {
     lines.push(error.stack)
@@ -172,6 +222,7 @@ export function logReactRootError(
   error: unknown,
   errorInfo?: { componentStack?: string | null },
 ): void {
+  expandMinifiedReactError(error)
   console.error(formatReactRootError(kind, error, errorInfo), error)
 }
 
@@ -194,8 +245,8 @@ export function createReactRootErrorOptions(): RootOptions {
 }
 
 /**
- * Installs window-level handlers that re-log decoded React production errors.
- * Safe to call more than once.
+ * Installs window-level handlers that expand leftover minified React codes and
+ * log app stacks. Safe to call more than once.
  *
  * Note: window handlers usually do not receive React's componentStack.
  * Prefer createReactRootErrorOptions() on createRoot for component identity.
@@ -208,46 +259,36 @@ export function installReactErrorDecoder(): void {
   installed[flag] = true
 
   window.addEventListener('error', (event) => {
+    expandMinifiedReactError(event.error)
     const source = event.error ?? event.message
-    const decoded = source instanceof Error
-      ? decodeReactErrorMessage(source.message)
+    const rawMessage = source instanceof Error
+      ? source.message
       : typeof source === 'string'
-        ? decodeReactErrorMessage(source)
-        : null
-    if (!decoded) return
+        ? source
+        : ''
+    const decoded = decodeReactErrorMessage(rawMessage)
+    const maxDepth = isMaxUpdateDepthError(rawMessage)
+    // Re-log minified production codes and max-update-depth always — that path
+    // usually has no React componentStack, so our fiber/updater report is the
+    // only useful identity in Unreal logs.
+    if (!decoded && !maxDepth) return
 
-    // createRoot onUncaughtError usually logs first with componentStack.
-    // This is a secondary path when React rethrows or createRoot options were not used.
-    const error = event.error instanceof Error ? event.error : null
-    const componentStack = error && 'componentStack' in error
-      ? String((error as Error & { componentStack?: string }).componentStack ?? '')
-      : ''
-    if (componentStack) {
-      console.error(
-        formatReactRootError('uncaught', event.error ?? event.message, { componentStack }),
-        event.error ?? event.message,
-      )
-      return
-    }
-    const appHints = extractAppStackHints(event.error)
-    if (appHints.length > 0) {
-      console.error(
-        `[WebUI] ${decoded} (window error)\n  app stack:\n    ${appHints.join('\n    ')}`,
-        event.error ?? event.message,
-      )
-      return
-    }
     console.error(
-      `[WebUI] ${decoded} (window error; see prior createRoot log for component path)`,
+      formatReactRootError('uncaught', event.error ?? event.message),
       event.error ?? event.message,
     )
   })
 
   window.addEventListener('unhandledrejection', (event) => {
+    expandMinifiedReactError(event.reason)
     const reason = event.reason
     const message = reason instanceof Error ? reason.message : String(reason ?? '')
     const decoded = decodeReactErrorMessage(message)
-    if (!decoded) return
-    console.error(`[WebUI] ${decoded}`, formatUnknownError(reason))
+    const maxDepth = isMaxUpdateDepthError(message)
+    if (!decoded && !maxDepth) return
+    console.error(
+      formatReactRootError('uncaught', reason),
+      formatUnknownError(reason),
+    )
   })
 }

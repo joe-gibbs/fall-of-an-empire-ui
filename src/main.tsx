@@ -3,9 +3,12 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/game-ui.css'
 import { createReactRootErrorOptions, installReactErrorDecoder } from './utils/reactErrorDecoder'
+import { installReactUpdateDiagnostics } from './utils/reactUpdateDiagnostics'
 
-// Expand minified React production codes (e.g. #185) in Unreal/Webkiln logs.
-// Component identity for those errors comes from createRoot error options below.
+// React is built as the development bundle so thrown errors already carry full
+// text. Update diagnostics attribute setState storms to components; the decoder
+// formats createRoot / window errors with fiber paths for Unreal/Webkiln logs.
+installReactUpdateDiagnostics()
 installReactErrorDecoder()
 
 const reactRootErrorOptions = createReactRootErrorOptions()

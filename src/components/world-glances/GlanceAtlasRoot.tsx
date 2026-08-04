@@ -479,11 +479,46 @@ export default function GlanceAtlasRoot() {
   useEffect(() => {
     const scratch = makeWorldGlanceFrameEntryScratch();
     const opacityThreshold = UI_PRESENTATION.worldAnchors.visibleOpacityThreshold;
-    return onWorldGlancesFrame((frame) => {
-      let detailChanged = false;
-      let flagsChanged = false;
-      let settlementFrameChanged = false;
-      let battleFrameChanged = false;
+    let pendingDetail = false;
+    let pendingFlags = false;
+    let pendingSettlementFrame = false;
+    let pendingBattleFrame = false;
+    let pendingVisibility: Set<string> | null = null;
+    let flushFrame: number | null = null;
+
+    const flushFrameState = () => {
+      flushFrame = null;
+      if (pendingDetail) {
+        pendingDetail = false;
+        setDetailByKey(new Map(detailByKeyRef.current));
+      }
+      if (pendingFlags) {
+        pendingFlags = false;
+        setFlagsByKey(new Map(flagsByKeyRef.current));
+      }
+      if (pendingSettlementFrame) {
+        pendingSettlementFrame = false;
+        setSettlementFrameByKey(new Map(settlementFrameByKeyRef.current));
+      }
+      if (pendingBattleFrame) {
+        pendingBattleFrame = false;
+        setBattleFrameByKey(new Map(battleFrameByKeyRef.current));
+      }
+      if (pendingVisibility) {
+        const nextVisible = pendingVisibility;
+        pendingVisibility = null;
+        setVisibleAtlasKeys(nextVisible);
+      }
+    };
+
+    const scheduleFrameStateFlush = () => {
+      if (flushFrame !== null) {
+        return;
+      }
+      flushFrame = window.requestAnimationFrame(flushFrameState);
+    };
+
+    const unsubscribeFrame = onWorldGlancesFrame((frame) => {
       const nextVisibleKeys = new Set<string>();
       for (const section of WORLD_GLANCE_FRAME_SECTIONS) {
         const count = worldGlanceFrameEntryCount(frame, section);
@@ -517,7 +552,7 @@ export default function GlanceAtlasRoot() {
                 prepareWorldAnchorContentChange(node);
               }
               settlementFrameByKeyRef.current.set(key, nextSettlementFrame);
-              settlementFrameChanged = true;
+              pendingSettlementFrame = true;
             }
           }
 
@@ -545,7 +580,7 @@ export default function GlanceAtlasRoot() {
                 prepareWorldAnchorContentChange(node);
               }
               battleFrameByKeyRef.current.set(key, nextBattleFrame);
-              battleFrameChanged = true;
+              pendingBattleFrame = true;
             }
           }
 
@@ -556,7 +591,7 @@ export default function GlanceAtlasRoot() {
               prepareWorldAnchorContentChange(node);
             }
             detailByKeyRef.current.set(key, nextDetail);
-            detailChanged = true;
+            pendingDetail = true;
           }
 
           const selected = entry.selected === true;
@@ -564,32 +599,38 @@ export default function GlanceAtlasRoot() {
           const flags = flagsByKeyRef.current.get(key);
           if (!flags || flags.selected !== selected || flags.targeted !== targeted) {
             flagsByKeyRef.current.set(key, { selected, targeted });
-            flagsChanged = true;
+            pendingFlags = true;
           }
         }
       }
+
       const previousVisibleKeys = visibleAtlasKeysRef.current;
       const visibilityChanged = previousVisibleKeys.size !== nextVisibleKeys.size
         || Array.from(nextVisibleKeys).some(key => !previousVisibleKeys.has(key))
         || Array.from(previousVisibleKeys).some(key => !nextVisibleKeys.has(key));
-      visibleAtlasKeysRef.current = nextVisibleKeys;
-
-      if (detailChanged) {
-        setDetailByKey(new Map(detailByKeyRef.current));
-      }
-      if (flagsChanged) {
-        setFlagsByKey(new Map(flagsByKeyRef.current));
-      }
-      if (settlementFrameChanged) {
-        setSettlementFrameByKey(new Map(settlementFrameByKeyRef.current));
-      }
-      if (battleFrameChanged) {
-        setBattleFrameByKey(new Map(battleFrameByKeyRef.current));
-      }
       if (visibilityChanged) {
-        setVisibleAtlasKeys(nextVisibleKeys);
+        visibleAtlasKeysRef.current = nextVisibleKeys;
+        pendingVisibility = nextVisibleKeys;
+      }
+
+      if (
+        pendingDetail
+        || pendingFlags
+        || pendingSettlementFrame
+        || pendingBattleFrame
+        || pendingVisibility
+      ) {
+        scheduleFrameStateFlush();
       }
     });
+
+    return () => {
+      unsubscribeFrame();
+      if (flushFrame !== null) {
+        window.cancelAnimationFrame(flushFrame);
+        flushFrame = null;
+      }
+    };
   }, []);
 
   return (
