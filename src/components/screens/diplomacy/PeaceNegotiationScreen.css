@@ -73,16 +73,21 @@
 
 .screen--negotiation .screen-content--negotiation {
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   padding: 0.45rem 0.75rem 1.15rem;
   overflow: hidden;
 }
 
 .pns-wrap {
   width: 100%;
-  height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  overflow: hidden;
 }
 
 .pns-wrap > * + * {
@@ -488,6 +493,7 @@
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
+  overflow: hidden;
 }
 
 .pns-board > * + * {
@@ -496,13 +502,17 @@
 
 .pns-panel {
   min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .pns-panel--terms {
   min-width: 0;
   width: 49.3%;
+  height: 100%;
+  max-height: 100%;
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: 49.3%;
@@ -511,6 +521,8 @@
 .pns-panel--options {
   min-width: 16rem;
   width: 23.5%;
+  height: 100%;
+  max-height: 100%;
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: 23.5%;
@@ -520,19 +532,23 @@
   min-width: 0;
   width: 51.5%;
   min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: 51.5%;
+  overflow: hidden;
 }
 
 .pns-selected-columns {
   min-height: 0;
   display: flex;
+  align-items: stretch;
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
+  overflow: hidden;
 }
 
 .pns-selected-columns .pns-panel--terms + .pns-panel--terms {
@@ -546,6 +562,9 @@
 
 .pns-panel .panel-header {
   padding: 0.38rem 0.55rem 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
 }
 
 .pns-panel .panel-title {
@@ -573,6 +592,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  align-content: flex-start;
   padding-right: 1.15rem;
 }
 
@@ -581,12 +601,16 @@
   margin-top: 0.25rem;
 }
 
+/* height: 0 + flex-grow forces the fill scroll frame to take remaining space
+   instead of expanding with treaty chips / options. */
 .pns-panel--terms .pns-draft-scroll,
 .pns-panel--options .pns-option-scroll {
   min-height: 0;
+  height: 0;
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
+  overflow: hidden;
 }
 
 .pns-participant-row {
@@ -786,15 +810,13 @@
   align-items: center;
   justify-content: space-between;
   color: var(--gold);
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
 }
 
 .pns-section-head > * + * {
   margin-left: 0.45rem;
-}
-
-.pns-draft-list {
-  min-height: 2rem;
-  align-content: flex-start;
 }
 
 .pns-draft-chip,
@@ -1860,14 +1882,31 @@
     margin-top: 0.55rem;
   }
 
-  .pns-panel--options,
-  .pns-middle,
+  .pns-panel--options {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    max-height: 30%;
+    flex-grow: 0;
+    flex-shrink: 1;
+    flex-basis: auto;
+  }
+
+  .pns-middle {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    max-height: none;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+  }
+
   .pns-panel--terms {
     width: 100%;
     min-width: 0;
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
+    height: 100%;
+    max-height: 100%;
   }
 }
 
@@ -1894,6 +1933,15 @@
 
   .pns-selected-columns {
     flex-direction: column;
+  }
+
+  .pns-selected-columns > .pns-panel--terms {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
   }
 
   .pns-selected-columns .pns-panel--terms + .pns-panel--terms {
