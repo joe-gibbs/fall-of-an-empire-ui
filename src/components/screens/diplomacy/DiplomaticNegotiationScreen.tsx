@@ -181,10 +181,12 @@ function proposalFallbackLabel(proposal: DiplomaticProposalDraft): string {
 }
 
 function ResourceDropdown({
+  id,
   value,
   resources,
   onSelect,
 }: {
+  id: string;
   value: string;
   resources: ResourceOption[];
   onSelect: (resource: ResourceOption) => void;
@@ -226,7 +228,7 @@ function ResourceDropdown({
 
   return (
     <DropdownSelect
-      id={`treaty-resource-${selected.name}`}
+      id={id}
       className="pns-resource-select"
       triggerClassName="pns-resource-select-button"
       textClassName="pns-resource-select-name"
@@ -237,7 +239,7 @@ function ResourceDropdown({
       optionActiveClassName="pns-resource-select-option--active"
       value={selected.name}
       options={options}
-      escapeId={`treaty.resource.${selected.name}`}
+      escapeId={`treaty.resource.${id}`}
       isActive={false}
       position="below-left"
       portal
@@ -315,6 +317,7 @@ function ProposalChip({
             {resourceOptions.length > 0 ? (
               <div className="pns-term-field pns-term-field--resource-picker">
                 <ResourceDropdown
+                  id={proposal.proposalId || proposalKey(proposal)}
                   value={resourceName}
                   resources={resourceOptions}
                   onSelect={resource => onChange({

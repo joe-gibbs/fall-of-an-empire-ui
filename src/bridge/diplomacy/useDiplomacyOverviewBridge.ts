@@ -47,12 +47,16 @@ export async function setAutoAssignGovernorsBridge(enabled: boolean): Promise<vo
   await refreshDiplomacyOverviewBridge('full');
 }
 
-export async function breakTreatyBridge(treatyId: string): Promise<void> {
+export async function breakTreatyBridge(treatyId: string, refreshFactionId?: string | null): Promise<void> {
   const result = await bridgeCall('game.break_treaty', { treatyId });
   await refreshDiplomacyOverviewBridge('full');
 
-  if (result.otherFactionId) {
-    const factionData = await bridgeCall('game.get_faction_data', { factionId: result.otherFactionId, scope: 'full' });
+  const factionIds = new Set<string>();
+  if (result.otherFactionId) factionIds.add(result.otherFactionId);
+  if (refreshFactionId) factionIds.add(refreshFactionId);
+
+  for (const factionId of factionIds) {
+    const factionData = await bridgeCall('game.get_faction_data', { factionId, scope: 'full' });
     dispatchFactionData(factionData);
   }
 }

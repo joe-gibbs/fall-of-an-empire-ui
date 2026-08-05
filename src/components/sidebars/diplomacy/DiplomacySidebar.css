@@ -706,8 +706,13 @@
 }
 
 .diplo-treaty-break {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
-  padding: 0.22rem 0.42rem;
+  gap: 0.28rem;
+  min-height: 1.55rem;
+  padding: 0.22rem 0.48rem;
   border-width: 0.077rem;
   border-style: solid;
   border-color: rgba(176, 72, 72, 0.5);
@@ -720,12 +725,24 @@
   cursor: pointer;
 }
 
+.diplo-treaty-break-icon {
+  width: 0.78rem;
+  height: 0.78rem;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
 .diplo-treaty-break:hover {
   border-top-color: var(--red-light);
   border-right-color: var(--red-light);
   border-bottom-color: var(--red-light);
   border-left-color: var(--red-light);
   color: var(--text-bright);
+}
+
+.diplo-treaty-break:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 /* --- Agent (Diplomat/Spy) sections --- */

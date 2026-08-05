@@ -119,28 +119,32 @@ export function useAnchoredDropdown({
       onClose();
     };
 
-    const handleViewportChange = (event: Event) => {
-      if (event.type === 'scroll') {
-        const target = event.target;
-        if (target instanceof Node && popupRef.current?.contains(target)) return;
-      }
-      onClose();
+    // Keep the menu open while the page scrolls; re-anchor to the trigger instead.
+    // Closing on every scroll makes menus in smooth-scroll panels thrash open/closed
+    // with vertical enter/exit animations and prevents option selection.
+    const handleScroll = (event: Event) => {
+      const target = event.target;
+      if (target instanceof Node && popupRef.current?.contains(target)) return;
+      computePosition();
+    };
+    const handleResize = () => {
+      computePosition();
     };
     const id = setTimeout(() => window.addEventListener('mousedown', handleOutside), 0);
     if (closeOnScroll) {
-      window.addEventListener('scroll', handleViewportChange, true);
-      window.addEventListener('resize', handleViewportChange);
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
     }
 
     return () => {
       clearTimeout(id);
       window.removeEventListener('mousedown', handleOutside);
       if (closeOnScroll) {
-        window.removeEventListener('scroll', handleViewportChange, true);
-        window.removeEventListener('resize', handleViewportChange);
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleResize);
       }
     };
-  }, [anchorElement, closeOnScroll, onClose, open]);
+  }, [anchorElement, closeOnScroll, computePosition, onClose, open]);
 
   useEscapeStackEntry({
     id: escapeId ?? 'dropdown.inactive',

@@ -541,14 +541,21 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
     }
     return Array.from(grouped.entries()).map(([type, partners]) => ({ type, partners }));
   }, [faction.treaties]);
-  const ourTreaties = useMemo(() => (
-    faction.isPlayer ? [] : faction.treaties.filter(treaty => treaty.isWithPlayer)
-  ), [faction.isPlayer, faction.treaties]);
+  // Treaties the player can manage from this sidebar: mutual treaties when viewing
+  // another faction, or all of the player's own treaties when viewing themselves.
+  const managedTreaties = useMemo(() => {
+    if (faction.isPlayer) {
+      return faction.treaties.filter(treaty => Boolean(treaty.id));
+    }
+    return faction.treaties.filter(treaty => treaty.isWithPlayer || (Boolean(treaty.id) && Boolean(treaty.canBreak)));
+  }, [faction.isPlayer, faction.treaties]);
 
   const breakTreaty = (treaty: FactionTreaty) => {
     if (!treaty.id || !treaty.canBreak) return;
     setBreakingTreatyId(treaty.id);
-    breakTreatyBridge(treaty.id).catch(acknowledgeBridgeFailure).finally(() => setBreakingTreatyId(null));
+    breakTreatyBridge(treaty.id, faction.id)
+      .catch(acknowledgeBridgeFailure)
+      .finally(() => setBreakingTreatyId(null));
   };
 
   return (
@@ -871,35 +878,79 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             </>
           )}
 
-          {ourTreaties.length > 0 && (
+          {managedTreaties.length > 0 && (
             <>
-              <SectionHeading variant="ornate" title={webUIText('Diplomacy.TreatiesWithUs')} />
+              <SectionHeading
+                variant="ornate"
+                title={faction.isPlayer
+                  ? webUIText('Diplomacy.ActiveTreaties')
+                  : webUIText('Diplomacy.TreatiesWithUs')}
+              />
               <div className="diplo-player-treaties">
-                {ourTreaties.map(treaty => (
-                  <div key={treaty.id || `${treaty.type}:${treaty.withFactionId}`} className="diplo-player-treaty-row">
-                    <img src={treatyIcons[treaty.type] || '/assets/icons/I_Diplomacy.png'} alt="" className="diplo-relation-type-icon" />
-                    <div className="diplo-player-treaty-copy">
-                      <span className="diplo-player-treaty-name">{treaty.displayName || formatTreatyType(treaty.type)}</span>
-                      <span className="diplo-player-treaty-detail">
-                        {treaty.isPerpetual
-                          ? webUIText('Diplomacy.TreatyPerpetual')
-                          : treaty.daysRemaining && treaty.daysRemaining > 0
-                            ? webUIText('Diplomacy.TreatyDaysRemaining', { Days: formatNumber(treaty.daysRemaining) })
-                            : webUIText('Diplomacy.TreatyNoExpiry')}
-                      </span>
+                {managedTreaties.map(treaty => {
+                  const canBreak = Boolean(treaty.canBreak && treaty.id);
+                  const partnerLabel = faction.isPlayer
+                    ? treaty.withFaction
+                    : undefined;
+                  const detail = treaty.isPerpetual
+                    ? webUIText('Diplomacy.TreatyPerpetual')
+                    : treaty.daysRemaining && treaty.daysRemaining > 0
+                      ? webUIText('Diplomacy.TreatyDaysRemaining', { Days: formatNumber(treaty.daysRemaining) })
+                      : webUIText('Diplomacy.TreatyNoExpiry');
+                  const breakTooltip: TooltipContent | undefined = canBreak
+                    ? {
+                        title: webUIText('Diplomacy.BreakTreaty'),
+                        body: treaty.breakingPenalty && treaty.breakingPenalty > 0
+                          ? webUIText('Diplomacy.BreakTreatyPenaltyBody', {
+                              Penalty: formatNumber(treaty.breakingPenalty),
+                            })
+                          : webUIText('Diplomacy.BreakTreatyBody'),
+                      }
+                    : undefined;
+                  return (
+                    <div
+                      key={treaty.id || `${treaty.type}:${treaty.withFactionId}`}
+                      className="diplo-player-treaty-row"
+                    >
+                      <img
+                        src={treatyIcons[treaty.type] || '/assets/icons/I_Diplomacy.png'}
+                        alt=""
+                        className="diplo-relation-type-icon"
+                      />
+                      <div className="diplo-player-treaty-copy">
+                        <span className="diplo-player-treaty-name">
+                          {treaty.displayName || formatTreatyType(treaty.type)}
+                        </span>
+                        <span className="diplo-player-treaty-detail">
+                          {partnerLabel ? `${partnerLabel} · ${detail}` : detail}
+                        </span>
+                      </div>
+                      {canBreak ? (
+                        <Tooltip content={breakTooltip} position="left" delay={200}>
+                          <button
+                            type="button"
+                            className="diplo-treaty-break"
+                            disabled={breakingTreatyId === treaty.id}
+                            aria-label={webUIText('Diplomacy.BreakTreaty')}
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              breakTreaty(treaty);
+                            }}
+                          >
+                            <img
+                              src="/assets/icons/I_ExclamationWarning.png"
+                              alt=""
+                              className="diplo-treaty-break-icon"
+                              draggable={false}
+                            />
+                            <WebUIText textKey="Diplomacy.BreakTreaty" />
+                          </button>
+                        </Tooltip>
+                      ) : null}
                     </div>
-                    {treaty.canBreak && treaty.id ? (
-                      <button
-                        type="button"
-                        className="diplo-treaty-break"
-                        disabled={breakingTreatyId === treaty.id}
-                        onMouseDown={() => breakTreaty(treaty)}
-                      >
-                        <WebUIText textKey="Diplomacy.BreakTreaty" />
-                      </button>
-                    ) : null}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
