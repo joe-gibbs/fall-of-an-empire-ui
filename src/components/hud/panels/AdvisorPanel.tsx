@@ -80,7 +80,7 @@ function AdvisorPanel({
 
             <div className="advisor-card__hero-copy">
               <h2 className="advisor-card__title">{currentHint.title}</h2>
-              <StyledScrollArea className="advisor-card__body-scroll" variant="fill">
+              <StyledScrollArea className="advisor-card__body-scroll" variant="inline">
                 <div className="advisor-card__body">
                   {renderRichText(paragraph.replace(/\n/g, '<br/>'), {
                     blockBullets: true,

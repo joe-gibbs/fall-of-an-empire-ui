@@ -162,6 +162,8 @@
 .advisor-card__body-scroll {
   flex: 1 1 auto;
   min-height: 0;
+  /* Inline scroll needs a max-height so long pages can scroll when the card is capped. */
+  max-height: min(14rem, calc(100vh - var(--bottombar-height) - var(--topbar-height) - 12rem));
   margin-top: 0.7rem;
 }
 
