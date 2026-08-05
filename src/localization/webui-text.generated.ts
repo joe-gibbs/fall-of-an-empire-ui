@@ -51,6 +51,7 @@ export const WEBUI_TEXT_SOURCE = {
   "QuickInteraction.ZoomToFleet": "Zoom to Fleet",
   "QuickInteraction.PromoteCommand": "Promote Command",
   "QuickInteraction.DemoteCommand": "Demote Command",
+  "QuickInteraction.DetachCommand": "Detach Command",
   "QuickInteraction.ActionSucceeded": "Action succeeded",
   "QuickInteraction.ActionFailed": "Action failed",
   "QuickInteraction.ActionCouldNotStart": "Action could not start",

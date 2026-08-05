@@ -28,6 +28,7 @@ import {
   setMilitaryAutoSquashRebelsBridge,
   setMilitaryDelegationBridge,
   setMilitaryDoctrineBridge,
+  setMilitaryParentBridge,
   showMilitarySidebarBridge,
   startMilitaryEmbarkTargetingBridge,
   startMilitaryMergeTargetingBridge,
@@ -322,6 +323,17 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   );
 
   const commandActions: MilitaryAction[] = army.isPersonalGuard ? [] : [
+    ...(army.parentCommandId ? [{
+      label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.460.1'),
+      icon: '/assets/icons/I_DetachCommand.png',
+      description: webUIText('Auto.Prop.componentssidebarsMilitarySidebar.462.1', {
+        ParentCommand: army.parentCommand || '',
+      }),
+      disabled: !isPlayerControlled,
+      onClick: () => {
+        setMilitaryParentBridge(army.id, null).catch(acknowledgeBridgeFailure);
+      },
+    }] : []),
     ...(army.commandRank !== 'Legatus' ? [{
       label: webUIText('Military.Command.Demote'),
       icon: '/assets/icons/I_Demote.png',
