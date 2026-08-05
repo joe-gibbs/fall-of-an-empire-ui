@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { TutorialProgressState } from '../../../bridge/app/useTutorialProgressBridge';
 import { useAnimatedPresence } from '../../../hooks/useAnimatedPresence';
+import { useKeyActionResolver } from '../../../hooks/useKeyActionResolver';
 import { renderRichText } from '../../../utils/richText';
 import './TutorialProgress.css';
 
@@ -18,6 +19,7 @@ export default function TutorialProgress({ progress, placement, onLinkClick }: T
   const visible = Boolean(progress && progress.steps.length > 0);
   const [renderProgress, setRenderProgress] = useState<TutorialProgressState | null>(progress);
   const { mounted, closing } = useAnimatedPresence(visible, { durationMs: EXIT_DURATION_MS });
+  const resolveKeyAction = useKeyActionResolver();
 
   let currentRenderProgress = renderProgress;
   if (progress && progress !== renderProgress) {
@@ -52,6 +54,7 @@ export default function TutorialProgress({ progress, placement, onLinkClick }: T
                   onLinkClick,
                   linkClassPrefix: 'tutorial-progress-link',
                   keepLinksWithPreviousWord: true,
+                  resolveKeyAction,
                 })}
               </span>
             </div>

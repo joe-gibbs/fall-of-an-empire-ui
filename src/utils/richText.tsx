@@ -1,5 +1,7 @@
 import React from 'react';
 import GlossaryDef from '../components/common/tooltips/GlossaryDef';
+import { KeyGlyph } from '../components/common/KeyGlyph';
+import type { KeyActionGlyphProps } from './actionBindings';
 import { WebkilnAssetPath } from './assets';
 import { conceptIconPath } from './iconMaps';
 
@@ -36,6 +38,11 @@ export interface RichTextOptions {
    * space text node after an inline link.
    */
   keepLinksWithPreviousWord?: boolean;
+  /**
+   * Resolve `<key action="Command"/>` to KeyGlyph props from live settings.
+   * Explicit glyph/display attributes still work without a resolver.
+   */
+  resolveKeyAction?: (actionName: string) => KeyActionGlyphProps | null;
 }
 
 /**
@@ -205,7 +212,33 @@ function preservesInlineSpacing(tag: string, opts: RichTextOptions): boolean {
     || tag === 'header'
     || tag === 'colour'
     || tag === 'color'
-    || tag === 'def';
+    || tag === 'def'
+    || tag === 'key';
+}
+
+function keyGlyphFromAttrs(
+  attrs: Record<string, string>,
+  flags: Set<string>,
+  opts: RichTextOptions,
+): KeyActionGlyphProps | null {
+  const action = (attrs.action ?? '').trim();
+  if (action && opts.resolveKeyAction) {
+    const resolved = opts.resolveKeyAction(action);
+    if (resolved) return resolved;
+  }
+
+  const glyphId = (attrs.glyph ?? attrs.glyphid ?? '').trim();
+  const keyDisplay = (attrs.display ?? attrs.key ?? attrs.label ?? action).trim();
+  if (!glyphId && !keyDisplay) return null;
+
+  return {
+    glyphId: glyphId || undefined,
+    keyDisplay: keyDisplay || undefined,
+    ctrl: flags.has('ctrl'),
+    shift: flags.has('shift'),
+    alt: flags.has('alt'),
+    cmd: flags.has('cmd'),
+  };
 }
 
 /**
@@ -247,6 +280,24 @@ export function renderRichText(input: string | null | undefined, opts: RichTextO
             alt={id}
           />,
         );
+      } else if (t.tag === 'key') {
+        keepNextNodeWithPreviousWord(top.children);
+        const glyphProps = keyGlyphFromAttrs(t.attrs, t.flags, opts);
+        if (glyphProps) {
+          top.children.push(
+            <KeyGlyph
+              key={nextKey()}
+              className="rich-key"
+              glyphId={glyphProps.glyphId}
+              keyDisplay={glyphProps.keyDisplay}
+              shift={glyphProps.shift}
+              ctrl={glyphProps.ctrl}
+              alt={glyphProps.alt}
+              cmd={glyphProps.cmd}
+            />,
+          );
+          top.preserveLeadingWhitespace = true;
+        }
       } else if (t.tag === 'br') {
         top.children.push(<br key={nextKey()} />);
       } else if (t.tag === 'hr') {

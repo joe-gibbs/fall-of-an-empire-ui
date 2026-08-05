@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react';
 import type { TutorialSpotlightResponse } from '../../../bridge-types.generated.ts';
+import { useKeyActionResolver } from '../../../hooks/useKeyActionResolver';
 import { renderEventTextChunk } from '../../../utils/eventTextFlow';
 import { renderRichText } from '../../../utils/richText';
+import { requestTutorialHudReveal } from '../../../utils/tutorialHudReveal';
 import CloseButton from '../../common/buttons/CloseButton';
 import './TutorialSpotlightOverlay.css';
 
@@ -179,7 +181,13 @@ function findSpotlightTarget(spotlight: TutorialSpotlightResponse): HTMLElement 
     return null;
   }
 
-  return findByTutorialToken(spotlightTargetTokens(spotlight));
+  const tokens = spotlightTargetTokens(spotlight);
+  const found = findByTutorialToken(tokens);
+  if (!found) {
+    // Compact HUD: open screens / map-mode dropdowns so entry targets mount and become visible.
+    requestTutorialHudReveal(tokens);
+  }
+  return found;
 }
 
 function elementUnitCount(element: HTMLElement | null): number {
@@ -327,6 +335,7 @@ export default function TutorialSpotlightOverlay({
   const eventId = spotlight.eventId;
   const pageTotal = Math.max(0, spotlight.totalPages);
   const pageText = pageTotal > 1 ? `${spotlight.currentPage + 1}/${pageTotal}` : '';
+  const resolveKeyAction = useKeyActionResolver();
   const bodyParagraphs = useMemo(() => splitSpotlightParagraphs(spotlight.body), [spotlight.body]);
 
   const spotlightRef = useRef(spotlight);
@@ -509,6 +518,7 @@ export default function TutorialSpotlightOverlay({
               {renderRichText(paragraph.replace(/\n/g, '<br/>'), {
                 onLinkClick,
                 blockBullets: true,
+                resolveKeyAction,
                 transformText: (chunk, key) => renderEventTextChunk(chunk, `tutorial-spotlight-${String(index)}-${key}`),
               })}
             </p>

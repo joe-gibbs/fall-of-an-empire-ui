@@ -29,8 +29,30 @@ import { toRootRem } from '../../../utils/cssUnits';
 import './SettlementBuildingsPanel.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
+import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
+import { useActiveInputDevice } from '../../../hooks/useActiveInputDevice';
+import { findActionBinding } from '../../../utils/actionBindings';
+import { ActionKeyGlyph } from '../../common/ActionKeyGlyph';
+
 interface Props {
   settlement: Settlement;
+}
+
+function useCancelConstructionHint(): React.ReactNode {
+  const { settings } = useSettingsBridge();
+  const activeInputDevice = useActiveInputDevice(
+    settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
+  );
+  const commandBinding = findActionBinding(settings?.controls, 'Command', activeInputDevice);
+  if (!commandBinding) {
+    return webUIText('SettlementBuildings.CancelConstruction');
+  }
+  return (
+    <span className="tt-footer-shortcut-row">
+      <ActionKeyGlyph binding={commandBinding} />
+      <span>{webUIText('SettlementBuildings.CancelConstructionSuffix')}</span>
+    </span>
+  );
 }
 
 /** Reason why the entire panel should treat all available buildings as locked
@@ -373,6 +395,7 @@ function builtTooltip(
   actions?: React.ReactNode,
   requirementTargets: BuildingLinkMatch[] = [],
   onNavigate?: (buildingId: string) => void,
+  cancelHint?: React.ReactNode,
 ): TooltipContent {
   const lines: TooltipLine[] = [];
   const ruined = b.condition !== undefined && b.condition <= 0;
@@ -459,8 +482,8 @@ function builtTooltip(
     body: buildingTooltipBody(b.description, b.effectsText),
     lines,
     afterLines: actions,
-    footer: canCancel && displayQueueItem(queueSummary)
-      ? webUIText('SettlementBuildings.RightClickCancelConstruction')
+    footer: canCancel && displayQueueItem(queueSummary) && cancelHint
+      ? cancelHint
       : undefined,
   };
 }
@@ -472,6 +495,7 @@ function availTooltip(
   canCancel = false,
   requirementTargets: BuildingLinkMatch[] = [],
   onNavigate?: (buildingId: string) => void,
+  cancelHint?: React.ReactNode,
 ): TooltipContent {
   const lines: TooltipLine[] = [];
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.281.8'), value: n(a.price), valueIcon: '/assets/icons/I_Coins.png' });
@@ -506,8 +530,8 @@ function availTooltip(
     title: a.name,
     body: buildingTooltipBody(a.description, a.effectsText),
     lines,
-    footer: canCancel && displayQueueItem(queueSummary)
-      ? webUIText('SettlementBuildings.RightClickCancelConstruction')
+    footer: canCancel && displayQueueItem(queueSummary) && cancelHint
+      ? cancelHint
       : undefined,
   };
 }
@@ -808,6 +832,7 @@ function BuiltCard({
   queueing?: boolean;
 }) {
   const buildingNavigation = React.useContext(BuildingNavigationContext);
+  const cancelHint = useCancelConstructionHint();
   const [confirmingAction, setConfirmingAction] = React.useState<BuildingManagementAction | null>(null);
   const [pendingAction, setPendingAction] = React.useState<BuildingManagementAction | null>(null);
   const panelLockReason = React.useContext(PanelLockContext);
@@ -899,6 +924,7 @@ function BuiltCard({
         managementActions,
         requirementTargets,
         buildingNavigation?.navigateToBuilding,
+        cancelHint,
       )}
       position="left"
       delay={200}
@@ -1010,6 +1036,7 @@ function AvailCard({
   queueing?: boolean;
 }) {
   const buildingNavigation = React.useContext(BuildingNavigationContext);
+  const cancelHint = useCancelConstructionHint();
   const panelLockReason = React.useContext(PanelLockContext);
   const intrinsicLocked = a.buildState.state !== 'visible';
   const locked = intrinsicLocked || !!panelLockReason;
@@ -1051,6 +1078,7 @@ function AvailCard({
         cancellable,
         requirementTargets,
         buildingNavigation?.navigateToBuilding,
+        cancelHint,
       )}
       position="left"
       delay={200}

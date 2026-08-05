@@ -13,6 +13,7 @@ import type { TopbarButtonRegistration } from '../../registry/index';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { useWebUIText, type WebUITextFormatter } from '../../localization/WebUITextContext';
 import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
+import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
 import { findActionBinding, TOPBAR_SCREEN_ACTIONS } from '../../utils/actionBindings';
 import { actionBindingFooter } from '../common/ActionKeyGlyph';
 import { ScreenButtonTooltipBody } from './ScreenButtonTooltip';
@@ -122,6 +123,9 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
 }) => {
   const t = useWebUIText();
   const { settings } = useSettingsBridge();
+  const activeInputDevice = useActiveInputDevice(
+    settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
+  );
   const playerFaction = usePlayerFactionSummary();
   const [steamAchievementsAvailable, setSteamAchievementsAvailable] = useState<boolean | null>(null);
 
@@ -195,7 +199,7 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
           factionName={playerFaction?.name}
           position="bottom"
           delay={200}
-          footer={actionBindingFooter(findActionBinding(settings?.controls, TOPBAR_SCREEN_ACTIONS.faction))}
+          footer={actionBindingFooter(findActionBinding(settings?.controls, TOPBAR_SCREEN_ACTIONS.faction, activeInputDevice))}
         >
           {factionButtonNode}
         </FactionTooltip>
@@ -203,7 +207,7 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
       {buttons.map((btn) => {
         const actionName = TOPBAR_SCREEN_ACTIONS[btn.id];
         const shortcut = actionName
-          ? actionBindingFooter(findActionBinding(settings?.controls, actionName))
+          ? actionBindingFooter(findActionBinding(settings?.controls, actionName, activeInputDevice))
           : undefined;
         return (
           <Tooltip key={btn.id} content={screenTooltipContent(btn, t, shortcut)} position="bottom" delay={200} variant="sidebar" bubbleClassName="tt-bubble--screen-button">

@@ -1,5 +1,6 @@
 import { useWebUIText } from '../../localization/WebUITextContext';
 import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
+import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
 import { findActionBinding, getMapModeActionName } from '../../utils/actionBindings';
 import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
 import { MapModeTooltip, TTHeader, TTMuted, TTBullets } from './MapModeTooltip';
@@ -20,7 +21,10 @@ export default function LocalizedMapModeTooltip({
 }) {
   const t = useWebUIText();
   const { settings } = useSettingsBridge();
-  const binding = findActionBinding(settings?.controls, getMapModeActionName(modeId));
+  const activeInputDevice = useActiveInputDevice(
+    settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
+  );
+  const binding = findActionBinding(settings?.controls, getMapModeActionName(modeId), activeInputDevice);
 
   return (
     <MapModeTooltip>

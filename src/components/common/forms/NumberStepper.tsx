@@ -8,7 +8,9 @@ import {
   useStepMultiplier,
 } from '../../../utils/stepModifiers';
 import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
-import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
+import { useActiveInputDevice } from '../../../hooks/useActiveInputDevice';
+import { findActionBinding, formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
+import { ActionKeyGlyph } from '../ActionKeyGlyph';
 import Tooltip from '../tooltips/Tooltip';
 import './NumberStepper.css';
 
@@ -59,12 +61,27 @@ const NumberStepper = memo(function NumberStepper({
 }: NumberStepperProps) {
   const t = useWebUIText();
   const { settings } = useSettingsBridge();
+  const activeInputDevice = useActiveInputDevice(
+    settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
+  );
   const multiplier = useStepMultiplier();
   const effectiveStep = stepAmountFromMultiplier(multiplier, step);
   const decrementDisabled = disabled || (min !== undefined && value <= min);
   const incrementDisabled = disabled || (max !== undefined && value >= max);
-  const batchKey = formatActionBinding(settings?.controls, 'IncreaseUnitProduction');
-  const modifierHint = stepModifiersHelpText(t, batchKey);
+  const batchBinding = findActionBinding(settings?.controls, 'IncreaseUnitProduction', activeInputDevice);
+  const batchKey = formatActionBinding(settings?.controls, 'IncreaseUnitProduction', activeInputDevice);
+  const modifierHintBody = stepModifiersHelpText(t, batchBinding ? '' : batchKey);
+  const modifierHint = batchBinding
+    ? (
+        <>
+          <div>{modifierHintBody}</div>
+          <div className="tt-footer-shortcut-row">
+            <span>{t('Common.StepModifiersBatchLabel')}</span>
+            <ActionKeyGlyph binding={batchBinding} />
+          </div>
+        </>
+      )
+    : modifierHintBody;
   const decrementLabel = stepButtonLabel(-1, effectiveStep);
   const incrementLabel = stepButtonLabel(1, effectiveStep);
 

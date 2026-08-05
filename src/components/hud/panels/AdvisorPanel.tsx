@@ -2,8 +2,11 @@ import { useState } from 'react';
 import type { AdvisorHint } from '../../../context/GameContext';
 import { useAnimatedPresence } from '../../../hooks/useAnimatedPresence';
 import { useDraggableOffset } from '../../../hooks/useDraggableOffset';
+import { useKeyActionResolver } from '../../../hooks/useKeyActionResolver';
 import { playSound } from '../../../hooks/useSound';
+import { renderRichText } from '../../../utils/richText';
 import CloseButton from '../../common/buttons/CloseButton';
+import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import { UI_MOTION } from '../../../config/motion';
 import './AdvisorPanel.css';
 
@@ -44,6 +47,7 @@ function AdvisorPanel({
     disabled: closing || !active,
     resetKey: currentHint?.hintKey ?? null,
   });
+  const resolveKeyAction = useKeyActionResolver();
 
   if (!mounted || !currentHint) return null;
 
@@ -76,7 +80,14 @@ function AdvisorPanel({
 
             <div className="advisor-card__hero-copy">
               <h2 className="advisor-card__title">{currentHint.title}</h2>
-              <div className="advisor-card__body">{paragraph}</div>
+              <StyledScrollArea className="advisor-card__body-scroll" variant="fill">
+                <div className="advisor-card__body">
+                  {renderRichText(paragraph.replace(/\n/g, '<br/>'), {
+                    blockBullets: true,
+                    resolveKeyAction,
+                  })}
+                </div>
+              </StyledScrollArea>
             </div>
           </div>
 

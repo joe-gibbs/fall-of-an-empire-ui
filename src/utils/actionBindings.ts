@@ -12,21 +12,41 @@ export interface ActionBindingLike {
   isAxis?: boolean;
 }
 
+export type ActiveInputDeviceHint = 'keyboard' | 'gamepad';
+
+function isGamepadBinding(entry: ActionBindingLike): boolean {
+  const glyphId = (entry.glyphId || '').trim();
+  if (glyphId.startsWith('gamepad_')) return true;
+  const keyName = (entry.keyName || '').trim().toLowerCase();
+  return keyName.startsWith('gamepad_');
+}
+
 /**
  * First matching non-axis binding for `actionName`, or null when unbound.
  * Prefer this when rendering KeyGlyph; use formatActionBinding for plain text.
+ * When `preferredDevice` is set, only return a binding for that device so
+ * gamepad mode never shows keyboard chords (and vice versa).
  */
 export function findActionBinding(
   controls: readonly ActionBindingLike[] | null | undefined,
   actionName: string,
+  preferredDevice?: ActiveInputDeviceHint,
 ): ActionBindingLike | null {
   if (!controls || !actionName) return null;
 
-  return controls.find((entry) => (
+  const matches = controls.filter((entry) => (
     entry.actionName === actionName
     && !entry.isAxis
-    && Boolean(entry.keyDisplay || entry.keyName)
-  )) ?? null;
+    && Boolean(entry.keyDisplay || entry.keyName || entry.glyphId)
+  ));
+  if (matches.length === 0) return null;
+
+  if (preferredDevice) {
+    const preferGamepad = preferredDevice === 'gamepad';
+    return matches.find((entry) => isGamepadBinding(entry) === preferGamepad) ?? null;
+  }
+
+  return matches[0] ?? null;
 }
 
 /**
@@ -36,8 +56,9 @@ export function findActionBinding(
 export function formatActionBinding(
   controls: readonly ActionBindingLike[] | null | undefined,
   actionName: string,
+  preferredDevice?: ActiveInputDeviceHint,
 ): string {
-  const match = findActionBinding(controls, actionName);
+  const match = findActionBinding(controls, actionName, preferredDevice);
   if (!match) return '';
 
   const key = (match.keyDisplay || match.keyName || '').trim();
@@ -50,6 +71,45 @@ export function formatActionBinding(
   if (match.cmd) parts.push('Cmd');
   parts.push(key);
   return parts.join('+');
+}
+
+export type KeyActionGlyphProps = {
+  glyphId?: string;
+  keyDisplay?: string;
+  shift?: boolean;
+  ctrl?: boolean;
+  alt?: boolean;
+  cmd?: boolean;
+};
+
+/** KeyGlyph props for a rebindable action on the preferred device. */
+export function resolveKeyActionGlyph(
+  controls: readonly ActionBindingLike[] | null | undefined,
+  actionName: string,
+  preferredDevice?: ActiveInputDeviceHint,
+): KeyActionGlyphProps | null {
+  const match = findActionBinding(controls, actionName, preferredDevice);
+  if (!match) return null;
+
+  const keyDisplay = (match.keyDisplay || match.keyName || '').trim();
+  if (!keyDisplay && !(match.glyphId || '').trim()) return null;
+
+  return {
+    glyphId: match.glyphId,
+    keyDisplay: keyDisplay || undefined,
+    shift: Boolean(match.shift),
+    ctrl: Boolean(match.ctrl),
+    alt: Boolean(match.alt),
+    cmd: Boolean(match.cmd),
+  };
+}
+
+/** Rich-text resolver for `<key action="Command"/>` tags. */
+export function makeKeyActionResolver(
+  controls: readonly ActionBindingLike[] | null | undefined,
+  preferredDevice?: ActiveInputDeviceHint,
+): (actionName: string) => KeyActionGlyphProps | null {
+  return (actionName: string) => resolveKeyActionGlyph(controls, actionName, preferredDevice);
 }
 
 /**

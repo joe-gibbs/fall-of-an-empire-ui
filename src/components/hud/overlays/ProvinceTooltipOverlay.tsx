@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
 import type { GetProvinceTooltipResponse } from '../../../bridge-types.generated.ts';
 import { useProvinceTooltipBridge } from '../../../bridge/provinces/useProvinceTooltipBridge';
+import { useKeyActionResolver } from '../../../hooks/useKeyActionResolver';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { toRootRem } from '../../../utils/cssUnits';
 import { formatNumber } from '../../../utils/numberFormat';
+import { renderRichText } from '../../../utils/richText';
 import ProvinceTooltipModeRenderer from '../../common/province-tooltip-modes/shared/ProvinceTooltipModeRenderer';
 import { provinceTooltipDataFromResponse } from '../../common/province-tooltip-modes/shared/types';
 import './ProvinceTooltipOverlay.css';
@@ -304,12 +306,23 @@ function MapModeContent({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   );
 }
 
+function SettlementActionHint({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
+  const resolveKeyAction = useKeyActionResolver();
+  if (!tooltip.actionHint) return null;
+  return (
+    <div className="province-tooltip-action">
+      {renderRichText(tooltip.actionHint, { resolveKeyAction })}
+    </div>
+  );
+}
+
 function SettlementMapModeDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   return (
     <div className="province-tooltip-details">
       <div className="province-tooltip-title">{tooltip.settlementName}</div>
       {shouldShowTerrainInfo(tooltip) && <TerrainSummary tooltip={tooltip} />}
       <MapModeContent tooltip={tooltip} />
+      <SettlementActionHint tooltip={tooltip} />
     </div>
   );
 }
@@ -323,17 +336,21 @@ function SettlementDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse })
     <div className="province-tooltip-details">
       <div className="province-tooltip-title">{tooltip.settlementName}</div>
       <TerrainSummary tooltip={tooltip} />
+      <SettlementActionHint tooltip={tooltip} />
     </div>
   );
 }
 
 function LandingDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
+  const resolveKeyAction = useKeyActionResolver();
   return (
     <div className="province-tooltip-details">
       <div className="province-tooltip-title">{tooltip.landingTitle}</div>
       <TerrainSummary tooltip={tooltip} />
       {tooltip.landingInstruction && (
-        <div className="province-tooltip-action">{tooltip.landingInstruction}</div>
+        <div className="province-tooltip-action">
+          {renderRichText(tooltip.landingInstruction, { resolveKeyAction })}
+        </div>
       )}
     </div>
   );
