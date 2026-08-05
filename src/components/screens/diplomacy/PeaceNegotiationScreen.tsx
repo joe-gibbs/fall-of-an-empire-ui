@@ -159,6 +159,16 @@ function tributeAmountFromText(value: string): number {
   return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
 }
 
+function isOneOffTributeTerm(type: string): boolean {
+  return type === 'onetime_tribute';
+}
+
+function boundedTributeAmount(value: number, maxGold?: number): number {
+  const amount = Math.max(0, Math.round(value));
+  if (maxGold === undefined) return amount;
+  return Math.min(amount, Math.max(0, Math.round(maxGold)));
+}
+
 function isConcession(term: Pick<PeaceTermDraft, 'direction'> | Pick<TermOption, 'direction'> | Pick<TermEntry, 'direction'>): boolean {
   return term.direction === 'concession';
 }
@@ -539,6 +549,7 @@ function Confronter({
 function DraftTermChip({
   term,
   live,
+  maxGold,
   amountStep,
   durationOptionsDays,
   onRemove,
@@ -547,6 +558,7 @@ function DraftTermChip({
 }: {
   term: PeaceTermDraft;
   live?: TermEntry;
+  maxGold?: number;
   amountStep: number;
   durationOptionsDays: number[];
   onRemove: () => void;
@@ -559,7 +571,8 @@ function DraftTermChip({
   const detail = isReplaceRuler ? replaceRulerDetail(live, term) : termDetail(live, term);
   const isTribute = term.type === 'onetime_tribute' || term.type === 'ongoing_tribute';
   const isOngoing = term.type === 'ongoing_tribute';
-  const tributeAmount = Math.max(0, Math.round(term.tributeAmount ?? live?.tributeAmount ?? 0));
+  const tributeMax = isOneOffTributeTerm(term.type) ? maxGold : undefined;
+  const tributeAmount = boundedTributeAmount(term.tributeAmount ?? live?.tributeAmount ?? 0, tributeMax);
   const tributeDurationDays = term.tributeDurationDays || live?.tributeDurationDays || durationOptionsDays[durationOptionsDays.length - 1];
   const candidates = replacementCandidates(term, live);
   const activeReplacementId = term.replacementRulerId || live?.replacementRulerId || candidates[0]?.id || '';
@@ -591,12 +604,13 @@ function DraftTermChip({
                   value={tributeAmount}
                   step={amountStep}
                   min={0}
+                  max={tributeMax}
                   className="pns-amount-control"
                   buttonClassName="pns-step-btn"
                   buttonDisabledClassName="pns-step-btn--disabled"
                   formatValue={formatNumber}
-                  parseValue={tributeAmountFromText}
-                  onChange={nextAmount => onChange({ tributeAmount: nextAmount })}
+                  parseValue={value => boundedTributeAmount(tributeAmountFromText(value), tributeMax)}
+                  onChange={nextAmount => onChange({ tributeAmount: boundedTributeAmount(nextAmount, tributeMax) })}
                 />
               </div>
               {isOngoing ? (
@@ -760,6 +774,7 @@ function TermsColumn({
   selectedTerms,
   stateTerms,
   total,
+  maxGold,
   amountStep,
   durationOptionsDays,
   onRemove,
@@ -772,6 +787,7 @@ function TermsColumn({
   selectedTerms: PeaceTermDraft[];
   stateTerms: TermEntry[];
   total: number;
+  maxGold?: number;
   amountStep: number;
   durationOptionsDays: number[];
   onRemove: (termId: string) => void;
@@ -802,6 +818,7 @@ function TermsColumn({
                 key={id}
                 term={term}
                 live={byId.get(id)}
+                maxGold={maxGold}
                 amountStep={amountStep}
                 durationOptionsDays={durationOptionsDays}
                 onRemove={() => onRemove(id)}
@@ -1266,6 +1283,7 @@ function PeaceNegotiationScreenContent({
             selectedTerms={selectedConcessions}
             stateTerms={liveTerms}
             total={concessionCost}
+            maxGold={state.playerFaction.gold}
             amountStep={state.amountStep}
             durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}
@@ -1280,6 +1298,7 @@ function PeaceNegotiationScreenContent({
             selectedTerms={selectedDemands}
             stateTerms={liveTerms}
             total={demandCost}
+            maxGold={state.targetFaction.gold}
             amountStep={state.amountStep}
             durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}

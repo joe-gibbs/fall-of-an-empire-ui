@@ -143,6 +143,16 @@ function boundedResourceAmount(value: number, resource?: ResourceOption): number
   return Math.min(amount, Math.max(0, Math.round(resource.amount)));
 }
 
+function isOneOffTribute(type: string): boolean {
+  return type === 'tribute_one_off';
+}
+
+function boundedTributeAmount(value: number, maxGold?: number): number {
+  const amount = Math.max(0, Math.round(value));
+  if (maxGold === undefined) return amount;
+  return Math.min(amount, Math.max(0, Math.round(maxGold)));
+}
+
 function defaultResourceTransferAmount(resource: ResourceOption, currentAmount: number): number {
   const available = Math.max(0, Math.round(resource.amount));
   if (available <= 0) return 0;
@@ -247,6 +257,7 @@ function ProposalChip({
   proposal,
   live,
   resourceOptions,
+  maxGold,
   amountStep,
   durationOptionsDays,
   onRemove,
@@ -255,6 +266,7 @@ function ProposalChip({
   proposal: DiplomaticProposalDraft;
   live?: TreatyEntry;
   resourceOptions: ResourceOption[];
+  maxGold?: number;
   amountStep: number;
   durationOptionsDays: number[];
   onRemove: () => void;
@@ -262,7 +274,8 @@ function ProposalChip({
 }) {
   const side = isMutual(proposal) ? 'mutual' : isRequest(proposal) ? 'demand' : 'concession';
   const label = proposalTypeLabel(proposal.type) || live?.label || proposalFallbackLabel(proposal);
-  const amount = Math.max(0, Math.round(proposal.tributeAmount ?? live?.tributeAmount ?? 0));
+  const tributeMax = isOneOffTribute(proposal.type) ? maxGold : undefined;
+  const amount = boundedTributeAmount(proposal.tributeAmount ?? live?.tributeAmount ?? 0, tributeMax);
   const resourceName = proposal.resourceName || live?.resourceName || '';
   const selectedResource = resourceOptions.find(resource => resource.name === resourceName);
   const resourceLabel = selectedResource?.label || live?.resourceLabel || '';
@@ -286,12 +299,13 @@ function ProposalChip({
                 value={amount}
                 step={amountStep}
                 min={0}
+                max={tributeMax}
                 className="pns-amount-control"
                 buttonClassName="pns-step-btn"
                 buttonDisabledClassName="pns-step-btn--disabled"
                 formatValue={formatNumber}
-                parseValue={amountFromText}
-                onChange={nextAmount => onChange({ tributeAmount: nextAmount })}
+                parseValue={value => boundedTributeAmount(amountFromText(value), tributeMax)}
+                onChange={nextAmount => onChange({ tributeAmount: boundedTributeAmount(nextAmount, tributeMax) })}
               />
             </div>
           </div>
@@ -399,6 +413,7 @@ function ProposalColumn({
   selected,
   stateProposals,
   resourceOptions,
+  maxGold,
   amountStep,
   durationOptionsDays,
   side,
@@ -409,6 +424,7 @@ function ProposalColumn({
   selected: DiplomaticProposalDraft[];
   stateProposals: TreatyEntry[];
   resourceOptions: ResourceOption[];
+  maxGold?: number;
   amountStep: number;
   durationOptionsDays: number[];
   side: 'offer' | 'request';
@@ -440,6 +456,7 @@ function ProposalColumn({
                 proposal={proposal}
                 live={live}
                 resourceOptions={resourceOptions}
+                maxGold={maxGold}
                 amountStep={amountStep}
                 durationOptionsDays={durationOptionsDays}
                 onRemove={() => onRemove(id)}
@@ -487,6 +504,8 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
   const selectedRequests = proposals.filter(proposal => isRequest(proposal) || isMutual(proposal));
   const ourResources = state?.ourResources ?? [];
   const theirResources = state?.theirResources ?? [];
+  const ourGold = state?.ourGold ?? 0;
+  const theirGold = state?.theirGold ?? 0;
   const acceptTone = acceptanceTone(preview?.acceptanceScore);
   const proposalScore = preview?.acceptanceScore ?? 0;
   const proposalScoreClamped = Math.max(-100, Math.min(100, proposalScore));
@@ -665,6 +684,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
             selected={selectedOffers}
             stateProposals={liveProposals}
             resourceOptions={ourResources}
+            maxGold={ourGold}
             amountStep={state.amountStep}
             durationOptionsDays={state.durationOptionsDays}
             side="offer"
@@ -676,6 +696,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
             selected={selectedRequests}
             stateProposals={liveProposals}
             resourceOptions={theirResources}
+            maxGold={theirGold}
             amountStep={state.amountStep}
             durationOptionsDays={state.durationOptionsDays}
             side="request"

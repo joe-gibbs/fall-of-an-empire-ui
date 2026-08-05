@@ -814,6 +814,8 @@ export interface GetDiplomaticNegotiationStateResponse {
   availableRequests: DiplomaticNegotiationOption[];
   ourResources: DiplomaticNegotiationResourceOption[];
   theirResources: DiplomaticNegotiationResourceOption[];
+  ourGold: number;
+  theirGold: number;
   amountStep: number;
   durationOptionsDays: number[];
   preview: DiplomaticNegotiationPreview;
