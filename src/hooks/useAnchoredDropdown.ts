@@ -84,6 +84,14 @@ export function useAnchoredDropdown({
       return;
     }
 
+    if (position === 'below-left') {
+      setStyle({
+        top: cssLength(rect.bottom + offset, useRootRem),
+        left: cssLength(rect.left, useRootRem),
+      });
+      return;
+    }
+
     const spaceBelow = window.innerHeight - rect.bottom - offset * 2;
     const spaceAbove = rect.top - offset * 2;
     const placeAbove = spaceBelow < Math.min(minSpaceBelow, maxPopupHeight) && spaceAbove > spaceBelow;

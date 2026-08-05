@@ -1,0 +1,142 @@
+.map-mode-picker {
+  position: relative;
+  pointer-events: auto;
+  z-index: 60;
+  margin: 0.4rem 0.5rem 0.55rem 0;
+}
+
+.map-mode-picker-trigger-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-mode-picker .map-mode-picker-trigger.icon-button {
+  width: 3rem;
+  height: 3rem;
+}
+
+.map-mode-picker .map-mode-picker-trigger .icon-button-icon {
+  width: 2.1rem;
+  height: 2.1rem;
+}
+
+.map-mode-picker-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.4rem);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  width: min(22rem, calc(100vw - 1rem));
+  max-height: min(22rem, calc(100vh - 6rem));
+  overflow: hidden;
+  padding: 0.35rem;
+  border-width: 0.15rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image: url('/assets/gold-frame.png') 6 / 0.15rem / 0 round;
+  background-color: #151b20;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 20rem 20rem;
+  box-shadow: var(--shadow-panel);
+  animation-name: map-mode-picker-in;
+  animation-duration: 0.12s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+}
+
+.map-mode-picker-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(20rem, calc(100vh - 7rem));
+}
+
+.map-mode-picker-scroll-viewport {
+  max-height: min(20rem, calc(100vh - 7rem));
+  padding-right: 0.15rem;
+}
+
+.map-mode-picker-panel--exiting {
+  animation-name: map-mode-picker-out;
+  animation-duration: 0.12s;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+  pointer-events: none;
+}
+
+@keyframes map-mode-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes map-mode-picker-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+}
+
+.map-mode-picker-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.2rem;
+}
+
+.map-mode-picker-grid > .tooltip-wrapper {
+  min-width: 0;
+  display: flex;
+}
+
+.map-mode-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.4rem 0.45rem;
+  border: none;
+  background: transparent;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.88rem;
+  line-height: 1.15;
+  text-align: left;
+  cursor: var(--cursor-pointer);
+}
+
+.map-mode-picker-item:hover {
+  background: rgba(201, 168, 76, 0.12);
+}
+
+.map-mode-picker-item--active {
+  color: var(--gold);
+  background: rgba(201, 168, 76, 0.1);
+}
+
+.map-mode-picker-item-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.map-mode-picker-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

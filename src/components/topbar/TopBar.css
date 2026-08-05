@@ -3,15 +3,59 @@
    T_TopNavbar_Left/Right as shaped panel backgrounds,
    T_CentreBorder for center speed/date section,
    portrait in the circular frame on the right
+
+   Layout is authored for a ~1920 CSS-px wide HUD. On
+   narrower / high-UI-scale viewports, .topbar-scale
+   shrinks the whole design so left/centre/right never
+   overlap and the date stays readable.
    ============================================= */
 
-.topbar {
+/*
+  Absolute HUD is authored at a fixed 1920px design width with a 13.2px rem base.
+  .topbar-scale is that design canvas; --topbar-layout-scale shrinks it to the
+  real viewport when rem is inflated (UI scale / font floor) or width is narrow.
+*/
+:root {
+  --topbar-design-width: 1920px;
+  --topbar-layout-scale: 1;
+}
+
+.topbar-shell {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: var(--topbar-height);
+  /* Decorative bar art + portrait sit slightly taller than the content row. */
+  height: calc((var(--topbar-height) + 1.2em) * var(--topbar-layout-scale, 1));
   z-index: 100;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.topbar-scale {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--topbar-design-width);
+  /* Freeze chrome to the design rem base so UI scale cannot explode the HUD. */
+  font-size: 13.2px;
+  --topbar-height: 3.4em;
+  height: calc(var(--topbar-height) + 1.2em);
+  transform: scale(var(--topbar-layout-scale, 1));
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+.topbar-scale > * {
+  pointer-events: auto;
+}
+
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--topbar-height);
   pointer-events: auto;
   overflow: visible;
 }
@@ -32,7 +76,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 40vw;
+  width: 40%;
   height: auto;
   pointer-events: none;
   z-index: 1;
@@ -44,7 +88,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 40vw;
+  width: 40%;
   height: auto;
   pointer-events: none;
   z-index: 1;
@@ -59,36 +103,53 @@
    overlaps the portrait edge.
    ============================================= */
 
-/* Circle in T_TopNavbar_Left.png (744x149):
-   Center: ~(74, 75), inner radius: ~5rem
-   At 40vw width, image height = 40vw * 149/744 = 8.01vw
-   Mirrored to right side: same offsets but from right edge */
+/*
+  Circle measured from T_TopNavbar_Left.png (744x149):
+    centre ≈ (58, 58), inner diameter ≈ 81px at widest.
+  Frame is 40% of the 1920 design canvas (768px) and scaleX(-1) mirrored, so the
+  circle sits near the right edge. Portrait box is square in em at 13.2px chrome:
+    frameScale = 768/744
+    centreFromRight = 58 * frameScale ≈ 59.9px → 4.54em
+    diameter = 81 * frameScale ≈ 83.6px → 6.33em
+    right = centreFromRight - diameter/2 ≈ 1.37em
+    top = 58/149 * frameH - diameter/2 ≈ 1.37em
+*/
 
 .topbar-portrait-slot {
   position: absolute;
-  /* Same offsets as before, but from the right edge (mirrored) */
-  top: 0.76vw;
-  right: 0.87vw;
-  width: 4.5vw;
-  height: 4.5vw;
+  top: 1.37em;
+  right: 1.37em;
+  width: 6.33em;
+  height: 6.33em;
   z-index: 102;
+}
+
+.topbar-portrait-slot > .tooltip-wrapper,
+.topbar-portrait-slot > .topbar-portrait,
+.topbar-portrait-slot > .ptt-portrait-btn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .topbar-portrait-frame {
   position: absolute;
   top: 0;
   right: 0;
-  width: 40vw;
+  width: 40%;
   height: auto;
   z-index: 103;
   transform: scaleX(-1);
+  /* Circle centre is 58/744 of the asset; mask is pre-flip so this is from the left. */
   mask-image: radial-gradient(
-    circle at 3.23vw 3.23vw,
+    circle at 7.8% 39%,
     transparent 0,
-    transparent 2.4vw,
-    black 2.48vw,
-    black 3.28vw,
-    transparent 3.36vw
+    transparent 5.4%,
+    black 5.6%,
+    black 8.2%,
+    transparent 8.4%
   );
   pointer-events: none;
   user-select: none;
@@ -124,10 +185,10 @@
 .topbar-portrait::before {
   content: '';
   position: absolute;
-  top: -0.55vw;
-  right: -0.55vw;
-  bottom: -0.55vw;
-  left: -0.55vw;
+  top: -12%;
+  right: -12%;
+  bottom: -12%;
+  left: -12%;
   border-radius: 50%;
   background:
     radial-gradient(circle,
@@ -148,17 +209,17 @@
 
 .topbar-portrait-surface {
   position: absolute;
-  top: -0.12vw;
-  right: -0.12vw;
-  bottom: -0.12vw;
-  left: -0.12vw;
+  top: -3%;
+  right: -3%;
+  bottom: -3%;
+  left: -3%;
   display: block;
   border-radius: 50%;
   overflow: hidden;
   background: linear-gradient(180deg, #2d1a3d, #1a0e24);
   box-shadow:
-    0 0 0 0.08vw rgba(255, 229, 156, 0.14),
-    inset 0 0.18vw 0.5vw rgba(8, 4, 14, 0.45);
+    0 0 0 0.08em rgba(255, 229, 156, 0.14),
+    inset 0 0.18em 0.5em rgba(8, 4, 14, 0.45);
   transition: opacity 0.12s ease;
   z-index: 1;
 }
@@ -192,14 +253,14 @@
 
 .topbar-left {
   position: absolute;
-  top: 0.5rem;
+  top: 0.5em;
   left: 0;
-  width: 40vw;
+  width: 40%;
   height: var(--topbar-height);
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 4rem;
+  padding-right: 4em;
   z-index: 2;
 }
 
@@ -209,25 +270,30 @@
 }
 
 .screen-buttons > * + * {
-  margin-left: 1rem;
+  margin-left: 1em;
 }
 
-/* Screen buttons 10% larger than default */
+/* Screen buttons 10% larger than default.
+   Icon size uses % of the button (not em) so img font-size quirks cannot zero them. */
 .screen-buttons .icon-button {
-  width: 3.215rem;
-  height: 3.215rem;
+  width: 3.215em;
+  height: 3.215em;
+  font-size: 13.2px;
 }
 
 .screen-buttons .icon-button-icon {
-  width: 2.42rem;
-  height: 2.42rem;
+  width: 75%;
+  height: 75%;
+  max-width: 75%;
+  max-height: 75%;
+  object-fit: contain;
 }
 
 .screen-buttons .screen-button-faction.icon-button {
-  width: 3.85rem;
-  height: 3.85rem;
+  width: 3.85em;
+  height: 3.85em;
   padding: 0;
-  border-width: 0.1rem;
+  border-width: 0.1em;
   border-style: solid;
   border-color: transparent;
   background-color: transparent;
@@ -281,8 +347,8 @@
 }
 
 .screen-button-faction-fallback-icon {
-  width: 2.65rem;
-  height: 2.65rem;
+  width: 2.65em;
+  height: 2.65em;
   position: relative;
   z-index: 3;
 }
@@ -296,8 +362,10 @@
   left: 50%;
   top: 0;
   transform: translateX(-50%);
-  width: 34rem;
-  z-index: 2;
+  width: max-content;
+  max-width: 38em;
+  /* Above left/right rails so pause/play/speed stay visible when rails grow. */
+  z-index: 12;
   pointer-events: none;
 }
 
@@ -320,13 +388,13 @@
   align-items: center;
   justify-content: center;
   height: var(--topbar-height);
-  padding: 0 1.2rem;
+  padding: 0 1.2em;
   z-index: 1;
   pointer-events: none;
 }
 
 .topbar-center-content > * + * {
-  margin-left: 0.75rem;
+  margin-left: 0.75em;
 }
 
 .topbar-center-content > .speed-controls,
@@ -339,37 +407,37 @@
 }
 
 .topbar-center-divider {
-  width: 0.077rem;
-  height: 1.846rem;
+  width: 0.077em;
+  height: 1.846em;
   background: rgba(80, 85, 100, 0.25);
   align-self: center;
 }
 
 .topbar-saving-indicator {
   position: absolute;
-  top: 3.1rem;
+  top: 3.1em;
   left: 50%;
   z-index: 6;
   display: flex;
   align-items: center;
-  padding: 0.34rem 0.68rem;
-  border-width: 0.077rem;
+  padding: 0.34em 0.68em;
+  border-width: 0.077em;
   border-style: solid;
   border-top-color: rgba(201, 168, 76, 0.72);
   border-right-color: rgba(201, 168, 76, 0.46);
   border-bottom-color: rgba(64, 45, 22, 0.9);
   border-left-color: rgba(201, 168, 76, 0.46);
-  border-radius: 0.23rem;
+  border-radius: 0.23em;
   background-color: #20272d;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.36) 0%, rgba(18, 23, 29, 0.84) 100%),
     url('/assets/baked/texture-overlay-heavy.png');
   background-position: 0 0, 0 0;
   background-repeat: repeat, repeat;
-  background-size: auto, 7.385rem 7.385rem;
+  background-size: auto, 7.385em 7.385em;
   color: var(--gold-light);
   font-family: var(--font-header);
-  font-size: 0.82rem;
+  font-size: 0.82em;
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1;
@@ -383,12 +451,12 @@
 }
 
 .topbar-saving-indicator > * + * {
-  margin-left: 0.38rem;
+  margin-left: 0.38em;
 }
 
 .topbar-saving-indicator-icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
   flex-shrink: 0;
 }
 
@@ -406,12 +474,12 @@
   12% {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(0.18rem);
+    transform: translateX(-50%) translateY(0.18em);
   }
   82% {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(0.18rem);
+    transform: translateX(-50%) translateY(0.18em);
   }
   100% {
     opacity: 0;
@@ -427,13 +495,16 @@
 .topbar-right-rail {
   position: absolute;
   top: 0;
-  right: 6.5vw;
-  min-width: max(0px, calc(43.5vw - 17rem));
+  right: 6.5%;
+  /* Pack toward the portrait so actions never sit under the date. */
+  left: auto;
   height: var(--topbar-height);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 0.75em;
   z-index: 3;
+  max-width: 44%;
 }
 
 .topbar-actions {
@@ -442,16 +513,31 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  margin-top: 1rem;
-  margin-right: 0.75rem;
+  margin-top: 0.35em;
+  margin-right: 0.5em;
 }
 
 .topbar-actions > * + * {
-  margin-left: 0.25rem;
+  margin-left: 0.25em;
 }
 
 .topbar-actions .screen-buttons > * + * {
-  margin-left: 0.25rem;
+  margin-left: 0.25em;
+}
+
+/* Build / victory / pin must match screen-button size (not IconButton rem). */
+.topbar-actions .icon-button {
+  width: 3.215em;
+  height: 3.215em;
+  font-size: 13.2px;
+}
+
+.topbar-actions .icon-button-icon {
+  width: 75%;
+  height: 75%;
+  max-width: 75%;
+  max-height: 75%;
+  object-fit: contain;
 }
 
 /* =============================================
@@ -467,7 +553,7 @@
 }
 
 .topbar-right > * + * {
-  margin-left: 0.75rem;
+  margin-left: 0.75em;
 }
 
 .topbar-right > .tooltip-wrapper {
@@ -476,7 +562,7 @@
 
 .topbar-right > .imperial-standing-wrapper {
   align-self: flex-start;
-  margin-top: 0.26rem;
+  margin-top: 0.26em;
 }
 
 /* =============================================
@@ -485,8 +571,8 @@
 
 .imperial-standing-gauge {
   position: relative;
-  width: 5.85rem;
-  height: 5.85rem;
+  width: 5.85em;
+  height: 5.85em;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -535,14 +621,14 @@
 
 .imperial-standing-gauge-core {
   position: absolute;
-  top: 0.38rem;
-  left: 0.38rem;
+  top: 0.38em;
+  left: 0.38em;
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 5.09rem;
-  height: 5.09rem;
+  width: 5.09em;
+  height: 5.09em;
   box-sizing: border-box;
   border-radius: 50%;
   border-width: 0;
@@ -590,8 +676,8 @@
   right: 0;
   bottom: 0;
   left: 0;
-  width: 5.85rem;
-  height: 5.85rem;
+  width: 5.85em;
+  height: 5.85em;
   background-color: transparent;
   background-image: none;
   background-position: 0 0;
@@ -604,22 +690,22 @@
 
 .imperial-standing-warning-slot {
   position: absolute;
-  right: -0.17rem;
-  bottom: -0.11rem;
+  right: -0.17em;
+  bottom: -0.11em;
   z-index: 7;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.47rem;
-  height: 1.47rem;
+  width: 1.47em;
+  height: 1.47em;
   border-radius: 50%;
   background-color: rgba(12, 15, 18, 0.86);
   pointer-events: none;
 }
 
 .imperial-standing-warning-icon {
-  width: 1.29rem;
-  height: 1.29rem;
+  width: 1.29em;
+  height: 1.29em;
   flex-shrink: 0;
 }
 
@@ -635,18 +721,18 @@
 }
 
 .date-display > * + * {
-  margin-left: 0.45rem;
+  margin-left: 0.45em;
 }
 
 .date-display-season-icon {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.4em;
+  height: 1.4em;
   flex-shrink: 0;
 }
 
 .date-display-climate-icon {
-  width: 1.28rem;
-  height: 1.28rem;
+  width: 1.28em;
+  height: 1.28em;
   flex-shrink: 0;
 }
 
@@ -663,40 +749,40 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-header);
-  font-size: 1.15rem;
+  font-size: 1.15em;
   font-weight: 600;
   color: var(--text-bright);
   letter-spacing: 0;
   white-space: nowrap;
-  min-width: 9.8rem;
+  min-width: 9.8em;
   flex-shrink: 0;
 }
 
 .demo-timer {
   position: fixed;
-  left: 1.2rem;
-  bottom: 1.2rem;
+  left: 1.2em;
+  bottom: 1.2em;
   z-index: 1450;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  min-height: 1.75rem;
-  padding: 0.23rem 0.5rem;
-  border-width: 0.077rem;
+  gap: 0.3em;
+  min-height: 1.75em;
+  padding: 0.23em 0.5em;
+  border-width: 0.077em;
   border-style: solid;
   border-color: transparent;
   border-image-source: url('/assets/gold-frame.png');
   border-image-slice: 6;
-  border-image-width: 0.077rem;
+  border-image-width: 0.077em;
   border-image-repeat: round;
   background-color: rgba(13, 16, 20, 0.9);
   background-image: url('/assets/baked/texture-overlay-dark.png');
   background-position: 0 0;
   background-repeat: repeat;
-  background-size: 7.385rem 7.385rem;
+  background-size: 7.385em 7.385em;
   color: var(--text-bright);
   font-family: var(--font-header);
-  font-size: 0.82rem;
+  font-size: 0.95em;
   line-height: 1;
   white-space: nowrap;
 }
@@ -704,7 +790,7 @@
 .demo-timer-label {
   color: var(--gold);
   text-transform: uppercase;
-  letter-spacing: 0.04rem;
+  letter-spacing: 0.04em;
 }
 
 .date-display-date-part {
@@ -714,31 +800,39 @@
 
 .date-display-date-part--day,
 .date-display-date-part--month {
-  width: 1.45rem;
+  width: 1.45em;
   text-align: right;
 }
 
 .date-display-date-part--year {
-  width: 2.55rem;
+  width: 2.55em;
   text-align: left;
 }
 
 .date-display-date-separator {
   display: block;
-  width: 0.33rem;
+  width: 0.33em;
   text-align: center;
   flex-shrink: 0;
 }
 
+/*
+  Fixed width for PAUSED / 1x / 4x so the centre rail (width: max-content)
+  does not reflow the whole topbar when pause toggles.
+*/
 .date-display-status {
-  font-size: 0.85rem;
+  font-size: 0.95em;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.08rem;
+  letter-spacing: 0.08em;
   white-space: nowrap;
-  min-width: 4.8rem;
+  width: 6.4em;
+  min-width: 6.4em;
+  max-width: 6.4em;
   text-align: center;
   flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .date-display-status--paused {
@@ -747,16 +841,26 @@
 
 /* =============================================
    SpeedControls
+   Sized in em inside .topbar-scale (frozen 13.2px). Icon size uses % of the
+   button (not em on the img) so img font-size quirks cannot zero the glyph.
+   Fixed track width so pause icon swap never shifts the date.
    ============================================= */
 
 .speed-controls {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  /* pause 2em + gap 0.4em + cycle 2.8em */
+  width: 5.2em;
+  min-width: 5.2em;
 }
 
 .speed-controls > * + * {
-  margin-left: 0.4rem;
+  margin-left: 0.4em;
+}
+
+.speed-controls > .tooltip-wrapper {
+  flex-shrink: 0;
 }
 
 .speed-btn {
@@ -770,16 +874,18 @@
   position: relative;
   padding: 0;
   flex-shrink: 0;
+  /* Freeze em base so button boxes stay real even if ancestors use rem. */
+  font-size: 13.2px;
 }
 
 .speed-btn--pause {
-  width: 2rem;
-  height: 2rem;
+  width: 2em;
+  height: 2em;
 }
 
 .speed-btn--cycle {
-  width: 2.8rem;
-  height: 2rem;
+  width: 2.8em;
+  height: 2em;
 }
 
 .speed-btn:hover {
@@ -792,14 +898,21 @@
 }
 
 .speed-btn-img {
-  width: 1.85rem;
-  height: 1.85rem;
+  width: 92%;
+  height: 92%;
+  max-width: 92%;
+  max-height: 92%;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 /* Speed cycle icon is wider than tall (56x38 in game) */
 .speed-btn-img--wide {
-  width: 2.6rem;
-  height: 1.76rem;
+  width: 100%;
+  height: 88%;
+  max-width: 100%;
+  max-height: 88%;
 }
 
 /* =============================================
@@ -884,4 +997,404 @@
 
 .resource-delta--negative {
   color: var(--red);
+}
+
+/* =============================================
+   Compact HUD (Steam Deck / small windows)
+   - Left: StripLeft flipped (hard screen edge, taper to centre)
+   - Right: wide Right.png metrics (taper centre, hard under portrait)
+     + T_TopNavbar_PortraitCircle square meander (no Left.png crop)
+   ============================================= */
+
+html.hud-compact {
+  /*
+    Screen overlays, sidebars, and padding use --topbar-height. Compact chrome
+    is as tall as the portrait island - if this stays at the 45px strip height,
+    the screen close button sits under the portrait and cannot be clicked.
+  */
+  --topbar-compact-strip-height: 45px;
+  --topbar-compact-portrait-island: 110px;
+  --topbar-height: var(--topbar-compact-portrait-island);
+  /* Left island uses full StripLeft (320x45). */
+  --topbar-compact-strip-width: 320px;
+  /*
+    Right metrics: room for date + gold + padding under the portrait.
+    T_TopNavbar_Right is 744x45 (taper left / hard right) - show a wide slice.
+  */
+  --topbar-compact-metrics-width: 480px;
+  /*
+    PortraitCircle is 121x121. Measured hole bbox (unflipped): L18 T17 R22 B23
+    (81x81). Frame is scaleX(-1), so left/right insets swap for the face slot.
+  */
+  --topbar-compact-portrait-inset-top: calc(var(--topbar-compact-portrait-island) * 17 / 121);
+  --topbar-compact-portrait-inset-right: calc(var(--topbar-compact-portrait-island) * 18 / 121);
+  --topbar-compact-portrait-inset-bottom: calc(var(--topbar-compact-portrait-island) * 23 / 121);
+  --topbar-compact-portrait-inset-left: calc(var(--topbar-compact-portrait-island) * 22 / 121);
+  /*
+    Warnings / tutorial sit under the left strip (45px), not the taller
+    portrait island - otherwise they hang too low with a big empty gap.
+  */
+  --hud-below-topbar: calc(var(--topbar-compact-strip-height) + 8px);
+}
+
+.topbar-shell--compact {
+  height: var(--topbar-compact-portrait-island);
+  overflow: visible;
+  background: transparent;
+}
+
+.topbar--compact {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  height: var(--topbar-compact-strip-height);
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.topbar-compact-side {
+  position: relative;
+  pointer-events: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  height: var(--topbar-compact-strip-height);
+  /* Visible so compact screens-menu / dropdowns are not clipped. */
+  overflow: visible;
+}
+
+.topbar-compact-side-bg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: var(--topbar-compact-strip-width);
+  max-width: none;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+
+/*
+  Left island: StripLeft has the hard/solid end on the PNG's RIGHT.
+  scaleX(-1) puts that hard edge on the left of the screen; taper faces centre.
+  Island is as wide as the strip so both ends are visible.
+*/
+.topbar-compact-side--left {
+  gap: 4px;
+  width: var(--topbar-compact-strip-width);
+  min-width: var(--topbar-compact-strip-width);
+  padding: 0 16px 0 0;
+  box-sizing: border-box;
+  z-index: 20;
+  overflow: visible;
+}
+
+.topbar-compact-side-bg--left {
+  left: 0;
+  transform: scaleX(-1);
+  transform-origin: center center;
+}
+
+.topbar-compact-speed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Absolute pixel slot - never changes with rem / UI scale. */
+  width: 68px;
+  height: 100%;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+/* Right: short metrics strip + circle island (not the full-width Left bar). */
+.topbar-compact-right-cluster {
+  display: flex;
+  align-items: flex-start;
+  pointer-events: auto;
+  z-index: 2;
+  position: relative;
+  flex-shrink: 0;
+  height: var(--topbar-compact-portrait-island);
+}
+
+/*
+  Metrics: T_TopNavbar_Right unflipped (taper LEFT / hard RIGHT of PNG).
+  Wide enough for date + gold; left-aligned so the organic taper is visible
+  on the open-centre side and the hard end sits under the portrait.
+*/
+.topbar-compact-side--metrics {
+  gap: 10px;
+  width: var(--topbar-compact-metrics-width);
+  min-width: var(--topbar-compact-metrics-width);
+  padding: 0 52px 0 28px;
+  box-sizing: border-box;
+  z-index: 1;
+  margin-right: calc(var(--topbar-compact-portrait-island) * -0.42);
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.topbar-compact-side-bg--metrics {
+  left: 0;
+  right: 0;
+  /* Cover the metrics box: taper stays on the left, solid end under the portrait. */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
+  transform: none;
+}
+
+/*
+  Pre-cropped square meander (T_TopNavbar_PortraitCircle 121x121).
+  Fill the island 1:1; flip horizontally; face sits in the measured hole.
+*/
+.topbar-compact-portrait-island {
+  position: relative;
+  width: var(--topbar-compact-portrait-island);
+  height: var(--topbar-compact-portrait-island);
+  flex-shrink: 0;
+  z-index: 3;
+  overflow: visible;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.topbar-compact-portrait-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  transform: scaleX(-1);
+  transform-origin: center center;
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+}
+
+/*
+  Face slot matches the flipped hole: unflipped L18/T17/R22/B23 → after
+  scaleX(-1) L22/T17/R18/B23 (of 121).
+*/
+.topbar-compact-portrait {
+  position: absolute;
+  top: var(--topbar-compact-portrait-inset-top);
+  right: var(--topbar-compact-portrait-inset-right);
+  bottom: var(--topbar-compact-portrait-inset-bottom);
+  left: var(--topbar-compact-portrait-inset-left);
+  z-index: 1;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.topbar--compact .screens-menu {
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  position: relative;
+  pointer-events: auto;
+}
+
+.topbar--compact .screens-menu-trigger.icon-button {
+  width: 34px;
+  height: 34px;
+}
+
+.topbar--compact .screens-menu-dropdown-anchor {
+  width: 34px;
+  height: 34px;
+}
+
+/* Absolute pixel sizes for pause / speed - vertically centred in the strip. */
+.topbar--compact .speed-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* Fixed 68px track matches .topbar-compact-speed so icon swap never reflows. */
+  width: 68px;
+  min-width: 68px;
+  height: 100%;
+}
+
+.topbar--compact .speed-controls > .tooltip-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.topbar--compact .speed-controls > * + * {
+  margin-left: 2px;
+}
+
+.topbar--compact .speed-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.topbar--compact .speed-btn--pause {
+  width: 28px;
+  height: 28px;
+}
+
+.topbar--compact .speed-btn--cycle {
+  width: 36px;
+  height: 28px;
+}
+
+.topbar--compact .speed-btn-img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+}
+
+.topbar--compact .speed-btn-img--wide {
+  width: 34px;
+  height: 24px;
+}
+
+.topbar--compact .date-display {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 1;
+  line-height: 1;
+  z-index: 1;
+}
+
+.topbar--compact .date-display > * + * {
+  margin-left: 0.28rem;
+}
+
+.topbar--compact .date-display-text {
+  display: flex;
+  align-items: center;
+  font-size: 0.98rem;
+  font-weight: 600;
+  min-width: 0;
+  width: auto;
+  line-height: 1;
+  color: var(--text-bright);
+}
+
+.topbar--compact .date-display-date-part--day,
+.topbar--compact .date-display-date-part--month,
+.topbar--compact .date-display-date-part--year {
+  width: auto;
+}
+
+.topbar--compact .date-display-status {
+  font-size: 0.86rem;
+  /* Same fixed slot as fullsize - "Paused" vs "1x" must not reflow metrics. */
+  width: 4.6rem;
+  min-width: 4.6rem;
+  max-width: 4.6rem;
+  text-align: center;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar--compact .date-display-season-icon,
+.topbar--compact .date-display-climate-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+.topbar--compact .resource-display {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 1;
+  z-index: 1;
+}
+
+.topbar--compact .resource-main {
+  display: flex;
+  align-items: center;
+  height: auto;
+}
+
+.topbar--compact .resource-pop-value {
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-bright);
+}
+
+.topbar--compact .resource-delta {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.topbar--compact .resource-coin-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.topbar-compact-portrait > .tooltip-wrapper,
+.topbar-compact-portrait > .topbar-portrait,
+.topbar-compact-portrait > .ptt-portrait-btn,
+.topbar-compact-portrait > .tooltip-wrapper > .ptt-portrait-btn,
+.topbar-compact-portrait > .tooltip-wrapper > .ptt-portrait-btn > .topbar-portrait,
+.topbar-compact-portrait > .ptt-portrait-btn > .topbar-portrait {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.topbar-compact-portrait .topbar-portrait {
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.topbar-compact-portrait .topbar-portrait-surface {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border: none;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: none;
+  background: linear-gradient(180deg, #2d1a3d, #1a0e24);
+}
+
+.topbar-compact-portrait .topbar-portrait-composite,
+.topbar-compact-portrait .topbar-portrait-composite.portrait {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Mild head crop - keep face centred in the hole (no big top shift). */
+.topbar-compact-portrait .topbar-portrait-composite .portrait-layer-stack,
+.topbar-compact-portrait .topbar-portrait-composite .portrait-img {
+  transform: translateY(-2%) scale(1.08);
+  transform-origin: center center;
+}
+
+.topbar-saving-indicator--compact {
+  top: calc(100% + 0.25rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  pointer-events: none;
 }

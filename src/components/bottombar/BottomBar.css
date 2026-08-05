@@ -69,6 +69,26 @@
   height: 1.9rem;
 }
 
+@media (max-width: 72rem) {
+  .bottombar-tray {
+    padding: 0.32rem;
+  }
+
+  .bottombar .icon-button {
+    width: 2.15rem;
+    height: 2.15rem;
+  }
+
+  .bottombar .icon-button-icon {
+    width: 1.55rem;
+    height: 1.55rem;
+  }
+
+  .bottombar-divider {
+    height: 1.35rem;
+  }
+}
+
 /* Selected map mode: gold fill so the current mode is unmistakable. */
 .bottombar .icon-button--active {
   border-top-color: var(--gold);

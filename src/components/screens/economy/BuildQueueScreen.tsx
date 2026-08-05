@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
@@ -7,6 +7,7 @@ import { playSound } from '../../../hooks/useSound';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { useBuildQueueBridge, unqueueBuildQueueItem, type BuildQueueCostView, type BuildQueueItemView } from '../../../bridge/settlements-economy/useBuildQueueBridge';
 import { registerScreen } from '../../../registry/index';
+import { UI_PRESENTATION } from '../../../config/presentation';
 import { formatNumber } from '../../../utils/numberFormat';
 import ResourceLink from '../../common/resources/ResourceLink';
 import './BuildQueueScreen.css';
@@ -29,6 +30,8 @@ const SORT_OPTIONS: SortOption[] = [
 ];
 
 const EMPTY_ITEMS: BuildQueueItemView[] = [];
+/** Matches .buildq-row min-height plus a little slack for multi-line costs. */
+const BUILDQ_ROW_HEIGHT_REM = 6.6;
 
 function n(value: number | undefined): string {
   return formatNumber(value ?? 0);
@@ -223,6 +226,26 @@ export default function BuildQueueScreen({ onClose }: { onClose: () => void }) {
   const [sortKey, setSortKey] = useState<SortKey>('settlement');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [pendingKeys, setPendingKeys] = useState<string[]>([]);
+  const [virtualRowHeight, setVirtualRowHeight] = useState(() => (
+    Math.ceil(UI_PRESENTATION.rootFontSizePx * BUILDQ_ROW_HEIGHT_REM)
+  ));
+
+  useEffect(() => {
+    const updateVirtualRowHeight = () => {
+      const rootFontSize = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize);
+      const safeFontSize = Number.isFinite(rootFontSize) && rootFontSize > 0
+        ? rootFontSize
+        : UI_PRESENTATION.rootFontSizePx;
+      setVirtualRowHeight(Math.ceil(safeFontSize * BUILDQ_ROW_HEIGHT_REM));
+    };
+    updateVirtualRowHeight();
+    window.addEventListener('webkiln:runtime-viewport', updateVirtualRowHeight);
+    window.addEventListener('resize', updateVirtualRowHeight);
+    return () => {
+      window.removeEventListener('webkiln:runtime-viewport', updateVirtualRowHeight);
+      window.removeEventListener('resize', updateVirtualRowHeight);
+    };
+  }, []);
 
   const items = data?.items ?? EMPTY_ITEMS;
   const filterTabs = [
@@ -329,7 +352,7 @@ export default function BuildQueueScreen({ onClose }: { onClose: () => void }) {
           styledScrollbar
           virtualized
           virtualizeThreshold={24}
-          virtualRowHeight={82}
+          virtualRowHeight={virtualRowHeight}
           virtualOverscan={8}
         />
       </div>

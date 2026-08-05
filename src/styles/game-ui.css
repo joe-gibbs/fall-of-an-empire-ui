@@ -1092,7 +1092,7 @@
 
 .text-label {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1321,7 +1321,7 @@
   align-items: center;
   margin: 0 0 0.6rem 0;
   padding: 0.55rem 0.7rem;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   line-height: 1.25;
 }
 
@@ -1355,15 +1355,15 @@
   display: flex;
   align-items: flex-start;
   color: var(--text);
-  font-size: 0.78rem;
-  line-height: 1.3;
+  font-size: 0.95rem;
+  line-height: 1.35;
 }
 
 .structured-text-line--header {
   color: var(--gold);
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
 }
 
 .structured-text-bullet {
@@ -1409,8 +1409,8 @@
 .structured-text-link {
   all: initial;
   font-family: var(--font-body);
-  font-size: 0.78rem;
-  line-height: 1.3;
+  font-size: 0.95rem;
+  line-height: 1.35;
   color: var(--gold);
   text-decoration-line: underline;
   text-decoration-style: solid;
@@ -1427,8 +1427,8 @@
 
 .building-effects {
   color: var(--text);
-  font-size: 0.78rem;
-  line-height: 1.3;
+  font-size: 0.95rem;
+  line-height: 1.35;
   white-space: normal;
 }
 
@@ -1468,8 +1468,8 @@
 .building-effects > .rich-colour {
   display: block;
   padding-left: 0.72rem;
-  font-size: 0.7rem;
-  line-height: 1.2;
+  font-size: 0.9rem;
+  line-height: 1.25;
 }
 
 /* --------------------------------------------------------------------------

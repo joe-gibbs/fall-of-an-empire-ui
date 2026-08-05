@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import ScreenButtons, { type ScreenId } from './ScreenButtons';
+import ScreensMenu from './ScreensMenu';
 import { ScreenButtonTooltipBody } from './ScreenButtonTooltip';
 import DateDisplay from './DateDisplay';
 import DemoTimer from './DemoTimer';
@@ -14,11 +15,15 @@ import { BureaucraticThroughputHudValue } from '../bureaucracy/BureaucraticThrou
 import { usePlayerFactionSummary } from '../../data-source/index';
 import { useGameState, useGameActions } from '../../context/GameContext';
 import { playSound } from '../../hooks/useSound';
+import { useCompactHud } from '../../hooks/useCompactHud';
+import { updateTopbarLayoutScale } from '../../utils/topbarLayoutScale';
 import './TopBar.css';
 
 import { webUIText } from '../../localization/WebUITextContext';
 import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
-import { formatActionBinding } from '../../utils/actionBindings';
+import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
+import { findActionBinding } from '../../utils/actionBindings';
+import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
 
 interface ActionButtonConfig {
   id: 'build' | 'victory' | 'pinned';
@@ -26,7 +31,6 @@ interface ActionButtonConfig {
   icon: string;
   tooltipBodyKey: string;
   tooltipLineKeys?: readonly string[];
-  /** When set, the line text is formatted with the live binding for this action. */
   tooltipLineKeysWithBinding?: ReadonlyArray<{ textKey: string; actionName: string }>;
   tutorialTarget: string;
   factionMode?: 'all' | 'independent' | 'subject';
@@ -86,21 +90,38 @@ const TopBar: React.FC<TopBarProps> = ({
   isVictoryOpen = false,
   onOpenBureaucracyOverview,
 }) => {
+  const compact = useCompactHud();
   const { isPaused, speed: contextSpeed, saveSerial } = useGameState();
   const { togglePause, setSpeed: contextSetSpeed, openSidebar } = useGameActions();
   const { settings } = useSettingsBridge();
+  const activeInputDevice = useActiveInputDevice(
+    settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
+  );
   const playerFaction = usePlayerFactionSummary();
   const subjectMode = playerFaction?.diplomaticStatus === 'subject';
   const playerCharacterId = playerFaction?.rulerId ?? null;
 
   const speed: Speed = isPaused ? 0 : (contextSpeed as Speed);
-  const playerCharacterName = playerFaction?.rulerName ?? playerFaction?.name ?? webUIText("TopBar.YourCharacter");
+  const playerCharacterName = playerFaction?.rulerName ?? playerFaction?.name ?? webUIText('TopBar.YourCharacter');
+
+  useLayoutEffect(() => {
+    if (compact) {
+      document.documentElement.style.setProperty('--topbar-layout-scale', '1');
+      return undefined;
+    }
+    updateTopbarLayoutScale();
+    window.addEventListener('resize', updateTopbarLayoutScale);
+    window.addEventListener('webkiln:runtime-viewport', updateTopbarLayoutScale);
+    return () => {
+      window.removeEventListener('resize', updateTopbarLayoutScale);
+      window.removeEventListener('webkiln:runtime-viewport', updateTopbarLayoutScale);
+    };
+  }, [compact, settings?.gameplay?.uiScale]);
 
   const handleSpeedChange = (newSpeed: Speed) => {
     if (newSpeed === 0) {
       togglePause();
     } else if (isPaused) {
-      // Unpausing - set speed
       contextSetSpeed(newSpeed as 1 | 2 | 4);
     } else {
       contextSetSpeed(newSpeed as 1 | 2 | 4);
@@ -126,11 +147,14 @@ const TopBar: React.FC<TopBarProps> = ({
       lines.push({ label: webUIText(key) });
     });
     button.tooltipLineKeysWithBinding?.forEach((entry) => {
-      const binding = formatActionBinding(settings?.controls, entry.actionName);
+      const binding = findActionBinding(settings?.controls, entry.actionName, activeInputDevice);
       lines.push({
-        label: binding
-          ? webUIText(entry.textKey, { Key: binding })
-          : webUIText(entry.textKey, { Key: webUIText('Topbar.WorldSearchFallback') }),
+        label: (
+          <span className="tt-footer-shortcut-row">
+            {binding ? <ActionKeyGlyph binding={binding} /> : null}
+            <span>{webUIText(entry.textKey)}</span>
+          </span>
+        ),
       });
     });
     return {
@@ -147,7 +171,7 @@ const TopBar: React.FC<TopBarProps> = ({
       onMouseDown={handlePortraitMouseDown}
       onClick={handlePortraitClick}
       disabled={!playerCharacterId}
-      aria-label={webUIText("Auto.Attr.componentstopbarTopBar.75.1", { PlayerCharacterName: playerCharacterName })}
+      aria-label={webUIText('Auto.Attr.componentstopbarTopBar.75.1', { PlayerCharacterName: playerCharacterName })}
     >
       <span className="topbar-portrait-surface">
         <Portrait
@@ -167,126 +191,199 @@ const TopBar: React.FC<TopBarProps> = ({
     </button>
   );
 
+  const portraitNode = playerCharacterId ? (
+    <PersonTooltip characterId={playerCharacterId} position="left" delay={200}>
+      {portraitButton}
+    </PersonTooltip>
+  ) : (
+    portraitButton
+  );
+
+  if (compact) {
+    return (
+      <>
+        <div className="topbar-shell topbar-shell--compact">
+          <header className="topbar topbar--compact">
+            <div className="topbar-compact-side topbar-compact-side--left" data-tutorial-target="ScreenButtonGroup">
+              {/*
+                StripLeft PNG has the hard/solid end on its RIGHT. Horizontally
+                flip so that hard edge sits on the left of the screen and the
+                organic taper faces the open centre.
+              */}
+              <img
+                src="/assets/ui-shadowed/T_TopNavbar_StripLeft.png"
+                className="topbar-compact-side-bg topbar-compact-side-bg--left"
+                alt=""
+                draggable={false}
+              />
+              <ScreensMenu
+                activeScreen={activeScreen}
+                onScreenChange={onScreenChange}
+                onPinnedToggle={onPinnedToggle}
+                isPinnedOpen={isPinnedOpen}
+                pinnedCount={pinnedCount}
+                onVictoryToggle={onVictoryToggle}
+                isVictoryOpen={isVictoryOpen}
+                subjectMode={subjectMode}
+              />
+              <div className="topbar-compact-speed">
+                <SpeedControls speed={speed} onSpeedChange={handleSpeedChange} />
+              </div>
+            </div>
+
+            <div className="topbar-compact-right-cluster">
+              {/*
+                Metrics: T_TopNavbar_Right unflipped (taper left / hard right) and
+                wide enough for date + gold. Portrait: square PortraitCircle crop
+                (flipped horizontally to match fullsize meander orientation).
+              */}
+              <div className="topbar-compact-side topbar-compact-side--metrics">
+                <img
+                  src="/assets/ui-shadowed/T_TopNavbar_Right.png"
+                  className="topbar-compact-side-bg topbar-compact-side-bg--metrics"
+                  alt=""
+                  draggable={false}
+                />
+                <DateDisplay />
+                <ResourceDisplay />
+              </div>
+              <div className="topbar-compact-portrait-island" data-tutorial-target="LeaderPortraitSlot">
+                <img
+                  src="/assets/ui-shadowed/T_TopNavbar_PortraitCircle.png"
+                  className="topbar-compact-portrait-frame"
+                  alt=""
+                  draggable={false}
+                />
+                <div className="topbar-compact-portrait">
+                  {portraitNode}
+                </div>
+              </div>
+            </div>
+
+            {saveSerial > 0 && (
+              <div key={saveSerial} className="topbar-saving-indicator topbar-saving-indicator--compact" role="status" aria-live="polite">
+                <img src="/assets/icons/I_SaveFolder.png" alt="" className="topbar-saving-indicator-icon" draggable={false} />
+                <span>{webUIText('Topbar.Saving')}</span>
+              </div>
+            )}
+          </header>
+        </div>
+        <DemoTimer />
+      </>
+    );
+  }
+
   return (
     <>
-      <header className="topbar">
-        {/* Left bar panel (Right asset mirrored) */}
-        <img
-          src="/assets/ui-shadowed/T_TopNavbar_Right.png"
-          className="topbar-bg-right"
-          alt=""
-          draggable={false}
-        />
+      <div className="topbar-shell">
+        <div className="topbar-scale">
+          <header className="topbar">
+            <img
+              src="/assets/ui-shadowed/T_TopNavbar_Right.png"
+              className="topbar-bg-right"
+              alt=""
+              draggable={false}
+            />
 
-      {/* Right panel with portrait circle (Left asset mirrored) */}
-      <img
-        src="/assets/ui-shadowed/T_TopNavbar_Left.png"
-        className="topbar-bg-left"
-        alt=""
-        draggable={false}
-      />
+            <img
+              src="/assets/ui-shadowed/T_TopNavbar_Left.png"
+              className="topbar-bg-left"
+              alt=""
+              draggable={false}
+            />
 
-      {/* Left: screen buttons */}
-      <div className="topbar-left" data-tutorial-target="ScreenButtonGroup">
-        <ScreenButtons
-          activeScreen={activeScreen}
-          onScreenChange={onScreenChange}
-        />
-      </div>
+            <div className="topbar-left" data-tutorial-target="ScreenButtonGroup">
+              <ScreenButtons
+                activeScreen={activeScreen}
+                onScreenChange={onScreenChange}
+              />
+            </div>
 
-      {/* Center: speed controls + date with centre border bg */}
-      <div className="topbar-center">
-        <img
-          src="/assets/ui-shadowed/T_CentreBorder.png"
-          className="topbar-center-bg"
-          alt=""
-          draggable={false}
-        />
-        <div className="topbar-center-content">
-          <SpeedControls speed={speed} onSpeedChange={handleSpeedChange} />
-          <div className="topbar-center-divider" />
-          <DateDisplay />
-        </div>
-        {saveSerial > 0 && (
-          <div key={saveSerial} className="topbar-saving-indicator" role="status" aria-live="polite">
-            <img src="/assets/icons/I_SaveFolder.png" alt="" className="topbar-saving-indicator-icon" draggable={false} />
-            <span>{webUIText('Topbar.Saving')}</span>
-          </div>
-        )}
-      </div>
+            <div className="topbar-center">
+              <img
+                src="/assets/ui-shadowed/T_CentreBorder.png"
+                className="topbar-center-bg"
+                alt=""
+                draggable={false}
+              />
+              <div className="topbar-center-content">
+                <SpeedControls speed={speed} onSpeedChange={handleSpeedChange} />
+                <div className="topbar-center-divider" />
+                <DateDisplay />
+              </div>
+              {saveSerial > 0 && (
+                <div key={saveSerial} className="topbar-saving-indicator" role="status" aria-live="polite">
+                  <img src="/assets/icons/I_SaveFolder.png" alt="" className="topbar-saving-indicator-icon" draggable={false} />
+                  <span>{webUIText('Topbar.Saving')}</span>
+                </div>
+              )}
+            </div>
 
-      <div className="topbar-right-rail">
-        {/* Right: screen and action buttons */}
-        <div className="topbar-actions" data-tutorial-target="ScreenButtonGroup ActionButtonGroup">
-          <ScreenButtons
-            activeScreen={activeScreen}
-            onScreenChange={onScreenChange}
-            placement="right"
-          />
-          {actionButtons.filter(btn => {
-            const mode = btn.factionMode ?? 'all';
-            return mode === 'all' || (subjectMode ? mode === 'subject' : mode === 'independent');
-          }).map((btn) => {
-            const label = webUIText(btn.labelKey);
-            const active = activeScreen === btn.id || (btn.id === 'pinned' && isPinnedOpen) || (btn.id === 'victory' && isVictoryOpen);
-            const className = btn.id === 'pinned' ? 'pinned-toggle-btn' : btn.id === 'victory' ? 'victory-toggle-btn' : '';
-            const handleClick = () => {
-              if (btn.id === 'pinned') onPinnedToggle?.();
-              else if (btn.id === 'victory') onVictoryToggle?.();
-              else onScreenChange?.(btn.id as ScreenId);
-            };
-            return (
-              <Tooltip
-                key={btn.id}
-                content={actionTooltip(btn)}
-                position="bottom"
-                delay={200}
-                variant="sidebar"
-                bubbleClassName="tt-bubble--screen-button"
-              >
-                <IconButton
-                  icon={btn.icon}
-                  label={label}
-                  active={active}
-                  className={className}
-                  tutorialTarget={btn.tutorialTarget}
-                  onClick={handleClick}
-                  badge={btn.id === 'pinned' ? pinnedCount : undefined}
+            <div className="topbar-right-rail">
+              <div className="topbar-actions" data-tutorial-target="ScreenButtonGroup ActionButtonGroup">
+                <ScreenButtons
+                  activeScreen={activeScreen}
+                  onScreenChange={onScreenChange}
+                  placement="right"
                 />
-              </Tooltip>
-            );
-          })}
-        </div>
+                {actionButtons.filter((btn) => {
+                  const mode = btn.factionMode ?? 'all';
+                  return mode === 'all' || (subjectMode ? mode === 'subject' : mode === 'independent');
+                }).map((btn) => {
+                  const label = webUIText(btn.labelKey);
+                  const active = activeScreen === btn.id || (btn.id === 'pinned' && isPinnedOpen) || (btn.id === 'victory' && isVictoryOpen);
+                  const className = btn.id === 'pinned' ? 'pinned-toggle-btn' : btn.id === 'victory' ? 'victory-toggle-btn' : '';
+                  const handleClick = () => {
+                    if (btn.id === 'pinned') onPinnedToggle?.();
+                    else if (btn.id === 'victory') onVictoryToggle?.();
+                    else onScreenChange?.(btn.id as ScreenId);
+                  };
+                  return (
+                    <Tooltip
+                      key={btn.id}
+                      content={actionTooltip(btn)}
+                      position="bottom"
+                      delay={200}
+                      variant="sidebar"
+                      bubbleClassName="tt-bubble--screen-button"
+                    >
+                      <IconButton
+                        icon={btn.icon}
+                        label={label}
+                        active={active}
+                        className={className}
+                        tutorialTarget={btn.tutorialTarget}
+                        onClick={handleClick}
+                        badge={btn.id === 'pinned' ? pinnedCount : undefined}
+                      />
+                    </Tooltip>
+                  );
+                })}
+              </div>
 
-        {/* Far right: standing and resources */}
-        <div className="topbar-right">
-          <ImperialStandingIndicator
-            playerFaction={playerFaction}
-            onOpenSubjectScreen={() => onScreenChange?.('faction')}
-            tooltipDisabled={activeScreen === 'governor-faction-overview'}
+              <div className="topbar-right">
+                <ImperialStandingIndicator
+                  playerFaction={playerFaction}
+                  onOpenSubjectScreen={() => onScreenChange?.('faction')}
+                  tooltipDisabled={activeScreen === 'governor-faction-overview'}
+                />
+                {!subjectMode && <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />}
+                <ResourceDisplay />
+              </div>
+            </div>
+          </header>
+
+          <div className="topbar-portrait-slot" data-tutorial-target="LeaderPortraitSlot">
+            {portraitNode}
+          </div>
+          <img
+            src="/assets/ui-shadowed/T_TopNavbar_Left.png"
+            className="topbar-portrait-frame"
+            alt=""
+            draggable={false}
           />
-          {!subjectMode && <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />}
-          <ResourceDisplay />
         </div>
       </div>
-      </header>
-
-      {/* Kept outside the topbar stacking context so it remains above sidebars. */}
-      <div className="topbar-portrait-slot" data-tutorial-target="LeaderPortraitSlot">
-        {playerCharacterId ? (
-          <PersonTooltip characterId={playerCharacterId} position="left" delay={200}>
-            {portraitButton}
-          </PersonTooltip>
-        ) : (
-          portraitButton
-        )}
-      </div>
-      <img
-        src="/assets/ui-shadowed/T_TopNavbar_Left.png"
-        className="topbar-portrait-frame"
-        alt=""
-        draggable={false}
-      />
       <DemoTimer />
     </>
   );

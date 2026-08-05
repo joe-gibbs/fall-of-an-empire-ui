@@ -20,8 +20,10 @@ declare global {
 export function applyRuntimeViewportScale(detail: RuntimeViewportState | undefined) {
   const scale = detail?.scale ?? detail?.scaleX ?? 1;
   const safeScale = scale > 0 ? scale : 1;
+  const scaledRootFontPx = UI_PRESENTATION.rootFontSizePx * safeScale;
+  const rootFontPx = Math.max(scaledRootFontPx, UI_PRESENTATION.minRootFontSizePx);
 
-  document.documentElement.style.setProperty('--runtime-root-font-size', `${UI_PRESENTATION.rootFontSizePx * safeScale}px`);
+  document.documentElement.style.setProperty('--runtime-root-font-size', `${rootFontPx}px`);
   document.documentElement.style.setProperty('--runtime-viewport-scale', String(safeScale));
 }
 

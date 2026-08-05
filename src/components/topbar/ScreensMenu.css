@@ -1,0 +1,168 @@
+.screens-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Invisible host so pinned/victory anchored dropdowns can position in compact HUD. */
+.screens-menu-dropdown-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3.4rem;
+  height: 3.4rem;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.screens-menu-trigger.icon-button {
+  width: 3.4rem;
+  height: 3.4rem;
+  padding: 0;
+  border-width: 0.1rem;
+  border-style: solid;
+  border-color: transparent;
+  background-color: transparent;
+  background-image: none;
+  cursor: var(--cursor-pointer);
+}
+
+.screens-menu-trigger.icon-button.icon-button--active,
+.screens-menu-trigger.screen-button-faction--active {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold);
+  border-bottom-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.screens-menu-trigger .screen-button-faction-roundel.faction-roundel {
+  width: 100%;
+  height: 100%;
+}
+
+.screens-menu-trigger .screen-button-faction-fallback-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+.screens-menu-panel {
+  /* Fixed: useAnchoredDropdown supplies top/left from the trigger rect. */
+  position: fixed;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  min-width: 14rem;
+  max-width: min(20rem, calc(100vw - 1rem));
+  max-height: min(26rem, calc(100vh - 5rem));
+  overflow: hidden;
+  padding: 0.25rem 0;
+  border-width: 0.15rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image: url('/assets/gold-frame.png') 6 / 0.15rem / 0 round;
+  background-color: #151b20;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 20rem 20rem;
+  box-shadow: var(--shadow-panel);
+  animation-name: screens-menu-in;
+  animation-duration: 0.12s;
+  animation-timing-function: var(--ease-snap);
+  animation-fill-mode: both;
+  pointer-events: auto;
+}
+
+.screens-menu-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(24rem, calc(100vh - 6rem));
+}
+
+.screens-menu-scroll-viewport {
+  max-height: min(24rem, calc(100vh - 6rem));
+  padding: 0.1rem 0 0.25rem;
+}
+
+.screens-menu-panel--exiting {
+  animation-name: screens-menu-out;
+  animation-duration: 0.12s;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+  pointer-events: none;
+}
+
+@keyframes screens-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes screens-menu-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+}
+
+.screens-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border: none;
+  background: transparent;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  line-height: 1.15;
+  text-align: left;
+  cursor: var(--cursor-pointer);
+}
+
+.screens-menu-item:hover {
+  background: rgba(201, 168, 76, 0.12);
+}
+
+.screens-menu-item--active {
+  color: var(--gold);
+  background: rgba(201, 168, 76, 0.08);
+}
+
+.screens-menu-item-icon {
+  width: 1.55rem;
+  height: 1.55rem;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.screens-menu-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.screens-menu-item-badge {
+  flex-shrink: 0;
+  min-width: 1.2rem;
+  padding: 0.1rem 0.28rem;
+  border: 0.08rem solid var(--gold);
+  border-radius: 50%;
+  background: #1a0b14;
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+}

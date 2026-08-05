@@ -1637,19 +1637,21 @@
   }
 
   .mm-socials {
-    top: auto;
-    bottom: 2.1818rem;
-    right: 2.1818rem;
-    flex-direction: row;
+    top: 5rem;
+    bottom: auto;
+    right: 1.2rem;
+    left: auto;
+    flex-direction: column;
   }
 
   .mm-social-btn + .mm-social-btn {
-    margin-top: 0;
-    margin-left: 0.5455rem;
+    margin-top: 0.4rem;
+    margin-left: 0;
   }
 
   .mm-version {
-    bottom: 6.3636rem;
+    bottom: 0.9rem;
+    right: 1.2rem;
   }
 }
 
@@ -1698,18 +1700,26 @@
     text-align: left;
   }
 
+  /* Keep socials top-right so they do not cover Quit / footer labels. */
   .mm-socials {
-    left: 1.2727rem;
-    right: 1.2727rem;
-    bottom: 1.2727rem;
-    justify-content: center;
+    top: 4.5rem;
+    left: auto;
+    right: 1rem;
+    bottom: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .mm-social-btn + .mm-social-btn {
+    margin-top: 0.4rem;
+    margin-left: 0;
   }
 
   .mm-version {
-    left: 1.2727rem;
-    right: 1.2727rem;
-    bottom: 6.5455rem;
-    text-align: center;
+    left: auto;
+    right: 1rem;
+    bottom: 0.7rem;
+    text-align: right;
   }
 }
 
@@ -2492,25 +2502,46 @@
     left: auto;
   }
 
-  .mm-root--mockup .mm-socials {
-    top: auto;
-    right: 1rem;
-    bottom: 1rem;
-    left: 1rem;
-    flex-direction: row;
+  /* Keep socials top-right so they never cover the bottom Quit row. */
+  .mm-root--mockup .mm-socials,
+  .mm-root--mockup-2 .mm-socials {
+    top: 4.5rem;
+    right: 0.9rem;
+    bottom: auto;
+    left: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .mm-root--mockup .mm-social-btn + .mm-social-btn,
+  .mm-root--mockup-2 .mm-social-btn + .mm-social-btn {
+    margin-top: 0.4rem;
+    margin-left: 0;
+  }
+
+  .mm-root--mockup .mm-version,
+  .mm-root--mockup-2 .mm-version {
+    right: 0.9rem;
+    bottom: 0.7rem;
+    left: auto;
+    text-align: right;
+  }
+
+  .mm-root--mockup-2 .mm-text-items {
+    width: calc(100% - 1.4rem);
+    max-width: 100%;
+    flex-wrap: wrap;
     justify-content: center;
+    row-gap: 0.25rem;
+    padding: 0.2rem 0.4rem;
   }
 
-  .mm-root--mockup .mm-social-btn + .mm-social-btn {
-    margin-top: 0;
-    margin-left: 0.5455rem;
-  }
-
-  .mm-root--mockup .mm-version {
-    right: 1rem;
-    bottom: 5.8182rem;
-    left: 1rem;
-    text-align: center;
+  .mm-root--mockup-2 .mm-text-btn {
+    width: auto;
+    min-width: 5.4rem;
+    flex: 0 1 auto;
+    font-size: 0.82rem;
+    padding: 0.3rem 0.4rem;
   }
 }
 

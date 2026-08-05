@@ -97,11 +97,14 @@ function PinnedItemRow({ item, onItemClick, onUnpin }: {
 }
 
 export default function PinnedItemsBar({ isOpen, onClose, items, onItemClick, onUnpin, onUnpinAll }: PinnedItemsBarProps) {
+  // Compact HUD anchors the pin action on the left-hand faction menu, so open below-left.
+  const compact = typeof document !== 'undefined'
+    && document.documentElement.classList.contains('hud-compact');
   const { mounted, closing, style, setPopupRef } = useAnchoredDropdown({
     open: isOpen,
     onClose,
     durationMs: EXIT_DURATION_MS,
-    position: 'below-right',
+    position: compact ? 'below-left' : 'below-right',
     anchorSelector: '.pinned-toggle-btn',
     escapeId: 'hud.pinned-items',
   });

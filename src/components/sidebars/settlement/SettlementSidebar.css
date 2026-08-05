@@ -349,13 +349,13 @@
 }
 
 .settle-building-name {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text);
   flex: 1;
 }
 
 .settle-building-level {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--gold);
   font-weight: 600;
   flex-shrink: 0;
@@ -378,20 +378,20 @@
 }
 
 .settle-resource-name {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text);
   flex: 1;
 }
 
 .settle-resource-stock {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
   min-width: 2rem;
   text-align: right;
 }
 
 .settle-resource-net {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: 600;
   min-width: 2.5rem;
   text-align: right;
@@ -539,7 +539,7 @@
 }
 
 .settle-garrison-name {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text);
   display: flex;
   align-items: center;
@@ -547,7 +547,7 @@
 
 /* Count badge on merged same-class stacks. */
 .settle-garrison-count {
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   color: var(--gold);
   letter-spacing: 0.02em;
   display: flex;
@@ -567,7 +567,7 @@
 }
 
 .settle-garrison-type {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;

@@ -139,17 +139,6 @@ function isSpotlightTargetSatisfied(spotlight: TutorialSpotlightResponse): boole
   return candidates.some(element => targetTokens(element).some(token => expectedTokens.has(token.toLowerCase())));
 }
 
-function findRenderedByTutorialToken(token: string): HTMLElement | null {
-  const candidates = Array.from(document.querySelectorAll('[data-tutorial-target]'));
-  const expected = token.toLowerCase();
-  const found = candidates.find(element => {
-    if (!targetTokens(element).some(candidate => candidate.toLowerCase() === expected)) return false;
-    const rect = element.getBoundingClientRect();
-    return rect.width > 1 && rect.height > 1;
-  });
-  return found instanceof HTMLElement ? found : null;
-}
-
 function findByDetail(attributeName: string, detail: string): HTMLElement | null {
   const expected = normaliseIdentifier(detail);
   if (!expected) return null;
@@ -367,15 +356,13 @@ export default function TutorialSpotlightOverlay({
         return;
       }
 
-      if (!revealedTarget && !current.isBuildingTarget && !current.isUnitTarget) {
-        const renderedTarget = findRenderedByTutorialToken(current.target);
-        if (renderedTarget) {
-          renderedTarget.scrollIntoView({ block: 'center', inline: 'nearest' });
-          revealedTarget = true;
-        }
-      }
-
+      // Opens compact dropdowns when needed, then resolves the visible target.
       const element = findSpotlightTarget(current);
+
+      if (!revealedTarget && !current.isBuildingTarget && !current.isUnitTarget && element) {
+        element.scrollIntoView({ block: 'center', inline: 'nearest' });
+        revealedTarget = true;
+      }
       if (!revealedTarget && current.isUnitTarget && element) {
         element.scrollIntoView({ block: 'center', inline: 'nearest' });
         revealedTarget = true;

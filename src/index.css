@@ -395,7 +395,9 @@ html.ui-reduce-motion hr {
   --font-header: 'Volkhov Numeric', 'Volkhov', 'Times New Roman', serif;
   --font-body: 'Lato Numeric', 'Lato', 'Segoe UI', sans-serif;
   --ui-scale: 1;
-  --runtime-root-font-size: 13.2px;
+  /* Matches UI_PRESENTATION.minRootFontSizePx so first paint is Deck-legible
+     before the runtime viewport event arrives. */
+  --runtime-root-font-size: 14px;
   --runtime-viewport-scale: 1;
 
   --cursor-default: auto;
@@ -422,7 +424,8 @@ html.ui-reduce-motion hr {
 }
 
 html {
-  /* Keep the root rem base in px. 13.2px is the previous 11px design base zoomed in by 20%.
+  /* Keep the root rem base in px. Runtime root size is floored for legibility
+     on small viewports (see UI_PRESENTATION.minRootFontSizePx).
      --ui-scale mirrors the gameplay UI Scale setting (see useUIScale). */
   font-size: calc(var(--runtime-root-font-size) * var(--ui-scale));
 }

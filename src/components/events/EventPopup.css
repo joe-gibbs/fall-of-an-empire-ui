@@ -509,13 +509,13 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
 }
 
 .event-popup--important .event-paragraph {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   line-height: 1.5;
 }
 
 .event-body p,
 .event-paragraph {
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.45;
   color: var(--text);
   margin-bottom: 0.5rem;

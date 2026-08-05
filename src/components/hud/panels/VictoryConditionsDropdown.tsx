@@ -3,6 +3,7 @@ import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import { useVictoryConditionsBridge } from '../../../bridge/app/useVictoryConditionsBridge';
 import { useAnchoredDropdown } from '../../../hooks/useAnchoredDropdown';
 import { formatNumber } from '../../../utils/numberFormat';
+import { renderRichText } from '../../../utils/richText';
 import type { VictoryConditionProgressEntry, VictoryConditionTierEntry } from '../../../bridge-types.generated.ts';
 import './VictoryConditionsDropdown.css';
 
@@ -52,7 +53,7 @@ function VictoryTierSummary({ tier }: { tier: VictoryConditionTierEntry }) {
 function VictoryConditionDescription({ condition }: { condition: VictoryConditionProgressEntry }) {
   return (
     <div className="vc-condition-desc">
-      {condition.description && <p>{condition.description}</p>}
+      {condition.description && <p>{renderRichText(condition.description)}</p>}
       {condition.domains.length > 0 && (
         <div className="vc-domain-list">
           {condition.domains.map(domain => (
@@ -76,11 +77,14 @@ function VictoryConditionDescription({ condition }: { condition: VictoryConditio
 }
 
 export default function VictoryConditionsDropdown({ isOpen, onClose }: VictoryConditionsDropdownProps) {
+  // Compact HUD anchors victory on the left-hand faction menu, so open below-left.
+  const compact = typeof document !== 'undefined'
+    && document.documentElement.classList.contains('hud-compact');
   const { mounted, closing, style, setPopupRef } = useAnchoredDropdown({
     open: isOpen,
     onClose,
     durationMs: EXIT_DURATION_MS,
-    position: 'below-right',
+    position: compact ? 'below-left' : 'below-right',
     anchorSelector: '.victory-toggle-btn',
     escapeId: 'hud.victory-conditions',
   });

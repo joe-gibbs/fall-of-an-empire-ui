@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { applyUIScaleCssVariable, clampUIScale } from '../../utils/gameplaySettingsCss';
+import { updateTopbarLayoutScale } from '../../utils/topbarLayoutScale';
 import { useBridgeQuery } from './useBridgeQuery';
 
 // Mirror the game's UIScale gameplay setting into a `--ui-scale` CSS custom
@@ -20,7 +22,7 @@ export function useUIScale(): number | undefined {
 
   useEffect(() => {
     if (scales?.uiScale != null && Number.isFinite(scales.uiScale) && scales.uiScale > 0) {
-      document.documentElement.style.setProperty('--ui-scale', String(scales.uiScale));
+      applyUIScaleCssVariable(scales.uiScale);
     }
     if (scales?.uiScrollSpeed != null && Number.isFinite(scales.uiScrollSpeed) && scales.uiScrollSpeed > 0) {
       document.documentElement.style.setProperty('--ui-scroll-speed', String(scales.uiScrollSpeed));
@@ -29,7 +31,9 @@ export function useUIScale(): number | undefined {
       document.documentElement.style.setProperty('--tooltip-delay-ms', String(Math.round(scales.tooltipDelaySeconds * 1000)));
     }
     document.documentElement.classList.toggle('ui-reduce-motion', scales?.reduceMotion === true);
+    // Root rem changed: recompute topbar layout scale so HUD zones stay separate.
+    updateTopbarLayoutScale();
   }, [scales]);
 
-  return scales?.uiScale;
+  return scales?.uiScale != null ? clampUIScale(scales.uiScale) : undefined;
 }

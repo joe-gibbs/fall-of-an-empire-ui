@@ -1,16 +1,17 @@
 .mmtt {
   box-sizing: border-box;
-  width: 22rem;
-  max-width: 22rem;
-  padding: 0.462rem 0.615rem 0.538rem;
-  line-height: 1.25;
+  width: 24rem;
+  max-width: 24rem;
+  padding: 0.5rem 0.7rem 0.6rem;
+  font-size: 1rem;
+  line-height: 1.32;
   white-space: normal;
   overflow-wrap: break-word;
 }
 
 .mmtt-header {
   margin: 0 0 0.35rem 0;
-  font-size: 1rem;
+  font-size: 1.05rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--gold);
@@ -22,7 +23,8 @@
   width: 100%;
   max-width: 100%;
   margin: 0 0 0.4rem 0;
-  line-height: 1.25;
+  font-size: 1rem;
+  line-height: 1.32;
   white-space: normal;
   overflow-wrap: break-word;
 }
@@ -56,7 +58,8 @@
   max-width: 100%;
   padding-left: 0.8rem;
   margin: 0.08rem 0;
-  line-height: 1.25;
+  font-size: 1rem;
+  line-height: 1.32;
   white-space: normal;
   overflow-wrap: break-word;
 }

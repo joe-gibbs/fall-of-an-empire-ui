@@ -4,6 +4,8 @@ import IconButton from '../common/buttons/IconButton';
 import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
 import { useMapModeBridge } from '../../bridge/military-map/useMapModeBridge';
 import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
+import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
+import { useCompactHud } from '../../hooks/useCompactHud';
 import type { MapModeEntry } from '../../bridge-types.generated.ts';
 import { findActionBinding, getMapModeActionName } from '../../utils/actionBindings';
 import { MAP_MODE_TOOLTIPS } from './mapModeTooltipContent';
@@ -11,6 +13,7 @@ import { MAP_MODE_ICONS } from './mapModeIcons';
 import { MapModeTooltip, TTHeader } from './MapModeTooltip';
 import ConvoyFilterPanel from './ConvoyFilterPanel';
 import MapModeFilterPanel from './MapModeFilterPanel';
+import MapModePicker from './MapModePicker';
 import OperationBar from './OperationBar';
 import './BottomBar.css';
 
@@ -43,7 +46,10 @@ function FallbackMapModeTooltip({
   entry?: MapModeEntry;
 }) {
   const { settings } = useSettingsBridge();
-  const binding = findActionBinding(settings?.controls, getMapModeActionName(id));
+  const activeInputDevice = useActiveInputDevice(
+    settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
+  );
+  const binding = findActionBinding(settings?.controls, getMapModeActionName(id), activeInputDevice);
   const body = entry?.tooltip || entry?.description;
 
   return (
@@ -66,6 +72,7 @@ function mapModeTooltipContent(id: string, label: string, entry?: MapModeEntry):
 }
 
 const BottomBar: React.FC = () => {
+  const compact = useCompactHud();
   const { state, setMapMode } = useMapModeBridge();
   const active = state?.activeMode ?? '';
   const trayRef = useRef<HTMLDivElement>(null);
@@ -77,45 +84,49 @@ const BottomBar: React.FC = () => {
     : ROWS;
 
   return (
-    <div className="bottombar">
+    <div className={`bottombar${compact ? ' bottombar--compact' : ''}`}>
       <OperationBar />
       <MapModeFilterPanel />
       {active === 'resources' && <ConvoyFilterPanel />}
-      <div className="bottombar-tray" ref={trayRef} data-tutorial-target="MapModeButtonGroup">
-        {rows.map((groups, ri) => (
-          <div className="bottombar-row" key={ri}>
-            {groups.map((ids, gi) => (
-              <React.Fragment key={gi}>
-                {gi > 0 && <div className="bottombar-divider" />}
-                <div className="bottombar-group">
-                  {ids.map((id) => {
-                    const entry = state?.byId.get(id);
-                    const label = entry?.label ?? id;
-                    const content = mapModeTooltipContent(id, label, entry);
-                    return (
-                      <Tooltip
-                        key={id}
-                        content={content}
-                        position="left"
-                        anchorRef={trayRef}
-                        bubbleClassName="tt-bubble--map-mode"
-                      >
-                        <IconButton
-                          icon={mapModeIcon(id)}
-                          label={label}
-                          active={active === id}
-                          tutorialTarget={`MapMode:${id}`}
-                          onClick={() => setMapMode(id)}
-                        />
-                      </Tooltip>
-                    );
-                  })}
-                </div>
-              </React.Fragment>
-            ))}
-          </div>
-        ))}
-      </div>
+      {compact ? (
+        <MapModePicker />
+      ) : (
+        <div className="bottombar-tray" ref={trayRef} data-tutorial-target="MapModeButtonGroup">
+          {rows.map((groups, ri) => (
+            <div className="bottombar-row" key={ri}>
+              {groups.map((ids, gi) => (
+                <React.Fragment key={gi}>
+                  {gi > 0 && <div className="bottombar-divider" />}
+                  <div className="bottombar-group">
+                    {ids.map((id) => {
+                      const entry = state?.byId.get(id);
+                      const label = entry?.label ?? id;
+                      const content = mapModeTooltipContent(id, label, entry);
+                      return (
+                        <Tooltip
+                          key={id}
+                          content={content}
+                          position="left"
+                          anchorRef={trayRef}
+                          bubbleClassName="tt-bubble--map-mode"
+                        >
+                          <IconButton
+                            icon={mapModeIcon(id)}
+                            label={label}
+                            active={active === id}
+                            tutorialTarget={`MapMode:${id}`}
+                            onClick={() => setMapMode(id)}
+                          />
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

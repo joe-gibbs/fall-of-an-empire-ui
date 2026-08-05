@@ -28,6 +28,9 @@ const COMMON_ASSETS = [
   '/assets/baked/badge-gold.png',
   '/assets/ui-shadowed/T_TopNavbar_Left.png',
   '/assets/ui-shadowed/T_TopNavbar_Right.png',
+  '/assets/ui-shadowed/T_TopNavbar_PortraitCircle.png',
+  '/assets/ui-shadowed/T_TopNavbar_StripLeft.png',
+
   '/assets/ui-shadowed/T_CentreBorder.png',
   '/assets/icons/I_Coins.png',
   '/assets/icons/I_BuildingsQuickButton.png',

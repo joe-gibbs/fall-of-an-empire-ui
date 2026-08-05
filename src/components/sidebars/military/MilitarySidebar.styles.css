@@ -239,7 +239,7 @@
 }
 
 .mil-strength-label {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -403,7 +403,7 @@
 
 .mil-commander-title {
   margin-top: 0.12rem;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   color: var(--gold);
   white-space: nowrap;
   overflow: hidden;
@@ -439,7 +439,7 @@
   background-repeat: repeat;
   background-size: 17.4545rem 8.7273rem;
   color: var(--text-bright);
-  font-size: 0.76rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -451,7 +451,7 @@
 
 .mil-commander-stat .icon-stat__value {
   font-family: var(--font-body);
-  font-size: 0.76rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -477,7 +477,7 @@
   background-color: #3a1427;
   color: var(--text-bright);
   font-family: var(--font-body);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -721,7 +721,7 @@
   width: 100%;
   min-width: 0;
   color: var(--gold-light);
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -734,7 +734,7 @@
   width: 100%;
   min-width: 0;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 700;
   text-align: left;
 }

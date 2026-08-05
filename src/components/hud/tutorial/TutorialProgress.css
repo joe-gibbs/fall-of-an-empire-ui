@@ -12,6 +12,14 @@
   left: calc(var(--sidebar-width) + 1rem);
 }
 
+/* Compact: same top as warnings; sit to the right of the warning strip. */
+html.hud-compact .tutorial-progress-shell,
+html.hud-compact .tutorial-progress-shell--shifted {
+  top: var(--hud-below-topbar, calc(var(--topbar-height) + 0.55rem));
+  left: 8.75rem;
+  max-width: calc(100vw - 9.5rem);
+}
+
 .tutorial-progress-panel {
   position: relative;
   pointer-events: auto;

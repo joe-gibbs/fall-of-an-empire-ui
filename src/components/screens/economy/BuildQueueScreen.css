@@ -159,12 +159,15 @@
 .buildq-row {
   display: flex;
   align-items: stretch;
+  box-sizing: border-box;
+  height: 100%;
   min-height: 6.2rem;
   padding: 0.45rem 0.55rem;
   border-bottom-width: 0.077rem;
   border-bottom-style: solid;
   border-bottom-color: var(--separator);
   background-color: rgba(8, 12, 17, 0.08);
+  overflow: hidden;
 }
 
 .buildq-row:hover {
@@ -217,10 +220,13 @@
 .buildq-main {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .buildq-title-row {

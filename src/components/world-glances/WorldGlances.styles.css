@@ -877,7 +877,7 @@
   flex-shrink: 0;
   flex-basis: 5.4545rem;
   color: var(--text-muted);
-  font-size: 0.7273rem;
+  font-size: 0.9rem;
 }
 
 .province-tooltip-mode-value {
@@ -886,7 +886,7 @@
   flex-shrink: 1;
   flex-basis: 0;
   color: var(--text-bright);
-  font-size: 0.7727rem;
+  font-size: 0.95rem;
 }
 
 .province-tooltip-mode-value--positive {
@@ -971,8 +971,8 @@
 
 .province-tooltip-share-mode-detail {
   color: var(--text-muted);
-  font-size: 0.6818rem;
-  line-height: 1.1;
+  font-size: 0.9rem;
+  line-height: 1.2;
 }
 
 .province-tooltip-share-mode-values {

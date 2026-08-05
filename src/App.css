@@ -76,7 +76,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 50;
+  /* Above warnings (40/45) and tutorial (48); below topbar chrome (100). */
+  z-index: 70;
   display: flex;
   justify-content: center;
   align-items: stretch;
@@ -283,35 +284,9 @@ button {
   mask-image: url('/assets/event-mask.png');
 }
 
-.topbar-center {
-  width: auto;
-}
-
-.topbar-center-content {
-  justify-content: flex-start;
-  padding: 0 1.2rem;
-}
-
-.topbar-center-content > * + * {
-  margin-left: 0.615rem;
-}
-
-.date-display-text {
-  font-size: 1.08rem;
-  font-weight: 600;
-  letter-spacing: 0;
-  width: 6.1rem;
-}
-
-.speed-btn-img {
-  width: 1.538rem;
-  height: 1.538rem;
-}
-
-.speed-btn-img--wide {
-  width: 2.154rem;
-  height: 1.462rem;
-}
+/* Top bar chrome is sized in em inside .topbar-scale (frozen 13.2px). Do not
+   override date/speed/center with rem here — rem follows global UI scale and
+   blows the centre rail, hides pause/speed, and desyncs button sizes. */
 
 .icon-button {
   cursor: var(--cursor-pointer);

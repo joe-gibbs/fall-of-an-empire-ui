@@ -197,7 +197,7 @@
 }
 
 .sidebar-subtitle {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--text-muted);
   margin-top: 0.154rem;
 }
@@ -253,7 +253,7 @@
 }
 
 .sidebar-header-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--gold);
   margin-top: 0.05rem;
 }
@@ -282,13 +282,13 @@
 }
 
 .sidebar-portrait-name {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--text-bright);
   line-height: 1.3;
 }
 
 .sidebar-portrait-detail {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
 }
 
@@ -309,7 +309,7 @@
   display: flex;
   align-items: center;
 
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 /* Buttons: now handled by GameButton component */
@@ -319,7 +319,7 @@
   display: flex;
   align-items: center;
 
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .sidebar-comparison-track {
@@ -354,7 +354,7 @@
   display: flex;
   align-items: center;
 
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--text);
   padding: 0.154rem 0;
   cursor: pointer;
@@ -379,7 +379,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--gold);
   flex-shrink: 0;
 }
@@ -409,7 +409,7 @@
   padding: 1.231rem 0.615rem;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .sidebar-placeholder-icon {

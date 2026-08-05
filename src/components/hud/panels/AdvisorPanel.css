@@ -23,7 +23,9 @@
   position: relative;
   width: 32rem;
   max-width: calc(100vw - 2rem);
-  min-height: 18rem;
+  /* Cap height so high UI scale cannot push tutorial copy off-screen. */
+  max-height: calc(100vh - var(--bottombar-height) - var(--topbar-height) - 1.5rem);
+  min-height: 12rem;
   padding: 1rem 1rem 0.95rem;
   display: flex;
   flex-direction: column;
@@ -110,7 +112,9 @@
   align-items: flex-start;
   padding-top: 1.15rem;
   min-width: 0;
-  flex: 1;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .advisor-card__hero > * {
@@ -147,9 +151,28 @@
 
 .advisor-card__hero-copy {
   min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   padding-right: 2.35rem;
+  overflow: hidden;
+}
+
+.advisor-card__body-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 0.7rem;
+}
+
+.advisor-card__body-scroll > .styled-scroll-area__viewport {
+  padding-right: 1.1rem;
+}
+
+.advisor-card__body-scroll > .styled-scroll-area__track {
+  top: 0.15rem;
+  right: 0.05rem;
+  bottom: 0.15rem;
 }
 
 .advisor-card__hero-copy > * {
@@ -168,18 +191,21 @@
   line-height: 1.08;
   color: var(--text-header);
   text-shadow: 0 0.08rem 0.28rem rgba(8, 12, 17, 0.55);
+  flex-shrink: 0;
 }
 
 .advisor-card__body {
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.48;
   color: var(--text);
+  padding-bottom: 0.2rem;
 }
 
 .advisor-card__progress {
   display: flex;
   align-items: center;
-  margin-top: auto;
+  margin-top: 0.75rem;
+  flex-shrink: 0;
 }
 
 .advisor-card__progress > * {
@@ -212,6 +238,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .advisor-card__actions > * {
@@ -340,7 +367,8 @@
 
   .advisor-card {
     width: calc(100vw - 0.9rem);
-    min-height: 17rem;
+    min-height: 11rem;
+    max-height: calc(100vh - var(--bottombar-height) - var(--topbar-height) - 0.9rem);
     padding: 0.9rem 0.9rem 0.85rem;
   }
 
@@ -383,7 +411,15 @@
   }
 
   .advisor-card__body {
-    font-size: 0.84rem;
+    font-size: 1rem;
+  }
+
+  .advisor-card__hero-copy {
+    padding-right: 1.6rem;
+  }
+
+  .advisor-card__body-scroll {
+    margin-top: 0.55rem;
   }
 
   .advisor-card__actions {
