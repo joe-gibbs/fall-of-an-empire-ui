@@ -106,7 +106,9 @@ const TopBar: React.FC<TopBarProps> = ({
 
   useLayoutEffect(() => {
     if (compact) {
-      document.documentElement.style.setProperty('--topbar-layout-scale', '1');
+      const root = document.documentElement;
+      root.style.setProperty('--topbar-layout-scale', '1');
+      root.style.removeProperty('--topbar-design-width');
       return undefined;
     }
     updateTopbarLayoutScale();

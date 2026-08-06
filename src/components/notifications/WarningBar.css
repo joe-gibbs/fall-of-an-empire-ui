@@ -13,7 +13,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   /* Cap strip so high UI scale / font floor cannot balloon these across the map. */
-  max-width: calc(5 * 2.35rem + 4 * 0.22rem);
+  max-width: calc(5 * 2.95rem + 4 * 0.28rem);
   transition-property: opacity, visibility;
   transition-duration: 0.2s, 0.2s;
   transition-timing-function: var(--ease-snap), var(--ease-snap);
@@ -42,8 +42,8 @@ html.hud-compact .warning-icon-strip {
 
 .warning-icon-btn {
   position: relative;
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.95rem;
+  height: 2.95rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,8 +55,8 @@ html.hud-compact .warning-icon-strip {
   animation-timing-function: var(--ease-snap);
   animation-fill-mode: both;
   transition: transform 0.12s ease-out;
-  margin-right: 0.22rem;
-  margin-bottom: 0.22rem;
+  margin-right: 0.28rem;
+  margin-bottom: 0.28rem;
 }
 
 .warning-icon-btn:nth-child(5n) {
@@ -116,11 +116,11 @@ html.hud-compact .warning-icon-strip {
 
 .warning-icon-img {
   position: relative;
-  width: 0.95rem;
-  height: 0.95rem;
+  width: 1.2rem;
+  height: 1.2rem;
   pointer-events: none;
   filter: brightness(1.3);
-  transform: scale(1.2);
+  transform: scale(1.25);
   transform-origin: center;
 }
 

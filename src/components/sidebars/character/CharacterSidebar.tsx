@@ -292,6 +292,22 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
   const hdVal = character.honourDread;
   const hdLabel = getHonourDreadLabel(hdVal);
   const hdColor = getHonourDreadColor(hdVal);
+  const honourDreadTooltipLines: TooltipLine[] = [
+    {
+      label: hdLabel,
+      value: formatSignedNumber(hdVal, { maximumFractionDigits: 2 }),
+      valueColor: hdColor,
+    },
+  ];
+  const honourDreadBreakdownLines = (character.honourDreadBreakdown ?? []).map(entry => ({
+    label: entry.label,
+    value: formatSignedNumber(entry.value, { maximumFractionDigits: 2 }),
+    valueColor: modifierValueColor(entry.value),
+  }));
+  if (honourDreadBreakdownLines.length > 0) {
+    honourDreadTooltipLines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1199.39'), isHeader: true });
+    honourDreadTooltipLines.push(...honourDreadBreakdownLines);
+  }
 
   // Role experience entries
   const roleEntries = character.roleTiers ? [
@@ -813,7 +829,11 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         </div>
 
         {/* Honour/Dread - center-pivot bar */}
-        <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1242.42'), body: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1242.43') }} position="bottom" delay={200}>
+        <Tooltip content={{
+          title: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1242.42'),
+          body: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1242.43'),
+          lines: honourDreadTooltipLines,
+        }} position="bottom" delay={200}>
           <div className="char-honour-row">
             <img src="/assets/icons/I_Dread.png" alt={webUIText('Auto.Attr.ComponentsSidebarsCharacterSidebar.1244.44')} className="char-honour-icon" />
             <div className="char-honour-track painted-bar-track">

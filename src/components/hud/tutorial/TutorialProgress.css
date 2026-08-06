@@ -16,8 +16,8 @@
 html.hud-compact .tutorial-progress-shell,
 html.hud-compact .tutorial-progress-shell--shifted {
   top: var(--hud-below-topbar, calc(var(--topbar-height) + 0.55rem));
-  left: 8.75rem;
-  max-width: calc(100vw - 9.5rem);
+  left: 10.75rem;
+  max-width: calc(100vw - 11.5rem);
 }
 
 .tutorial-progress-panel {

@@ -5,19 +5,29 @@
    portrait in the circular frame on the right
 
    Layout is authored for a ~1920 CSS-px wide HUD. On
-   narrower / high-UI-scale viewports, .topbar-scale
-   shrinks the whole design so left/centre/right never
-   overlap and the date stays readable.
+   narrower viewports, .topbar-scale shrinks the 1920
+   design so left/centre/right never overlap. On wider
+   viewports the canvas expands to the real width so the
+   rails pin to the edges instead of sitting left-aligned.
    ============================================= */
 
 /*
-  Absolute HUD is authored at a fixed 1920px design width with a 13.2px rem base.
-  .topbar-scale is that design canvas; --topbar-layout-scale shrinks it to the
-  real viewport when rem is inflated (UI scale / font floor) or width is narrow.
+  Absolute HUD chrome uses a frozen 13.2px em base inside .topbar-scale.
+  --topbar-design-width is 1920px by default and is expanded to the real
+  viewport when wider; --topbar-layout-scale shrinks the 1920 canvas on
+  narrow widths (never above 1 — wide screens expand the canvas instead).
+
+  End-cap art and the portrait circle are authored for 40% of 1920 (768px).
+  Cap them at that design size so expanding the canvas for ultrawide does not
+  grow the frame while the portrait slot (em) stays put — that desync is what
+  leaves a gap between the face and the meander ring.
 */
 :root {
+  --topbar-authored-width: 1920px;
   --topbar-design-width: 1920px;
   --topbar-layout-scale: 1;
+  --topbar-endcap-width: calc(var(--topbar-authored-width) * 0.4);
+  --topbar-right-rail-inset: calc(var(--topbar-authored-width) * 0.065);
 }
 
 .topbar-shell {
@@ -76,7 +86,8 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 40%;
+  width: var(--topbar-endcap-width);
+  max-width: 40%;
   height: auto;
   pointer-events: none;
   z-index: 1;
@@ -88,7 +99,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 40%;
+  width: var(--topbar-endcap-width);
+  max-width: 40%;
   height: auto;
   pointer-events: none;
   z-index: 1;
@@ -106,8 +118,9 @@
 /*
   Circle measured from T_TopNavbar_Left.png (744x149):
     centre ≈ (58, 58), inner diameter ≈ 81px at widest.
-  Frame is 40% of the 1920 design canvas (768px) and scaleX(-1) mirrored, so the
-  circle sits near the right edge. Portrait box is square in em at 13.2px chrome:
+  Frame is capped at 40% of the 1920 authored width (768px) and scaleX(-1)
+  mirrored, so the circle sits near the right edge. Portrait box is square in
+  em at 13.2px chrome against that fixed end-cap size:
     frameScale = 768/744
     centreFromRight = 58 * frameScale ≈ 59.9px → 4.54em
     diameter = 81 * frameScale ≈ 83.6px → 6.33em
@@ -138,7 +151,8 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 40%;
+  width: var(--topbar-endcap-width);
+  max-width: 40%;
   height: auto;
   z-index: 103;
   transform: scaleX(-1);
@@ -255,7 +269,8 @@
   position: absolute;
   top: 0.5em;
   left: 0;
-  width: 40%;
+  width: var(--topbar-endcap-width);
+  max-width: 40%;
   height: var(--topbar-height);
   display: flex;
   align-items: center;
@@ -495,7 +510,9 @@
 .topbar-right-rail {
   position: absolute;
   top: 0;
-  right: 6.5%;
+  /* Design inset from the right edge (6.5% of 1920), not of the expanded canvas,
+     so resources stay next to the fixed-size portrait on ultrawide. */
+  right: var(--topbar-right-rail-inset);
   /* Pack toward the portrait so actions never sit under the date. */
   left: auto;
   height: var(--topbar-height);
@@ -504,7 +521,7 @@
   justify-content: flex-end;
   gap: 0.75em;
   z-index: 3;
-  max-width: 44%;
+  max-width: min(44%, calc(var(--topbar-authored-width) * 0.44));
 }
 
 .topbar-actions {
