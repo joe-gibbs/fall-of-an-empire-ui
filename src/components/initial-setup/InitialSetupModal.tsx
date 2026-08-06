@@ -199,7 +199,7 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
                 label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.751.34')}
                 value={Math.round(workingGameplay.uiScale * 100)}
                 min={50}
-                max={150}
+                max={130}
                 suffix="%"
                 onChange={setUIScale}
               />

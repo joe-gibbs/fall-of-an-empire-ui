@@ -1,8 +1,8 @@
 import type { SettingsGameplayDTO } from '../bridge-types.generated.ts';
 
-/** Matches settings slider and StrategySettingsSubsystem clamp (50%–150%). */
+/** Matches settings slider and StrategySettingsSubsystem clamp (50%–130%). */
 export const UI_SCALE_MIN = 0.5;
-export const UI_SCALE_MAX = 1.5;
+export const UI_SCALE_MAX = 1.3;
 
 export function clampUIScale(uiScale: number): number {
   if (!Number.isFinite(uiScale) || uiScale <= 0) {
