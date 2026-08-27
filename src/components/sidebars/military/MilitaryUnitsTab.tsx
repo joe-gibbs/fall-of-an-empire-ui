@@ -2,6 +2,7 @@ import React, { type MouseEvent as ReactMouseEvent } from 'react';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Tooltip from '../../common/tooltips/Tooltip';
+import GameButton from '../../common/buttons/GameButton';
 import type { ArmyBattleGroup, ArmyUnitRow, ArmyUnitTypeStrength } from '../../../data/types';
 import { TIER_ICONS } from '../../../utils/iconMaps';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
@@ -34,8 +35,12 @@ type MilitaryUnitsTabProps = {
   unitRosterRef: React.RefObject<HTMLDivElement | null>;
   unitRowRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
   selectedUnitIdSet: Set<string>;
+  showSplitControls: boolean;
+  canSplitForce: boolean;
+  splitInProgress: boolean;
   maxStats: UnitStatCaps;
   handleUnitRowMouseDown: (event: ReactMouseEvent<HTMLDivElement>, unit: ArmyUnitRow) => void;
+  onSplitSelected: () => void;
 };
 
 export function renderUnitTypeCounts(unitTypes: ArmyUnitTypeStrength[]): React.ReactNode {
@@ -91,8 +96,12 @@ export function MilitaryUnitsTab({
   unitRosterRef,
   unitRowRefs,
   selectedUnitIdSet,
+  showSplitControls,
+  canSplitForce,
+  splitInProgress,
   maxStats,
   handleUnitRowMouseDown,
+  onSplitSelected,
 }: MilitaryUnitsTabProps) {
   const renderUnitRow = (unit: ArmyUnitRow, extraClassName = '') => {
     const stats = resolveUnitStats(unit);
@@ -162,6 +171,16 @@ export function MilitaryUnitsTab({
   const compositionClass = compositionSummary.length <= 1
     ? 'mil-composition mil-composition--compact'
     : 'mil-composition';
+  const selectedUnitCount = selectedUnitIdSet.size;
+  const selectableUnitCount = unitRows.filter(unit => unit.selectable).length;
+  const hasValidSplitSelection = selectedUnitCount > 0 && selectedUnitCount < selectableUnitCount;
+  const splitDescription = !canSplitForce
+    ? webUIText('Military.SplitUnavailable')
+    : hasValidSplitSelection
+      ? webUIText('Military.SplitSelectedDescription', {
+        Force: webUIText(isNavy ? 'Common.FleetLower' : 'Common.ArmyLower'),
+      })
+      : webUIText('Military.SplitSelectionInstruction');
 
   return (
     <div className="mil-units-tab">
@@ -191,6 +210,27 @@ export function MilitaryUnitsTab({
         })}
       </div>
       <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsMilitarySidebar.1101.46')} count={unitRows.length} />
+      {showSplitControls && (
+        <div className="mil-unit-split-controls">
+          <span className="mil-unit-split-count">
+            {webUIText('Military.SplitSelectionCount', { Count: formatNumber(selectedUnitCount) })}
+          </span>
+          <Tooltip
+            content={{ title: webUIText('Military.SplitSelected'), body: splitDescription }}
+            position="bottom"
+            delay={150}
+          >
+            <GameButton
+              variant="burgundy"
+              icon="/assets/icons/I_DetachCommand.png"
+              disabled={!canSplitForce || !hasValidSplitSelection || splitInProgress}
+              onClick={onSplitSelected}
+            >
+              {webUIText('Military.SplitSelected')}
+            </GameButton>
+          </Tooltip>
+        </div>
+      )}
       <div className="mil-roster" ref={unitRosterRef}>
         {unitSelectionBox && (
           <div

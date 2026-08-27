@@ -54,7 +54,7 @@ export default function SortableHeader<T extends string>({
         active ? 'sortable-header-button--active' : '',
         active && activeClassName ? activeClassName : '',
       ].filter(Boolean).join(' ')}
-      onMouseDown={() => {
+      onClick={() => {
         playSound('click');
         onSort(id);
       }}

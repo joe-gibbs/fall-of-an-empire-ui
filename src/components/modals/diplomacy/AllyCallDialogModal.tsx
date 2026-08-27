@@ -184,21 +184,16 @@ export default function AllyCallDialogModal({ state, onRespond }: Props) {
   return (
     <div
       className={`modal-overlay acd-overlay${closing ? ' acd-overlay--closing' : ''}`}
-      onMouseDown={event => {
+      onClick={event => {
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
         close();
       }}
-      onClick={event => {
-        if (event.target !== event.currentTarget) return;
-        event.preventDefault();
-        event.stopPropagation();
-      }}
     >
       <div
         className={`modal acd-modal${closing ? ' acd-modal--closing' : ''}`}
-        onMouseDown={stopPropagation}
+        onClick={stopPropagation}
       >
         <div className="acd-header">
           <div className="acd-header-left">
@@ -261,7 +256,7 @@ function AllyRow({
     <button
       type="button"
       className={`acd-row${selected ? ' acd-row--selected' : ''}`}
-      onMouseDown={onToggle}
+      onClick={onToggle}
       aria-pressed={selected}
     >
       <span className="acd-check" />

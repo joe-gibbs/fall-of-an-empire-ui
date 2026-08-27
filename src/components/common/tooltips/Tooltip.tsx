@@ -834,13 +834,37 @@ function updateSharedTooltip(next: ActiveTooltip) {
   emitTooltipState();
 }
 
+function isTooltipTriggerAvailable(element: HTMLElement | null | undefined): boolean {
+  if (!element || !element.isConnected) {
+    return false;
+  }
+
+  let node: HTMLElement | null = element;
+  while (node) {
+    if (node.getAttribute('aria-hidden') === 'true') {
+      return false;
+    }
+    const style = window.getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+      return false;
+    }
+    node = node.parentElement;
+  }
+
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
 function isTooltipTreeHovered(
   id: number,
   wrapper?: HTMLElement | null,
   anchor?: HTMLElement | null,
 ): boolean {
-  if (wrapper?.isConnected && wrapper.matches(':hover')) return true;
-  if (anchor?.isConnected && anchor !== wrapper && anchor.matches(':hover')) return true;
+  if (!wrapper || !isTooltipTriggerAvailable(wrapper)) {
+    return false;
+  }
+  if (wrapper.matches(':hover')) return true;
+  if (anchor && isTooltipTriggerAvailable(anchor) && anchor !== wrapper && anchor.matches(':hover')) return true;
   const surfaces = document.querySelectorAll(`[data-tooltip-surface="${id}"]`);
   for (let i = 0; i < surfaces.length; i += 1) {
     const el = surfaces[i];
@@ -906,7 +930,11 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
   }, []);
 
   const placeTooltip = useCallback(() => {
-    if (!tooltipPositionerRef.current || !tooltipRef.current || !active.wrapperElement.isConnected) {
+    if (!tooltipPositionerRef.current || !tooltipRef.current) {
+      return;
+    }
+    if (!isTooltipTriggerAvailable(active.wrapperElement)) {
+      hideSharedTooltip(active.id);
       return;
     }
 
@@ -977,6 +1005,23 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
   });
 
   useEffect(() => {
+    const wrapper = active.wrapperElement;
+    const hideIfTriggerGone = () => {
+      if (!isTooltipTriggerAvailable(wrapper)) {
+        hideSharedTooltip(active.id);
+      }
+    };
+    hideIfTriggerGone();
+    const observer = new MutationObserver(hideIfTriggerGone);
+    let node: HTMLElement | null = wrapper;
+    while (node) {
+      observer.observe(node, { attributes: true, attributeFilter: ['aria-hidden', 'class', 'style'] });
+      node = node.parentElement;
+    }
+    return () => observer.disconnect();
+  }, [active.id, active.wrapperElement]);
+
+  useEffect(() => {
     schedulePlacement();
     const target = tooltipRef.current;
     let observer: ResizeObserver | null = null;
@@ -984,9 +1029,8 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
       observer = new ResizeObserver(schedulePlacement);
       observer.observe(target);
     }
-    // Reposition on viewport/layout changes only. Do not listen to mousemove -
-    // placement used to hide the bubble while measuring, which fired mouseleave
-    // and collapsed nested tooltip chains during normal pointer travel.
+    // Reposition on viewport/layout changes only. Mousemove placement hides the
+    // bubble while measuring and collapses nested tooltip chains.
     window.addEventListener('resize', schedulePlacement);
     window.addEventListener('scroll', schedulePlacement, true);
     return () => {
@@ -1075,6 +1119,7 @@ const Tooltip: React.FC<TooltipProps> = ({
   const disabledRef = useRef(disabled);
   const onShowIntentRef = useRef(onShowIntent);
   const hoveredRef = useRef(false);
+  const focusedRef = useRef(false);
   const tooltipIdRef = useRef(nextTooltipId++);
   const hoverStartedAtRef = useRef(0);
 
@@ -1114,50 +1159,74 @@ const Tooltip: React.FC<TooltipProps> = ({
     showRef.current = setTimeout(() => {
       showRef.current = null;
       const wrapper = wrapperRef.current;
-      if (!disabledRef.current && hoveredRef.current && wrapper) {
+      if (!disabledRef.current && (hoveredRef.current || focusedRef.current) && wrapper) {
         showSharedTooltip(buildActiveTooltipRef.current(wrapper));
       }
     }, delayMs);
   }, []);
 
-  const beginShow = useCallback(() => {
-    const alreadyHovered = hoveredRef.current;
-    if (!alreadyHovered) {
+  const beginShow = useCallback((source: 'hover' | 'focus') => {
+    const alreadyActive = hoveredRef.current || focusedRef.current;
+    if (!alreadyActive) {
       onShowIntentRef.current?.();
       hoverStartedAtRef.current = Date.now();
     }
-    hoveredRef.current = true;
+    if (source === 'hover') hoveredRef.current = true;
+    else focusedRef.current = true;
     cancelSharedTooltipHide(tooltipIdRef.current);
     if (disabledRef.current) return;
     // Controlled `open` re-renders must not re-fire showIntent or re-schedule
     // the open delay once this tooltip is already active or pending.
-    if (alreadyHovered && activeTooltip?.id === tooltipIdRef.current) {
+    if (alreadyActive && activeTooltip?.id === tooltipIdRef.current) {
       return;
     }
-    if (alreadyHovered && showRef.current) {
+    if (alreadyActive && showRef.current) {
       return;
     }
-    scheduleShow(alreadyHovered ? 0 : effectiveDelay);
+    scheduleShow(alreadyActive ? 0 : effectiveDelay);
   }, [effectiveDelay, scheduleShow]);
 
   const show = useCallback(() => {
-    if (!controlled) beginShow();
+    if (!controlled) beginShow('hover');
   }, [beginShow, controlled]);
+
+  const showFromFocus = useCallback(() => {
+    if (!controlled) beginShow('focus');
+  }, [beginShow, controlled]);
+
+  const finishHide = useCallback(() => {
+    if (hoveredRef.current || focusedRef.current) return;
+    if (showRef.current) { clearTimeout(showRef.current); showRef.current = null; }
+    scheduleSharedTooltipHide(tooltipIdRef.current, HIDE_GRACE_MS);
+  }, []);
 
   const hide = useCallback(() => {
     hoveredRef.current = false;
+    finishHide();
+  }, [finishHide]);
+
+  const hideFromFocus = useCallback((event: React.FocusEvent<HTMLElement>) => {
+    if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
+    focusedRef.current = false;
+    finishHide();
+  }, [finishHide]);
+
+  const forceHide = useCallback(() => {
+    hoveredRef.current = false;
+    focusedRef.current = false;
     if (showRef.current) { clearTimeout(showRef.current); showRef.current = null; }
     scheduleSharedTooltipHide(tooltipIdRef.current, HIDE_GRACE_MS);
   }, []);
 
   useEffect(() => {
     if (!controlled) return;
-    if (open) beginShow();
-    else hide();
-  }, [beginShow, controlled, hide, open]);
+    if (open) beginShow('hover');
+    else forceHide();
+  }, [beginShow, controlled, forceHide, open]);
 
   const dismissForPress = useCallback(() => {
     hoveredRef.current = false;
+    focusedRef.current = false;
     cancelTimers();
     hideSharedTooltip(tooltipIdRef.current);
   }, [cancelTimers]);
@@ -1169,15 +1238,18 @@ const Tooltip: React.FC<TooltipProps> = ({
       return;
     }
 
-    if (hoveredRef.current && activeTooltip?.id !== tooltipIdRef.current && !showRef.current) {
+    if ((hoveredRef.current || focusedRef.current) && activeTooltip?.id !== tooltipIdRef.current && !showRef.current) {
       const elapsed = Date.now() - hoverStartedAtRef.current;
       scheduleShow(Math.max(0, effectiveDelay - elapsed));
     }
   }, [disabled, effectiveDelay, scheduleShow]);
 
   useEffect(() => {
+    // Keep the open portal in sync when content changes. The pointer is often
+    // over the bubble (not the trigger) for interactive tooltips — e.g. building
+    // dismantle/downgrade confirm — so do not gate on hoveredRef.
     const wrapper = wrapperRef.current;
-    if (!wrapper || !hoveredRef.current || disabledRef.current || activeTooltip?.id !== tooltipIdRef.current) {
+    if (!wrapper || disabledRef.current || activeTooltip?.id !== tooltipIdRef.current) {
       return;
     }
     updateSharedTooltip(buildActiveTooltip(wrapper));
@@ -1202,6 +1274,9 @@ const Tooltip: React.FC<TooltipProps> = ({
           style={wrapperStyle}
           onMouseEnter={show}
           onMouseLeave={hide}
+          onFocusCapture={showFromFocus}
+          onBlurCapture={hideFromFocus}
+          onPointerDownCapture={dismissForPress}
           onMouseDownCapture={dismissForPress}
         >
           {children}
@@ -1213,6 +1288,9 @@ const Tooltip: React.FC<TooltipProps> = ({
           style={wrapperStyle}
           onMouseEnter={show}
           onMouseLeave={hide}
+          onFocusCapture={showFromFocus}
+          onBlurCapture={hideFromFocus}
+          onPointerDownCapture={dismissForPress}
           onMouseDownCapture={dismissForPress}
         >
           {children}

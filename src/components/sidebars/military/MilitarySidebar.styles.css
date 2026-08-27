@@ -164,10 +164,89 @@
   color: var(--text-bright);
   letter-spacing: 0.03rem;
   text-shadow: 0 0.077rem 0.3rem rgba(8, 12, 17, 0.9);
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 1.8rem;
+}
+
+.mil-header-name-text {
+  min-width: 0;
+  flex-shrink: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mil-header-name > .tooltip-wrapper {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.mil-header-rename-btn,
+.mil-rename-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
+  background-image: linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%);
+  background-repeat: repeat;
+  background-size: auto;
+  background-color: rgba(13, 18, 24, 0.58);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mil-header-rename-btn:hover,
+.mil-rename-icon-btn:hover {
+  background-color: rgba(201, 168, 76, 0.12);
+  border-top-color: rgba(255, 255, 255, 0.16);
+  border-right-color: rgba(255, 255, 255, 0.12);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  border-left-color: rgba(255, 255, 255, 0.12);
+}
+
+.mil-header-rename-icon,
+.mil-rename-icon-btn img {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.mil-rename-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
   width: 100%;
+  max-width: 100%;
+  min-height: 1.8rem;
+}
+
+.mil-rename-input {
+  min-width: 0;
+  width: 12rem;
+  max-width: 14rem;
+  height: 1.8rem;
+  padding: 0.12rem 0.35rem;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-bright);
+  background-color: rgba(13, 18, 24, 0.76);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(255, 255, 255, 0.14);
+  border-right-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.1);
 }
 
 .mil-header-subtitle {
@@ -2424,6 +2503,25 @@
   user-select: none;
 }
 
+.mil-unit-split-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2.45rem;
+  padding: 0.3rem 0.46rem;
+}
+
+.mil-unit-split-count {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.mil-unit-split-controls .btn--burgundy {
+  min-height: 1.85rem;
+  padding: 0.28rem 0.58rem;
+  font-size: 0.7rem;
+}
+
 .mil-roster > * + * {
   margin-top: 0.42rem;
 }
@@ -2802,6 +2900,11 @@
 
 .mil-header-identity > * + * {
   margin-left: 0.8rem;
+}
+
+.mil-header-name > * + *,
+.mil-rename-row > * + * {
+  margin-left: 0.35rem;
 }
 
 .mil-header-emblems > * + * {
@@ -5422,5 +5525,523 @@
 
 .mil-resource-row--stable .mil-resource-foot {
   margin-top: 0.04rem;
+}
+
+/* ===== Military header ===== */
+
+.military-sidebar .mil-header {
+  min-height: 0;
+  height: auto;
+  overflow: visible;
+  padding: 0.462rem;
+}
+
+.military-sidebar .mil-header-scrim {
+  min-height: 0;
+  height: auto;
+  padding: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+.mil-lead {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.mil-lead > .tooltip-wrapper:first-child {
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+.mil-lead > .tooltip-wrapper:last-child {
+  flex-shrink: 0;
+}
+
+.mil-lead-portrait-button {
+  width: 5.5rem;
+  height: 5.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mil-lead-portrait {
+  width: 5.5rem !important;
+  height: 5.5rem !important;
+  min-width: 5.5rem !important;
+  min-height: 5.5rem !important;
+}
+
+.mil-lead-body {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  margin-left: 0.5rem;
+  margin-right: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.mil-lead-body .mil-rename-input {
+  width: 100%;
+  max-width: 100%;
+}
+
+.mil-lead-roundel {
+  flex-shrink: 0;
+}
+
+.mil-lead-name {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.mil-lead-name-text {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  font-family: var(--font-header);
+  font-size: 1.28rem;
+  line-height: 1.18;
+  color: var(--text-bright);
+  letter-spacing: 0.02rem;
+  text-shadow: 0 0.077rem 0.3rem rgba(8, 12, 17, 0.9);
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.mil-lead-name > .tooltip-wrapper {
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-top: 0.12rem;
+  margin-left: 0.28rem;
+}
+
+.mil-lead-commander {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0.18rem;
+}
+
+.mil-lead-commander-open {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mil-lead-commander-open.is-static {
+  cursor: auto;
+}
+
+.mil-lead-commander-name {
+  margin-right: 0.38rem;
+  color: var(--gold);
+  font-size: 0.92rem;
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.mil-lead-commander-rank {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.mil-lead-commander > .tooltip-wrapper {
+  width: 1.7rem;
+  height: 1.7rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-left: 0.28rem;
+}
+
+.mil-lead-commander-assign {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.06);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  background-color: #151b20;
+  cursor: pointer;
+}
+
+.mil-lead-commander-assign:hover {
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  background-color: #20272d;
+}
+
+.mil-lead-commander-assign.is-disabled,
+.mil-lead-commander-assign.is-disabled:hover {
+  opacity: 0.45;
+  cursor: auto;
+}
+
+.mil-lead-commander-assign img {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.mil-lead-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+  margin-top: 0.28rem;
+}
+
+.mil-lead-stats > .tooltip-wrapper {
+  margin-right: 0.55rem;
+  margin-bottom: 0.08rem;
+}
+
+.mil-lead-stat {
+  display: flex;
+  align-items: center;
+}
+
+.mil-lead-stat img {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
+  margin-right: 0.2rem;
+}
+
+.mil-lead-stat-label {
+  margin-right: 0.22rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.mil-lead-stat-temp {
+  margin-right: 0.16rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.mil-lead-stat-value {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.mil-duty {
+  width: 100%;
+  min-width: 0;
+  margin-top: 0.42rem;
+  padding-top: 0.42rem;
+  position: relative;
+}
+
+.mil-duty::before,
+.mil-vitals::before,
+.mil-commands::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 0.5455rem;
+  background: url('/assets/gold-line.png') repeat-x center;
+  background-size: auto 0.5455rem;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.mil-duty-text {
+  display: block;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.98rem;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.mil-duty-link {
+  display: flex;
+  align-items: center;
+  margin-top: 0.18rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.mil-duty-link img {
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-right: 0.28rem;
+  flex-shrink: 0;
+}
+
+.mil-vitals {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin-top: 0.38rem;
+  padding-top: 0.5rem;
+  position: relative;
+}
+
+.mil-vitals > .tooltip-wrapper {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.mil-vitals > .tooltip-wrapper + .tooltip-wrapper {
+  margin-left: 0.28rem;
+}
+
+.mil-vital {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 3.7rem;
+  padding: 0.28rem 0.22rem 0.32rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.22);
+  border-right-color: rgba(80, 92, 104, 0.3);
+  border-bottom-color: rgba(80, 92, 104, 0.34);
+  border-left-color: rgba(80, 92, 104, 0.3);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  background-color: #151b20;
+}
+
+.mil-vital-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mil-vital-label img {
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-right: 0.22rem;
+  flex-shrink: 0;
+}
+
+.mil-vital-value {
+  margin-top: 0.12rem;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.mil-vital > .painted-bar-track {
+  width: 100%;
+  margin-top: 0.22rem;
+  height: 0.5rem;
+}
+
+.mil-commands {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  width: 100%;
+  margin-top: 0.38rem;
+  padding-top: 0.5rem;
+  position: relative;
+  gap: 0.28rem;
+}
+
+.mil-commands > .tooltip-wrapper {
+  display: flex;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: calc((100% - 0.56rem) / 3);
+  min-width: 0;
+}
+
+.mil-command {
+  width: 100%;
+  min-height: 3.35rem;
+  padding: 0.28rem 0.18rem 0.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: rgba(201, 168, 76, 0.22);
+  border-right-color: rgba(80, 92, 104, 0.3);
+  border-bottom-color: rgba(80, 92, 104, 0.34);
+  border-left-color: rgba(80, 92, 104, 0.3);
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  background-color: #151b20;
+  color: var(--text-bright);
+  cursor: pointer;
+}
+
+.mil-command:hover {
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  background-color: #20272d;
+  border-top-color: rgba(201, 168, 76, 0.42);
+  border-right-color: rgba(201, 168, 76, 0.3);
+  border-bottom-color: rgba(201, 168, 76, 0.3);
+  border-left-color: rgba(201, 168, 76, 0.3);
+}
+
+.mil-command.is-active {
+  border-top-color: var(--gold);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold);
+  background-image:
+    linear-gradient(180deg, rgba(201, 168, 76, 0.16) 0%, rgba(72, 18, 24, 0.58) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/button-burgundy.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 11.6364rem 5.8182rem;
+  background-color: var(--burgundy);
+}
+
+.mil-command.is-disabled,
+.mil-command.is-disabled:hover {
+  opacity: 0.45;
+  cursor: auto;
+  pointer-events: none;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
+  background-color: #151b20;
+  border-top-color: rgba(201, 168, 76, 0.22);
+  border-right-color: rgba(80, 92, 104, 0.3);
+  border-bottom-color: rgba(80, 92, 104, 0.34);
+  border-left-color: rgba(80, 92, 104, 0.3);
+}
+
+.mil-command--danger {
+  border-top-color: rgba(199, 91, 58, 0.34);
+  border-right-color: rgba(199, 91, 58, 0.24);
+  border-bottom-color: rgba(199, 91, 58, 0.24);
+  border-left-color: rgba(199, 91, 58, 0.24);
+}
+
+.mil-command--danger:hover,
+.mil-command--danger.is-active {
+  border-top-color: rgba(199, 91, 58, 0.55);
+  border-right-color: rgba(199, 91, 58, 0.4);
+  border-bottom-color: rgba(199, 91, 58, 0.4);
+  border-left-color: rgba(199, 91, 58, 0.4);
+  background-color: rgba(86, 26, 28, 0.42);
+}
+
+.mil-command-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.mil-command-label {
+  margin-top: 0.16rem;
+  width: 100%;
+  min-width: 0;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+  white-space: normal;
+}
+
+.mil-command-cost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.1rem;
+  color: var(--gold);
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.mil-command-cost img {
+  width: 0.72rem;
+  height: 0.72rem;
+  margin-right: 0.14rem;
 }
 

@@ -90,13 +90,13 @@ export default function CourtOfficeSummary({
         type="button"
         className={rootClassName}
         aria-disabled={readOnly}
-        onMouseDown={() => {
+        onClick={() => {
           if (!readOnly) onOpen?.(position);
         }}
       >
         <span
           className={`court-office-portrait${holder && onOpenCharacter ? ' court-office-portrait--clickable' : ''}`}
-          onMouseDown={event => {
+          onClick={event => {
             if (!holder || !onOpenCharacter) return;
             event.stopPropagation();
             onOpenCharacter(holder.id);

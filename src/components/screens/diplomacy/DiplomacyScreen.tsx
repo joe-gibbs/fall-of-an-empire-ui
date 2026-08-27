@@ -332,13 +332,13 @@ function TreatyTypeCell({ type }: { type: string }) {
 function RowActionButton({
   icon,
   label,
-  onMouseDown,
+  onClick,
   danger = false,
   disabled = false,
 }: {
   icon: string;
   label: string;
-  onMouseDown: () => void;
+  onClick: () => void;
   danger?: boolean;
   disabled?: boolean;
 }) {
@@ -348,10 +348,10 @@ function RowActionButton({
       className={`dps-row-action-btn${danger ? ' dps-row-action-btn--danger' : ''}`}
       disabled={disabled}
       aria-label={label}
-      onMouseDown={(event) => {
+      onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        if (!disabled) onMouseDown();
+        if (!disabled) onClick();
       }}
     >
       <img src={icon} alt="" className="dps-row-action-icon" draggable={false} />
@@ -376,14 +376,14 @@ function RowActions({
         <RowActionButton
           icon="/assets/icons/I_Diplomacy.png"
           label={webUIText('Diplomacy.NegotiateTreaty')}
-          onMouseDown={() => openScreen('treaty', factionId)}
+          onClick={() => openScreen('treaty', factionId)}
         />
       ) : null}
       {showView ? (
         <RowActionButton
           icon="/assets/icons/I_Characters.png"
           label={webUIText('Common.View')}
-          onMouseDown={() => openSidebar('diplomacy', factionId)}
+          onClick={() => openSidebar('diplomacy', factionId)}
         />
       ) : null}
     </div>
@@ -414,9 +414,14 @@ function FactionPips({ factions }: { factions: FactionRef[] }) {
   );
 }
 
-function TableRow({ children, className, onMouseDown }: { children: ReactNode; className?: string; onMouseDown?: () => void }) {
+function TableRow({ children, className, onClick }: { children: ReactNode; className?: string; onClick?: () => void }) {
   return (
-    <div className={cellClass('dps-table-row', className)} role="row" onMouseDown={onMouseDown}>
+    <div
+      className={cellClass('dps-table-row', className)}
+      role={onClick ? 'button' : 'row'}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+    >
       {children}
     </div>
   );
@@ -552,7 +557,7 @@ function ForeignPowers({ rows, playerFaction }: { rows: FactionRow[]; playerFact
         <TableRow
           key={row.id}
           className="dps-table-row--clickable"
-          onMouseDown={() => openSidebar('diplomacy', row.id)}
+          onClick={() => openSidebar('diplomacy', row.id)}
         >
           <FactionTableCell faction={row} detail={row.capital || row.rulerName} />
           <TableCell className="dps-table-col--short"><StatusCell label={row.diplomaticStatusLabel} /></TableCell>
@@ -618,7 +623,7 @@ function Treaties({ rows }: { rows: FactionTreaty[] }) {
                   label={webUIText('Diplomacy.BreakTreaty')}
                   danger
                   disabled={breakingId === row.id}
-                  onMouseDown={() => handleBreak(row.id!)}
+                  onClick={() => handleBreak(row.id!)}
                 />
               ) : null}
               {row.withFactionId ? <RowActions factionId={row.withFactionId} /> : <span className="dps-muted"><WebUIText textKey="Auto.ComponentsScreensDiplomacyScreen.355.3" /></span>}
@@ -650,7 +655,7 @@ function ActiveWars({ rows }: { rows: ActiveWar[] }) {
         <TableRow
           key={row.id}
           className={row.canNegotiate && row.theirLeader.id ? 'dps-table-row--clickable' : undefined}
-          onMouseDown={row.canNegotiate && row.theirLeader.id ? () => openScreen('peace', row.theirLeader.id) : undefined}
+          onClick={row.canNegotiate && row.theirLeader.id ? () => openScreen('peace', row.theirLeader.id) : undefined}
         >
           <TableCell className="dps-table-col--wide">
             <div className="dps-war-name-cell">
@@ -699,7 +704,7 @@ function ActiveWars({ rows }: { rows: ActiveWar[] }) {
                 <RowActionButton
                   icon="/assets/icons/I_Peace.png"
                   label={webUIText('Auto.ComponentsScreensDiplomacyScreen.414.5')}
-                  onMouseDown={() => openScreen('peace', row.theirLeader.id)}
+                  onClick={() => openScreen('peace', row.theirLeader.id)}
                 />
               </div>
             ) : (

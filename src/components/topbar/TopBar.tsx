@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 import ScreenButtons, { type ScreenId } from './ScreenButtons';
 import ScreensMenu from './ScreensMenu';
 import { ScreenButtonTooltipBody } from './ScreenButtonTooltip';
@@ -24,6 +24,8 @@ import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
 import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
 import { findActionBinding } from '../../utils/actionBindings';
 import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
+import { KeyGlyph } from '../common/KeyGlyph';
+import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 
 interface ActionButtonConfig {
   id: 'build' | 'victory' | 'pinned';
@@ -97,6 +99,8 @@ const TopBar: React.FC<TopBarProps> = ({
   const activeInputDevice = useActiveInputDevice(
     settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
   );
+  const openScreensBinding = findActionBinding(settings?.controls, 'OpenScreensMenu', 'gamepad');
+  const openMapModesBinding = findActionBinding(settings?.controls, 'OpenMapModes', 'gamepad');
   const playerFaction = usePlayerFactionSummary();
   const subjectMode = playerFaction?.diplomaticStatus === 'subject';
   const playerCharacterId = playerFaction?.rulerId ?? null;
@@ -120,6 +124,16 @@ const TopBar: React.FC<TopBarProps> = ({
     };
   }, [compact, settings?.gameplay?.uiScale]);
 
+  useEffect(() => {
+    const openCurrentCharacter = () => {
+      if (!playerCharacterId) return;
+      playSound('click');
+      openSidebar('character', playerCharacterId);
+    };
+    bridgeEvents.addEventListener('ui.gamepad_open_current_character', openCurrentCharacter);
+    return () => bridgeEvents.removeEventListener('ui.gamepad_open_current_character', openCurrentCharacter);
+  }, [openSidebar, playerCharacterId]);
+
   const handleSpeedChange = (newSpeed: Speed) => {
     if (newSpeed === 0) {
       togglePause();
@@ -130,17 +144,12 @@ const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
-  const handlePortraitMouseDown = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handlePortraitClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
     if (!playerCharacterId) return;
     playSound('click');
     openSidebar('character', playerCharacterId);
-  };
-
-  const handlePortraitClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
   };
 
   const actionTooltip = (button: ActionButtonConfig): TooltipContent => {
@@ -169,8 +178,8 @@ const TopBar: React.FC<TopBarProps> = ({
     <button
       type="button"
       className="topbar-portrait"
+      data-webkiln-hit="alpha"
       data-tutorial-target="LeaderPortrait"
-      onMouseDown={handlePortraitMouseDown}
       onClick={handlePortraitClick}
       disabled={!playerCharacterId}
       aria-label={webUIText('Auto.Attr.componentstopbarTopBar.75.1', { PlayerCharacterName: playerCharacterName })}
@@ -231,6 +240,40 @@ const TopBar: React.FC<TopBarProps> = ({
               <div className="topbar-compact-speed">
                 <SpeedControls speed={speed} onSpeedChange={handleSpeedChange} />
               </div>
+              {activeInputDevice === 'gamepad' && (
+                <div className="topbar-controller-shortcuts" aria-label={webUIText('Controller.PromptBar')}>
+                  {openScreensBinding && (
+                    <span className="topbar-controller-shortcut">
+                      <ActionKeyGlyph binding={openScreensBinding} />
+                      <span className="topbar-controller-shortcut-label">{openScreensBinding.label}</span>
+                    </span>
+                  )}
+                  {openMapModesBinding && (
+                    <span className="topbar-controller-shortcut">
+                      <ActionKeyGlyph binding={openMapModesBinding} />
+                      <span className="topbar-controller-shortcut-label">{openMapModesBinding.label}</span>
+                    </span>
+                  )}
+                  {openScreensBinding && (
+                    <span className="topbar-controller-shortcut">
+                      <span className="topbar-controller-shortcut-glyphs">
+                        <KeyGlyph glyphId="gamepad_lb" keyDisplay={webUIText('Controller.LeftBumper')} />
+                        <ActionKeyGlyph binding={openScreensBinding} />
+                      </span>
+                      <span className="topbar-controller-shortcut-label">{webUIText('Controller.Prompt.Warnings')}</span>
+                    </span>
+                  )}
+                  {openScreensBinding && (
+                    <span className="topbar-controller-shortcut">
+                      <span className="topbar-controller-shortcut-glyphs">
+                        <KeyGlyph glyphId="gamepad_rb" keyDisplay={webUIText('Controller.RightBumper')} />
+                        <ActionKeyGlyph binding={openScreensBinding} />
+                      </span>
+                      <span className="topbar-controller-shortcut-label">{webUIText('Controller.Prompt.CurrentCharacter')}</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="topbar-compact-right-cluster">
@@ -249,7 +292,7 @@ const TopBar: React.FC<TopBarProps> = ({
                 <DateDisplay />
                 <ResourceDisplay />
               </div>
-              <div className="topbar-compact-portrait-island" data-tutorial-target="LeaderPortraitSlot">
+              <div className="topbar-compact-portrait-island" data-webkiln-hit="alpha" data-tutorial-target="LeaderPortraitSlot">
                 <img
                   src="/assets/ui-shadowed/T_TopNavbar_PortraitCircle.png"
                   className="topbar-compact-portrait-frame"

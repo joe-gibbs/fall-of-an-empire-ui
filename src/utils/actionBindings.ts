@@ -2,6 +2,7 @@
 
 export interface ActionBindingLike {
   actionName: string;
+  label?: string;
   keyDisplay?: string;
   keyName?: string;
   glyphId?: string;

@@ -765,7 +765,7 @@ function renderMarkdownInline(
               <span
                 key={nodes.length}
                 className={`enc-article-link enc-md-inline${exists ? '' : ' enc-article-link--missing'}`}
-                onMouseDown={() => { if (exists) onNavigate(id); }}
+                onClick={() => { if (exists) onNavigate(id); }}
               >
                 {renderMarkdownInline(linkText, entries, onNavigate)}
               </span>,
@@ -1024,7 +1024,7 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
                                 type="button"
                                 className="enc-bldg-place-btn"
                                 aria-label={webUIText('BottomBar.BuildingPlacement.PlaceNamedOnMap', { Name: building.name })}
-                                onMouseDown={(event) => {
+                                onClick={(event) => {
                                   event.preventDefault();
                                   event.stopPropagation();
                                   placeBuildingOnMap(building);

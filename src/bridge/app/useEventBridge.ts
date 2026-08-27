@@ -114,6 +114,7 @@ function mapEvent(data: GetCurrentEventResponse): GameEvent | null {
             parameter: e.parameter || undefined,
             amount: e.amount || undefined,
             description: e.description || undefined,
+            icon: e.icon || undefined,
           }))
         : undefined,
     })),

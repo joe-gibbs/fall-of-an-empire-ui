@@ -93,9 +93,6 @@ export interface BridgeQueryState<T> {
 /**
  * Generic bridge query hook: fetches once on mount / payload change, subscribes
  * to push updates from the game side, and cleans up on unmount.
- *
- * Replaces the per-action boilerplate of fetch + onBridgeEvent + cancellation
- * tracking that each useXxxBridge hook used to repeat.
  */
 export function useBridgeQueryState<A extends BridgeActionName, T>(
   options: UseBridgeQueryOptions<A, T>,

@@ -40,7 +40,12 @@ const ScreenShell: React.FC<ScreenShellProps> = ({
   );
 
   return (
-    <div className={`screen${className ? ` ${className}` : ''}`} data-tutorial-target="Screen ScreenShell">
+    <div
+      className={`screen${className ? ` ${className}` : ''}`}
+      data-tutorial-target="Screen ScreenShell"
+      data-focus-root="screen"
+      data-focus-priority="400"
+    >
       <div className="screen-header" data-tutorial-target="ScreenHeader">
         <div className="screen-title-area" data-tutorial-target="ScreenTitleArea">
           <h1 className="screen-title" data-tutorial-target="ScreenTitle">{title}</h1>
@@ -53,7 +58,7 @@ const ScreenShell: React.FC<ScreenShellProps> = ({
                 type="button"
                 className="screen-help-button"
                 data-tutorial-target="ScreenHelpButton"
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
                   gameActions.showAdvisor(advisorTopic, { force: true });

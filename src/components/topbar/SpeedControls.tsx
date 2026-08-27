@@ -5,7 +5,8 @@ import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
 import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
 import { findActionBinding } from '../../utils/actionBindings';
 import { WebkilnAssetPath } from '../../utils/assets';
-import { ActionKeyGlyph, actionBindingFooter } from '../common/ActionKeyGlyph';
+import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
+import { actionBindingFooter } from '../common/actionBindingFooter';
 import Tooltip from '../common/tooltips/Tooltip';
 
 type Speed = 0 | 1 | 2 | 3 | 4;
@@ -88,7 +89,7 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
         <button
           className="speed-btn speed-btn--pause"
           data-tutorial-target="PausePlayButton"
-          onMouseDown={() => { playSound('click'); handlePauseToggle(); }}
+          onClick={() => { playSound('click'); handlePauseToggle(); }}
         >
           <img
             src={WebkilnAssetPath(isPaused ? '/assets/ui-shadowed/T_Paused_Active.png' : '/assets/ui-shadowed/T_Play_Active.png')
@@ -103,7 +104,7 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
         <button
           className="speed-btn speed-btn--cycle"
           data-tutorial-target="SpeedButton"
-          onMouseDown={() => { playSound('click'); handleSpeedCycle(); }}
+          onClick={() => { playSound('click'); handleSpeedCycle(); }}
         >
           <img
             src={speedIcons[speed]}

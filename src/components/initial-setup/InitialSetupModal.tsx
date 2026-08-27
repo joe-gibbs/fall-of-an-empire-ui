@@ -44,6 +44,7 @@ function recommendModel(
   return MODEL_RECOMMENDATION_ORDER.find(filename => {
     const model = models.find(candidate => candidate.filename === filename);
     return model !== undefined
+      && model.installed
       && model.vramRequirementMB > 0
       && model.ramRequirementMB > 0
       && model.vramRequirementMB <= hardware.videoMemoryMB

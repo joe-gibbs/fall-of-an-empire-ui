@@ -460,7 +460,7 @@ export function SideBlock({
               <button
                 type="button"
                 className="battle-screen-side-commander-name battle-screen-side-link"
-                onMouseDown={(event) => openLinkedSidebar(event, 'military', singleParticipantId)}
+                onClick={(event) => openLinkedSidebar(event, 'military', singleParticipantId)}
               >
                 {singleParticipant?.name}
               </button>
@@ -468,7 +468,7 @@ export function SideBlock({
               <button
                 type="button"
                 className="battle-screen-side-commander-name battle-screen-side-link"
-                onMouseDown={(event) => openLinkedSidebar(event, 'character', participantCommanderId)}
+                onClick={(event) => openLinkedSidebar(event, 'character', participantCommanderId)}
               >
                 {leaderName(participant)}
               </button>
@@ -481,7 +481,7 @@ export function SideBlock({
               <button
                 type="button"
                 className="battle-screen-side-faction battle-screen-side-link"
-                onMouseDown={(event) => openLinkedSidebar(event, 'diplomacy', participantFactionId)}
+                onClick={(event) => openLinkedSidebar(event, 'diplomacy', participantFactionId)}
               >
                 {participant.faction.name || webUIText("BattleScreen.UnknownForce")}
               </button>
@@ -542,7 +542,7 @@ export function SideBlock({
                         <button
                           type="button"
                           className="battle-screen-side-participant-name battle-screen-side-link"
-                          onMouseDown={(event) => openLinkedSidebar(event, 'military', army.id)}
+                          onClick={(event) => openLinkedSidebar(event, 'military', army.id)}
                         >
                           {army.name}
                         </button>
@@ -553,7 +553,7 @@ export function SideBlock({
                         <button
                           type="button"
                           className="battle-screen-side-participant-commander battle-screen-side-link"
-                          onMouseDown={(event) => openLinkedSidebar(event, 'character', commanderId)}
+                          onClick={(event) => openLinkedSidebar(event, 'character', commanderId)}
                         >
                           {leaderName(army)}
                         </button>
@@ -705,7 +705,7 @@ export function FormationCounter({
           className={`battle-formation battle-formation--${formation.side} battle-counter--${typeKey}${selected ? ' battle-formation--selected' : ''}${takingDamage ? ' battle-formation--taking-damage' : ''}${engaged ? ' battle-formation--engaged' : ''}${formation.isRouting ? ' battle-formation--routing' : ''}${formation.isWithdrawing ? ' battle-formation--withdrawing' : ''}`}
           onMouseEnter={() => onHoverChange(formation.id)}
           onMouseLeave={() => onHoverChange(null)}
-          onMouseDown={(event) => {
+          onClick={(event) => {
             if (event.button !== 0) return;
             event.preventDefault();
             event.stopPropagation();
@@ -801,7 +801,7 @@ function BattleFormationUnitCard({ unit, side }: { unit: BattleFormationUnitDeta
     >
       <div
         className={`battle-formation-unit-card${unit.strength <= 0 ? ' battle-formation-unit-card--destroyed' : ''}`}
-        onMouseDown={event => event.stopPropagation()}
+        onClick={event => event.stopPropagation()}
       >
         <div className="battle-formation-unit-portrait-frame">
           {portrait
@@ -882,7 +882,7 @@ export function BattleUnitAgentMarker({
         ...positionStyle,
         backgroundColor: agent.colour,
       }}
-      onMouseDown={event => {
+      onClick={event => {
         if (event.button === 0) event.stopPropagation();
       }}
     />
@@ -905,7 +905,7 @@ export function BattleUnitAgentMarker({
         ref={markerRef}
         className={`${classes} battle-unit-agent--tooltip-child`}
         style={{ backgroundColor: agent.colour }}
-        onMouseDown={event => {
+        onClick={event => {
           if (event.button === 0) event.stopPropagation();
         }}
       />
@@ -1319,7 +1319,7 @@ export function BattleActionButton({
         className={`battle-action-btn${action.isActive ? ' is-active' : ''}${actionUnavailable ? ' is-disabled' : ''}`}
         aria-label={action.name}
         aria-disabled={actionUnavailable ? 'true' : 'false'}
-        onMouseDown={() => {
+        onClick={() => {
           if (actionUnavailable) return;
           void startBattleActionBridge(battleId, formationId, requestedAction);
         }}

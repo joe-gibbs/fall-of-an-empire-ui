@@ -316,7 +316,7 @@ export default function FactionInteractionInputModal({
                         type="button"
                         className={`pig-option fii-option${selected ? ' pig-option--selected' : ''}${!affordable ? ' pig-option--locked' : ''}`}
                         aria-pressed={selected}
-                        onMouseDown={(event) => {
+                        onClick={(event) => {
                           if (event.button !== 0 || !affordable) return;
                           event.preventDefault();
                           selectGold(req.inputId, option.amount);
@@ -353,7 +353,7 @@ export default function FactionInteractionInputModal({
                             type="button"
                             className={`fii-faction-option${selected ? ' fii-faction-option--selected' : ''}`}
                             aria-pressed={selected}
-                            onMouseDown={(event) => {
+                            onClick={(event) => {
                               if (event.button !== 0) return;
                               event.preventDefault();
                               selectFaction(req.inputId, candidate.id);
@@ -390,12 +390,12 @@ export default function FactionInteractionInputModal({
         </div>
 
         <div className="pig-footer">
-          <button type="button" className="btn--outline pig-footer__button" onMouseDown={handleClose}>{t('Common.Cancel')}</button>
+          <button type="button" className="btn--outline pig-footer__button" onClick={handleClose}>{t('Common.Cancel')}</button>
           <button
             type="button"
             className={`btn--burgundy pig-footer__button${!canConfirm || submitting ? ' pig-footer__button--disabled' : ''}`}
             disabled={!canConfirm || submitting}
-            onMouseDown={() => { void handleConfirm(); }}
+            onClick={() => { void handleConfirm(); }}
           >
             {t('Common.Confirm')}
           </button>

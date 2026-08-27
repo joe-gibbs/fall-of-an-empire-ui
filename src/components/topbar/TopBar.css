@@ -135,6 +135,16 @@
   width: 6.33em;
   height: 6.33em;
   z-index: 102;
+  pointer-events: none;
+}
+
+.topbar-portrait-slot .tooltip-wrapper {
+  pointer-events: none;
+}
+
+.topbar-portrait-slot .topbar-portrait,
+.topbar-portrait-slot .ptt-portrait-btn {
+  pointer-events: auto;
 }
 
 .topbar-portrait-slot > .tooltip-wrapper,
@@ -1131,6 +1141,72 @@ html.hud-compact {
   z-index: 1;
 }
 
+.topbar-controller-shortcuts {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, 17px);
+  column-gap: 6px;
+  row-gap: 1px;
+  align-content: center;
+  width: 194px;
+  height: 100%;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.topbar-controller-shortcut {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 4px;
+  color: var(--text-bright);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
+}
+
+.topbar-controller-shortcut-glyphs {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.topbar-controller-shortcut .key-glyph {
+  flex-shrink: 0;
+  gap: 1px;
+}
+
+.topbar-controller-shortcut .key-glyph__pad {
+  min-width: 16px;
+  width: auto;
+  height: 16px;
+  padding: 0 3px;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: url('/assets/baked/icon-button.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  color: var(--gold-light);
+  font-size: 9px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8));
+}
+
+.topbar-controller-shortcut-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Right: short metrics strip + circle island (not the full-width Left bar). */
 .topbar-compact-right-cluster {
   display: flex;
@@ -1361,6 +1437,15 @@ html.hud-compact {
 .topbar--compact .resource-coin-icon {
   width: 1.15rem;
   height: 1.15rem;
+}
+
+.topbar-compact-portrait-island .tooltip-wrapper {
+  pointer-events: none;
+}
+
+.topbar-compact-portrait-island .topbar-portrait,
+.topbar-compact-portrait-island .ptt-portrait-btn {
+  pointer-events: auto;
 }
 
 .topbar-compact-portrait > .tooltip-wrapper,

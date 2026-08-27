@@ -241,6 +241,15 @@ export default function GameUIRoot() {
 
   useEffect(() => {
     const handler = () => {
+      beginUIPerfInteraction('screen:pause-menu');
+      setShowPause(true);
+    };
+    bridgeEvents.addEventListener('ui.gamepad_menu', handler);
+    return () => bridgeEvents.removeEventListener('ui.gamepad_menu', handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
       beginUIPerfInteraction('modal:province-emperor-takeover');
       setProvinceEmperorTakeoverDismissed(false);
       void refreshProvinceEmperorTakeover().catch(acknowledgeBridgeFailure);

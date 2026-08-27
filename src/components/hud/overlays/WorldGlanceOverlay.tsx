@@ -481,11 +481,10 @@ function updatePortSettlementLineElement(
   line.style.transform = `translate3d(${formatPx(portPosition.x)}, ${formatPx(portPosition.y)}, 0) rotate(${angleDeg.toFixed(2)}deg)`;
 }
 
-function handleMouseDown(kind: string, id: string, event: MouseEvent<HTMLDivElement>) {
-  if (event.button !== 0 && event.button !== 2) return;
+function handleGlanceClick(kind: string, id: string, event: MouseEvent<HTMLDivElement>, mouseButton: 'left' | 'right') {
   event.preventDefault();
   event.stopPropagation();
-  handleWorldGlanceInput(kind, id, event.button === 2 ? 'right' : 'left', event.shiftKey);
+  handleWorldGlanceInput(kind, id, mouseButton, event.shiftKey);
 }
 
 function nodeKey(kind: string, id: string): string {
@@ -908,7 +907,6 @@ const GlanceNode = memo(function GlanceNode({
   deferContent = true,
   hydrationEnabled = true,
 }: GlanceNodeProps) {
-  const lastRightMouseDownRef = useRef(0);
   const isHoveredTargetRef = useRef(false);
   const contentKey = `${kind}:${id}`;
   const [hydratedContentKey, setHydratedContentKey] = useState<string | null>(null);
@@ -966,21 +964,12 @@ const GlanceNode = memo(function GlanceNode({
     }
   }, [id, kind, onHoverChange]);
 
-  const onMouseDown = (event: MouseEvent<HTMLDivElement>) => {
-    if (event.button === 2) {
-      lastRightMouseDownRef.current = Date.now();
-    }
-    handleMouseDown(kind, id, event);
+  const onClick = (event: MouseEvent<HTMLDivElement>) => {
+    handleGlanceClick(kind, id, event, 'left');
   };
 
   const onContextMenu = (event: MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const now = Date.now();
-    if (now - lastRightMouseDownRef.current > 250) {
-      handleWorldGlanceInput(kind, id, 'right', event.shiftKey);
-    }
+    handleGlanceClick(kind, id, event, 'right');
   };
 
   return (
@@ -991,7 +980,7 @@ const GlanceNode = memo(function GlanceNode({
       style={INITIAL_NODE_STYLE}
       onMouseOver={onMouseOver}
       onMouseOut={onMouseOut}
-      onMouseDown={onMouseDown}
+      onClick={onClick}
       onContextMenu={onContextMenu}
     >
       <div className="glance-tip world-glance-tip">

@@ -49,7 +49,7 @@ function FamilyGraphCard({
     <button
       type="button"
       className={`char-family-card${entry.isFocus ? ' char-family-card--focus' : ''}${isAlive === false ? ' char-family-card--dead' : ''}${isImprisoned && isAlive !== false ? ' char-family-card--imprisoned' : ''}${canOpen ? '' : ' char-family-card--static'}`}
-      onPointerDown={canOpen ? () => onOpen(entry.id) : undefined}
+      onClick={canOpen ? () => onOpen(entry.id) : undefined}
       aria-label={displayName}
     >
       <PersonTooltip characterId={entry.id} position="left" delay={150}>

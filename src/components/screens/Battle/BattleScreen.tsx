@@ -590,7 +590,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
             <button
               type="button"
               className="battle-window-button battle-expand-toggle"
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 setExpanded(value => !value);
@@ -719,7 +719,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
                               <button
                                 type="button"
                                 className={`battle-mode-btn${selectedCommandable.every(formation => formation.stance === stance.id) ? ' is-active' : ''}`}
-                                onMouseDown={() => setSelectedStance(stance.id)}
+                                onClick={() => setSelectedStance(stance.id)}
                               >
                                 <img className="battle-mode-btn-icon" src={stance.icon} alt="" draggable={false} />
                                 <span>{stance.label}</span>

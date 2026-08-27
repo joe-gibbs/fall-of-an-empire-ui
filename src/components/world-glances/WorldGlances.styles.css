@@ -1747,8 +1747,8 @@
 
 .glance-military-strength {
   position: absolute;
-  left: 0.7273rem;
-  right: 0.7273rem;
+  left: 0.5455rem;
+  right: 0.5455rem;
   bottom: -0.7273rem;
   z-index: 5;
   padding: 0.0909rem 0.1818rem;
@@ -1757,7 +1757,7 @@
   border-top-style: solid;
   border-top-color: var(--relation-border-top);
   font-family: var(--font-header);
-  font-size: 0.7727rem;
+  font-size: 1.0909rem;
   font-weight: 700;
   line-height: 1;
   color: #f4efe2;
@@ -1868,7 +1868,7 @@
   min-width: 2.1818rem;
   flex: 1 1 auto;
   font-family: var(--font-header);
-  font-size: 0.7273rem;
+  font-size: 1.0909rem;
   font-weight: 700;
   line-height: 1;
   color: #f4efe2;
@@ -1961,9 +1961,9 @@
 
 .detail-flag .glance-military-strength,
 .detail-name .glance-military-strength {
-  left: 0.5909rem;
-  right: 0.5909rem;
-  font-size: 0.6364rem;
+  left: 0.4545rem;
+  right: 0.4545rem;
+  font-size: 0.9091rem;
 }
 
 /* Final world-map treatment for civic and battle glances. These keep their
@@ -3025,10 +3025,10 @@
 }
 
 .gset-status-icon--capital {
-  top: -0.3182rem;
-  right: -0.0909rem;
-  width: 1.2273rem;
-  height: 1.2273rem;
+  top: -0.5455rem;
+  right: -0.2727rem;
+  width: 1.8182rem;
+  height: 1.8182rem;
   transform: none;
 }
 

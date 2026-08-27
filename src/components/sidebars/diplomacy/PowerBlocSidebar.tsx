@@ -828,7 +828,7 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
             emptyLabel={<WebUIText textKey="Auto.ComponentsSidebarsPowerBlocSidebar.305.5" />}
           />
           {canShowMoreMembers ? (
-            <button type="button" className="powerbloc-view-members" onMouseDown={() => setShowAllMembers(true)}>
+            <button type="button" className="powerbloc-view-members" onClick={() => setShowAllMembers(true)}>
               {webUIText('PowerBlocs.ViewAllMembers')}
             </button>
           ) : null}

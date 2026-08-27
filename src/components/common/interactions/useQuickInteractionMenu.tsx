@@ -322,6 +322,10 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
         ref={menuRef}
         className="quick-interaction-menu"
         style={style}
+        role="menu"
+        data-focus-root
+        data-focus-group="vertical"
+        data-focus-priority="475"
         onPointerEnter={dismissSharedTooltips}
         onPointerDown={event => event.stopPropagation()}
         onContextMenu={event => event.preventDefault()}
@@ -330,7 +334,8 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
           <button
             type="button"
             className="quick-interaction-menu__button"
-            onPointerDown={(event) => {
+            role="menuitem"
+            onClick={(event) => {
               if (event.button !== 0) return;
               event.preventDefault();
               event.stopPropagation();
@@ -344,7 +349,8 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
           <button
             type="button"
             className="quick-interaction-menu__button"
-            onPointerDown={(event) => {
+            role="menuitem"
+            onClick={(event) => {
               if (event.button !== 0) return;
               event.preventDefault();
               event.stopPropagation();
@@ -359,7 +365,8 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
             key={action.label}
             type="button"
             className="quick-interaction-menu__button"
-            onPointerDown={(event) => {
+            role="menuitem"
+            onClick={(event) => {
               if (event.button !== 0) return;
               event.preventDefault();
               event.stopPropagation();
@@ -384,7 +391,8 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
             <button
               type="button"
               className="quick-interaction-menu__button"
-              onPointerDown={(event) => {
+              role="menuitem"
+              onClick={(event) => {
                 if (event.button !== 0) return;
                 event.preventDefault();
                 event.stopPropagation();

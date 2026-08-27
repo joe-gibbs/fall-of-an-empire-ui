@@ -4,6 +4,7 @@ import { WebkilnAssetPath } from '../../utils/assets';
 import './EventEffects.css';
 
 function iconFor(effect: EventEffect): string | null {
+  if (effect.icon) return effect.icon;
   switch (effect.kind) {
     case 'money':     return '/assets/icons/I_Coins.png';
     case 'food':      return '/assets/icons/I_Food.png';

@@ -379,7 +379,7 @@ function DataTable<T, TKey extends string = string>({
                   resolveRowClassName(rowClassName, row, absoluteIndex),
                 )}
                 style={{ ...virtualStyle, ...resolvedRowStyle }}
-                onMouseDown={onRowClick ? (event) => {
+                onClick={onRowClick ? (event) => {
                   if (event.button !== 0) return;
                   playSound('click');
                   onRowClick(row, absoluteIndex);

@@ -18,7 +18,7 @@ export default function ResourceLink({ resourceId, children, className, stopProp
   };
 
   return (
-    <button type="button" className={`resource-link${className ? ` ${className}` : ''}`} onMouseDown={onMouseDown}>
+    <button type="button" className={`resource-link${className ? ` ${className}` : ''}`} onClick={onMouseDown}>
       {children}
     </button>
   );

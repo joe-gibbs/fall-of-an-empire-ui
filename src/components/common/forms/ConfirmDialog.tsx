@@ -70,22 +70,16 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   return (
     <div
       className={overlayCls}
-      onMouseDown={(e) => {
+      onClick={(e) => {
         if (e.target !== e.currentTarget) return;
         e.preventDefault();
         e.stopPropagation();
         animatedClose('cancel');
       }}
-      onClick={(e) => {
-        if (e.target !== e.currentTarget) return;
-        e.preventDefault();
-        e.stopPropagation();
-      }}
     >
 
       <div
         className={modalCls}
-        onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="confirm-dialog-header">
@@ -104,7 +98,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           {variant === 'danger' ? (
             <button
               className={`btn--danger${pressed === 'confirm' ? ' pressed' : ''}`}
-              onMouseDown={() => { playSound('error'); animatedClose('confirm'); }}
+              onClick={() => { playSound('error'); animatedClose('confirm'); }}
             >
               {confirmText}
             </button>

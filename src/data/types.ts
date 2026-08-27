@@ -581,8 +581,7 @@ export interface BuildingRequirement {
   met: boolean;
 }
 
-/** A building that can appear in the browser tree but isn't built at this
- *  settlement. Mirrors UBuildingWidget when CachedBuildingInstance is null. */
+/** A building that can appear in the browser tree but is not built at this settlement. */
 export interface AvailableBuilding {
   id: string;
   assetKey: string;
@@ -1241,6 +1240,7 @@ export interface Army {
   isForcedMarching?: boolean;
   canForcedMarch: boolean;
   canMerge: boolean;
+  canSplit: boolean;
   isRaiding?: boolean;
   isReplenishing?: boolean;
   replenishCost?: number;
@@ -1317,6 +1317,7 @@ export interface EventEffect {
   parameter?: string;
   amount?: number;
   description?: string;
+  icon?: string;
 }
 
 export interface EventOption {

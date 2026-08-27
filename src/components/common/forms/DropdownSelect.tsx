@@ -1,9 +1,10 @@
 import { createPortal } from 'react-dom';
-import { memo, useState, type CSSProperties, type ReactNode } from 'react';
+import { memo, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { useAnchoredDropdown } from '../../../hooks/useAnchoredDropdown';
 import { playSound } from '../../../hooks/useSound';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import './DropdownSelect.css';
+import { requestGamepadFocusRefresh } from '../../../input/gamepadFocusEvents';
 
 type DropdownPosition = 'inline' | 'below-right' | 'below-left';
 
@@ -119,6 +120,10 @@ const DropdownSelect = memo(function DropdownSelect({
   });
 
   const selected = options.find(option => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (mounted) requestGamepadFocusRefresh();
+  }, [mounted]);
   const selectedIcon = selected?.icon ?? icon;
   const active = isActive ?? Boolean(selected && selected.value !== options[0]?.value);
   const triggerContent = renderValue ? renderValue(selected) : (
@@ -150,6 +155,10 @@ const DropdownSelect = memo(function DropdownSelect({
         closing && menuClosingClassName,
       )}
       style={style as CSSProperties}
+      role="menu"
+      data-focus-root
+      data-focus-group="vertical"
+      data-focus-priority="475"
     >
       {options.map(option => {
         const optionIcon = option.icon ?? icon;
@@ -158,13 +167,15 @@ const DropdownSelect = memo(function DropdownSelect({
           <button
             key={option.value}
             type="button"
+            role="menuitem"
+            aria-current={optionActive || undefined}
             className={classNames(
               'dropdown-select__option',
               optionClassName,
               optionActive && 'dropdown-select__option--active',
               optionActive && optionActiveClassName,
             )}
-            onMouseDown={(event) => {
+            onClick={(event) => {
               event.preventDefault();
               if (stopPropagation) event.stopPropagation();
               playSound('click');
@@ -208,7 +219,7 @@ const DropdownSelect = memo(function DropdownSelect({
           active && 'dropdown-select__trigger--active',
           active && triggerActiveClassName,
         )}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.preventDefault();
           if (stopPropagation) event.stopPropagation();
           playSound('tab');

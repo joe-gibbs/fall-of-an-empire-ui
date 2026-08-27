@@ -15,7 +15,7 @@ import { useWebUIText, type WebUITextFormatter } from '../../localization/WebUIT
 import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
 import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
 import { findActionBinding, TOPBAR_SCREEN_ACTIONS } from '../../utils/actionBindings';
-import { actionBindingFooter } from '../common/ActionKeyGlyph';
+import { actionBindingFooter } from '../common/actionBindingFooter';
 import { ScreenButtonTooltipBody } from './ScreenButtonTooltip';
 import './ScreenButtons.css';
 
@@ -39,19 +39,6 @@ const FACTION_FALLBACK_ICON = '/assets/icons/I_Domain.png';
 const FACTION_LABEL_KEY = 'Topbar.Faction';
 const RELIGION_BUTTON_ID = 'religion';
 const ACHIEVEMENTS_BUTTON_ID = 'achievements';
-const LEGACY_TOPBAR_TARGETS: Record<string, string[]> = {
-  characters: ['CharacterSearchButton'],
-  diplomacy: ['DiplomacyButton'],
-  economy: ['EconomyButton'],
-  encyclopedia: ['EncyclopediaButton'],
-  faction: ['FactionButton'],
-  family: ['FamilyTreeButton'],
-  ledger: ['LedgerButton', 'SettlementFinderButton'],
-  military: ['MilitaryButton'],
-  powerblocs: ['PowerBlocsButton'],
-  religion: ['ReligionButton'],
-};
-
 function localizeButtonLabel(button: Pick<TopbarButtonRegistration, 'label' | 'labelKey'>, t: WebUITextFormatter): string {
   return button.labelKey ? t(button.labelKey) : button.label;
 }
@@ -112,8 +99,8 @@ function resolveScreenButtonIcon(button: TopbarButtonRegistration, playerReligio
   return button.icon;
 }
 
-function topbarButtonTargets(id: string): string {
-  return [`ScreenButton:${id}`, `${id}Button`, ...(LEGACY_TOPBAR_TARGETS[id] ?? [])].join(' ');
+function screenButtonTarget(id: string): string {
+  return `ScreenButton:${id}`;
 }
 
 const ScreenButtons: React.FC<ScreenButtonsProps> = ({
@@ -163,9 +150,9 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
     <button
       type="button"
       className={`icon-button screen-button-faction ${activeScreen === FACTION_BUTTON_ID ? 'icon-button--active screen-button-faction--active' : ''}`}
-      data-tutorial-target={topbarButtonTargets(FACTION_BUTTON_ID)}
+      data-tutorial-target={screenButtonTarget(FACTION_BUTTON_ID)}
       data-tutorial-satisfied={activeScreen === FACTION_BUTTON_ID ? 'true' : undefined}
-      onMouseDown={() => { playSound('click'); onScreenChange?.(FACTION_BUTTON_ID); }}
+      onClick={() => { playSound('click'); onScreenChange?.(FACTION_BUTTON_ID); }}
       aria-label={factionButtonLabel}
     >
       {playerFaction ? (
@@ -215,7 +202,7 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
               icon={resolveScreenButtonIcon(btn, playerReligionId)}
               label={localizeButtonLabel(btn, t)}
               active={activeScreen === btn.id}
-              tutorialTarget={topbarButtonTargets(btn.id)}
+              tutorialTarget={screenButtonTarget(btn.id)}
               onClick={() => onScreenChange?.(btn.id)}
             />
           </Tooltip>

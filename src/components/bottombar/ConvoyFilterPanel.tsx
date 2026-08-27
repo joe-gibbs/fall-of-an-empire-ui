@@ -43,7 +43,7 @@ function FactionRow({ faction, onToggle }: FactionRowProps) {
       <button
         type="button"
         className={rowClass}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.preventDefault();
           onToggle(faction.id, !faction.active);
         }}
@@ -106,7 +106,7 @@ const ConvoyFilterPanel: React.FC = () => {
           <button
             type="button"
             className={`convoy-filter-master ${state.showConvoys ? 'is-on' : ''}`}
-            onMouseDown={(event) => {
+            onClick={(event) => {
               event.preventDefault();
               setShowConvoys(!state.showConvoys);
             }}
@@ -119,7 +119,7 @@ const ConvoyFilterPanel: React.FC = () => {
           <button
             type="button"
             className="convoy-filter-preset"
-            onMouseDown={(event) => {
+            onClick={(event) => {
               event.preventDefault();
               showAllFactions();
             }}
@@ -129,7 +129,7 @@ const ConvoyFilterPanel: React.FC = () => {
           <button
             type="button"
             className="convoy-filter-preset"
-            onMouseDown={(event) => {
+            onClick={(event) => {
               event.preventDefault();
               showNoFactions();
             }}

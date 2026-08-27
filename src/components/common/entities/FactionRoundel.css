@@ -89,6 +89,10 @@
   background-size: contain;
 }
 
+.faction-roundel-symbol--image {
+  object-fit: contain;
+}
+
 /* Gold ring border */
 .faction-roundel-ring {
   position: absolute;

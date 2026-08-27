@@ -1,7 +1,7 @@
 import React from 'react';
 import { playSound } from '../../../hooks/useSound';
 import { emblemAssetPath } from '../../../utils/factionEmblem';
-import { WebkilnAssetPath } from '../../../utils/assets';
+import { emblemMaskStyle, resolveRoundelEmblem } from '../../../hooks/useMaskableAssetUrl';
 import { resolveFactionBorderVariant, type FactionBorderVariant } from '../../../utils/factionBorder';
 import { useFaction } from '../../../data-source/index';
 import { useQuickInteractionMenu } from '../interactions/useQuickInteractionMenu';
@@ -80,13 +80,10 @@ const FactionRoundel: React.FC<FactionRoundelProps> = ({
   const emblemColour = resolveEmblemColour(resolvedColour, resolvedSecondary);
   const emblemLight = lighten(emblemColour, 0.15);
   const emblemDark = darken(emblemColour, 0.25);
-  const symbolPath = WebkilnAssetPath(symbol ?? emblemAssetPath(resolvedEmblem, resolvedCultureGroup));
-  const symbolStyle: React.CSSProperties | undefined = symbolPath ? {
+  const roundelEmblem = resolveRoundelEmblem(symbol ?? emblemAssetPath(resolvedEmblem, resolvedCultureGroup));
+  const symbolStyle: React.CSSProperties | undefined = roundelEmblem && !roundelEmblem.useImage ? {
     backgroundImage: `linear-gradient(160deg, ${emblemLight}, ${emblemColour} 55%, ${emblemDark})`,
-    maskImage: `url("${symbolPath}")`,
-    maskPosition: 'center',
-    maskSize: 'contain',
-    maskRepeat: 'no-repeat',
+    ...emblemMaskStyle(roundelEmblem.src),
   } : undefined;
   const quickMenu = useQuickInteractionMenu<HTMLDivElement>({
     kind: 'faction',
@@ -108,7 +105,8 @@ const FactionRoundel: React.FC<FactionRoundelProps> = ({
     <>
       <div
         className={`faction-roundel faction-roundel--${size} faction-roundel--border-${resolvedBorderVariant} ${onClick ? 'faction-roundel--clickable' : ''} ${className}`}
-        onMouseDown={handleMouseDown}
+        data-webkiln-hit="alpha"
+        onClick={handleMouseDown}
         onContextMenu={quickMenu.onContextMenu}
         role="img"
         aria-label={resolvedName}
@@ -124,8 +122,11 @@ const FactionRoundel: React.FC<FactionRoundelProps> = ({
         {/* Vignette overlay for depth */}
         <div className="faction-roundel-vignette" />
 
-        {/* Heraldic symbol, tinted with secondary colour through a packaged image mask. */}
-        {symbolStyle && <div className="faction-roundel-symbol" style={symbolStyle} />}
+        {roundelEmblem?.useImage ? (
+          <img className="faction-roundel-symbol faction-roundel-symbol--image" src={roundelEmblem.src} alt="" draggable={false} />
+        ) : (
+          symbolStyle && <div className="faction-roundel-symbol" style={symbolStyle} />
+        )}
 
         {/* Gold ring */}
         {showRing && <div className="faction-roundel-ring" />}

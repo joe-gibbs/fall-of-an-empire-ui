@@ -429,7 +429,7 @@ export function BureaucraticRushTooltipAction({
         type="button"
         className="btm-rush-button"
         disabled={rushed || pending}
-        onMouseDown={handleMouseDown}
+        onClick={handleMouseDown}
       >
         {rushed ? webUIText('BureaucracyMock.Rush.Applied') : webUIText('BureaucracyMock.Rush.Button')}
       </button>
@@ -511,7 +511,7 @@ export function BureaucraticThroughputHudValue({ onOpen }: { onOpen?: () => void
       <button
         type="button"
         className={`btm-hud resource-main${model.overload > 0 ? ' btm-hud--overload' : ''}`}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.preventDefault();
           onOpen?.();
         }}

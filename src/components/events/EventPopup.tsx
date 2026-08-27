@@ -286,7 +286,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
                     className="event-chain-nav"
                     disabled={chainIndex === 0}
                     aria-label={webUIText('MainMenu.WorkshopPrevious')}
-                    onMouseDown={(mouseEvent) => {
+                    onClick={(mouseEvent) => {
                       if (mouseEvent.button !== 0 || chainIndex === 0) return;
                       mouseEvent.preventDefault();
                       mouseEvent.stopPropagation();
@@ -306,7 +306,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
                     className="event-chain-nav"
                     disabled={isCurrentEvent}
                     aria-label={webUIText('MainMenu.WorkshopNext')}
-                    onMouseDown={(mouseEvent) => {
+                    onClick={(mouseEvent) => {
                       if (mouseEvent.button !== 0 || isCurrentEvent) return;
                       mouseEvent.preventDefault();
                       mouseEvent.stopPropagation();
@@ -387,7 +387,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
                   <button
                     type="button"
                     className="event-name-input-random"
-                    onMouseDown={handleRandomRegnalName}
+                    onClick={handleRandomRegnalName}
                     disabled={event.regnalNameInput.randomOptions.length === 0}
                     aria-label={event.regnalNameInput.randomButtonText}
                   >
@@ -415,7 +415,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
                   <button
                     type="button"
                     className="event-name-input-random"
-                    onMouseDown={handleRandomPersonName}
+                    onClick={handleRandomPersonName}
                     disabled={event.personNameInput.randomOptions.length === 0}
                     aria-label={event.personNameInput.randomButtonText}
                   >
@@ -459,7 +459,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
                     <button
                       type="button"
                       className={classes.join(' ')}
-                      onMouseDown={(event) => {
+                      onClick={(event) => {
                         if (!option.isLocked && !isEventNameMissing) handleOptionMouseDown(event, i);
                       }}
                       disabled={option.isLocked || isEventNameMissing}

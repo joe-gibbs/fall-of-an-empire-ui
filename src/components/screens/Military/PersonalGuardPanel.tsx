@@ -84,7 +84,7 @@ function CompanyCard({
         <button
           type="button"
           className="personal-guard-company-button"
-          onMouseDown={() => onEdit?.()}
+          onClick={() => onEdit?.()}
         >
           {emptyBody}
         </button>
@@ -148,7 +148,7 @@ function CompanyCard({
         <button
           type="button"
           className="personal-guard-company-button"
-          onMouseDown={() => onEdit?.()}
+          onClick={() => onEdit?.()}
         >
           {body}
         </button>
@@ -383,13 +383,13 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
               type="button"
               className={`personal-guard-captain${guard.commanderId ? '' : ' personal-guard-captain--vacant'}`}
               disabled={!canAppointCommander}
-              onMouseDown={() => {
+              onClick={() => {
                 if (canAppointCommander) setCommanderModalOpen(true);
               }}
             >
               <span
                 className={`personal-guard-captain-portrait${guard.commanderId ? ' personal-guard-captain-portrait--clickable' : ''}`}
-                onMouseDown={event => {
+                onClick={event => {
                   if (!guard.commanderId) return;
                   event.stopPropagation();
                   openRightSidebar('character', guard.commanderId);

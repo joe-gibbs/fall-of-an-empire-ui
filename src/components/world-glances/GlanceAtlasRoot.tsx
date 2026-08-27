@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { memo, useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
 import { useUIScale } from '../../bridge/core/useUIScale';
 import { UI_PRESENTATION } from '../../config/presentation';
@@ -49,7 +49,7 @@ const SETTLEMENT_ATLAS_EDGE_BLEED_REM = 0.0909;
 // The siege progress track and capital socket sit above the settlement plate's layout box.
 // Reserve that transparent space for every settlement so a state change cannot be clipped by
 // the already-packed atlas cell.
-const SETTLEMENT_STATUS_TOP_BLEED_REM = 0.4545;
+const SETTLEMENT_STATUS_TOP_BLEED_REM = 0.7273;
 // Covers the furthest military crown socket (1.5rem) plus a small atlas edge guard.
 const MILITARY_ATLAS_BLEED_REM = 1.5909;
 // Admitted settlement cells keep one stable footprint across flag/name/detail changes so their
@@ -267,12 +267,14 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   const interactiveProps = section === 'notification' ? {} : {
     onPointerEnter: () => handleWorldGlanceHover(section, id, true),
     onPointerLeave: () => handleWorldGlanceHover(section, id, false),
-    onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0 && event.button !== 2) return;
+    onClick: (event: ReactMouseEvent<HTMLDivElement>) => {
       event.preventDefault();
-      handleWorldGlanceInput(section, id, event.button === 2 ? 'right' : 'left', event.shiftKey);
+      handleWorldGlanceInput(section, id, 'left', event.shiftKey);
     },
-    onContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => event.preventDefault(),
+    onContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      handleWorldGlanceInput(section, id, 'right', event.shiftKey);
+    },
   };
 
   if (section === 'notification') {

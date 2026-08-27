@@ -379,6 +379,8 @@ interface MockBridgeState {
   religionConversionTargetKey: string;
   religionConversionStageIndex: number;
   religionConversionStageStartDay: number;
+  showSettlementGlances: boolean;
+  showMilitaryGlances: boolean;
   showConvoyGlances: boolean;
   convoyFactionFilterActive: boolean;
   activeConvoyFactionIds: string[];
@@ -393,6 +395,7 @@ interface MockBridgeState {
   buildingPlacementTotalCost: number;
   formationSelectionActive: boolean;
   formationSelectionTemplateId: string;
+  militaryCustomNames: Record<string, string>;
 }
 
 interface MockFactionReference {
@@ -696,6 +699,14 @@ function worldBattleParticipant(
 ) {
   void detail;
   return { faction };
+}
+
+function worldGlanceVisibility(state: MockBridgeState): BridgeResponse<'game.get_world_glance_visibility'> {
+  return {
+    showSettlements: state.showSettlementGlances,
+    showMilitary: state.showMilitaryGlances,
+    showConvoys: state.showConvoyGlances,
+  };
 }
 
 function convoyFactionFilters(state: MockBridgeState): BridgeResponse<'game.get_convoy_glance_filters'> {
@@ -2621,6 +2632,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     isForcedMarching: false,
     canForcedMarch: !isNavy,
     canMerge: !isEmbarked,
+    canSplit: !isEmbarked && units.length > 1,
     isRaiding: false,
     isReplenishing: false,
     replenishCost: isNavy ? 640 : isDetachment ? 320 : isScouts ? 180 : 820,
@@ -2932,8 +2944,8 @@ function currentEvent(visible: boolean, kind: MockEventKind): BridgeResponse<'ga
             objective: 'Buy time before order collapses',
             isLocked: false,
             effects: [
-              { kind: 'money', parameter: MOCK_IDS.playerFaction, amount: -3000, description: 'Emergency grain purchases empty the treasury.' },
-              { kind: 'unrest', parameter: MOCK_IDS.settlement, amount: -20, description: 'Aurelion calms for now.' },
+              { kind: 'money', parameter: MOCK_IDS.playerFaction, amount: -3000, description: 'Emergency grain purchases empty the treasury.', icon: '' },
+              { kind: 'unrest', parameter: MOCK_IDS.settlement, amount: -20, description: 'Aurelion calms for now.', icon: '' },
             ],
           },
           {
@@ -2942,8 +2954,8 @@ function currentEvent(visible: boolean, kind: MockEventKind): BridgeResponse<'ga
             objective: 'Break private hoarding',
             isLocked: false,
             effects: [
-              { kind: 'unrest', parameter: MOCK_IDS.settlement, amount: -10, description: 'The hungry are fed.' },
-              { kind: 'opinion', parameter: 'court', amount: -25, description: 'The great families turn hostile.' },
+              { kind: 'unrest', parameter: MOCK_IDS.settlement, amount: -10, description: 'The hungry are fed.', icon: '' },
+              { kind: 'opinion', parameter: 'court', amount: -25, description: 'The great families turn hostile.', icon: '' },
             ],
           },
         ]
@@ -2955,7 +2967,7 @@ function currentEvent(visible: boolean, kind: MockEventKind): BridgeResponse<'ga
             objective: 'Submit to imperial judgement',
             isLocked: false,
             effects: [
-              { kind: 'stability', parameter: MOCK_IDS.playerFaction, amount: -100, description: 'The province is handed over.' },
+              { kind: 'stability', parameter: MOCK_IDS.playerFaction, amount: -100, description: 'The province is handed over.', icon: '' },
             ],
           },
           {
@@ -2964,7 +2976,7 @@ function currentEvent(visible: boolean, kind: MockEventKind): BridgeResponse<'ga
             objective: 'Hold the province',
             isLocked: false,
             effects: [
-              { kind: 'war', parameter: MOCK_IDS.playerFaction, amount: 1, description: 'A rebellion begins.' },
+              { kind: 'war', parameter: MOCK_IDS.playerFaction, amount: 1, description: 'A rebellion begins.', icon: '' },
             ],
           },
         ]
@@ -2975,8 +2987,8 @@ function currentEvent(visible: boolean, kind: MockEventKind): BridgeResponse<'ga
             objective: 'Protect the reform programme',
             isLocked: false,
             effects: [
-              { kind: 'opinion', parameter: 'court', amount: -10, description: 'Court bloc happiness falls.' },
-              { kind: 'stability', parameter: MOCK_IDS.settlement, amount: 4, description: 'Aurelion reform progress holds.' },
+              { kind: 'opinion', parameter: 'court', amount: -10, description: 'Court bloc happiness falls.', icon: '' },
+              { kind: 'stability', parameter: MOCK_IDS.settlement, amount: 4, description: 'Aurelion reform progress holds.', icon: '' },
             ],
           },
           {
@@ -2985,8 +2997,8 @@ function currentEvent(visible: boolean, kind: MockEventKind): BridgeResponse<'ga
             objective: 'Preserve court support',
             isLocked: false,
             effects: [
-              { kind: 'unrest', parameter: MOCK_IDS.settlement, amount: 5, description: 'Local unrest rises.' },
-              { kind: 'gold', parameter: MOCK_IDS.playerFaction, amount: -90, description: 'Patronage payments leave the treasury.' },
+              { kind: 'unrest', parameter: MOCK_IDS.settlement, amount: 5, description: 'Local unrest rises.', icon: '' },
+              { kind: 'gold', parameter: MOCK_IDS.playerFaction, amount: -90, description: 'Patronage payments leave the treasury.', icon: '' },
             ],
           },
         ]
@@ -4295,8 +4307,11 @@ function settingsResponse(): BridgeResponse<'game.get_settings'> {
       { index: 4, isAxis: false, scale: 0, actionName: 'SelectAllMilitaries', label: 'Select All Military', category: 'selection', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'A', keyDisplay: 'A', glyphId: '', shift: false, ctrl: true, alt: false, cmd: false },
       { index: 5, isAxis: false, scale: 0, actionName: 'WorldSearch', label: 'World Search', category: 'system', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'F', keyDisplay: 'F', glyphId: '', shift: false, ctrl: true, alt: false, cmd: false },
       { index: 6, isAxis: false, scale: 0, actionName: 'WorldSearch', label: 'World Search', category: 'system', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_LeftThumbstick', keyDisplay: 'Left Stick Click', glyphId: 'gamepad_ls', shift: false, ctrl: false, alt: false, cmd: false },
-      { index: 7, isAxis: false, scale: 0, actionName: 'CycleMapModeNext', label: 'Next Map Mode', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_DPad_Up', keyDisplay: 'D-Pad Up', glyphId: 'gamepad_dpad_up', shift: false, ctrl: false, alt: false, cmd: false },
-      { index: 8, isAxis: false, scale: 0, actionName: 'CycleMapModePrev', label: 'Previous Map Mode', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_DPad_Down', keyDisplay: 'D-Pad Down', glyphId: 'gamepad_dpad_down', shift: false, ctrl: false, alt: false, cmd: false },
+      { index: 7, isAxis: false, scale: 0, actionName: 'OpenScreensMenu', label: 'Open Screens', category: 'screens', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_DPad_Up', keyDisplay: 'D-Pad Up', glyphId: 'gamepad_dpad_up', shift: false, ctrl: false, alt: false, cmd: false },
+      { index: 8, isAxis: false, scale: 0, actionName: 'OpenMapModes', label: 'Open Map Modes', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_DPad_Down', keyDisplay: 'D-Pad Down', glyphId: 'gamepad_dpad_down', shift: false, ctrl: false, alt: false, cmd: false },
+      { index: 12, isAxis: false, scale: 0, actionName: 'OpenEscapeMenu', label: 'Open Menu', category: 'system', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_FaceButton_Right', keyDisplay: 'B Button', glyphId: 'gamepad_b', shift: false, ctrl: false, alt: false, cmd: false },
+      { index: 13, isAxis: false, scale: 0, actionName: 'ReduceSpeed', label: 'Decrease Speed', category: 'gameSpeed', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_DPad_Left', keyDisplay: 'D-Pad Left', glyphId: 'gamepad_dpad_left', shift: false, ctrl: false, alt: false, cmd: false },
+      { index: 14, isAxis: false, scale: 0, actionName: 'IncreaseSpeed', label: 'Increase Speed', category: 'gameSpeed', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_DPad_Right', keyDisplay: 'D-Pad Right', glyphId: 'gamepad_dpad_right', shift: false, ctrl: false, alt: false, cmd: false },
       { index: 9, isAxis: false, scale: 0, actionName: 'MapMode_AdminDomain', label: 'Map: Administrative Domains', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Three', keyDisplay: '3', glyphId: '', shift: false, ctrl: true, alt: false, cmd: false },
       { index: 10, isAxis: false, scale: 0, actionName: 'MapMode_Factions', label: 'Map: Factions', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'F', keyDisplay: 'F', glyphId: '', shift: true, ctrl: true, alt: false, cmd: false },
       { index: 11, isAxis: false, scale: 0, actionName: 'MapMode_Factions', label: 'Map: Factions', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_DPad_Left', keyDisplay: 'D-Pad Left', glyphId: 'gamepad_dpad_left', shift: false, ctrl: false, alt: false, cmd: false },
@@ -4316,7 +4331,7 @@ function settingsResponse(): BridgeResponse<'game.get_settings'> {
     supportedResolutions: ['1280x720', '1920x1080', '2560x1440'],
     dlssSupported: false,
     upscalingTechnology: 'TSR',
-    activeInputDevice: 'keyboard',
+    activeInputDevice: new URLSearchParams(window.location.search).get('input') === 'gamepad' ? 'gamepad' : 'keyboard',
   };
 }
 
@@ -4874,6 +4889,7 @@ function mockDefeatOutcomeSummary(cause: MockDefeatCause) {
 }
 
 export function createMockBridgeRuntime(searchParams: URLSearchParams) {
+  mockInitialSetupCompleted = searchParams.get('setup') === 'complete';
   const hintsEnabled = searchParams.has('hints');
   const initialProvinceMode = searchParams.has('provinceMode')
     || searchParams.get('playerMode') === 'province'
@@ -4917,6 +4933,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     religionConversionTargetKey: '',
     religionConversionStageIndex: 0,
     religionConversionStageStartDay: 249409,
+    showSettlementGlances: true,
+    showMilitaryGlances: true,
     showConvoyGlances: true,
     convoyFactionFilterActive: false,
     activeConvoyFactionIds: [],
@@ -4931,6 +4949,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     buildingPlacementTotalCost: 0,
     formationSelectionActive: false,
     formationSelectionTemplateId: '',
+    militaryCustomNames: {},
   };
 
   function emitGameState(emit: MockBridgeEventEmitter) {
@@ -5317,6 +5336,22 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     } satisfies BridgeResponse<'ui.ally_call_dialog'>;
   }
 
+  function namedMilitaryData(id: string): BridgeResponse<'game.get_military_data'> {
+    const data = militaryData(id);
+    const customName = state.militaryCustomNames[id];
+    if (customName) data.name = customName;
+    return data;
+  }
+
+  function namedMilitaryOverview(): BridgeResponse<'game.get_military_overview'> {
+    const overview = militaryOverview();
+    overview.forces = overview.forces.map((force) => {
+      const customName = state.militaryCustomNames[force.id];
+      return customName ? { ...force, name: customName } : force;
+    });
+    return overview;
+  }
+
   function responseFor(action: string, payload: unknown, emit: MockBridgeEventEmitter): unknown {
     switch (action as BridgeActionName) {
       case 'game.get_app_mode':
@@ -5398,11 +5433,11 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.get_settlement_buildings':
         return clone(settlementBuildings(payloadString(payload, 'settlementId', MOCK_IDS.settlement)));
       case 'game.get_military_data':
-        return clone(militaryData(payloadString(payload, 'militaryId', MOCK_IDS.military)));
+        return clone(namedMilitaryData(payloadString(payload, 'militaryId', MOCK_IDS.military)));
       case 'game.get_military_commander_candidates':
         return clone(militaryCommanderCandidates(payloadString(payload, 'militaryId', MOCK_IDS.military)));
       case 'game.get_military_overview':
-        return clone(militaryOverview());
+        return clone(namedMilitaryOverview());
       case 'game.get_personal_guard':
         return clone(personalGuardStatus(state));
       case 'game.set_personal_guard_composition': {
@@ -5465,8 +5500,14 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         emit('game.get_personal_guard', response);
         return { success: true, message: '' } satisfies BridgeResponse<'game.replace_personal_guard_company'>;
       }
-      case 'game.get_selected_militaries':
-        return clone(selectedMilitaries());
+      case 'game.get_selected_militaries': {
+        const selected = selectedMilitaries();
+        selected.militaries = selected.militaries.map((force) => {
+          const customName = state.militaryCustomNames[force.id];
+          return customName ? { ...force, name: customName } : force;
+        });
+        return clone(selected);
+      }
       case 'game.get_map_modes':
         return clone(mapModes(state.activeMapMode));
       case 'game.get_map_mode_filters':
@@ -5538,12 +5579,23 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         emitResources(emit);
         return mockBuildingPlacement();
       }
+      case 'game.get_world_glance_visibility':
+        return clone(worldGlanceVisibility(state));
+      case 'game.set_world_glance_visibility':
+        state.showSettlementGlances = payloadBoolean(payload, 'showSettlements', true);
+        state.showMilitaryGlances = payloadBoolean(payload, 'showMilitary', true);
+        state.showConvoyGlances = payloadBoolean(payload, 'showConvoys', true);
+        emit('game.get_world_glance_visibility', responseFor('game.get_world_glance_visibility', undefined, emit));
+        emit('game.get_convoy_glance_filters', responseFor('game.get_convoy_glance_filters', undefined, emit));
+        emit('game.get_world_glances', responseFor('game.get_world_glances', undefined, emit));
+        return undefined;
       case 'game.get_convoy_glance_filters':
         return clone(convoyFactionFilters(state));
       case 'game.set_convoy_glance_filters':
         state.showConvoyGlances = payloadBoolean(payload, 'showConvoys', true);
         state.convoyFactionFilterActive = payloadBoolean(payload, 'factionFilterActive', false);
         state.activeConvoyFactionIds = payloadStringArray(payload, 'activeFactionIds');
+        emit('game.get_world_glance_visibility', responseFor('game.get_world_glance_visibility', undefined, emit));
         emit('game.get_convoy_glance_filters', responseFor('game.get_convoy_glance_filters', undefined, emit));
         emit('game.get_world_glances', responseFor('game.get_world_glances', undefined, emit));
         return undefined;
@@ -5952,8 +6004,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           ],
         } satisfies BridgeResponse<'game.get_geographic_summary'>;
       }
-      case 'game.get_world_glances':
-        return {
+      case 'game.get_world_glances': {
+        const response = {
           viewportWidth: window.innerWidth || 1920,
           viewportHeight: window.innerHeight || 1080,
           snapshotRevision: 0,
@@ -6032,6 +6084,17 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             },
           ],
         } satisfies BridgeResponse<'game.get_world_glances'>;
+        if (!state.showSettlementGlances) {
+          response.settlements = [];
+          response.ports = [];
+        }
+        if (!state.showMilitaryGlances) {
+          response.armies = [];
+          response.navies = [];
+          response.battles = [];
+        }
+        return response;
+      }
       case 'game.get_world_glance_tooltip': {
         const kind = payloadString(payload, 'kind');
         const id = payloadString(payload, 'id');
@@ -6254,8 +6317,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return { currentLocale: 'en', languages: [{ code: 'en', name: 'English' }, { code: 'de', name: 'Deutsch' }] } satisfies BridgeResponse<'game.get_languages'>;
       case 'game.list_mods':
         return { mods: [
-          { id: 'mock-mod', name: 'Mock Dev Content', version: '1.0', author: 'Local', description: 'Fixture mod entry for browser UI testing.', loadOrder: 0, enabled: true, pakMounted: false, hasScripts: false, canUploadToWorkshop: true },
-          { id: 'mock-balance-mod', name: 'Mock Balance Pack', version: '0.2', author: 'Local', description: 'Second fixture entry for mod list spacing.', loadOrder: 1, enabled: false, pakMounted: false, hasScripts: true, canUploadToWorkshop: true },
+          { id: 'mock-mod', name: 'Mock Dev Content', version: '1.0', gameVersion: '2.05.4', author: 'Local', description: 'Fixture mod entry for browser UI testing.', loadOrder: 0, enabled: true, pakMounted: false, hasScripts: false, compatible: true, compatibilityError: '', canUploadToWorkshop: true },
+          { id: 'mock-balance-mod', name: 'Mock Balance Pack', version: '0.2', gameVersion: '2.05.4', author: 'Local', description: 'Second fixture entry for mod list spacing.', loadOrder: 1, enabled: false, pakMounted: false, hasScripts: true, compatible: true, compatibilityError: '', canUploadToWorkshop: true },
         ], steamWorkshopAvailable: true, workshopCategories: ['Campaign', 'Map', 'Gameplay', 'Faction', 'Units', 'Buildings', 'UI', 'Total Conversion', 'Translation'] } satisfies BridgeResponse<'game.list_mods'>;
       case 'game.list_saves':
         return { loadError: '', saves: [
@@ -6415,6 +6478,10 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         } satisfies BridgeResponse<'game.get_new_game_map_faction_selection'>;
       case 'game.pick_new_game_map_faction':
         return { baseName: 'RephsianDominion' } satisfies BridgeResponse<'game.pick_new_game_map_faction'>;
+      case 'game.faction_selection_tabletop':
+        return {
+          baseName: payloadString(payload, 'command') === 'pick' ? 'RephsianDominion' : '',
+        } satisfies BridgeResponse<'game.faction_selection_tabletop'>;
       case 'game.continue':
         state.appMode = 'ingame';
         emitAppMode(emit);
@@ -6976,10 +7043,31 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return { duplicated: true, templateId: 'balanced-field-army-copy', message: 'Mock formation duplicated.' } satisfies BridgeResponse<'game.duplicate_military_formation_template'>;
       case 'game.replace_military_commander': {
         const militaryId = payloadString(payload, 'militaryId', MOCK_IDS.military);
-        emit('game.get_military_data', militaryData(militaryId));
-        emit('game.get_military_overview', militaryOverview());
+        emit('game.get_military_data', namedMilitaryData(militaryId));
+        emit('game.get_military_overview', namedMilitaryOverview());
         return undefined;
       }
+      case 'game.rename_military': {
+        const militaryId = payloadString(payload, 'militaryId', MOCK_IDS.military);
+        const name = payloadString(payload, 'name');
+        if (name) state.militaryCustomNames[militaryId] = name;
+        const renamedName = state.militaryCustomNames[militaryId] ?? namedMilitaryData(militaryId).name;
+        emit('game.get_military_data', namedMilitaryData(militaryId));
+        emit('game.get_military_overview', namedMilitaryOverview());
+        emit('game.get_selected_militaries', {
+          militaries: namedMilitaryOverview().forces.slice(0, 3),
+        } satisfies BridgeResponse<'game.get_selected_militaries'>);
+        return {
+          renamed: true,
+          name: renamedName,
+          message: 'Renamed',
+        } satisfies BridgeResponse<'game.rename_military'>;
+      }
+      case 'game.split_military':
+        return {
+          newMilitaryId: 'mock-military-detachment',
+          newMilitaryName: 'Aurelion Detachment',
+        } satisfies BridgeResponse<'game.split_military'>;
       case 'game.set_language':
       case 'game.set_notification_muted':
       case 'game.reset_notification_mutes':

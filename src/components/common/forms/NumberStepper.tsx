@@ -106,7 +106,7 @@ const NumberStepper = memo(function NumberStepper({
           type="button"
           className={classNames('number-stepper__button', buttonClassName, decrementDisabled && 'number-stepper__button--disabled', decrementDisabled && buttonDisabledClassName)}
           disabled={decrementDisabled}
-          onMouseDown={(event) => {
+          onClick={(event) => {
             if (decrementDisabled) return;
             noteModifierKeysFromEvent(event);
             nudge(event, -1);
@@ -127,7 +127,7 @@ const NumberStepper = memo(function NumberStepper({
           type="button"
           className={classNames('number-stepper__button', buttonClassName, incrementDisabled && 'number-stepper__button--disabled', incrementDisabled && buttonDisabledClassName)}
           disabled={incrementDisabled}
-          onMouseDown={(event) => {
+          onClick={(event) => {
             if (incrementDisabled) return;
             noteModifierKeysFromEvent(event);
             nudge(event, 1);

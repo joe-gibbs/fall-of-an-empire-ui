@@ -106,21 +106,15 @@ export default function CourtierPromotionModal({
   return (
     <div
       className={`cpm-overlay${closing ? ' cpm-overlay--closing' : ''}`}
-      onMouseDown={event => {
+      onClick={event => {
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
         close();
       }}
-      onClick={event => {
-        if (event.target !== event.currentTarget) return;
-        event.preventDefault();
-        event.stopPropagation();
-      }}
     >
       <div
         className={`modal cpm-modal${closing ? ' cpm-modal--closing' : ''}`}
-        onMouseDown={stopPropagation}
         onClick={stopPropagation}
       >
         <div className="cpm-header">
@@ -161,7 +155,7 @@ export default function CourtierPromotionModal({
               type="button"
               className={`btn--burgundy cpm-promote-btn${!selected || !canAfford || promoting ? ' cpm-promote-btn--disabled' : ''}`}
               disabled={!selected || !canAfford || promoting}
-              onMouseDown={() => { if (selected && canAfford && !promoting) handlePromote(); }}
+              onClick={() => { if (selected && canAfford && !promoting) handlePromote(); }}
             >
               {selected ? webUIText("CourtierPromotion.PromoteWithTitle", { Title: selected.title }) : webUIText("CourtierPromotion.Promote")}
             </button>
@@ -203,7 +197,7 @@ function CourtierCard({
       <button
         type="button"
         className={`cpm-card${selected ? ' cpm-card--selected' : ''}`}
-        onMouseDown={onSelect}
+        onClick={onSelect}
       >
         <div
           className="cpm-card-bg"

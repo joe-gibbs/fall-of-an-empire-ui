@@ -673,7 +673,7 @@ function AppointmentRoleCard({
     <button
       type="button"
       className={roleClassName}
-      onMouseDown={onSelect}
+      onClick={onSelect}
     >
       <img className="gfov-appointment-role-icon" src={role.icon} alt="" draggable={false} />
       <div className="gfov-appointment-role-body">
@@ -1291,7 +1291,9 @@ function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => vo
               <div
                 key={row.regionId || row.regionName}
                 className="gfov-reggov-row"
-                onMouseDown={() => row.governorId && onOpenCharacter(row.governorId)}
+                role={row.governorId ? 'button' : undefined}
+                tabIndex={row.governorId ? 0 : undefined}
+                onClick={() => row.governorId && onOpenCharacter(row.governorId)}
               >
                 <div className="gfov-reggov-region">
                   <span className="gfov-reggov-region-name">{row.regionName}</span>
@@ -1310,7 +1312,7 @@ function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => vo
                 <GovernorMetric label={t('Auto.Attr.ComponentsScreensInternalPoliticsScreen.837.17')} value={`${formatSignedNumber(row.militaryBonusPercent)}%`} tone={row.militaryBonusPercent >= 0 ? 'good' : 'bad'} />
                 <div
                   className="gfov-reggov-actions"
-                  onMouseDown={(event) => {
+                  onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
                   }}

@@ -80,7 +80,12 @@
   border-left-width: 0.077rem;
   border-left-style: solid;
   border-left-color: rgba(235, 206, 112, 0.5);
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
+}
+
+.styled-scroll-area__thumb:active {
+  cursor: grabbing;
 }
 
 .styled-scroll-area__thumb:hover {

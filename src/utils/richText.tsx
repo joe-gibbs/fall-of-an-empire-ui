@@ -137,7 +137,7 @@ function wrapFrame(frame: Frame, opts: RichTextOptions, key: string): React.Reac
         <span
           key={key}
           className={`${prefix} ${prefix}--${type}${opts.onLinkClick ? ` ${prefix}--clickable` : ''}`}
-          onMouseDown={opts.onLinkClick ? (e) => { e.stopPropagation(); opts.onLinkClick!(type, id); } : undefined}
+          onClick={opts.onLinkClick ? (e) => { e.stopPropagation(); opts.onLinkClick!(type, id); } : undefined}
           onDoubleClick={opts.onLinkDoubleClick ? (e) => { e.stopPropagation(); opts.onLinkDoubleClick!(type, id); } : undefined}
         >
           {frame.children}
@@ -299,7 +299,8 @@ export function renderRichText(input: string | null | undefined, opts: RichTextO
           top.preserveLeadingWhitespace = true;
         }
       } else if (t.tag === 'br') {
-        top.children.push(<br key={nextKey()} />);
+        // Flex rich-text flows ignore <br>. A full-width spacer forces the wrap.
+        top.children.push(<span key={nextKey()} className="rich-break" />);
       } else if (t.tag === 'hr') {
         top.children.push(<span key={nextKey()} className="rich-hr" />);
       }

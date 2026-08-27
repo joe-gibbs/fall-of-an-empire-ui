@@ -168,16 +168,11 @@ function serveOptimisedAssetVariants(): Plugin {
  *     }
  *   }
  *
- * The plugin intercepts /mods/manifest.json (returns a synthesized manifest
- * containing every mod.json that declares a `webui` block) and /mods/<id>/*
- * (serves the file from the mod directory). In production, the shipped web UI
- * subsystem has to replicate this contract on the C++ side, reading from
- * the installed game's Mods/ folder. The JS-side loader in src/mods/index.ts
- * doesn't change.
+ * The plugin serves /mods/<id>/* directly from the mod directory. Discovery
+ * still comes through the content-pack bridge, matching the production path.
  */
 function serveExternalMods(): Plugin {
   const MODS_URL_PREFIX = '/mods/'
-  const MANIFEST_URL = '/mods/manifest.json'
 
   function modsDirCandidates(projectRoot: string): string[] {
     return [
@@ -193,40 +188,6 @@ function serveExternalMods(): Plugin {
       }
     }
     return null
-  }
-
-  interface ModWebUIBlock {
-    entry: string
-    styles?: string[]
-  }
-  interface ModJson {
-    id?: string
-    name?: string
-    webui?: ModWebUIBlock
-  }
-
-  function readManifest(modsDir: string): Array<{ name: string; entry: string; styles?: string[] }> {
-    const out: Array<{ name: string; entry: string; styles?: string[] }> = []
-    for (const entry of fs.readdirSync(modsDir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue
-      const modJsonPath = path.join(modsDir, entry.name, 'mod.json')
-      if (!fs.existsSync(modJsonPath)) continue
-      let mod: ModJson
-      try {
-        mod = JSON.parse(fs.readFileSync(modJsonPath, 'utf-8'))
-      } catch (e) {
-        console.warn(`[mods] ${entry.name}/mod.json is invalid JSON:`, (e as Error).message)
-        continue
-      }
-      if (!mod.webui?.entry) continue
-      const id = mod.id ?? entry.name
-      out.push({
-        name: mod.name ?? id,
-        entry: `${MODS_URL_PREFIX}${entry.name}/${mod.webui.entry}`,
-        styles: mod.webui.styles?.map(s => `${MODS_URL_PREFIX}${entry.name}/${s}`),
-      })
-    }
-    return out
   }
 
   const MIME: Record<string, string> = {
@@ -253,22 +214,8 @@ function serveExternalMods(): Plugin {
 
         const modsDir = resolveModsDir(projectRoot)
         if (!modsDir) {
-          // No Mods/ directory on disk yet - return an empty manifest or 404.
-          if (url === MANIFEST_URL) {
-            res.setHeader('Content-Type', MIME['.json'])
-            res.end('[]')
-            return
-          }
           res.statusCode = 404
           res.end('No Mods directory')
-          return
-        }
-
-        if (url === MANIFEST_URL) {
-          const manifest = readManifest(modsDir)
-          res.setHeader('Content-Type', MIME['.json'])
-          res.setHeader('Cache-Control', 'no-store')
-          res.end(JSON.stringify(manifest, null, 2))
           return
         }
 

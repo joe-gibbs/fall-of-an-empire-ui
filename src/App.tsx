@@ -13,6 +13,9 @@ import GameUIRoot from './components/app-shell/GameUIRoot';
 import ResourceDetailsProvider from './context/ResourceDetailsProvider';
 import InitialSetupModal from './components/initial-setup/InitialSetupModal';
 import { useButtonClickSound } from './hooks/useSound';
+import InputModeProvider from './input/InputModeProvider';
+import GamepadFocusProvider from './input/GamepadFocusManager';
+import GamepadPromptLayer from './input/GamepadPromptLayer';
 import './App.css';
 
 
@@ -20,9 +23,10 @@ function App() {
   useUIScale();
   useButtonClickSound();
   const appMode = useAppMode();
+  const contentAppMode = appMode === 'loading' ? null : appMode;
   useEffect(() => {
-    preloadWebUIAssets(appMode);
-  }, [appMode]);
+    preloadWebUIAssets(contentAppMode);
+  }, [contentAppMode]);
 
   useEffect(() => {
     if (!appMode) return undefined;
@@ -65,14 +69,14 @@ function App() {
   }, [appMode]);
 
   let content: ReactNode = null;
-  if (appMode === 'mainmenu') {
+  if (contentAppMode === 'mainmenu') {
     content = (
       <>
         <MainMenu />
         <TooltipHost />
       </>
     );
-  } else if (appMode === 'ingame') {
+  } else if (contentAppMode === 'ingame') {
     content = (
       <GameProvider>
         <ResourceDetailsProvider>
@@ -86,11 +90,16 @@ function App() {
   return (
     <EscapeStackProvider>
       <WebUITextProvider>
-        <div className="game-cursor-surface" data-webkiln-world-input>
-          {content}
-          <InitialSetupModal autoOpen={appMode === 'mainmenu'} />
-          <LoadingScreenOverlay />
-        </div>
+        <InputModeProvider>
+          <GamepadFocusProvider appMode={contentAppMode}>
+            <div className="game-cursor-surface" data-webkiln-world-input>
+              {content}
+              <InitialSetupModal autoOpen={contentAppMode === 'mainmenu'} />
+              <LoadingScreenOverlay />
+              <GamepadPromptLayer appMode={contentAppMode} />
+            </div>
+          </GamepadFocusProvider>
+        </InputModeProvider>
       </WebUITextProvider>
     </EscapeStackProvider>
   );

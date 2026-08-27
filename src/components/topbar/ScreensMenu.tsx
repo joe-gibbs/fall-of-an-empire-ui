@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
+import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 import { usePlayerFactionSummary } from '../../data-source/index';
 import { getAllTopbarButtons, isVisibleForFactionMode } from '../../registry/index';
 import type { TopbarButtonRegistration } from '../../registry/index';
@@ -15,6 +16,7 @@ import { useWebUIText, type WebUITextFormatter } from '../../localization/WebUIT
 import FactionRoundel from '../common/entities/FactionRoundel';
 import FactionTooltip from '../common/tooltips/FactionTooltip';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
+import { requestGamepadFocusRefresh } from '../../input/gamepadFocusEvents';
 import './ScreensMenu.css';
 
 export type ScreenMenuId = string;
@@ -102,6 +104,16 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    const openMenu = () => setOpen(true);
+    bridgeEvents.addEventListener('ui.gamepad_open_screens_menu', openMenu);
+    return () => bridgeEvents.removeEventListener('ui.gamepad_open_screens_menu', openMenu);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) requestGamepadFocusRefresh();
+  }, [mounted]);
+
   // Tutorial spotlight: mount menu items when a compact-HUD target lives only inside the panel.
   useEffect(() => {
     const handler = (event: Event) => {
@@ -186,7 +198,7 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
       label: t('Topbar.Faction'),
       icon: FACTION_FALLBACK_ICON,
       active: activeScreen === FACTION_BUTTON_ID,
-      tutorialTarget: 'FactionButton',
+      tutorialTarget: 'ScreenButton:faction',
       onSelect: () => {
         playSound('click');
         onScreenChange?.(FACTION_BUTTON_ID);
@@ -216,11 +228,11 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
     <button
       type="button"
       className={`icon-button screen-button-faction screens-menu-trigger${menuOpen ? ' icon-button--active screen-button-faction--active' : ''}${activeScreen === FACTION_BUTTON_ID ? ' screen-button-faction--active' : ''}`}
-      data-tutorial-target="ScreenButtonGroup FactionButton"
+      data-tutorial-target="ScreenButtonGroup ScreenButton:faction"
       aria-label={factionLabel}
       aria-expanded={menuOpen}
       aria-haspopup="menu"
-      onMouseDown={() => {
+      onClick={() => {
         playSound('click');
         setOpen((v) => !v);
       }}
@@ -269,6 +281,9 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
           ref={setPopupRef}
           style={style}
           role="menu"
+          data-focus-root
+          data-focus-group="vertical"
+          data-focus-priority="260"
           aria-label={factionLabel}
         >
           <StyledScrollArea className="screens-menu-scroll" viewportClassName="screens-menu-scroll-viewport" variant="inline">
@@ -277,9 +292,10 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
                 key={entry.id}
                 type="button"
                 role="menuitem"
+                aria-current={entry.active || undefined}
                 className={`screens-menu-item${entry.active ? ' screens-menu-item--active' : ''}`}
                 data-tutorial-target={entry.tutorialTarget}
-                onMouseDown={entry.onSelect}
+                onClick={entry.onSelect}
               >
                 <img src={WebkilnAssetPath(entry.icon) ?? entry.icon} alt="" className="screens-menu-item-icon" />
                 <span className="screens-menu-item-label">{entry.label}</span>

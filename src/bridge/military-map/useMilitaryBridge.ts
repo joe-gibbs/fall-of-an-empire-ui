@@ -332,6 +332,7 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     isForcedMarching: data.isForcedMarching,
     canForcedMarch: data.canForcedMarch,
     canMerge: data.canMerge,
+    canSplit: data.canSplit,
     isRaiding: data.isRaiding,
     isReplenishing: data.isReplenishing,
     replenishCost: data.replenishCost > 0 ? data.replenishCost : undefined,
@@ -551,6 +552,20 @@ export function replenishMilitaryBridge(militaryId: string): Promise<void> {
 
 export function disbandMilitaryBridge(militaryId: string): Promise<void> {
   return bridgeCall('game.disband_military', { militaryId }).then(() => undefined);
+}
+
+export async function renameMilitaryBridge(militaryId: string, name: string): Promise<boolean> {
+  try {
+    const response = await bridgeCall('game.rename_military', { militaryId, name });
+    return response.renamed;
+  } catch (error) {
+    acknowledgeBridgeFailure(error);
+    return false;
+  }
+}
+
+export function splitMilitaryBridge(militaryId: string, unitIds: string[]): Promise<{ newMilitaryId: string; newMilitaryName: string }> {
+  return bridgeCall('game.split_military', { militaryId, unitIds });
 }
 
 export function setMilitaryFormationTemplateBridge(militaryId: string, templateId: string): Promise<void> {

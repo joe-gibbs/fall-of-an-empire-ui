@@ -1,6 +1,8 @@
 # Fall of an Empire WebUI
 
-The WebUI is the React/TypeScript source for the Webkiln interface. In game it talks to Unreal through generated bridge actions. For browser-only UI work, run the mock bridge instead.
+The WebUI is the React/TypeScript source for the Webkiln interface. It lives in the Fall of an Empire game repository. In game it talks to Unreal through generated bridge actions. For browser-only UI work, run the mock bridge instead.
+
+The public GitHub copy at [joe-gibbs/fall-of-an-empire-ui](https://github.com/joe-gibbs/fall-of-an-empire-ui) is a per-release snapshot published with the source zip. Develop and commit WebUI changes in the game repository.
 
 For WebUI modding, see [MODDING.md](MODDING.md). It covers the `mod.json` `webui` block, the `@foae/sdk` surface, generated files, and the Sicily sample mod.
 

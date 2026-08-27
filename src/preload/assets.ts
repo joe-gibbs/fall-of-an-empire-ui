@@ -46,6 +46,7 @@ const COMMON_ASSETS = [
   '/assets/icons/I_Religions.png',
   '/assets/icons/I_Ledger.png',
   '/assets/icons/I_ArmiesQuickButton.png',
+  '/assets/icons/I_Capital.png',
   '/assets/icons/I_Family.png',
   '/assets/icons/I_Encyclopedia.png',
   '/assets/icons/I_PowerBlocs.png',

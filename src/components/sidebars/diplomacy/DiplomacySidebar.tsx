@@ -864,7 +864,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                       className={`diplo-build-focus-button${option.id === focusKey ? ' diplo-build-focus-button--active' : ''}${canSetBuildFocus ? '' : ' diplo-build-focus-button--disabled'}`}
                       aria-label={option.label}
                       disabled={!canSetBuildFocus}
-                      onMouseDown={(event) => {
+                      onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
                         setBuildFocus(option.id);
@@ -932,7 +932,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                             className="diplo-treaty-break"
                             disabled={breakingTreatyId === treaty.id}
                             aria-label={webUIText('Diplomacy.BreakTreaty')}
-                            onMouseDown={(event) => {
+                            onClick={(event) => {
                               event.preventDefault();
                               event.stopPropagation();
                               breakTreaty(treaty);
@@ -1075,7 +1075,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                   <button
                     type="button"
                     className="diplo-successor-action"
-                    onMouseDown={(event) => {
+                    onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
                       setHeirModalOpen(true);
@@ -1174,7 +1174,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
               <div
                 className="diplo-agent-section diplo-agent-section--clickable diplo-agent-section--filled"
                 data-tutorial-target="DiplomatPortrait"
-                onMouseDown={() => openAgentSelect(faction.id, 'diplomat')}
+                onClick={() => openAgentSelect(faction.id, 'diplomat')}
                 role="button"
               >
                 <Portrait
@@ -1192,7 +1192,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                 <button
                   type="button"
                   className="diplo-agent-recall"
-                  onMouseDown={(event) => {
+                  onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
                     recallAgent('diplomat');
@@ -1207,7 +1207,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
               <div
                 className="diplo-agent-section diplo-agent-section--clickable"
                 data-tutorial-target="DiplomatPortrait"
-                onMouseDown={() => openAgentSelect(faction.id, 'diplomat')}
+                onClick={() => openAgentSelect(faction.id, 'diplomat')}
                 role="button"
               >
                 <div className="diplo-agent-portrait-slot">
@@ -1384,7 +1384,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             <PersonTooltip characterId={faction.assignedSpy.id} position="bottom" delay={200}>
               <div
                 className="diplo-agent-section diplo-agent-section--clickable diplo-agent-section--filled"
-                onMouseDown={() => openAgentSelect(faction.id, 'spy')}
+                onClick={() => openAgentSelect(faction.id, 'spy')}
                 role="button"
               >
                 <Portrait
@@ -1402,7 +1402,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                 <button
                   type="button"
                   className="diplo-agent-recall"
-                  onMouseDown={(event) => {
+                  onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
                     recallAgent('spy');
@@ -1416,7 +1416,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
             <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.690.49'), body: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.690.50'), lines: [{ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.690.51'), get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.690.1"); }, valueColor: 'var(--gold)' }] }} position="bottom" delay={200}>
               <div
                 className="diplo-agent-section diplo-agent-section--clickable"
-                onMouseDown={() => openAgentSelect(faction.id, 'spy')}
+                onClick={() => openAgentSelect(faction.id, 'spy')}
                 role="button"
               >
                 <div className="diplo-agent-portrait-slot">

@@ -257,7 +257,7 @@ function FactionHeader({
             <button
               type="button"
               className="fov-current-ruler-name"
-              onMouseDown={() => faction.rulerId && onOpenCharacter(faction.rulerId)}
+              onClick={() => faction.rulerId && onOpenCharacter(faction.rulerId)}
             >
               {faction.rulerName || t('FactionOverview.NoRuler')}
             </button>
@@ -363,7 +363,12 @@ function SuccessionStrip({
   return (
     <div className="fov-succession-heir">
       <Tooltip content={tooltip} delay={200} variant="sidebar">
-        <div className="fov-succession-main" onMouseDown={() => successor && onOpenCharacter(successor.id)}>
+        <div
+          className="fov-succession-main"
+          role={successor ? 'button' : undefined}
+          tabIndex={successor ? 0 : undefined}
+          onClick={() => successor && onOpenCharacter(successor.id)}
+        >
           <Portrait
             personId={successor?.id}
             src={successor?.portrait}
@@ -382,7 +387,7 @@ function SuccessionStrip({
           </div>
         </div>
       </Tooltip>
-      <button type="button" className="fov-succession-assign" onMouseDown={onAssignHeir}>
+      <button type="button" className="fov-succession-assign" onClick={onAssignHeir}>
         {t('Common.Assign')}
       </button>
     </div>
@@ -544,7 +549,7 @@ function RulerEntry({
 
   return (
     <Tooltip content={tooltip} delay={200} variant="sidebar">
-      <div className="fov-ruler-entry" onMouseDown={() => onOpenCharacter(person.id)}>
+      <div className="fov-ruler-entry" onClick={() => onOpenCharacter(person.id)}>
         <div className="fov-ruler-portrait-col">
           <Portrait
             personId={person.id}

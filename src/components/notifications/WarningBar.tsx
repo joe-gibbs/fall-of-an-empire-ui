@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { playSound } from '../../hooks/useSound';
 import Tooltip from '../common/tooltips/Tooltip';
 import type { TooltipContent } from '../common/tooltips/Tooltip';
@@ -7,6 +7,9 @@ import { activateWarning } from '../../bridge/app/useNotificationsBridge';
 import { startGovernorAssignmentBridge } from '../../bridge/military-map/useBottomBarOperationsBridge';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { GOVERNOR_MISSION_ICON } from '../../utils/iconMaps';
+import { bridgeEvents } from '../../bridge/core/bridgeEvents';
+import { requestGamepadFocusRefresh } from '../../input/gamepadFocusEvents';
+import { useEscapeStackEntry } from '../../context/EscapeStack';
 import './WarningBar.css';
 
 interface WarningBarProps {
@@ -77,6 +80,31 @@ function warningTooltip(warning: Warning, currentTargetIndex: number): TooltipCo
 const WarningBar: React.FC<WarningBarProps> = ({ warnings, onDismiss, hidden }) => {
   const [exiting, setExiting] = useState<Set<string>>(new Set());
   const [cycleIndexByWarning, setCycleIndexByWarning] = useState<Record<string, number>>({});
+  const [controllerOpen, setControllerOpen] = useState(false);
+  const stripRef = useRef<HTMLDivElement>(null);
+
+  const closeControllerWarnings = useCallback(() => {
+    const focused = document.activeElement;
+    if (focused instanceof HTMLElement && stripRef.current?.contains(focused)) focused.blur();
+    setControllerOpen(false);
+  }, []);
+
+  useEscapeStackEntry({
+    id: 'hud.warnings',
+    active: controllerOpen,
+    onClose: closeControllerWarnings,
+    allowFromInput: true,
+  });
+
+  useEffect(() => {
+    const openControllerWarnings = () => setControllerOpen(true);
+    bridgeEvents.addEventListener('ui.gamepad_open_warnings', openControllerWarnings);
+    return () => bridgeEvents.removeEventListener('ui.gamepad_open_warnings', openControllerWarnings);
+  }, []);
+
+  useEffect(() => {
+    requestGamepadFocusRefresh();
+  }, [controllerOpen]);
 
   const handleActivate = useCallback((w: Warning, e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -116,8 +144,12 @@ const WarningBar: React.FC<WarningBarProps> = ({ warnings, onDismiss, hidden }) 
 
   return (
     <div
-      className={`warning-icon-strip${hidden ? ' warning-icon-strip--hidden' : ''}`}
+      ref={stripRef}
+      className={`warning-icon-strip${hidden ? ' warning-icon-strip--hidden' : ''}${controllerOpen ? ' warning-icon-strip--controller-open' : ''}`}
       data-tutorial-target="WarningsContainer"
+      data-focus-root={controllerOpen ? 'warnings' : undefined}
+      data-focus-group={controllerOpen ? 'horizontal' : undefined}
+      data-focus-priority={controllerOpen ? '275' : undefined}
     >
       {warnings.map((w, i) => {
         const isExiting = exiting.has(w.id);
@@ -132,16 +164,19 @@ const WarningBar: React.FC<WarningBarProps> = ({ warnings, onDismiss, hidden }) 
             delay={150}
             bubbleClassName="warning-tooltip"
           >
-            <div
+            <button
+              type="button"
               className={`warning-icon-btn warning-icon-btn--${w.severity}${isExiting ? ' warning-icon-btn--exiting' : ''}`}
               style={{ animationDelay: `${i * 0.08}s` }}
+              aria-label={w.title}
+              data-gamepad-default={controllerOpen && i === 0 ? '' : undefined}
               onAnimationEnd={(e) => handleAnimationEnd(w.id, e)}
-              onMouseDown={(e) => handleActivate(w, e)}
+              onClick={(e) => handleActivate(w, e)}
               onContextMenu={(e) => { e.preventDefault(); handleDismiss(w.id, e as unknown as React.MouseEvent); }}
             >
               <img src={frame} alt="" className="warning-icon-frame" />
               <img src={icon} alt="" className="warning-icon-img" />
-            </div>
+            </button>
           </Tooltip>
         );
       })}

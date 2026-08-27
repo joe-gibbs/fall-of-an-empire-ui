@@ -21,14 +21,21 @@ interface SidebarTabBarProps {
 const SidebarTabBar: React.FC<SidebarTabBarProps> = ({ tabs, activeTab, onTabChange, onChange }) => {
   const handleChange = onTabChange || onChange || (() => {});
   return (
-    <div className="sidebar-tab-bar" data-tutorial-target="SidebarTabBar">
+    <div
+      className="sidebar-tab-bar"
+      data-tutorial-target="SidebarTabBar"
+      data-focus-group="horizontal"
+      role="tablist"
+    >
       {tabs.map(tab => (
         <button
           key={tab.id}
           className={`sidebar-tab${tab.id === activeTab ? ' sidebar-tab--active' : ''}`}
           data-tutorial-target={`SidebarTab:${tab.id}`}
           data-tutorial-satisfied={tab.id === activeTab ? 'true' : undefined}
-          onMouseDown={() => { playSound('tab'); handleChange(tab.id); }}
+          role="tab"
+          aria-selected={tab.id === activeTab}
+          onClick={() => { playSound('tab'); handleChange(tab.id); }}
         >
           {tab.icon && <img src={WebkilnAssetPath(tab.icon)} alt="" className="sidebar-tab-icon" draggable={false} />}
           {tab.label}

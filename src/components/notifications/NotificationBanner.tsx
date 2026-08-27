@@ -39,15 +39,6 @@ function hasRichTextMarkup(text: string): boolean {
   return RICH_TAG_RE.test(text);
 }
 
-/**
- * Multi-line notification bodies (peace offers, demand lists, etc.) arrive with
- * plain newlines. HTML collapses those, so convert them to rich-text breaks the
- * same way tooltips do.
- */
-function prepareNotificationBody(text: string): string {
-  return text.replace(/\r?\n/g, '<br/>');
-}
-
 function renderNotificationRichText(
   text: string,
   keyPrefix: string,
@@ -58,6 +49,29 @@ function renderNotificationRichText(
     keepLinksWithPreviousWord: true,
     linkClassPrefix: 'event-link',
     transformText: (chunk, key) => renderEventTextChunk(chunk, `${keyPrefix}-${key}`),
+  });
+}
+
+/**
+ * Multi-line bodies arrive with plain newlines. Flex rich-text ignores <br>,
+ * so each line is a block instead of a converted break.
+ */
+function renderNotificationDescription(
+  text: string,
+  keyPrefix: string,
+  onLinkClick?: (type: string, id: string) => void,
+): React.ReactNode {
+  return text.split(/\r?\n/).map((line, index) => {
+    const content = hasRichTextMarkup(line) ? (
+      <span className="notification-rich-flow">
+        {renderNotificationRichText(line, `${keyPrefix}-${index}`, onLinkClick)}
+      </span>
+    ) : line;
+    return (
+      <span key={`${keyPrefix}-line-${index}`} className="notification-description-line">
+        {content}
+      </span>
+    );
   });
 }
 
@@ -165,7 +179,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
       ref={setPopupRef}
       className="notification-options-popover-positioner"
       style={optionsPositionStyle}
-      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
     >
       <div className={`notification-options-popover${optionsClosing ? ' notification-options-popover--closing' : ''}`}>
@@ -199,7 +213,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   const closeButton = (
     <button
       className="notification-close"
-      onMouseDown={(e) => { e.stopPropagation(); playSound('close'); onClose(); }}
+      onClick={(e) => { e.stopPropagation(); playSound('close'); onClose(); }}
       aria-label={webUIText('Auto.Attr.ComponentsNotificationsNotificationBanner.66.1')}
     >
       <img src="/assets/icons/I_Close.png" alt="" className="notification-close-icon" draggable={false} />
@@ -210,14 +224,14 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
       <button
         type="button"
         className="notification-decision-btn notification-decision-btn--accept"
-        onMouseDown={(e) => { e.stopPropagation(); playSound('click'); onDecision?.(true); }}
+        onClick={(e) => { e.stopPropagation(); playSound('click'); onDecision?.(true); }}
       >
         {diplomaticRequest?.acceptLabel || webUIText('Auto.ComponentsScreensPeaceNegotiationScreen.945.14')}
       </button>
       <button
         type="button"
         className="notification-decision-btn notification-decision-btn--decline"
-        onMouseDown={(e) => { e.stopPropagation(); playSound('close'); onDecision?.(false); }}
+        onClick={(e) => { e.stopPropagation(); playSound('close'); onDecision?.(false); }}
       >
         {diplomaticRequest?.declineLabel || webUIText('Auto.ComponentsScreensPeaceNegotiationScreen.944.13')}
       </button>
@@ -227,7 +241,6 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   const hasCountdown = typeof countdownProgress === 'number' && Number.isFinite(countdownProgress);
   const countdownFill = hasCountdown ? Math.max(0, Math.min(1, countdownProgress ?? 0)) : 0;
   const description = notification.description ?? '';
-  const preparedDescription = prepareNotificationBody(description);
   const title = hasRichTextMarkup(notification.title) ? (
     <span className="notification-title notification-title-flow">
       {renderNotificationRichText(notification.title, `notification-title-${notification.id}`, onLinkClick)}
@@ -235,18 +248,18 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   ) : (
     <span className="notification-title">{notification.title}</span>
   );
-  const descriptionContent = hasRichTextMarkup(preparedDescription) ? (
-    <span className="notification-rich-flow">
-      {renderNotificationRichText(preparedDescription, `notification-description-${notification.id}`, onLinkClick)}
-    </span>
-  ) : description;
+  const descriptionContent = renderNotificationDescription(
+    description,
+    `notification-description-${notification.id}`,
+    onLinkClick,
+  );
 
   if (style === 'cinematic') {
     return (
       <div
         ref={setTriggerRef}
         className={`notification-banner notification-banner--${notification.type} notification-banner--style-cinematic${requiresDecision ? ' notification-banner--decision' : ''}`}
-        onMouseDown={handleMouseDown}
+        onClick={handleMouseDown}
         onContextMenu={handleContextMenu}
       >
         <div className="notification-scroll-roller notification-scroll-roller--left" />
@@ -271,7 +284,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
     <div
       ref={setTriggerRef}
       className={`notification-banner notification-banner--${notification.type} notification-banner--style-${style}${requiresDecision ? ' notification-banner--decision' : ''}`}
-      onMouseDown={handleMouseDown}
+      onClick={handleMouseDown}
       onContextMenu={handleContextMenu}
     >
       {iconOrPortrait}

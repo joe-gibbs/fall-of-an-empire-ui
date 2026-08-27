@@ -4,29 +4,23 @@ import { getCachedBridgeEvent } from '../core/bridgeEventCache';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
 export type AppMode = 'mainmenu' | 'ingame' | 'loading';
-export type AppContentMode = Exclude<AppMode, 'loading'>;
 
 function normalise(value: string | undefined): AppMode {
   if (value === 'loading') return 'loading';
   return value === 'mainmenu' ? 'mainmenu' : 'ingame';
 }
 
-function toContentMode(mode: AppMode): AppContentMode | null {
-  if (mode === 'loading') return null;
-  return mode;
-}
-
 /**
- * Tracks whether the app should render the main-menu or in-game surface.
+ * Tracks the native app mode, including the loading-only surface.
  * Native loading mode renders only the loading overlay; underlying screens
  * are unmounted so they do not keep querying game data while the world changes.
  * Returns null until the first resolution (bridge ping + initial fetch)
  * so the UI can hold off on committing to either layout.
  */
-export function useAppMode(): AppContentMode | null {
-  const [mode, setMode] = useState<AppContentMode | null>(() => {
+export function useAppMode(): AppMode | null {
+  const [mode, setMode] = useState<AppMode | null>(() => {
     const cached = getCachedBridgeEvent('game.get_app_mode');
-    return cached ? toContentMode(normalise(cached.mode)) : null;
+    return cached ? normalise(cached.mode) : null;
   });
 
   useEffect(() => {
@@ -50,7 +44,7 @@ export function useAppMode(): AppContentMode | null {
       pendingFrame = 0;
       pendingTimer = 0;
       if (cancelled || pendingMode === null) return;
-      setMode(toContentMode(pendingMode));
+      setMode(pendingMode);
       pendingMode = null;
     };
 

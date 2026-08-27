@@ -374,7 +374,7 @@ function ShareTooltipPanel({
                 <button
                   type="button"
                   className="settle-share-clergy-action-btn"
-                  onMouseDown={(event) => {
+                  onClick={(event) => {
                     if (event.button !== 0) return;
                     event.preventDefault();
                     event.stopPropagation();
@@ -387,7 +387,7 @@ function ShareTooltipPanel({
                   <button
                     type="button"
                     className="settle-share-clergy-action-btn"
-                    onMouseDown={(event) => {
+                    onClick={(event) => {
                       if (event.button !== 0) return;
                       event.preventDefault();
                       event.stopPropagation();
@@ -680,7 +680,7 @@ function HintSectionHeading({ title, hintKey }: { title: string; hintKey?: strin
     <div className="settle-section-heading-with-action">
       <SectionHeading variant="ornate" title={title} />
       <Tooltip content={{ get title() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.657.1", { Title: title }); } }} position="left" delay={200}>
-        <button type="button" className="settle-section-help-btn" onMouseDown={(event) => { event.preventDefault(); showHintKey(hintKey); }}>
+        <button type="button" className="settle-section-help-btn" onClick={(event) => { event.preventDefault(); showHintKey(hintKey); }}>
           <img src="/assets/ui/I_HelpIcon.png" alt="" />
         </button>
       </Tooltip>
@@ -1091,7 +1091,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                     <button
                       type="button"
                       className="settle-person-action-btn"
-                      onMouseDown={(event) => {
+                      onClick={(event) => {
                         if (event.button !== 0) return;
                         event.preventDefault();
                         setGovernorModalOpen(true);
@@ -1381,7 +1381,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                 <span className="settle-garrison-empty-body">{settlement.garrisonHiddenReason || webUIText('Settlement.ScoutDefenders')}</span>
               </div>
               <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1439.81') }} position="left" delay={200}>
-                <button type="button" className="settle-section-help-btn" onMouseDown={(event) => { event.preventDefault(); showHintKey('GarrisonHint'); }}>
+                <button type="button" className="settle-section-help-btn" onClick={(event) => { event.preventDefault(); showHintKey('GarrisonHint'); }}>
                   <img src="/assets/ui/I_HelpIcon.png" alt="" />
                 </button>
               </Tooltip>
@@ -1528,7 +1528,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                 <span className="settle-garrison-empty-body"><WebUIText textKey="Auto.ComponentsSidebarsSettlementSidebar.1582.13" /></span>
               </div>
               <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1585.87') }} position="left" delay={200}>
-                <button type="button" className="settle-section-help-btn" onMouseDown={(event) => { event.preventDefault(); showHintKey('GarrisonHint'); }}>
+                <button type="button" className="settle-section-help-btn" onClick={(event) => { event.preventDefault(); showHintKey('GarrisonHint'); }}>
                   <img src="/assets/ui/I_HelpIcon.png" alt="" />
                 </button>
               </Tooltip>

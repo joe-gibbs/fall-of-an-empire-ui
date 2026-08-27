@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { playSound } from '../../../hooks/useSound';
+import { zoomToCharacterCapital } from '../../../bridge/app/usePinnedItemsBridge';
 import { usePerson } from '../../../data-source/index';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import type { Character, PortraitLayerData } from '../../../data/types';
@@ -323,7 +324,7 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
   const resolvedLayers = fetched?.portraitLayers ?? layers;
   const resolvedIsAlive = fetched?.isAlive ?? isAlive;
   const resolvedIsImprisoned = fetched?.isImprisoned ?? isImprisoned ?? false;
-  const use3DPortraits = use3DPortraitsEnabled();
+  const use3DPortraits = use3DPortraitsEnabled() && Boolean(personId);
   const requestPriority = size === 'hero' || size === 'xl' ? 3 : size === 'lg' || size === 'md' ? 2 : 1;
   const refreshToken = `${fetched?.age ?? ''}|${activity ?? fetched?.activity ?? ''}|${commanderKind ?? fetched?.commanderKind ?? ''}`;
   const generatedPortrait = useGeneratedPortrait(
@@ -422,16 +423,25 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.button !== 0) {
-      if (event.button === 2 && quickMenu.onContextMenu) {
-        event.stopPropagation();
-      }
-      return;
-    }
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
     if (!onClick) return;
     playSound('click');
     onClick();
+  };
+
+  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (quickMenu.onContextMenu) {
+      event.stopPropagation();
+      quickMenu.onContextMenu(event);
+    }
+  };
+
+  const handleDoubleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!personId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    zoomToCharacterCapital(personId);
   };
 
   return (
@@ -439,15 +449,17 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
       <div
         ref={containerRef}
         className={`portrait portrait--${size}${deadClass} ${isRect ? 'portrait--rect' : ''} ${isHero ? 'portrait--hero' : ''} ${showBorder ? `portrait--bordered${resolvedBorderTier !== 'gold' ? ` portrait--tier-${resolvedBorderTier}` : ''}` : ''} ${onClick ? 'portrait--clickable' : ''} ${className}`}
+        data-webkiln-hit={isRect ? undefined : 'alpha'}
         style={isHero ? undefined : {
           width: dim,
           height: dim,
           minWidth: dim,
           minHeight: dim,
         }}
-        onMouseDown={handleMouseDown}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         onMouseMove={handleMouseMove}
-        onContextMenu={quickMenu.onContextMenu}
+        onContextMenu={handleContextMenu}
       >
         <div className="portrait-clip">
           {showLayeredScene ? (

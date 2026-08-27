@@ -29,7 +29,7 @@ function FilterRow({ entry, radioMode, onToggle, onSelect }: FilterRowProps) {
       type="button"
       className={rowClass}
       aria-label={webUIText(radioMode ? 'MapModeFilter.SelectEntry' : 'MapModeFilter.ToggleEntry', { Name: entry.name })}
-      onMouseDown={(event) => {
+      onClick={(event) => {
         event.preventDefault();
         if (radioMode) {
           onSelect(entry.id);
@@ -109,7 +109,7 @@ const MapModeFilterPanel: React.FC = () => {
             <button
               type="button"
               className="map-filter-preset"
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.preventDefault();
                 showAll();
               }}
@@ -119,7 +119,7 @@ const MapModeFilterPanel: React.FC = () => {
             <button
               type="button"
               className="map-filter-preset"
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.preventDefault();
                 showNone();
               }}

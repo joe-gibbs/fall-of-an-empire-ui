@@ -49,23 +49,17 @@ export function CandidateModalFrame({
   return (
     <div
       className={`${prefix}-overlay${closing ? ` ${prefix}-overlay--closing` : ''}`}
-      onMouseDown={event => {
+      onClick={event => {
         if (event.button !== 0) return;
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
         onClose();
       }}
-      onClick={event => {
-        if (event.target !== event.currentTarget) return;
-        event.preventDefault();
-        event.stopPropagation();
-      }}
     >
       <div className="modal-drag-frame" style={offsetStyle}>
         <div
           className={`modal ${prefix}-modal${modalClassName ? ` ${modalClassName}` : ''}${closing ? ` ${prefix}-modal--closing` : ''}`}
-          onMouseDown={event => event.stopPropagation()}
           onClick={event => event.stopPropagation()}
         >
           <ModalDragHandle className={`${prefix}-drag-handle`} onMouseDown={onHandleMouseDown} />
@@ -232,7 +226,7 @@ export function CandidateListPane<TItem, TSort extends string>({
               key={option.id}
               type="button"
               className={`${prefix}-list-sort-btn${activeSort === option.id ? ` ${prefix}-list-sort-btn--active` : ''}`}
-              onMouseDown={() => onSortChange(option.id)}
+              onClick={() => onSortChange(option.id)}
             >
               {option.label}
             </button>
@@ -351,7 +345,7 @@ export function CandidateRow({
     <div
       className={`${prefix}-row${active ? ` ${prefix}-row--active` : ''}${busy ? ` ${prefix}-row--busy` : ''}`}
       data-tutorial-target={tutorialTarget}
-      onMouseDown={onSelect}
+      onClick={onSelect}
     >
       <div className={`${prefix}-row-portrait`}>
         <Portrait
@@ -400,7 +394,7 @@ export function CandidateRow({
             type="button"
             className="candidate-row-view-btn"
             aria-label={webUIText('Common.View')}
-            onMouseDown={(event) => {
+            onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
               onViewCharacter();

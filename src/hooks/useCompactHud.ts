@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useInputMode } from '../input/InputModeContext';
 
 /** Match Steam Deck and other short/narrow windows (1280x800, 1366x768, etc.). */
 const COMPACT_MAX_WIDTH_PX = 1400;
 const COMPACT_MAX_HEIGHT_PX = 900;
+let compactClassOwnerCount = 0;
 
-function readCompact(): boolean {
+function readCompact(gamepad: boolean): boolean {
   if (typeof window === 'undefined') return false;
-  return window.innerWidth <= COMPACT_MAX_WIDTH_PX || window.innerHeight <= COMPACT_MAX_HEIGHT_PX;
+  return gamepad || window.innerWidth <= COMPACT_MAX_WIDTH_PX || window.innerHeight <= COMPACT_MAX_HEIGHT_PX;
 }
 
 /**
@@ -14,11 +16,14 @@ function readCompact(): boolean {
  * Also toggles `html.hud-compact` for global CSS (warnings, bottom bar, etc.).
  */
 export function useCompactHud(): boolean {
-  const [compact, setCompact] = useState(readCompact);
+  const activeInputDevice = useInputMode();
+  const gamepad = activeInputDevice === 'gamepad';
+  const [compact, setCompact] = useState(() => readCompact(gamepad));
 
   useEffect(() => {
+    compactClassOwnerCount += 1;
     const apply = () => {
-      const next = readCompact();
+      const next = readCompact(gamepad);
       setCompact(next);
       document.documentElement.classList.toggle('hud-compact', next);
     };
@@ -28,9 +33,12 @@ export function useCompactHud(): boolean {
     return () => {
       window.removeEventListener('resize', apply);
       window.removeEventListener('webkiln:runtime-viewport', apply);
-      document.documentElement.classList.remove('hud-compact');
+      compactClassOwnerCount -= 1;
+      if (compactClassOwnerCount === 0) {
+        document.documentElement.classList.remove('hud-compact');
+      }
     };
-  }, []);
+  }, [gamepad]);
 
   return compact;
 }

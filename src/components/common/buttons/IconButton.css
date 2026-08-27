@@ -116,3 +116,26 @@
   z-index: 4;
   pointer-events: none;
 }
+
+.controller-shortcut {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  filter: drop-shadow(0 0.1rem 0.14rem rgba(0, 0, 0, 0.9));
+}
+
+.controller-shortcut--icon {
+  right: -0.58rem;
+  bottom: -0.5rem;
+}
+
+.controller-shortcut .key-glyph__pad {
+  min-width: 1.18rem;
+  height: 1.18rem;
+  padding: 0 0.2rem;
+  font-size: 0.62rem;
+  border-width: 0.08rem;
+}

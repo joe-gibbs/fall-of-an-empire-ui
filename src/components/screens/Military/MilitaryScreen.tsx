@@ -497,7 +497,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
             <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.1012.38'), body: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.1012.39') }}>
               <button
                 className={`chart-highlight-btn chart-highlight-btn--text${highlight === null ? ' is-active' : ''}`}
-                onMouseDown={() => setHighlight(null)}
+                onClick={() => setHighlight(null)}
               >
                 <WebUIText textKey="Auto.ComponentsScreensMilitaryMilitaryScreen.1016.13" />
               </button>
@@ -506,7 +506,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
               <Tooltip key={String(opt.key)} content={{ title: opt.label, body: opt.desc }}>
                 <button
                   className={`chart-highlight-btn${highlight === opt.key ? ' is-active' : ''}`}
-                  onMouseDown={() => setHighlight(opt.key)}
+                  onClick={() => setHighlight(opt.key)}
                   aria-label={opt.label}
                 >
                   <img src={opt.icon} alt="" className="chart-highlight-icon" draggable={false} />
@@ -582,7 +582,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
             <Tooltip content={webUIText("Auto.Attr.componentsscreensMilitaryMilitaryScreen.1090.1")}>
               <button
                 className="chart-zoom-btn"
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.stopPropagation();
                   zoomOut();
                 }}
@@ -595,7 +595,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
             <Tooltip content={webUIText("Auto.Attr.componentsscreensMilitaryMilitaryScreen.1103.1")}>
               <button
                 className="chart-zoom-btn"
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.stopPropagation();
                   zoomIn();
                 }}

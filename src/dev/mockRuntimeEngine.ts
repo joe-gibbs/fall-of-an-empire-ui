@@ -486,7 +486,9 @@ export function installMockruntimeEngine(): void {
   };
 
   const collapseLauncher = hasLaunchQuery(params) && params.get('launcher') !== 'open';
-  window.setTimeout(() => installLauncher(runtime, emitBridgeEvent, collapseLauncher), 0);
+  if (params.get('launcher') !== 'hidden') {
+    window.setTimeout(() => installLauncher(runtime, emitBridgeEvent, collapseLauncher), 0);
+  }
   window.setInterval(() => runtime.advanceDay(emitBridgeEvent), 900);
 
   if (hasLaunchQuery(params)) {

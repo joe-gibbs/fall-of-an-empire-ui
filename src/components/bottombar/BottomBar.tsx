@@ -12,6 +12,7 @@ import { MAP_MODE_TOOLTIPS } from './mapModeTooltipContent';
 import { MAP_MODE_ICONS } from './mapModeIcons';
 import { MapModeTooltip, TTHeader } from './MapModeTooltip';
 import ConvoyFilterPanel from './ConvoyFilterPanel';
+import GlanceToggleBar from './GlanceToggleBar';
 import MapModeFilterPanel from './MapModeFilterPanel';
 import MapModePicker from './MapModePicker';
 import OperationBar from './OperationBar';
@@ -88,6 +89,7 @@ const BottomBar: React.FC = () => {
       <OperationBar />
       <MapModeFilterPanel />
       {active === 'resources' && <ConvoyFilterPanel />}
+      <GlanceToggleBar />
       {compact ? (
         <MapModePicker />
       ) : (

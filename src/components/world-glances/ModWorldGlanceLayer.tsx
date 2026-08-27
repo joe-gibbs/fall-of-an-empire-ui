@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import {
   useWorldGlanceRegistrations,
   type ModWorldGlanceEntry,
@@ -130,7 +130,7 @@ function ModWorldGlanceNode({ registration, entry, atlas, glanceScale, worldAnch
   const anchorPoint = registration.anchorPoint ?? 'center';
   const rasterScale = (registration.rasterScale ?? 1) * worldAnchorRasterScale;
 
-  const sendInput = (mouseButton: 'left' | 'right', event: MouseEvent<HTMLDivElement> | PointerEvent<HTMLDivElement>) => {
+  const sendInput = (mouseButton: 'left' | 'right', event: MouseEvent<HTMLDivElement>) => {
     if (!registration.onInput) return;
     event.preventDefault();
     event.stopPropagation();
@@ -173,10 +173,9 @@ function ModWorldGlanceNode({ registration, entry, atlas, glanceScale, worldAnch
     <div
       className="mod-world-glance mod-world-glance--overlay"
       style={style}
-      onPointerDown={event => sendInput(event.button === 2 ? 'right' : 'left', event)}
+      onClick={event => sendInput('left', event)}
       onContextMenu={event => {
-        event.preventDefault();
-        event.stopPropagation();
+        sendInput('right', event);
       }}
       onPointerEnter={() => registration.onHover?.({
         anchorKey: entry.anchorKey,

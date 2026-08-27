@@ -210,7 +210,7 @@ const ImperialStandingIndicator: React.FC<ImperialStandingIndicatorProps> = ({ p
         })}
         role={isInteractive ? 'button' : 'img'}
         tabIndex={isInteractive ? 0 : undefined}
-        onMouseDown={handleMouseDown}
+        onClick={handleMouseDown}
         onKeyDown={handleKeyDown}
       >
         <div className="imperial-standing-gauge-core" aria-hidden="true">

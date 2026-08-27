@@ -354,7 +354,7 @@ function ProposalChip({
                     key={days}
                     type="button"
                     className={`pns-duration-button${durationDays === days ? ' pns-duration-button--active' : ''}`}
-                    onMouseDown={() => onChange({ durationDays: days })}
+                    onClick={() => onChange({ durationDays: days })}
                   >
                     {DURATION_YEAR_LABELS[index]}
                   </button>
@@ -365,7 +365,7 @@ function ProposalChip({
         ) : null}
       </div>
       <span className={`pns-term-score tns-term-score--${valueTone}`}>{fmtSigned(live?.value)}</span>
-      <button type="button" className="pns-draft-chip-close" onMouseDown={onRemove}>
+      <button type="button" className="pns-draft-chip-close" onClick={onRemove}>
         <img src="/assets/ui/I_CloseIcon.png" alt="" className="pns-draft-chip-close-icon" />
       </button>
     </div>
@@ -384,7 +384,7 @@ function AvailableTreatyRow({ option, onAdd }: { option: TreatyOption; onAdd: ()
         type="button"
         className={`pns-term-row pns-term-row--${side}`}
         data-tutorial-target={option.type === 'military_alliance' ? 'MilitaryAllianceOption' : undefined}
-        onMouseDown={onAdd}
+        onClick={onAdd}
       >
         <img src={proposalIcon(option.type)} alt="" className="pns-term-icon" />
         <span className="pns-term-copy">
@@ -641,7 +641,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
 
   const headerExtra = state?.found ? (
     <div className="tns-header">
-      <button type="button" className="pns-back-link" onMouseDown={() => openScreen('diplomacy', 'foreign')}>
+      <button type="button" className="pns-back-link" onClick={() => openScreen('diplomacy', 'foreign')}>
         <img src="/assets/icons/I_NavPrevious.png" alt="" className="tns-back-icon" />
         <span><WebUIText textKey="TreatyNegotiation.BackToDiplomacy" /></span>
       </button>
@@ -715,7 +715,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
                   {preview?.verdictLabel || webUIText('TreatyNegotiation.Acceptance')}
                 </span>
               </Tooltip>
-              <button type="button" className="pns-reset-inline" onMouseDown={handleReset}>
+              <button type="button" className="pns-reset-inline" onClick={handleReset}>
                 <img src="/assets/icons/DeselectAll.png" alt="" />
                 <span><WebUIText textKey="Common.Clear" /></span>
               </button>
@@ -734,7 +734,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
           </div>
           {preview?.blockedReason ? <div className="pns-empty-state pns-empty-state--quiet">{preview.blockedReason}</div> : null}
           {outcome ? <div className="pns-outcome">{outcome}</div> : null}
-          <button type="button" data-tutorial-target="SubmitTreatyProposalButton" className={`btn--burgundy btn--full pns-propose-button${canSubmit ? '' : ' pns-propose-button--disabled'}`} disabled={!canSubmit} onMouseDown={handleSubmit}>
+          <button type="button" data-tutorial-target="SubmitTreatyProposalButton" className={`btn--burgundy btn--full pns-propose-button${canSubmit ? '' : ' pns-propose-button--disabled'}`} disabled={!canSubmit} onClick={handleSubmit}>
             <WebUIText textKey="TreatyNegotiation.Propose" />
           </button>
         </div>

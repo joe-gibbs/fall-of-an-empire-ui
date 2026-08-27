@@ -1,0 +1,106 @@
+html.input-gamepad,
+html.input-gamepad :is(
+  body, div, span, button, a, input, select, textarea, label, img, svg, path, canvas,
+  p, ul, ol, li, table, thead, tbody, tfoot, tr, th, td,
+  header, main, nav, section, article, aside, footer,
+  form, fieldset, legend, details, summary, video
+) {
+  cursor: none !important;
+}
+
+html.input-gamepad [data-gamepad-focused="true"],
+html.input-gamepad .is-gamepad-focused,
+html.input-gamepad :focus-visible {
+  outline: 0.16rem solid var(--gold-bright, #d9b768);
+  outline-offset: 0.18rem;
+  box-shadow:
+    0 0 0 0.12rem rgba(33, 19, 10, 0.92),
+    0 0 0.8rem rgba(217, 183, 104, 0.66);
+}
+
+html.input-gamepad [data-gamepad-focused="true"] {
+  position: relative;
+  z-index: 2;
+}
+
+.gamepad-prompt-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 0.45rem;
+  z-index: 9600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 2.25rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.34rem 0.8rem;
+  border: 0.18rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6 / 0.18rem / 0 round;
+  background: url('/assets/baked/panel-warm-dark.png') center / 100% 100% no-repeat;
+  filter: var(--filter-shadow-panel);
+  pointer-events: none;
+}
+
+.gamepad-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  white-space: nowrap;
+}
+
+.gamepad-prompt__label {
+  color: var(--text-primary, #eee5d1);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+.gamepad-world-reticle {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 42;
+  width: 2.4rem;
+  height: 2.4rem;
+  transform: translate(-50%, -50%);
+  border: 0.12rem solid rgba(225, 197, 126, 0.92);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 0.08rem rgba(30, 18, 10, 0.9),
+    0 0 0.7rem rgba(225, 197, 126, 0.48);
+  pointer-events: none;
+}
+
+.gamepad-world-reticle__horizontal,
+.gamepad-world-reticle__vertical {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: rgba(239, 216, 158, 0.96);
+  box-shadow: 0 0 0.2rem rgba(24, 14, 8, 0.95);
+  transform: translate(-50%, -50%);
+}
+
+.gamepad-world-reticle__horizontal {
+  width: 3.1rem;
+  height: 0.09rem;
+}
+
+.gamepad-world-reticle__vertical {
+  width: 0.09rem;
+  height: 3.1rem;
+}
+
+@media (max-width: 70rem), (max-height: 50rem) {
+  .gamepad-prompt-bar {
+    gap: 0.62rem;
+    bottom: 0.24rem;
+    min-height: 1.9rem;
+    padding: 0.24rem 0.55rem;
+  }
+
+  .gamepad-prompt__label {
+    font-size: 0.7rem;
+  }
+}

@@ -60,7 +60,6 @@ const SaveEntryRow: React.FC<SaveEntryProps> = ({ save, index, removing, loading
   const character = save.playerCharacterName;
   const faction = save.playerFactionName;
   const metadata = character && faction ? `${character} - ${faction}` : '';
-
   return (
     <div
       ref={registerRef}
@@ -248,19 +247,14 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
 
       <div
         className={overlayCls}
-        onMouseDown={event => {
+        onClick={event => {
           if (event.target !== event.currentTarget) return;
           event.preventDefault();
           event.stopPropagation();
           animatedClose();
         }}
-        onClick={event => {
-          if (event.target !== event.currentTarget) return;
-          event.preventDefault();
-          event.stopPropagation();
-        }}
       >
-        <div className={modalCls} onMouseDown={stopPropagation} onClick={stopPropagation}>
+        <div className={modalCls} onClick={stopPropagation}>
           <div className="load-game__header">
             <span className="load-game__title"><WebUIText textKey="Auto.ComponentsScreensLoadGameModal.384.4" /></span>
             <div className="load-game__header-actions">

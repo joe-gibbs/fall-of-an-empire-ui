@@ -82,3 +82,8 @@ export function zoomToBridge(type: PinnedItemType, id: string): void {
   if (!id) return;
   bridgeCall('game.zoom_to', { itemType: type, itemId: id }).catch(acknowledgeBridgeFailure);
 }
+
+export function zoomToCharacterCapital(personId: string): void {
+  if (!personId) return;
+  bridgeCall('game.zoom_to', { itemType: 'character_capital', itemId: personId }).catch(acknowledgeBridgeFailure);
+}

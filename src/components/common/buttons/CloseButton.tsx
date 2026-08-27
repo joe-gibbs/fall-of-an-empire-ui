@@ -11,7 +11,7 @@ interface CloseButtonProps {
 const CloseButton: React.FC<CloseButtonProps> = ({ size = 'md', onClick, className }) => (
   <button
     className={`close-btn close-btn--${size}${className ? ` ${className}` : ''}`}
-    onMouseDown={() => { playSound('close'); onClick(); }}
+    onClick={() => { playSound('close'); onClick(); }}
     aria-label={webUIText('Auto.Attr.ComponentsCommonCloseButton.14.1')}
   >
     <img src="/assets/icons/I_Close.png" alt="" className="close-btn-icon" draggable={false} />

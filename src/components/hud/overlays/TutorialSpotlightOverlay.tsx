@@ -47,13 +47,6 @@ const TARGET_ALIASES: Record<string, string[]> = {
   SeasonDisplay: ['SeasonDisplay', 'DateDisplay'],
   DateDisplay: ['DateDisplay', 'SeasonDisplay'],
   ScreenButtonGroup: ['ScreenButtonGroup'],
-  MilitaryButton: ['MilitaryButton', 'ScreenButton:military'],
-  DiplomacyButton: ['DiplomacyButton', 'ScreenButton:diplomacy'],
-  FactionButton: ['FactionButton', 'ScreenButton:faction'],
-  CharacterSearchButton: ['CharacterSearchButton', 'ScreenButton:characters'],
-  PowerBlocsButton: ['PowerBlocsButton', 'ScreenButton:powerblocs'],
-  SettlementFinderButton: ['SettlementFinderButton', 'ScreenButton:ledger', 'LedgerButton'],
-  EncyclopediaButton: ['EncyclopediaButton', 'ScreenButton:encyclopedia'],
   BuildQueueButton: ['BuildQueueButton'],
   VictoryConditionsButton: ['VictoryConditionsButton'],
   PinnedItemsToggleButton: ['PinnedItemsToggleButton'],
@@ -516,7 +509,7 @@ export default function TutorialSpotlightOverlay({
             type="button"
             className={`tutorial-spotlight-nav${!spotlight.canGoBack ? ' tutorial-spotlight-nav--disabled' : ''}`}
             disabled={!spotlight.canGoBack}
-            onMouseDown={(event) => handleNavigateMouseDown(event, -1)}
+            onClick={(event) => handleNavigateMouseDown(event, -1)}
           >
             <img src="/assets/icons/I_NavPrevious.png" alt="" className="tutorial-spotlight-nav-icon" draggable={false} />
           </button>
@@ -524,7 +517,7 @@ export default function TutorialSpotlightOverlay({
           <button
             type="button"
             className="tutorial-spotlight-nav"
-            onMouseDown={(event) => handleNavigateMouseDown(event, 1)}
+            onClick={(event) => handleNavigateMouseDown(event, 1)}
           >
             <img src="/assets/icons/I_NavNext.png" alt="" className="tutorial-spotlight-nav-icon" draggable={false} />
           </button>

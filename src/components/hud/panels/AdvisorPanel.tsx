@@ -104,7 +104,7 @@ function AdvisorPanel({
             <button
               type="button"
               className="advisor-card__btn advisor-card__btn--ghost"
-              onMouseDown={() => { playSound('click'); onPrevious?.(); }}
+              onClick={() => { playSound('click'); onPrevious?.(); }}
               disabled={pageIndex === 0}
             >
               <WebUIText textKey="Auto.ComponentsHudAdvisorPanel.85.1" />
@@ -113,7 +113,7 @@ function AdvisorPanel({
               <button
                 type="button"
                 className="advisor-card__btn advisor-card__btn--primary"
-                onMouseDown={() => { playSound(isLastPage ? 'confirm' : 'click'); (isLastPage ? onDismiss : onNext)?.(); }}
+                onClick={() => { playSound(isLastPage ? 'confirm' : 'click'); (isLastPage ? onDismiss : onNext)?.(); }}
               >
                 {isLastPage ? webUIText("AdvisorPanel.Understood") : webUIText("AdvisorPanel.Next")}
               </button>

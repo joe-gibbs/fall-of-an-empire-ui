@@ -165,6 +165,14 @@ export function WebkilnAutoSizedAssetPath(path: string, displaySizePx: number): 
   return `${root.prefix}${family}/__sizes/${bucket}/${sizedRest}${query}`;
 }
 
+export function isSameOriginGameAssetUrl(url: string): boolean {
+  if (url.startsWith('/') || url.startsWith('blob:') || url.startsWith('data:')) {
+    return true;
+  }
+  const lower = url.toLowerCase();
+  return lower.startsWith('gameui://app/') || lower.startsWith('gameui://base/');
+}
+
 export function WebkilnAssetPath(path: string): string;
 export function WebkilnAssetPath(path?: string | null): string | undefined;
 export function WebkilnAssetPath(path?: string | null): string | undefined {

@@ -38,6 +38,12 @@ html.hud-compact .warning-icon-strip {
   pointer-events: none;
 }
 
+.warning-icon-strip--controller-open {
+  padding: 0.28rem;
+  background: url('/assets/baked/panel-warm-dark.png') center / 100% 100% no-repeat;
+  filter: var(--filter-shadow-panel);
+}
+
 /* --- Icon button --- */
 
 .warning-icon-btn {

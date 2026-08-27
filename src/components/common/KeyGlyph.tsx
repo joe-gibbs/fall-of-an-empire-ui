@@ -64,7 +64,7 @@ export function KeyGlyph(props: KeyGlyphProps) {
     if (props.alt) modParts.push('Alt');
 
     return (
-      <span className={className} title={formatTextChord(props)}>
+      <span className={className} aria-label={formatTextChord(props)}>
         {modParts.length > 0 && (
           <span className="key-glyph__mod">{modParts.join(' + ')} + </span>
         )}
@@ -84,7 +84,7 @@ export function KeyGlyph(props: KeyGlyphProps) {
   if (glyph.startsWith('mouse_')) {
     const label = GLYPH_LABELS[glyph] ?? props.keyDisplay ?? '?';
     return (
-      <span className={className} title={formatTextChord(props)}>
+      <span className={className} aria-label={formatTextChord(props)}>
         <span className={`key-glyph__mouse key-glyph__mouse--${glyph.replace('mouse_', '')}`}>
           {label}
         </span>
@@ -93,7 +93,7 @@ export function KeyGlyph(props: KeyGlyphProps) {
   }
 
   return (
-    <span className={`${className} key-glyph__keycap`} title={formatTextChord(props)}>
+    <span className={`${className} key-glyph__keycap`} aria-label={formatTextChord(props)}>
       {formatTextChord(props)}
     </span>
   );

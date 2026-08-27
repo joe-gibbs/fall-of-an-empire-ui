@@ -32,7 +32,7 @@ const GameButton: React.FC<GameButtonProps> = ({
       disabled={disabled}
       aria-label={ariaLabel}
       data-tutorial-target={tutorialTarget}
-      onMouseDown={(event) => {
+      onClick={(event) => {
         if (disabled) return;
         playSound('click');
         onClick?.(event);

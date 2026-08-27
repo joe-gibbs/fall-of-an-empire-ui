@@ -624,7 +624,7 @@ function MapPlaceButton({
         type="button"
         className="bld-map-place-btn"
         aria-label={webUIText('BottomBar.BuildingPlacement.PlaceNamedOnMap', { Name: buildingName })}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.stopPropagation();
           onPlace(buildingId);
         }}
@@ -659,14 +659,10 @@ function RequiresRow({ items }: { items: BuildingRequirement[] }) {
               type="button"
               className={`bld-requires-item${r.met ? ' bld-requires-item--met' : ' bld-requires-item--missing'}`}
               aria-label={webUIText('SettlementBuildings.ViewRequirement', { Name: r.name })}
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 if (event.button !== 0) return;
                 event.stopPropagation();
                 buildingNavigation?.navigateToBuilding(r.assetKey);
-              }}
-              onClick={(event) => {
-                event.stopPropagation();
-                if (event.detail === 0) buildingNavigation?.navigateToBuilding(r.assetKey);
               }}
             >
               {r.icon && <img src={r.icon} alt="" className="bld-requires-icon" />}
@@ -713,7 +709,7 @@ function BuildingManagementActions({
         type="button"
         className={`bld-tooltip-action-btn${confirmingAction === 'downgrade' ? ' bld-tooltip-action-btn--confirm' : ''}`}
         disabled={downgradeDisabled}
-        onMouseDown={event => onAction('downgrade', event)}
+        onClick={event => onAction('downgrade', event)}
       >
         <span className="bld-tooltip-action-name">{downgradeLabel}</span>
         <span className="bld-tooltip-action-detail">
@@ -726,7 +722,7 @@ function BuildingManagementActions({
         type="button"
         className={`bld-tooltip-action-btn bld-tooltip-action-btn--danger${confirmingAction === 'demolish' ? ' bld-tooltip-action-btn--confirm' : ''}`}
         disabled={demolishDisabled}
-        onMouseDown={event => onAction('demolish', event)}
+        onClick={event => onAction('demolish', event)}
       >
         <span className="bld-tooltip-action-name">{demolishLabel}</span>
         <span className="bld-tooltip-action-detail">
@@ -780,14 +776,10 @@ function BuildingRequirementText({
         type="button"
         className="bld-requirement-link"
         aria-label={webUIText('SettlementBuildings.ViewRequirement', { Name: target.name })}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           if (event.button !== 0) return;
           event.stopPropagation();
           onNavigate(target.assetKey);
-        }}
-        onClick={(event) => {
-          event.stopPropagation();
-          if (event.detail === 0) onNavigate(target.assetKey);
         }}
       >
         {reason.slice(target.start, target.end)}
@@ -863,17 +855,14 @@ function BuiltCard({
   const builtStatusLabel = ruined
     ? webUIText('SettlementBuildings.Ruin')
     : webUIText('SettlementBuildings.Built');
-  const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.button === 0) {
-      if (actionable) onQueue?.(b.id, event.currentTarget);
-      return;
-    }
-
-    if (event.button === 2 && cancellable) {
-      event.preventDefault();
-      onUnqueue?.(cancelQueueIndex);
-    }
-  }, [actionable, b.id, cancelQueueIndex, cancellable, onQueue, onUnqueue]);
+  const handleClick = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (actionable) onQueue?.(b.id, event.currentTarget);
+  }, [actionable, b.id, onQueue]);
+  const handleContextMenu = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!cancellable) return;
+    event.preventDefault();
+    onUnqueue?.(cancelQueueIndex);
+  }, [cancelQueueIndex, cancellable, onUnqueue]);
   const handleManagementAction = React.useCallback((action: BuildingManagementAction, event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -938,8 +927,8 @@ function BuiltCard({
         data-tutorial-target="DynamicBuilding"
         data-tutorial-building-id={b.assetKey ?? b.id}
         data-tutorial-building-class-id={b.id}
-        onMouseDown={actionable || cancellable ? handleMouseDown : undefined}
-        onContextMenu={cancellable ? event => event.preventDefault() : undefined}
+        onClick={actionable ? handleClick : undefined}
+        onContextMenu={cancellable ? handleContextMenu : undefined}
         role={actionable || cancellable ? 'button' : undefined}
       >
         <div className="bld-node-icon-wrap">
@@ -1057,17 +1046,14 @@ function AvailCard({
     ? undefined
     : rawLockReason;
   const requirementTargets = lockReason ? rawRequirementTargets : [];
-  const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.button === 0) {
-      if (actionable) onQueue?.(a.id, event.currentTarget);
-      return;
-    }
-
-    if (event.button === 2 && cancellable) {
-      event.preventDefault();
-      onUnqueue?.(cancelQueueIndex);
-    }
-  }, [a.id, actionable, cancelQueueIndex, cancellable, onQueue, onUnqueue]);
+  const handleClick = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (actionable) onQueue?.(a.id, event.currentTarget);
+  }, [a.id, actionable, onQueue]);
+  const handleContextMenu = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!cancellable) return;
+    event.preventDefault();
+    onUnqueue?.(cancelQueueIndex);
+  }, [cancelQueueIndex, cancellable, onUnqueue]);
 
   return (
     <Tooltip
@@ -1092,8 +1078,8 @@ function AvailCard({
         data-tutorial-target="DynamicBuilding"
         data-tutorial-building-id={a.assetKey}
         data-tutorial-building-class-id={a.id}
-        onMouseDown={actionable || cancellable ? handleMouseDown : undefined}
-        onContextMenu={cancellable ? event => event.preventDefault() : undefined}
+        onClick={actionable ? handleClick : undefined}
+        onContextMenu={cancellable ? handleContextMenu : undefined}
         role={actionable || cancellable ? 'button' : undefined}
       >
         <div className="bld-node-icon-wrap">
@@ -1601,7 +1587,7 @@ function CategoryTabs({
               + (isActive ? ' bld-cat-tab--active' : '')
               + (disabled ? ' bld-cat-tab--disabled' : '')
             }
-            onMouseDown={disabled ? undefined : () => onChange(cat)}
+            onClick={disabled ? undefined : () => onChange(cat)}
             disabled={disabled}
           >
             <span className="bld-cat-tab-label">{CATEGORY_LABELS[cat]}</span>

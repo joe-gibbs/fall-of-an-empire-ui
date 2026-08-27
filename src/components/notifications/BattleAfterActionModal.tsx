@@ -137,7 +137,7 @@ function SideReport({
             <button
               type="button"
               className="battle-aar-side-label battle-aar-faction-link"
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 handleFactionClick();
@@ -180,7 +180,7 @@ function SideReport({
                   <button
                     type="button"
                     className="battle-aar-commander-name battle-aar-commander-name--clickable"
-                    onPointerDown={(event) => {
+                    onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
                       handleCommanderClick();
@@ -377,21 +377,16 @@ export default function BattleAfterActionModal({
   return (
     <div
       className={`modal-overlay battle-aar-overlay${closing ? ' modal-overlay--closing battle-aar-overlay--closing' : ''}`}
-      onMouseDown={event => {
+      onClick={event => {
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
         close();
       }}
-      onClick={event => {
-        if (event.target !== event.currentTarget) return;
-        event.preventDefault();
-        event.stopPropagation();
-      }}
     >
       <div
         className={`modal battle-aar-modal${closing ? ' modal--closing battle-aar-modal--closing' : ''}`}
-        onMouseDown={stopPropagation}
+        onClick={stopPropagation}
       >
         <div className={`battle-aar-hero ${outcomeClass}`}>
           <div className="battle-aar-hero-image" style={headerImageStyle} />

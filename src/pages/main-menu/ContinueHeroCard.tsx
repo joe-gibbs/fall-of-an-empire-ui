@@ -56,6 +56,9 @@ export default function ContinueHeroCard({ save, onResume }: ContinueHeroCardPro
           />
         </div>
         <div className="mm-continue-hero-copy">
+          <span className="mm-continue-hero-kicker">
+            {webUIText('Auto.ComponentsScreensMainMenuScreen.198.3')}
+          </span>
           <span className="mm-continue-hero-name">{character}</span>
           {realm && <span className="mm-continue-hero-realm">{realm}</span>}
           {date && <span className="mm-continue-hero-date">{date}</span>}

@@ -125,7 +125,7 @@ function EntityButton({ children, onClick }: { children: ReactNode; onClick: () 
     <button
       type="button"
       className="buildq-link"
-      onMouseDown={(event) => {
+      onClick={(event) => {
         event.preventDefault();
         playSound('click');
         onClick();
@@ -322,7 +322,7 @@ export default function BuildQueueScreen({ onClose }: { onClose: () => void }) {
                 key={option.id}
                 type="button"
                 className={`buildq-sort-btn${sortKey === option.id ? ' buildq-sort-btn--active' : ''}`}
-                onMouseDown={() => changeSort(option.id)}
+                onClick={() => changeSort(option.id)}
               >
                 <span>{option.label}</span>
                 {sortKey === option.id && (

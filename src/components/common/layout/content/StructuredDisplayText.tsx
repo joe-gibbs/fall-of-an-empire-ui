@@ -64,7 +64,7 @@ function Segment({
       <button
         type="button"
         className={`${className} structured-text-link`}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
           onLinkClick(segment.linkType!, segment.linkId!);

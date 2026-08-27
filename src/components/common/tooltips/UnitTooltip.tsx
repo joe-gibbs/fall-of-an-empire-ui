@@ -689,7 +689,7 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
                       <button
                         type="button"
                         className="settle-unit-tooltip-settlement-link"
-                        onMouseDown={(event) => {
+                        onClick={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
                           zoomToBridge('settlement', settlement.id);
@@ -708,7 +708,7 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
                     <button
                       type="button"
                       className="settle-unit-tooltip-settlement-link settle-unit-tooltip-more-link"
-                      onMouseDown={(event) => {
+                      onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
                         setShowAllBuildabilitySettlements(true);
@@ -723,7 +723,7 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
                     <button
                       type="button"
                       className="settle-unit-tooltip-settlement-link settle-unit-tooltip-more-link"
-                      onMouseDown={(event) => {
+                      onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
                         setShowAllBuildabilitySettlements(false);

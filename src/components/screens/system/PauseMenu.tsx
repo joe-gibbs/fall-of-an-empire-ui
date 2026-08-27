@@ -202,15 +202,15 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
         <h2 className="pause-overlay__title"><WebUIText textKey="Auto.ComponentsScreensPauseMenu.298.1" /></h2>
 
         <nav className="pause-overlay__items" onClick={stopPropagation}>
-          <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); handleClose(); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.301.2" /></button>
-          <button className="pause-overlay__item" disabled={gameOver} onMouseDown={() => { playSound('click'); openSaveDialog('save'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.302.3" /></button>
-          <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); setShowLoad(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.303.4" /></button>
-          <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); setShowResetHintsConfirm(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.304.5" /></button>
-          <button className="pause-overlay__item" onMouseDown={() => { playSound('click'); setShowSettings(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.305.6" /></button>
+          <button className="pause-overlay__item" onClick={() => { playSound('click'); handleClose(); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.301.2" /></button>
+          <button className="pause-overlay__item" disabled={gameOver} onClick={() => { playSound('click'); openSaveDialog('save'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.302.3" /></button>
+          <button className="pause-overlay__item" onClick={() => { playSound('click'); setShowLoad(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.303.4" /></button>
+          <button className="pause-overlay__item" onClick={() => { playSound('click'); setShowResetHintsConfirm(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.304.5" /></button>
+          <button className="pause-overlay__item" onClick={() => { playSound('click'); setShowSettings(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.305.6" /></button>
 
           <div className="pause-overlay__separator" />
 
-          <button className="pause-overlay__item" disabled={gameOver} onMouseDown={() => { playSound('click'); openSaveDialog('saveAndQuit'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.309.7" /></button>
+          <button className="pause-overlay__item" disabled={gameOver} onClick={() => { playSound('click'); openSaveDialog('saveAndQuit'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.309.7" /></button>
           <button className="pause-overlay__item" onClick={() => { playSound('click'); void handleExitToDesktop(); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.310.8" /></button>
         </nav>
 

@@ -7,6 +7,7 @@ import LoadGameModal from '../components/screens/system/LoadGameModal';
 import FactionSelection from './FactionSelection';
 import LanguageSelector from '../components/mainmenu/LanguageSelector';
 import Tooltip from '../components/common/tooltips/Tooltip';
+import { dismissSharedTooltips } from '../components/common/tooltips/tooltipEvents';
 import GameButton from '../components/common/buttons/GameButton';
 import DropdownSelect, { type DropdownSelectOption } from '../components/common/forms/DropdownSelect';
 import ConfirmDialog from '../components/common/forms/ConfirmDialog';
@@ -39,9 +40,6 @@ interface NewGameMapEntry {
 }
 
 const LOAD_GAME_CARD_IMAGE = '/assets/events/library-archive.png';
-const MAIN_MENU_ROW_WIDTH_REM = 76;
-const MAIN_MENU_CONTINUE_CARD_WIDTH_REM = 21.5;
-const MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM = 6.75;
 const WORKSHOP_CATEGORY_LABEL_KEYS: Record<string, string> = {
   Campaign: 'MainMenu.WorkshopCategoryCampaign',
   Map: 'MainMenu.WorkshopCategoryMap',
@@ -58,7 +56,6 @@ interface MainMenuIllustratedButtonData {
   id: string;
   variant: 'load-game' | 'scenario';
   label: string;
-  kicker?: string;
   description?: string;
   img?: string;
   locked?: boolean;
@@ -83,6 +80,14 @@ function compareScenarioMaps(left: NewGameMapEntry, right: NewGameMapEntry): num
   return left.id.localeCompare(right.id);
 }
 
+function waitForLoadingScreenPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
 const MainMenu: React.FC = () => {
   const locale = useWebUILocale();
   const use3DPortraits = use3DPortraitsEnabled();
@@ -103,9 +108,9 @@ const MainMenu: React.FC = () => {
   const [workshopSearchDraft, setWorkshopSearchDraft] = useState('');
   const [factionSelectionCache, setFactionSelectionCache] = useState<Record<string, GetNewGameMapFactionSelectionResponse>>({});
   const closeTimerRef = useRef<number | null>(null);
-  const lastIllustratedPointerActivationAtRef = useRef(0);
   const factionSelectionCacheRef = useRef(new Map<string, GetNewGameMapFactionSelectionResponse>());
   const factionSelectionRequestRef = useRef(new Map<string, Promise<GetNewGameMapFactionSelectionResponse>>());
+  const factionSelectionClosePendingRef = useRef(false);
 
   const {
     mods,
@@ -295,18 +300,34 @@ const MainMenu: React.FC = () => {
     }
   };
 
-  const handleSelectScenarioMap = (map: NewGameMapEntry) => {
+  const handleSelectScenarioMap = async (map: NewGameMapEntry) => {
+    dismissSharedTooltips();
     if (map.isLocked) {
       setShowFullGamePrompt(true);
       return;
     }
 
     if (map.requiresFactionSelection) {
-      setSelectedNewGameMap(map);
-      void preloadFactionSelection(map.id).catch((error) => {
-        console.error('[MainMenu] preloading faction selection failed', error);
-      });
-      openSubView('newgame');
+      try {
+        await bridgeCall('game.faction_selection_tabletop', {
+          command: 'prepare',
+          mapId: map.id,
+          baseName: '',
+          screenX: 0,
+          screenY: 0,
+          deltaX: 0,
+          deltaY: 0,
+          zoomDelta: 0,
+        });
+        await waitForLoadingScreenPaint();
+        setSelectedNewGameMap(map);
+        void preloadFactionSelection(map.id).catch((error) => {
+          console.error('[MainMenu] preloading faction selection failed', error);
+        });
+        openSubView('newgame');
+      } catch (error) {
+        console.error('[MainMenu] preparing faction selection failed', error);
+      }
       return;
     }
 
@@ -390,6 +411,7 @@ const MainMenu: React.FC = () => {
       setView('menu');
       setClosing(false);
       setSelectedNewGameMap(null);
+      factionSelectionClosePendingRef.current = false;
       closeTimerRef.current = null;
     }, UI_MOTION.subviewCloseMs);
     return () => {
@@ -402,6 +424,31 @@ const MainMenu: React.FC = () => {
 
   const goBack = () => {
     if (closing || view === 'menu') return;
+
+    if (view === 'newgame') {
+      if (factionSelectionClosePendingRef.current) return;
+      factionSelectionClosePendingRef.current = true;
+      void (async () => {
+        try {
+          await bridgeCall('game.faction_selection_tabletop', {
+            command: 'prepare',
+            mapId: selectedNewGameMap?.id ?? '',
+            baseName: '',
+            screenX: 0,
+            screenY: 0,
+            deltaX: 0,
+            deltaY: 0,
+            zoomDelta: 0,
+          });
+          await waitForLoadingScreenPaint();
+        } catch (error) {
+          console.error('[MainMenu] preparing faction selection close failed', error);
+        }
+        setClosing(true);
+      })();
+      return;
+    }
+
     setClosing(true);
   };
 
@@ -413,6 +460,7 @@ const MainMenu: React.FC = () => {
   });
 
   const openSubView = (nextView: Exclude<MenuView, 'menu'>) => {
+    dismissSharedTooltips();
     setClosing(false);
     setSkipMenuIntro(true);
     setView(nextView);
@@ -425,7 +473,7 @@ const MainMenu: React.FC = () => {
     <div className="mm-sub-header">
       <button
         className="mm-back-btn"
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.preventDefault();
           goBack();
         }}
@@ -569,7 +617,7 @@ const MainMenu: React.FC = () => {
             <button
               key={tab}
               className={`mm-mod-tab ${activeModsPanelView === tab ? 'mm-mod-tab--active' : ''}`}
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.preventDefault();
                 setModsPanelView(tab);
                 if (tab === 'subscribed') void refreshSubscribedWorkshop();
@@ -596,7 +644,7 @@ const MainMenu: React.FC = () => {
             <span className="mm-mod-restart-copy"><WebUIText textKey="MainMenu.ModRestartRequired" /></span>
             <button
               className="mm-mod-restart-btn"
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.preventDefault();
                 void handleRestart();
               }}
@@ -625,10 +673,10 @@ const MainMenu: React.FC = () => {
           return (
             <div
               key={mod.id}
-              className={`mm-mod-entry ${mod.enabled ? 'mm-mod-entry--enabled' : ''}`}
-              onMouseDown={(event) => {
+              className={`mm-mod-entry ${mod.enabled ? 'mm-mod-entry--enabled' : ''}${mod.compatible ? '' : ' mm-mod-entry--incompatible'}`}
+              onClick={(event) => {
                 event.preventDefault();
-                void handleToggleMod(mod);
+                if (mod.compatible) void handleToggleMod(mod);
               }}
             >
               <div className="mm-mod-info">
@@ -638,6 +686,9 @@ const MainMenu: React.FC = () => {
                 </span>
                 {mod.author && <span className="mm-mod-author">{webUIText('MainMenu.ModAuthor', { Author: mod.author })}</span>}
                 {mod.description && <span className="mm-mod-desc">{mod.description}</span>}
+                {!mod.compatible && mod.compatibilityError && (
+                  <span className="mm-mod-compatibility">{mod.compatibilityError}</span>
+                )}
                 {uploadStatusText && (
                   <span className={`mm-mod-upload-status mm-mod-upload-status--${uploadStatus?.state ?? 'idle'}`}>
                     {uploadStatusText}
@@ -660,12 +711,20 @@ const MainMenu: React.FC = () => {
                     void handleOpenWorkshopItem(uploadStatus.url);
                   }, webUIText('MainMenu.ModWorkshopOpen'))
                 )}
-                <div
+                <button
+                  type="button"
                   className={`mm-toggle ${mod.enabled ? 'mm-toggle--on' : ''}`}
-                  aria-hidden="true"
+                  aria-pressed={mod.enabled}
+                  aria-label={mod.name}
+                  disabled={!mod.compatible}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (mod.compatible) void handleToggleMod(mod);
+                  }}
                 >
-                  <div className="mm-toggle-knob" />
-                </div>
+                  <span className="mm-toggle-knob" />
+                </button>
               </div>
             </div>
           );
@@ -778,7 +837,7 @@ const MainMenu: React.FC = () => {
     <div className={`mm-credits-view${closing ? ' mm-credits-view--closing' : ''}`}>
       <button
         className="mm-credits-back-btn"
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.preventDefault();
           goBack();
         }}
@@ -822,17 +881,11 @@ const MainMenu: React.FC = () => {
       id: map.id,
       variant: 'scenario',
       label: map.displayName,
-      kicker: map.menuKicker,
       description: map.menuDescription,
       img: map.menuImageUrl,
       locked: map.isLocked,
-      onClick: () => handleSelectScenarioMap(map),
+      onClick: () => { void handleSelectScenarioMap(map); },
     }));
-  const scenarioStripWidth = `${
-    latestSave
-      ? MAIN_MENU_ROW_WIDTH_REM - MAIN_MENU_CONTINUE_CARD_WIDTH_REM - MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM
-      : MAIN_MENU_ROW_WIDTH_REM - MAIN_MENU_LOAD_GAME_SLOT_WIDTH_REM
-  }rem`;
   const menuSlots: MainMenuSlotData[] = [];
   if (latestSave) {
     menuSlots.push({ kind: 'continue', key: 'continue' });
@@ -872,23 +925,15 @@ const MainMenu: React.FC = () => {
     key: string,
     slotClass: string,
   ) => {
-    const showKicker = btn.kicker && btn.kicker.toLowerCase() !== btn.label.toLowerCase();
     const cardImage = btn.img;
     const scenarioButton = (
       <button
         className={`mm-illust-btn mm-illust-btn--${btn.variant}${btn.locked ? ' mm-illust-btn--locked' : ''}`}
-        onPointerDown={(event) => {
+        onClick={(event) => {
           if (event.button !== 0) {
             return;
           }
-          lastIllustratedPointerActivationAtRef.current = Date.now();
           event.preventDefault();
-          btn.onClick();
-        }}
-        onClick={(event) => {
-          if (event.detail !== 0 && Date.now() - lastIllustratedPointerActivationAtRef.current < 500) {
-            return;
-          }
           btn.onClick();
         }}
         style={cardImage ? { ['--mm-card-image' as string]: `url(${cardImage})` } : undefined}
@@ -903,7 +948,6 @@ const MainMenu: React.FC = () => {
         )}
         <div className="mm-illust-copy">
           <span className="mm-illust-label">{btn.label}</span>
-          {showKicker && <span className="mm-illust-subtitle">{btn.kicker}</span>}
         </div>
       </button>
     );
@@ -915,7 +959,7 @@ const MainMenu: React.FC = () => {
           title: btn.label,
           body: btn.locked ? webUIText('Demo.CampaignLocked') : btn.description,
         }}
-        position="top"
+        position="right"
         delay={450}
         bubbleClassName="tt-bubble--main-menu-scenario"
         wrapperClassName={`mm-menu-slot ${slotClass}`}
@@ -927,10 +971,9 @@ const MainMenu: React.FC = () => {
 
   const renderMainMenu = () => (
     <>
-      {/* Left-aligned menu column */}
+      {/* Left bar: logo + continue / load / campaigns */}
       <div className="mm-left">
         <div className="mm-left-panel">
-          {/* Game logo / title */}
           <div className="mm-logo">
             <LitLogo
               alt={webUIText('Auto.Attr.PagesMainMenu.451.7')}
@@ -943,8 +986,11 @@ const MainMenu: React.FC = () => {
             )}
           </div>
 
-          {/* Hero Continue card + illustrated buttons */}
-          <div className="mm-illustrated-btns">
+          <div
+            className="mm-illustrated-btns"
+            data-focus-group="vertical"
+            data-focus-right=".mm-text-btn"
+          >
             {menuSlots.map((slot) => {
               if (slot.kind === 'continue') {
                 return latestSave
@@ -954,11 +1000,7 @@ const MainMenu: React.FC = () => {
 
               if (slot.kind === 'scenarios') {
                 return (
-                  <div
-                    key={slot.key}
-                    className="mm-scenario-strip"
-                    style={{ ['--mm-scenario-strip-width' as string]: scenarioStripWidth }}
-                  >
+                  <div key={slot.key} className="mm-scenario-strip">
                     {slot.buttons.map((btn, index) => renderIllustratedMenuButton(
                       btn,
                       `scenario-${btn.id}`,
@@ -971,18 +1013,31 @@ const MainMenu: React.FC = () => {
               return renderIllustratedMenuButton(slot.button, slot.key, slot.slotClass);
             })}
           </div>
+
           {menuError && (
             <div className="mm-load-error">
               <span className="mm-load-error-title">{webUIText('MainMenu.LoadSaveFailed')}</span>
               <span className="mm-load-error-message">{menuError}</span>
             </div>
           )}
+        </div>
+      </div>
 
-          {/* Gold divider */}
-          <div className="mm-divider" />
+      {/* Right bar: language + settings stack + socials */}
+      <div className="mm-right">
+        <div className="mm-right-panel">
+          <div className="mm-right-header">
+            <div className="mm-lang-slot">
+              <LanguageSelector />
+            </div>
+            <div className="mm-right-header-rule" aria-hidden="true" />
+          </div>
 
-          {/* Text-only menu items */}
-          <div className="mm-text-items">
+          <div
+            className="mm-text-items"
+            data-focus-group="vertical"
+            data-focus-left=".mm-continue-hero, .mm-illust-btn"
+          >
             {textMenuItems.map(item => (
               <button
                 key={item.label}
@@ -990,42 +1045,42 @@ const MainMenu: React.FC = () => {
                 onClick={item.onClick}
               >
                 {item.locked && <img src="/assets/icons/I_Locked.png" alt="" draggable={false} />}
-                {item.label}
+                <span className="mm-text-btn-label">{item.label}</span>
               </button>
             ))}
           </div>
+
+          <div className="mm-utility-footer">
+            <div className="mm-socials" data-focus-group="horizontal">
+              <button className="mm-social-btn" aria-label={webUIText('Auto.Attr.PagesMainMenu.504.8')} onClick={() => openExternalLink('discord')}>
+                <img src="/assets/icons/Socials/I_DiscordIcon.png" alt="" />
+              </button>
+              <button className="mm-social-btn" aria-label={webUIText('Auto.Attr.PagesMainMenu.507.9')} onClick={() => openExternalLink('reddit')}>
+                <img src="/assets/icons/Socials/I_RedditIcon.png" alt="" />
+              </button>
+              <button className="mm-social-btn" aria-label={webUIText('Auto.Attr.PagesMainMenu.510.10')} onClick={() => openExternalLink('website')}>
+                <img src="/assets/icons/Socials/I_WebIcon.png" alt="" />
+              </button>
+              <button className="mm-social-btn" aria-label={webUIText('Auto.Attr.PagesMainMenu.513.11')} onClick={() => openExternalLink('feedback')}>
+                <img src="/assets/icons/Socials/I_FeedbackIcon.png" alt="" />
+              </button>
+            </div>
+            {version && (
+              <span className="mm-version">
+                <WebUIText textKey="Auto.PagesMainMenu.519.11" />
+                {version}
+              </span>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Language selector - top right, above socials */}
-      <div className="mm-lang-slot">
-        <LanguageSelector />
-      </div>
-
-      {/* Social icons - top right, stacked vertically */}
-      <div className="mm-socials">
-        <button className="mm-social-btn" aria-label={webUIText('Auto.Attr.PagesMainMenu.504.8')} onClick={() => openExternalLink('discord')}>
-          <img src="/assets/icons/Socials/I_DiscordIcon.png" alt="" />
-        </button>
-        <button className="mm-social-btn" aria-label={webUIText('Auto.Attr.PagesMainMenu.507.9')} onClick={() => openExternalLink('reddit')}>
-          <img src="/assets/icons/Socials/I_RedditIcon.png" alt="" />
-        </button>
-        <button className="mm-social-btn" aria-label={webUIText('Auto.Attr.PagesMainMenu.510.10')} onClick={() => openExternalLink('website')}>
-          <img src="/assets/icons/Socials/I_WebIcon.png" alt="" />
-        </button>
-        <button className="mm-social-btn" aria-label={webUIText('Auto.Attr.PagesMainMenu.513.11')} onClick={() => openExternalLink('feedback')}>
-          <img src="/assets/icons/Socials/I_FeedbackIcon.png" alt="" />
-        </button>
-      </div>
-
-      {/* Version - bottom right */}
-      {version && <span className="mm-version"><WebUIText textKey="Auto.PagesMainMenu.519.11" />{version}</span>}
     </>
   );
 
   const rootClassName = [
     'mm-root',
     view !== 'menu' ? 'mm-root--subview' : '',
+    view === 'newgame' ? 'mm-root--faction-selection' : '',
     view === 'credits' ? 'mm-root--credits' : '',
     view === 'menu' && skipMenuIntro ? 'mm-root--menu-return' : '',
     latestSave ? 'mm-root--has-continue' : 'mm-root--no-continue',
@@ -1040,7 +1095,7 @@ const MainMenu: React.FC = () => {
   return (
     <>
 
-      <div className={rootClassName}>
+      <div className={rootClassName} data-focus-root="main-menu" data-focus-priority="200">
         <div className={menuLayerClassName} aria-hidden={view !== 'menu'}>
           {renderMainMenu()}
         </div>

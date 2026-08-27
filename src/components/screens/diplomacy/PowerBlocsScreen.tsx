@@ -258,7 +258,7 @@ function DemandCard({
   const urgencyColour = urgencyPct < 25 ? 'var(--red)' : urgencyPct < 50 ? 'var(--orange)' : 'var(--yellow)';
 
   return (
-    <div className="pbs-demand-card" onMouseDown={handleMouseDown}>
+    <div className="pbs-demand-card" onClick={handleMouseDown}>
       <div className="pbs-demand-bloc">
         <BlocIdentity bloc={bloc} />
         <div className="pbs-demand-bloc-meta">
@@ -442,7 +442,7 @@ function BlocTable({
             };
 
             return (
-              <div className="pbs-join-cell" onMouseDown={event => event.stopPropagation()}>
+              <div className="pbs-join-cell" onClick={event => event.stopPropagation()}>
                 <Tooltip content={tooltip} position="left" delay={150} disabled={!bloc.canPlayerJoinReason}>
                   <GameButton
                     variant="outline"
@@ -458,7 +458,7 @@ function BlocTable({
           }
 
           return (
-            <div className="pbs-join-cell" onMouseDown={event => event.stopPropagation()}>
+            <div className="pbs-join-cell" onClick={event => event.stopPropagation()}>
               <GameButton
                 variant={joined ? 'outline' : 'burgundy'}
                 className="pbs-join-button"
@@ -564,7 +564,7 @@ function SubjectPlayerBlocPanel({
       <div
         className="pbs-subject-hero"
         data-tutorial-target="PlayerPowerBloc"
-        onMouseDown={() => onOpen(bloc.id)}
+        onClick={() => onOpen(bloc.id)}
       >
         <div className="pbs-subject-hero-main">
           <BlocIdentity bloc={bloc} />

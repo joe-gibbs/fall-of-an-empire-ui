@@ -221,7 +221,7 @@ function ResourceName({ row, onOpen }: { row: EconomyOverviewResourceRow; onOpen
       <button
         type="button"
         className="econ-resource-name econ-resource-name--button"
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
           onOpen(row);
@@ -533,7 +533,7 @@ function BreakdownColumn({
             key={`${row.labelKey}:${index}`}
             aria-expanded={selectedMetric === row.key}
             aria-controls="economy-flow-detail"
-            onPointerDown={(event) => {
+            onClick={(event) => {
               event.preventDefault();
               onSelectMetric(row.key);
             }}
@@ -637,7 +637,7 @@ function CommandCostNode({
           type="button"
           className={`econ-command-cost__row${expanded ? ' is-expanded' : ''}`}
           aria-expanded={expanded}
-          onPointerDown={(event) => {
+          onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
             onToggle(node.id);
@@ -950,7 +950,7 @@ function ShortagesDashboard({ resources, onOpenResource }: { resources: EconomyO
                     type="button"
                     className={`econ-shortage-use${expanded ? ' econ-shortage-use--expanded' : ''}`}
                     aria-expanded={expanded}
-                    onPointerDown={(event) => {
+                    onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
                       setExpandedResourceId(current => current === resource.id ? null : resource.id);
@@ -962,7 +962,7 @@ function ShortagesDashboard({ resources, onOpenResource }: { resources: EconomyO
                   <button
                     type="button"
                     className="econ-shortage-view"
-                    onMouseDown={(event) => {
+                    onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
                       onOpenResource(resource);
@@ -998,7 +998,7 @@ function AutoBuyControl({ data }: { data: GetEconomyOverviewResponse | null }) {
       type="button"
       className={`econ-toggle-btn${enabled ? ' econ-toggle-btn--active' : ''}`}
       disabled={!data}
-      onMouseDown={(event) => {
+      onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
         if (!data) return;
@@ -1106,7 +1106,7 @@ function TradeControls({
           className="econ-trade-btn econ-trade-btn--buy"
           disabled={!canBuy}
           aria-label={t('Economy.Buy')}
-          onMouseDown={(event) => {
+          onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
             noteModifierKeysFromEvent(event);
@@ -1133,7 +1133,7 @@ function TradeControls({
           className="econ-trade-btn econ-trade-btn--sell"
           disabled={!canSell}
           aria-label={t('Economy.Sell')}
-          onMouseDown={(event) => {
+          onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
             noteModifierKeysFromEvent(event);
@@ -1177,7 +1177,7 @@ function SettlementDashboard({ rows }: { rows: EconomyOverviewSettlementRow[] })
             <button
               type="button"
               className="econ-detail-toggle"
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 setDetailId(current => current === row.id ? null : row.id);
@@ -1232,7 +1232,7 @@ function PriorityControls({
           key={option}
           type="button"
           className={`econ-priority-btn${key === option ? ' econ-priority-btn--active' : ''}`}
-          onMouseDown={(event) => {
+          onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
             if (key === option) return;
@@ -1263,7 +1263,7 @@ function SubjectTaxRateControls({
       <button
         type="button"
         disabled={!canLowerTax}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
           if (canLowerTax) adjustEconomySubjectTaxRateBridge(factionId, -0.05).catch(() => undefined);
@@ -1275,7 +1275,7 @@ function SubjectTaxRateControls({
       <button
         type="button"
         disabled={!canRaiseTax}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
           if (canRaiseTax) adjustEconomySubjectTaxRateBridge(factionId, 0.05).catch(() => undefined);
@@ -1352,7 +1352,7 @@ function MilitaryDashboard({ rows }: { rows: EconomyOverviewMilitaryRow[] }) {
               <button
                 type="button"
                 className="econ-detail-toggle"
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
                   setDetailId(current => current === row.id ? null : row.id);
@@ -1425,7 +1425,7 @@ function VassalDashboard({ rows }: { rows: EconomyOverviewVassalRow[] }) {
             <button
               type="button"
               className="econ-detail-toggle"
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 setDetailId(current => current === row.id ? null : row.id);
@@ -1696,7 +1696,7 @@ function ProvinceTab({ data }: { data: GetEconomyOverviewResponse | null }) {
               <button
                 type="button"
                 className="econ-detail-toggle"
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
                   setDetailId(current => current === row.factionId ? null : row.factionId);

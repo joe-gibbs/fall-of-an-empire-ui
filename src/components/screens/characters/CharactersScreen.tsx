@@ -335,7 +335,6 @@ const CharacterPrisonActions = memo(function CharacterPrisonActions({ character 
   return (
     <div
       className="chs-prison-actions"
-      onMouseDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >
       <Tooltip

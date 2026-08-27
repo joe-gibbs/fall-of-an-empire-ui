@@ -4,53 +4,15 @@ import { registerModPoCatalogues } from '../localization/modPoText';
 import { registerAssetOverride, registerContentPackAssetPaths } from '../utils/assets';
 import { joinGameLocalResourceUrl } from '../utils/localResourceUrl';
 
-/**
- * Runtime mod loader.
- *
- * At boot this fetches `/mods/manifest.json` and loads every entry URL it
- * lists as a classic script. Each mod is a standalone file on disk, not part
- * of the main bundle and not known to Vite at the main app's build time.
- *
- * Mod contract:
- *   - The entry file is served as a classic script.
- *   - It uses `globalThis.FOAE` for React, components, hooks, and the
- *     registry. It does NOT `import` anything, because there is no
- *     bundler in the loop.
- *   - Its top-level code calls `FOAE.registry.register*()` to add
- *     screens / sidebars / topbar buttons. Those calls fire as a side
- *     effect of loading the script.
- *
- * Manifest shape (a JSON array):
- *   [
- *     { "name": "sample", "entry": "/mods/sample/index.js", "styles": ["/mods/sample/style.css"] }
- *   ]
- *
- * `main.tsx` awaits `modsReady` before rendering so manifest registrations
- * land in the registry before the first paint. Content-pack UI is discovered
- * over the bridge and registers after it, once the runtime is up.
- *
- * Deployment notes:
- *   - In dev, files under `WebUI/public/mods/` are served at `/mods/...`
- *     by Vite. The dev loop is "drop a file, refresh".
- *   - In the shipped game, `public/` contents are packaged and served by
- *     the native web UI host. To support true third-party drop-in mods from
- *     `<GameDir>/Mods/`, the C++ side needs to (a) scan that directory,
- *     (b) expose the files through the host (custom URL scheme or a small HTTP
- *     server), and (c) build the manifest JSON dynamically via a bridge
- *     call. The JS-side loader below doesn't change - it just fetches
- *     the manifest URL it's given.
- */
+/** Loads active content-pack UI entries supplied by the game bridge. */
 
-interface ModManifestEntry {
+interface ContentPackScriptEntry {
   /** Human-readable identifier for logs. Not used for registry keying. */
   name: string;
   /** URL of the mod's classic-script entry file. */
   entry: string;
   /** Optional CSS files to inject via <link> before the entry runs. */
   styles?: string[];
-  /** Optional PO catalogue path or URL. Use `{locale}` as the locale placeholder. */
-  localization?: string;
-  localisation?: string;
 }
 
 interface ContentPackWebUIEntry {
@@ -65,7 +27,6 @@ interface ContentPackWebUIPack {
   rootPath?: string;
   styles?: string[];
   localization?: string;
-  localisation?: string;
   assetOverrides?: Record<string, string>;
   assetPaths?: string[];
   entries?: ContentPackWebUIEntry[];
@@ -75,44 +36,7 @@ interface ContentPackWebUIManifest {
   packs?: ContentPackWebUIPack[];
 }
 
-const MANIFEST_URL = '/mods/manifest.json';
 const loadedModEntries = new Set<string>();
-
-function loadJson(url: string): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    const request = new XMLHttpRequest();
-    request.open('GET', url, true);
-    request.setRequestHeader('Cache-Control', 'no-store');
-    request.onreadystatechange = () => {
-      if (request.readyState !== XMLHttpRequest.DONE) return;
-      if (request.status < 200 || request.status >= 300) {
-        reject(new Error(`HTTP ${request.status.toString()}`));
-        return;
-      }
-      try {
-        resolve(JSON.parse(request.responseText));
-      } catch (error) {
-        reject(error);
-      }
-    };
-    request.onerror = () => reject(new Error('manifest request failed'));
-    request.send();
-  });
-}
-
-async function fetchManifest(): Promise<ModManifestEntry[]> {
-  try {
-    const parsed = await loadJson(MANIFEST_URL);
-    if (!Array.isArray(parsed)) {
-      console.warn(`[mods] ${MANIFEST_URL} did not parse as an array; ignoring`);
-      return [];
-    }
-    return parsed as ModManifestEntry[];
-  } catch {
-    // No manifest is a valid state - means no mods are installed.
-    return [];
-  }
-}
 
 function isContentPackManifest(value: unknown): value is ContentPackWebUIManifest {
   return !!value && typeof value === 'object' && Array.isArray((value as ContentPackWebUIManifest).packs);
@@ -127,8 +51,8 @@ function parseContentPackManifest(response: GetContentPackWebUIManifestResponse)
   }
 }
 
-function contentPackManifestEntries(parsed: ContentPackWebUIManifest): ModManifestEntry[] {
-  const entries: ModManifestEntry[] = [];
+function contentPackManifestEntries(parsed: ContentPackWebUIManifest): ContentPackScriptEntry[] {
+  const entries: ContentPackScriptEntry[] = [];
   for (const pack of parsed.packs ?? []) {
     const baseUrl = pack.resourceBaseUrl || '';
     if (!baseUrl) continue;
@@ -136,7 +60,7 @@ function contentPackManifestEntries(parsed: ContentPackWebUIManifest): ModManife
     const styles = (pack.styles ?? [])
       .map(style => joinGameLocalResourceUrl(baseUrl, style))
       .filter(Boolean);
-    const localizationPath = pack.localization || pack.localisation;
+    const localizationPath = pack.localization;
     if (localizationPath) {
       registerModPoCatalogues([{
         packId: pack.id ?? pack.name ?? baseUrl,
@@ -171,39 +95,11 @@ function contentPackManifestEntries(parsed: ContentPackWebUIManifest): ModManife
  * that event never fires and this never resolves, so only background work may await it.
  */
 function whenBridgeAvailable(): Promise<void> {
-  // TEMPORARY startup diagnostics for the content-pack manifest failure.
-  const probe = (stage: string) => {
-    const gameUI = (window as { gameUI?: Record<string, unknown> }).gameUI;
-    console.warn(`[mods][probe] ${stage} t=${Math.round(performance.now()).toString()}ms`
-      + ` gameUI=${gameUI ? 'yes' : 'no'}`
-      + ` request=${typeof gameUI?.request} on=${typeof gameUI?.on} markReady=${typeof gameUI?.markReady}`
-      + ` engine=${getRuntimeEngine() ? 'yes' : 'no'}`
-      + ` readyState=${document.readyState}`);
-  };
-  probe('module-scope');
   if (getRuntimeEngine()) {
     return Promise.resolve();
   }
   return new Promise(resolve => {
-    window.addEventListener('webkiln:runtime-ready', () => {
-      probe('runtime-ready');
-      resolve();
-    }, { once: true });
-    window.addEventListener('load', () => { probe('window-load'); }, { once: true });
-    const started = performance.now();
-    const tick = () => {
-      if (getRuntimeEngine()) {
-        probe('engine-appeared');
-        resolve();
-        return;
-      }
-      if (performance.now() - started > 30000) {
-        probe('gave-up');
-        return;
-      }
-      window.setTimeout(tick, 100);
-    };
-    tick();
+    window.addEventListener('webkiln:runtime-ready', () => resolve(), { once: true });
   });
 }
 
@@ -214,15 +110,13 @@ function whenBridgeAvailable(): Promise<void> {
  */
 async function loadContentPackMods(): Promise<void> {
   await whenBridgeAvailable();
-  console.warn(`[mods][probe] calling manifest t=${Math.round(performance.now()).toString()}ms`);
   try {
     const parsed = parseContentPackManifest(await bridgeCall('game.get_content_pack_webui_manifest'));
-    console.warn(`[mods][probe] manifest ok t=${Math.round(performance.now()).toString()}ms packs=${parsed ? 'yes' : 'no'}`);
     if (parsed) {
       await loadModManifestEntries(contentPackManifestEntries(parsed));
     }
   } catch (error) {
-    console.warn(`[mods][probe] manifest failed t=${Math.round(performance.now()).toString()}ms`, error);
+    console.error('[mods] failed to load content-pack manifest:', error);
   }
 }
 
@@ -235,7 +129,7 @@ function injectStyles(hrefs: string[]): void {
   }
 }
 
-async function loadOne(mod: ModManifestEntry): Promise<void> {
+async function loadOne(mod: ContentPackScriptEntry): Promise<void> {
   if (mod.styles?.length) injectStyles(mod.styles);
   await new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
@@ -246,27 +140,11 @@ async function loadOne(mod: ModManifestEntry): Promise<void> {
   });
 }
 
-function registerModManifestCatalogues(mods: ModManifestEntry[]): void {
-  registerModPoCatalogues(mods
-    .map((mod) => {
-      const localizationPath = mod.localization || mod.localisation;
-      if (!localizationPath) return null;
-      const base = mod.entry.slice(0, mod.entry.lastIndexOf('/') + 1);
-      const urlPattern = localizationPath.includes('://') || localizationPath.startsWith('/')
-        ? localizationPath
-        : `${base}${localizationPath}`;
-      return { packId: mod.name, urlPattern };
-    })
-    .filter((catalogue): catalogue is { packId: string; urlPattern: string } => catalogue !== null));
-}
-
-async function loadModManifestEntries(mods: ModManifestEntry[]): Promise<boolean> {
+async function loadModManifestEntries(mods: ContentPackScriptEntry[]): Promise<boolean> {
   const pendingMods = mods.filter(mod => mod.entry && !loadedModEntries.has(mod.entry));
   if (pendingMods.length === 0) {
     return false;
   }
-
-  registerModManifestCatalogues(pendingMods);
 
   const loaded: string[] = [];
   const failed: { name: string; error: unknown }[] = [];
@@ -296,18 +174,7 @@ async function loadMods(): Promise<void> {
     return;
   }
 
-  void loadContentPackMods();
-
-  const manifest = await fetchManifest();
-
-  const byEntry = new Map<string, ModManifestEntry>();
-  manifest.forEach(mod => {
-    if (mod.entry) byEntry.set(mod.entry, mod);
-  });
-  const allMods = Array.from(byEntry.values());
-  if (allMods.length === 0) return;
-
-  await loadModManifestEntries(allMods);
+  await loadContentPackMods();
 }
 
 onBridgeEvent('game.get_content_pack_webui_manifest', (response) => {
@@ -317,9 +184,5 @@ onBridgeEvent('game.get_content_pack_webui_manifest', (response) => {
   }
 });
 
-/**
- * Promise that resolves once every mod the manifest listed has been
- * loaded (successfully or not - a single broken mod does not block
- * the others). `main.tsx` awaits this before rendering.
- */
+/** Resolves after content-pack asset aliases and UI entries have been registered. */
 export const modsReady: Promise<void> = loadMods();

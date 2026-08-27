@@ -90,19 +90,14 @@ const SaveGameDialog: React.FC<SaveGameDialogProps> = ({
 
       <div
         className={overlayCls}
-        onMouseDown={event => {
+        onClick={event => {
           if (event.target !== event.currentTarget) return;
           event.preventDefault();
           event.stopPropagation();
           animatedClose();
         }}
-        onClick={event => {
-          if (event.target !== event.currentTarget) return;
-          event.preventDefault();
-          event.stopPropagation();
-        }}
       >
-        <div className={modalCls} onMouseDown={stopPropagation} onClick={stopPropagation}>
+        <div className={modalCls} onClick={stopPropagation}>
           <div className="save-dialog__header">
             <span className="save-dialog__title">{title}</span>
             <CloseButton size="sm" onClick={animatedClose} />

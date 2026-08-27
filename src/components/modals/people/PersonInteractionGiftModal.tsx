@@ -218,7 +218,7 @@ export default function PersonInteractionGiftModal({
                     type="button"
                     className={`pig-option${selectedCard ? ' pig-option--selected' : ''}${!affordable ? ' pig-option--locked' : ''}`}
                     aria-pressed={selectedCard}
-                    onMouseDown={(event) => {
+                    onClick={(event) => {
                       if (event.button !== 0) return;
                       event.preventDefault();
                       handleSelectGift(option.index);
@@ -261,12 +261,12 @@ export default function PersonInteractionGiftModal({
         </div>
 
         <div className="pig-footer">
-          <button type="button" className="btn--outline pig-footer__button" onMouseDown={handleClose}><WebUIText textKey="Auto.ComponentsModalsPersonInteractionGiftModal.259.13" /></button>
+          <button type="button" className="btn--outline pig-footer__button" onClick={handleClose}><WebUIText textKey="Auto.ComponentsModalsPersonInteractionGiftModal.259.13" /></button>
           <button
             type="button"
             className={`btn--burgundy pig-footer__button${!selected || submitting || !selectedAffordable ? ' pig-footer__button--disabled' : ''}`}
             disabled={!selected || submitting || !selectedAffordable}
-            onMouseDown={() => { void handleConfirm(); }}
+            onClick={() => { void handleConfirm(); }}
           >
             <WebUIText textKey="Auto.ComponentsModalsPersonInteractionGiftModal.266.14" />
           </button>

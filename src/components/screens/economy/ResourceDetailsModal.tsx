@@ -392,8 +392,8 @@ export default function ResourceDetailsModal({
   };
 
   return createPortal(
-    <div className={`erd-overlay${closing ? ' erd-overlay--closing' : ''}`} onMouseDown={close}>
-      <article className={`erd-modal${closing ? ' erd-modal--closing' : ''}`} onMouseDown={stopPropagation}>
+    <div className={`erd-overlay${closing ? ' erd-overlay--closing' : ''}`} onClick={close}>
+      <article className={`erd-modal${closing ? ' erd-modal--closing' : ''}`} onClick={stopPropagation}>
         <header className="erd-header">
           <img className="erd-header__icon" src={`/assets/resources/${resource.id}.png`} alt="" draggable={false} />
           <div className="erd-header__copy">
@@ -467,7 +467,7 @@ export default function ResourceDetailsModal({
                 <button
                   type="button"
                   className={`erd-toggle${autoBuyEnabled ? ' erd-toggle--active' : ''}`}
-                  onMouseDown={() => setEconomyAutoBuyBridge(!autoBuyEnabled).catch(() => undefined)}
+                  onClick={() => setEconomyAutoBuyBridge(!autoBuyEnabled).catch(() => undefined)}
                 >
                   {t('Economy.AutoBuy')}: {autoBuyEnabled ? t('Economy.Enabled') : t('Economy.Disabled')}
                 </button>
@@ -475,7 +475,7 @@ export default function ResourceDetailsModal({
               <button
                 type="button"
                 className={`erd-toggle${resource.autoSellEnabled ? ' erd-toggle--active' : ''}`}
-                onMouseDown={() => setResourceAutoSellBridge(resource.id, !resource.autoSellEnabled, threshold).catch(() => undefined)}
+                onClick={() => setResourceAutoSellBridge(resource.id, !resource.autoSellEnabled, threshold).catch(() => undefined)}
               >
                 {t('Economy.AutoSell')}: {resource.autoSellEnabled ? t('Economy.Enabled') : t('Economy.Disabled')}
               </button>
@@ -492,7 +492,7 @@ export default function ResourceDetailsModal({
                   <div className="erd-threshold">
                     <button
                       type="button"
-                      onMouseDown={(event) => {
+                      onClick={(event) => {
                         event.preventDefault();
                         setAutoSellThreshold(threshold - stepAmountFromEvent(event, autoSellThresholdStep));
                       }}
@@ -503,7 +503,7 @@ export default function ResourceDetailsModal({
                     <strong><small>{t('Economy.AutoSellReserveShort')}</small>{number(threshold)}</strong>
                     <button
                       type="button"
-                      onMouseDown={(event) => {
+                      onClick={(event) => {
                         event.preventDefault();
                         setAutoSellThreshold(threshold + stepAmountFromEvent(event, autoSellThresholdStep));
                       }}
@@ -524,7 +524,7 @@ export default function ResourceDetailsModal({
                   <button
                     type="button"
                     className={historyRange === range ? 'erd-range-tab erd-range-tab--active' : 'erd-range-tab'}
-                    onMouseDown={() => setHistoryRange(range)}
+                    onClick={() => setHistoryRange(range)}
                     key={range}
                   >
                     {range === '12' ? t('Economy.Range12Months') : range === '24' ? t('Economy.Range24Months') : t('Economy.RangeAll')}

@@ -947,6 +947,21 @@ export interface BridgeFactionInteractionFactionCandidate {
   opinion: number;
 }
 
+export interface FactionSelectionTabletopRequest {
+  command: string;
+  mapId: string;
+  baseName: string;
+  screenX: unknown;
+  screenY: unknown;
+  deltaX: unknown;
+  deltaY: unknown;
+  zoomDelta: unknown;
+}
+
+export interface FactionSelectionTabletopResponse {
+  baseName: string;
+}
+
 export interface FormationTemplateEligibleSettlementEntry {
   id: string;
   name: string;
@@ -1671,6 +1686,7 @@ export interface EventEffectData {
   parameter: string;
   amount: number;
   description: string;
+  icon: string;
 }
 
 export interface EventOptionData {
@@ -3700,6 +3716,118 @@ export interface GetResourcesResponse {
   populationDelta: number;
 }
 
+export interface GetSaveLoadSnapshotRequest {
+  includeEntities: boolean;
+}
+
+export interface HarnessResourceSnapshot {
+  key: string;
+  amount: number;
+}
+
+export interface HarnessFactionSnapshot {
+  id: string;
+  isDestroyed: boolean;
+  leaderId: string;
+  liegeId: string;
+  capitalSettlementId: string;
+  gold: number;
+  population: number;
+  monthlySnapshotCount: number;
+  settlementIds: string[];
+  armyIds: string[];
+  navyIds: string[];
+  storedResources: HarnessResourceSnapshot[];
+}
+
+export interface HarnessPersonSnapshot {
+  id: string;
+  isAlive: boolean;
+  bornAt: number;
+  diedAt: number;
+  primaryFactionId: string;
+  ruledFactionId: string;
+  baseTactics: number;
+  baseAuthority: number;
+  baseCunning: number;
+  baseGovernance: number;
+  baseLoyalty: number;
+  baseConstitution: number;
+  fame: number;
+  honourDread: number;
+  vigor: number;
+  battlesWon: number;
+  battlesLost: number;
+  settlementsConquered: number;
+  yearsAsRuler: number;
+  yearsAsGovernor: number;
+  eventHistoryCount: number;
+  roleHistoryCount: number;
+  traitIds: string[];
+  parentIds: string[];
+  childIds: string[];
+  friendIds: string[];
+  enemyIds: string[];
+  patronIds: string[];
+  clientIds: string[];
+  spouseIds: string[];
+}
+
+export interface HarnessSettlementSnapshot {
+  id: string;
+  factionId: string;
+  occupierFactionId: string;
+  population: number;
+  corruption: number;
+  unrest: number;
+  stockpile: HarnessResourceSnapshot[];
+}
+
+export interface HarnessMilitarySnapshot {
+  id: string;
+  kind: string;
+  factionId: string;
+  leaderId: string;
+  garrisonSettlementId: string;
+  unitCount: number;
+  manpower: number;
+  morale: number;
+  veterancy: number;
+  locationX: number;
+  locationY: number;
+  locationZ: number;
+  orderType: number;
+  orderExecutionState: number;
+  orderTargetX: number;
+  orderTargetY: number;
+  orderTargetZ: number;
+  isMoving: boolean;
+  destinationX: number;
+  destinationY: number;
+  destinationZ: number;
+  pathPointCount: number;
+}
+
+export interface GetSaveLoadSnapshotResponse {
+  gameDay: number;
+  playerFactionId: string;
+  playerCharacterId: string;
+  factionCount: number;
+  personCount: number;
+  settlementCount: number;
+  militaryCount: number;
+  livingPersonCount: number;
+  deadPersonCount: number;
+  destroyedFactionActorCount: number;
+  totalFactionMonthlySnapshotCount: number;
+  totalPersonEventHistoryCount: number;
+  totalPersonRoleHistoryCount: number;
+  factions: HarnessFactionSnapshot[];
+  persons: HarnessPersonSnapshot[];
+  settlements: HarnessSettlementSnapshot[];
+  militaries: HarnessMilitarySnapshot[];
+}
+
 export interface SeasonResourceEffect {
   resourceId: string;
   resourceName: string;
@@ -4864,6 +4992,9 @@ export interface ModEntryDto {
   id: string;
   name: string;
   version: string;
+  gameVersion: string;
+  compatible: boolean;
+  compatibilityError: string;
   author: string;
   description: string;
   loadOrder: number;
@@ -5173,6 +5304,7 @@ export interface GetMilitaryDataResponse {
   isForcedMarching: boolean;
   canForcedMarch: boolean;
   canMerge: boolean;
+  canSplit: boolean;
   isRaiding: boolean;
   isReplenishing: boolean;
   replenishCost: number;
@@ -5234,6 +5366,16 @@ export interface ReplenishMilitaryRequest {
 
 export interface DisbandMilitaryRequest {
   militaryId: string;
+}
+
+export interface SplitMilitaryRequest {
+  militaryId: string;
+  unitIds: string[];
+}
+
+export interface SplitMilitaryResponse {
+  newMilitaryId: string;
+  newMilitaryName: string;
 }
 
 export interface SetMilitaryFormationTemplateRequest {
@@ -5830,6 +5972,17 @@ export interface ReligionConversionActionResponse {
   message: string;
 }
 
+export interface RenameMilitaryRequest {
+  militaryId: string;
+  name: string;
+}
+
+export interface RenameMilitaryResponse {
+  renamed: boolean;
+  name: string;
+  message: string;
+}
+
 export interface RenameSettlementRequest {
   settlementId: string;
   name: string;
@@ -6417,6 +6570,18 @@ export interface WebUIDisplayLine {
   segments: WebUIDisplaySegment[];
 }
 
+export interface GetWorldGlanceVisibilityResponse {
+  showSettlements: boolean;
+  showMilitary: boolean;
+  showConvoys: boolean;
+}
+
+export interface SetWorldGlanceVisibilityRequest {
+  showSettlements: boolean;
+  showMilitary: boolean;
+  showConvoys: boolean;
+}
+
 export interface WorldSearchRequest {
   query: string;
   maxResults: number;
@@ -6482,6 +6647,7 @@ export interface BridgeActions {
   'game.download_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.duplicate_military_formation_template': { request: DuplicateMilitaryFormationTemplateRequest; response: DuplicateMilitaryFormationTemplateResponse };
   'game.enter_court_appointment_contest': { request: EnterCourtAppointmentContestRequest; response: EnterCourtAppointmentContestResponse };
+  'game.faction_selection_tabletop': { request: FactionSelectionTabletopRequest; response: FactionSelectionTabletopResponse };
   'game.form_personal_guard': { request: FormPersonalGuardRequest; response: FormPersonalGuardResponse };
   'game.form_personal_power_bloc': { request: void; response: FormPersonalPowerBlocResponse };
   'game.generate_formation_template_name': { request: GenerateFormationTemplateNameRequest; response: GenerateFormationTemplateNameResponse };
@@ -6561,6 +6727,7 @@ export interface BridgeActions {
   'game.get_victory_conditions': { request: void; response: GetVictoryConditionsResponse };
   'game.get_warnings': { request: void; response: GetWarningsResponse };
   'game.get_world_glance_tooltip': { request: GetWorldGlanceTooltipRequest; response: GetWorldGlanceTooltipResponse };
+  'game.get_world_glance_visibility': { request: void; response: GetWorldGlanceVisibilityResponse };
   'game.get_world_glances': { request: void; response: GetWorldGlancesResponse };
   'game.governor_assignment': { request: GovernorAssignmentRequest; response: GovernorAssignmentResponse };
   'game.handle_world_glance_hover': { request: HandleWorldGlanceHoverRequest; response: void };
@@ -6585,6 +6752,7 @@ export interface BridgeActions {
   'game.randomise_character_creator': { request: RandomiseCharacterCreatorRequest; response: RandomiseCharacterCreatorResponse };
   'game.rebind_action_key': { request: RebindActionKeyRequest; response: RebindActionKeyResponse };
   'game.recruit_character_for_role': { request: RecruitCharacterForRoleRequest; response: RecruitCharacterForRoleResponse };
+  'game.rename_military': { request: RenameMilitaryRequest; response: RenameMilitaryResponse };
   'game.rename_settlement': { request: RenameSettlementRequest; response: RenameSettlementResponse };
   'game.render_character_creator_preview': { request: RenderCharacterCreatorPreviewRequest; response: void };
   'game.reorder_settlement_building': { request: ReorderSettlementBuildingRequest; response: void };
@@ -6637,7 +6805,9 @@ export interface BridgeActions {
   'game.set_settlement_capital': { request: SetSettlementCapitalRequest; response: SetSettlementCapitalResponse };
   'game.set_settlement_sidebar_ambient': { request: SetSettlementSidebarAmbientRequest; response: void };
   'game.set_speed': { request: SetSpeedRequest; response: SetSpeedResponse };
+  'game.set_world_glance_visibility': { request: SetWorldGlanceVisibilityRequest; response: GetWorldGlanceVisibilityResponse };
   'game.show_military_sidebar': { request: MilitaryTargetingRequest; response: void };
+  'game.split_military': { request: SplitMilitaryRequest; response: SplitMilitaryResponse };
   'game.start_battle_action': { request: StartBattleActionRequest; response: StartBattleActionResponse };
   'game.start_bloc_interaction': { request: StartBlocInteractionRequest; response: StartBlocInteractionResponse };
   'game.start_faction_interaction': { request: StartFactionInteractionRequest; response: StartFactionInteractionResponse };
@@ -6666,6 +6836,7 @@ export interface BridgeActions {
   'game.withdraw_battle_formation': { request: WithdrawBattleFormationRequest; response: WithdrawBattleFormationResponse };
   'game.world_search': { request: WorldSearchRequest; response: WorldSearchResponse };
   'game.zoom_to': { request: ZoomToRequest; response: ZoomToResponse };
+  'harness.get_save_load_snapshot': { request: GetSaveLoadSnapshotRequest; response: GetSaveLoadSnapshotResponse };
   'ui.ally_call_dialog': { request: AllyCallDialogRequest; response: AllyCallDialogEvent };
   'ui.campaign_outcome_events': { request: void; response: void };
   'ui.courtier_promotion_event': { request: void; response: void };

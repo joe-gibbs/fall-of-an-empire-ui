@@ -1048,8 +1048,8 @@ def prune_stale_published_assets() -> int:
     return removed
 
 
-def verify_published_assets(only_paths: tuple[str, ...]) -> int:
-    """Fail the build if a source asset did not reach UIResources."""
+def find_missing_published_assets(only_paths: tuple[str, ...] = ()) -> tuple[int, list[str]]:
+    """Return (checked count, missing published paths relative to UIResources/foae)."""
     missing: list[str] = []
     checked = 0
 
@@ -1066,6 +1066,19 @@ def verify_published_assets(only_paths: tuple[str, ...]) -> int:
         for expected in expected_paths:
             if not expected.exists():
                 missing.append(expected.relative_to(WEB_DIR).as_posix())
+
+    return checked, missing
+
+
+def published_assets_complete(only_paths: tuple[str, ...] = ()) -> bool:
+    """Return whether every public asset has a published output under UIResources."""
+    _, missing = find_missing_published_assets(only_paths)
+    return not missing
+
+
+def verify_published_assets(only_paths: tuple[str, ...]) -> int:
+    """Fail the build if a source asset did not reach UIResources."""
+    checked, missing = find_missing_published_assets(only_paths)
 
     if missing:
         print('\nError: WebUI asset publish is incomplete.')
@@ -1109,12 +1122,20 @@ def main():
         WEB_ASSETS.mkdir(parents=True, exist_ok=True)
 
     current_tree_state = source_tree_state() if not dry_run and not only_paths else {}
-    if current_tree_state and current_tree_state == load_source_tree_state():
+    # Vite empties UIResources/foae on each build. The source-tree fast path is only
+    # valid when published outputs are still present; otherwise restore from cache.
+    if (
+        current_tree_state
+        and current_tree_state == load_source_tree_state()
+        and published_assets_complete()
+    ):
         print('Public assets unchanged; using published image outputs')
         print(f'\n--- Rewriting references in {WEB_DIR.relative_to(ROOT.parent)}/ ---')
         nf = rewrite_built_refs()
         print(f'Updated {nf} files')
         return
+    if current_tree_state and current_tree_state == load_source_tree_state():
+        print('Public assets unchanged but published outputs incomplete; restoring from cache')
 
     copied_public = 0 if only_paths else copy_public_files(dry_run)
     copied_static = 0 if only_paths else copy_static_assets(dry_run)

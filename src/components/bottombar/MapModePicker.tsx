@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useMapModeBridge } from '../../bridge/military-map/useMapModeBridge';
+import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 import type { MapModeEntry } from '../../bridge-types.generated.ts';
 import { useAnchoredDropdown } from '../../hooks/useAnchoredDropdown';
 import { playSound } from '../../hooks/useSound';
@@ -10,6 +11,7 @@ import {
   type TutorialHudRevealDetail,
 } from '../../utils/tutorialHudReveal';
 import IconButton from '../common/buttons/IconButton';
+import { requestGamepadFocusRefresh } from '../../input/gamepadFocusEvents';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import Tooltip from '../common/tooltips/Tooltip';
 import { MAP_MODE_ICONS } from './mapModeIcons';
@@ -84,6 +86,16 @@ const MapModePicker: React.FC = () => {
     return () => window.removeEventListener(TUTORIAL_REVEAL_MAP_MODE_PICKER, handler);
   }, []);
 
+  useEffect(() => {
+    const openMenu = () => setOpen(true);
+    bridgeEvents.addEventListener('ui.gamepad_open_map_modes', openMenu);
+    return () => bridgeEvents.removeEventListener('ui.gamepad_open_map_modes', openMenu);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) requestGamepadFocusRefresh();
+  }, [mounted]);
+
   const triggerTooltip = active
     ? (MAP_MODE_TOOLTIPS[active] ?? { title: activeLabel })
     : { title: webUIText('Topbar.MapModes') };
@@ -115,10 +127,12 @@ const MapModePicker: React.FC = () => {
           ref={setPopupRef}
           style={style}
           role="menu"
+          data-focus-root
+          data-focus-priority="260"
           aria-label={webUIText('Topbar.MapModes')}
         >
           <StyledScrollArea className="map-mode-picker-scroll" viewportClassName="map-mode-picker-scroll-viewport" variant="inline">
-            <div className="map-mode-picker-grid">
+            <div className="map-mode-picker-grid" data-focus-group="grid">
               {modeIds.map((id) => {
                 const entry = state?.byId.get(id);
                 const label = entry?.label ?? id;
@@ -135,9 +149,10 @@ const MapModePicker: React.FC = () => {
                     <button
                       type="button"
                       role="menuitem"
+                      aria-current={isActive || undefined}
                       className={`map-mode-picker-item${isActive ? ' map-mode-picker-item--active' : ''}`}
                       data-tutorial-target={`MapMode:${id}`}
-                      onMouseDown={() => {
+                      onClick={() => {
                         playSound('click');
                         setMapMode(id);
                         setOpen(false);

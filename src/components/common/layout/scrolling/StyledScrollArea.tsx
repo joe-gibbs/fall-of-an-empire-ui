@@ -320,6 +320,7 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
     event.preventDefault();
     event.stopPropagation();
     cancelSmoothScroll();
+    event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = {
       pointerId: event.pointerId,
       startY: event.clientY,

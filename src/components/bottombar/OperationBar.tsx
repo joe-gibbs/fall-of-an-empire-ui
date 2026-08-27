@@ -72,7 +72,7 @@ function OperationButton({
         className={`operation-button operation-button--${variant}${disabled ? ' operation-button--disabled' : ''}`}
         aria-label={label}
         aria-disabled={disabled ? 'true' : 'false'}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.stopPropagation();
           if (disabled) return;
           playSound('click');
@@ -190,7 +190,7 @@ function GovernorCandidate({ candidate, selectLabel }: { candidate: GovernorAssi
         }
         aria-label={selectLabel}
         aria-disabled={candidate.atCapacity ? 'true' : 'false'}
-        onMouseDown={(event) => {
+        onClick={(event) => {
           event.stopPropagation();
           if (candidate.atCapacity) return;
           playSound('click');

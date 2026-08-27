@@ -232,7 +232,7 @@ export function UnitRow({
           <button
             type="button"
             className="tpl-step-btn"
-            onMouseDown={(event) => {
+            onClick={(event) => {
               event.preventDefault();
               onDecrement(stepAmountFromEvent(event));
             }}
@@ -244,7 +244,7 @@ export function UnitRow({
           <button
             type="button"
             className="tpl-step-btn"
-            onMouseDown={(event) => {
+            onClick={(event) => {
               event.preventDefault();
               onIncrement(stepAmountFromEvent(event));
             }}
@@ -257,20 +257,20 @@ export function UnitRow({
       <div className="tpl-unit-actions">
         {downgrade ? (
           <Tooltip content={{ get title() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.561.1", { Name: downgrade.name }); }, get body() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.561.2", { Name: unit.name, Name2: downgrade.name }); } }} position="left" delay={200}>
-            <button type="button" className="tpl-unit-swap" onMouseDown={() => onSwap(unit.id, downgrade.id)} aria-label={webUIText("Auto.Attr.componentssidebarsFormationTemplateSidebar.562.1", { Name: downgrade.name })}>
+            <button type="button" className="tpl-unit-swap" onClick={() => onSwap(unit.id, downgrade.id)} aria-label={webUIText("Auto.Attr.componentssidebarsFormationTemplateSidebar.562.1", { Name: downgrade.name })}>
               <img src="/assets/icons/I_UnitDemote.png" alt="" className="tpl-unit-action-icon" />
             </button>
           </Tooltip>
         ) : <span className="tpl-unit-action-spacer" />}
         {upgrade ? (
           <Tooltip content={{ get title() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.568.1", { Name: upgrade.name }); }, get body() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.568.2", { Name: unit.name, Name2: upgrade.name }); } }} position="left" delay={200}>
-            <button type="button" className="tpl-unit-swap" onMouseDown={() => onSwap(unit.id, upgrade.id)} aria-label={webUIText("Auto.Attr.componentssidebarsFormationTemplateSidebar.569.1", { Name: upgrade.name })}>
+            <button type="button" className="tpl-unit-swap" onClick={() => onSwap(unit.id, upgrade.id)} aria-label={webUIText("Auto.Attr.componentssidebarsFormationTemplateSidebar.569.1", { Name: upgrade.name })}>
               <img src="/assets/icons/I_UnitPromote.png" alt="" className="tpl-unit-action-icon" />
             </button>
           </Tooltip>
         ) : <span className="tpl-unit-action-spacer" />}
         <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.574.27'), get body() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.574.1", { Name: unit.name }); } }} position="left" delay={200}>
-          <button type="button" className="tpl-unit-remove" onMouseDown={onRemove} aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.575.28')}>
+          <button type="button" className="tpl-unit-remove" onClick={onRemove} aria-label={webUIText('Auto.Attr.ComponentsSidebarsFormationTemplateSidebar.575.28')}>
             <img src="/assets/icons/I_Trash.png" alt="" className="tpl-unit-action-icon" />
           </button>
         </Tooltip>
@@ -361,16 +361,11 @@ export function Picker({
   return createPortal(
     <div
       className="tpl-picker"
-      onMouseDown={event => {
-        if (event.target !== event.currentTarget) return;
-        event.preventDefault();
-        event.stopPropagation();
-        onCancel();
-      }}
       onClick={event => {
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
+        onCancel();
       }}
     >
       <div className="modal-drag-frame" style={offsetStyle}>
@@ -415,7 +410,7 @@ export function Picker({
                 key={tab.id}
                 type="button"
                 className={`tpl-picker-tab${tab.id === effectiveActiveType ? ' tpl-picker-tab--active' : ''}`}
-                onMouseDown={() => setActiveType(tab.id)}
+                onClick={() => setActiveType(tab.id)}
               >
                 <img src={tab.icon} alt="" className="tpl-picker-tab-icon" />
                 <span className="tpl-picker-tab-label">{tab.label}</span>
@@ -444,7 +439,7 @@ export function Picker({
                           data-tutorial-target="DynamicUnit"
                           data-tutorial-unit-id={unit.id}
                           data-tutorial-unit-count={count}
-                          onMouseDown={(event) => {
+                          onClick={(event) => {
                             event.preventDefault();
                             onAdd(unit.id, stepAmountFromEvent(event));
                           }}
@@ -477,7 +472,7 @@ export function Picker({
           </StyledScrollArea>
           <div className="tpl-picker-foot">
             <span>{webUIText("FormationTemplateSidebar.UnitsShown", { Value1: fmt(visibleCount) })}</span>
-            <button type="button" className="tpl-picker-done" onMouseDown={onCancel}><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" /></button>
+            <button type="button" className="tpl-picker-done" onClick={onCancel}><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" /></button>
           </div>
         </div>
       </div>
@@ -494,7 +489,7 @@ export function AssignedForces({ forces, openForce }: { forces: FormationTemplat
       ) : forces.map(force => {
         const role = force.commanderName || force.rank || (force.isNavy ? webUIText("Common.Fleet") : webUIText("Common.Army"));
         return (
-          <button key={force.id} type="button" className="tpl-force-row" onMouseDown={() => openForce(force.id)}>
+          <button key={force.id} type="button" className="tpl-force-row" onClick={() => openForce(force.id)}>
             <span className="tpl-force-line tpl-force-line--primary">
               <span className="tpl-force-name">{force.name}</span>
               <span className="tpl-force-strength">{`${fmt(force.strength)}/${fmt(force.maxStrength)}`}</span>
@@ -564,7 +559,7 @@ export function CombatTab({
           <button
             type="button"
             className="tpl-battle-group-add tpl-battle-group-add--icon"
-            onMouseDown={() => onAddBattleGroup('melee')}
+            onClick={() => onAddBattleGroup('melee')}
             disabled={!hasUnassignedMelee}
             aria-label={meleeTooltip.title}
           >
@@ -576,7 +571,7 @@ export function CombatTab({
           <button
             type="button"
             className="tpl-battle-group-add tpl-battle-group-add--icon"
-            onMouseDown={() => onAddBattleGroup('ranged')}
+            onClick={() => onAddBattleGroup('ranged')}
             disabled={!hasUnassignedRanged}
             aria-label={rangedTooltip.title}
           >
@@ -588,7 +583,7 @@ export function CombatTab({
           <button
             type="button"
             className="tpl-battle-group-add tpl-battle-group-add--icon"
-            onMouseDown={() => onAddBattleGroup('siege')}
+            onClick={() => onAddBattleGroup('siege')}
             disabled={!hasUnassignedSiege}
             aria-label={siegeTooltip.title}
           >
@@ -615,7 +610,7 @@ export function CombatTab({
                 <img src={roleIcon} alt="" className="tpl-battle-group-icon" />
                 <span className="tpl-battle-group-title">{groupName}</span>
                 <span className={`tpl-battle-group-count${groupCount > maximumBattleGroupUnits ? ' tpl-battle-group-count--bad' : ''}`}>{`${fmt(groupCount)} / ${fmt(maximumBattleGroupUnits)}`}</span>
-                <button type="button" className="tpl-unit-remove" onMouseDown={() => onRemoveBattleGroup(group.id)} aria-label={webUIText('FormationTemplate.BattlePlan.RemoveGroup')}>
+                <button type="button" className="tpl-unit-remove" onClick={() => onRemoveBattleGroup(group.id)} aria-label={webUIText('FormationTemplate.BattlePlan.RemoveGroup')}>
                   <img src="/assets/icons/I_Trash.png" alt="" className="tpl-unit-action-icon" />
                 </button>
               </div>
@@ -643,7 +638,7 @@ export function CombatTab({
                           <button
                             type="button"
                             className="tpl-step-btn"
-                            onMouseDown={(event) => {
+                            onClick={(event) => {
                               event.preventDefault();
                               onSetBattleGroupUnitCount(group.id, unit.id, count - stepAmountFromEvent(event));
                             }}
@@ -655,7 +650,7 @@ export function CombatTab({
                           <button
                             type="button"
                             className="tpl-step-btn"
-                            onMouseDown={(event) => {
+                            onClick={(event) => {
                               event.preventDefault();
                               onSetBattleGroupUnitCount(group.id, unit.id, count + stepAmountFromEvent(event));
                             }}
@@ -685,7 +680,7 @@ export function CombatTab({
                       <button
                         type="button"
                         className="tpl-battle-group-add-unit"
-                        onMouseDown={(event) => {
+                        onClick={(event) => {
                           event.preventDefault();
                           onSetBattleGroupUnitCount(
                             group.id,

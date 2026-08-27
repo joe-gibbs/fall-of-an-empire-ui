@@ -493,6 +493,7 @@ const PersonTooltip: React.FC<PersonTooltipProps> = ({
     return (
       <div
         className="ptt-portrait-btn"
+        data-webkiln-hit="alpha"
         onClick={handleClick}
         onMouseEnter={updatePointerAltHeld}
         onMouseMove={updatePointerAltHeld}
@@ -514,6 +515,7 @@ const PersonTooltip: React.FC<PersonTooltipProps> = ({
     >
       <div
         className="ptt-portrait-btn"
+        data-webkiln-hit="alpha"
         onClick={handleClick}
         onMouseEnter={updatePointerAltHeld}
         onMouseMove={updatePointerAltHeld}

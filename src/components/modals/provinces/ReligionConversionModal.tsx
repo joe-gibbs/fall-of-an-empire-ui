@@ -196,21 +196,15 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
   return (
     <div
       className={`modal-overlay${closing ? ' modal-overlay--closing' : ''}`}
-      onMouseDown={event => {
+      onClick={event => {
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
         close();
       }}
-      onClick={event => {
-        if (event.target !== event.currentTarget) return;
-        event.preventDefault();
-        event.stopPropagation();
-      }}
     >
       <div
         className={`modal rcm-modal${closing ? ' modal--closing' : ''}`}
-        onMouseDown={event => event.stopPropagation()}
         onClick={event => event.stopPropagation()}
       >
         <div className="rcm-header">
@@ -322,7 +316,7 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
                     <button
                       type="button"
                       className={`rcm-option${option.key === selectedKey ? ' rcm-option--selected' : ''}`}
-                      onMouseDown={() => setSelectedKey(option.key)}
+                      onClick={() => setSelectedKey(option.key)}
                     >
                       <img src={option.iconPath} alt="" className="rcm-option-icon" draggable={false} />
                       <span className="rcm-option-copy">

@@ -20,7 +20,7 @@ export const NATIVE_BRIDGE_PROTOCOL = {
     "battleParticipantNumbers": 6,
     "battleSideNumbers": 6,
     "battleFormationStrings": 19,
-    "battleFormationDetailNumbers": 19,
+    "battleFormationDetailNumbers": 18,
     "battleUnitStrings": 4,
     "battleUnitNumbers": 2,
     "battleActionStrings": 5,

@@ -342,7 +342,14 @@ export const Toggle: React.FC<{
   tooltip?: TooltipContent;
   disabled?: boolean;
 }> = ({ checked, onChange, label, desc, tooltip, disabled = false }) => (
-  <div className={`settings-row${disabled ? ' settings-row--disabled' : ''}`} onClick={disabled ? undefined : onChange}>
+  <div
+    className={`settings-row${disabled ? ' settings-row--disabled' : ''}`}
+    role="checkbox"
+    tabIndex={disabled ? -1 : 0}
+    aria-checked={checked}
+    aria-disabled={disabled || undefined}
+    onClick={disabled ? undefined : onChange}
+  >
     <div className="settings-row__text">
       <SettingsLabel label={label} tooltip={tooltip} />
       {desc && <span className="settings-row__desc">{desc}</span>}
@@ -407,7 +414,7 @@ export const Dropdown: React.FC<{ label: string; desc?: string; tooltip?: Toolti
   );
 };
 
-export const SettingsSlider: React.FC<{ label: string; desc?: string; tooltip?: TooltipContent; value: number; min?: number; max?: number; suffix?: string; display?: string; onChange: (v: number) => void }> = ({ label, desc, tooltip, value, min = 0, max = 100, suffix = '%', display, onChange }) => {
+export const SettingsSlider: React.FC<{ label: string; desc?: string; tooltip?: TooltipContent; value: number; min?: number; max?: number; step?: number; suffix?: string; display?: string; onChange: (v: number) => void }> = ({ label, desc, tooltip, value, min = 0, max = 100, step = Math.max(1, Math.round((max - min) / 20)), suffix = '%', display, onChange }) => {
   const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
   const thumbTransform = pct <= 0 ? 'translateX(0)' : pct >= 100 ? 'translateX(-100%)' : 'translateX(-50%)';
   const applyFromClientX = (clientX: number, track: HTMLDivElement) => {
@@ -440,10 +447,19 @@ export const SettingsSlider: React.FC<{ label: string; desc?: string; tooltip?: 
       <div
         className="settings-slider-track"
         role="slider"
+        tabIndex={0}
+        aria-label={label}
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}
         onMouseDown={handleTrackMouseDown}
+        onKeyDown={event => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowDown'
+            && event.key !== 'ArrowRight' && event.key !== 'ArrowUp') return;
+          event.preventDefault();
+          const direction = event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -1 : 1;
+          onChange(Math.min(max, Math.max(min, value + step * direction)));
+        }}
       >
         <div className="settings-slider-fill" style={{ width: `${pct.toFixed(1)}%` }} />
         <span
@@ -973,7 +989,7 @@ export const EventModelSelection: React.FC<{
       description: webUIText('Settings.Events.Scripted.Description'),
       iconPath: '/assets/icons/Models/T_ScriptedEvents.png',
       selected: llmProvider === 'Scripted',
-      onSelect: () => setGameplay({ llmProvider: 'Scripted', localLlmModel: '' }),
+      onSelect: () => setGameplay({ llmProvider: 'Scripted' }),
     },
   ];
 
@@ -986,7 +1002,7 @@ export const EventModelSelection: React.FC<{
             key={card.id}
             type="button"
             className={`settings-event-card${card.selected ? ' settings-event-card--selected' : ''}`}
-            onMouseDown={card.onSelect}
+            onClick={card.onSelect}
             aria-pressed={card.selected}
             aria-label={card.title}
           >
@@ -1013,7 +1029,7 @@ export const EventModelSelection: React.FC<{
               key={model.filename}
               type="button"
               className={`settings-event-card settings-event-card--model${selected ? ' settings-event-card--selected' : ''}${locked ? ' settings-event-card--locked' : ''}${canDownload ? ' settings-event-card--download' : ''}`}
-              onMouseDown={() => selectModel(model)}
+              onClick={() => selectModel(model)}
               disabled={locked && !canDownload}
               aria-pressed={selected}
               aria-label={model.title || model.filename}

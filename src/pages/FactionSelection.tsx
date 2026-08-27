@@ -1,8 +1,6 @@
 import React, {
-  createContext,
   forwardRef,
   useCallback,
-  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -10,21 +8,15 @@ import React, {
   useState,
 } from 'react';
 import Tooltip, { type TooltipLine } from '../components/common/tooltips/Tooltip';
-import IconButton from '../components/common/buttons/IconButton';
 import Portrait from '../components/common/portraits/Portrait';
 import { TraitIcon } from '../components/common/entities/TraitIcon';
 import CultureTooltip from '../components/common/tooltips/CultureTooltip';
 import GovernmentTooltip from '../components/common/tooltips/GovernmentTooltip';
 import ReligionTooltip from '../components/common/tooltips/ReligionTooltip';
 import StyledScrollArea from '../components/common/layout/scrolling/StyledScrollArea';
-import ZoomPanCanvas, {
-  type ZoomPanCanvasApi,
-  type ZoomPanMetrics,
-  type ZoomPanPoint,
-  type ZoomPanView,
-} from '../components/common/layout/scrolling/ZoomPanCanvas';
 import VirtualList from '../components/common/layout/scrolling/VirtualList';
 import { StatCellGrid, StatCell } from '../components/sidebars/shared/StatCellGrid';
+import { emblemMaskStyle, resolveRoundelEmblem } from '../hooks/useMaskableAssetUrl';
 import { WebkilnAssetPath } from '../utils/assets';
 import { resolveFactionBorderVariant } from '../utils/factionBorder';
 import { emblemAssetPath } from '../utils/factionEmblem';
@@ -32,11 +24,9 @@ import { formatNumber, formatSignedNumber } from '../utils/numberFormat';
 import { characterStatEffectLines } from '../utils/characterStatEffects';
 import type { StatKey } from '../data/types';
 import { useWebUIText, type WebUITextFormatter } from '../localization/WebUITextContext';
-import { MAP_MODE_ICONS } from '../components/bottombar/mapModeIcons';
-import { MAP_MODE_TOOLTIPS } from '../components/bottombar/mapModeTooltipContent';
 import {
   bridgeCall,
-  type GetNewGameMapFactionGeometryResponse,
+  type FactionSelectionTabletopRequest,
   type GetNewGameMapFactionSelectionResponse,
   type ScenarioMapFactionDto,
   type ScenarioMapLeaderDto,
@@ -73,42 +63,6 @@ interface FactionListRow {
   kind: 'sovereign' | 'subject';
   groupKey: string;
   hasMembers: boolean;
-}
-
-type FactionSelectionMapMode = 'political' | 'diplomaticRelation' | 'culture' | 'religion';
-type DiplomaticRelationStatus =
-  | 'identical'
-  | 'peace'
-  | 'vassal'
-  | 'liege'
-  | 'war'
-  | 'sharedLiege'
-  | 'militaryAlliance'
-  | 'defensiveAlliance';
-
-const MIN_ZOOM = 1;
-const MAX_ZOOM = 2.4;
-const ZOOM_STEP = 1.15;
-const MAP_BORDER_CANVAS_MAX_DIMENSION = 1024;
-const FACTION_SELECTION_MAP_MODES: FactionSelectionMapMode[] = [
-  'political',
-  'diplomaticRelation',
-  'culture',
-  'religion',
-];
-const MAP_MODE_LABEL_KEYS: Record<FactionSelectionMapMode, string> = {
-  political: 'MapModeTooltip.Political.Title',
-  diplomaticRelation: 'MapModeTooltip.DiplomaticRelation.Title',
-  culture: 'MapModeTooltip.Culture.Title',
-  religion: 'MapModeTooltip.Religion.Title',
-};
-
-function centredMapView({ viewportWidth, viewportHeight, contentWidth, contentHeight }: ZoomPanMetrics): ZoomPanView {
-  return {
-    zoom: MIN_ZOOM,
-    panX: (viewportWidth - contentWidth * MIN_ZOOM) * 0.5,
-    panY: (viewportHeight - contentHeight * MIN_ZOOM) * 0.5,
-  };
 }
 
 const STAT_META: Record<string, { labelKey: string; icon: string; descriptionKey: string }> = {
@@ -173,30 +127,6 @@ const FACTION_STAT_ICONS: Record<string, string> = {
 
 const SUBJECT_TREATY_TYPES = new Set(['Subject', 'Vassalage']);
 const MILITARY_TREATY_TYPES = new Set(['MilitaryAlliance', 'DefensiveAlliance']);
-const ALLIANCE_TREATY_TYPES = new Set(['MilitaryAlliance', 'DefensiveAlliance']);
-
-function linearChannelToSrgbHex(linear: number): string {
-  const srgb = linear <= 0.0031308
-    ? 12.92 * linear
-    : 1.055 * Math.pow(linear, 1 / 2.4) - 0.055;
-  const value = Math.max(0, Math.min(255, Math.round(srgb * 255)));
-  return value.toString(16).padStart(2, '0');
-}
-
-function linearRgb(red: number, green: number, blue: number): string {
-  return `#${linearChannelToSrgbHex(red)}${linearChannelToSrgbHex(green)}${linearChannelToSrgbHex(blue)}`;
-}
-
-const DIPLOMATIC_RELATION_COLOURS: Record<DiplomaticRelationStatus, string> = {
-  identical: linearRgb(0.07, 0.07, 0.25),
-  peace: linearRgb(0.13, 0.25, 0.13),
-  vassal: linearRgb(0.07, 0.2, 0.25),
-  liege: linearRgb(0.25, 0.2, 0.07),
-  war: linearRgb(0.25, 0.07, 0.07),
-  sharedLiege: linearRgb(0.25, 0.25, 0.13),
-  militaryAlliance: linearRgb(0.07, 0.3, 0.3),
-  defensiveAlliance: linearRgb(0.13, 0.3, 0.25),
-};
 
 function normaliseRgb(values: number[]): [number, number, number] {
   return [
@@ -384,17 +314,6 @@ function flattenFactionGroups(groups: FactionGroup[]): FactionListRow[] {
   return rows;
 }
 
-function getPoliticalColour(
-  faction: ScenarioMapFactionDto,
-  factionsByBase: Map<string, ScenarioMapFactionDto>,
-): number[] {
-  if (!faction.overlordBaseName) {
-    return faction.primaryColour;
-  }
-
-  return factionsByBase.get(faction.overlordBaseName)?.primaryColour ?? faction.primaryColour;
-}
-
 function getWarsForFaction(
   wars: ScenarioMapWarDto[],
   factionBaseName: string,
@@ -425,43 +344,6 @@ function roundelClassName(faction: ScenarioMapFactionDto, size: 'xs' | 'sm' | 'l
     playable: faction.playable,
   });
   return `fs-roundel fs-roundel--${size} fs-roundel--border-${variant}`;
-}
-
-function mapStageStyle(data: GetNewGameMapFactionSelectionResponse): React.CSSProperties {
-  return {
-    aspectRatio: `${data.mapWidth} / ${data.mapHeight}`,
-  };
-}
-
-function applyFactionGeometry(
-  data: GetNewGameMapFactionSelectionResponse,
-  geometryData: GetNewGameMapFactionGeometryResponse,
-): GetNewGameMapFactionSelectionResponse {
-  if (data.mapId !== geometryData.mapId) {
-    return data;
-  }
-
-  const geometriesByBase = new Map(
-    geometryData.factions.map((faction) => [faction.baseName, faction.geometry]),
-  );
-
-  return {
-    ...data,
-    mapWidth: geometryData.mapWidth || data.mapWidth,
-    mapHeight: geometryData.mapHeight || data.mapHeight,
-    factions: data.factions.map((faction) => {
-      const geometry = geometriesByBase.get(faction.baseName);
-      return geometry ? { ...faction, geometry } : faction;
-    }),
-  };
-}
-
-function mapCanvasScale(data: GetNewGameMapFactionSelectionResponse): number {
-  return Math.min(1, MAP_BORDER_CANVAS_MAX_DIMENSION / Math.max(data.mapWidth, data.mapHeight));
-}
-
-function mapCanvasSize(sourceSize: number, scale: number): number {
-  return Math.max(1, Math.round(sourceSize * scale));
 }
 
 function translatedTextOrFallback(t: WebUITextFormatter, key: string, fallback: string): string {
@@ -531,26 +413,26 @@ function translateFactionSelectionData(
   };
 }
 
-function roundelSymbolStyle(emblemAssetPath: string): React.CSSProperties {
-  return {
-    maskImage: `url("${WebkilnAssetPath(emblemAssetPath)}")`,
-    maskPosition: 'center',
-    maskSize: 'contain',
-    maskRepeat: 'no-repeat',
-  };
-}
-
-function renderRoundelSymbol(faction: ScenarioMapFactionDto): React.ReactNode {
-  if (!faction.emblemRowName) {
+function FactionSelectionRoundelSymbol({ faction }: { faction: ScenarioMapFactionDto }) {
+  const emblem = resolveRoundelEmblem(faction.emblemAssetPath || emblemAssetPath(faction.emblemRowName));
+  if (!emblem) {
     return null;
   }
-
-  const symbolAssetPath = emblemAssetPath(faction.emblemRowName);
+  if (emblem.useImage) {
+    return (
+      <img
+        className="fs-roundel-symbol-img"
+        src={emblem.src}
+        alt=""
+        draggable={false}
+      />
+    );
+  }
 
   return (
     <span
       className="fs-roundel-symbol"
-      style={roundelSymbolStyle(symbolAssetPath)}
+      style={emblemMaskStyle(emblem.src)}
     />
   );
 }
@@ -567,106 +449,6 @@ function modifierColor(value: number): string {
 
 function isSubjectTreaty(type: string): boolean {
   return SUBJECT_TREATY_TYPES.has(type);
-}
-
-function treatyWith(faction: ScenarioMapFactionDto, otherBaseName: string, types?: Set<string>): ScenarioMapTreatyDto | null {
-  return faction.treaties.find((treaty) => (
-    treaty.withFactionBaseName === otherBaseName &&
-    (!types || types.has(treaty.type))
-  )) ?? null;
-}
-
-function warSideIncludes(side: ScenarioMapWarDto['attacker'], baseName: string): boolean {
-  return side.leaderFactionBaseName === baseName || side.memberFactionBaseNames.includes(baseName);
-}
-
-function factionsAreAtWar(
-  data: GetNewGameMapFactionSelectionResponse,
-  leftBaseName: string,
-  rightBaseName: string,
-): boolean {
-  return data.wars.some((war) => (
-    (warSideIncludes(war.attacker, leftBaseName) && warSideIncludes(war.defender, rightBaseName)) ||
-    (warSideIncludes(war.defender, leftBaseName) && warSideIncludes(war.attacker, rightBaseName))
-  ));
-}
-
-function getVassalRelationColour(faction: ScenarioMapFactionDto): string {
-  switch (faction.subjectSubtype) {
-    case 'province':
-      return linearRgb(0.13, 0.2, 0.25);
-    case 'foederati':
-      return linearRgb(0.13, 0.25, 0.2);
-    case 'protectorate':
-      return linearRgb(0.2, 0.13, 0.25);
-    case 'hereditary':
-      return linearRgb(0.22, 0.16, 0.12);
-    default:
-      return DIPLOMATIC_RELATION_COLOURS.vassal;
-  }
-}
-
-function getDiplomaticRelationColour(
-  data: GetNewGameMapFactionSelectionResponse,
-  comparisonFaction: ScenarioMapFactionDto,
-  faction: ScenarioMapFactionDto,
-): string {
-  if (comparisonFaction.baseName === faction.baseName) {
-    return DIPLOMATIC_RELATION_COLOURS.identical;
-  }
-
-  const selectedSubjectTreaty = treatyWith(comparisonFaction, faction.baseName, SUBJECT_TREATY_TYPES);
-  if (selectedSubjectTreaty) {
-    return getVassalRelationColour(faction);
-  }
-
-  const targetSubjectTreaty = treatyWith(faction, comparisonFaction.baseName, SUBJECT_TREATY_TYPES);
-  if (targetSubjectTreaty) {
-    return DIPLOMATIC_RELATION_COLOURS.liege;
-  }
-
-  const selectedAllianceTreaty = treatyWith(comparisonFaction, faction.baseName, ALLIANCE_TREATY_TYPES);
-  const targetAllianceTreaty = treatyWith(faction, comparisonFaction.baseName, ALLIANCE_TREATY_TYPES);
-  const allianceType = selectedAllianceTreaty?.type ?? targetAllianceTreaty?.type ?? '';
-  if (allianceType === 'MilitaryAlliance') {
-    return DIPLOMATIC_RELATION_COLOURS.militaryAlliance;
-  }
-  if (allianceType === 'DefensiveAlliance') {
-    return DIPLOMATIC_RELATION_COLOURS.defensiveAlliance;
-  }
-
-  if (factionsAreAtWar(data, comparisonFaction.baseName, faction.baseName)) {
-    return DIPLOMATIC_RELATION_COLOURS.war;
-  }
-
-  if (
-    comparisonFaction.overlordBaseName &&
-    comparisonFaction.overlordBaseName === faction.overlordBaseName
-  ) {
-    return DIPLOMATIC_RELATION_COLOURS.sharedLiege;
-  }
-
-  return DIPLOMATIC_RELATION_COLOURS.peace;
-}
-
-function getMapModeFillColour(
-  mode: FactionSelectionMapMode,
-  data: GetNewGameMapFactionSelectionResponse,
-  selected: ScenarioMapFactionDto,
-  faction: ScenarioMapFactionDto,
-  factionsByBase: Map<string, ScenarioMapFactionDto>,
-): string {
-  switch (mode) {
-    case 'diplomaticRelation':
-      return getDiplomaticRelationColour(data, selected, faction);
-    case 'culture':
-      return faction.cultureInfo.colour || '#555555';
-    case 'religion':
-      return faction.religionInfo.colour || '#555555';
-    case 'political':
-    default:
-      return rgb(getPoliticalColour(faction, factionsByBase), 0.72);
-  }
 }
 
 function treatyBlockLabel(type: string, t: WebUITextFormatter): string {
@@ -784,221 +566,36 @@ function renderFactionStats(stats: ScenarioMapStatDto[]): React.ReactNode {
   );
 }
 
-function FactionBorderCanvas({
-  data,
-  factions,
+function FactionSelectionHeader({
+  title,
+  subtitle,
+  onClose,
+  backLabel,
 }: {
-  data: GetNewGameMapFactionSelectionResponse;
-  factions: ScenarioMapFactionDto[];
+  title: string;
+  subtitle?: string;
+  onClose: () => void;
+  backLabel: string;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const borderPaths = useMemo(
-    () => factions
-      .map((faction) => faction.geometry.borderPath)
-      .filter((path): path is string => path.length > 0),
-    [factions],
-  );
-  const canvasScale = mapCanvasScale(data);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      return;
-    }
-
-    const sourceWidth = Math.max(1, data.mapWidth);
-    const sourceHeight = Math.max(1, data.mapHeight);
-    const canvasWidth = mapCanvasSize(sourceWidth, canvasScale);
-    const canvasHeight = mapCanvasSize(sourceHeight, canvasScale);
-    if (canvas.width !== canvasWidth) {
-      canvas.width = canvasWidth;
-    }
-    if (canvas.height !== canvasHeight) {
-      canvas.height = canvasHeight;
-    }
-
-    const context = canvas.getContext('2d');
-    if (!context) {
-      return;
-    }
-
-    context.clearRect(0, 0, canvasWidth, canvasHeight);
-    if (borderPaths.length === 0 || typeof Path2D === 'undefined') {
-      return;
-    }
-
-    context.save();
-    context.scale(canvasScale, canvasScale);
-    context.lineJoin = 'round';
-    context.lineCap = 'round';
-
-    context.strokeStyle = 'rgba(8, 12, 17, 0.52)';
-    context.lineWidth = 4;
-    for (const borderPath of borderPaths) {
-      context.stroke(new Path2D(borderPath));
-    }
-
-    context.strokeStyle = 'rgba(238, 206, 130, 0.28)';
-    context.lineWidth = 1.5;
-    for (const borderPath of borderPaths) {
-      context.stroke(new Path2D(borderPath));
-    }
-    context.restore();
-  }, [borderPaths, canvasScale, data.mapHeight, data.mapWidth]);
-
   return (
-    <canvas
-      ref={canvasRef}
-      className="fs-map-borders"
-      width={mapCanvasSize(data.mapWidth, mapCanvasScale(data))}
-      height={mapCanvasSize(data.mapHeight, mapCanvasScale(data))}
-      aria-hidden="true"
-    />
-  );
-}
+    <header className="fs-header">
+      <button type="button" className="fs-back-btn" data-gamepad-back onClick={onClose}>
+        <span className="fs-back-icon" aria-hidden="true" />
+        <span>{backLabel}</span>
+      </button>
 
-function FactionPathCanvas({
-  data,
-  fillPath,
-  fillStyle,
-  borderPath,
-  outerBorderStyle,
-  outerBorderWidth,
-  innerBorderStyle,
-  innerBorderWidth,
-}: {
-  data: GetNewGameMapFactionSelectionResponse;
-  fillPath: string;
-  fillStyle: string;
-  borderPath: string;
-  outerBorderStyle: string;
-  outerBorderWidth: number;
-  innerBorderStyle: string;
-  innerBorderWidth: number;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const canvasScale = mapCanvasScale(data);
+      <div className="fs-title-block">
+        {subtitle ? <div className="fs-subtitle">{subtitle}</div> : null}
+        <h1 className="fs-title">{title}</h1>
+        <div className="fs-title-ornament" aria-hidden="true">
+          <span className="fs-title-ornament-line" />
+          <span className="fs-title-ornament-diamond" />
+          <span className="fs-title-ornament-line" />
+        </div>
+      </div>
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      return;
-    }
-
-    const sourceWidth = Math.max(1, data.mapWidth);
-    const sourceHeight = Math.max(1, data.mapHeight);
-    const canvasWidth = mapCanvasSize(sourceWidth, canvasScale);
-    const canvasHeight = mapCanvasSize(sourceHeight, canvasScale);
-    if (canvas.width !== canvasWidth) {
-      canvas.width = canvasWidth;
-    }
-    if (canvas.height !== canvasHeight) {
-      canvas.height = canvasHeight;
-    }
-
-    const context = canvas.getContext('2d');
-    if (!context) {
-      return;
-    }
-
-    context.clearRect(0, 0, canvasWidth, canvasHeight);
-    if (typeof Path2D === 'undefined') {
-      return;
-    }
-
-    context.save();
-    context.scale(canvasScale, canvasScale);
-    context.lineJoin = 'round';
-    context.lineCap = 'round';
-
-    if (fillPath) {
-      context.fillStyle = fillStyle;
-      context.fill(new Path2D(fillPath));
-    }
-
-    if (borderPath) {
-      const path = new Path2D(borderPath);
-      context.strokeStyle = outerBorderStyle;
-      context.lineWidth = outerBorderWidth;
-      context.stroke(path);
-      context.strokeStyle = innerBorderStyle;
-      context.lineWidth = innerBorderWidth;
-      context.stroke(path);
-    }
-
-    context.restore();
-  }, [
-    borderPath,
-    canvasScale,
-    data.mapHeight,
-    data.mapWidth,
-    fillPath,
-    fillStyle,
-    innerBorderStyle,
-    innerBorderWidth,
-    outerBorderStyle,
-    outerBorderWidth,
-  ]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fs-map-overlay"
-      width={mapCanvasSize(data.mapWidth, mapCanvasScale(data))}
-      height={mapCanvasSize(data.mapHeight, mapCanvasScale(data))}
-      aria-hidden="true"
-    />
-  );
-}
-
-function FactionHighlightCanvas({
-  data,
-  selected,
-  subjects,
-  hovered,
-}: {
-  data: GetNewGameMapFactionSelectionResponse;
-  selected: ScenarioMapFactionDto;
-  subjects: ScenarioMapFactionDto[];
-  hovered: ScenarioMapFactionDto | null;
-}) {
-  const visibleHovered = hovered && hovered.baseName !== selected.baseName ? hovered : null;
-  const subjectFillPath = subjects.map((subject) => subject.geometry.fillPath).filter(Boolean).join(' ');
-  const subjectBorderPath = subjects.map((subject) => subject.geometry.borderPath).filter(Boolean).join(' ');
-
-  return (
-    <>
-      <FactionPathCanvas
-        data={data}
-        fillPath={subjectFillPath}
-        fillStyle="rgba(255, 231, 160, 0.20)"
-        borderPath={subjectBorderPath}
-        outerBorderStyle="rgba(13, 18, 24, 0.56)"
-        outerBorderWidth={10}
-        innerBorderStyle="rgba(255, 218, 96, 0.52)"
-        innerBorderWidth={5}
-      />
-      <FactionPathCanvas
-        data={data}
-        fillPath={selected.geometry.fillPath}
-        fillStyle="rgba(255, 231, 160, 0.42)"
-        borderPath={selected.geometry.borderPath}
-        outerBorderStyle="rgba(13, 18, 24, 0.96)"
-        outerBorderWidth={10}
-        innerBorderStyle="rgba(255, 218, 96, 0.98)"
-        innerBorderWidth={5}
-      />
-      <FactionPathCanvas
-        data={data}
-        fillPath={visibleHovered?.geometry.fillPath ?? ''}
-        fillStyle={visibleHovered?.playable ? 'rgba(255, 246, 200, 0.30)' : 'rgba(194, 88, 88, 0.26)'}
-        borderPath={visibleHovered?.geometry.borderPath ?? ''}
-        outerBorderStyle={visibleHovered?.playable ? 'rgba(13, 18, 24, 0.88)' : 'rgba(42, 10, 10, 0.9)'}
-        outerBorderWidth={8}
-        innerBorderStyle={visibleHovered?.playable ? 'rgba(255, 231, 150, 0.9)' : 'rgba(219, 94, 94, 0.88)'}
-        innerBorderWidth={4}
-      />
-    </>
+      <div className="fs-header-balance" aria-hidden="true" />
+    </header>
   );
 }
 
@@ -1017,132 +614,20 @@ function StateView({
 }) {
   const t = useWebUIText();
   return (
-    <div className={`fs-root${closing ? ' fs-root--closing' : ''}`}>
-      <div className="fs-header">
-        <div className="fs-title-wrap">
-          <div className="fs-title">{title}</div>
-          <div className="fs-subtitle">{subtitle}</div>
-        </div>
-        <button type="button" className="fs-back-btn" onClick={onClose}>
-          <span className="fs-back-icon" aria-hidden="true" />
-          <span>{t('MainMenu.BackToMainMenu')}</span>
-        </button>
-      </div>
+    <div
+      className={`fs-root${closing ? ' fs-root--closing' : ''}`}
+      data-focus-root="faction-selection"
+      data-focus-priority="400"
+    >
+      <div className="fs-atmosphere" aria-hidden="true" />
+      <FactionSelectionHeader
+        title={title}
+        subtitle={subtitle}
+        onClose={onClose}
+        backLabel={t('MainMenu.BackToMainMenu')}
+      />
       <div className="fs-state-shell">
         <div className="fs-state-card">{message}</div>
-      </div>
-    </div>
-  );
-}
-
-function FactionSelectionLoadingFrame({
-  title,
-  closing = false,
-  onClose,
-}: {
-  title: string;
-  closing?: boolean;
-  onClose: () => void;
-}) {
-  const t = useWebUIText();
-  const rootClassName = `fs-root fs-root--pending${closing ? ' fs-root--closing' : ''}`;
-
-  return (
-    <div className={rootClassName}>
-      <div className="fs-header">
-        <div className="fs-title-wrap">
-          <div className="fs-title">{title || t('MainMenu.ChooseYourFaction')}</div>
-          <div className="fs-subtitle">{t('MainMenu.ChooseYourFaction')}</div>
-        </div>
-        <button type="button" className="fs-back-btn" onClick={onClose}>
-          <span className="fs-back-icon" aria-hidden="true" />
-          <span>{t('MainMenu.BackToMainMenuUpper')}</span>
-        </button>
-      </div>
-
-      <div className="fs-body" aria-busy="true">
-        <aside className="fs-list-panel">
-          <div className="fs-list-head">
-            <input
-              type="text"
-              className="search-input fs-search"
-              placeholder={t('MainMenu.SearchFactions')}
-              value=""
-              disabled
-              readOnly
-            />
-            <button
-              type="button"
-              className="fs-list-toggle-row"
-              aria-pressed={false}
-              disabled
-            >
-              <span className="fs-toggle-box">
-                <span className="fs-toggle-mark" />
-              </span>
-              <span className="fs-toggle-label">{t('MainMenu.ShowForeignFactions')}</span>
-            </button>
-          </div>
-
-          <div className="fs-list-scroll fs-pending-list" aria-hidden="true">
-            {Array.from({ length: 12 }, (_, index) => (
-              <div key={index} className="fs-faction-row fs-faction-row--sovereign fs-pending-row">
-                <span className="fs-pending-roundel" />
-                <span className="fs-faction-copy">
-                  <span className="fs-pending-line fs-pending-line--name" />
-                  <span className="fs-pending-line fs-pending-line--sub" />
-                </span>
-              </div>
-            ))}
-          </div>
-        </aside>
-
-        <section className="fs-map-panel fs-map-panel--pending">
-          <div className="fs-map-frame">
-            <div className="fs-map-stage fs-map-stage--pending" aria-hidden="true">
-              <div className="fs-map-pending-continent fs-map-pending-continent--west" />
-              <div className="fs-map-pending-continent fs-map-pending-continent--east" />
-              <div className="fs-map-pending-route fs-map-pending-route--one" />
-              <div className="fs-map-pending-route fs-map-pending-route--two" />
-              <div className="fs-map-vignette" />
-            </div>
-          </div>
-        </section>
-
-        <aside className="fs-detail-panel">
-          <div className="fs-detail-hero fs-detail-hero--pending">
-            <div className="fs-detail-hero-vignette" />
-            <div className="fs-detail-hero-scrim">
-              <span className="fs-pending-roundel fs-pending-roundel--lg" />
-              <div className="fs-detail-hero-info">
-                <div className="fs-pending-line fs-pending-line--hero" />
-                <div className="fs-pending-line fs-pending-line--ruler" />
-              </div>
-            </div>
-          </div>
-
-          <div className="fs-detail-body fs-detail-body--pending" aria-hidden="true">
-            {Array.from({ length: 4 }, (_, sectionIndex) => (
-              <div key={sectionIndex} className="fs-detail-section">
-                <div className="fs-detail-section-title">
-                  <span className="fs-pending-icon" />
-                  <span className="fs-pending-line fs-pending-line--section" />
-                </div>
-                <div className="fs-pending-detail-grid">
-                  <span className="fs-pending-line" />
-                  <span className="fs-pending-line fs-pending-line--short" />
-                  <span className="fs-pending-line fs-pending-line--medium" />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="fs-detail-footer">
-            <button type="button" className="fs-begin-btn fs-begin-btn--disabled" disabled>
-              <span className="fs-begin-btn-main">{t('MainMenu.BeginCampaign')}</span>
-            </button>
-          </div>
-        </aside>
       </div>
     </div>
   );
@@ -1153,114 +638,318 @@ export interface FactionMapHoverHandle {
   clearHovered: () => void;
 }
 
-interface MapControlsOverlayState {
-  mapLabelFaction: ScenarioMapFactionDto | null;
-  lockedLabel: string;
-  activeMapMode: FactionSelectionMapMode;
-  setActiveMapMode: (mode: FactionSelectionMapMode) => void;
+function requestFactionSelectionTabletop(
+  request: Partial<FactionSelectionTabletopRequest> & Pick<FactionSelectionTabletopRequest, 'command'>,
+) {
+  return bridgeCall('game.faction_selection_tabletop', {
+    command: request.command,
+    mapId: request.mapId ?? '',
+    baseName: request.baseName ?? '',
+    screenX: request.screenX ?? 0,
+    screenY: request.screenY ?? 0,
+    deltaX: request.deltaX ?? 0,
+    deltaY: request.deltaY ?? 0,
+    zoomDelta: request.zoomDelta ?? 0,
+  });
 }
 
-const MapControlsOverlayContext = createContext<MapControlsOverlayState>({
-  mapLabelFaction: null,
-  lockedLabel: '',
-  activeMapMode: 'political',
-  setActiveMapMode: () => {},
-});
+function zoomTabletopToCapital(baseName: string) {
+  return requestFactionSelectionTabletop({
+    command: 'focus',
+    baseName,
+  }).then(() => requestFactionSelectionTabletop({
+    command: 'zoom',
+    zoomDelta: 7,
+  }));
+}
 
-function FactionSelectionMapControls({
-  zoom,
-  zoomIn,
-  zoomOut,
-  resetView,
-}: ZoomPanCanvasApi) {
-  const { mapLabelFaction, lockedLabel, activeMapMode, setActiveMapMode } = useContext(MapControlsOverlayContext);
+function useFactionSelectionTabletop(
+  mapId: string,
+  selectedBaseName: string,
+  enabled: boolean,
+): void {
+  const showRequestRef = useRef<ReturnType<typeof requestFactionSelectionTabletop> | null>(null);
+  const selectedBaseNameRef = useRef(selectedBaseName);
+
+  useEffect(() => {
+    selectedBaseNameRef.current = selectedBaseName;
+  }, [selectedBaseName]);
+
+  useEffect(() => {
+    return () => {
+      void requestFactionSelectionTabletop({ command: 'hide' }).catch(acknowledgeBridgeFailure);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) {
+      showRequestRef.current = null;
+      return undefined;
+    }
+
+    const showRequest = requestFactionSelectionTabletop({
+      command: 'show',
+      mapId,
+      baseName: selectedBaseNameRef.current,
+    });
+    showRequestRef.current = showRequest;
+    void showRequest
+      .catch(acknowledgeBridgeFailure);
+
+    return () => {
+      showRequestRef.current = null;
+    };
+  }, [enabled, mapId]);
+
+  useEffect(() => {
+    if (!enabled || !selectedBaseName) {
+      return;
+    }
+
+    let cancelled = false;
+    const showRequest = showRequestRef.current;
+    if (showRequest) {
+      void showRequest
+        .then(() => {
+          if (!cancelled) {
+            return requestFactionSelectionTabletop({
+              command: 'focus',
+              baseName: selectedBaseName,
+            });
+          }
+          return undefined;
+        })
+        .catch(acknowledgeBridgeFailure);
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, selectedBaseName]);
+}
+
+interface FactionSelectionTabletopMapProps {
+  selectedBaseName: string;
+  hoveredFaction: ScenarioMapFactionDto | null;
+  scenarioDescriptionParts: string[];
+  onSelectBaseName: (baseName: string) => void;
+}
+
+function FactionSelectionTabletopMap({
+  selectedBaseName,
+  hoveredFaction,
+  scenarioDescriptionParts,
+  onSelectBaseName,
+}: FactionSelectionTabletopMapProps) {
   const t = useWebUIText();
+  const dragRef = useRef({
+    pointerId: -1,
+    button: -1,
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    lastY: 0,
+    moved: false,
+  });
+  const pendingPanRef = useRef({ x: 0, y: 0 });
+  const panFrameRef = useRef<number | null>(null);
+
+  const flushPan = useCallback(() => {
+    panFrameRef.current = null;
+    const delta = pendingPanRef.current;
+    pendingPanRef.current = { x: 0, y: 0 };
+    if (delta.x !== 0 || delta.y !== 0) {
+      void requestFactionSelectionTabletop({
+        command: 'pan',
+        deltaX: delta.x,
+        deltaY: delta.y,
+      }).catch(acknowledgeBridgeFailure);
+    }
+  }, []);
+
+  useEffect(() => () => {
+    if (panFrameRef.current !== null) {
+      cancelAnimationFrame(panFrameRef.current);
+    }
+  }, []);
+
+  const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 && event.button !== 1) {
+      return;
+    }
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      pointerId: event.pointerId,
+      button: event.button,
+      startX: event.clientX,
+      startY: event.clientY,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      moved: false,
+    };
+  }, []);
+
+  const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (drag.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const deltaX = event.clientX - drag.lastX;
+    const deltaY = event.clientY - drag.lastY;
+    drag.lastX = event.clientX;
+    drag.lastY = event.clientY;
+    drag.moved = drag.moved || Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 4;
+    pendingPanRef.current.x += deltaX / window.innerWidth;
+    pendingPanRef.current.y -= deltaY / window.innerHeight;
+    if (panFrameRef.current === null) {
+      panFrameRef.current = requestAnimationFrame(flushPan);
+    }
+  }, [flushPan]);
+
+  const finishPointer = useCallback((event: React.PointerEvent<HTMLDivElement>, allowPick: boolean) => {
+    const drag = dragRef.current;
+    if (drag.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    dragRef.current.pointerId = -1;
+
+    if (allowPick && drag.button === 0 && !drag.moved) {
+      void requestFactionSelectionTabletop({
+        command: 'pick',
+        screenX: event.clientX / window.innerWidth,
+        screenY: event.clientY / window.innerHeight,
+      })
+        .then((response) => {
+          if (response.baseName) {
+            onSelectBaseName(response.baseName);
+          }
+        })
+        .catch(acknowledgeBridgeFailure);
+    }
+  }, [onSelectBaseName]);
+
+  const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    void requestFactionSelectionTabletop({
+      command: 'zoom',
+      zoomDelta: -event.deltaY / 120,
+    }).catch(acknowledgeBridgeFailure);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      let request: (Partial<FactionSelectionTabletopRequest> & Pick<FactionSelectionTabletopRequest, 'command'>) | null = null;
+      if (key === 'w') request = { command: 'pan', deltaY: -0.045 };
+      else if (key === 's') request = { command: 'pan', deltaY: 0.045 };
+      else if (key === 'a') request = { command: 'pan', deltaX: 0.045 };
+      else if (key === 'd') request = { command: 'pan', deltaX: -0.045 };
+      else if (key === '+' || key === '=') request = { command: 'zoom', zoomDelta: 0.7 };
+      else if (key === '-' || key === '_') request = { command: 'zoom', zoomDelta: -0.7 };
+      else if (key === 'r') request = { command: 'reset' };
+
+      if (request) {
+        event.preventDefault();
+        void requestFactionSelectionTabletop(request).catch(acknowledgeBridgeFailure);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleZoomControl = useCallback((event: React.PointerEvent<HTMLButtonElement>, amount: number) => {
+    event.preventDefault();
+    event.stopPropagation();
+    void requestFactionSelectionTabletop({
+      command: amount === 0 ? 'reset' : 'zoom',
+      zoomDelta: amount,
+    }).catch(acknowledgeBridgeFailure);
+  }, []);
 
   return (
-    <>
-      {mapLabelFaction && (
-        <div className="fs-map-hover-label">
-          <span className={roundelClassName(mapLabelFaction, 'xs')} style={roundelStyle(mapLabelFaction)}>
-            {renderRoundelSymbol(mapLabelFaction)}
-          </span>
-          <span>{mapLabelFaction.displayName}</span>
-          {!mapLabelFaction.playable && (
-            <span className="fs-map-hover-tag fs-map-hover-tag--locked">{lockedLabel}</span>
-          )}
+    <section className={`fs-map-panel fs-map-panel--tabletop${scenarioDescriptionParts.length > 0 ? ' fs-map-panel--has-description' : ''}`}>
+      <div
+        className="fs-tabletop-input"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={(event) => finishPointer(event, true)}
+        onPointerCancel={(event) => finishPointer(event, false)}
+        onAuxClick={(event) => event.preventDefault()}
+        onWheel={handleWheel}
+      >
+        {hoveredFaction && hoveredFaction.baseName !== selectedBaseName && (
+          <div className="fs-map-hover-label">
+            <span className={roundelClassName(hoveredFaction, 'xs')} style={roundelStyle(hoveredFaction)}>
+              <FactionSelectionRoundelSymbol faction={hoveredFaction} />
+            </span>
+            <span>{hoveredFaction.displayName}</span>
+            {!hoveredFaction.playable && (
+              <span className="fs-map-hover-tag fs-map-hover-tag--locked">{t('MainMenu.Locked')}</span>
+            )}
+          </div>
+        )}
+
+        <div
+          className="fs-zoom-controls"
+          data-focus-group="vertical"
+          data-focus-left=".fs-faction-row--active"
+          data-focus-right=".fs-begin-btn"
+        >
+          <button type="button" className="fs-zoom-btn" onPointerDown={(event) => handleZoomControl(event, 1)}>
+            <img src="/assets/icons/I_Plus.png" alt="" className="fs-zoom-icon" draggable={false} />
+          </button>
+          <button type="button" className="fs-zoom-btn" onPointerDown={(event) => handleZoomControl(event, -1)}>
+            <img src="/assets/icons/I_Minus.png" alt="" className="fs-zoom-icon" draggable={false} />
+          </button>
+          <button
+            type="button"
+            className="fs-zoom-btn fs-zoom-btn--reset"
+            onPointerDown={(event) => handleZoomControl(event, 0)}
+          >
+            <img src="/assets/icons/I_ResetView.png" alt="" className="fs-zoom-icon" draggable={false} />
+          </button>
+        </div>
+      </div>
+
+      {scenarioDescriptionParts.length > 0 && (
+        <div className="fs-campaign-description">
+          <StyledScrollArea
+            className="fs-campaign-description-scroll"
+            viewportClassName="fs-campaign-description-viewport"
+            variant="inline"
+          >
+            {scenarioDescriptionParts.map((part, index) => (
+              <p key={index}>{part}</p>
+            ))}
+          </StyledScrollArea>
         </div>
       )}
-
-      <div className="fs-map-mode-controls">
-        {FACTION_SELECTION_MAP_MODES.map((mode) => {
-          const label = t(MAP_MODE_LABEL_KEYS[mode]);
-          return (
-            <Tooltip
-              key={mode}
-              content={MAP_MODE_TOOLTIPS[mode] ?? { title: label }}
-              position="left"
-              delay={150}
-              bubbleClassName="tt-bubble--map-mode"
-            >
-              <div
-                className="fs-map-mode-btn-wrap"
-                onMouseDown={(event) => {
-                  event.stopPropagation();
-                }}
-              >
-                <IconButton
-                  icon={MAP_MODE_ICONS[mode]}
-                  label={label}
-                  active={activeMapMode === mode}
-                  className="fs-map-mode-btn"
-                  onClick={() => setActiveMapMode(mode)}
-                />
-              </div>
-            </Tooltip>
-          );
-        })}
-      </div>
-
-      <div className="fs-zoom-controls">
-        <button
-          type="button"
-          className="fs-zoom-btn"
-          onMouseDown={(event) => {
-            event.stopPropagation();
-            zoomIn();
-          }}
-        >
-          <img src="/assets/icons/I_Plus.png" alt="" className="fs-zoom-icon" draggable={false} />
-        </button>
-        <button
-          type="button"
-          className="fs-zoom-btn"
-          onMouseDown={(event) => {
-            event.stopPropagation();
-            zoomOut();
-          }}
-        >
-          <img src="/assets/icons/I_Minus.png" alt="" className="fs-zoom-icon" draggable={false} />
-        </button>
-        <button
-          type="button"
-          className="fs-zoom-btn fs-zoom-btn--reset"
-          onMouseDown={(event) => {
-            event.stopPropagation();
-            resetView();
-          }}
-        >
-          <img src="/assets/icons/I_ResetView.png" alt="" className="fs-zoom-icon" draggable={false} />
-        </button>
-        <div className="fs-zoom-readout">{zoom.toFixed(1)}<WebUIText textKey="Auto.PagesFactionSelection.621.1" /></div>
-      </div>
-    </>
+    </section>
   );
 }
 
 interface FactionSelectionBrowseColumnProps {
   mapId: string;
   data: GetNewGameMapFactionSelectionResponse;
-  selected: ScenarioMapFactionDto;
   selectedBaseName: string;
   onSelectBaseName: (baseName: string) => void;
   search: string;
@@ -1275,7 +964,6 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
     {
       mapId,
       data,
-      selected,
       selectedBaseName,
       onSelectBaseName,
       search,
@@ -1288,9 +976,6 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
   ) {
     const t = useWebUIText();
     const [hoveredBaseName, setHoveredBaseName] = useState('');
-    const [activeMapMode, setActiveMapMode] = useState<FactionSelectionMapMode>('political');
-
-    const pickRequestIdRef = useRef(0);
 
     useImperativeHandle(ref, () => ({
       setHovered: (baseName: string) => setHoveredBaseName(baseName),
@@ -1303,10 +988,6 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
       [factions],
     );
     const hovered = hoveredBaseName ? factionsByBase.get(hoveredBaseName) ?? null : null;
-    const selectedSubjects = useMemo(
-      () => factions.filter((faction) => faction.overlordBaseName === selected.baseName),
-      [factions, selected.baseName],
-    );
     const searchQuery = search.trim().toLowerCase();
 
     const visibleFactions = useMemo(
@@ -1325,37 +1006,6 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
       return flattenFactionGroups(groups);
     }, [factions, visibleFactions]);
 
-    const mapLabelFaction = hovered && hovered.baseName !== selected.baseName ? hovered : null;
-    const mapControlsOverlay = useMemo(
-      () => ({
-        mapLabelFaction,
-        lockedLabel: t('MainMenu.Locked'),
-        activeMapMode,
-        setActiveMapMode,
-      }),
-      [activeMapMode, mapLabelFaction, t],
-    );
-
-    const handleMapPick = useCallback((point: ZoomPanPoint) => {
-      const requestId = pickRequestIdRef.current + 1;
-      pickRequestIdRef.current = requestId;
-
-      void bridgeCall('game.pick_new_game_map_faction', {
-        mapId,
-        x: point.x / 100,
-        y: point.y / 100,
-      })
-        .then((response) => {
-          if (pickRequestIdRef.current !== requestId || !response.baseName) {
-            return;
-          }
-
-          onSelectBaseName(response.baseName);
-          setHoveredBaseName(response.baseName);
-        })
-        .catch(acknowledgeBridgeFailure);
-    }, [mapId, onSelectBaseName]);
-
     const renderFactionRow = useCallback((row: FactionListRow) => {
       const faction = row.faction;
       const active = selectedBaseName === faction.baseName;
@@ -1367,18 +1017,33 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
           }${!faction.playable ? ' fs-faction-row--locked' : ''}${
             row.hasMembers ? ' fs-faction-row--grouped' : ''
           }`}
+          aria-selected={active}
+          data-gamepad-default={active ? '' : undefined}
+          data-focus-right=".fs-begin-btn"
+          onFocus={() => onSelectBaseName(faction.baseName)}
           onClick={() => onSelectBaseName(faction.baseName)}
           onMouseEnter={() => setHoveredBaseName(faction.baseName)}
           onMouseLeave={() => setHoveredBaseName('')}
         >
           <span className={roundelClassName(faction, 'xs')} style={roundelStyle(faction)}>
-            {renderRoundelSymbol(faction)}
+            <FactionSelectionRoundelSymbol faction={faction} />
           </span>
           <span className="fs-faction-copy">
             <span className="fs-faction-name">{faction.displayName}</span>
-            {(row.kind === 'subject' || !row.hasMembers) && (
-              <span className="fs-faction-sub">
-                {faction.capitalSettlementName || faction.realm || '-'}
+            {(row.kind === 'subject' || !row.hasMembers) && faction.capitalSettlementName && (
+              <span
+                className="fs-faction-sub fs-faction-sub--capital"
+                onClick={(event) => {
+                  if (event.button !== 0) {
+                    return;
+                  }
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onSelectBaseName(faction.baseName);
+                  void zoomTabletopToCapital(faction.baseName).catch(acknowledgeBridgeFailure);
+                }}
+              >
+                {faction.capitalSettlementName}
               </span>
             )}
           </span>
@@ -1388,7 +1053,15 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
 
     return (
       <>
-        <aside className="fs-list-panel">
+        <aside
+          className="fs-list-panel"
+          data-focus-group="vertical"
+          data-focus-right=".fs-begin-btn"
+        >
+          <div className="fs-panel-banner">
+            <span className="fs-panel-banner-title">{t('MainMenu.Realm')}</span>
+            <span className="fs-panel-banner-count">{formatNumber(visibleFactions.length)}</span>
+          </div>
           <div className="fs-list-head">
             <input
               type="text"
@@ -1424,192 +1097,15 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
             overscan={10}
             resetSignal={`${mapId}:${showForeign ? 1 : 0}:${searchQuery}`}
           />
+          <div className="fs-panel-meander" aria-hidden="true" />
         </aside>
 
-        <section className={`fs-map-panel${scenarioDescriptionParts.length > 0 ? ' fs-map-panel--has-description' : ''}`}>
-          <MapControlsOverlayContext.Provider value={mapControlsOverlay}>
-            <ZoomPanCanvas
-              key={mapId}
-              className="fs-map-frame"
-              contentClassName="fs-map-stage"
-              contentStyle={mapStageStyle(data)}
-              initialView={centredMapView}
-              minZoom={MIN_ZOOM}
-              maxZoom={MAX_ZOOM}
-              zoomStep={ZOOM_STEP}
-              resetViewOnResize
-              onContentLeftClick={handleMapPick}
-              onContentMouseLeave={() => setHoveredBaseName('')}
-              onPanDragStart={() => setHoveredBaseName('')}
-              controls={FactionSelectionMapControls}
-            >
-              {data.paperMapUrl && (
-                <img src={data.paperMapUrl} alt="" className="fs-map-painted" draggable={false} />
-              )}
-              {activeMapMode === 'political' && data.politicalMapUrl && (
-                <img src={data.politicalMapUrl} alt="" className="fs-map-political-img" draggable={false} />
-              )}
-
-              {(activeMapMode !== 'political' || !data.politicalMapUrl) && (
-                <svg
-                  viewBox={`0 0 ${data.mapWidth} ${data.mapHeight}`}
-                  className={`fs-map-political fs-map-political--${activeMapMode}`}
-                  preserveAspectRatio="none"
-                >
-                  {factions.map((faction) => {
-                    const fillColour = getMapModeFillColour(activeMapMode, data, selected, faction, factionsByBase);
-
-                    return (
-                      <g key={faction.baseName}>
-                        {faction.geometry.fillPath && (
-                          <path
-                            d={faction.geometry.fillPath}
-                            fill={fillColour}
-                            fillOpacity={activeMapMode === 'political' ? undefined : 0.78}
-                          />
-                        )}
-                        {faction.geometry.borderPath && (
-                          <path
-                            d={faction.geometry.borderPath}
-                            fill="none"
-                            stroke="rgba(8, 12, 17, 0.82)"
-                            strokeWidth={2}
-                            strokeLinejoin="round"
-                            strokeLinecap="round"
-                          />
-                        )}
-                      </g>
-                    );
-                  })}
-                </svg>
-              )}
-
-              <FactionBorderCanvas data={data} factions={factions} />
-
-              {data.politicalMapUrl ? (
-                <FactionHighlightCanvas
-                  data={data}
-                  selected={selected}
-                  subjects={selectedSubjects}
-                  hovered={hovered}
-                />
-              ) : (
-                <svg
-                  viewBox={`0 0 ${data.mapWidth} ${data.mapHeight}`}
-                  className="fs-map-overlay"
-                  preserveAspectRatio="none"
-                >
-                    {selectedSubjects.map((subject) => subject.geometry.fillPath).filter(Boolean).length > 0 && (
-                      <path
-                        d={selectedSubjects.map((subject) => subject.geometry.fillPath).filter(Boolean).join(' ')}
-                        fill="rgba(255, 231, 160, 0.20)"
-                      />
-                    )}
-                    {selectedSubjects.map((subject) => subject.geometry.borderPath).filter(Boolean).length > 0 && (
-                      <g>
-                        <path
-                          d={selectedSubjects.map((subject) => subject.geometry.borderPath).filter(Boolean).join(' ')}
-                          fill="none"
-                          stroke="rgba(13, 18, 24, 0.56)"
-                          strokeWidth={10}
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                        />
-                        <path
-                          d={selectedSubjects.map((subject) => subject.geometry.borderPath).filter(Boolean).join(' ')}
-                          fill="none"
-                          stroke="rgba(255, 218, 96, 0.52)"
-                          strokeWidth={5}
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                        />
-                      </g>
-                    )}
-                    {selected.geometry.fillPath && (
-                      <path d={selected.geometry.fillPath} fill="rgba(255, 231, 160, 0.42)" />
-                    )}
-                    {selected.geometry.borderPath && (
-                      <g>
-                        <path
-                          d={selected.geometry.borderPath}
-                          fill="none"
-                          stroke="rgba(13, 18, 24, 0.96)"
-                          strokeWidth={10}
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                        />
-                        <path
-                          d={selected.geometry.borderPath}
-                          fill="none"
-                          stroke="rgba(255, 218, 96, 0.98)"
-                          strokeWidth={5}
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                        />
-                      </g>
-                    )}
-
-                    {hovered && hovered.baseName !== selected.baseName && hovered.geometry.fillPath && (
-                      <path
-                        d={hovered.geometry.fillPath}
-                        fill={hovered.playable ? 'rgba(255, 246, 200, 0.30)' : 'rgba(194, 88, 88, 0.26)'}
-                      />
-                    )}
-                    {hovered && hovered.baseName !== selected.baseName && hovered.geometry.borderPath && (
-                      <g>
-                        <path
-                          d={hovered.geometry.borderPath}
-                          fill="none"
-                          stroke={hovered.playable ? 'rgba(13, 18, 24, 0.88)' : 'rgba(42, 10, 10, 0.9)'}
-                          strokeWidth={8}
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                        />
-                        <path
-                          d={hovered.geometry.borderPath}
-                          fill="none"
-                          stroke={hovered.playable ? 'rgba(255, 231, 150, 0.9)' : 'rgba(219, 94, 94, 0.88)'}
-                          strokeWidth={4}
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                        />
-                      </g>
-                    )}
-                </svg>
-              )}
-
-              <div className="fs-map-vignette" />
-
-              {selected.hasCapitalPosition && (
-                <div
-                  className="fs-capital-marker"
-                  style={{
-                    left: `${selected.capitalPosX * 100}%`,
-                    top: `${selected.capitalPosY * 100}%`,
-                  }}
-                >
-                  <div className="fs-capital-pin">
-                    <div className="fs-capital-star" />
-                    <div className="fs-capital-name">{selected.capitalSettlementName}</div>
-                  </div>
-                </div>
-              )}
-            </ZoomPanCanvas>
-          </MapControlsOverlayContext.Provider>
-
-          {scenarioDescriptionParts.length > 0 && (
-            <div className="fs-campaign-description">
-              <StyledScrollArea
-                className="fs-campaign-description-scroll"
-                viewportClassName="fs-campaign-description-viewport"
-              >
-                {scenarioDescriptionParts.map((part, index) => (
-                  <p key={index}>{part}</p>
-                ))}
-              </StyledScrollArea>
-            </div>
-          )}
-        </section>
+        <FactionSelectionTabletopMap
+          selectedBaseName={selectedBaseName}
+          hoveredFaction={hovered}
+          scenarioDescriptionParts={scenarioDescriptionParts}
+          onSelectBaseName={onSelectBaseName}
+        />
       </>
     );
   },
@@ -1659,13 +1155,13 @@ function FactionSelectionDetailPanel({
   });
 
   const renderSubjectRoundels = (subjects: ScenarioMapFactionDto[]) => (
-    <div className="fs-subject-roundel-list">
+    <div className="fs-subject-roundel-list" data-focus-group="horizontal">
       {subjects.map((subject) => (
         <Tooltip
           key={subject.baseName}
           content={{
             title: subject.displayName,
-            body: subject.capitalSettlementName || subject.realm || undefined,
+            body: subject.capitalSettlementName || undefined,
           }}
           position="bottom"
           delay={150}
@@ -1680,7 +1176,7 @@ function FactionSelectionDetailPanel({
             onMouseLeave={onFactionHoverEnd}
           >
             <span className={roundelClassName(subject, 'sm')} style={roundelStyle(subject)}>
-              {renderRoundelSymbol(subject)}
+              <FactionSelectionRoundelSymbol faction={subject} />
             </span>
           </button>
         </Tooltip>
@@ -1698,7 +1194,7 @@ function FactionSelectionDetailPanel({
       <>
         {leader && (
           <span className={roundelClassName(leader, 'sm')} style={roundelStyle(leader)}>
-            {renderRoundelSymbol(leader)}
+            <FactionSelectionRoundelSymbol faction={leader} />
           </span>
         )}
         <div className="fs-war-side-meta">
@@ -1731,9 +1227,23 @@ function FactionSelectionDetailPanel({
     );
   };
 
+  const heroStyle = {
+    ['--fs-faction-primary' as string]: rgb(selected.primaryColour),
+    ['--fs-faction-primary-soft' as string]: rgb(selected.primaryColour, 0.42),
+    ['--fs-faction-secondary' as string]: rgb(
+      selected.secondaryColour.length >= 3 ? selected.secondaryColour : selected.primaryColour,
+      0.35,
+    ),
+  };
+
   return (
-    <aside className="fs-detail-panel">
-      <div className="fs-detail-hero">
+    <aside
+      className="fs-detail-panel"
+      data-focus-group="vertical"
+      data-focus-left=".fs-faction-row--active"
+    >
+      <div className="fs-detail-hero" style={heroStyle}>
+        <div className="fs-detail-hero-wash" aria-hidden="true" />
         {selectedLeader ? (
           <div className="fs-detail-hero-portrait">
             <Portrait
@@ -1753,9 +1263,14 @@ function FactionSelectionDetailPanel({
 
         <div className="fs-detail-hero-scrim">
           <span className={roundelClassName(selected, 'lg')} style={roundelStyle(selected)}>
-            {renderRoundelSymbol(selected)}
+            <FactionSelectionRoundelSymbol faction={selected} />
           </span>
           <div className="fs-detail-hero-info">
+            {!selected.playable && (
+              <div className="fs-detail-hero-status">
+                {showPurchaseForSelected ? t('Demo.BuyFullGame') : t('MainMenu.Locked')}
+              </div>
+            )}
             <div className="fs-detail-hero-faction-name">{selected.displayName}</div>
             {selectedLeader && (
               <div className="fs-detail-hero-ruler-name">{selectedLeader.displayName}</div>
@@ -1822,13 +1337,24 @@ function FactionSelectionDetailPanel({
               </div>
             </ReligionTooltip>
 
-            <div className="fs-identity-item">
+            <button
+              type="button"
+              className="fs-identity-item fs-identity-item--capital"
+              onClick={(event) => {
+                if (event.button !== 0) {
+                  return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                void zoomTabletopToCapital(selected.baseName).catch(acknowledgeBridgeFailure);
+              }}
+            >
               <img src="/assets/icons/I_Capital.png" alt="" className="fs-identity-icon" />
               <div>
                 <div className="fs-identity-label">{t('Common.Capital')}</div>
                 <div className="fs-identity-text">{selected.capitalSettlementName || '-'}</div>
               </div>
-            </div>
+            </button>
 
             <GovernmentTooltip
               government={selected.government}
@@ -1869,7 +1395,7 @@ function FactionSelectionDetailPanel({
                 return (
                   <div key={war.id} className="fs-war">
                     <div className="fs-war-name">{war.name}</div>
-                    <div className="fs-war-sides">
+                    <div className="fs-war-sides" data-focus-group="horizontal">
                       {renderWarSide(ourSide, ourLeader, ourAllyCount, 'ours')}
                       <div className="fs-war-vs"><WebUIText textKey="Auto.PagesFactionSelection.928.2" /></div>
                       {renderWarSide(enemySide, enemyLeader, enemyAllyCount, 'theirs')}
@@ -1963,6 +1489,7 @@ function FactionSelectionDetailPanel({
         <button
           type="button"
           className={`fs-begin-btn${selected.playable || showPurchaseForSelected ? '' : ' fs-begin-btn--disabled'}`}
+          data-focus-left=".fs-faction-row--active"
           disabled={!selected.playable && !showPurchaseForSelected}
           onClick={() => {
             if (selected.playable) {
@@ -1991,6 +1518,7 @@ function FactionSelectionDetailPanel({
           </span>
         </button>
       </div>
+      <div className="fs-panel-meander" aria-hidden="true" />
     </aside>
   );
 }
@@ -2054,27 +1582,6 @@ function useFactionSelectionData(
     };
   }, [data?.mapId, initialSelectionData, loadFactionSelection, mapId, t]);
 
-  // Load map overlays once per map. Depend on mapId only so applying geometry does not re-trigger.
-  useEffect(() => {
-    if (!data) {
-      return;
-    }
-
-    let cancelled = false;
-    void bridgeCall('game.get_new_game_map_faction_geometry', { mapId: data.mapId })
-      .then((response) => {
-        if (cancelled) {
-          return;
-        }
-        setData((current) => (current ? applyFactionGeometry(current, response) : current));
-      })
-      .catch(acknowledgeBridgeFailure);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [data?.mapId]);
-
   const displayData = useMemo(
     () => data ? translateFactionSelectionData(data, t) : null,
     [data, t],
@@ -2122,6 +1629,17 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
   } = useFactionSelectionData(mapId, initialData, loadFactionSelection, t);
   const [search, setSearch] = useState('');
   const [showForeign, setShowForeign] = useState(showPurchaseForLocked);
+  useFactionSelectionTabletop(
+    mapId,
+    selectedBaseName,
+    Boolean(data && displayData && selected && !loadError),
+  );
+
+  useEffect(() => {
+    if (loadError || (data && displayData && !selected)) {
+      void requestFactionSelectionTabletop({ command: 'hide' }).catch(acknowledgeBridgeFailure);
+    }
+  }, [data, displayData, loadError, selected]);
 
   const mapHoverRef = useRef<FactionMapHoverHandle | null>(null);
   const showPurchaseForSelected = Boolean(
@@ -2164,13 +1682,7 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
   }
 
   if (!data || !displayData) {
-    return (
-      <FactionSelectionLoadingFrame
-        title={scenarioTitle}
-        closing={closing}
-        onClose={onClose}
-      />
-    );
+    return null;
   }
 
   if (!selected) {
@@ -2186,25 +1698,19 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
   }
 
   return (
-    <div className={rootClassName}>
-
-      <div className="fs-header">
-          <div className="fs-title-wrap">
-            <div className="fs-title">{scenarioTitle || t('MainMenu.ChooseYourFaction')}</div>
-            <div className="fs-subtitle">{t('MainMenu.ChooseYourFaction')}</div>
-          </div>
-          <button type="button" className="fs-back-btn" onClick={onClose}>
-            <span className="fs-back-icon" aria-hidden="true" />
-            <span>{t('MainMenu.BackToMainMenuUpper')}</span>
-          </button>
-      </div>
+    <div className={rootClassName} data-focus-root="faction-selection" data-focus-priority="400">
+      <div className="fs-atmosphere" aria-hidden="true" />
+      <FactionSelectionHeader
+        title={scenarioTitle || t('MainMenu.ChooseYourFaction')}
+        onClose={onClose}
+        backLabel={t('MainMenu.BackToMainMenuUpper')}
+      />
 
       <div className="fs-body">
         <FactionSelectionBrowseColumn
           ref={mapHoverRef}
           mapId={mapId}
           data={displayData}
-          selected={selected}
           selectedBaseName={selectedBaseName}
           onSelectBaseName={selectFactionBaseName}
           search={search}

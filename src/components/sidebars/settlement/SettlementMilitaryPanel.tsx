@@ -399,7 +399,7 @@ function FormationCard({
         className={`mil-formation${locked ? ' mil-formation--locked' : ''}`}
         role="button"
         tabIndex={0}
-        onMouseDown={() => onOpen(f.id)}
+        onClick={() => onOpen(f.id)}
       >
         <div className="mil-formation-header">
           <span className="mil-formation-title">
@@ -444,7 +444,7 @@ function FormationCard({
             <button
               type="button"
               className="mil-raise-btn"
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.stopPropagation();
                 onRaise(f.id);
               }}
@@ -651,7 +651,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
         </div>
       )}
       <div className="mil-formation-list">
-        <button type="button" className="mil-new-template-btn" onMouseDown={openNewTemplate}>
+        <button type="button" className="mil-new-template-btn" onClick={openNewTemplate}>
           <span className="mil-new-template-plus">+</span>
           <span><WebUIText textKey="Auto.ComponentsSidebarsSettlementMilitaryPanel.321.7" /></span>
         </button>

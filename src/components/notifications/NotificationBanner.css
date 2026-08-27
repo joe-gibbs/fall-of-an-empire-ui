@@ -528,14 +528,14 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   transition-timing-function: var(--ease-snap), var(--ease-snap);
 }
 
-.notification-description > span {
+.notification-description-line {
   display: block;
   width: 100%;
   white-space: normal;
   overflow-wrap: break-word;
 }
 
-.notification-description > .notification-rich-flow {
+.notification-description-line .notification-rich-flow {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -553,9 +553,9 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   align-items: flex-start;
 }
 
-.notification-rich-flow br {
+.notification-rich-flow br,
+.notification-rich-flow .rich-break {
   display: block;
-  content: '';
   flex-basis: 100%;
   width: 100%;
   height: 0;

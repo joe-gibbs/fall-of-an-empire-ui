@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 import { playSound } from '../../../hooks/useSound';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import './IconButton.css';
@@ -12,6 +12,8 @@ interface IconButtonProps {
   tutorialTarget?: string;
   /** Numeric badge drawn on the top-right of the button. Falsy values hide it. */
   badge?: number;
+  /** Live controller binding rendered on the control itself. */
+  shortcut?: ReactNode;
 }
 
 const IconButton: React.FC<IconButtonProps> = ({
@@ -22,15 +24,19 @@ const IconButton: React.FC<IconButtonProps> = ({
   className = '',
   tutorialTarget,
   badge,
+  shortcut,
 }) => {
   const resolvedIcon = icon ? WebkilnAssetPath(icon) : '';
 
   return (
     <button
+      type="button"
       className={`icon-button ${active ? 'icon-button--active' : ''} ${className}`}
+      data-webkiln-hit="alpha"
+      aria-label={label}
       data-tutorial-target={tutorialTarget}
       data-tutorial-satisfied={tutorialTarget && active ? 'true' : undefined}
-      onMouseDown={() => { playSound('click'); onClick?.(); }}
+      onClick={() => { playSound('click'); onClick?.(); }}
     >
       {resolvedIcon ? (
         <img src={resolvedIcon} alt={label || ''} className="icon-button-icon" />
@@ -39,6 +45,9 @@ const IconButton: React.FC<IconButtonProps> = ({
       )}
       {badge ? (
         <span className="icon-button-badge">{badge > 99 ? '99+' : badge}</span>
+      ) : null}
+      {shortcut ? (
+        <span className="controller-shortcut controller-shortcut--icon" aria-hidden="true">{shortcut}</span>
       ) : null}
     </button>
   );

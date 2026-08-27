@@ -455,7 +455,7 @@ function ParticipantRow({
     <button
       type="button"
       className={`pns-participant-row${selected ? ' is-selected' : ''}${disabled ? ' is-disabled' : ''}${isChild ? ' pns-participant-row--child' : ''}`}
-      onMouseDown={disabled ? undefined : onSelect}
+      onClick={disabled ? undefined : onSelect}
     >
       <FactionTooltip factionId={faction.id} factionName={faction.name} position={tooltipSide} delay={200}>
         <FactionRoundel
@@ -622,7 +622,7 @@ function DraftTermChip({
                         key={days}
                         type="button"
                         className={`pns-duration-button${tributeDurationDays === days ? ' pns-duration-button--active' : ''}`}
-                        onMouseDown={() => onChange({ tributeDurationDays: days })}
+                        onClick={() => onChange({ tributeDurationDays: days })}
                       >
                         {TRIBUTE_DURATION_YEAR_LABELS[index]}
                       </button>
@@ -639,7 +639,7 @@ function DraftTermChip({
                   key={candidate.id}
                   type="button"
                   className={`pns-replacement-row${candidate.id === activeReplacementId ? ' pns-replacement-row--active' : ''}`}
-                  onMouseDown={(event) => {
+                  onClick={(event) => {
                     event.stopPropagation();
                     onChange({ replacementRulerId: candidate.id });
                   }}
@@ -660,7 +660,7 @@ function DraftTermChip({
                   </span>
                   <span
                     className="pns-replacement-view"
-                    onMouseDown={(event) => {
+                    onClick={(event) => {
                       event.stopPropagation();
                       onViewCharacter(candidate.id);
                     }}
@@ -673,7 +673,7 @@ function DraftTermChip({
           ) : null}
         </div>
         <span className={`pns-term-score pns-term-score--${direction}`}>{formatTermCost(live?.warScoreCost, term.direction)}</span>
-        <button type="button" className="pns-draft-chip-close" onMouseDown={onRemove}>
+        <button type="button" className="pns-draft-chip-close" onClick={onRemove}>
           <img src="/assets/ui/I_CloseIcon.png" alt="" className="pns-draft-chip-close-icon" />
         </button>
       </div>
@@ -709,7 +709,7 @@ function AvailableTermRow({
       position="bottom"
       delay={200}
     >
-      <button type="button" className={`pns-term-row pns-term-row--${direction}${active ? ' pns-term-row--selection-active' : ''}`} data-tutorial-target={tutorialTarget} onMouseDown={onAdd}>
+      <button type="button" className={`pns-term-row pns-term-row--${direction}${active ? ' pns-term-row--selection-active' : ''}`} data-tutorial-target={tutorialTarget} onClick={onAdd}>
         <img src={termIcon(option.type)} alt="" className="pns-term-icon" />
         <span className="pns-term-copy">
           <span className="pns-term-name">{option.label}</span>
@@ -742,7 +742,7 @@ function AvailableTermGroup({
 
   return (
     <div className={`pns-option-group pns-option-group--${direction}${active ? ' pns-option-group--selection-active' : ''}`}>
-      <button type="button" className="pns-option-group-toggle" onMouseDown={onToggle}>
+      <button type="button" className="pns-option-group-toggle" onClick={onToggle}>
         <img
           src="/assets/icons/I_DropdownChevron.png"
           alt=""
@@ -1123,7 +1123,7 @@ function PeaceNegotiationScreenContent({
       <button
         type="button"
         className="pns-back-link"
-        onMouseDown={() => openScreen('diplomacy', 'wars')}
+        onClick={() => openScreen('diplomacy', 'wars')}
       >
         <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
           <path d="M8 1L3 6L8 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="square" />
@@ -1316,7 +1316,7 @@ function PeaceNegotiationScreenContent({
                 </span>
               </Tooltip>
               <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensPeaceNegotiationScreen.920.19'), body: webUIText('Auto.Prop.ComponentsScreensPeaceNegotiationScreen.920.20') }} position="top" delay={200}>
-                <button type="button" className="pns-reset-inline" onMouseDown={handleReset}>
+                <button type="button" className="pns-reset-inline" onClick={handleReset}>
                   <img src="/assets/icons/DeselectAll.png" alt="" />
                   <span><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.922.12" /></span>
                 </button>
@@ -1352,7 +1352,7 @@ function PeaceNegotiationScreenContent({
             type="button"
             className={`btn--burgundy btn--full pns-propose-button${canSubmit ? '' : ' pns-propose-button--disabled'}`}
             disabled={!canSubmit}
-            onMouseDown={handleSubmit}
+            onClick={handleSubmit}
           >
             <WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.958.15" />
           </button>

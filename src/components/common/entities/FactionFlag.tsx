@@ -30,7 +30,7 @@ const FactionFlag: React.FC<FactionFlagProps> = ({
   return (
     <div
       className={`faction-flag ${onClick ? 'faction-flag--clickable' : ''}`}
-      onMouseDown={onClick ? () => { playSound('click'); onClick(); } : undefined}
+      onClick={onClick ? () => { playSound('click'); onClick(); } : undefined}
     >
       <div className="faction-flag-frame" style={{ width, height }}>
         <div

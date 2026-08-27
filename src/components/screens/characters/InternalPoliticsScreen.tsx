@@ -496,7 +496,7 @@ function InternalFactionRow({
       className={`ips-faction-row${isFoederati(row) ? ' ips-faction-row--foederati' : ''}`}
       onMouseEnter={() => setShowFocusOptions(true)}
       onMouseLeave={() => setShowFocusOptions(false)}
-      onMouseDown={() => openSidebar('diplomacy', row.id)}
+      onClick={() => openSidebar('diplomacy', row.id)}
     >
       <div className="ips-faction-cell ips-faction-cell--name">
         <FactionTooltip factionId={row.id} factionName={row.name} delay={150}>
@@ -552,7 +552,7 @@ function InternalFactionRow({
                 className={`ips-focus-button${option.id === focusKey ? ' ips-focus-button--active' : ''}${canSetBuildFocus ? '' : ' ips-focus-button--disabled'}`}
                 aria-label={option.label}
                 disabled={!canSetBuildFocus}
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
                   setFocus(option.id);
@@ -581,7 +581,7 @@ function InternalFactionRow({
                 type="button"
                 className={`ips-tax-button${canLowerTax ? '' : ' ips-tax-button--disabled'}`}
                 disabled={!canLowerTax}
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
                   adjustTax(-0.05, canLowerTax);
@@ -602,7 +602,7 @@ function InternalFactionRow({
                 type="button"
                 className={`ips-tax-button${canRaiseTax ? '' : ' ips-tax-button--disabled'}`}
                 disabled={!canRaiseTax}
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
                   adjustTax(0.05, canRaiseTax);
@@ -635,7 +635,12 @@ function GovernorRow({ row, characters, blocs }: { row: RegionalGovernor; charac
   const governorLoad = row.bureaucraticGovernorLoad;
 
   return (
-    <div className="ips-governor-row" onMouseDown={() => row.governorId && openSidebar('character', row.governorId)}>
+    <div
+      className="ips-governor-row"
+      role={row.governorId ? 'button' : undefined}
+      tabIndex={row.governorId ? 0 : undefined}
+      onClick={() => row.governorId && openSidebar('character', row.governorId)}
+    >
       <div className="ips-governor-cell ips-governor-cell--region">
         <span className="ips-governor-region">{row.regionName}</span>
         {row.isLocked ? <span className="ips-governor-sub"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.578.6" /></span> : null}
@@ -733,7 +738,7 @@ function ProvinceCandidateCard({ row, leaderCandidates }: { row: ProvinceCandida
               type="button"
               className={`ips-create-province-button${canCreateProvince ? '' : ' ips-create-province-button--disabled'}`}
               disabled={!canCreateProvince}
-              onMouseDown={(event) => {
+              onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 if (canCreateProvince) {
@@ -777,7 +782,12 @@ function CommandHeadRow({ summary, characters, blocs }: { summary: CommandHeadSu
   );
 
   return (
-    <div className="ips-command-row" onMouseDown={() => force.commanderId && openSidebar('character', force.commanderId)}>
+    <div
+      className="ips-command-row"
+      role={force.commanderId ? 'button' : undefined}
+      tabIndex={force.commanderId ? 0 : undefined}
+      onClick={() => force.commanderId && openSidebar('character', force.commanderId)}
+    >
       <div className="ips-command-cell ips-command-cell--commander">
         <PersonPortrait character={character} personId={force.commanderId} name={force.commanderName || force.name} />
         <div className="ips-command-copy">
@@ -827,7 +837,7 @@ function FoederatiRow({
   const character = rulerId ? characters.get(rulerId) : undefined;
 
   return (
-    <div className="ips-foederati-row" onMouseDown={() => openSidebar('diplomacy', entry.factionId)}>
+    <div className="ips-foederati-row" onClick={() => openSidebar('diplomacy', entry.factionId)}>
       <div className="ips-foederati-cell ips-foederati-cell--name">
         <FactionRoundel
           factionId={entry.factionId}
@@ -881,7 +891,7 @@ function FoederatiRow({
             type="button"
             className={`ips-foederati-action${canToggle ? '' : ' ips-foederati-action--disabled'}`}
             disabled={!canToggle}
-            onMouseDown={(event) => {
+            onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
               if (canToggle) {

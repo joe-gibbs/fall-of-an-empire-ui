@@ -404,6 +404,17 @@ export function resolveCurrentOrderLabel(army: Army): string {
   return webUIText('MilitarySidebar.Idle');
 }
 
+export function resolveForcedMarchDisabledReason(army: Army): string | undefined {
+  if (army.isForcedMarching) return undefined;
+  if (!army.isPlayerControlled) return webUIText('MilitarySidebar.ForcedMarchNotYours');
+  if (army.canForcedMarch) return undefined;
+  if (army.garrisonedAt) {
+    return webUIText('MilitarySidebar.ForcedMarchGarrisoned', { Settlement: army.garrisonedAt });
+  }
+  if (army.isRaiding) return webUIText('MilitarySidebar.ForcedMarchRaiding');
+  return webUIText('MilitarySidebar.ForcedMarchInBattle');
+}
+
 export function unitRowSourceLabels(row: ArmyUnitRow): string[] {
   return row.sources.map(source => (
     source.count > 1 ? `${source.name} x${formatNumber(source.count)}` : source.name

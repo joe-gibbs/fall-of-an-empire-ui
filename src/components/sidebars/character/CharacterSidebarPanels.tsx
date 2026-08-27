@@ -34,7 +34,7 @@ function ActivityText({
           <span
             key={i}
             className="char-activity-link char-activity-link--clickable"
-            onMouseDown={(e) => { e.stopPropagation(); onLinkClick(seg.linkType!, seg.linkId!); }}
+            onClick={(e) => { e.stopPropagation(); onLinkClick(seg.linkType!, seg.linkId!); }}
           >
             {seg.text}
           </span>
@@ -144,7 +144,7 @@ export function CharacterHistoryList({
                 <button
                   type="button"
                   className="char-history-target char-history-target--link"
-                  onMouseDown={(event) => {
+                  onClick={(event) => {
                     event.stopPropagation();
                     onOpenTarget(sidebarType, entry.targetId!);
                   }}
@@ -187,7 +187,7 @@ export function RelationshipOverviewCard({
     <button
       type="button"
       className={`${relationshipCardClass(rel.type, canOpen)}${isAlive === false ? ' char-rel-card--dead' : ''}${isImprisoned && isAlive !== false ? ' char-rel-card--imprisoned' : ''}`}
-      onMouseDown={canOpen ? () => onOpen(rel.characterId) : undefined}
+      onClick={canOpen ? () => onOpen(rel.characterId) : undefined}
       aria-label={displayName}
     >
       <PersonTooltip characterId={rel.characterId} position="left" delay={150}>
@@ -242,7 +242,7 @@ export function CharacterDutyRow({
       <button
         type="button"
         className="char-duty-row"
-        onMouseDown={(e) => {
+        onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           onOpen();

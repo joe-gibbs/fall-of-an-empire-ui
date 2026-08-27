@@ -52,7 +52,7 @@ export default function EntityLink({
   };
 
   return (
-    <button type="button" className={classes} onMouseDown={handleMouseDown}>
+    <button type="button" className={classes} onClick={handleMouseDown}>
       {icon}
       <span className={labelClasses}>{children}</span>
     </button>

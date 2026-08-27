@@ -122,16 +122,18 @@ function CourtSlot({
 
   return (
     <Tooltip content={tooltip} delay={200} variant="sidebar">
-      <div className={rootClassName} data-tutorial-target={`CourtOffice:${position.key}`} onMouseDown={() => { if (!readOnly) onOpen(position); }}>
+      <div
+        className={rootClassName}
+        data-tutorial-target={`CourtOffice:${position.key}`}
+        role={!readOnly ? 'button' : undefined}
+        tabIndex={!readOnly ? 0 : undefined}
+        onClick={() => { if (!readOnly) onOpen(position); }}
+      >
         <div className="fov-court-portrait-col">
           {position.holder ? (
             <>
               <div
                 className={`fov-court-portrait-action${onOpenCharacter ? ' fov-court-portrait-action--clickable' : ''}`}
-                onMouseDown={(event) => {
-                  if (!onOpenCharacter) return;
-                  event.stopPropagation();
-                }}
                 onClick={(event) => {
                   if (!onOpenCharacter) return;
                   event.stopPropagation();
@@ -149,7 +151,7 @@ function CourtSlot({
                 <button
                   type="button"
                   className="fov-court-replace-btn"
-                  onMouseDown={(event) => {
+                  onClick={(event) => {
                     event.stopPropagation();
                     onOpen(position);
                   }}
@@ -218,10 +220,6 @@ function CourtSlot({
                   <Tooltip key={sub.id} content={subordinateTooltip} delay={150}>
                     <div
                       className={`fov-court-sub${sub.isPlayerCharacter ? ' fov-court-sub--player' : ''}${onOpenCharacter ? ' fov-court-sub--clickable' : ''}`}
-                      onMouseDown={(event) => {
-                        if (!onOpenCharacter) return;
-                        event.stopPropagation();
-                      }}
                       onClick={(event) => {
                         if (!onOpenCharacter) return;
                         event.stopPropagation();
@@ -529,7 +527,7 @@ export function PolicyEntry({
                 type="button"
                 className="fov-policy-btn fov-policy-btn--cancel"
                 aria-label={t('Common.Cancel')}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.stopPropagation();
                   cancelAdjustment();
                 }}
@@ -545,7 +543,7 @@ export function PolicyEntry({
                   className={`fov-policy-btn${canIncrease ? '' : ' fov-policy-btn--disabled'}`}
                   disabled={!canIncrease}
                   data-tutorial-target={policy.id === 'taxrate' ? 'TaxRateIncreaseButton' : undefined}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.stopPropagation();
                     startAdjustment('increase');
                   }}
@@ -556,7 +554,7 @@ export function PolicyEntry({
                   type="button"
                   className={`fov-policy-btn${canDecrease ? '' : ' fov-policy-btn--disabled'}`}
                   disabled={!canDecrease}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.stopPropagation();
                     startAdjustment('decrease');
                   }}

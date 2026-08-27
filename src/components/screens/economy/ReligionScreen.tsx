@@ -94,15 +94,9 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
   const conversion = useReligionConversionBridge();
   const { openRightSidebar } = useGameActions();
 
-  const handleClergyMouseDown = useCallback((event: MouseEvent<HTMLButtonElement>, personId: string | null) => {
-    event.stopPropagation();
-    if (event.button !== 0 || !personId) return;
-    openRightSidebar('character', personId);
-  }, [openRightSidebar]);
-
   const handleClergyClick = useCallback((event: MouseEvent<HTMLButtonElement>, personId: string | null) => {
     event.stopPropagation();
-    if (event.detail !== 0 || !personId) return;
+    if (event.button !== 0 || !personId) return;
     openRightSidebar('character', personId);
   }, [openRightSidebar]);
 
@@ -158,7 +152,6 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
       <button
         type="button"
         className="rel-cell-character rel-cell-character-button"
-        onMouseDown={(event) => handleClergyMouseDown(event, diocese.bishopId)}
         onClick={(event) => handleClergyClick(event, diocese.bishopId)}
       >
         <Portrait personId={diocese.bishopId ?? undefined} name={diocese.bishopName} size="sm" />
@@ -183,7 +176,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
     sortFollowers: diocese.followers,
     sortDistribution: diocese.followerPercent,
     assignment: diocese,
-  })), [dioceses, handleClergyClick, handleClergyMouseDown]);
+  })), [dioceses, handleClergyClick]);
 
   const activeReligionKey = dioceses?.religionKey ?? selectedReligion;
   const religionOffice = useMemo(
@@ -215,7 +208,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
               <button
                 type="button"
                 className={`rel-religion-button${religion.key === activeReligionKey ? ' rel-religion-button--active' : ''}${religion.isPlayerReligion ? ' rel-religion-button--state' : ''}`}
-                onMouseDown={() => setSelectedReligion(religion.key)}
+                onClick={() => setSelectedReligion(religion.key)}
               >
                 <span className="rel-religion-icon-frame">
                   <img src={religion.iconPath || RELIGION_FALLBACK_ICON} alt="" className="rel-religion-icon" draggable={false} />

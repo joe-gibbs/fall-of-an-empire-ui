@@ -217,7 +217,7 @@ function TemplateListItem({
       <button
         type="button"
         className="chart-template-list-select"
-        onMouseDown={() => onSelect(template.id)}
+        onClick={() => onSelect(template.id)}
       >
         <img src={iconProfile.icon} alt="" className="chart-template-list-icon" draggable={false} />
         <span className="chart-template-list-copy">
@@ -248,7 +248,7 @@ function TemplateListItem({
             className="chart-template-list-duplicate"
             aria-label={duplicateTitle}
             disabled={duplicateDisabled}
-            onMouseDown={event => {
+            onClick={event => {
               event.stopPropagation();
               onDuplicate(template.id);
             }}
@@ -268,7 +268,6 @@ function TemplateListItem({
             className={`chart-template-list-delete${deletePending ? ' chart-template-list-delete--confirm' : ''}`}
             aria-label={deleteTitle}
             disabled={!template.canDelete || deleteDisabled}
-            onMouseDown={event => event.stopPropagation()}
             onClick={event => {
               event.stopPropagation();
               onDelete(template.id);
@@ -811,8 +810,10 @@ export function TemplateUnitSelectorModal({
               <button
                 type="button"
                 className="chart-unit-picker-add chart-unit-picker-add--select"
-                onMouseDown={event => event.stopPropagation()}
-                onClick={() => onAdd(unit.id, 1)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onAdd(unit.id, 1);
+                }}
               >
                 <WebUIText textKey="Military.PersonalGuard.SelectReplacement" />
               </button>
@@ -839,7 +840,7 @@ export function TemplateUnitSelectorModal({
                 type="button"
                 className="chart-unit-picker-add"
                 disabled={count <= 0}
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.stopPropagation();
                   if (count <= 0) return;
                   onRemove(unit.id, stepAmountFromEvent(event));
@@ -861,7 +862,7 @@ export function TemplateUnitSelectorModal({
                 data-tutorial-target="DynamicUnit"
                 data-tutorial-unit-id={unit.id}
                 data-tutorial-unit-count={count}
-                onMouseDown={(event) => {
+                onClick={(event) => {
                   event.stopPropagation();
                   if (addDisabled) return;
                   onAdd(unit.id, stepAmountFromEvent(event));
@@ -892,16 +893,11 @@ export function TemplateUnitSelectorModal({
   return createPortal(
     <div
       className={`chart-unit-picker${closing ? ' chart-unit-picker--closing' : ''}`}
-      onMouseDown={event => {
-        if (event.target !== event.currentTarget) return;
-        event.preventDefault();
-        event.stopPropagation();
-        requestClose();
-      }}
       onClick={event => {
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
+        requestClose();
       }}
     >
       <div className="modal-drag-frame" style={offsetStyle}>
@@ -1097,7 +1093,7 @@ function TemplateAssignedForces({
               key={force.id}
               type="button"
               className="chart-template-force-row"
-              onMouseDown={() => onOpenForce(force.id)}
+              onClick={() => onOpenForce(force.id)}
             >
               <span className="chart-template-force-primary">
                 <span className="chart-template-force-name">{force.name}</span>
@@ -1119,7 +1115,7 @@ function TemplateAssignedForces({
         <button
           type="button"
           className="chart-template-force-toggle"
-          onMouseDown={() => setExpanded(value => !value)}
+          onClick={() => setExpanded(value => !value)}
         >
           {expanded
             ? webUIText('FormationTemplate.ShowFewerForces')
@@ -1416,7 +1412,7 @@ function TemplateEditor({
   const assignedForceCount = template?.assignedForces.length ?? 0;
 
   return (
-    <section className="chart-template-workbench" onMouseDown={() => {
+    <section className="chart-template-workbench" onClick={() => {
       if (iconPickerOpen) setIconPickerOpen(false);
     }}>
       <div className="chart-template-workbench-body">
@@ -1428,7 +1424,7 @@ function TemplateEditor({
                   type="button"
                   className="chart-template-composer-icon-button"
                   aria-label={webUIText('FormationTemplate.IconChoice')}
-                  onMouseDown={(event) => {
+                  onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
                     if (!editable) return;
@@ -1439,14 +1435,14 @@ function TemplateEditor({
                   <img src={iconProfile.icon} alt="" className="chart-template-composer-icon" draggable={false} />
                 </button>
                 {iconPickerOpen && (
-                  <div className="chart-template-icon-popover" onMouseDown={event => event.stopPropagation()}>
+                  <div className="chart-template-icon-popover" onClick={event => event.stopPropagation()}>
                     {FORMATION_TEMPLATE_ICON_OPTIONS.map(option => (
                       <button
                         key={option.kind}
                         type="button"
                         className={`chart-template-icon-choice${iconProfile.kind === option.kind ? ' chart-template-icon-choice--selected' : ''}`}
                         aria-label={webUIText(option.labelKey)}
-                        onMouseDown={() => {
+                        onClick={() => {
                           setDraft(current => ({ ...current, iconId: option.kind }));
                           setIconPickerOpen(false);
                         }}
@@ -1896,7 +1892,7 @@ export function TemplatesPanel({
                   className="chart-template-create"
                   aria-label={createTitle}
                   data-tutorial-target="NewFormationButton"
-                  onMouseDown={createTemplate}
+                  onClick={createTemplate}
                 >
                   <span className="chart-template-create-plus" />
                   <span className="chart-template-create-copy">

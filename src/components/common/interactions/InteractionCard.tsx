@@ -158,7 +158,7 @@ const InteractionCard: React.FC<InteractionCardProps> = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={classes} data-tutorial-target={tutorialTarget} onMouseDown={handleMouseDown}>
+    <div className={classes} data-tutorial-target={tutorialTarget} onClick={handleMouseDown}>
       {bgImage && (
         <div className="interaction-card-bg" style={{ backgroundImage: `url(${bgImage})` }} />
       )}
@@ -205,7 +205,7 @@ const InteractionCard: React.FC<InteractionCardProps> = ({
             <button
               type="button"
               className="interaction-card-cancel"
-              onMouseDown={handleCancelMouseDown}
+              onClick={handleCancelMouseDown}
               aria-label={webUIText('Common.Cancel')}
             >
               <img src="/assets/icons/I_Close.png" alt="" draggable={false} />

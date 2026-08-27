@@ -192,6 +192,14 @@
   color: rgba(255, 255, 255, 0.3);
   margin-top: 0.0909rem;
 }
+.save-entry--incompatible {
+  opacity: 0.72;
+}
+.save-entry__compatibility {
+  color: var(--red-light);
+  font-size: 0.8rem;
+  margin-top: 0.1818rem;
+}
 .save-entry__actions {
   display: flex;
   align-items: center;

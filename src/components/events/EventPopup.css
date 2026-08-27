@@ -551,8 +551,11 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
   display: inline;
 }
 
-.event-paragraph br {
-  display: inline;
+.event-paragraph br,
+.event-paragraph .rich-break {
+  display: block;
+  width: 100%;
+  height: 0;
 }
 
 .event-paragraph .rich-concept {

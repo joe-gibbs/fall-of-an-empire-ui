@@ -303,7 +303,7 @@ export default function WorldSearchBar() {
                     type="button"
                     className={`world-search-row${isActive ? ' world-search-row--active' : ''}`}
                     onMouseEnter={() => setActiveIndex(index)}
-                    onMouseDown={(event) => {
+                    onClick={(event) => {
                       event.preventDefault();
                       selectResult(result);
                     }}
@@ -330,7 +330,7 @@ export default function WorldSearchBar() {
                           <span
                             className="world-search-row-detail world-search-row-detail--link"
                             role="link"
-                            onMouseDown={(event) => {
+                            onClick={(event) => {
                               event.preventDefault();
                               event.stopPropagation();
                               openFaction(factionId);
