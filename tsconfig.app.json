@@ -22,5 +22,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "public/sdk/*.d.ts"]
+  "include": ["src", "public/sdk/*.d.ts", "../../Webkiln/Resources/Webkiln.d.ts"]
 }

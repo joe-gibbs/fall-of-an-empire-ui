@@ -61,10 +61,10 @@
   display: flex;
   align-items: center;
   pointer-events: auto;
-  margin: 0 0.462rem 0.154rem 0;
-  padding: 0.32rem;
-  background: url('/assets/ui/T_Minimap_Header.png') center/100% 100% no-repeat;
-  filter: var(--filter-shadow-panel);
+}
+
+.bottombar--compact .glance-toggle-bar {
+  margin: 0 0.5rem 0.15rem 0;
 }
 
 .glance-toggle-bar > * + * {
@@ -88,13 +88,8 @@
 }
 
 @media (max-width: 72rem) {
-  .bottombar-tray,
-  .glance-toggle-bar {
+  .bottombar-tray {
     padding: 0.32rem;
-  }
-
-  .glance-toggle-bar {
-    margin-right: 0.32rem;
   }
 
   .bottombar .icon-button {

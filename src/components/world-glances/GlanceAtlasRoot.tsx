@@ -315,8 +315,8 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   }
   else if (section === 'port') content = <PortGlance data={mapPort(entry as GetWorldGlancesResponse['ports'][number])} />;
   else if (section === 'convoy') content = <ConvoyGlance data={mapConvoy(entry as GetWorldGlancesResponse['convoys'][number])} />;
-  else if (section === 'army') content = <ArmyGlance data={mapMilitary(entry as GetWorldGlancesResponse['armies'][number])} />;
-  else if (section === 'navy') content = <NavyGlance data={mapNavy(entry as GetWorldGlancesResponse['navies'][number])} />;
+  else if (section === 'army') content = <ArmyGlance data={mapMilitary(entry as GetWorldGlancesResponse['armies'][number])} enableHoverTooltip={false} />;
+  else if (section === 'navy') content = <NavyGlance data={mapNavy(entry as GetWorldGlancesResponse['navies'][number])} enableHoverTooltip={false} />;
   else {
     const battleData = mapBattle(entry as GetWorldGlancesResponse['battles'][number]);
     if (battleFrame) {

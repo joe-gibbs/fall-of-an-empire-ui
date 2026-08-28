@@ -4,7 +4,7 @@
    icons (I_Warning, I_Caution). Tooltip on hover.
    ============================================= */
 
-.warning-icon-strip {
+.hud-attention-strip {
   position: fixed;
   top: calc(var(--topbar-height) + 0.45rem);
   left: calc(var(--sidebar-width) + 0.55rem);
@@ -19,13 +19,19 @@
   transition-timing-function: var(--ease-snap), var(--ease-snap);
 }
 
+.warning-icon-strip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
 /*
   Compact: same below-topbar inset as the tutorial panel.
   z-index must stay below .screen-overlay (50) so warnings never cover screens
   or block the close button. Above tutorial (48) is not required when a screen
   is open; on the map, 45 still sits above world glances and under chrome.
 */
-html.hud-compact .warning-icon-strip {
+html.hud-compact .hud-attention-strip {
   left: 0.75rem;
   top: var(--hud-below-topbar, calc(var(--topbar-height) + 0.55rem));
   max-width: calc(100vw - 1.5rem);

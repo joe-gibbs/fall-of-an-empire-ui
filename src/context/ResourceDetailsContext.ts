@@ -7,8 +7,12 @@ export interface ResourceDetailsActions {
 
 export const ResourceDetailsContext = createContext<ResourceDetailsActions | null>(null);
 
+export function useOptionalResourceDetails(): ResourceDetailsActions | null {
+  return useContext(ResourceDetailsContext);
+}
+
 export function useResourceDetails(): ResourceDetailsActions {
-  const context = useContext(ResourceDetailsContext);
+  const context = useOptionalResourceDetails();
   if (!context) {
     throw new Error('useResourceDetails must be used within ResourceDetailsProvider');
   }

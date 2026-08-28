@@ -1,5 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react';
-import { useResourceDetails } from '../../../context/ResourceDetailsContext';
+import { useOptionalResourceDetails } from '../../../context/ResourceDetailsContext';
 import './ResourceLink.css';
 
 interface Props {
@@ -10,15 +10,20 @@ interface Props {
 }
 
 export default function ResourceLink({ resourceId, children, className, stopPropagation = true }: Props) {
-  const { openResource } = useResourceDetails();
-  const onMouseDown = (event: MouseEvent<HTMLButtonElement>) => {
+  const resourceDetails = useOptionalResourceDetails();
+  const classes = `resource-link${className ? ` ${className}` : ''}`;
+  if (!resourceDetails) {
+    return <span className={classes}>{children}</span>;
+  }
+
+  const onClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     if (stopPropagation) event.stopPropagation();
-    openResource(resourceId);
+    resourceDetails.openResource(resourceId);
   };
 
   return (
-    <button type="button" className={`resource-link${className ? ` ${className}` : ''}`} onClick={onMouseDown}>
+    <button type="button" className={classes} onClick={onClick}>
       {children}
     </button>
   );

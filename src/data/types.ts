@@ -1424,6 +1424,8 @@ export interface Notification {
   settlementViewportHeight?: number;
   battleAfterActionReport?: BattleAfterActionReportPayload;
   diplomaticRequest?: DiplomaticRequestNotification;
+  persistUntilDismissed?: boolean;
+  actionSucceeded?: boolean;
 }
 
 export type WarningSeverity = "caution" | "warning" | "critical";

@@ -9,18 +9,11 @@ export interface runtimeEngine {
   isAttached?: boolean;
 }
 
-interface WebkilnGameUI {
-  markReady: () => Promise<void>;
-  request: (action: string, payload?: unknown) => Promise<unknown>;
-  on: (name: string, callback: (...args: unknown[]) => void) => (() => void) | void;
-}
-
 const reportedBridgeErrors = new WeakSet<object>();
 const reportedBridgeErrorKeys = new Set<string>();
 
 declare global {
   interface Window {
-    gameUI?: WebkilnGameUI;
     __webkilnRuntimeEngineMock?: runtimeEngine;
   }
 }

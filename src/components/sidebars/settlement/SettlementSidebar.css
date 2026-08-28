@@ -699,12 +699,14 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: 0.28rem;
   padding: 0.1rem 0.45rem 0.35rem 0.5rem;
 }
 
 .unit-tt-cost-chip {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   padding: 0.18rem 0.38rem 0.18rem 0.22rem;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
@@ -1104,7 +1106,8 @@
 
 .unit-tt-cost-strip .tooltip-wrapper-inline {
   display: inline-flex;
-  max-width: 100%;
+  flex-shrink: 0;
+  min-width: min-content;
 }
 
 .settle-unit-stat-bar.painted-bar-track,
@@ -1849,8 +1852,7 @@
 }
 
 .unit-tt-cost-strip > * {
-  margin-right: 0.28rem;
-  margin-bottom: 0.28rem;
+  flex-shrink: 0;
 }
 
 .unit-tt-cost-chip > * + * {

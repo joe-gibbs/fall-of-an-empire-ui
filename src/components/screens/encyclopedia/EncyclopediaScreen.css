@@ -1174,17 +1174,19 @@
 
 /* Unit card stats row */
 .enc-unit-stats-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  justify-content: center;
+  width: 100%;
+  column-gap: 0.28rem;
+  row-gap: 0.04rem;
   margin-top: 0.05rem;
-}
-
-.enc-unit-stats-row > * + * {
-  margin-left: 0.35rem;
 }
 
 .enc-unit-stat {
   display: flex;
   align-items: center;
+  min-width: 0;
   font-family: var(--font-body);
   font-size: 0.7rem;
   color: var(--text-muted);

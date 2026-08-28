@@ -206,7 +206,6 @@ export interface FoaeModSDK {
   assets: {
     WebkilnAssetPath(path: string): string;
     WebkilnAssetPath(path?: string | null): string | undefined;
-    FoaeGameUIAssetPath?: (path: string) => string | undefined;
     modAssetRoot?: string;
     preloadImageAsset(path: string): void;
     preloadImageAssets(paths: string[]): void;

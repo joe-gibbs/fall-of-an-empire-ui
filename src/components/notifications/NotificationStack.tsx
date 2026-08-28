@@ -135,6 +135,7 @@ function settlementAnchorMapsEqual(left: SettlementAnchorMap, right: SettlementA
 }
 
 function notificationCountdownProgress(notification: Notification, currentGameDay: number): number | null {
+  if (notification.persistUntilDismissed) return null;
   if ((notification.style ?? 'regular') === 'cinematic') return null;
   const { createdOnDay, expiresOnDay, durationDays } = notification;
   if (
@@ -362,7 +363,8 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
     const expiredIds: string[] = [];
     for (const n of notifications) {
       if (
-        currentGameDay > 0
+        !n.persistUntilDismissed
+        && currentGameDay > 0
         && typeof n.expiresOnDay === 'number'
         && n.expiresOnDay <= currentGameDay
         && !exiting.has(n.id)

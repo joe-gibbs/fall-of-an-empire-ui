@@ -30,6 +30,7 @@ declare global {
       setAppMode: (mode: MockAppMode) => void;
       showNotification: () => void;
       showRegularNotification: () => void;
+      showActionResultNotification: (succeeded?: boolean) => void;
       showBattleAfterActionNotification: (outcome?: MockOutcome) => void;
       showEvent: () => void;
       showImportantEvent: () => void;
@@ -73,6 +74,7 @@ function hasLaunchQuery(params: URLSearchParams): boolean {
     || params.has('sidebar')
     || params.has('notification')
     || params.has('regularNotification')
+    || params.has('actionResult')
     || params.has('battleAarNotification')
     || params.has('battleAar')
     || params.has('event')
@@ -128,6 +130,7 @@ function launchRequestFromQuery(params: URLSearchParams): MockLaunchRequest {
     sidebarTabIndex: parseOptionalInteger(params.get('tabIndex') ?? params.get('sidebarTabIndex')),
     notification: params.has('notification'),
     regularNotification: params.has('regularNotification'),
+    actionResultNotification: params.has('actionResult'),
     battleAarNotification: params.has('battleAarNotification') || params.has('battleAar'),
     battleAarOutcome,
     event: params.has('event'),
@@ -363,6 +366,8 @@ function installLauncher(runtime: ReturnType<typeof createMockBridgeRuntime>, em
   addLauncherRow(createRow('Push', [
     createButton('Cinematic', () => runtime.showNotification(emitBridgeEvent)),
     createButton('Regular', () => runtime.showRegularNotification(emitBridgeEvent)),
+    createButton('Action Result', () => runtime.showActionResultNotification(emitBridgeEvent, true)),
+    createButton('Action Failed', () => runtime.showActionResultNotification(emitBridgeEvent, false)),
     createButton('Battle AAR', () => runtime.showBattleAfterActionNotification(emitBridgeEvent, 'victory')),
     createButton('Defeat AAR', () => runtime.showBattleAfterActionNotification(emitBridgeEvent, 'defeat')),
     createButton('Event', () => runtime.showEvent(emitBridgeEvent)),
@@ -473,6 +478,7 @@ export function installMockruntimeEngine(): void {
     setAppMode: (mode) => runtime.setAppMode(mode, emitBridgeEvent),
     showNotification: () => runtime.showNotification(emitBridgeEvent),
     showRegularNotification: () => runtime.showRegularNotification(emitBridgeEvent),
+    showActionResultNotification: (succeeded) => runtime.showActionResultNotification(emitBridgeEvent, succeeded),
     showBattleAfterActionNotification: (outcome) => runtime.showBattleAfterActionNotification(emitBridgeEvent, outcome),
     showEvent: () => runtime.showEvent(emitBridgeEvent),
     showImportantEvent: () => runtime.showImportantEvent(emitBridgeEvent),

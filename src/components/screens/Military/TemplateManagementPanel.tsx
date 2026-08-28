@@ -384,6 +384,9 @@ export function TemplateUnitSelectorModal({
   capacityFullMessage,
   compareUnit,
   statusMessage,
+  removeLabel,
+  onRemoveSelected,
+  removeDisabled,
 }: {
   units: FormationTemplateUnitEntry[];
   currentCounts: Record<string, number>;
@@ -408,6 +411,9 @@ export function TemplateUnitSelectorModal({
   compareUnit?: FormationTemplateUnitEntry | null;
   /** Optional status or failure text shown in the footer. */
   statusMessage?: string;
+  removeLabel?: string;
+  onRemoveSelected?: () => void;
+  removeDisabled?: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState(CATALOGUE_ALL_FILTER);
@@ -1033,6 +1039,16 @@ export function TemplateUnitSelectorModal({
               <span className="chart-unit-picker-status chart-unit-picker-status--solo" role="status">
                 {statusMessage}
               </span>
+            )}
+            {isSingle && onRemoveSelected && (
+              <GameButton
+                variant="outline"
+                className="chart-unit-picker-remove"
+                disabled={removeDisabled}
+                onClick={onRemoveSelected}
+              >
+                {removeLabel ?? webUIText('Military.PersonalGuard.RemoveCompany')}
+              </GameButton>
             )}
             <GameButton
               variant="burgundy"

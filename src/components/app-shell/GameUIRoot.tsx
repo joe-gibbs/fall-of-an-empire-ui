@@ -21,8 +21,10 @@ import LoadGameModal from '../screens/system/LoadGameModal';
 import AgentSelectModal from '../modals/characters/AgentSelectModal';
 import CourtierPromotionModal from '../modals/characters/CourtierPromotionModal';
 import AllyCallDialogModal from '../modals/diplomacy/AllyCallDialogModal';
+import ConfirmDialog from '../common/forms/ConfirmDialog';
 import ProvinceEmperorTakeoverModal from '../modals/provinces/ProvinceEmperorTakeoverModal';
 import WarningBar from '../notifications/WarningBar';
+import ActionResultsBar from '../notifications/ActionResultsBar';
 import NotificationStack from '../notifications/NotificationStack';
 import type { AdvisorTopicId } from '../../data/advisorTopics';
 import { ensureLoaded as preloadSounds } from '../../hooks/useSound';
@@ -33,6 +35,7 @@ import { useTutorialSpotlightBridge } from '../../bridge/app/useTutorialSpotligh
 import { usePinnedItemsBridge } from '../../bridge/app/usePinnedItemsBridge';
 import { useCourtierPromotionBridge } from '../../bridge/characters/useCourtierPromotionBridge';
 import { useAllyCallDialogBridge } from '../../bridge/diplomacy/useAllyCallDialogBridge';
+import { useMilitaryMergeConfirmBridge } from '../../bridge/military-map/useMilitaryMergeConfirmBridge';
 import { useFactionBorderHighlightBridge } from '../../bridge/diplomacy/useFactionBorderHighlightBridge';
 import {
   refreshProvinceEmperorTakeover,
@@ -142,6 +145,7 @@ export default function GameUIRoot() {
     state: allyCallDialog,
     respond: respondToAllyCall,
   } = useAllyCallDialogBridge();
+  const militaryMergeConfirm = useMilitaryMergeConfirmBridge();
   const provinceEmperorTakeover = useProvinceEmperorTakeoverBridge(true);
   const [showPinned, setShowPinned] = useState(false);
   const [showVictoryConditions, setShowVictoryConditions] = useState(false);
@@ -385,6 +389,7 @@ export default function GameUIRoot() {
     && isWorldGlanceTutorialTarget(tutorialSpotlight.spotlight.target)
     ? tutorialSpotlight.spotlight.target
     : '';
+  const actionResultNotifications = notifications.filter(notification => notification.persistUntilDismissed);
   const mapGlancesObscured = Boolean(
     showPause
     || showVictory
@@ -413,8 +418,13 @@ export default function GameUIRoot() {
       />
 
       <div className="game-main" data-webkiln-world-input>
-        {warnings.length > 0 && (
-          <WarningBar warnings={warnings} onDismiss={dismissWarning} />
+        {(warnings.length > 0 || actionResultNotifications.length > 0) && (
+          <div className="hud-attention-strip">
+            <ActionResultsBar notifications={actionResultNotifications} />
+            {warnings.length > 0 && (
+              <WarningBar warnings={warnings} onDismiss={dismissWarning} />
+            )}
+          </div>
         )}
 
         <NotificationStack
@@ -557,6 +567,14 @@ export default function GameUIRoot() {
       <AllyCallDialogModal
         state={allyCallDialog}
         onRespond={respondToAllyCall}
+      />
+      <ConfirmDialog
+        visible={militaryMergeConfirm.visible}
+        title={militaryMergeConfirm.title}
+        message={militaryMergeConfirm.message}
+        confirmText={militaryMergeConfirm.confirmText}
+        onConfirm={militaryMergeConfirm.confirm}
+        onClosed={militaryMergeConfirm.cancel}
       />
       <ProvinceEmperorTakeoverModal
         open={provinceEmperorTakeoverOpen}

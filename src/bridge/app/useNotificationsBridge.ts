@@ -32,6 +32,8 @@ export interface NotificationShown {
   settlementViewportWidth?: number;
   settlementViewportHeight?: number;
   battleAfterActionReport?: BattleAfterActionReportPayload;
+  persistUntilDismissed?: boolean;
+  actionSucceeded?: boolean;
 }
 
 interface DiplomacyFactionReference {
@@ -133,6 +135,8 @@ export function mapNotificationShown(data: NotificationShown): Notification {
     settlementViewportWidth: data.settlementViewportWidth,
     settlementViewportHeight: data.settlementViewportHeight,
     battleAfterActionReport: normaliseBattleAfterActionReport(data.battleAfterActionReport),
+    persistUntilDismissed: data.persistUntilDismissed === true,
+    actionSucceeded: data.actionSucceeded === true,
   };
 }
 

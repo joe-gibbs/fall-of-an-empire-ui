@@ -89,11 +89,14 @@ const BottomBar: React.FC = () => {
       <OperationBar />
       <MapModeFilterPanel />
       {active === 'resources' && <ConvoyFilterPanel />}
-      <GlanceToggleBar />
       {compact ? (
-        <MapModePicker />
+        <>
+          <GlanceToggleBar />
+          <MapModePicker />
+        </>
       ) : (
         <div className="bottombar-tray" ref={trayRef} data-tutorial-target="MapModeButtonGroup">
+          <GlanceToggleBar anchorRef={trayRef} />
           {rows.map((groups, ri) => (
             <div className="bottombar-row" key={ri}>
               {groups.map((ids, gi) => (

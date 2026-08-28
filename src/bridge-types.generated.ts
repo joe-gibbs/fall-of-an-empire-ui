@@ -535,6 +535,25 @@ export interface CompleteInitialSetupResponse {
   completed: boolean;
 }
 
+export interface ConfirmMilitaryMergeRequest {
+  confirmed: boolean;
+  targetMilitaryId: string;
+  sourceMilitaryIds: string[];
+  queue: boolean;
+  createNewTemplate: boolean;
+}
+
+export interface ConfirmMilitaryMergePrompt {
+  open: boolean;
+  targetMilitaryId: string;
+  targetName: string;
+  sourceMilitaryIds: string[];
+  sourceNames: string[];
+  isNavy: boolean;
+  queue: boolean;
+  createNewTemplate: boolean;
+}
+
 export interface ContinueGameResponse {
   started: boolean;
   slotName: string;
@@ -5972,6 +5991,15 @@ export interface ReligionConversionActionResponse {
   message: string;
 }
 
+export interface RemovePersonalGuardCompanyRequest {
+  slotNumber: number;
+}
+
+export interface RemovePersonalGuardCompanyResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface RenameMilitaryRequest {
   militaryId: string;
   name: string;
@@ -6633,6 +6661,7 @@ export interface BridgeActions {
   'game.choose_event_option': { request: ChooseEventOptionRequest; response: ChooseEventOptionResponse };
   'game.clear_military_selection': { request: void; response: void };
   'game.complete_initial_setup': { request: void; response: CompleteInitialSetupResponse };
+  'game.confirm_military_merge': { request: ConfirmMilitaryMergeRequest; response: ConfirmMilitaryMergePrompt };
   'game.continue': { request: void; response: ContinueGameResponse };
   'game.create_province_from_candidate': { request: CreateProvinceFromCandidateRequest; response: void };
   'game.delete_formation_template': { request: DeleteFormationTemplateRequest; response: DeleteFormationTemplateResponse };
@@ -6752,6 +6781,7 @@ export interface BridgeActions {
   'game.randomise_character_creator': { request: RandomiseCharacterCreatorRequest; response: RandomiseCharacterCreatorResponse };
   'game.rebind_action_key': { request: RebindActionKeyRequest; response: RebindActionKeyResponse };
   'game.recruit_character_for_role': { request: RecruitCharacterForRoleRequest; response: RecruitCharacterForRoleResponse };
+  'game.remove_personal_guard_company': { request: RemovePersonalGuardCompanyRequest; response: RemovePersonalGuardCompanyResponse };
   'game.rename_military': { request: RenameMilitaryRequest; response: RenameMilitaryResponse };
   'game.rename_settlement': { request: RenameSettlementRequest; response: RenameSettlementResponse };
   'game.render_character_creator_preview': { request: RenderCharacterCreatorPreviewRequest; response: void };

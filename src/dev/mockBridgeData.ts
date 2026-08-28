@@ -31,6 +31,7 @@ export interface MockLaunchRequest {
   sidebarTabIndex?: number;
   notification?: boolean;
   regularNotification?: boolean;
+  actionResultNotification?: boolean;
   battleAarNotification?: boolean;
   battleAarOutcome?: MockOutcome;
   event?: boolean;
@@ -5476,9 +5477,6 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return { success: true, message: 'The Personal Guard has been established.' } satisfies BridgeResponse<'game.form_personal_guard'>;
       }
       case 'game.replace_personal_guard_company': {
-        if (!state.personalGuard.hasGuard && !state.personalGuard.isForming) {
-          return { success: false, message: 'The Personal Guard is not available.' } satisfies BridgeResponse<'game.replace_personal_guard_company'>;
-        }
         const capacity = state.provinceMode ? 10 : 20;
         const slotNumber = Math.max(1, Math.round(payloadNumber(payload, 'slotNumber', 1)));
         const unitId = payloadString(payload, 'unitId', '');
@@ -5499,6 +5497,21 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         const response = personalGuardStatus(state);
         emit('game.get_personal_guard', response);
         return { success: true, message: '' } satisfies BridgeResponse<'game.replace_personal_guard_company'>;
+      }
+      case 'game.remove_personal_guard_company': {
+        const slotNumber = Math.max(1, Math.round(payloadNumber(payload, 'slotNumber', 1)));
+        const index = slotNumber - 1;
+        if (index < 0 || index >= state.personalGuard.unitIds.length) {
+          return { success: false, message: 'Could not remove that company.' } satisfies BridgeResponse<'game.remove_personal_guard_company'>;
+        }
+        state.personalGuard.unitIds.splice(index, 1);
+        if (state.personalGuard.unitIds.length === 0) {
+          state.personalGuard.hasGuard = false;
+          state.personalGuard.isForming = false;
+        }
+        const response = personalGuardStatus(state);
+        emit('game.get_personal_guard', response);
+        return { success: true, message: '' } satisfies BridgeResponse<'game.remove_personal_guard_company'>;
       }
       case 'game.get_selected_militaries': {
         const selected = selectedMilitaries();
@@ -7087,7 +7100,41 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.set_military_forced_march':
       case 'game.start_military_embark_targeting':
       case 'game.disembark_military':
-      case 'game.start_military_merge_targeting':
+        return undefined;
+      case 'game.start_military_merge_targeting': {
+        const sourceId = payloadString(payload, 'militaryId', MOCK_IDS.military);
+        const forces = militaryOverview().forces;
+        const source = forces.find(force => force.id === sourceId) ?? forces[0];
+        const target = forces.find(force => force.id !== source.id && force.isNavy === source.isNavy)
+          ?? forces.find(force => force.id !== source.id)
+          ?? source;
+        const prompt = {
+          open: true,
+          targetMilitaryId: target.id,
+          targetName: target.name,
+          sourceMilitaryIds: [source.id],
+          sourceNames: [source.name],
+          isNavy: source.isNavy,
+          queue: false,
+          createNewTemplate: false,
+        };
+        emit('game.confirm_military_merge', prompt);
+        return undefined;
+      }
+      case 'game.confirm_military_merge': {
+        const closed = {
+          open: false,
+          targetMilitaryId: '',
+          targetName: '',
+          sourceMilitaryIds: [],
+          sourceNames: [],
+          isNavy: false,
+          queue: false,
+          createNewTemplate: false,
+        };
+        emit('game.confirm_military_merge', closed);
+        return closed;
+      }
       case 'game.replenish_military':
       case 'game.disband_military':
       case 'game.set_military_formation_template':
@@ -7241,6 +7288,31 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         expiresOnDay: createdOnDay + 4,
         durationDays: 4,
         hasPortrait: false,
+      });
+    },
+    showActionResultNotification(emit: MockBridgeEventEmitter, succeeded = true) {
+      const createdOnDay = state.gameDay;
+      const person = personById(MOCK_IDS.governor);
+      emit('game.notification_shown', {
+        id: `mock-action-result-${createdOnDay}-${Date.now()}`,
+        title: succeeded ? 'Support Secured' : 'Contact Exposed',
+        description: succeeded
+          ? `${person.name} joins the rebellion.`
+          : `${person.name} refuses and word reaches court.`,
+        type: 'character',
+        notificationTypeId: 'PersonInteraction',
+        notificationTypeLabel: 'Interactions',
+        timestamp: '742-06-17',
+        style: 'regular',
+        createdOnDay,
+        expiresOnDay: 0,
+        durationDays: 0,
+        hasPortrait: true,
+        characterName: person.name,
+        personId: person.id,
+        portraitLayers: person.portraitLayers,
+        persistUntilDismissed: true,
+        actionSucceeded: succeeded,
       });
     },
     showBattleAfterActionNotification(emit: MockBridgeEventEmitter, outcome: MockOutcome = 'victory') {
@@ -7478,6 +7550,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       if (request.sidebar) emit('ui.sidebar_event', { type: request.sidebar, id: request.sidebarId ?? defaultIdForSidebar(request.sidebar), tabIndex: request.sidebarTabIndex });
       if (request.notification) this.showNotification(emit);
       if (request.regularNotification) this.showRegularNotification(emit);
+      if (request.actionResultNotification) this.showActionResultNotification(emit);
       if (request.battleAarNotification) this.showBattleAfterActionNotification(emit, request.battleAarOutcome);
       if (request.event) this.showEvent(emit);
       if (request.importantEvent) this.showImportantEvent(emit);

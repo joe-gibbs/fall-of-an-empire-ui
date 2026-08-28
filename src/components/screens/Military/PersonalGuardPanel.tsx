@@ -212,7 +212,9 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
   const commanderName = guard.commanderName || webUIText('Military.PersonalGuard.CaptainVacant');
   const canAppointCommander = Boolean(guard.militaryId);
   const canEstablish = !guard.hasGuard && !guard.isForming;
-  const canEditCompanies = Boolean(guard.hasGuard || guard.isForming);
+  const hasDraftRoster = guard.companies.length > 0;
+  // Draft, forming, and standing rosters can all add, replace, or remove companies.
+  const canEditCompanies = true;
 
   const replaceCompany = replaceSlot != null
     ? guard.companies.find(company => company.slotNumber === replaceSlot) ?? null
@@ -366,6 +368,51 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
       .finally(() => setReplaceBusy(false));
   };
 
+  const handleRemove = () => {
+    if (replaceBusy || replaceSlot == null || !replaceCompany) return;
+    setReplaceBusy(true);
+    void bridgeCall('game.remove_personal_guard_company', {
+      slotNumber: replaceSlot,
+    })
+      .then((response) => {
+        if (!response.success) {
+          acknowledgeBridgeFailure(response.message || webUIText('Military.PersonalGuard.RemoveFailed'), 'game.remove_personal_guard_company');
+          return;
+        }
+        setReplaceSlot(null);
+        return refreshGuardAndMilitary();
+      })
+      .catch((error: unknown) => acknowledgeBridgeFailure(error, 'game.remove_personal_guard_company'))
+      .finally(() => setReplaceBusy(false));
+  };
+
+  const handleReform = () => {
+    if (formBusy || !hasDraftRoster) return;
+    const unitIds = guard.companies
+      .slice()
+      .sort((a, b) => a.slotNumber - b.slotNumber)
+      .map(company => company.unitId)
+      .filter((unitId): unitId is string => Boolean(unitId));
+    if (unitIds.length === 0) return;
+    setFormBusy(true);
+    setFormError('');
+    void bridgeCall('game.form_personal_guard', { unitIds })
+      .then((response) => {
+        if (!response.success) {
+          const message = response.message || webUIText('Military.PersonalGuard.FormUnavailable');
+          setFormError(message);
+          acknowledgeBridgeFailure(message, 'game.form_personal_guard');
+          return;
+        }
+        return refreshGuardAndMilitary();
+      })
+      .catch((error: unknown) => {
+        setFormError(webUIText('Military.PersonalGuard.FormUnavailable'));
+        acknowledgeBridgeFailure(error, 'game.form_personal_guard');
+      })
+      .finally(() => setFormBusy(false));
+  };
+
   return (
     <div className="personal-guard-view">
       <section className="panel personal-guard-header">
@@ -460,13 +507,18 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
         {canEstablish && (
           <div className="personal-guard-establish">
             <InteractionCard
-              title={webUIText('Military.PersonalGuard.Form')}
-              description={webUIText('Military.PersonalGuard.FormOpenCatalogue')}
+              title={webUIText(hasDraftRoster ? 'Military.PersonalGuard.Reform' : 'Military.PersonalGuard.Form')}
+              description={webUIText(hasDraftRoster
+                ? 'Military.PersonalGuard.ReformBody'
+                : 'Military.PersonalGuard.FormOpenCatalogue')}
               image={SWORDS_ICON}
               bgImage={ESTABLISH_BG}
-              onClick={openEstablish}
+              onClick={hasDraftRoster ? handleReform : openEstablish}
               tutorialTarget="FormPersonalGuardButton"
             />
+            {formError && (
+              <span className="personal-guard-form-error" role="status">{formError}</span>
+            )}
           </div>
         )}
 
@@ -543,6 +595,9 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
           compareUnit={compareUnit}
           doneLabel={webUIText('Common.Cancel')}
           onDone={() => setReplaceSlot(null)}
+          removeLabel={webUIText('Military.PersonalGuard.RemoveCompany')}
+          onRemoveSelected={replaceCompany ? handleRemove : undefined}
+          removeDisabled={replaceBusy}
         />
       )}
 

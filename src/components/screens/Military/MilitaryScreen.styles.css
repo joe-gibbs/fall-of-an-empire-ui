@@ -4141,6 +4141,10 @@
   margin-right: auto;
 }
 
+.chart-unit-picker-remove {
+  margin-right: auto;
+}
+
 .chart-unit-picker-empty {
   padding: 1rem;
   color: var(--text-muted);

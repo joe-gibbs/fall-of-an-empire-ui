@@ -5,7 +5,7 @@ import { WebkilnAssetPath } from '../../../utils/assets';
 import { renderRichText } from '../../../utils/richText';
 import { readableFactionTextColour } from '../../../utils/colorFormatters';
 import { UI_PRESENTATION } from '../../../config/presentation';
-import { subscribeTooltipDismissEvent } from './tooltipEvents';
+import { dismissSharedTooltips, subscribeTooltipDismissEvent } from './tooltipEvents';
 import './Tooltip.css';
 
 interface TooltipLine {
@@ -92,6 +92,8 @@ const TOOLTIP_GAP = UI_PRESENTATION.tooltip.gapPx;
 const SUB_TOOLTIP_GAP = UI_PRESENTATION.tooltip.nestedGapPx;
 const SUB_TOOLTIP_VERTICAL_OFFSET = UI_PRESENTATION.tooltip.nestedVerticalOffsetPx;
 const PLACEMENT_STABILISE_FRAMES = UI_PRESENTATION.tooltip.placementStabiliseFrames;
+
+let lastPointerNode: EventTarget | null = null;
 
 function rectFromBounds(rect: DOMRect): Rect {
   const width = rect.width > 0 ? rect.width : Math.max(0, rect.right - rect.left);
@@ -312,6 +314,28 @@ function hasTooltipContent(content: React.ReactNode | TooltipContent): boolean {
   );
 }
 
+function isWebkilnPointerOnWorld(): boolean {
+  const policy = (window as Window & { __webkilnInputPolicy?: { lastKey?: string } }).__webkilnInputPolicy;
+  return typeof policy?.lastKey === 'string' && policy.lastKey.startsWith('0');
+}
+
+function isNodeInTooltipTree(
+  id: number,
+  node: EventTarget | null | undefined,
+  wrapper?: HTMLElement | null,
+  anchor?: HTMLElement | null,
+): boolean {
+  if (!(node instanceof Node)) return false;
+  if (wrapper?.contains(node)) return true;
+  if (anchor && anchor !== wrapper && anchor.contains(node)) return true;
+  return node instanceof Element && Boolean(node.closest(`[data-tooltip-surface="${id}"]`));
+}
+
+function isPointerOverTooltipSurface(id: number): boolean {
+  return lastPointerNode instanceof Element
+    && Boolean(lastPointerNode.closest(`[data-tooltip-surface="${id}"]`));
+}
+
 function TooltipBody({
   data,
   sidebar,
@@ -383,8 +407,9 @@ function TooltipLineItem({
     if (hideRef.current) clearTimeout(hideRef.current);
     hideRef.current = setTimeout(() => {
       hideRef.current = null;
-      // Still bridging between the line and its portal child.
-      if (isElementHovered(lineRef.current, subRef.current)) return;
+      if (lineRef.current?.contains(lastPointerNode as Node) || subRef.current?.contains(lastPointerNode as Node)) {
+        return;
+      }
       setSubVisible(false);
     }, HIDE_GRACE_MS);
   }, []);
@@ -628,8 +653,9 @@ function NestedTooltip({
     if (hideRef.current) clearTimeout(hideRef.current);
     hideRef.current = setTimeout(() => {
       hideRef.current = null;
-      // Still bridging between the nested trigger and its portal child.
-      if (isElementHovered(wrapperRef.current, subRef.current)) return;
+      if (wrapperRef.current?.contains(lastPointerNode as Node) || subRef.current?.contains(lastPointerNode as Node)) {
+        return;
+      }
       setVisible(false);
     }, HIDE_GRACE_MS);
   }, [clearShow]);
@@ -720,6 +746,12 @@ function NestedTooltip({
     };
   }, [cancelPlacementFrames, clearHide, clearShow]);
 
+  useEffect(() => subscribeTooltipDismissEvent(() => {
+    clearShow();
+    clearHide();
+    setVisible(false);
+  }), [clearHide, clearShow]);
+
   useLayoutEffect(() => {
     placeSubTooltip();
   }, [placeSubTooltip]);
@@ -793,6 +825,7 @@ interface ActiveTooltip {
   bubbleClassName?: string;
   wrapperElement: HTMLElement;
   anchorElement?: HTMLElement | null;
+  controlled: boolean;
 }
 
 type TooltipListener = (active: ActiveTooltip | null) => void;
@@ -855,40 +888,45 @@ function isTooltipTriggerAvailable(element: HTMLElement | null | undefined): boo
   return rect.width > 0 && rect.height > 0;
 }
 
-function isTooltipTreeHovered(
-  id: number,
-  wrapper?: HTMLElement | null,
-  anchor?: HTMLElement | null,
-): boolean {
-  if (!wrapper || !isTooltipTriggerAvailable(wrapper)) {
-    return false;
+function isPointerOverTooltipTree(id: number): boolean {
+  const active = activeTooltip;
+  if (!active || active.id !== id) return false;
+  if (!isTooltipTriggerAvailable(active.wrapperElement)) return false;
+  return isNodeInTooltipTree(id, lastPointerNode, active.wrapperElement, active.anchorElement);
+}
+
+function dismissOpenTooltips() {
+  if (tooltipHideTimer) {
+    clearTimeout(tooltipHideTimer);
+    tooltipHideTimer = null;
   }
-  if (wrapper.matches(':hover')) return true;
-  if (anchor && isTooltipTriggerAvailable(anchor) && anchor !== wrapper && anchor.matches(':hover')) return true;
-  const surfaces = document.querySelectorAll(`[data-tooltip-surface="${id}"]`);
-  for (let i = 0; i < surfaces.length; i += 1) {
-    const el = surfaces[i];
-    if (el instanceof HTMLElement && el.isConnected && el.matches(':hover')) {
-      return true;
-    }
+  if (activeTooltip) {
+    activeTooltip = null;
+    emitTooltipState();
   }
-  return false;
+  dismissSharedTooltips();
 }
 
 function scheduleSharedTooltipHide(id: number, delayMs: number) {
-  if (tooltipHideTimer) {
-    clearTimeout(tooltipHideTimer);
+  if (delayMs <= 0) {
+    hideSharedTooltip(id);
+    return;
   }
+  if (tooltipHideTimer) return;
   tooltipHideTimer = setTimeout(() => {
     tooltipHideTimer = null;
     if (activeTooltip?.id !== id) return;
-    // Pointer may still be over the trigger, bubble, or a nested portal after
-    // crossing the gap between surfaces; keep the tree open in that case.
-    if (isTooltipTreeHovered(id, activeTooltip.wrapperElement, activeTooltip.anchorElement)) {
+    // Nested rows live on the bubble. If the pointer made it onto a tooltip
+    // surface, keep the tree open even if Webkiln's last world-input bit flickered.
+    if (isPointerOverTooltipSurface(id)) return;
+    // Over the map, Chromium can keep the last HUD node as the pointer target.
+    // Trust Webkiln's world-input bit rather than that stale trigger node.
+    if (isWebkilnPointerOnWorld()) {
+      dismissOpenTooltips();
       return;
     }
-    activeTooltip = null;
-    emitTooltipState();
+    if (isPointerOverTooltipTree(id)) return;
+    dismissOpenTooltips();
   }, delayMs);
 }
 
@@ -909,10 +947,6 @@ function cancelSharedTooltipHide(id: number) {
   }
   clearTimeout(tooltipHideTimer);
   tooltipHideTimer = null;
-}
-
-function isElementHovered(...elements: Array<HTMLElement | null | undefined>): boolean {
-  return elements.some(el => Boolean(el?.isConnected && el.matches(':hover')));
 }
 
 function TooltipHostContent({ active }: { active: ActiveTooltip }) {
@@ -1084,10 +1118,68 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
   );
 }
 
+function handleTooltipPointerEvent(event: Event) {
+  lastPointerNode = event.target;
+  const active = activeTooltip;
+  if (!active || active.controlled) return;
+
+  const inTree = isNodeInTooltipTree(
+    active.id,
+    event.target,
+    active.wrapperElement,
+    active.anchorElement,
+  );
+
+  if (event.type === 'pointerdown' || event.type === 'mousedown') {
+    if (!inTree) dismissOpenTooltips();
+    return;
+  }
+
+  if (inTree) {
+    cancelSharedTooltipHide(active.id);
+    return;
+  }
+
+  scheduleSharedTooltipHide(active.id, HIDE_GRACE_MS);
+}
+
 function TooltipHost() {
   const [active, setActive] = useState<ActiveTooltip | null>(activeTooltip);
 
   useEffect(() => subscribeTooltip(setActive), []);
+
+  useEffect(() => {
+    const onLeaveDocument = (event: Event) => {
+      if ('relatedTarget' in event && event.relatedTarget) return;
+      dismissOpenTooltips();
+    };
+    document.addEventListener('pointermove', handleTooltipPointerEvent, true);
+    document.addEventListener('pointerover', handleTooltipPointerEvent, true);
+    document.addEventListener('pointerdown', handleTooltipPointerEvent, true);
+    document.addEventListener('mouseleave', onLeaveDocument);
+    window.addEventListener('blur', onLeaveDocument);
+    return () => {
+      document.removeEventListener('pointermove', handleTooltipPointerEvent, true);
+      document.removeEventListener('pointerover', handleTooltipPointerEvent, true);
+      document.removeEventListener('pointerdown', handleTooltipPointerEvent, true);
+      document.removeEventListener('mouseleave', onLeaveDocument);
+      window.removeEventListener('blur', onLeaveDocument);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!active) return undefined;
+    let frame = 0;
+    const step = () => {
+      frame = requestAnimationFrame(step);
+      if (!activeTooltip || activeTooltip.id !== active.id || activeTooltip.controlled) return;
+      if (isPointerOverTooltipSurface(activeTooltip.id)) return;
+      if (!isWebkilnPointerOnWorld()) return;
+      scheduleSharedTooltipHide(activeTooltip.id, HIDE_GRACE_MS);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [active]);
 
   if (!active) {
     return null;
@@ -1120,6 +1212,7 @@ const Tooltip: React.FC<TooltipProps> = ({
   const onShowIntentRef = useRef(onShowIntent);
   const hoveredRef = useRef(false);
   const focusedRef = useRef(false);
+  const pointerDismissedRef = useRef(false);
   const tooltipIdRef = useRef(nextTooltipId++);
   const hoverStartedAtRef = useRef(0);
 
@@ -1147,7 +1240,8 @@ const Tooltip: React.FC<TooltipProps> = ({
     bubbleClassName,
     wrapperElement: wrapper,
     anchorElement: anchorRef?.current ?? wrapper,
-  }), [anchorRef, bubbleClassName, content, position, variant]);
+    controlled,
+  }), [anchorRef, bubbleClassName, content, controlled, position, variant]);
   const buildActiveTooltipRef = useRef(buildActiveTooltip);
 
   useLayoutEffect(() => {
@@ -1187,15 +1281,17 @@ const Tooltip: React.FC<TooltipProps> = ({
   }, [effectiveDelay, scheduleShow]);
 
   const show = useCallback(() => {
+    pointerDismissedRef.current = false;
     if (!controlled) beginShow('hover');
   }, [beginShow, controlled]);
 
   const showFromFocus = useCallback(() => {
+    if (pointerDismissedRef.current) return;
     if (!controlled) beginShow('focus');
   }, [beginShow, controlled]);
 
   const finishHide = useCallback(() => {
-    if (hoveredRef.current || focusedRef.current) return;
+    if (hoveredRef.current) return;
     if (showRef.current) { clearTimeout(showRef.current); showRef.current = null; }
     scheduleSharedTooltipHide(tooltipIdRef.current, HIDE_GRACE_MS);
   }, []);
@@ -1207,6 +1303,7 @@ const Tooltip: React.FC<TooltipProps> = ({
 
   const hideFromFocus = useCallback((event: React.FocusEvent<HTMLElement>) => {
     if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
+    pointerDismissedRef.current = false;
     focusedRef.current = false;
     finishHide();
   }, [finishHide]);
@@ -1215,7 +1312,7 @@ const Tooltip: React.FC<TooltipProps> = ({
     hoveredRef.current = false;
     focusedRef.current = false;
     if (showRef.current) { clearTimeout(showRef.current); showRef.current = null; }
-    scheduleSharedTooltipHide(tooltipIdRef.current, HIDE_GRACE_MS);
+    hideSharedTooltip(tooltipIdRef.current);
   }, []);
 
   useEffect(() => {
@@ -1224,12 +1321,17 @@ const Tooltip: React.FC<TooltipProps> = ({
     else forceHide();
   }, [beginShow, controlled, forceHide, open]);
 
-  const dismissForPress = useCallback(() => {
+  const dismissOpenState = useCallback(() => {
     hoveredRef.current = false;
     focusedRef.current = false;
     cancelTimers();
     hideSharedTooltip(tooltipIdRef.current);
   }, [cancelTimers]);
+
+  const dismissForPress = useCallback(() => {
+    pointerDismissedRef.current = true;
+    dismissOpenState();
+  }, [dismissOpenState]);
 
   useEffect(() => {
     if (disabled) {
@@ -1245,15 +1347,33 @@ const Tooltip: React.FC<TooltipProps> = ({
   }, [disabled, effectiveDelay, scheduleShow]);
 
   useEffect(() => {
-    // Keep the open portal in sync when content changes. The pointer is often
-    // over the bubble (not the trigger) for interactive tooltips — e.g. building
-    // dismantle/downgrade confirm — so do not gate on hoveredRef.
+    // Keep the open portal in sync when content changes. Native glance tooltips
+    // start empty while a bridge fetch is in flight; if the delay fires first,
+    // showSharedTooltip hides them. Re-schedule once content exists so hover
+    // that is already past the delay still opens on the HUD.
     const wrapper = wrapperRef.current;
-    if (!wrapper || disabledRef.current || activeTooltip?.id !== tooltipIdRef.current) {
+    if (!wrapper || disabledRef.current) {
       return;
     }
-    updateSharedTooltip(buildActiveTooltip(wrapper));
-  }, [buildActiveTooltip]);
+
+    const next = buildActiveTooltip(wrapper);
+    if (!hasTooltipContent(next.content)) {
+      if (activeTooltip?.id === tooltipIdRef.current) {
+        hideSharedTooltip(tooltipIdRef.current);
+      }
+      return;
+    }
+
+    if (activeTooltip?.id === tooltipIdRef.current) {
+      updateSharedTooltip(next);
+      return;
+    }
+
+    if (hoveredRef.current || focusedRef.current) {
+      const elapsed = Date.now() - hoverStartedAtRef.current;
+      scheduleShow(Math.max(0, effectiveDelay - elapsed));
+    }
+  }, [buildActiveTooltip, effectiveDelay, scheduleShow]);
 
   useEffect(() => {
     const tooltipId = tooltipIdRef.current;
@@ -1263,7 +1383,7 @@ const Tooltip: React.FC<TooltipProps> = ({
     };
   }, [cancelTimers]);
 
-  useEffect(() => subscribeTooltipDismissEvent(dismissForPress), [dismissForPress]);
+  useEffect(() => subscribeTooltipDismissEvent(dismissOpenState), [dismissOpenState]);
 
   return (
     <>

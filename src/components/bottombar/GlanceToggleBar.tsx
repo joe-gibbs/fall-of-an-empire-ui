@@ -4,6 +4,10 @@ import IconButton from '../common/buttons/IconButton';
 import { useWorldGlanceVisibilityBridge } from '../../bridge/military-map/useWorldGlanceVisibilityBridge';
 import { webUIText } from '../../localization/WebUITextContext';
 
+interface GlanceToggleBarProps {
+  anchorRef?: React.RefObject<HTMLElement | null>;
+}
+
 const TOGGLES = [
   {
     id: 'settlements',
@@ -31,7 +35,7 @@ const TOGGLES = [
   },
 ] as const;
 
-const GlanceToggleBar: React.FC = () => {
+const GlanceToggleBar: React.FC<GlanceToggleBarProps> = ({ anchorRef }) => {
   const { state, toggleSettlements, toggleMilitary, toggleConvoys } = useWorldGlanceVisibilityBridge();
   const shown = {
     settlements: state?.showSettlements ?? true,
@@ -51,7 +55,7 @@ const GlanceToggleBar: React.FC = () => {
         const label = webUIText(toggle.labelKey);
         const tooltip = webUIText(active ? toggle.hideKey : toggle.showKey);
         return (
-          <Tooltip key={toggle.id} content={tooltip} position="left" delay={180}>
+          <Tooltip key={toggle.id} content={tooltip} position="left" delay={180} anchorRef={anchorRef}>
             <IconButton
               icon={toggle.icon}
               label={label}
