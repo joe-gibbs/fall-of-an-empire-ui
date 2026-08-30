@@ -12,6 +12,7 @@ interface CompactStatProps {
   mode?: CompactStatMode;
   tooltip?: ReactNode | TooltipContent;
   tooltipDelay?: number;
+  onShowIntent?: () => void;
   className?: string;
   iconClassName?: string;
   valueClassName?: string;
@@ -29,6 +30,7 @@ const CompactStat = memo(function CompactStat({
   mode = 'full',
   tooltip,
   tooltipDelay = 120,
+  onShowIntent,
   className,
   iconClassName,
   valueClassName,
@@ -47,7 +49,7 @@ const CompactStat = memo(function CompactStat({
   );
 
   return (
-    <Tooltip content={tooltip ?? { title: label }} delay={tooltipDelay} inline>
+    <Tooltip content={tooltip ?? { title: label }} delay={tooltipDelay} inline onShowIntent={onShowIntent}>
       {node}
     </Tooltip>
   );

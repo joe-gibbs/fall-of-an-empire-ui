@@ -267,6 +267,10 @@ function AllyRow({
         emblem={ally.emblem}
         name={ally.name}
         size="sm"
+        diplomaticStatus={ally.diplomaticStatus}
+        subjectSubtype={ally.subjectSubtype}
+        isPlayer={ally.isPlayer}
+        isRebel={ally.isRebel}
       />
       <span className="acd-row-main">
         <span className="acd-row-name">{ally.name}</span>

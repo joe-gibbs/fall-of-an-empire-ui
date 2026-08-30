@@ -18,6 +18,7 @@ export const MAP_MODE_ICONS: Record<string, string> = {
   disease: '/assets/icons/I_Skull.png',
   corruption: '/assets/traits/Corrupt.png',
   loyalty: '/assets/icons/I_Loyalty.png',
+  luxury: '/assets/icons/I_Luxury.png',
   diplomaticRelation: '/assets/icons/I_Peace.png',
   militaries: '/assets/icons/Armies/I_ArmyRephsian.png',
   garrisons: '/assets/icons/Doctrines/I_Doctrine_Garrison.png',

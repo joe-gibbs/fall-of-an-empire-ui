@@ -188,17 +188,21 @@ const DateDisplay: React.FC = () => {
   return (
     <Tooltip content={tooltip} position="bottom" delay={200} onShowIntent={requestSeasonEffects}>
       <div className="date-display" data-tutorial-target="DateDisplay SeasonDisplay" aria-label={tooltip.title}>
-        <img
-          src={seasonIcon}
-          alt={seasonLabel || season}
-          className="date-display-season-icon"
-        />
-        {trendIcon && (
+        <span className="date-display-season-icon">
           <img
-            src={trendIcon}
-            alt={trendLabel}
-            className={`date-display-climate-icon date-display-climate-icon--${trendDirection}`}
+            src={seasonIcon}
+            alt={seasonLabel || season}
+            draggable={false}
           />
+        </span>
+        {trendIcon && (
+          <span className={`date-display-climate-icon date-display-climate-icon--${trendDirection}`}>
+            <img
+              src={WebkilnAssetPath(trendIcon)}
+              alt={trendLabel}
+              draggable={false}
+            />
+          </span>
         )}
         <span className="date-display-text">
           {dateText}

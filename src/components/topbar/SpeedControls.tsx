@@ -7,7 +7,7 @@ import { findActionBinding } from '../../utils/actionBindings';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
 import { actionBindingFooter } from '../common/actionBindingFooter';
-import Tooltip from '../common/tooltips/Tooltip';
+import Tooltip, { type TooltipContent } from '../common/tooltips/Tooltip';
 
 type Speed = 0 | 1 | 2 | 3 | 4;
 
@@ -69,15 +69,15 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
     </div>
   ) : undefined;
 
-  const pauseTooltip = {
+  const pauseTooltip: TooltipContent = {
     title: isPaused ? webUIText('TopbarSpeed.ResumeTitle') : webUIText('TopbarSpeed.PauseTitle'),
     body: isPaused
       ? webUIText('TopbarSpeed.ResumeBody')
       : webUIText('TopbarSpeed.PauseBody'),
-    footer: actionBindingFooter(pauseBinding),
+    titleAccessory: actionBindingFooter(pauseBinding),
   };
 
-  const speedTooltip = {
+  const speedTooltip: TooltipContent = {
     title: webUIText('TopbarSpeed.CycleTitle'),
     body: webUIText('TopbarSpeed.CycleBody'),
     footer: speedFooter,

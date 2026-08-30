@@ -47,11 +47,12 @@ function screenTooltipContent(
   button: Pick<TopbarButtonRegistration, 'id' | 'label' | 'labelKey' | 'tooltip'>,
   t: WebUITextFormatter,
   shortcut?: React.ReactNode,
-): React.ReactNode | TooltipContent {
+): TooltipContent {
   if (!button.tooltip) {
-    return shortcut
-      ? { title: localizeButtonLabel(button, t), footer: shortcut }
-      : localizeButtonLabel(button, t);
+    return {
+      title: localizeButtonLabel(button, t),
+      titleAccessory: shortcut,
+    };
   }
 
   const title = button.tooltip.titleKey ? t(button.tooltip.titleKey) : button.tooltip.title;
@@ -65,8 +66,7 @@ function screenTooltipContent(
     valueIcon: line.valueIcon,
     isHeader: line.isHeader,
   }));
-  const staticFooter = button.tooltip.footerKey ? t(button.tooltip.footerKey) : button.tooltip.footer;
-  const footer = shortcut ?? staticFooter;
+  const footer = shortcut ? undefined : (button.tooltip.footerKey ? t(button.tooltip.footerKey) : button.tooltip.footer);
   const useScreenButtonFlow = lines?.length && lines.every(line => (
     !line.labelIcon
     && !line.value
@@ -78,6 +78,7 @@ function screenTooltipContent(
   if (useScreenButtonFlow) {
     return {
       title,
+      titleAccessory: shortcut,
       body: <ScreenButtonTooltipBody body={body} lines={lines} />,
       footer,
     };
@@ -85,6 +86,7 @@ function screenTooltipContent(
 
   return {
     title,
+    titleAccessory: shortcut,
     body,
     lines,
     footer,
@@ -186,7 +188,7 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
           factionName={playerFaction?.name}
           position="bottom"
           delay={200}
-          footer={actionBindingFooter(findActionBinding(settings?.controls, TOPBAR_SCREEN_ACTIONS.faction, activeInputDevice))}
+          titleAccessory={actionBindingFooter(findActionBinding(settings?.controls, TOPBAR_SCREEN_ACTIONS.faction, activeInputDevice))}
         >
           {factionButtonNode}
         </FactionTooltip>

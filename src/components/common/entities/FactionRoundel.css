@@ -19,7 +19,8 @@
   transform-origin: center;
 }
 
-/* Colour fill behind the symbol */
+/* Colour fill behind the symbol. Keep an opaque background-color so Webkiln
+   alpha hit-testing sees the disc; it ignores CSS gradients. */
 .faction-roundel-fill {
   position: absolute;
   top: var(--roundel-fill-inset);
@@ -30,6 +31,7 @@
   border-top-right-radius: var(--roundel-radius);
   border-bottom-right-radius: var(--roundel-radius);
   border-bottom-left-radius: var(--roundel-radius);
+  background-color: #1a1410;
 }
 
 /* Inner dark vignette for depth */

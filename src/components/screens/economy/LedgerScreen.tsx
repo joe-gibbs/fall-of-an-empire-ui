@@ -229,13 +229,13 @@ function LedgerMetric({ icon, children }: { icon: string; children: ReactNode })
 }
 
 function LedgerFactionLink({
-  factionId, factionName, visual, diplomaticStatus, isPlayer, isRebel, onOpen,
+  factionId, factionName, visual, diplomaticStatus, subjectSubtype, isPlayer, isRebel, onOpen,
 }: {
-  factionId: string; factionName: string; visual: LedgerFactionVisual; diplomaticStatus?: string; isPlayer?: boolean; isRebel?: boolean; onOpen: () => void;
+  factionId: string; factionName: string; visual: LedgerFactionVisual; diplomaticStatus?: string; subjectSubtype?: string; isPlayer?: boolean; isRebel?: boolean; onOpen: () => void;
 }) {
   return (
     <div className="ledger-faction-link">
-      <FactionRoundel factionId={factionId} name={factionName} colour={visual.colour} secondaryColour={visual.secondaryColour} cultureGroup={visual.cultureGroup} emblem={visual.emblem} resolveFaction={false} diplomaticStatus={diplomaticStatus} isPlayer={isPlayer} isRebel={isRebel} size="xs" onClick={onOpen} />
+      <FactionRoundel factionId={factionId} name={factionName} colour={visual.colour} secondaryColour={visual.secondaryColour} cultureGroup={visual.cultureGroup} emblem={visual.emblem} resolveFaction={false} diplomaticStatus={diplomaticStatus} subjectSubtype={subjectSubtype} isPlayer={isPlayer} isRebel={isRebel} size="xs" onClick={onOpen} />
       <EntityLink type="faction" id={factionId}>{factionName}</EntityLink>
     </div>
   );
@@ -642,7 +642,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   ];
 
   const factionColumns: Column<LedgerFactionRow>[] = [
-    { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.233.24'), render: row => <LedgerFactionLink factionId={row.id} factionName={row.name} visual={row.visual} diplomaticStatus={row.diplomaticStatus} isPlayer={row.isPlayer} isRebel={row.isRebel} onOpen={() => openSidebar('faction', row.id)} />, sortValue: row => row.name },
+    { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.233.24'), render: row => <LedgerFactionLink factionId={row.id} factionName={row.name} visual={row.visual} diplomaticStatus={row.diplomaticStatus} subjectSubtype={row.subjectSubtype} isPlayer={row.isPlayer} isRebel={row.isRebel} onOpen={() => openSidebar('faction', row.id)} />, sortValue: row => row.name },
     { id: 'status', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.234.25'), align: 'centre', render: row => <FactionStatusIcon row={row} />, sortValue: row => statusLabel(row.diplomaticStatus, row.isRebel) },
     { id: 'ruler', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.235.26'), render: row => <EntityLink type="character" id={row.rulerId}>{row.rulerName || webUIText("LedgerScreen.NoRuler")}</EntityLink>, sortValue: row => row.rulerName },
     { id: 'settlements', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.236.27'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_City.png">{fmt(row.settlementCount)}</LedgerMetric>, sortValue: row => row.settlementCount },

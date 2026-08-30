@@ -171,6 +171,17 @@ const DEFINITIONS: Record<string, MapModeTooltipDefinition> = {
     ],
     footerKeys: ['MapModeTooltip.Loyalty.Footer'],
   },
+  luxury: {
+    titleKey: 'MapModeTooltip.Luxury.Title',
+    bodyKey: 'MapModeTooltip.Luxury.Body',
+    bulletKeys: [
+      'MapModeTooltip.Luxury.Bullet.Short',
+      'MapModeTooltip.Luxury.Bullet.MissingTwo',
+      'MapModeTooltip.Luxury.Bullet.MissingOne',
+      'MapModeTooltip.Luxury.Bullet.Supplied',
+    ],
+    footerKeys: ['MapModeTooltip.Luxury.Footer'],
+  },
   diplomaticRelation: {
     titleKey: 'MapModeTooltip.DiplomaticRelation.Title',
     bodyKey: 'MapModeTooltip.DiplomaticRelation.Body',

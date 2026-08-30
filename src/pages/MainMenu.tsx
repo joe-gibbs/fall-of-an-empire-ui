@@ -17,6 +17,7 @@ import CharacterCreatorDebug from './main-menu/CharacterCreatorDebug';
 import './main-menu/MainMenu.css';
 import { bridgeCall, onBridgeEvent } from '../bridge-types.generated.ts';
 import type { GetNewGameMapFactionSelectionResponse } from '../bridge-types.generated.ts';
+import { acknowledgeBridgeFailure } from '../bridge/core/runtimeEngine';
 import type { SaveEntry } from '../bridge/app/useSavesBridge';
 import { useModsBridge } from '../bridge/app/useModsBridge';
 import type { ModEntry, SteamWorkshopItem } from '../bridge/app/useModsBridge';
@@ -101,6 +102,8 @@ const MainMenu: React.FC = () => {
   const [steamAchievementsAvailable, setSteamAchievementsAvailable] = useState<boolean | null>(null);
   const [showLoad, setShowLoad] = useState(false);
   const [showFullGamePrompt, setShowFullGamePrompt] = useState(false);
+  const [showModRecovery, setShowModRecovery] = useState(false);
+  const pendingModRecoveryRef = useRef(false);
   const [newGameMaps, setNewGameMaps] = useState<NewGameMapEntry[]>([]);
   const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
   const [menuError, setMenuError] = useState<string | null>(null);
@@ -232,6 +235,33 @@ const MainMenu: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (isDemo !== false) return;
+    let cancelled = false;
+    pendingModRecoveryRef.current = false;
+    Promise.all([
+      bridgeCall('game.get_mod_load_state'),
+      bridgeCall('game.get_initial_setup'),
+    ]).then(([loadState, setup]) => {
+      if (cancelled) return;
+      if (!loadState.showRecoveryPrompt) return;
+      if (setup.completed) {
+        setShowModRecovery(true);
+        return;
+      }
+      pendingModRecoveryRef.current = true;
+    }).catch(acknowledgeBridgeFailure);
+    return () => {
+      cancelled = true;
+    };
+  }, [isDemo]);
+
+  useEffect(() => onBridgeEvent('game.complete_initial_setup', () => {
+    if (!pendingModRecoveryRef.current) return;
+    pendingModRecoveryRef.current = false;
+    setShowModRecovery(true);
+  }), []);
+
+  useEffect(() => {
     let cancelled = false;
     const applyAchievementAvailability = (response: { steamAvailable: boolean }) => {
       if (!cancelled) setSteamAchievementsAvailable(response.steamAvailable);
@@ -347,6 +377,14 @@ const MainMenu: React.FC = () => {
       await bridgeCall('game.restart');
     } catch (err) {
       console.error('[MainMenu] restart failed', err);
+    }
+  };
+
+  const handleOpenModsFolder = async () => {
+    try {
+      await bridgeCall('game.open_mods_folder');
+    } catch (err) {
+      console.error('[MainMenu] open mods folder failed', err);
     }
   };
 
@@ -469,7 +507,7 @@ const MainMenu: React.FC = () => {
   const subViewClass = `mm-sub-view${closing ? ' mm-sub-view--closing' : ''}`;
 
   /* Sub views */
-  const renderBackHeader = (title: string) => (
+  const renderBackHeader = (title: string, extra?: React.ReactNode) => (
     <div className="mm-sub-header">
       <button
         className="mm-back-btn"
@@ -481,6 +519,7 @@ const MainMenu: React.FC = () => {
         <span className="mm-back-arrow" aria-hidden="true" /><span><WebUIText textKey="Auto.PagesMainMenu.362.7" /></span>
       </button>
       <h2 className="mm-sub-title">{title}</h2>
+      {extra ? <div className="mm-sub-header-actions">{extra}</div> : null}
     </div>
   );
 
@@ -602,7 +641,12 @@ const MainMenu: React.FC = () => {
 
   const renderMods = () => (
     <div className={subViewClass}>
-      {renderBackHeader(webUIText('MainMenu.SubviewMods'))}
+      {renderBackHeader(
+        webUIText('MainMenu.SubviewMods'),
+        <GameButton variant="outline" className="mm-open-folder-btn" onClick={() => { void handleOpenModsFolder(); }}>
+          <WebUIText textKey="MainMenu.OpenModsFolder" />
+        </GameButton>,
+      )}
       <div className="mm-list-body">
         <div className="mm-mod-tabs">
           {([
@@ -1115,6 +1159,15 @@ const MainMenu: React.FC = () => {
         cancelText={webUIText('Demo.NotNow')}
         onConfirm={() => { void handlePurchaseFullGame(); }}
         onClosed={() => setShowFullGamePrompt(false)}
+      />
+      <ConfirmDialog
+        visible={showModRecovery}
+        title={webUIText('MainMenu.ModsNotLoadedTitle')}
+        message={webUIText('MainMenu.ModsNotLoadedBody')}
+        confirmText={webUIText('MainMenu.ModsNotLoadedOpenMods')}
+        cancelText={webUIText('MainMenu.ModsNotLoadedContinue')}
+        onConfirm={() => openSubView('mods')}
+        onClosed={() => setShowModRecovery(false)}
       />
       {view === 'newgame' && activeSelectedNewGameMap && (
         <FactionSelection

@@ -22,13 +22,16 @@ import { useGameActions, useGameState } from '../../../context/GameContext';
 import { usePinnedItemsBridge, zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import { breakTreatyBridge, setProvinceBuildFocusBridge } from '../../../bridge/diplomacy/useDiplomacyOverviewBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
-import { dispatchFactionData } from '../../../bridge/diplomacy/useFactionBridge';
+import { dispatchFactionData, refreshFactionData } from '../../../bridge/diplomacy/useFactionBridge';
+import { toggleFoederatiCallupBridge } from '../../../bridge/military-map/useMilitaryBridge';
 import { BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
 import glossary from '../../../data/glossary';
 import type { Faction, FactionTreaty } from '../../../data/types';
 import { STAT_ICONS } from '../../../utils/iconMaps';
 import { formatTreatyType } from '../../../utils/displayLabels';
 import { canNegotiateDiplomacyWith } from '../../../utils/diplomacyAuthority';
+import { getComplianceState } from '../../../utils/colorFormatters';
+import { buildComplianceTooltip } from '../../../utils/characterTooltipContent';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { cultureIconPath } from '../../../utils/cultureIcons';
@@ -90,20 +93,6 @@ function buildFactionInteractionTooltip(
 ): TooltipContent {
   const lines: TooltipContent['lines'] = [];
 
-  if (i.goldCost > 0) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.63.1'), value: formatNumber(i.goldCost), valueIcon: '/assets/icons/I_Coins.png' });
-  }
-
-  if (i.inProgress && i.remainingDays > 0) {
-    const days = Math.round(i.remainingDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.68.2'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.68.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
-  } else if (i.durationDays > 0) {
-    const days = Math.round(i.durationDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.71.3'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.71.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
-  } else {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.73.4'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.73.1"); } });
-  }
-
   if (i.successFactors.length > 0) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.78.5'),
@@ -118,6 +107,20 @@ function buildFactionInteractionTooltip(
         valueColor: f.percent >= 0 ? 'var(--green)' : 'var(--red)',
       });
     }
+  }
+
+  if (i.goldCost > 0) {
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.63.1'), value: formatNumber(i.goldCost), valueIcon: '/assets/icons/I_Coins.png' });
+  }
+
+  if (i.inProgress && i.remainingDays > 0) {
+    const days = Math.round(i.remainingDays);
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.68.2'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.68.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+  } else if (i.durationDays > 0) {
+    const days = Math.round(i.durationDays);
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.71.3'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.71.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+  } else {
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.73.4'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.73.1"); } });
   }
 
   if (i.cooldownDays > 0) {
@@ -163,12 +166,12 @@ function buildFactionInteractionTooltip(
   };
 }
 
-function getStatusBadgeText(status: Faction['diplomaticStatus']): string {
-  switch (status) {
+function getStatusBadgeText(faction: Faction): string {
+  switch (faction.diplomaticStatus) {
     case 'war': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.118.9');
     case 'ally': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.119.10');
     case 'rival': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.120.11');
-    case 'subject': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.121.12');
+    case 'subject': return faction.subjectType || webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.121.12');
     default: return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.122.13');
   }
 }
@@ -195,9 +198,14 @@ const statusIcons: Record<string, string> = {
   ally: '/assets/icons/I_Peace.png',
   rival: '/assets/icons/I_Swords.png',
   subject: '/assets/icons/I_Vassal.png',
+  foederati: '/assets/icons/I_InviteFoederati.png',
   neutral: '/assets/icons/I_Diplomacy.png',
 };
 
+function statusIconForFaction(faction: Faction): string {
+  if (faction.subjectSubtype === 'foederati') return statusIcons.foederati;
+  return statusIcons[faction.diplomaticStatus] || statusIcons.neutral;
+}
 
 /** Keyed on the bridge's ETreatyType enum names. */
 const treatyIcons: Record<string, string> = {
@@ -278,15 +286,6 @@ const statMeta: { key: import('../../../data/types').StatKey; label: string; ico
   { key: 'constitution', get label() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.183.6'); }, icon: '/assets/icons/StatIcons/I_Constitution.png', get desc() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.183.12'); } },
 ];
 
-/** Compliance thresholds matching the game's 5-state system */
-function getComplianceState(val: number): { label: string; icon: string; color: string } {
-  if (val >= 30) return { label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.188.14'), icon: '/assets/icons/Compliance/I_Eager.png', color: 'var(--green)' };
-  if (val >= 10) return { label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.189.15'), icon: '/assets/icons/Compliance/I_Reliable.png', color: '#9acd32' };
-  if (val >= -10) return { label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.190.16'), icon: '/assets/icons/Compliance/I_Grumbling.png', color: 'var(--gold)' };
-  if (val >= -30) return { label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.191.17'), icon: '/assets/icons/Compliance/I_Delaying.png', color: 'var(--orange)' };
-  return { label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.192.18'), icon: '/assets/icons/Compliance/I_Refusing.png', color: 'var(--red)' };
-}
-
 async function refreshAgentTarget(factionId: string, role: AgentRole): Promise<void> {
   const factionData = await bridgeCall('game.get_faction_data', { factionId, scope: 'full' });
   dispatchFactionData(factionData);
@@ -319,8 +318,20 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
   const diplomacyNavigation = sidebarNavigation.diplomacy;
   const canNavigateBack = (diplomacyNavigation?.back.length ?? 0) > 0;
   const canNavigateForward = (diplomacyNavigation?.forward.length ?? 0) > 0;
-  const statusText = getStatusBadgeText(faction.diplomaticStatus);
+  const statusText = getStatusBadgeText(faction);
   const isProvinceSubject = faction.subjectSubtype === 'province';
+  const isPlayerFoederati = !faction.isPlayer && faction.diplomaticStatus === 'subject' && faction.subjectSubtype === 'foederati';
+  const canToggleFoederatiCallup = Boolean(faction.isFoederatiCalledUp || faction.canCallFoederati);
+  const foederatiCallupLabel = faction.isFoederatiCalledUp
+    ? webUIText('InternalPolitics.StandDown')
+    : faction.canCallFoederati
+      ? webUIText('InternalPolitics.CallUp')
+      : webUIText('InternalPolitics.WillRefuse');
+  const foederatiCallupBody = faction.isFoederatiCalledUp
+    ? webUIText('InternalPolitics.StandDownThis')
+    : faction.canCallFoederati
+      ? webUIText('InternalPolitics.CallUpThis')
+      : webUIText('InternalPolitics.ThisFoederatiForce');
   const hasBuildFocus = isProvinceSubject && Boolean(faction.buildFocus);
   const focusKey = focusKeyForFaction(faction);
   const canSetBuildFocus = hasBuildFocus && Boolean(faction.canSetBuildFocus);
@@ -519,6 +530,10 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
     culture?: string;
     cultureGroup?: string;
     emblem?: string;
+    diplomaticStatus?: string;
+    subjectSubtype?: string;
+    isPlayer?: boolean;
+    isRebel?: boolean;
   }
   const treatyRelations = useMemo(() => {
     const grouped = new Map<string, TreatyPartner[]>();
@@ -534,6 +549,10 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
         culture: t.withFactionCulture,
         cultureGroup: t.withFactionCultureGroup,
         emblem: t.withFactionEmblem,
+        diplomaticStatus: t.withFactionDiplomaticStatus,
+        subjectSubtype: t.withFactionSubjectSubtype,
+        isPlayer: t.withFactionIsPlayer,
+        isRebel: t.withFactionIsRebel,
       };
       const list = grouped.get(t.type) ?? [];
       list.push(partner);
@@ -625,6 +644,10 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                 withFactionCulture: treaty.withFactionCulture,
                 withFactionCultureGroup: treaty.withFactionCultureGroup,
                 withFactionEmblem: treaty.withFactionEmblem,
+                withFactionDiplomaticStatus: treaty.withFactionDiplomaticStatus,
+                withFactionSubjectSubtype: treaty.withFactionSubjectSubtype,
+                withFactionIsPlayer: treaty.withFactionIsPlayer,
+                withFactionIsRebel: treaty.withFactionIsRebel,
               })),
             }}
             delay={150}
@@ -648,7 +671,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
           <div className="diplo-header-info">
             <span className="diplo-header-name">{faction.name}</span>
             {!faction.isPlayer && <div className="diplo-header-status-row">
-              <img src={statusIcons[faction.diplomaticStatus] || statusIcons.neutral} alt="" className="diplo-header-status-icon" />
+              <img src={statusIconForFaction(faction)} alt="" className="diplo-header-status-icon" />
               <DiplomacyStatusBadge text={statusText} status={faction.diplomaticStatus} />
               {faction.isRebel && (
                 <DiplomacyStatusBadge
@@ -823,19 +846,14 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
 
           {/* Compliance (subject factions only) */}
           {complianceState && (
-            <Tooltip content={{
-              get title() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.428.1", { Label: complianceState.label }); },
+            <Tooltip content={buildComplianceTooltip(complianceVal, {
+              compliance: complianceVal,
+              complianceBreakdown: faction.complianceBreakdown,
+            }, {
+              title: webUIText('Auto.Prop.componentssidebarsDiplomacySidebar.428.1', { Label: complianceState.label }),
               body: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.429.29'),
-              lines: [
-                { label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.431.30'), value: formatNumber(complianceVal), valueColor: complianceState.color },
-                ...(faction.complianceBreakdown ?? []).map(m => ({
-                  label: m.label,
-                  value: formatSignedNumber(m.value),
-                  valueColor: m.value > 0 ? '#6dba4c' : m.value < 0 ? '#c75b3a' : 'var(--text-muted)',
-                })),
-              ],
               footer: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.438.31'),
-            }} position="bottom" delay={200}>
+            })} position="bottom" delay={200}>
               <div className="diplo-compliance-row">
                 <img src={complianceState.icon} alt="" className="diplo-compliance-icon" />
                 <span className="diplo-compliance-label"><WebUIText textKey="Auto.ComponentsSidebarsDiplomacySidebar.441.5" /></span>
@@ -956,7 +974,32 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
           )}
 
           {/* Faction overview stats */}
-          <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsDiplomacySidebar.449.32')} />
+          <div className="diplo-section-heading-with-action">
+            <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsDiplomacySidebar.449.32')} />
+            {isPlayerFoederati && (
+              <Tooltip
+                inline
+                content={{ title: foederatiCallupLabel, body: foederatiCallupBody }}
+                position="left"
+                delay={200}
+              >
+                <GameButton
+                  variant="outline"
+                  icon={faction.isFoederatiCalledUp ? '/assets/icons/T_ReleaseFoederati.png' : '/assets/icons/T_RaiseFoederati.png'}
+                  className="diplo-levy-action-button"
+                  disabled={!canToggleFoederatiCallup}
+                  onClick={() => {
+                    if (!canToggleFoederatiCallup) return;
+                    void toggleFoederatiCallupBridge(faction.id, !faction.isFoederatiCalledUp)
+                      .then(() => refreshFactionData(faction.id))
+                      .catch(acknowledgeBridgeFailure);
+                  }}
+                >
+                  {foederatiCallupLabel}
+                </GameButton>
+              </Tooltip>
+            )}
+          </div>
           <div className="diplo-overview-grid">
             <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.451.33'), body: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.451.34') }} position="bottom" delay={200}>
               <div className="diplo-overview-stat">
@@ -1069,20 +1112,27 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                 )}
                 <div className="diplo-successor-info">
                   <span className="diplo-successor-title">{successor ? successorTitle : webUIText('FactionOverview.NoSuccessor')}</span>
-                  <span className="diplo-successor-name">{successor?.name ?? webUIText('Common.None')}</span>
+                  {successor ? <span className="diplo-successor-name">{successor.name}</span> : null}
                 </div>
                 {canSetSuccessor ? (
-                  <button
-                    type="button"
-                    className="diplo-successor-action"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setHeirModalOpen(true);
-                    }}
+                  <Tooltip
+                    content={{ body: webUIText('FactionOverview.AssignProvinceSuccessorTooltip') }}
+                    position="left"
+                    delay={180}
+                    wrapperClassName="diplo-successor-action-wrap"
                   >
-                    {webUIText('Common.Assign')}
-                  </button>
+                    <button
+                      type="button"
+                      className="diplo-successor-action"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setHeirModalOpen(true);
+                      }}
+                    >
+                      {webUIText('Common.Assign')}
+                    </button>
+                  </Tooltip>
                 ) : null}
               </div>
             </>
@@ -1116,6 +1166,10 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                         emblem={f.emblem}
                         name={f.name}
                         resolveFaction={false}
+                        diplomaticStatus={f.diplomaticStatus}
+                        subjectSubtype={f.subjectSubtype}
+                        isPlayer={f.isPlayer}
+                        isRebel={f.isRebel}
                         size="xs"
                         showRing
                         onClick={() => openSidebar('diplomacy', f.id)}
@@ -1152,6 +1206,10 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                         emblem={p.emblem}
                         name={p.name}
                         resolveFaction={false}
+                        diplomaticStatus={p.diplomaticStatus}
+                        subjectSubtype={p.subjectSubtype}
+                        isPlayer={p.isPlayer}
+                        isRebel={p.isRebel}
                         size="xs"
                         showRing
                         onClick={() => openSidebar('diplomacy', p.id)}

@@ -64,17 +64,28 @@ const FactionRoundel: React.FC<FactionRoundelProps> = ({
   // When a factionId is supplied, pull live data; explicit props become
   // placeholders used while the query is in flight.
   const hasVisualFallback = Boolean(colour || symbol || emblem || cultureGroup);
-  const fetched = useFaction(resolveFaction && !hasVisualFallback ? factionId ?? null : null);
-  const resolvedColour = fetched?.colour ?? colour ?? '#666666';
-  const resolvedSecondary = fetched?.secondaryColour ?? secondaryColour;
-  const resolvedEmblem = fetched?.emblem ?? emblem;
-  const resolvedCultureGroup = fetched?.cultureGroup ?? cultureGroup;
-  const resolvedName = fetched?.name ?? name ?? '';
+  const hasDiplomaticFallback = Boolean(
+    borderVariant
+    || diplomaticStatus
+    || subjectSubtype
+    || isPlayer !== undefined
+    || isRebel !== undefined
+  );
+  const fetched = useFaction(
+    factionId ?? null,
+    'summary',
+    Boolean(resolveFaction && factionId && (!hasVisualFallback || !hasDiplomaticFallback)),
+  );
+  const resolvedColour = colour ?? fetched?.colour ?? '#666666';
+  const resolvedSecondary = secondaryColour ?? fetched?.secondaryColour;
+  const resolvedEmblem = emblem ?? fetched?.emblem;
+  const resolvedCultureGroup = cultureGroup ?? fetched?.cultureGroup;
+  const resolvedName = name || fetched?.name || '';
   const resolvedBorderVariant = borderVariant ?? resolveFactionBorderVariant({
-    diplomaticStatus: fetched?.diplomaticStatus ?? diplomaticStatus,
-    subjectSubtype: fetched?.subjectSubtype ?? subjectSubtype,
-    isPlayer: fetched?.isPlayer ?? isPlayer,
-    isRebel: fetched?.isRebel ?? isRebel,
+    diplomaticStatus: diplomaticStatus ?? fetched?.diplomaticStatus,
+    subjectSubtype: subjectSubtype ?? fetched?.subjectSubtype,
+    isPlayer: isPlayer ?? fetched?.isPlayer,
+    isRebel: isRebel ?? fetched?.isRebel,
   });
 
   const emblemColour = resolveEmblemColour(resolvedColour, resolvedSecondary);
@@ -115,6 +126,10 @@ const FactionRoundel: React.FC<FactionRoundelProps> = ({
         <div
           className="faction-roundel-fill"
           style={{
+            // Solid colour is required for Webkiln alpha hit-testing: the
+            // painter counts background-color, not CSS gradients, so a
+            // gradient-only fill makes the disc a click-through hole.
+            backgroundColor: resolvedColour,
             backgroundImage: `radial-gradient(circle at 40% 35%, ${lighten(resolvedColour, 0.2)}, ${resolvedColour} 70%, ${darken(resolvedColour, 0.3)} 100%)`,
           }}
         />

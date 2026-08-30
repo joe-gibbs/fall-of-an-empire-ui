@@ -4,7 +4,7 @@ import type { PortGlanceData } from './WorldGlanceTypes';
 import { formatNumber } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
 import { WebkilnAssetPath } from '../../utils/assets';
-import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel } from './WorldGlancePresentation';
+import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
 
 import { webUIText } from '../../localization/WebUITextContext';
 import type { GetWorldGlanceTooltipResponse } from '../../bridge-types.generated';
@@ -136,6 +136,7 @@ export default function PortGlance({ data }: PortGlanceProps) {
         className={rootClass}
         style={{
           '--faction-colour': data.faction.colour,
+          ...relationTextVars(data.faction.relation),
         } as CSSProperties}
       >
         {levelLabel && <div className="gport-level-label" aria-hidden="true">{levelLabel}</div>}

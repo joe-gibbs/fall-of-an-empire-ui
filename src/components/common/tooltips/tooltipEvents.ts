@@ -10,3 +10,14 @@ export function subscribeTooltipDismissEvent(listener: () => void): () => void {
   window.addEventListener(TOOLTIP_DISMISS_EVENT, listener);
   return () => window.removeEventListener(TOOLTIP_DISMISS_EVENT, listener);
 }
+
+export function isPointerOverTooltipInteraction(): boolean {
+  if (typeof document === 'undefined') {
+    return false;
+  }
+
+  return Boolean(
+    document.querySelector('[data-tooltip-surface]:hover')
+    || document.querySelector('.tooltip-wrapper:hover, .tooltip-wrapper-inline:hover'),
+  );
+}

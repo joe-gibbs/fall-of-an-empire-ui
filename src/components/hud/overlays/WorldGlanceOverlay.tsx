@@ -20,6 +20,7 @@ import {
   type WorldGlancesFrameResponse,
 } from '../../../bridge/app/useWorldGlancesBridge';
 import ArmyGlance, { NativeMilitaryGlanceTooltip } from '../../world-glances/ArmyGlance';
+import { isPointerOverTooltipInteraction } from '../../common/tooltips/tooltipEvents';
 import NavyGlance from '../../world-glances/NavyGlance';
 import BattleGlance from '../../world-glances/BattleGlance';
 import SettlementGlance from '../../world-glances/SettlementGlance';
@@ -42,6 +43,7 @@ import type {
 import '../../world-glances/WorldGlances.css';
 import './WorldGlanceOverlay.css';
 import { parseWorldGlanceTutorialTarget } from './worldGlanceTutorialTarget';
+import { consumeCommandDragClick } from '../../../utils/militaryCommandAssignment';
 import { UI_PERFORMANCE } from '../../../config/uiPerformance';
 import { UI_PRESENTATION } from '../../../config/presentation';
 
@@ -115,6 +117,8 @@ function mapSettlement(entry: GetWorldGlancesResponse['settlements'][number]): S
     complianceTargetIsRuler: entry.complianceTargetIsRuler ?? false,
     complianceLuxuryLabel: entry.complianceLuxuryLabel ?? '',
     complianceLuxuryStatus: entry.complianceLuxuryStatus ?? '',
+    luxurySlotsRequired: entry.luxurySlotsRequired ?? 0,
+    luxurySlotsProvided: entry.luxurySlotsProvided ?? 0,
     regionName: entry.regionName ?? '',
     landName: entry.landName ?? '',
     domainName: entry.domainName ?? '',
@@ -484,6 +488,7 @@ function updatePortSettlementLineElement(
 function handleGlanceClick(kind: string, id: string, event: MouseEvent<HTMLDivElement>, mouseButton: 'left' | 'right') {
   event.preventDefault();
   event.stopPropagation();
+  if (consumeCommandDragClick()) return;
   handleWorldGlanceInput(kind, id, mouseButton, event.shiftKey);
 }
 
@@ -976,6 +981,7 @@ const GlanceNode = memo(function GlanceNode({
     <div
       ref={setRootNode}
       data-tutorial-target={tutorialTarget}
+      {...((kind === 'army' || kind === 'navy') ? { 'data-military-command-id': id } : {})}
       className={`world-glance world-glance-node world-glance-node--${kind}${attached ? ' world-glance-node--attached' : ''} detail-flag`}
       style={INITIAL_NODE_STYLE}
       onMouseOver={onMouseOver}
@@ -1063,6 +1069,9 @@ function NativeWorldGlanceInputOverlay() {
   const latestFrameRef = useRef<WorldGlancesFrameResponse | null>(null);
   const [hovered, setHovered] = useState<{ kind: 'army' | 'navy' | 'convoy'; id: string } | null>(null);
   const hoveredRef = useRef(hovered);
+  const engineHoveredRef = useRef(false);
+  const tooltipHeldRef = useRef(false);
+  const releaseTimerRef = useRef<number | null>(null);
   const [anchor, setAnchor] = useState<ScreenPosition | null>(null);
 
   dataRef.current = data;
@@ -1106,6 +1115,30 @@ function NativeWorldGlanceInputOverlay() {
     updateAnchor(frame);
   }), [updateAnchor]);
 
+  const clearReleaseTimer = useCallback(() => {
+    if (releaseTimerRef.current !== null) {
+      window.clearTimeout(releaseTimerRef.current);
+      releaseTimerRef.current = null;
+    }
+  }, []);
+
+  const releaseIfIdle = useCallback(() => {
+    if (engineHoveredRef.current || tooltipHeldRef.current) {
+      return;
+    }
+    hoveredRef.current = null;
+    setHovered(null);
+    setAnchor(null);
+  }, []);
+
+  const scheduleRelease = useCallback(() => {
+    clearReleaseTimer();
+    releaseTimerRef.current = window.setTimeout(() => {
+      releaseTimerRef.current = null;
+      releaseIfIdle();
+    }, UI_PRESENTATION.tooltip.hideGraceMs);
+  }, [clearReleaseTimer, releaseIfIdle]);
+
   useEffect(() => {
     const onHover = (event: Event) => {
       const args = (event as CustomEvent<{ args?: unknown[] }>).detail?.args;
@@ -1118,19 +1151,45 @@ function NativeWorldGlanceInputOverlay() {
 
       if (isHovered) {
         const target: { kind: 'army' | 'navy' | 'convoy'; id: string } = { kind, id };
+        engineHoveredRef.current = true;
+        clearReleaseTimer();
         hoveredRef.current = target;
         setHovered(target);
         updateAnchor(latestFrameRef.current, target);
       } else if (hoveredRef.current?.kind === kind && hoveredRef.current.id === id) {
-        hoveredRef.current = null;
-        setHovered(null);
-        setAnchor(null);
+        engineHoveredRef.current = false;
+        tooltipHeldRef.current = tooltipHeldRef.current || isPointerOverTooltipInteraction();
+        if (tooltipHeldRef.current) {
+          return;
+        }
+        scheduleRelease();
+      }
+    };
+
+    const onPointerOver = (event: Event) => {
+      if (!hoveredRef.current) {
+        return;
+      }
+      const overTooltip = event.target instanceof Element
+        && Boolean(event.target.closest('[data-tooltip-surface]'));
+      tooltipHeldRef.current = overTooltip;
+      if (overTooltip) {
+        clearReleaseTimer();
+        return;
+      }
+      if (!engineHoveredRef.current) {
+        scheduleRelease();
       }
     };
 
     window.addEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
-    return () => window.removeEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
-  }, [updateAnchor]);
+    document.addEventListener('pointerover', onPointerOver, true);
+    return () => {
+      window.removeEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
+      document.removeEventListener('pointerover', onPointerOver, true);
+      clearReleaseTimer();
+    };
+  }, [clearReleaseTimer, scheduleRelease, updateAnchor]);
 
   if (!data || !hovered || !anchor) return null;
 

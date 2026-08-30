@@ -32,13 +32,15 @@
   align-items: center;
   justify-content: center;
   flex: 1;
+  min-width: 0;
   text-align: center;
-  padding: 0.385rem 0.923rem 0.462rem;
+  /* Four settlement tabs (General/Buildings/Military/Garrison) must fit in --sidebar-width. */
+  padding: 0.385rem 0.32rem 0.462rem;
   font-family: var(--font-header);
   font-size: 0.95rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.045em;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
   border-width: 0.077rem;
   border-style: solid;

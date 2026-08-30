@@ -1,6 +1,6 @@
 import InteractionEffectsTooltip from '../../common/tooltips/InteractionEffectsTooltip';
 import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
-import type { Character, CharacterStatModifier, SettlementTier, StatKey } from '../../../data/types';
+import type { Character, SettlementTier } from '../../../data/types';
 import type { PersonInteractionView } from '../../../bridge/characters/usePersonInteractionsBridge';
 import { successChanceColour } from '../../../utils/colorFormatters';
 import { BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
@@ -73,51 +73,19 @@ export function buildHeaderAgeTooltip(character: Character, isAlive: boolean): T
   };
 }
 
-export function getTemporaryStatModifiers(character: Character, stat: StatKey): CharacterStatModifier[] {
-  return character.stats.temporaryModifiers?.filter(modifier => modifier.stat === stat) ?? [];
-}
-
-export function getTemporaryStatModifierTotal(modifiers: CharacterStatModifier[]): number {
-  return modifiers.reduce((sum, modifier) => sum + modifier.value, 0);
-}
-
-export function modifierValueColor(value: number): string {
-  if (value > 0) return 'var(--green)';
-  if (value < 0) return 'var(--red)';
-  return 'var(--text-muted)';
-}
+export {
+  formatTemporaryModifierLabel,
+  getTemporaryStatModifierTotal,
+  getTemporaryStatModifiers,
+  modifierTooltipLines,
+  modifierValueColor,
+  temporaryModifierTooltipLines,
+} from '../../../utils/characterTooltipContent';
 
 export function getOpinionIcon(value: number): string {
   if (value >= 20) return '/assets/icons/I_OpinionPositive.png';
   if (value >= -20) return '/assets/icons/I_OpinionNeutral.png';
   return '/assets/icons/I_OpinionNegative.png';
-}
-
-export function modifierTooltipLines(entries?: { label: string; value: number }[]): TooltipLine[] {
-  return (entries ?? []).map(entry => ({
-    label: entry.label,
-    value: formatSignedNumber(entry.value, { maximumFractionDigits: 1 }),
-    valueColor: modifierValueColor(entry.value),
-  }));
-}
-
-export function formatTemporaryModifierLabel(modifier: CharacterStatModifier): string {
-  if (modifier.remainingDays === undefined) return modifier.label;
-  const days = Math.round(modifier.remainingDays);
-  return webUIText("Auto.Return.componentssidebarsCharacterSidebar.156.1", { Label: modifier.label, Value2: formatNumber(days), Value3: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') });
-}
-
-export function temporaryModifierTooltipLines(modifiers: CharacterStatModifier[]): TooltipLine[] {
-  if (modifiers.length === 0) return [];
-
-  return [
-    { label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.163.3'), isHeader: true },
-    ...modifiers.map(modifier => ({
-      label: formatTemporaryModifierLabel(modifier),
-      value: formatSignedNumber(modifier.value, { maximumFractionDigits: 1 }),
-      valueColor: modifierValueColor(modifier.value),
-    })),
-  ];
 }
 
 export const roleIcons: Record<string, string> = {
@@ -235,6 +203,24 @@ export function buildInteractionTooltip(interaction: PersonInteractionView, targ
   const hasInitiatorRequirementReason = initiatorRequirement.length > 0
     && reasons.some(reason => normaliseInteractionReason(reason.reason) === normaliseInteractionReason(initiatorRequirement));
 
+  if (interaction.successFactors.length > 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.310.10'),
+      value: formatPercent(interaction.successChancePercent),
+      valueColor: successChanceColour(interaction.successChancePercent),
+      labelIcon: '/assets/icons/I_GoalMet.png',
+      isHeader: true,
+    });
+
+    for (const factor of interaction.successFactors) {
+      lines.push({
+        label: factor.name,
+        value: `${formatSignedNumber(factor.percent)}%`,
+        valueColor: factor.percent >= 0 ? 'var(--green)' : 'var(--red)',
+      });
+    }
+  }
+
   lines.push({
     label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.281.4'),
     value: interactionCategoryLabels[interaction.category] ?? interaction.category,
@@ -261,24 +247,6 @@ export function buildInteractionTooltip(interaction: PersonInteractionView, targ
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.303.8'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.303.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.305.9'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.305.1"); } });
-  }
-
-  if (interaction.successFactors.length > 0) {
-    lines.push({
-      label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.310.10'),
-      value: formatPercent(interaction.successChancePercent),
-      valueColor: successChanceColour(interaction.successChancePercent),
-      labelIcon: '/assets/icons/I_GoalMet.png',
-      isHeader: true,
-    });
-
-    for (const factor of interaction.successFactors) {
-      lines.push({
-        label: factor.name,
-        value: `${formatSignedNumber(factor.percent)}%`,
-        valueColor: factor.percent >= 0 ? 'var(--green)' : 'var(--red)',
-      });
-    }
   }
 
   if (interaction.cooldownDays > 0) {

@@ -509,6 +509,9 @@ function InternalFactionRow({
             name={row.name}
             size="md"
             showRing
+            diplomaticStatus={row.diplomaticStatus}
+            subjectSubtype={row.subjectSubtype}
+            isRebel={row.isRebel}
           />
         </FactionTooltip>
         <div className="ips-faction-row-title">
@@ -848,6 +851,10 @@ function FoederatiRow({
           name={entry.factionName}
           size="sm"
           showRing
+          diplomaticStatus={entry.factionDiplomaticStatus}
+          subjectSubtype={entry.factionSubjectSubtype}
+          isPlayer={entry.factionIsPlayer}
+          isRebel={entry.factionIsRebel}
         />
         <div className="ips-foederati-copy">
           <EntityLink type="faction" id={entry.factionId} className="ips-foederati-name ips-entity-link" fallbackClassName="ips-foederati-name">{entry.factionName}</EntityLink>

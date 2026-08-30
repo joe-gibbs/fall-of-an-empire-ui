@@ -32,6 +32,7 @@
   display: flex;
   align-items: stretch;
   --faction-colour: var(--gold-muted);
+  --relation-text: var(--text-header);
   background: linear-gradient(180deg, rgba(28, 24, 20, 0.96), rgba(14, 12, 10, 0.96));
   border: 0.0909rem solid rgba(18, 20, 22, 0.9);
   border-top-color: var(--gold-muted);
@@ -62,6 +63,59 @@
   line-height: 1rem;
   text-align: center;
   pointer-events: none;
+}
+
+.glance.is-at-war {
+  isolation: isolate;
+}
+
+.glance-war-glow {
+  position: absolute;
+  pointer-events: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+}
+
+.glance--settlement .glance-war-glow {
+  top: 50%;
+  left: 2.1rem;
+  width: 9.5rem;
+  height: 4.1rem;
+  transform: translate(-18%, -50%);
+  background-image: radial-gradient(
+    ellipse at center,
+    rgba(176, 38, 32, 0.42) 0%,
+    rgba(176, 38, 32, 0.16) 46%,
+    rgba(176, 38, 32, 0) 74%
+  );
+}
+
+.glance--military .glance-war-glow {
+  top: 50%;
+  left: 50%;
+  width: 7.2rem;
+  height: 7.2rem;
+  transform: translate(-50%, -50%);
+  background-image: radial-gradient(
+    circle at center,
+    rgba(176, 38, 32, 0.46) 0%,
+    rgba(176, 38, 32, 0.18) 44%,
+    rgba(176, 38, 32, 0) 72%
+  );
+}
+
+.glance--military-garrison .glance-war-glow {
+  top: 50%;
+  left: 50%;
+  width: 8.2rem;
+  height: 2.6rem;
+  transform: translate(-50%, -50%);
+  background-image: radial-gradient(
+    ellipse at center,
+    rgba(176, 38, 32, 0.4) 0%,
+    rgba(176, 38, 32, 0.14) 50%,
+    rgba(176, 38, 32, 0) 74%
+  );
 }
 
 .glance.is-selected {
@@ -737,7 +791,7 @@
 .gset-name {
   font-family: var(--font-header);
   font-size: 0.88rem;
-  color: var(--text-header);
+  color: var(--relation-text);
   line-height: 1.1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -776,7 +830,7 @@
 .gset-info-value {
   font-family: var(--font-header);
   font-size: 0.82rem;
-  color: var(--text-bright);
+  color: var(--relation-text);
 }
 
 .gset-info-value--numeric {
@@ -843,159 +897,78 @@
   border-right-color: rgba(201, 168, 76, 0.22);
   border-bottom-color: rgba(18, 20, 22, 0.62);
   border-left-color: rgba(201, 168, 76, 0.22);
+  min-width: 16.5rem;
 }
 
-.province-tooltip-mode-rows {
-  display: flex;
-  flex-direction: column;
-  color: var(--text);
-  line-height: 1.22;
-  overflow-wrap: break-word;
-}
-
-.province-tooltip-mode-row {
+.military-glance-tt-identity,
+.military-glance-tt-identity-hit {
   display: flex;
   align-items: flex-start;
   min-width: 0;
 }
 
-.province-tooltip-mode-row + .province-tooltip-mode-row {
-  margin-top: 0.1364rem;
+.military-glance-tt-identity-hit {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
 }
 
-.province-tooltip-mode-icon {
-  width: 0.9091rem;
-  height: 0.9091rem;
-  flex-grow: 0;
+.military-glance-tt-identity {
+  gap: 0.55rem;
+  padding: 0.45rem 0.65rem 0.38rem;
+}
+
+.military-glance-tt-roundel {
   flex-shrink: 0;
-  flex-basis: 0.9091rem;
-  margin-right: 0.3182rem;
+  margin-top: 0.05rem;
 }
 
-.province-tooltip-mode-label {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 5.4545rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.province-tooltip-mode-value {
+.military-glance-tt-copy {
   min-width: 0;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
+}
+
+.military-glance-tt-name {
+  font-family: var(--font-header);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.15;
   color: var(--text-bright);
-  font-size: 0.95rem;
+  letter-spacing: 0.023rem;
 }
 
-.province-tooltip-mode-value--positive {
-  color: var(--green);
-}
-
-.province-tooltip-mode-value--negative {
-  color: var(--red);
-}
-
-.province-tooltip-mode-value--warning {
-  color: var(--gold-light);
-}
-
-.province-tooltip-mode-value--muted {
-  color: var(--text-muted);
-}
-
-.province-tooltip-mode-section {
+.military-glance-tt-meta {
   display: flex;
-  flex-direction: column;
-}
-
-.province-tooltip-mode-section-title {
-  display: none;
-}
-
-.province-tooltip-mode-bullet {
-  display: flex;
-  align-items: flex-start;
-  margin-top: 0.1364rem;
-}
-
-.province-tooltip-mode-bullet-mark {
-  width: 0.3182rem;
-  height: 0.3182rem;
-  flex-shrink: 0;
-  margin-top: 0.3182rem;
-  margin-right: 0.3182rem;
-  background-color: rgba(201, 168, 76, 0.72);
-}
-
-.province-tooltip-share-mode-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.province-tooltip-share-mode-row {
-  display: flex;
-  align-items: flex-start;
+  align-items: center;
+  gap: 0.35rem;
   min-width: 0;
-}
-
-.province-tooltip-share-mode-row + .province-tooltip-share-mode-row {
-  margin-top: 0.1818rem;
-}
-
-.province-tooltip-share-mode-swatch {
-  width: 0.5455rem;
-  height: 0.5455rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 0.5455rem;
-  margin-top: 0.1818rem;
-  margin-right: 0.3636rem;
-  background-color: var(--text-muted);
-  border: 0.0455rem solid rgba(201, 168, 76, 0.28);
-}
-
-.province-tooltip-share-mode-name-wrap {
-  min-width: 0;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.province-tooltip-share-mode-name {
-  color: var(--text-bright);
-}
-
-.province-tooltip-share-mode-detail {
+  margin-top: 0.16rem;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   line-height: 1.2;
 }
 
-.province-tooltip-share-mode-values {
-  flex-grow: 0;
+.military-glance-tt-meta-rule {
+  width: 0.35rem;
+  height: 0.077rem;
+  background: rgba(201, 168, 76, 0.45);
   flex-shrink: 0;
-  flex-basis: 4.2727rem;
-  margin-left: 0.5455rem;
-  display: flex;
-  justify-content: flex-end;
-  color: var(--text-header);
 }
 
-.province-tooltip-share-mode-change {
-  margin-left: 0.3636rem;
-  color: var(--text-muted);
+.tt-bubble--glance .tt-lines {
+  border-top-color: rgba(201, 168, 76, 0.2);
 }
 
-.province-tooltip-share-mode-change--positive {
-  color: var(--green);
+.tt-bubble--glance .tooltip-wrapper,
+.tt-bubble--glance .ftt-trigger,
+.tt-bubble--glance .military-glance-tt-identity-hit {
+  width: 100%;
 }
 
-.province-tooltip-share-mode-change--negative {
-  color: var(--red);
+.military-glance-tt-identity-hit:hover .military-glance-tt-name {
+  color: var(--gold-light);
 }
 
 .glance {
@@ -1054,6 +1027,10 @@
 .tt-bubble--glance > * {
   position: relative;
   z-index: 2;
+}
+
+.glance > .glance-war-glow {
+  z-index: 0;
 }
 
 .glance--battle {
@@ -1264,7 +1241,7 @@
 .glance-name,
 .gset-name,
 .battle-participant-name {
-  color: #f2e6b6;
+  color: var(--relation-text);
   font-weight: 700;
   letter-spacing: 0;
   text-shadow: 0 0.0909rem 0 rgba(18, 20, 22, 0.95), 0 0 0.3636rem rgba(18, 20, 22, 0.96);
@@ -1282,7 +1259,7 @@
 .gset-info-value,
 .battle-side-strength,
 .battle-participant-strength {
-  color: #f4efe2;
+  color: var(--relation-text);
   font-weight: 700;
   letter-spacing: 0;
   text-shadow: 0 0.0909rem 0 rgba(18, 20, 22, 0.95), 0 0 0.3182rem rgba(18, 20, 22, 0.98);
@@ -1438,12 +1415,6 @@
   background-color: var(--gold);
 }
 
-.world-glance-node.is-selected .glance--military .glance-military-faction-field,
-.glance--military.is-selected .glance-military-faction-field {
-  background-color: var(--gold);
-  background-image: radial-gradient(circle at 40% 35%, #f4efe2, #d6a83a 70%, #7a5a1f 100%);
-}
-
 .world-glance-node.is-selected .glance--military .glance-military-icon-socket,
 .glance--military.is-selected .glance-military-icon-socket {
   background-color: var(--gold);
@@ -1521,51 +1492,45 @@
 }
 
 .glance-military-core {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 3rem;
   height: 3rem;
+  margin: 0;
   background-color: transparent;
   background-image: none;
   overflow: visible;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
   z-index: 3;
 }
 
-.glance-military-faction-field {
-  position: relative;
-  display: block;
-  width: 3rem;
-  height: 3rem;
-  overflow: hidden;
-  background-color: var(--faction-colour);
-  background-image:
-    radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 48%),
-    radial-gradient(circle at 55% 60%, rgba(18, 20, 22, 0) 42%, rgba(18, 20, 22, 0.44) 100%),
-    url('/assets/baked/texture-overlay-dark.png');
-  background-position: center, center, 0 0;
-  background-repeat: no-repeat, no-repeat, repeat;
-  background-size: 100% 100%, 100% 100%, 5.8182rem 5.8182rem;
-  border-radius: 50%;
+.glance-military-faction-roundel.faction-roundel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+  pointer-events: none;
 }
 
-.glance-military-faction-field::before {
-  content: '';
+.glance-military-faction-roundel .faction-roundel-symbol {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 1;
-  border-radius: 50%;
-  background-color: var(--relation-target-bg);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 100ms linear;
-}
-
-.world-glance-node:not(.is-selected):hover .glance-military-faction-field::before,
-.world-glance-node:not(.is-selected).is-hovered .glance-military-faction-field::before,
-.glance--military:not(.is-selected):hover .glance-military-faction-field::before {
-  opacity: 0.72;
+  width: 2.1rem;
+  height: 2.1rem;
+  margin: auto;
 }
 
 .glance-military-type-mark {
@@ -1582,7 +1547,6 @@
 .glance-military-type-mark--navy {
   width: 1rem;
   height: 1rem;
-  filter: brightness(1.1) sepia(0.18) saturate(1.25) hue-rotate(165deg);
 }
 
 .glance-military-crown {
@@ -1653,25 +1617,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.1818rem;
-  height: 2.1818rem;
+  width: 1.4545rem;
+  height: 1.4545rem;
   pointer-events: none;
+  overflow: hidden;
   transform: translate(-50%, -50%);
 }
 
-.glance-military-kind .glance-military-type-mark {
-  width: 1.7273rem;
-  height: 1.7273rem;
+.glance-military-kind .glance-military-type-mark,
+.glance-military-kind .glance-military-type-mark--navy {
+  width: 1.2727rem;
+  height: 1.2727rem;
   object-fit: contain;
 }
 
-.glance-military-kind .glance-military-type-mark--navy {
-  width: 2.0909rem;
-  height: 2.0909rem;
-}
-
 .glance--enemy .glance-military-type-mark,
-.glance--military-garrison.glance--enemy .glance-garrison-kind img {
+.glance--military-garrison.glance--enemy .glance-garrison-type-mark {
   filter: sepia(0.72) saturate(2.35) hue-rotate(310deg) brightness(0.78) contrast(1.18);
 }
 .glance-military-crown--count-1 .glance-military-icon-socket:first-child {
@@ -1760,15 +1721,15 @@
   font-size: 1.0909rem;
   font-weight: 700;
   line-height: 1;
-  color: #f4efe2;
+  color: var(--relation-text);
   text-align: center;
   white-space: nowrap;
   transition: opacity 80ms linear;
 }
 
 .glance--military-garrison {
-  width: 5.7273rem;
-  min-width: 5.7273rem;
+  width: 6.7273rem;
+  min-width: 6.7273rem;
   height: 1.3636rem;
   min-height: 1.3636rem;
   box-sizing: border-box;
@@ -1786,7 +1747,7 @@
   border-width: 0;
   transform: translateY(calc(3rem + var(--garrison-stack-offset, 0rem)));
   transform-origin: center center;
-  color: #f4efe2;
+  color: var(--relation-text);
 }
 
 .glance--military-garrison .glance-military-alert-flash {
@@ -1827,6 +1788,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 1.1818rem;
+  height: 1.1818rem;
+  flex: 0 0 1.1818rem;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.glance-garrison-faction-roundel.faction-roundel {
+  width: 1.1818rem;
+  height: 1.1818rem;
+  pointer-events: none;
+}
+
+.glance-garrison-faction-roundel .faction-roundel-symbol {
+  width: 0.7273rem;
+  height: 0.7273rem;
+}
+
+.glance-garrison-type {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 1rem;
   height: 1rem;
   flex: 0 0 1rem;
@@ -1838,18 +1824,14 @@
   background-repeat: repeat;
   background-size: 5.8182rem 5.8182rem;
   border: 0.0455rem solid var(--relation-border-top);
+  overflow: hidden;
 }
 
-.glance-garrison-kind img {
-  display: block;
+.glance-garrison-type .glance-military-type-mark,
+.glance-garrison-type .glance-military-type-mark--navy {
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-
-.glance--military-garrison.glance--navy .glance-garrison-kind img {
-  width: 1.0909rem;
-  height: 1.0909rem;
 }
 
 .glance-garrison-tier {
@@ -1871,7 +1853,7 @@
   font-size: 1.0909rem;
   font-weight: 700;
   line-height: 1;
-  color: #f4efe2;
+  color: var(--relation-text);
   text-align: right;
   white-space: nowrap;
   text-shadow: 0 0.0455rem 0 rgba(0, 0, 0, 0.82);
@@ -1935,28 +1917,30 @@
   height: 2.45rem;
 }
 
-.detail-flag .glance-military-faction-field,
-.detail-name .glance-military-faction-field {
-  width: 2.45rem;
-  height: 2.45rem;
+.detail-flag .glance-military-faction-roundel.faction-roundel,
+.detail-name .glance-military-faction-roundel.faction-roundel {
+  width: 100%;
+  height: 100%;
+}
+
+.detail-flag .glance-military-faction-roundel .faction-roundel-symbol,
+.detail-name .glance-military-faction-roundel .faction-roundel-symbol {
+  width: 1.7rem;
+  height: 1.7rem;
 }
 
 .detail-flag .glance-military-kind,
 .detail-name .glance-military-kind {
-  width: 1.8182rem;
-  height: 1.8182rem;
+  width: 1.1818rem;
+  height: 1.1818rem;
 }
 
 .detail-flag .glance-military-kind .glance-military-type-mark,
-.detail-name .glance-military-kind .glance-military-type-mark {
-  width: 1.4545rem;
-  height: 1.4545rem;
-}
-
+.detail-name .glance-military-kind .glance-military-type-mark,
 .detail-flag .glance-military-kind .glance-military-type-mark--navy,
 .detail-name .glance-military-kind .glance-military-type-mark--navy {
-  width: 1.7727rem;
-  height: 1.7727rem;
+  width: 1.0455rem;
+  height: 1.0455rem;
 }
 
 .detail-flag .glance-military-strength,
@@ -3033,20 +3017,20 @@
 }
 
 .gset-status-icon--siege {
-  top: -0.1818rem;
-  left: 0.1364rem;
+  top: 0.5455rem;
+  left: -0.1818rem;
   z-index: 8;
-  width: 1.0909rem;
-  height: 1.0909rem;
+  width: 1.1818rem;
+  height: 1.1818rem;
   padding: 0.0909rem;
   transform: scale(1);
   animation-name: gset-siege-state-pulse;
   animation-duration: 1.7s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
-  border-top-color: rgba(216, 72, 61, 0.88);
-  border-right-color: rgba(216, 72, 61, 0.58);
-  border-left-color: rgba(216, 72, 61, 0.58);
+  border-top-color: rgba(255, 138, 58, 0.94);
+  border-right-color: rgba(216, 72, 61, 0.7);
+  border-left-color: rgba(216, 72, 61, 0.7);
 }
 
 @keyframes gset-siege-state-pulse {
@@ -3199,7 +3183,7 @@
   font-size: 0.8182rem;
   line-height: 1.05;
   letter-spacing: 0;
-  color: var(--text-header);
+  color: var(--relation-text);
   overflow: hidden;
   text-overflow: clip;
   white-space: nowrap;
@@ -3243,7 +3227,7 @@
   font-size: 0.7273rem;
   line-height: 1;
   letter-spacing: 0;
-  color: var(--text-bright);
+  color: var(--relation-text);
   overflow: hidden;
   text-overflow: clip;
   white-space: nowrap;
@@ -3277,33 +3261,58 @@
 
 .gset-siege-progress {
   position: absolute;
-  top: -0.3636rem;
-  left: 0.5rem;
+  top: -0.5455rem;
+  left: 0.2727rem;
   z-index: 9;
   display: block;
-  width: 3.2727rem;
-  height: 0.4545rem;
+  box-sizing: border-box;
+  width: 3.7273rem;
+  height: 0.8182rem;
+  padding: 0.0909rem;
+  background-color: rgba(8, 6, 4, 0.94);
+  background-image: url('/assets/glance/glance-chip.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  box-shadow: 0 0 0 0.0909rem rgba(6, 5, 4, 0.94), 0 0.1364rem 0.3182rem rgba(0, 0, 0, 0.88);
   pointer-events: none;
 }
 
 .gset-siege-progress-track {
   display: block;
+  box-sizing: border-box;
   width: 100%;
-  height: 0.2727rem;
-  background-color: rgba(5, 6, 8, 0.92);
-  border-width: 0.0455rem;
+  height: 100%;
+  background-color: #16110d;
+  background-image: url('/assets/glance/glance-bar-track.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border-width: 0.0909rem;
   border-style: solid;
-  border-top-color: rgba(238, 224, 184, 0.48);
-  border-right-color: rgba(201, 168, 76, 0.34);
-  border-bottom-color: rgba(18, 20, 22, 0.9);
-  border-left-color: rgba(201, 168, 76, 0.34);
+  border-top-color: #f3d48a;
+  border-right-color: #c9a84c;
+  border-bottom-color: #2a1c0c;
+  border-left-color: #c9a84c;
   overflow: hidden;
 }
 
 .gset-siege-progress-fill {
   display: block;
   height: 100%;
-  background-color: var(--red);
+  background-color: #ff7a2e;
+  box-shadow: inset 0 0.0455rem 0 rgba(255, 224, 170, 0.55);
+}
+
+.detail-name .gset-siege-progress,
+.world-glance-node.detail-name .gset-siege-progress,
+.mock-production-glance.detail-name .gset-siege-progress,
+.detail-detailed .gset-siege-progress,
+.world-glance-node.detail-detailed .gset-siege-progress,
+.mock-production-glance.detail-detailed .gset-siege-progress {
+  left: 4.2727rem;
+  right: 0.5455rem;
+  width: auto;
 }
 
 .gset-bar,
@@ -4209,7 +4218,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f4efe2;
+  color: var(--relation-text);
   font-family: var(--font-header);
   font-size: 0.7727rem;
   font-weight: 700;
@@ -4440,7 +4449,7 @@
   border-style: solid;
   border-color: rgba(201, 168, 76, 0.52);
   border-radius: 0.1818rem;
-  color: var(--text-bright);
+  color: var(--relation-text);
   font-family: var(--font-header);
   font-size: 0.6818rem;
   line-height: 1;

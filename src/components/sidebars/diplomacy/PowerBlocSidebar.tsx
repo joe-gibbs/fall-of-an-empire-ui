@@ -136,20 +136,6 @@ function PowerBlocTitle({ name }: { name: string }) {
 function buildBlocInteractionTooltip(i: BlocInteractionView, blocId: string): TooltipContent {
   const lines: TooltipContent['lines'] = [];
 
-  if (i.goldCost > 0) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.35.1'), value: formatNumber(i.goldCost), valueIcon: '/assets/icons/I_Coins.png' });
-  }
-
-  if (i.inProgress && i.remainingDays > 0) {
-    const days = Math.round(i.remainingDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.40.2'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.40.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
-  } else if (i.durationDays > 0) {
-    const days = Math.round(i.durationDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.43.3'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.43.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
-  } else {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.45.4'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.45.1"); } });
-  }
-
   if (i.successFactors.length > 0) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.50.5'),
@@ -165,6 +151,20 @@ function buildBlocInteractionTooltip(i: BlocInteractionView, blocId: string): To
         valueColor: f.percent >= 0 ? 'var(--green)' : 'var(--red)',
       });
     }
+  }
+
+  if (i.goldCost > 0) {
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.35.1'), value: formatNumber(i.goldCost), valueIcon: '/assets/icons/I_Coins.png' });
+  }
+
+  if (i.inProgress && i.remainingDays > 0) {
+    const days = Math.round(i.remainingDays);
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.40.2'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.40.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+  } else if (i.durationDays > 0) {
+    const days = Math.round(i.durationDays);
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.43.3'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.43.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+  } else {
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.45.4'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.45.1"); } });
   }
 
   if (i.cooldownDays > 0) {

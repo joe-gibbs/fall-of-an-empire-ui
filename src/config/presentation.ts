@@ -14,7 +14,8 @@ export const UI_PRESENTATION = {
     notificationScale: 0.7,
   },
   tooltip: {
-    // Minimum delay before a tooltip may open, before the player's preference is applied.
+    // Delay before the first tooltip in a hover chain may open, before the player's preference is applied.
+    // Later tooltips in the same chain open immediately until the pointer leaves for a non-tooltip area.
     minimumDelayMs: 450,
     // Grace period after the pointer leaves a tooltip surface before closing.
     // Long enough to travel between a parent tooltip and a nested child without dismissing.

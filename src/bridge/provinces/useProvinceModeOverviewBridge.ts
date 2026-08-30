@@ -21,6 +21,10 @@ export interface ProvinceModeFactionSummary {
   cultureGroup: string;
   religion: string;
   emblem: string;
+  diplomaticStatus?: string;
+  subjectSubtype?: string;
+  isPlayer?: boolean;
+  isRebel?: boolean;
   capital: string;
   gold: number;
   income: number;
@@ -123,6 +127,10 @@ function mapFaction(data: ProvinceModeFactionSummaryDTO): ProvinceModeFactionSum
     cultureGroup: data.cultureGroup,
     religion: data.religion,
     emblem: data.emblem,
+    diplomaticStatus: data.diplomaticStatus || undefined,
+    subjectSubtype: data.subjectSubtype || undefined,
+    isPlayer: data.isPlayer,
+    isRebel: data.isRebel,
     capital: data.capital,
     gold: data.gold,
     income: data.income,

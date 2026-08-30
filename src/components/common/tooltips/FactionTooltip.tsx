@@ -58,6 +58,10 @@ interface FactionTooltipTreaty {
   withFactionCulture?: string;
   withFactionCultureGroup?: string;
   withFactionEmblem?: string;
+  withFactionDiplomaticStatus?: string;
+  withFactionSubjectSubtype?: string;
+  withFactionIsPlayer?: boolean;
+  withFactionIsRebel?: boolean;
 }
 
 interface FactionTooltipTreatyFaction {
@@ -67,6 +71,10 @@ interface FactionTooltipTreatyFaction {
   name: string;
   colour?: string;
   secondaryColour?: string;
+  diplomaticStatus?: string;
+  subjectSubtype?: string;
+  isPlayer?: boolean;
+  isRebel?: boolean;
   culture?: string;
   cultureGroup?: string;
   emblem?: string;
@@ -87,8 +95,8 @@ interface FactionTooltipProps {
   children: React.ReactNode;
   position?: 'top' | 'bottom' | 'left' | 'right';
   delay?: number;
-  /** Optional live key binding shown under the faction summary (e.g. open-faction shortcut). */
-  footer?: React.ReactNode;
+  /** Optional live key binding shown on the name row (e.g. open-faction shortcut). */
+  titleAccessory?: React.ReactNode;
 }
 
 const diplomaticStatusMeta: Record<Faction['diplomaticStatus'], { label: string; color: string }> = {
@@ -189,6 +197,10 @@ function appendTreatyFaction(group: FactionTooltipTreatyGroup, treaty: FactionTo
     culture: treaty.withFactionCulture,
     cultureGroup: treaty.withFactionCultureGroup,
     emblem: treaty.withFactionEmblem,
+    diplomaticStatus: treaty.withFactionDiplomaticStatus,
+    subjectSubtype: treaty.withFactionSubjectSubtype,
+    isPlayer: treaty.withFactionIsPlayer,
+    isRebel: treaty.withFactionIsRebel,
   });
 }
 
@@ -223,6 +235,10 @@ function TreatyFactionRoundel({ faction }: { faction: FactionTooltipTreatyFactio
         emblem={faction.emblem}
         name={faction.name}
         size="xs"
+        diplomaticStatus={faction.diplomaticStatus}
+        subjectSubtype={faction.subjectSubtype}
+        isPlayer={faction.isPlayer}
+        isRebel={faction.isRebel}
       />
     </FactionTooltip>
   );
@@ -247,7 +263,13 @@ function resolveFactionTooltipData(
   return resolved as FactionTooltipData;
 }
 
-function FactionTooltipContent({ faction }: { faction: FactionTooltipData }) {
+function FactionTooltipContent({
+  faction,
+  titleAccessory,
+}: {
+  faction: FactionTooltipData;
+  titleAccessory?: React.ReactNode;
+}) {
   const debugMode = useOptionalGameState()?.debugMode ?? false;
   const hasIdentity = Boolean(faction.culture || faction.religion);
   const hasStats = !faction.isPlayer && (faction.opinion != null || faction.compliance != null);
@@ -257,7 +279,10 @@ function FactionTooltipContent({ faction }: { faction: FactionTooltipData }) {
   return (
     <div className="ftt">
       <div className="ftt-name-row">
-        <div className="ftt-name">{faction.name}</div>
+        <div className={titleAccessory ? 'ftt-name-heading ftt-name-heading--with-accessory' : 'ftt-name-heading'}>
+          <div className="ftt-name">{faction.name}</div>
+          {titleAccessory}
+        </div>
         {faction.statusLabel && (
           <div className="ftt-status" style={faction.statusColor ? { color: faction.statusColor } : undefined}>
             {faction.statusLabel}
@@ -397,7 +422,7 @@ const FactionTooltip: React.FC<FactionTooltipProps> = ({
   children,
   position = 'right',
   delay = 200,
-  footer,
+  titleAccessory,
 }) => {
   const lookupId = factionId ?? factionName ?? null;
   const fallbackData = data ?? (factionName ? { name: factionName } : undefined);
@@ -411,11 +436,11 @@ const FactionTooltip: React.FC<FactionTooltipProps> = ({
   if (!resolved) {
     return (
       <Tooltip
-        content={footer ? { title: factionName || webUIText('Topbar.Faction'), footer } : null}
+        content={titleAccessory ? { title: factionName || webUIText('Topbar.Faction'), titleAccessory } : null}
         position={position}
         delay={delay}
         variant="sidebar"
-        disabled={!footer}
+        disabled={!titleAccessory}
         onShowIntent={requestResolution}
       >
         <div className="ftt-trigger">
@@ -427,7 +452,7 @@ const FactionTooltip: React.FC<FactionTooltipProps> = ({
 
   return (
     <Tooltip
-      content={{ afterLines: <FactionTooltipContent faction={resolved} />, footer }}
+      content={{ afterLines: <FactionTooltipContent faction={resolved} titleAccessory={titleAccessory} /> }}
       position={position}
       delay={delay}
       variant="sidebar"

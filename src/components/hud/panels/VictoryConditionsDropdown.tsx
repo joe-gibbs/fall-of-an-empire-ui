@@ -1,13 +1,13 @@
-import ProgressBar from '../../common/data-display/bars/ProgressBar';
+import { useState } from 'react';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import { useVictoryConditionsBridge } from '../../../bridge/app/useVictoryConditionsBridge';
 import { useAnchoredDropdown } from '../../../hooks/useAnchoredDropdown';
 import { formatNumber } from '../../../utils/numberFormat';
-import { renderRichText } from '../../../utils/richText';
 import type { VictoryConditionProgressEntry, VictoryConditionTierEntry } from '../../../bridge-types.generated.ts';
 import './VictoryConditionsDropdown.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
+
 interface VictoryConditionsDropdownProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,69 +15,150 @@ interface VictoryConditionsDropdownProps {
 
 const EXIT_DURATION_MS = 120;
 
-function conditionProgress(condition: VictoryConditionProgressEntry): number {
-  return condition.progress;
+function conditionCounts(condition: VictoryConditionProgressEntry): { current: number; target: number } {
+  if (condition.domains.length > 0) {
+    let current = 0;
+    let target = 0;
+    for (const domain of condition.domains) {
+      current += domain.controlledSettlements;
+      target += domain.totalSettlements;
+    }
+    return { current, target };
+  }
+
+  return { current: condition.currentCount, target: condition.targetCount };
 }
 
-function conditionDetail(condition: VictoryConditionProgressEntry): string {
-  return condition.detailText || `${Math.round(conditionProgress(condition))}%`;
+function usesSettlementCount(condition: VictoryConditionProgressEntry): boolean {
+  return condition.kind === 'domains' || condition.kind === 'religion' || condition.domains.length > 0;
 }
 
-function tierCompletedCount(tier: VictoryConditionTierEntry): number {
-  return tier.conditions.filter(condition => condition.isMet).length;
+function formatConditionCount(condition: VictoryConditionProgressEntry): string {
+  const { current, target } = conditionCounts(condition);
+  return webUIText(
+    usesSettlementCount(condition) ? 'VictoryConditions.SettlementCount' : 'VictoryConditions.Count',
+    { Current: formatNumber(current), Target: formatNumber(target) },
+  );
 }
 
-function tierProgress(tier: VictoryConditionTierEntry): number {
-  if (tier.conditions.length === 0) return 0;
-  return (tierCompletedCount(tier) / tier.conditions.length) * 100;
+function blockingCondition(tier: VictoryConditionTierEntry): VictoryConditionProgressEntry | null {
+  if (tier.isAchieved) return null;
+
+  const unmet = tier.conditions.filter(condition => !condition.isMet);
+  if (unmet.length === 0) return null;
+
+  return unmet.find(condition => condition.kind === 'domains' || condition.domains.length > 0)
+    ?? unmet.find(condition => condition.kind === 'religion')
+    ?? unmet.find(condition => condition.kind === 'year')
+    ?? unmet[0];
 }
 
-function VictoryTierSummary({ tier }: { tier: VictoryConditionTierEntry }) {
+function tierHasDetails(tier: VictoryConditionTierEntry): boolean {
+  const domainLists = tier.conditions.filter(condition => condition.domains.length > 0).length;
+  const extraLines = tier.conditions.filter(condition => condition.domains.length === 0).length;
+  return domainLists > 0 || extraLines > 1;
+}
+
+function defaultExpandedTierId(tiers: VictoryConditionTierEntry[]): string | null {
+  const next = tiers.find(tier => !tier.isAchieved && tierHasDetails(tier));
+  return next?.id ?? null;
+}
+
+function VictoryDomainList({ condition }: { condition: VictoryConditionProgressEntry }) {
   return (
-    <div className={`vc-tier-summary${tier.isAchieved ? ' vc-tier-summary--achieved' : ''}`}>
-      <div className="vc-tier-summary-main">
-        <img src={tier.iconPath} alt="" className="vc-tier-summary-icon" />
-        <span className="vc-tier-summary-name">{tier.name}</span>
-      </div>
-      <ProgressBar
-        value={tierProgress(tier)}
-        max={100}
-        colour={tier.isAchieved ? 'var(--green)' : 'var(--gold)'}
-        height={5}
-        className="vc-tier-summary-bar"
-      />
+    <div className="vc-domain-list">
+      {condition.domains.map(domain => (
+        <div
+          className={`vc-domain-row${domain.isMet ? ' vc-domain-row--met' : ' vc-domain-row--missing'}`}
+          key={domain.name}
+        >
+          <span className="vc-domain-name">{domain.name}</span>
+          <span className="vc-domain-count">
+            {webUIText('VictoryConditions.Count', {
+              Current: formatNumber(domain.controlledSettlements),
+              Target: formatNumber(domain.totalSettlements),
+            })}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
 
-function VictoryConditionDescription({ condition }: { condition: VictoryConditionProgressEntry }) {
+function VictoryConditionLine({ condition }: { condition: VictoryConditionProgressEntry }) {
   return (
-    <div className="vc-condition-desc">
-      {condition.description && <p>{renderRichText(condition.description)}</p>}
-      {condition.domains.length > 0 && (
-        <div className="vc-domain-list">
-          {condition.domains.map(domain => (
-            <div
-              className={`vc-domain-row${domain.isMet ? ' vc-domain-row--met' : ' vc-domain-row--missing'}`}
-              key={domain.name}
-            >
-              <span className="vc-domain-bullet" />
-              <span className="vc-domain-text">
-                <span className="vc-domain-name">{domain.name}</span>
-                <span className="vc-domain-count">
-                  {`${formatNumber(domain.controlledSettlements)} / ${formatNumber(domain.totalSettlements)}`}
-                </span>
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className={`vc-line${condition.isMet ? ' vc-line--met' : ''}`}>
+      <span className="vc-line-label">{condition.label}</span>
+      <span className="vc-line-count">{formatConditionCount(condition)}</span>
     </div>
+  );
+}
+
+function VictoryTierDetails({ tier }: { tier: VictoryConditionTierEntry }) {
+  return (
+    <div className="vc-tier-details">
+      {tier.conditions.map(condition => (
+        condition.domains.length > 0 ? (
+          <VictoryDomainList condition={condition} key={condition.id} />
+        ) : (
+          <VictoryConditionLine condition={condition} key={condition.id} />
+        )
+      ))}
+    </div>
+  );
+}
+
+function VictoryTier({
+  tier,
+  expanded,
+  onToggle,
+}: {
+  tier: VictoryConditionTierEntry;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const expandable = tierHasDetails(tier);
+  const blocking = blockingCondition(tier);
+  const count = blocking ? formatConditionCount(blocking) : null;
+  const className = [
+    'vc-tier',
+    expandable ? 'vc-tier--expandable' : '',
+    expanded ? 'vc-tier--expanded' : '',
+    tier.isAchieved ? 'vc-tier--achieved' : '',
+  ].filter(Boolean).join(' ');
+
+  const heading = (
+    <>
+      <img src={tier.iconPath} alt="" className="vc-tier-icon" />
+      {expandable && <span className="vc-tier-caret" aria-hidden="true" />}
+      <span className="vc-tier-name">{tier.name}</span>
+      {count && <span className="vc-tier-count">{count}</span>}
+      {tier.isAchieved && (
+        <span className="vc-tier-check" aria-label={webUIText('Auto.Attr.ComponentsHudVictoryConditionsDropdown.59.1')} />
+      )}
+    </>
+  );
+
+  return (
+    <section className={className}>
+      {expandable ? (
+        <button
+          type="button"
+          className="vc-tier-heading"
+          aria-expanded={expanded}
+          onClick={onToggle}
+        >
+          {heading}
+        </button>
+      ) : (
+        <div className="vc-tier-heading">{heading}</div>
+      )}
+      {expanded && expandable && <VictoryTierDetails tier={tier} />}
+    </section>
   );
 }
 
 export default function VictoryConditionsDropdown({ isOpen, onClose }: VictoryConditionsDropdownProps) {
-  // Compact HUD anchors victory on the left-hand faction menu, so open below-left.
   const compact = typeof document !== 'undefined'
     && document.documentElement.classList.contains('hud-compact');
   const { mounted, closing, style, setPopupRef } = useAnchoredDropdown({
@@ -89,10 +170,15 @@ export default function VictoryConditionsDropdown({ isOpen, onClose }: VictoryCo
     escapeId: 'hud.victory-conditions',
   });
   const victoryConditions = useVictoryConditionsBridge(mounted);
+  const [expandedId, setExpandedId] = useState<string | null | undefined>(undefined);
+  if (!isOpen && expandedId !== undefined) {
+    setExpandedId(undefined);
+  }
 
   if (!mounted) return null;
 
   const tiers = victoryConditions?.enabled ? victoryConditions.tiers : [];
+  const resolvedExpandedId = expandedId === undefined ? defaultExpandedTierId(tiers) : expandedId;
 
   return (
     <div
@@ -102,7 +188,7 @@ export default function VictoryConditionsDropdown({ isOpen, onClose }: VictoryCo
     >
       <div className="vc-dropdown-header">
         <img src="/assets/icons/Victory/I_Victory_Gold.png" alt="" className="vc-dropdown-header-icon" />
-        <span className="vc-dropdown-title"><WebUIText textKey="Auto.ComponentsHudVictoryConditionsDropdown.38.1" /></span>
+        <span className="vc-dropdown-title"><WebUIText textKey="Topbar.VictoryConditions" /></span>
       </div>
 
       <StyledScrollArea className="vc-dropdown-body" viewportClassName="vc-dropdown-body-viewport" variant="inline">
@@ -115,56 +201,19 @@ export default function VictoryConditionsDropdown({ isOpen, onClose }: VictoryCo
         )}
 
         {victoryConditions?.enabled && tiers.length > 0 && (
-          <>
-            {tiers.length > 1 && (
-              <div className="vc-tier-summary-list">
-                {tiers.map(tier => <VictoryTierSummary tier={tier} key={tier.id} />)}
-              </div>
-            )}
-
+          <div className="vc-tier-list">
             {tiers.map(tier => (
-              <section className="vc-tier" key={tier.id}>
-                <div className="vc-tier-header">
-                  <img src={tier.iconPath} alt="" className="vc-tier-icon" />
-                  <span className={`vc-tier-name${tier.isAchieved ? ' vc-tier-name--achieved' : ''}`}>
-                    {tier.name}
-                  </span>
-                  {tier.isAchieved && <span className="vc-tier-check" aria-label={webUIText('Auto.Attr.ComponentsHudVictoryConditionsDropdown.59.1')} />}
-                </div>
-
-                <div className="vc-tier-conditions">
-                  {tier.conditions.map(condition => (
-                    <article
-                      className={`vc-condition${condition.isMet ? ' vc-condition--met' : ''}`}
-                      key={condition.id}
-                    >
-                      <div className="vc-condition-top">
-                        <span className="vc-condition-label">{condition.label}</span>
-                        {!condition.isMet && (
-                          <span className="vc-condition-detail">
-                            {conditionDetail(condition)}
-                          </span>
-                        )}
-                        {condition.isMet && <span className="vc-condition-check" aria-label={webUIText('Auto.Attr.ComponentsHudVictoryConditionsDropdown.72.2')} />}
-                      </div>
-
-                      {!condition.isMet && <VictoryConditionDescription condition={condition} />}
-
-                      <div className="vc-condition-bar-row">
-                        <ProgressBar
-                          value={conditionProgress(condition)}
-                          max={100}
-                          colour={condition.isMet ? 'var(--green)' : 'var(--gold)'}
-                          height={condition.isMet ? 4 : 6}
-                          className="vc-condition-bar"
-                        />
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </section>
+              <VictoryTier
+                tier={tier}
+                key={tier.id}
+                expanded={resolvedExpandedId === tier.id}
+                onToggle={() => setExpandedId(current => {
+                  const openId = current === undefined ? defaultExpandedTierId(tiers) : current;
+                  return openId === tier.id ? null : tier.id;
+                })}
+              />
             ))}
-          </>
+          </div>
         )}
       </StyledScrollArea>
     </div>

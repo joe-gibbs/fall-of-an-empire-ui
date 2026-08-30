@@ -1,17 +1,23 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import Tooltip, { type TooltipLine, type TooltipContent } from './Tooltip';
+import Tooltip, { NestedTooltip, type TooltipContent } from './Tooltip';
 import CultureTooltip from './CultureTooltip';
 import ReligionTooltip from './ReligionTooltip';
 import { cultureIconPath } from '../../../utils/cultureIcons';
 import { TraitIcon } from '../entities/TraitIcon';
-import type { Character, CharacterStatModifier, StatKey } from '../../../data/types';
+import type { Character } from '../../../data/types';
 import { useGameActions, useGameState } from '../../../context/GameContext';
 import { usePersonTooltipBridge } from '../../../bridge/characters/usePersonBridge';
-import glossary from '../../../data/glossary';
 import { getStatColor, getComplianceState } from '../../../utils/colorFormatters';
 import { STAT_ICONS } from '../../../utils/iconMaps';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
-import { characterStatEffectLines } from '../../../utils/characterStatEffects';
+import {
+  buildCharacterStatTooltip,
+  buildComplianceTooltip,
+  getTemporaryStatModifierTotal,
+  getTemporaryStatModifiers,
+  modifierTooltipLines,
+  modifierValueColor,
+} from '../../../utils/characterTooltipContent';
 import './PersonTooltip.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -26,12 +32,12 @@ interface PersonTooltipProps {
 }
 
 const STAT_DEFS = [
-  { key: 'tactics' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.28.1'); }, icon: '/assets/icons/StatIcons/I_Tactics.png', glossaryKey: 'Tactics' },
-  { key: 'authority' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.29.2'); }, icon: '/assets/icons/StatIcons/I_Authority.png', glossaryKey: 'Authority' },
-  { key: 'cunning' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.30.3'); }, icon: '/assets/icons/StatIcons/I_Cunning.png', glossaryKey: 'Cunning' },
-  { key: 'governance' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.31.4'); }, icon: '/assets/icons/StatIcons/I_Governance.png', glossaryKey: 'Governance' },
-  { key: 'loyalty' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.32.5'); }, icon: '/assets/icons/StatIcons/I_Loyalty.png', glossaryKey: 'Loyalty' },
-  { key: 'constitution' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.33.6'); }, icon: '/assets/icons/StatIcons/I_Constitution.png', glossaryKey: 'Constitution' },
+  { key: 'tactics' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.28.1'); }, icon: '/assets/icons/StatIcons/I_Tactics.png' },
+  { key: 'authority' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.29.2'); }, icon: '/assets/icons/StatIcons/I_Authority.png' },
+  { key: 'cunning' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.30.3'); }, icon: '/assets/icons/StatIcons/I_Cunning.png' },
+  { key: 'governance' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.31.4'); }, icon: '/assets/icons/StatIcons/I_Governance.png' },
+  { key: 'loyalty' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.32.5'); }, icon: '/assets/icons/StatIcons/I_Loyalty.png' },
+  { key: 'constitution' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.33.6'); }, icon: '/assets/icons/StatIcons/I_Constitution.png' },
 ];
 
 const COMPLIANCE_SEGMENTS: {
@@ -110,49 +116,7 @@ function formatTitleWithRelation(character: Character): TitleParts | null {
   return title ? { relation: null, title } : null;
 }
 
-function breakdownLines(entries?: { label: string; value: number }[]): TooltipLine[] {
-  if (!entries || entries.length === 0) return [];
-  return entries.map(e => {
-    return {
-      label: e.label,
-      value: formatSignedNumber(e.value),
-      valueColor: e.value > 0 ? 'var(--green)' : e.value < 0 ? 'var(--red)' : 'var(--text-muted)',
-    };
-  });
-}
 
-function getTemporaryStatModifiers(character: Character, stat: StatKey): CharacterStatModifier[] {
-  return character.stats.temporaryModifiers?.filter(modifier => modifier.stat === stat) ?? [];
-}
-
-function getTemporaryStatModifierTotal(modifiers: CharacterStatModifier[]): number {
-  return modifiers.reduce((sum, modifier) => sum + modifier.value, 0);
-}
-
-function modifierValueColor(value: number): string {
-  if (value > 0) return 'var(--green)';
-  if (value < 0) return 'var(--red)';
-  return 'var(--text-muted)';
-}
-
-function formatTemporaryModifierLabel(modifier: CharacterStatModifier): string {
-  if (modifier.remainingDays === undefined) return modifier.label;
-  const days = Math.round(modifier.remainingDays);
-  return webUIText("Auto.Return.componentscommonPersonTooltip.120.1", { Label: modifier.label, Value2: formatNumber(days), Value3: days === 1 ? webUIText('Common.Day') : webUIText('Common.Days') });
-}
-
-function temporaryModifierTooltipLines(modifiers: CharacterStatModifier[]): TooltipLine[] {
-  if (modifiers.length === 0) return [];
-
-  return [
-    { label: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.127.1'), isHeader: true },
-    ...modifiers.map(modifier => ({
-      label: formatTemporaryModifierLabel(modifier),
-      value: formatSignedNumber(modifier.value, { maximumFractionDigits: 1 }),
-      valueColor: modifierValueColor(modifier.value),
-    })),
-  ];
-}
 
 function imprisonmentSummary(c: Character): string | null {
   if (!c.isImprisoned) return null;
@@ -181,20 +145,18 @@ function MeterBar({
   tooltip: TooltipContent;
 }) {
   return (
-    <Tooltip content={tooltip} position="left" delay={150}>
+    <NestedTooltip content={tooltip} delay={150}>
       <div className="ptt-meter-row">
         <img src={leftIcon} alt={leftAlt} className="ptt-meter-icon" draggable={false} />
         <div className="ptt-meter-track">{children}</div>
         <img src={rightIcon} alt={rightAlt} className="ptt-meter-icon" draggable={false} />
       </div>
-    </Tooltip>
+    </NestedTooltip>
   );
 }
 
-function ComplianceSegmentedBar({ value, breakdown }: {
-  value: number;
-  breakdown?: { label: string; value: number }[];
-}) {
+function ComplianceSegmentedBar({ character }: { character: Character }) {
+  const value = character.compliance;
   const current = getComplianceState(value);
   const currentIndex = COMPLIANCE_SEGMENTS.findIndex(s => s.label === current.label);
   return (
@@ -203,11 +165,10 @@ function ComplianceSegmentedBar({ value, breakdown }: {
       leftAlt={webUIText('Auto.ExtraAttr.ComponentsCommonPersonTooltip.182.1')}
       rightIcon="/assets/icons/Compliance/I_Eager.png"
       rightAlt={webUIText('Auto.ExtraAttr.ComponentsCommonPersonTooltip.184.2')}
-      tooltip={{
-        get title() { return webUIText("Auto.Prop.componentscommonPersonTooltip.186.1", { Label: current.label }); },
+      tooltip={buildComplianceTooltip(value, character, {
+        title: webUIText('Auto.Prop.componentscommonPersonTooltip.186.1', { Label: current.label }),
         body: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.187.2'),
-        lines: breakdownLines(breakdown),
-      }}
+      })}
     >
       <div className="ptt-comp-segments">
         {COMPLIANCE_SEGMENTS.map((s, i) => {
@@ -240,7 +201,7 @@ function OpinionBar({ value, breakdown }: {
       rightAlt={webUIText('Auto.ExtraAttr.ComponentsCommonPersonTooltip.219.4')}
       tooltip={{
         title: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.221.3'),
-        lines: breakdownLines(breakdown),
+        lines: modifierTooltipLines(breakdown),
       }}
     >
       {clamped < 0 && (
@@ -274,7 +235,7 @@ function ReputationBar({ value, breakdown }: {
       tooltip={{
         title: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.254.4'),
         body: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.255.5'),
-        lines: breakdownLines(breakdown),
+        lines: modifierTooltipLines(breakdown, 2),
       }}
     >
       {clamped < 0 && (
@@ -373,28 +334,12 @@ function PersonTooltipContent({ character: c, initialAltHeld }: { character: Cha
           <div className="ptt-strip-stats">
             {STAT_DEFS.map(s => {
               const val = c.stats[s.key];
-              const base = c.stats.base?.[s.key];
               const temporaryModifiers = getTemporaryStatModifiers(c, s.key);
               const temporaryTotal = getTemporaryStatModifierTotal(temporaryModifiers);
-              const contributions = c.traits.flatMap((trait) =>
-                (trait.effects ?? [])
-                  .filter((e) => e.stat === s.key)
-                  .map((e) => ({ label: trait.name, value: e.value, valueColor: e.isPositive ? 'var(--green)' : 'var(--red)' })),
-              );
-              const baseContent = glossary[s.glossaryKey as keyof typeof glossary] || { title: s.label, body: '' };
-              const lines: TooltipLine[] = [];
-              if (base !== undefined) lines.push({ label: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.365.6'), value: formatNumber(base) });
-              if (contributions.length > 0) {
-                lines.push({ label: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.367.7'), isHeader: true });
-                lines.push(...contributions);
-              }
-              lines.push(...temporaryModifierTooltipLines(temporaryModifiers));
-              lines.push({ label: webUIText('CharacterStats.CurrentEffects'), isHeader: true });
-              lines.push(...characterStatEffectLines(s.key, val));
               return (
                 <Tooltip
                   key={s.key}
-                  content={{ title: baseContent.title, body: baseContent.body, lines }}
+                  content={buildCharacterStatTooltip(s.key, val, c)}
                   position="left"
                   delay={150}
                 >
@@ -418,7 +363,7 @@ function PersonTooltipContent({ character: c, initialAltHeld }: { character: Cha
           {hasStanding && (
             <div className="ptt-strip-standing">
               {showCompliance && (
-                <ComplianceSegmentedBar value={c.compliance} breakdown={c.complianceBreakdown} />
+                <ComplianceSegmentedBar character={c} />
               )}
               {showOpinion && c.opinionTowardPlayer !== undefined && (
                 <OpinionBar value={c.opinionTowardPlayer} breakdown={c.opinionBreakdown} />

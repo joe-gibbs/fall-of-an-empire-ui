@@ -11,8 +11,17 @@ export function relationDisplayLabel(relation: FactionRelation, atWar?: boolean)
 }
 
 export function relationDisplayColour(relation: FactionRelation, atWar?: boolean): string {
-  if (atWar || relation === 'enemy') return 'var(--red-light)';
-  if (relation === 'own' || relation === 'subject') return 'var(--gold-light)';
-  if (relation === 'ally') return 'var(--green-light)';
-  return 'var(--text-bright)';
+  if (atWar || relation === 'enemy') return 'var(--diplo-relation-war)';
+  if (relation === 'own') return 'var(--diplo-relation-own)';
+  if (relation === 'subject') return 'var(--diplo-relation-subject)';
+  if (relation === 'ally') return 'var(--diplo-relation-ally)';
+  return 'var(--diplo-relation-neutral)';
+}
+
+export function relationTextVars(relation: FactionRelation, atWar?: boolean): { '--relation-text': string } {
+  return { '--relation-text': relationDisplayColour(relation, atWar) };
+}
+
+export function isHostileGlance(relation: FactionRelation, atWar?: boolean): boolean {
+  return atWar === true || relation === 'enemy';
 }

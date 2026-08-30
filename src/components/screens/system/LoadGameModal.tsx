@@ -5,6 +5,7 @@ import FactionRoundel from '../../common/entities/FactionRoundel';
 import ConfirmDialog from '../../common/forms/ConfirmDialog';
 import VirtualList from '../../common/layout/scrolling/VirtualList';
 import { useSavesBridge, type SaveEntry } from '../../../bridge/app/useSavesBridge';
+import { bridgeCall } from '../../../bridge-types.generated.ts';
 import { toRootRem } from '../../../utils/cssUnits';
 import { useModalPresence } from '../../../hooks/useModalPresence';
 import { UI_MOTION } from '../../../config/motion';
@@ -137,6 +138,12 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
 
   const { saves, load: loadSave, remove: removeSave } = useSavesBridge(visible);
 
+  const handleOpenFolder = useCallback(() => {
+    void bridgeCall('game.open_save_games_folder').catch((error) => {
+      console.error('[LoadGameModal] open folder failed', error);
+    });
+  }, []);
+
   const sortedSaves = useMemo(() => {
     if (!saves) return null;
     return [...saves].sort((a, b) => (b.timestamp ?? '').localeCompare(a.timestamp ?? ''));
@@ -258,6 +265,9 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
           <div className="load-game__header">
             <span className="load-game__title"><WebUIText textKey="Auto.ComponentsScreensLoadGameModal.384.4" /></span>
             <div className="load-game__header-actions">
+              <GameButton variant="outline" className="load-game__open-folder" onClick={handleOpenFolder}>
+                <WebUIText textKey="LoadGame.OpenFolder" />
+              </GameButton>
               <CloseButton size="sm" onClick={animatedClose} />
             </div>
           </div>

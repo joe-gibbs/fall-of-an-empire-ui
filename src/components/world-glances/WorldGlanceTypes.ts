@@ -10,6 +10,7 @@ export interface GlanceFactionStub {
   cultureGroup: string;
   emblem?: string;
   relation: FactionRelation;
+  subjectSubtype?: string;
   isRebel?: boolean;
 }
 
@@ -68,7 +69,7 @@ export type SettlementInfoMode =
   | 'gold'
   | 'political' | 'overlord' | 'diplomaticRelation'
   | 'population' | 'unrest' | 'culture' | 'religion'
-  | 'loyalty' | 'landscape' | 'settlementType'
+  | 'loyalty' | 'luxury' | 'landscape' | 'settlementType'
   | 'economicProsperity' | 'economy'
   | 'adminRegion' | 'adminLand' | 'adminDomain'
   | 'disease' | 'militaries' | 'regionGovernor'
@@ -113,6 +114,8 @@ export interface SettlementGlanceData {
   complianceTargetIsRuler?: boolean;
   complianceLuxuryLabel?: string;
   complianceLuxuryStatus?: string;
+  luxurySlotsRequired?: number;
+  luxurySlotsProvided?: number;
   regionName?: string;
   landName?: string;
   domainName?: string;

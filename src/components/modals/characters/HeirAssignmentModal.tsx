@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import GameButton from '../../common/buttons/GameButton';
+import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
+import Portrait from '../../common/portraits/Portrait';
+import Tooltip from '../../common/tooltips/Tooltip';
 import {
   CandidateBody,
   CandidateChanceBlock,
@@ -18,7 +21,6 @@ import {
   CandidateTraits,
 } from './CandidateSelectionModal';
 import { setDesignatedHeir, useTargetedHeirCandidates } from '../../../bridge/characters/useHeirBridge';
-import type { HeirCandidateEntry } from '../../../bridge-types.generated.ts';
 import { useModalPresence } from '../../../hooks/useModalPresence';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { useWebUIText } from '../../../localization/WebUITextContext';
@@ -59,6 +61,7 @@ export default function HeirAssignmentModal({
     escapeId: 'modal.heir-assignment',
     allowFromInput: true,
     closeStrategy: 'request',
+    durationMs: 320,
   });
 
   const candidates = useTargetedHeirCandidates(mounted, factionId ?? '');
@@ -100,15 +103,18 @@ export default function HeirAssignmentModal({
     });
   }, [close, currentDesignatedHeirId, factionId]);
 
-  const handleView = useCallback((candidate: HeirCandidateEntry) => {
-    onOpenCharacter(candidate.id);
-    close();
-  }, [close, onOpenCharacter]);
+  const openCharacter = useCallback((personId: string) => {
+    onOpenCharacter(personId);
+  }, [onOpenCharacter]);
 
   if (!mounted) return null;
 
   const selectedStat = selected ? selected[primaryStat] ?? 0 : 0;
   const selectedTraits: CharacterTrait[] = [];
+  const passedOverPeople = selected
+    ? selected.passedOverConsequences.slice().sort((a, b) => Number(b.isPreviousHeir) - Number(a.isPreviousHeir))
+    : [];
+  const passedOverCount = passedOverPeople.length;
 
   return createPortal(
     <CandidateModalFrame
@@ -117,6 +123,7 @@ export default function HeirAssignmentModal({
       onClose={close}
       headerIcon="/assets/icons/I_Family.png"
       title={t('FactionOverview.AssignHeir')}
+      backdrop="none"
     >
       <CandidateMissionBar prefix="cam">
         <CandidateMissionDescription prefix="cam">{t('FactionOverview.AssignHeirDescription')}</CandidateMissionDescription>
@@ -144,7 +151,7 @@ export default function HeirAssignmentModal({
               prefix="cam"
               active={active}
               onSelect={() => setSelectedId(candidate.id)}
-              onViewCharacter={() => handleView(candidate)}
+              onViewCharacter={() => openCharacter(candidate.id)}
               personId={candidate.id}
               portraitSrc={candidate.portrait}
               portraitLayers={undefined}
@@ -173,6 +180,7 @@ export default function HeirAssignmentModal({
                 portraitLayers={undefined}
                 name={selected.name}
                 title={selected.title || selected.shortTitle || selected.relationToRuler || t('Common.Court')}
+                onOpenCharacter={() => openCharacter(selected.id)}
               />
 
               <div className="cam-detail-body">
@@ -218,27 +226,55 @@ export default function HeirAssignmentModal({
                         <span>{t('FactionOverview.HeirOpinionOfYou', { Name: selected.name })}</span>
                         <strong>{formatSignedNumber(selected.heirOpinionOfAppointerChange)}</strong>
                       </div>
-                      {selected.passedOverConsequences.map(consequence => (
-                        <div
-                          key={consequence.personId}
-                          className={`cam-consequence-card${consequence.isPreviousHeir ? ' cam-consequence-card--previous' : ''}`}
-                        >
-                          <div className="cam-consequence-name">
-                            <span>{consequence.name}</span>
-                            {consequence.isPreviousHeir && <em>{t('FactionOverview.PreviousHeir')}</em>}
+                      {passedOverCount > 0 && (
+                        <div className="cam-consequence-people">
+                          <div className="cam-consequence-people-label">
+                            {passedOverCount === 1
+                              ? t('FactionOverview.PeopleLoseOpinionOne', { Count: formatNumber(passedOverCount) })
+                              : t('FactionOverview.PeopleLoseOpinionMany', { Count: formatNumber(passedOverCount) })}
                           </div>
-                          <div className="cam-consequence-values">
-                            <span>
-                              {t('FactionOverview.OpinionOfYou')}
-                              <strong>{formatSignedNumber(consequence.opinionOfAppointerChange)}</strong>
-                            </span>
-                            <span>
-                              {t('FactionOverview.OpinionOfChosenHeir')}
-                              <strong>{formatSignedNumber(consequence.opinionOfHeirChange)}</strong>
-                            </span>
-                          </div>
+                          <StyledScrollArea
+                            className="cam-consequence-portrait-scroll"
+                            viewportClassName="cam-consequence-portrait-scroll-viewport"
+                            variant="inline"
+                          >
+                            <div className="cam-consequence-portraits">
+                              {passedOverPeople.map(consequence => (
+                                <Tooltip
+                                  key={consequence.personId}
+                                  position="left"
+                                  delay={120}
+                                  content={{
+                                    title: consequence.name,
+                                    body: consequence.isPreviousHeir ? t('FactionOverview.PreviousHeir') : undefined,
+                                    lines: [
+                                      {
+                                        label: t('FactionOverview.OpinionOfYou'),
+                                        value: formatSignedNumber(consequence.opinionOfAppointerChange),
+                                        valueColor: 'var(--red)',
+                                      },
+                                      {
+                                        label: t('FactionOverview.OpinionOfChosenHeir'),
+                                        value: formatSignedNumber(consequence.opinionOfHeirChange),
+                                        valueColor: 'var(--red)',
+                                      },
+                                    ],
+                                  }}
+                                >
+                                  <Portrait
+                                    personId={consequence.personId}
+                                    name={consequence.name}
+                                    size="sm"
+                                    showBorder
+                                    borderTier={consequence.isPreviousHeir ? 'gold' : 'bronze'}
+                                    onClick={() => openCharacter(consequence.personId)}
+                                  />
+                                </Tooltip>
+                              ))}
+                            </div>
+                          </StyledScrollArea>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </CandidateSection>
                 )}
@@ -250,7 +286,7 @@ export default function HeirAssignmentModal({
                 {currentDesignatedHeirId ? (
                   <GameButton variant="outline" onClick={handleClear}>{t('Common.Clear')}</GameButton>
                 ) : null}
-                <GameButton variant="outline" onClick={() => handleView(selected)}>{t('Common.View')}</GameButton>
+                <GameButton variant="outline" onClick={() => openCharacter(selected.id)}>{t('Common.View')}</GameButton>
                 <GameButton
                   variant="burgundy"
                   onClick={handleAssign}

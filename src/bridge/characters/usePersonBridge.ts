@@ -1,4 +1,5 @@
 import { useBridgeQuery } from '../core/useBridgeQuery';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { mapPortraitLayers, mapPortraitPath } from './portraitMapping';
 import type { GetPersonDataResponse } from '../../bridge-types.generated.ts';
 import type { ActivitySegment, Character, CharacterStatModifier, PersonActivity, StatKey } from '../../data/types';
@@ -59,6 +60,10 @@ function mapPerson(data: GetPersonDataResponse): Character {
     factionSecondaryColour: data.factionSecondaryColour || undefined,
     factionEmblem: data.factionEmblem || undefined,
     factionCultureGroup: data.factionCultureGroup || undefined,
+    factionDiplomaticStatus: data.factionDiplomaticStatus || undefined,
+    factionSubjectSubtype: data.factionSubjectSubtype || undefined,
+    factionIsPlayer: data.factionIsPlayer,
+    factionIsRebel: data.factionIsRebel,
     culture: data.culture,
     religion: data.religion,
     cultureInfo: data.cultureInfo.id ? data.cultureInfo : undefined,
@@ -141,7 +146,13 @@ function mapPerson(data: GetPersonDataResponse): Character {
     isFamilyOfPlayer: data.isFamilyOfPlayer,
     isSubordinateOfPlayer: data.isSubordinateOfPlayer,
     relationToPlayer: data.relationToPlayer || undefined,
-    complianceBreakdown: data.complianceBreakdown.length ? data.complianceBreakdown : undefined,
+    complianceBreakdown: data.complianceBreakdown.length
+      ? data.complianceBreakdown.map(entry => ({
+        key: entry.key || undefined,
+        label: entry.label,
+        value: entry.value,
+      }))
+      : undefined,
     opinionTowardPlayer: data.opinionBreakdown.length ? data.opinionTowardPlayer : undefined,
     opinionBreakdown: data.opinionBreakdown.length ? data.opinionBreakdown : undefined,
     honourDreadBreakdown: data.honourDreadBreakdown.length ? data.honourDreadBreakdown : undefined,
@@ -176,6 +187,12 @@ function mapPerson(data: GetPersonDataResponse): Character {
       age: r.age,
       isAlive: r.isAlive,
     })),
+    luxuryNeeds: data.luxuryNeeds.map(slot => ({
+      name: slot.name,
+      icon: WebkilnAssetPath(slot.icon) ?? slot.icon,
+      required: slot.required,
+      provided: slot.provided,
+    })),
     isAlive: data.isAlive,
     isImprisoned: data.isImprisoned,
     imprisonedBy: data.imprisonedBy || undefined,
@@ -204,6 +221,7 @@ export function usePersonBridge(personId: string | null | undefined, scope: Pers
     payload: personId ? { personId, scope } : null,
     map: mapPerson,
     matchPush: (data) => !personId || data.id === personId,
+    cacheResponseMs: scope === 'tooltip' ? 12_000 : 0,
   });
 
   if (live) return live;

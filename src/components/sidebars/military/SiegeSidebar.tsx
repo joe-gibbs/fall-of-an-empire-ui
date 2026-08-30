@@ -54,12 +54,20 @@ interface SiegeViewModel {
   defenderFactionSecondaryColour?: string;
   defenderFactionEmblem?: string;
   defenderFactionCultureGroup?: string;
+  defenderFactionDiplomaticStatus?: string;
+  defenderFactionSubjectSubtype?: string;
+  defenderFactionIsPlayer?: boolean;
+  defenderFactionIsRebel?: boolean;
   hostileFaction: string;
   hostileFactionId?: string;
   hostileFactionColour: string;
   hostileFactionSecondaryColour?: string;
   hostileFactionEmblem?: string;
   hostileFactionCultureGroup?: string;
+  hostileFactionDiplomaticStatus?: string;
+  hostileFactionSubjectSubtype?: string;
+  hostileFactionIsPlayer?: boolean;
+  hostileFactionIsRebel?: boolean;
   progress: number;
   estimatedDays: number;
   capitalOccupationDaysRemaining?: number;
@@ -251,12 +259,20 @@ function buildViewModel(settlement: Settlement): SiegeViewModel | null {
     defenderFactionSecondaryColour: settlement.factionSecondaryColour,
     defenderFactionEmblem: settlement.factionEmblem,
     defenderFactionCultureGroup: settlement.factionCultureGroup,
+    defenderFactionDiplomaticStatus: settlement.factionDiplomaticStatus,
+    defenderFactionSubjectSubtype: settlement.factionSubjectSubtype,
+    defenderFactionIsPlayer: settlement.factionIsPlayer,
+    defenderFactionIsRebel: settlement.factionIsRebel,
     hostileFaction: siege.hostileFaction,
     hostileFactionId: siege.hostileFactionId,
     hostileFactionColour: siege.hostileFactionColour ?? '#8f2424',
     hostileFactionSecondaryColour: siege.hostileFactionSecondaryColour,
     hostileFactionEmblem: siege.hostileFactionEmblem,
     hostileFactionCultureGroup: siege.hostileFactionCultureGroup,
+    hostileFactionDiplomaticStatus: siege.hostileFactionDiplomaticStatus,
+    hostileFactionSubjectSubtype: siege.hostileFactionSubjectSubtype,
+    hostileFactionIsPlayer: siege.hostileFactionIsPlayer,
+    hostileFactionIsRebel: siege.hostileFactionIsRebel,
     progress: siege.progress,
     estimatedDays: siege.estimatedDays,
     capitalOccupationDaysRemaining: siege.capitalOccupationDaysRemaining,
@@ -540,6 +556,10 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
                 name={view.defenderFaction}
                 size="md"
                 className="siege-header-roundel"
+                diplomaticStatus={view.defenderFactionDiplomaticStatus}
+                subjectSubtype={view.defenderFactionSubjectSubtype}
+                isPlayer={view.defenderFactionIsPlayer}
+                isRebel={view.defenderFactionIsRebel}
                 onClick={view.defenderFactionId ? () => openSidebar('diplomacy', view.defenderFactionId!) : undefined}
               />
             </FactionTooltip>
@@ -563,6 +583,10 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
                   name={view.hostileFaction}
                   size="xs"
                   className="siege-header-hostile-roundel"
+                  diplomaticStatus={view.hostileFactionDiplomaticStatus}
+                  subjectSubtype={view.hostileFactionSubjectSubtype}
+                  isPlayer={view.hostileFactionIsPlayer}
+                  isRebel={view.hostileFactionIsRebel}
                   onClick={view.hostileFactionId ? () => openSidebar('diplomacy', view.hostileFactionId!) : undefined}
                 />
               </FactionTooltip>

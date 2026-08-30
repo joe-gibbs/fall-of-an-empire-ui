@@ -16,6 +16,28 @@
 .cam-overlay--closing { animation: cam-overlay-out 0.18s ease-in both; pointer-events: none; }
 @keyframes cam-overlay-out { from { opacity: 1 } to { opacity: 0 } }
 
+.cam-overlay.cam-overlay--clear {
+  background: transparent;
+  pointer-events: none;
+  animation-name: none;
+  animation-duration: 0s;
+}
+
+.cam-overlay--clear.cam-overlay--closing {
+  animation-name: none;
+}
+
+.cam-overlay--clear > .candidate-modal-motion > .modal-drag-frame,
+.cam-overlay--clear > .modal-drag-frame {
+  pointer-events: auto;
+}
+
+.cam-overlay--clear .cam-modal,
+.cam-overlay--clear .cam-modal--closing {
+  animation-name: none;
+  animation-duration: 0s;
+}
+
 .cam-modal {
   width: 60rem; max-width: 92vw; height: 68vh; min-height: 36rem;
   animation: cam-modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -40,6 +62,8 @@
   border-bottom-style: solid;
   border-bottom-color: var(--separator);
   flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
   background-color: #242a30;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
@@ -47,6 +71,9 @@
     linear-gradient(180deg, rgba(36, 42, 48, 0.72) 0%, rgba(13, 18, 24, 0.42) 100%);
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, auto;
+}
+.cam-header:active {
+  cursor: grabbing;
 }
 .cam-header-left { display: flex; align-items: center; }
 .cam-header-left > * + * { margin-left: 0.7rem; }
@@ -285,6 +312,9 @@
 .cam-hero {
   position: relative; width: 100%; height: 10rem;
   flex-shrink: 0; overflow: hidden;
+}
+.cam-hero--clickable {
+  cursor: pointer;
 }
 .cam-hero .portrait--hero { height: 10rem !important; }
 .cam-hero .portrait-img { top: 0; height: 90%; bottom: auto; }
@@ -574,9 +604,7 @@
 }
 
 .cam-consequence-row,
-.cam-consequence-card {
-  border: 0.077rem solid rgba(201, 168, 76, 0.24);
-  background: rgba(15, 20, 26, 0.42);
+.cam-consequence-people {
   padding: 0.45rem 0.55rem;
 }
 
@@ -591,41 +619,32 @@
   color: var(--green);
 }
 
-.cam-consequence-card--previous {
-  border-color: rgba(176, 55, 48, 0.55);
-}
-
-.cam-consequence-name,
-.cam-consequence-values,
-.cam-consequence-values span {
+.cam-consequence-people {
   display: flex;
-  align-items: center;
+  flex-direction: column;
 }
 
-.cam-consequence-name {
-  justify-content: space-between;
-  gap: 0.6rem;
+.cam-consequence-people-label {
   color: var(--text-primary);
+  font-size: 0.82rem;
+  margin-bottom: 0.4rem;
 }
 
-.cam-consequence-name em {
-  color: var(--red);
-  font-size: 0.72rem;
-  font-style: normal;
-  text-transform: uppercase;
+.cam-consequence-portrait-scroll,
+.cam-consequence-portrait-scroll-viewport {
+  max-height: 8.8rem;
 }
 
-.cam-consequence-values {
-  gap: 0.9rem;
-  margin-top: 0.25rem;
-  color: var(--text-muted);
-  font-size: 0.76rem;
+.cam-consequence-portrait-scroll-viewport {
+  padding-right: 1rem;
 }
 
-.cam-consequence-values span {
-  gap: 0.3rem;
+.cam-consequence-portraits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
 }
 
-.cam-consequence-values strong {
-  color: var(--red);
+.cam-consequence-portraits > .tooltip-wrapper {
+  flex-shrink: 0;
 }

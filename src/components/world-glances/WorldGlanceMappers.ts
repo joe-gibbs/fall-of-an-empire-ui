@@ -25,6 +25,7 @@ export function mapFaction(faction: GetWorldGlancesResponse['armies'][number]['f
     cultureGroup: faction.cultureGroup ?? '',
     emblem: faction.emblem,
     relation: (faction.relation ?? 'neutral') as FactionRelation,
+    subjectSubtype: faction.subjectSubtype || undefined,
     isRebel: faction.isRebel ?? false,
   };
 }
@@ -81,6 +82,8 @@ export function mapSettlement(entry: GetWorldGlancesResponse['settlements'][numb
     complianceTargetIsRuler: entry.complianceTargetIsRuler ?? false,
     complianceLuxuryLabel: entry.complianceLuxuryLabel ?? '',
     complianceLuxuryStatus: entry.complianceLuxuryStatus ?? '',
+    luxurySlotsRequired: entry.luxurySlotsRequired ?? 0,
+    luxurySlotsProvided: entry.luxurySlotsProvided ?? 0,
     regionName: entry.regionName ?? '',
     landName: entry.landName ?? '',
     domainName: entry.domainName ?? '',

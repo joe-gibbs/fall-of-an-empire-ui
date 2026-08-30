@@ -335,6 +335,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
                         name={f.name}
                         size="xs"
                         showRing={false}
+                        diplomaticStatus={f.diplomaticStatus}
                       />
                     )}
                     <span style={{ flex: 1 }}>{o.label}</span>

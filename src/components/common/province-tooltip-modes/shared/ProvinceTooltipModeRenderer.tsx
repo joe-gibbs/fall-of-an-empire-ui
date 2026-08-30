@@ -1,6 +1,7 @@
 import AdminTooltip from '../governance/AdminTooltip';
 import BishopricTooltip from '../governance/BishopricTooltip';
 import ComplianceTooltip from '../governance/ComplianceTooltip';
+import LuxuryTooltip from '../governance/LuxuryTooltip';
 import CorruptionTooltip from '../governance/CorruptionTooltip';
 import CustomMapModeTooltip from '../status/CustomMapModeTooltip';
 import DiplomaticStatusTooltip from '../status/DiplomaticStatusTooltip';
@@ -42,6 +43,8 @@ export default function ProvinceTooltipModeRenderer({ data }: { data: ProvinceTo
     case 'opinion':
     case 'loyalty':
       return <ComplianceTooltip data={data} />;
+    case 'luxury':
+      return <LuxuryTooltip data={data} />;
     case 'economicProsperity':
     case 'economy':
     case 'gold':

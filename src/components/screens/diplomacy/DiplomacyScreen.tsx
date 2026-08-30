@@ -132,7 +132,7 @@ function sortedForeignRows(rows: FactionRow[], sort: SortState<ForeignSortKey>):
       case 'faction':
         return compareRowValues(a.name, b.name, sort.direction);
       case 'status':
-        return compareRowValues(a.diplomaticStatusLabel || a.diplomaticStatus, b.diplomaticStatusLabel || b.diplomaticStatus, sort.direction);
+        return compareRowValues(diplomaticStatusDisplay(a), diplomaticStatusDisplay(b), sort.direction);
       case 'opinion':
         return compareRowValues(a.opinion, b.opinion, sort.direction);
       case 'strength':
@@ -311,6 +311,13 @@ function treatyIcon(type: string): string {
   }
 }
 
+function diplomaticStatusDisplay(row: FactionRow): string {
+  if (row.subjectType && (row.diplomaticStatus === 'vassal' || row.diplomaticStatus === 'subject')) {
+    return row.subjectType;
+  }
+  return row.diplomaticStatusLabel;
+}
+
 function StatusCell({ label }: { label: string }) {
   return (
     <span className="dps-status-cell">
@@ -406,6 +413,10 @@ function FactionPips({ factions }: { factions: FactionRef[] }) {
               name={faction.name}
               size="xs"
               showRing
+              diplomaticStatus={faction.diplomaticStatus}
+              subjectSubtype={faction.subjectSubtype}
+              isPlayer={faction.isPlayer}
+              isRebel={faction.isRebel}
             />
           </span>
         </FactionTooltip>
@@ -560,7 +571,7 @@ function ForeignPowers({ rows, playerFaction }: { rows: FactionRow[]; playerFact
           onClick={() => openSidebar('diplomacy', row.id)}
         >
           <FactionTableCell faction={row} detail={row.capital || row.rulerName} />
-          <TableCell className="dps-table-col--short"><StatusCell label={row.diplomaticStatusLabel} /></TableCell>
+          <TableCell className="dps-table-col--short"><StatusCell label={diplomaticStatusDisplay(row)} /></TableCell>
           <TableCell className={cellClass('dps-table-col--short', signedValueClass(row.opinion))}>
             {fmtSigned(row.opinion)}
           </TableCell>
@@ -608,6 +619,10 @@ function Treaties({ rows }: { rows: FactionTreaty[] }) {
               secondaryColour={row.withFactionSecondaryColour}
               cultureGroup={row.withFactionCultureGroup}
               emblem={row.withFactionEmblem}
+              diplomaticStatus={row.withFactionDiplomaticStatus}
+              subjectSubtype={row.withFactionSubjectSubtype}
+              isPlayer={row.withFactionIsPlayer}
+              isRebel={row.withFactionIsRebel}
               detail={row.withFactionCulture}
             />
           </TableCell>

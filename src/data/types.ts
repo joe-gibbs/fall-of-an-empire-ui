@@ -188,6 +188,10 @@ export interface Character {
   factionSecondaryColour?: string;
   factionEmblem?: string;
   factionCultureGroup?: string;
+  factionDiplomaticStatus?: string;
+  factionSubjectSubtype?: string;
+  factionIsPlayer?: boolean;
+  factionIsRebel?: boolean;
   culture: string;
   religion: string;
   /** Full culture data for tooltip (description + flags). */
@@ -228,7 +232,7 @@ export interface Character {
   /** Player's relation to this character ("Spouse", "Son", "Patron", etc.) or empty. */
   relationToPlayer?: string;
   /** Sorted modifier breakdown of compliance toward the player. */
-  complianceBreakdown?: { label: string; value: number }[];
+  complianceBreakdown?: { key?: string; label: string; value: number }[];
   /** Net opinion this character has towards the player (sum of modifiers). */
   opinionTowardPlayer?: number;
   /** Sorted modifier breakdown of this character's opinion towards the player. */
@@ -271,6 +275,10 @@ export interface FactionTreaty {
   withFactionCulture?: string;
   withFactionCultureGroup?: string;
   withFactionEmblem?: string;
+  withFactionDiplomaticStatus?: string;
+  withFactionSubjectSubtype?: string;
+  withFactionIsPlayer?: boolean;
+  withFactionIsRebel?: boolean;
   turnsRemaining?: number;
   daysRemaining?: number;
   isPerpetual?: boolean;
@@ -280,6 +288,7 @@ export interface FactionTreaty {
 }
 
 export interface FactionOpinionModifier {
+  key?: string;
   label: string;
   value: number;
 }
@@ -300,6 +309,10 @@ export interface FactionWarPartner {
   secondaryColour?: string;
   cultureGroup?: string;
   emblem?: string;
+  diplomaticStatus?: string;
+  subjectSubtype?: string;
+  isPlayer?: boolean;
+  isRebel?: boolean;
 }
 
 export interface FactionPolicy {
@@ -462,6 +475,10 @@ export interface Faction {
   usesLevies?: boolean;
   /** Current levy strength that could be called up, or active levy strength when raised. */
   levyStrength?: number;
+  /** True when this foederati subject currently has its levies in the field. */
+  isFoederatiCalledUp?: boolean;
+  /** True when the player can call up this foederati subject's levies. */
+  canCallFoederati?: boolean;
   /** Capital settlement name */
   capital: string;
   /** Player's diplomat assigned to this faction, if any. */
@@ -916,6 +933,10 @@ export interface Settlement {
   factionEmblem?: string;
   /** Culture group of the owning faction — used by FactionRoundel for fallback styling. */
   factionCultureGroup?: string;
+  factionDiplomaticStatus?: string;
+  factionSubjectSubtype?: string;
+  factionIsPlayer?: boolean;
+  factionIsRebel?: boolean;
   /** True if this settlement is its faction's capital. */
   isCapital?: boolean;
   /** True if the owning faction is independent (i.e. not a subject of another). */
@@ -1049,6 +1070,10 @@ export interface SiegeInfo {
   hostileFactionSecondaryColour?: string;
   hostileFactionEmblem?: string;
   hostileFactionCultureGroup?: string;
+  hostileFactionDiplomaticStatus?: string;
+  hostileFactionSubjectSubtype?: string;
+  hostileFactionIsPlayer?: boolean;
+  hostileFactionIsRebel?: boolean;
   besiegingArmies: BesiegingArmyInfo[];
   defendingMilitaries: BesiegingArmyInfo[];
 }
@@ -1202,6 +1227,10 @@ export interface Army {
   formationTemplate?: string;
   /** Settlement this army is garrisoned in */
   garrisonedAt?: string;
+  garrisonedAtId?: string;
+  currentOrderTargetId?: string;
+  currentOrderTargetName?: string;
+  currentOrderTargetType?: string;
   /** Navy carrying this army while embarked. */
   embarkedNavyId?: string;
   embarkedNavyName?: string;
@@ -1286,6 +1315,10 @@ export interface MilitaryFoederatiEntry {
   factionSecondaryColour?: string;
   factionEmblem?: string;
   factionCultureGroup?: string;
+  factionDiplomaticStatus?: string;
+  factionSubjectSubtype?: string;
+  factionIsPlayer?: boolean;
+  factionIsRebel?: boolean;
   rulerId?: string;
   rulerName: string;
   rulerPortrait?: string;

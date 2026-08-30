@@ -31,6 +31,38 @@ export interface LayoutResult {
   height: number;
 }
 
+export interface ChartSelectionBox {
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+}
+
+export function chartSelectionRect(box: ChartSelectionBox): { left: number; top: number; width: number; height: number } {
+  const left = Math.min(box.start.x, box.end.x);
+  const top = Math.min(box.start.y, box.end.y);
+  return {
+    left,
+    top,
+    width: Math.abs(box.end.x - box.start.x),
+    height: Math.abs(box.end.y - box.start.y),
+  };
+}
+
+export function forceIdsInChartSelection(layout: LayoutResult, box: ChartSelectionBox): string[] {
+  if (layout.width <= 0 || layout.height <= 0) return [];
+  const rect = chartSelectionRect(box);
+  const ids: string[] = [];
+  for (const node of layout.nodes) {
+    const left = (node.x / layout.width) * 100;
+    const top = (node.y / layout.height) * 100;
+    const right = ((node.x + node.w) / layout.width) * 100;
+    const bottom = ((node.y + node.h) / layout.height) * 100;
+    if (right >= rect.left && left <= rect.left + rect.width && bottom >= rect.top && top <= rect.top + rect.height) {
+      ids.push(node.force.id);
+    }
+  }
+  return ids;
+}
+
 export function layoutTree(forces: Force[]): LayoutResult {
   const byId = new Map(forces.map(f => [f.id, f]));
   const children = new Map<string, Force[]>();

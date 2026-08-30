@@ -20,7 +20,7 @@ import PersonInteractionInitiatorModal from '../../modals/people/PersonInteracti
 import PersonInteractionGiftModal from '../../modals/people/PersonInteractionGiftModal';
 import type { Character, CharacterRelationship, StatKey } from '../../../data/types';
 import { STAT_ICONS } from '../../../utils/iconMaps';
-import { characterStatEffectLines } from '../../../utils/characterStatEffects';
+import { buildCharacterStatTooltip, buildComplianceTooltip } from '../../../utils/characterTooltipContent';
 import { useGameActions, useGameState } from '../../../context/GameContext';
 import { bridgeCall, type StartPersonInteractionResponse } from '../../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
@@ -68,7 +68,6 @@ import {
   modifierValueColor,
   roleIcons,
   socialRelationshipGroups,
-  temporaryModifierTooltipLines,
   type CharacterSidebarTab,
 } from './CharacterSidebarModel';
 import SidebarTabBar from '../shared/SidebarTabBar';
@@ -253,28 +252,13 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
     opinionTooltipLines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1199.39'), isHeader: true });
     opinionTooltipLines.push(...opinionBreakdownLines);
   }
-  const complianceTooltipLines: TooltipLine[] = complianceState ? [
-    {
-      label: webUIText('Auto.ComponentsCommonFactionTooltip.186.3'),
-      value: formatSignedNumber(character.compliance),
-      valueColor: complianceState.color,
-    },
-    ...(showOpinionOfPlayer ? [{
-      label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1128.33'),
-      value: formatSignedNumber(opinionOfPlayer),
-      valueColor: opinionColor,
-    }] : []),
-    {
-      label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1129.34'),
-      value: complianceState.label,
-      valueColor: complianceState.color,
-    },
-  ] : [];
-  const complianceBreakdownLines = modifierTooltipLines(character.complianceBreakdown);
-  if (complianceTooltipLines.length > 0 && complianceBreakdownLines.length > 0) {
-    complianceTooltipLines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1199.39'), isHeader: true });
-    complianceTooltipLines.push(...complianceBreakdownLines);
-  }
+  const complianceTooltip = complianceState
+    ? buildComplianceTooltip(character.compliance, character, {
+      title: webUIText('Auto.Prop.componentssidebarsCharacterSidebar.1125.1', { Label: complianceState.label }),
+      body: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1126.32'),
+      footer: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1131.35'),
+    })
+    : null;
 
   // Luxury needs (hide for dead characters)
   const luxuryNeeds = isAlive ? (character.luxuryNeeds || []) : [];
@@ -660,6 +644,10 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                 size="lg"
                 showRing
                 resolveFaction={false}
+                diplomaticStatus={character.factionDiplomaticStatus}
+                subjectSubtype={character.factionSubjectSubtype}
+                isPlayer={character.factionIsPlayer}
+                isRebel={character.factionIsRebel}
                 onClick={() => openSidebar('diplomacy', character.factionId!)}
               />
             </FactionTooltip>
@@ -676,28 +664,28 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
             </div>
             {rulerFactionSuffix && <span className="char-header-ruler-suffix">{rulerFactionSuffix}</span>}
           </div>
-          <div className="char-header-info-row">
-            {hasHeaderActivity && (
-              <div className="char-header-faction">
-                {!isAlive ? (
-                  <div className="char-header-lifespan">
-                    <img src="/assets/icons/I_Skull.png" alt="" className="char-header-lifespan-icon" draggable={false} />
-                    {deathStatusText && <span>{deathStatusText}</span>}
-                  </div>
-                ) : (
-                  <HeaderActivity
-                    playerRelation={playerRelationLabel}
-                    hasActivitySegments={hasActivitySegments}
-                    segments={character.activitySegments}
-                    fallbackActivity={headerActivityLabel}
-                    onLinkClick={handleActivityLinkClick}
-                  />
-                )}
-              </div>
-            )}
-            {(showOpinionOfPlayer || complianceState) && (
-              <div className="char-header-standing-badges">
-                {showOpinionOfPlayer && (
+          {(hasHeaderActivity || showOpinionOfPlayer) && (
+            <div className="char-header-info-row">
+              {hasHeaderActivity && (
+                <div className="char-header-faction">
+                  {!isAlive ? (
+                    <div className="char-header-lifespan">
+                      <img src="/assets/icons/I_Skull.png" alt="" className="char-header-lifespan-icon" draggable={false} />
+                      {deathStatusText && <span>{deathStatusText}</span>}
+                    </div>
+                  ) : (
+                    <HeaderActivity
+                      playerRelation={playerRelationLabel}
+                      hasActivitySegments={hasActivitySegments}
+                      segments={character.activitySegments}
+                      fallbackActivity={headerActivityLabel}
+                      onLinkClick={handleActivityLinkClick}
+                    />
+                  )}
+                </div>
+              )}
+              {showOpinionOfPlayer && (
+                <div className="char-header-standing-badges">
                   <Tooltip content={{
                     title: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.221.3'),
                     lines: opinionTooltipLines,
@@ -706,23 +694,10 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                       <img src={opinionIcon} alt="" className="char-header-opinion-badge-icon" />
                     </div>
                   </Tooltip>
-                )}
-                {complianceState && (
-                  <Tooltip content={{
-                    get title() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1125.1", { Label: complianceState.label }); },
-                    body: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1126.32'),
-                    lines: complianceTooltipLines,
-                    footer: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1131.35'),
-                  }} position="bottom" delay={200}>
-                    <div className="char-header-compliance-badge" style={{ color: complianceState.color }}>
-                      <img src={complianceState.icon} alt="" className="char-header-compliance-badge-icon" />
-                      {complianceState.label}
-                    </div>
-                  </Tooltip>
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -756,6 +731,16 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
           </ReligionTooltip>
         </div>
 
+        {complianceState && complianceTooltip && (
+          <Tooltip content={complianceTooltip} position="bottom" delay={200}>
+            <div className="char-compliance-row">
+              <img src={complianceState.icon} alt="" className="char-compliance-icon" />
+              <span className="char-compliance-label"><WebUIText textKey="InternalPolitics.Compliance" /></span>
+              <span className="char-compliance-val" style={{ color: complianceState.color }}>{complianceState.label}</span>
+            </div>
+          </Tooltip>
+        )}
+
         {/* Traits */}
         <div className="char-trait-strip">
           {character.traits.map((trait) => {
@@ -771,27 +756,18 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         {/* Stats - 3-column grid */}
         <StatCellGrid>
           {coreStats.map((stat) => {
-            const base = character.stats.base?.[stat.key];
             const temporaryModifiers = getTemporaryStatModifiers(character, stat.key);
             const temporaryTotal = getTemporaryStatModifierTotal(temporaryModifiers);
-            const contributions = character.traits.flatMap((trait) =>
-              (trait.effects ?? [])
-                .filter((e) => e.stat === stat.key)
-                .map((e) => ({ label: trait.name, value: e.value, valueColor: e.isPositive ? 'var(--green)' : 'var(--red)' })),
-            );
-            const tooltipLines: TooltipLine[] = [];
-            if (base !== undefined) {
-              tooltipLines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1196.38'), value: formatNumber(base) });
-            }
-            if (contributions.length > 0) {
-              tooltipLines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1199.39'), isHeader: true });
-              tooltipLines.push(...contributions);
-            }
-            tooltipLines.push(...temporaryModifierTooltipLines(temporaryModifiers));
-            tooltipLines.push({ label: webUIText('CharacterStats.CurrentEffects'), isHeader: true });
-            tooltipLines.push(...characterStatEffectLines(stat.key, stat.value));
             return (
-              <Tooltip key={stat.label} content={{ title: stat.label, body: stat.description, lines: tooltipLines }} position="bottom" delay={150}>
+              <Tooltip
+                key={stat.label}
+                content={buildCharacterStatTooltip(stat.key, stat.value, character, {
+                  title: stat.label,
+                  body: stat.description,
+                })}
+                position="bottom"
+                delay={150}
+              >
                 <StatCell
                   icon={stat.icon}
                   value={stat.value}
@@ -940,7 +916,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         {/* Luxury Needs */}
         {luxuryNeeds.length > 0 && (
           <>
-            <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsCharacterSidebar.1304.55')} />
+            <SectionHeading variant="ornate" title={webUIText('CharacterSidebar.LuxuryNeeds')} />
             <div className="char-luxury-list">
               {luxuryNeeds.map(slot => {
                 const pct = slot.required > 0 ? Math.min(100, (slot.provided / slot.required) * 100) : 0;

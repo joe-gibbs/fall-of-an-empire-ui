@@ -226,14 +226,22 @@ export function logReactRootError(
   console.error(formatReactRootError(kind, error, errorInfo), error)
 }
 
+type ReactRootErrorHandler = (
+  error: unknown,
+  errorInfo?: { componentStack?: string | null },
+) => void
+
 /**
  * Root options that log which component failed when React reports an error.
  * Pass these into every createRoot(...) call.
  */
-export function createReactRootErrorOptions(): RootOptions {
+export function createReactRootErrorOptions(handlers?: {
+  onUncaughtError?: ReactRootErrorHandler
+}): RootOptions {
   return {
     onUncaughtError(error, errorInfo) {
       logReactRootError('uncaught', error, errorInfo)
+      handlers?.onUncaughtError?.(error, errorInfo)
     },
     onCaughtError(error, errorInfo) {
       logReactRootError('caught', error, errorInfo)

@@ -21,7 +21,7 @@ import './MapModePicker.css';
 const ROWS: string[][][] = [
   [['overlord', 'diplomaticRelation', 'political', 'religion', 'culture', 'resources', 'militaries', 'unrest']],
   [['loyalty', 'landscape', 'economicProsperity', 'adminRegion', 'adminLand', 'adminDomain', 'disease', 'population']],
-  [['regionGovernor', 'trade', 'corruption', 'stockpiles', 'garrisons', 'bishopric']],
+  [['regionGovernor', 'luxury', 'trade', 'corruption', 'stockpiles', 'garrisons', 'bishopric']],
 ];
 
 const BASE_MODE_IDS = new Set(ROWS.reduce<string[]>((all, row) => {

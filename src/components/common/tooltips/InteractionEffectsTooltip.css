@@ -49,6 +49,16 @@
     url('/assets/baked/card-charcoal.png');
 }
 
+.interaction-effects-tooltip__outcome--effects {
+  background-image:
+    linear-gradient(90deg, rgba(199, 169, 100, 0.08), rgba(22, 28, 31, 0.04) 58%),
+    url('/assets/baked/card-charcoal.png');
+}
+
+.interaction-effects-tooltip__outcome--effects .interaction-effects-tooltip__outcome-lines {
+  margin-top: 0;
+}
+
 .interaction-effects-tooltip__outcome-content {
   min-width: 0;
   padding: 0.308rem 0.462rem 0.346rem;

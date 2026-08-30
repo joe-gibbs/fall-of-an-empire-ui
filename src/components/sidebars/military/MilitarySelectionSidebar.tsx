@@ -8,7 +8,15 @@ import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import { handleWorldGlanceInput } from '../../../bridge/app/useWorldGlancesBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { setMilitaryParentBridge } from '../../../bridge/military-map/useMilitaryBridge';
-import { useSelectedMilitaries } from '../../../data-source/index';
+import { useMilitaryOverview, useSelectedMilitaries } from '../../../data-source/index';
+import {
+  canDragMilitaryCommand,
+  collectAssignableCommands,
+  findCommandAssignmentTarget,
+  markCommandDragConsumed,
+  validateCommandAssignment,
+  type CommandAssignmentForce,
+} from '../../../utils/militaryCommandAssignment';
 import { registerSidebar } from '../../../registry/index';
 import type { MilitaryDoctrine, MilitaryForce } from '../../../data/types';
 import { formatNumber } from '../../../utils/numberFormat';
@@ -72,12 +80,6 @@ interface SelectionBranch {
   children: SelectionBranch[];
 }
 
-const RANK_ORDER: Record<MilitaryForce['rank'], number> = {
-  Dux: 0,
-  Praefectus: 1,
-  Legatus: 2,
-};
-
 const DRAG_THRESHOLD = 6;
 
 interface DragVisualState {
@@ -98,7 +100,8 @@ interface PendingDrag {
 }
 
 function compareForces(left: MilitaryForce, right: MilitaryForce): number {
-  return RANK_ORDER[left.rank] - RANK_ORDER[right.rank] || left.name.localeCompare(right.name);
+  const rankOrder: Record<MilitaryForce['rank'], number> = { Dux: 0, Praefectus: 1, Legatus: 2 };
+  return rankOrder[left.rank] - rankOrder[right.rank] || left.name.localeCompare(right.name);
 }
 
 function buildSelectionForest(forces: MilitaryForce[]): SelectionBranch[] {
@@ -127,31 +130,23 @@ function buildSelectionForest(forces: MilitaryForce[]): SelectionBranch[] {
   return roots;
 }
 
-function validateParentDrop(
-  source: MilitaryForce,
-  target: MilitaryForce,
-  forces: MilitaryForce[],
-): boolean {
-  if (!source.isPlayerControlled || !target.isPlayerControlled) return false;
-  if (source.id === target.id || source.parentId === target.id) return false;
-  if (source.factionId !== target.factionId) return false;
-  if (source.isNavy !== target.isNavy) return false;
-  if (RANK_ORDER[target.rank] >= RANK_ORDER[source.rank]) return false;
-  if (target.subordinateCount >= target.subordinateCapacity) return false;
-
-  const byId = new Map(forces.map(force => [force.id, force]));
-  let ancestor: MilitaryForce | undefined = target;
-  while (ancestor) {
-    if (ancestor.id === source.id) return false;
-    ancestor = ancestor.parentId ? byId.get(ancestor.parentId) : undefined;
+function assignmentCatalogue(
+  selected: MilitaryForce[],
+  overview: MilitaryForce[] | null | undefined,
+): CommandAssignmentForce[] {
+  const byId = new Map<string, CommandAssignmentForce>();
+  for (const force of overview ?? []) {
+    byId.set(force.id, force);
   }
-  return true;
+  for (const force of selected) {
+    byId.set(force.id, force);
+  }
+  return [...byId.values()];
 }
 
 function ForceBranch({
   branch,
   depth,
-  forces,
   dragVisual,
   openMilitary,
   onForcePointerDown,
@@ -159,7 +154,6 @@ function ForceBranch({
 }: {
   branch: SelectionBranch;
   depth: number;
-  forces: MilitaryForce[];
   dragVisual: DragVisualState;
   openMilitary: (id: string) => void;
   onForcePointerDown: (event: ReactPointerEvent<HTMLDivElement>, force: MilitaryForce) => void;
@@ -169,7 +163,7 @@ function ForceBranch({
   const ratio = force.maxStrength > 0 ? force.strength / force.maxStrength : 0;
   const detailLabel = webUIText(force.isNavy ? 'QuickInteraction.ViewFleet' : 'QuickInteraction.ViewArmy');
   const zoomLabel = webUIText(force.isNavy ? 'QuickInteraction.ZoomToFleet' : 'QuickInteraction.ZoomToArmy');
-  const canDrag = forces.some(target => validateParentDrop(force, target, forces));
+  const canDrag = canDragMilitaryCommand(force);
   const isDragSource = dragVisual.sourceId === force.id;
   const isDropTarget = dragVisual.targetId === force.id;
 
@@ -274,7 +268,6 @@ function ForceBranch({
               key={child.force.id}
               branch={child}
               depth={depth + 1}
-              forces={forces}
               dragVisual={dragVisual}
               openMilitary={openMilitary}
               onForcePointerDown={onForcePointerDown}
@@ -290,6 +283,7 @@ function ForceBranch({
 function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClose: () => void }) {
   const { openSidebar } = useGameActions();
   const selectedForcesResult = useSelectedMilitaries();
+  const overview = useMilitaryOverview();
   const serverForces = useMemo(() => selectedForcesResult ?? [], [selectedForcesResult]);
   const serverHierarchyKey = serverForces.map(force => `${force.id}:${force.parentId ?? ''}`).join('|');
   const [localHierarchy, setLocalHierarchy] = useState<{
@@ -300,15 +294,24 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
     ? localHierarchy.forces
     : serverForces;
   const selectionForest = useMemo(() => buildSelectionForest(selectedForces), [selectedForces]);
+  const assignmentForces = useMemo(
+    () => assignmentCatalogue(selectedForces, overview?.forces),
+    [overview?.forces, selectedForces],
+  );
   const forcesRef = useRef(selectedForces);
+  const assignmentForcesRef = useRef(assignmentForces);
   const pendingDragRef = useRef<PendingDrag | null>(null);
-  const dropTargetRef = useRef<MilitaryForce | null>(null);
+  const dropTargetRef = useRef<CommandAssignmentForce | null>(null);
   const dragCopyRef = useRef<HTMLDivElement | null>(null);
   const [dragVisual, setDragVisual] = useState<DragVisualState>({ sourceId: null, targetId: null, targetValid: false });
 
   useEffect(() => {
     forcesRef.current = selectedForces;
   }, [selectedForces]);
+
+  useEffect(() => {
+    assignmentForcesRef.current = assignmentForces;
+  }, [assignmentForces]);
 
   const removeDragCopy = useCallback(() => {
     dragCopyRef.current?.remove();
@@ -330,6 +333,7 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
     copy.setAttribute('aria-hidden', 'true');
     copy.querySelector('.mil-selection-actions')?.remove();
     copy.style.width = `${sourceElement.getBoundingClientRect().width}px`;
+    copy.style.pointerEvents = 'none';
     document.body.appendChild(copy);
     dragCopyRef.current = copy;
     window.requestAnimationFrame(() => copy.classList.add('is-shown'));
@@ -363,9 +367,38 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
     });
   }, [serverHierarchyKey]);
 
+  const applyParentChanges = useCallback((sourceIds: string[], parentId: string) => {
+    const currentForces = forcesRef.current;
+    const assigned = new Set(sourceIds);
+    const previousParentCounts = new Map<string, number>();
+    for (const sourceId of sourceIds) {
+      const previousParentId = currentForces.find(force => force.id === sourceId)?.parentId;
+      if (!previousParentId || assigned.has(previousParentId)) continue;
+      previousParentCounts.set(previousParentId, (previousParentCounts.get(previousParentId) ?? 0) + 1);
+    }
+    setLocalHierarchy({
+      baseKey: serverHierarchyKey,
+      forces: currentForces.map(force => {
+        if (assigned.has(force.id)) return { ...force, parentId };
+        if (force.id === parentId) {
+          return { ...force, subordinateCount: force.subordinateCount + sourceIds.length };
+        }
+        const detached = previousParentCounts.get(force.id);
+        if (detached) {
+          return { ...force, subordinateCount: Math.max(0, force.subordinateCount - detached) };
+        }
+        return force;
+      }),
+    });
+    void Promise.all(sourceIds.map(sourceId => setMilitaryParentBridge(sourceId, parentId)))
+      .catch(error => {
+        setLocalHierarchy(null);
+        acknowledgeBridgeFailure(error, 'game.set_military_parent');
+      });
+  }, [serverHierarchyKey]);
+
   const handleForcePointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>, source: MilitaryForce) => {
     if (event.button !== 0) return;
-    const currentForces = forcesRef.current;
     pendingDragRef.current = {
       pointerId: event.pointerId,
       source,
@@ -373,7 +406,7 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
       startX: event.clientX,
       startY: event.clientY,
       shiftKey: event.shiftKey,
-      canDrag: currentForces.some(target => validateParentDrop(source, target, currentForces)),
+      canDrag: canDragMilitaryCommand(source),
       started: false,
     };
   }, []);
@@ -395,9 +428,13 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
       event.preventDefault();
       moveDragCopy(event.clientX, event.clientY);
       const pointedElement = document.elementFromPoint(event.clientX, event.clientY);
-      const targetRow = pointedElement?.closest<HTMLDivElement>('[data-military-selection-node]');
-      const target = forcesRef.current.find(force => force.id === targetRow?.dataset.militarySelectionNode) ?? null;
-      const valid = target ? validateParentDrop(pending.source, target, forcesRef.current) : false;
+      const hit = findCommandAssignmentTarget(pointedElement);
+      const target = hit
+        ? assignmentForcesRef.current.find(force => force.id === hit.id) ?? null
+        : null;
+      const valid = target
+        ? validateCommandAssignment(pending.source, target, assignmentForcesRef.current).ok
+        : false;
       dropTargetRef.current = valid ? target : null;
       setDragVisual({
         sourceId: pending.source.id,
@@ -415,7 +452,18 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
 
       if (wasDragging) {
         event.preventDefault();
-        if (target) applyParentChange(pending.source.id, target.id);
+        markCommandDragConsumed();
+        if (target) {
+          const sources = collectAssignableCommands(
+            forcesRef.current,
+            pending.source.id,
+            target,
+            assignmentForcesRef.current,
+          );
+          if (sources.length > 0) {
+            applyParentChanges(sources.map(force => force.id), target.id);
+          }
+        }
         return;
       }
 
@@ -434,7 +482,7 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
       window.removeEventListener('blur', clearDrag);
       removeDragCopy();
     };
-  }, [applyParentChange, clearDrag, createDragCopy, moveDragCopy, removeDragCopy]);
+  }, [applyParentChange, applyParentChanges, clearDrag, createDragCopy, moveDragCopy, removeDragCopy]);
 
   const totals = selectedForces.reduce((acc, force) => ({
     strength: acc.strength + force.strength,
@@ -473,7 +521,6 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
               key={branch.force.id}
               branch={branch}
               depth={0}
-              forces={selectedForces}
               dragVisual={dragVisual}
               openMilitary={id => openSidebar('military', id)}
               onForcePointerDown={handleForcePointerDown}

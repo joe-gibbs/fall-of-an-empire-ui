@@ -36,6 +36,10 @@ export interface AllyCallDialogAlly {
   secondaryColour: string;
   cultureGroup: string;
   emblem: string;
+  diplomaticStatus: string;
+  subjectSubtype: string;
+  isPlayer: boolean;
+  isRebel: boolean;
   strength: number;
   strengthRatio: number;
   callLikelihoodPercent: number;
@@ -636,6 +640,10 @@ export interface DiplomacyFactionReference {
   secondaryColour: string;
   cultureGroup: string;
   emblem: string;
+  diplomaticStatus: string;
+  subjectSubtype: string;
+  isPlayer: boolean;
+  isRebel: boolean;
 }
 
 export interface DiplomacyFactionEntry {
@@ -732,6 +740,10 @@ export interface DiplomacyTreatyEntry {
   withFactionSecondaryColour: string;
   withFactionCultureGroup: string;
   withFactionEmblem: string;
+  withFactionDiplomaticStatus: string;
+  withFactionSubjectSubtype: string;
+  withFactionIsPlayer: boolean;
+  withFactionIsRebel: boolean;
   daysRemaining: number;
   isPerpetual: boolean;
   canBreak: boolean;
@@ -1428,6 +1440,7 @@ export interface BuildQueueItemGroup {
   isVassal: boolean;
   itemId: string;
   assetKey: string;
+  portrait: string;
   itemName: string;
   itemKind: string;
   itemKindLabel: string;
@@ -2188,6 +2201,8 @@ export interface GetFactionDailyDataResponse {
   armies: number;
   usesLevies: boolean;
   levyStrength: number;
+  isFoederatiCalledUp: boolean;
+  canCallFoederati: boolean;
   gold: number;
   income: number;
   strength: number;
@@ -2214,6 +2229,10 @@ export interface FactionTreatyEntry {
   withFactionCulture: string;
   withFactionCultureGroup: string;
   withFactionEmblem: string;
+  withFactionDiplomaticStatus: string;
+  withFactionSubjectSubtype: string;
+  withFactionIsPlayer: boolean;
+  withFactionIsRebel: boolean;
   daysRemaining: number;
   isPerpetual: boolean;
   canBreak: boolean;
@@ -2222,6 +2241,7 @@ export interface FactionTreatyEntry {
 }
 
 export interface FactionOpinionModifier {
+  key: string;
   label: string;
   value: number;
 }
@@ -2239,6 +2259,10 @@ export interface FactionWarEntry {
   secondaryColour: string;
   cultureGroup: string;
   emblem: string;
+  diplomaticStatus: string;
+  subjectSubtype: string;
+  isPlayer: boolean;
+  isRebel: boolean;
 }
 
 export interface FactionPolicyLevelEntry {
@@ -2341,6 +2365,8 @@ export interface GetFactionDataResponse {
   armies: number;
   usesLevies: boolean;
   levyStrength: number;
+  isFoederatiCalledUp: boolean;
+  canCallFoederati: boolean;
   gold: number;
   income: number;
   strength: number;
@@ -2758,6 +2784,7 @@ export interface LedgerFactionRow {
   rulerId: string;
   rulerName: string;
   diplomaticStatus: string;
+  subjectSubtype: string;
   settlementCount: number;
   population: number;
   gold: number;
@@ -2881,6 +2908,11 @@ export interface GetMilitaryCommanderCandidatesResponse {
   currentCommanderId: string;
   message: string;
   candidates: MilitaryCommanderCandidate[];
+}
+
+export interface GetModLoadStateResponse {
+  communityModsSkipped: boolean;
+  showRecoveryPrompt: boolean;
 }
 
 export interface GetNewGameMapFactionGeometryRequest {
@@ -3078,6 +3110,7 @@ export interface PersonTraitEntry {
 }
 
 export interface PersonOpinionEntry {
+  key: string;
   label: string;
   value: number;
 }
@@ -3144,6 +3177,13 @@ export interface PersonHistoryEntry {
   detail: string;
 }
 
+export interface PersonLuxurySlotEntry {
+  name: string;
+  icon: string;
+  required: number;
+  provided: number;
+}
+
 export interface GetPersonDataResponse {
   id: string;
   name: string;
@@ -3171,6 +3211,10 @@ export interface GetPersonDataResponse {
   factionSecondaryColour: string;
   factionEmblem: string;
   factionCultureGroup: string;
+  factionDiplomaticStatus: string;
+  factionSubjectSubtype: string;
+  factionIsPlayer: boolean;
+  factionIsRebel: boolean;
   cultureId: string;
   culture: string;
   religionId: string;
@@ -3206,6 +3250,7 @@ export interface GetPersonDataResponse {
   commandedMilitary: PersonCommandedMilitaryEntry;
   relationships: PersonRelationshipEntry[];
   history: PersonHistoryEntry[];
+  luxuryNeeds: PersonLuxurySlotEntry[];
 }
 
 export interface GetPersonInteractionOptionsRequest {
@@ -3455,6 +3500,10 @@ export interface ProvinceModeFactionSummaryDTO {
   cultureGroup: string;
   religion: string;
   emblem: string;
+  diplomaticStatus: string;
+  subjectSubtype: string;
+  isPlayer: boolean;
+  isRebel: boolean;
   capital: string;
   gold: number;
   income: number;
@@ -3670,6 +3719,8 @@ export interface GetProvinceTooltipResponse {
   complianceTargetIsRuler: boolean;
   complianceLuxuryLabel: string;
   complianceLuxuryStatus: string;
+  luxurySlotsRequired: number;
+  luxurySlotsProvided: number;
   regionName: string;
   landName: string;
   domainName: string;
@@ -4307,6 +4358,10 @@ export interface GetSettlementDataResponse {
   factionSecondaryColour: string;
   factionEmblem: string;
   factionCultureGroup: string;
+  factionDiplomaticStatus: string;
+  factionSubjectSubtype: string;
+  factionIsPlayer: boolean;
+  factionIsRebel: boolean;
   factionId: string;
   factionDebugShortId: number;
   isCapital: boolean;
@@ -4384,6 +4439,10 @@ export interface GetSettlementDataResponse {
   hostileFactionSecondaryColour: string;
   hostileFactionEmblem: string;
   hostileFactionCultureGroup: string;
+  hostileFactionDiplomaticStatus: string;
+  hostileFactionSubjectSubtype: string;
+  hostileFactionIsPlayer: boolean;
+  hostileFactionIsRebel: boolean;
   besiegingArmies: SettlementBesiegingArmy[];
   defendingMilitaries: SettlementBesiegingArmy[];
   canBuild: boolean;
@@ -4493,6 +4552,10 @@ export interface GetSettlementSiegeDataResponse {
   hostileFactionSecondaryColour: string;
   hostileFactionEmblem: string;
   hostileFactionCultureGroup: string;
+  hostileFactionDiplomaticStatus: string;
+  hostileFactionSubjectSubtype: string;
+  hostileFactionIsPlayer: boolean;
+  hostileFactionIsRebel: boolean;
   besiegingArmies: SettlementBesiegingArmy[];
   defendingMilitaries: SettlementBesiegingArmy[];
   canBuild: boolean;
@@ -4620,6 +4683,8 @@ export interface VictoryConditionProgressEntry {
   description: string;
   domains: VictoryConditionDomainEntry[];
   progress: number;
+  currentCount: number;
+  targetCount: number;
   detailText: string;
   isMet: boolean;
 }
@@ -4652,6 +4717,7 @@ export interface WorldGlanceFaction {
   cultureGroup: string;
   emblem: string;
   relation: string;
+  subjectSubtype: string;
   isRebel: boolean;
 }
 
@@ -4723,6 +4789,8 @@ export interface WorldSettlementGlance {
   complianceTargetIsRuler: boolean;
   complianceLuxuryLabel: string;
   complianceLuxuryStatus: string;
+  luxurySlotsRequired: number;
+  luxurySlotsProvided: number;
   regionName: string;
   landName: string;
   domainName: string;
@@ -5134,6 +5202,10 @@ export interface FoederatiOverviewEntry {
   factionSecondaryColour: string;
   factionEmblem: string;
   factionCultureGroup: string;
+  factionDiplomaticStatus: string;
+  factionSubjectSubtype: string;
+  factionIsPlayer: boolean;
+  factionIsRebel: boolean;
   rulerName: string;
   rulerId: string;
   rulerPortrait: string;
@@ -5298,6 +5370,10 @@ export interface GetMilitaryDataResponse {
   currentOrder: string;
   formationTemplate: string;
   garrisonedAt: string;
+  garrisonedAtId: string;
+  currentOrderTargetId: string;
+  currentOrderTargetName: string;
+  currentOrderTargetType: string;
   embarkedNavyId: string;
   embarkedNavyName: string;
   commandDoctrine: string;
@@ -5526,6 +5602,8 @@ export interface NotificationShownPayload {
   settlementViewportWidth: number;
   settlementViewportHeight: number;
   battleAfterActionReport: BattleAfterActionReportPayload;
+  persistUntilDismissed: boolean;
+  actionSucceeded: boolean;
 }
 
 export interface SettlementNotificationAnchor {
@@ -6545,6 +6623,8 @@ export interface VictoryConditionInfo {
   summaryText: string;
   domainProgress: VictoryConditionDomainProgressInfo[];
   progress: number;
+  currentCount: number;
+  targetCount: number;
   detailText: string;
   bMet: boolean;
 }
@@ -6724,6 +6804,7 @@ export interface BridgeActions {
   'game.get_military_commander_candidates': { request: GetMilitaryCommanderCandidatesRequest; response: GetMilitaryCommanderCandidatesResponse };
   'game.get_military_data': { request: GetMilitaryDataRequest; response: GetMilitaryDataResponse };
   'game.get_military_overview': { request: void; response: GetMilitaryOverviewResponse };
+  'game.get_mod_load_state': { request: void; response: GetModLoadStateResponse };
   'game.get_new_game_map_faction_geometry': { request: GetNewGameMapFactionGeometryRequest; response: GetNewGameMapFactionGeometryResponse };
   'game.get_new_game_map_faction_selection': { request: GetNewGameMapFactionSelectionRequest; response: GetNewGameMapFactionSelectionResponse };
   'game.get_peace_negotiation_preview': { request: GetPeaceNegotiationPreviewRequest; response: GetPeaceNegotiationPreviewResponse };
@@ -6769,6 +6850,8 @@ export interface BridgeActions {
   'game.loading_screen': { request: void; response: LoadingScreenResponse };
   'game.navigate_settlement': { request: NavigateSettlementRequest; response: NavigateSettlementResponse };
   'game.notification_events': { request: NotificationEventsRequest; response: void };
+  'game.open_mods_folder': { request: void; response: void };
+  'game.open_save_games_folder': { request: void; response: void };
   'game.perform_siege_command': { request: PerformSiegeCommandRequest; response: PerformSiegeCommandResponse };
   'game.pick_new_game_map_faction': { request: PickNewGameMapFactionRequest; response: PickNewGameMapFactionResponse };
   'game.portrait_invalidated': { request: void; response: PortraitInvalidatedEventPayload };

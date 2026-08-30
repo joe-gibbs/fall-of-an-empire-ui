@@ -11,6 +11,7 @@ import { formatNumber } from '../../../utils/numberFormat';
 import { UI_PERFORMANCE } from '../../../config/uiPerformance';
 import { UI_PRESENTATION } from '../../../config/presentation';
 import { useDraggableOffset } from '../../../hooks/useDraggableOffset';
+import { playSound } from '../../../hooks/useSound';
 import type { CandidateModalPrefix } from './CandidateSelectionUtils';
 import './CandidateSelectionModal.css';
 
@@ -32,6 +33,8 @@ interface CandidateModalFrameProps {
   headerIcon: string;
   title: string;
   modalClassName?: string;
+  /** Dim the rest of the UI and close on outside click. Use `none` for a floating panel. */
+  backdrop?: 'dim' | 'none';
   children: ReactNode;
 }
 
@@ -42,14 +45,38 @@ export function CandidateModalFrame({
   headerIcon,
   title,
   modalClassName,
+  backdrop = 'dim',
   children,
 }: CandidateModalFrameProps) {
-  const { offsetStyle, onHandleMouseDown } = useDraggableOffset({ disabled: closing });
+  const {
+    offsetStyle,
+    rootRef,
+    onHandleMouseDown,
+    onSurfaceMouseDown,
+  } = useDraggableOffset({
+    disabled: closing,
+    blockClassNames: [
+      'styled-scroll-area',
+      'tooltip-wrapper',
+      'dropdown-select',
+      'search-field',
+      'search-input',
+      'portrait',
+      'candidate-row-view-btn',
+      `${prefix}-row`,
+      `${prefix}-detail-body`,
+      `${prefix}-footer`,
+      `${prefix}-list-sort`,
+      `${prefix}-stat-chip`,
+    ],
+  });
+  const clearBackdrop = backdrop === 'none';
 
   return (
     <div
-      className={`${prefix}-overlay${closing ? ` ${prefix}-overlay--closing` : ''}`}
+      className={`${prefix}-overlay${clearBackdrop ? ` ${prefix}-overlay--clear candidate-overlay--clear` : ''}${closing ? ` ${prefix}-overlay--closing` : ''}`}
       onClick={event => {
+        if (clearBackdrop) return;
         if (event.button !== 0) return;
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
@@ -57,14 +84,18 @@ export function CandidateModalFrame({
         onClose();
       }}
     >
-      <div className="modal-drag-frame" style={offsetStyle}>
-        <div
-          className={`modal ${prefix}-modal${modalClassName ? ` ${modalClassName}` : ''}${closing ? ` ${prefix}-modal--closing` : ''}`}
-          onClick={event => event.stopPropagation()}
-        >
-          <ModalDragHandle className={`${prefix}-drag-handle`} onMouseDown={onHandleMouseDown} />
-          <CandidateModalHeader prefix={prefix} icon={headerIcon} title={title} onClose={onClose} />
-          {children}
+      <div className={`candidate-modal-motion${clearBackdrop ? ' candidate-modal-motion--clear' : ''}${closing ? ' candidate-modal-motion--closing' : ''}`}>
+        <div className="modal-drag-frame" style={offsetStyle}>
+          <div
+            ref={rootRef}
+            className={`modal ${prefix}-modal${modalClassName ? ` ${modalClassName}` : ''}${closing ? ` ${prefix}-modal--closing` : ''}`}
+            onClick={event => event.stopPropagation()}
+            onMouseDown={onSurfaceMouseDown}
+          >
+            <ModalDragHandle className={`${prefix}-drag-handle`} onMouseDown={onHandleMouseDown} />
+            <CandidateModalHeader prefix={prefix} icon={headerIcon} title={title} onClose={onClose} />
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -364,6 +395,7 @@ export function CandidateRow({
           isHeir={isHeir}
           isDesignatedHeir={isDesignatedHeir}
           isPreviousRuler={isPreviousRuler}
+          onClick={onViewCharacter}
         />
       </div>
       <div className={`${prefix}-row-info`}>
@@ -420,11 +452,18 @@ interface CandidateHeroProps {
   portraitLayers?: PortraitLayerData;
   name: string;
   title?: string;
+  onOpenCharacter?: () => void;
 }
 
-export function CandidateHero({ prefix, personId, resolvePerson = false, portraitSrc, portraitLayers, name, title }: CandidateHeroProps) {
+export function CandidateHero({ prefix, personId, resolvePerson = false, portraitSrc, portraitLayers, name, title, onOpenCharacter }: CandidateHeroProps) {
   return (
-    <div className={`${prefix}-hero`}>
+    <div
+      className={`${prefix}-hero${onOpenCharacter ? ` ${prefix}-hero--clickable` : ''}`}
+      onClick={onOpenCharacter ? () => {
+        playSound('click');
+        onOpenCharacter();
+      } : undefined}
+    >
       <Portrait personId={personId} resolvePerson={resolvePerson} src={portraitSrc} layers={portraitLayers} name={name} size="hero" shape="rect" showBorder={false} />
       <div className={`${prefix}-hero-scrim`}>
         {title && <span className={`${prefix}-hero-title`}>{title}</span>}

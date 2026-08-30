@@ -647,13 +647,13 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
       </button>
       <div className="tns-faction-pair">
         <FactionTooltip factionId={state.playerFaction.id} factionName={state.playerFaction.name} position="bottom" delay={200}>
-          <FactionRoundel factionId={state.playerFaction.id} colour={state.playerFaction.colour} secondaryColour={state.playerFaction.secondaryColour} cultureGroup={state.playerFaction.cultureGroup} emblem={state.playerFaction.emblem} name={state.playerFaction.name} size="sm" showRing />
+          <FactionRoundel factionId={state.playerFaction.id} colour={state.playerFaction.colour} secondaryColour={state.playerFaction.secondaryColour} cultureGroup={state.playerFaction.cultureGroup} emblem={state.playerFaction.emblem} name={state.playerFaction.name} size="sm" showRing diplomaticStatus={state.playerFaction.diplomaticStatus} subjectSubtype={state.playerFaction.subjectSubtype} isPlayer={state.playerFaction.isPlayer} isRebel={state.playerFaction.isRebel} />
         </FactionTooltip>
         <span className="tns-faction-name">{state.playerFaction.name}</span>
         <img src="/assets/icons/I_Diplomacy.png" alt="" className="tns-header-icon" />
         <span className="tns-faction-name tns-faction-name--right">{state.targetFaction.name}</span>
         <FactionTooltip factionId={state.targetFaction.id} factionName={state.targetFaction.name} position="bottom" delay={200}>
-          <FactionRoundel factionId={state.targetFaction.id} colour={state.targetFaction.colour} secondaryColour={state.targetFaction.secondaryColour} cultureGroup={state.targetFaction.cultureGroup} emblem={state.targetFaction.emblem} name={state.targetFaction.name} size="sm" showRing />
+          <FactionRoundel factionId={state.targetFaction.id} colour={state.targetFaction.colour} secondaryColour={state.targetFaction.secondaryColour} cultureGroup={state.targetFaction.cultureGroup} emblem={state.targetFaction.emblem} name={state.targetFaction.name} size="sm" showRing diplomaticStatus={state.targetFaction.diplomaticStatus} subjectSubtype={state.targetFaction.subjectSubtype} isPlayer={state.targetFaction.isPlayer} isRebel={state.targetFaction.isRebel} />
         </FactionTooltip>
       </div>
       <Tooltip content={opinionBreakdown} position="bottom" delay={150} variant="sidebar" inline wrapperClassName="tns-opinion-tooltip">

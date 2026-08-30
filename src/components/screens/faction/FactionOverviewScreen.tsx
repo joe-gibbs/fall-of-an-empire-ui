@@ -10,6 +10,7 @@ import GovernmentTooltip from '../../common/tooltips/GovernmentTooltip';
 import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
 import { cultureIconPath } from '../../../utils/cultureIcons';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
+import InteractionEffectsTooltip from '../../common/tooltips/InteractionEffectsTooltip';
 import InteractionCard from '../../common/interactions/InteractionCard';
 import Badge from '../../common/data-display/stats/Badge';
 import HeirAssignmentModal from '../../modals/characters/HeirAssignmentModal';
@@ -98,18 +99,25 @@ function edictTooltip(edict: FactionInteractionView, factionId: string, t: WebUI
     }
   }
 
+  const body = edict.inProgress && edict.remainingDays > 0
+    ? (
+      <>
+        <span>{description}</span>
+        <BureaucraticRushTooltipAction
+          actionId={`edict:${edict.id}`}
+          targetFactionId={factionId}
+          daysSaved={edict.bureaucraticRushDaysSaved}
+          overloadLoad={edict.bureaucraticRushLoad}
+        />
+      </>
+    )
+    : description;
+
   return {
     title: edict.name,
-    body: description,
+    body,
     lines,
-    afterLines: edict.inProgress ? (
-      <BureaucraticRushTooltipAction
-        actionId={`edict:${edict.id}`}
-        targetFactionId={factionId}
-        daysSaved={edict.bureaucraticRushDaysSaved}
-        overloadLoad={edict.bureaucraticRushLoad}
-      />
-    ) : undefined,
+    afterLines: <InteractionEffectsTooltip lines={edict.effectLines} />,
   };
 }
 
@@ -242,6 +250,10 @@ function FactionHeader({
             name={faction.name}
             size="lg"
             showRing
+            diplomaticStatus={faction.diplomaticStatus}
+            subjectSubtype={faction.subjectSubtype}
+            isPlayer={faction.isPlayer}
+            isRebel={faction.isRebel}
           />
         </FactionTooltip>
         <Portrait

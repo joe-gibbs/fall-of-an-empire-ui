@@ -983,6 +983,15 @@
   margin: 0 0 0 1.4545rem;
 }
 
+.mm-sub-header-actions {
+  margin-left: auto;
+}
+
+.mm-open-folder-btn {
+  font-size: 0.95rem;
+  padding: 0.4545rem 0.9091rem;
+}
+
 /* Scrollable list body */
 .mm-list-body {
   flex: 1;

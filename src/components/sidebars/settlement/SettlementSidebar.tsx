@@ -109,6 +109,22 @@ const settlementTypeHeaderBg: Record<string, string> = {
 function buildInteractionTooltip(i: SettlementInteractionView, settlementId: string): TooltipContent {
   const lines: TooltipLine[] = [];
 
+  if (i.successFactors.length > 0) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.120.7'),
+      value: formatPercentValue(i.successChancePercent),
+      valueColor: successChanceColour(i.successChancePercent),
+      isHeader: true,
+    });
+    for (const f of i.successFactors) {
+      lines.push({
+        label: f.name,
+        value: `${formatSignedNumber(f.percent)}%`,
+        valueColor: f.percent >= 0 ? 'var(--green)' : 'var(--red)',
+      });
+    }
+  }
+
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.99.1'), labelIcon: i.scope === 'region' ? '/assets/icons/I_Region.png' : '/assets/icons/I_City.png', get value() { return i.scope === 'region' ? webUIText("SettlementSidebar.Region") : webUIText("SettlementSidebar.Settlement"); } });
 
   if (i.goldCost > 0) {
@@ -125,22 +141,6 @@ function buildInteractionTooltip(i: SettlementInteractionView, settlementId: str
 
   if (i.needsDestinationSelection) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.115.6'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.115.1"); } });
-  }
-
-  if (i.successFactors.length > 0) {
-    lines.push({
-      label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.120.7'),
-      value: formatPercentValue(i.successChancePercent),
-      valueColor: successChanceColour(i.successChancePercent),
-      isHeader: true,
-    });
-    for (const f of i.successFactors) {
-      lines.push({
-        label: f.name,
-        value: `${formatSignedNumber(f.percent)}%`,
-        valueColor: f.percent >= 0 ? 'var(--green)' : 'var(--red)',
-      });
-    }
   }
 
   if (i.cooldownDays > 0) {
@@ -905,6 +905,10 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                 name={settlement.faction}
                 size="md"
                 className="settle-header-roundel"
+                diplomaticStatus={settlement.factionDiplomaticStatus}
+                subjectSubtype={settlement.factionSubjectSubtype}
+                isPlayer={settlement.factionIsPlayer}
+                isRebel={settlement.factionIsRebel}
                 onClick={() => openSidebar('diplomacy', settlement.faction)}
               />
             </FactionTooltip>

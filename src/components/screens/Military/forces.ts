@@ -21,6 +21,9 @@ export interface Force {
   delegated: boolean;
   autoSquashRebels: boolean;
   isPlayerControlled: boolean;
+  factionId?: string;
+  subordinateCount?: number;
+  subordinateCapacity?: number;
 }
 
 export function strengthPct(f: Force): number {

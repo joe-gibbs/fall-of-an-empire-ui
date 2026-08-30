@@ -1,13 +1,18 @@
-import { useCallback, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../common/tooltips/Tooltip';
-import type { ArmyGlanceData, NavyGlanceData } from './WorldGlanceTypes';
+import FactionTooltip from '../common/tooltips/FactionTooltip';
+import PersonTooltip from '../common/tooltips/PersonTooltip';
+import EntityLink from '../common/entities/EntityLink';
+import FactionRoundel from '../common/entities/FactionRoundel';
+import type { ArmyGlanceData, GlanceFactionStub, NavyGlanceData } from './WorldGlanceTypes';
 import { bridgeCall, type GetMilitaryDataResponse } from '../../bridge-types.generated.ts';
 import { clampUnitFraction } from './glanceMath';
 import { militaryRingStackStyle } from './ringAssets';
 import { formatNumber, formatPercent } from '../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../utils/assets';
-import { useGameState } from '../../context/GameContext';
-import { readableFactionTextColour, relationDisplayLabel } from './WorldGlancePresentation';
+import { useGameState, useOptionalGameActions } from '../../context/GameContext';
+import { roundelDiplomacyProps } from '../../utils/factionBorder';
+import { isHostileGlance, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
 import GlanceRelationFrame from './GlanceRelationFrame';
 
 import { webUIText } from '../../localization/WebUITextContext';
@@ -73,6 +78,8 @@ function relationBorderSideColour(relation: ArmyGlanceData['faction']['relation'
 }
 
 const STRENGTH_RING_REFERENCE = 5000;
+const ARMY_TYPE_ICON = '/assets/icons/I_Swords.png';
+const NAVY_TYPE_ICON = '/assets/icons/I_Anchor.png';
 
 function strengthFraction(data: { strength: number }): number {
   return clampUnitFraction(data.strength / STRENGTH_RING_REFERENCE);
@@ -86,14 +93,134 @@ function strengthValueLabel(strength: number, maxStrength: number): string {
   return formatNumber(strength);
 }
 
+function GlanceFactionMark({
+  faction,
+  className,
+  size,
+  showRing = false,
+}: {
+  faction: GlanceFactionStub;
+  className?: string;
+  size: 'xs' | 'md';
+  showRing?: boolean;
+}) {
+  return (
+    <FactionRoundel
+      className={className}
+      factionId={faction.id}
+      colour={faction.colour}
+      secondaryColour={faction.secondaryColour}
+      cultureGroup={faction.cultureGroup}
+      emblem={faction.emblem}
+      name={faction.name}
+      size={size}
+      showRing={showRing}
+      resolveFaction={false}
+      {...roundelDiplomacyProps(faction)}
+    />
+  );
+}
+
+function militaryKindLabel(isNavy: boolean, isPersonalGuard: boolean): string {
+  if (isNavy) return webUIText('Common.Fleet');
+  if (isPersonalGuard) return webUIText('Military.PersonalGuard');
+  return webUIText('Common.Army');
+}
+
+function MilitaryGlanceHeader({
+  faction,
+  title,
+  isNavy,
+  isPersonalGuard,
+  interactive,
+}: {
+  faction: GlanceFactionStub;
+  title: string;
+  isNavy: boolean;
+  isPersonalGuard: boolean;
+  interactive: boolean;
+}) {
+  const openSidebar = useOptionalGameActions()?.openSidebar;
+  const identity = (
+    <div className="military-glance-tt-identity">
+      <GlanceFactionMark faction={faction} className="military-glance-tt-roundel" size="md" showRing />
+      <div className="military-glance-tt-copy">
+        <div className="military-glance-tt-name">{title}</div>
+        <div className="military-glance-tt-meta">
+          <span>{militaryKindLabel(isNavy, isPersonalGuard)}</span>
+          <span className="military-glance-tt-meta-rule" aria-hidden="true" />
+          <span style={{ color: relationDisplayColour(faction.relation) }}>
+            {relationDisplayLabel(faction.relation)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!interactive) {
+    return identity;
+  }
+
+  return (
+    <FactionTooltip factionId={faction.id} factionName={faction.name} delay={150}>
+      <div
+        className="military-glance-tt-identity-hit"
+        onClick={() => {
+          if (faction.id) {
+            openSidebar?.('diplomacy', faction.id);
+          }
+        }}
+      >
+        {identity}
+      </div>
+    </FactionTooltip>
+  );
+}
+
+function GlancePersonValue({ id, name, interactive }: { id?: string; name: string; interactive: boolean }) {
+  if (!interactive || !id) {
+    return <>{name}</>;
+  }
+
+  return (
+    <PersonTooltip characterId={id} delay={150}>
+      <span className="tt-nested-link">{name}</span>
+    </PersonTooltip>
+  );
+}
+
+function GlanceEntityValue({ type, id, name, interactive }: { type: string; id?: string; name: string; interactive: boolean }) {
+  if (!interactive) {
+    return <>{name}</>;
+  }
+
+  return (
+    <EntityLink type={type} id={id} inline className="tt-entity-link" fallbackClassName="tt-nested-link">
+      {name}
+    </EntityLink>
+  );
+}
+
+function linkedOrderValue(detail: GetMilitaryDataResponse, fallback: string, interactive: boolean): ReactNode {
+  const targetId = detail.currentOrderTargetId;
+  const targetType = detail.currentOrderTargetType;
+  if (!interactive || !targetId || !targetType) {
+    return fallback;
+  }
+
+  return <GlanceEntityValue type={targetType} id={targetId} name={fallback} interactive />;
+}
+
 function militaryTooltip(
   data: ArmyGlanceData | NavyGlanceData,
   detail: GetMilitaryDataResponse | null,
   isNavy: boolean,
   blockading: boolean,
   debugMode: boolean,
+  interactive: boolean,
 ): TooltipContent {
   const isRaiding = detail?.isRaiding ?? Boolean(data.raiding);
+  const isPersonalGuard = Boolean(detail?.found && detail.isPersonalGuard);
   const strength = detail?.found ? detail.strength : data.strength;
   const maxStrength = detail?.found ? detail.maxStrength : 0;
   const moralePercent = detail?.found ? detail.morale : clampUnitFraction(data.morale) * 100;
@@ -103,19 +230,74 @@ function militaryTooltip(
   if (blockading) statuses.push(webUIText('WorldGlances.Military.Blockading'));
   const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
   const currentOrder = detail?.currentOrder ?? '';
+  const garrisonedAt = detail?.found ? detail.garrisonedAt : '';
+  const embarkedNavyName = detail?.found ? detail.embarkedNavyName : '';
+  const parentCommand = detail?.found ? detail.parentCommand : '';
 
-  const lines: TooltipLine[] = [
-    {
-      label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.157.1'),
-      get value() { return isNavy ? webUIText("ArmyGlance.Navy") : webUIText("Common.Army"); },
-      valueIcon: isNavy ? '/assets/icons/I_Port.png' : '/assets/icons/I_Swords.png',
-    },
-  ];
+  const lines: TooltipLine[] = [];
+
+  if (detail?.found) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.173.3'),
+      value: (
+        <GlancePersonValue
+          id={detail.commanderId || undefined}
+          name={detail.commanderName || webUIText('Common.NoCommander')}
+          interactive={interactive}
+        />
+      ),
+    });
+  }
+
+  if (garrisonedAt) {
+    lines.push({
+      label: webUIText('WorldGlances.Military.GarrisonedIn'),
+      value: (
+        <GlanceEntityValue
+          type="settlement"
+          id={detail?.garrisonedAtId || undefined}
+          name={garrisonedAt}
+          interactive={interactive}
+        />
+      ),
+      valueIcon: '/assets/icons/I_Domain.png',
+    });
+  }
+
+  if (embarkedNavyName) {
+    lines.push({
+      label: webUIText('WorldGlances.Military.EmbarkedIn'),
+      value: (
+        <GlanceEntityValue
+          type="military"
+          id={detail?.embarkedNavyId || undefined}
+          name={embarkedNavyName}
+          interactive={interactive}
+        />
+      ),
+      valueIcon: '/assets/icons/I_NaviesQuickButton.png',
+    });
+  }
+
+  if (parentCommand) {
+    lines.push({
+      label: webUIText('WorldGlances.Military.Command'),
+      value: (
+        <GlanceEntityValue
+          type="military"
+          id={detail?.parentCommandId || undefined}
+          name={parentCommand}
+          interactive={interactive}
+        />
+      ),
+      valueIcon: '/assets/icons/I_ArmiesQuickButton.png',
+    });
+  }
 
   if (currentOrder) {
     lines.push({
       label: webUIText('WorldGlances.Military.CurrentAction'),
-      value: currentOrder,
+      value: detail?.found ? linkedOrderValue(detail, currentOrder, interactive) : currentOrder,
       valueIcon: blockading ? '/assets/icons/I_Siege.png' : isRaiding ? '/assets/icons/I_RaidingTorch.png' : undefined,
     });
   }
@@ -125,7 +307,8 @@ function militaryTooltip(
       get label() { return isNavy ? webUIText("ArmyGlance.Ships") : webUIText("ArmyGlance.Soldiers"); },
       value: strengthValueLabel(strength, maxStrength),
       valueColor: strengthColour(clampUnitFraction(strength / STRENGTH_RING_REFERENCE)),
-      valueIcon: isNavy ? '/assets/icons/I_Port.png' : '/assets/icons/I_Swords.png',
+      valueIcon: isNavy ? NAVY_TYPE_ICON : ARMY_TYPE_ICON,
+      isHeader: true,
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.168.2'),
@@ -133,14 +316,6 @@ function militaryTooltip(
       valueColor: moraleColour(moralePercent / 100),
       valueIcon: '/assets/icons/I_Loyalty.png',
     },
-  );
-
-  if (detail?.found) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.173.3'), value: detail.commanderName || webUIText('Common.NoCommander') });
-  }
-
-  lines.push(
-    { label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.174.4'), value: data.faction.name, valueColor: readableFactionTextColour(data.faction.colour) },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.176.5'),
       get value() { return webUIText("Auto.Prop.componentsworldglancesArmyGlance.178.1", { Value1: String(data.tier) }); },
@@ -174,8 +349,15 @@ function militaryTooltip(
   }
 
   return {
-    title: detail?.name || data.faction.name,
-    get body() { return webUIText("Auto.Prop.componentsworldglancesArmyGlance.202.1", { Value1: webUIText(isNavy ? 'Common.Fleet' : 'Common.Army'), Value2: relationDisplayLabel(data.faction.relation), Name: data.faction.name }); },
+    header: (
+      <MilitaryGlanceHeader
+        faction={data.faction}
+        title={detail?.name || data.faction.name}
+        isNavy={isNavy}
+        isPersonalGuard={isPersonalGuard}
+        interactive={interactive}
+      />
+    ),
     lines,
   };
 }
@@ -219,7 +401,7 @@ function MilitaryTooltip({ data, isNavy = false, children, open, passive = false
   }, [data.id, tooltipDetail]);
 
   const content = useMemo(
-    () => militaryTooltip(data, resolvedDetail, isNavy, Boolean(blockading), debugMode),
+    () => militaryTooltip(data, resolvedDetail, isNavy, Boolean(blockading), debugMode, true),
     [blockading, data, debugMode, isNavy, resolvedDetail],
   );
 
@@ -248,7 +430,6 @@ export function NativeMilitaryGlanceTooltip({
       data={data}
       isNavy={isNavy}
       open
-      passive
       wrapperStyle={{
         position: 'fixed',
         left: anchor.x,
@@ -270,37 +451,51 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
   const moraleStateClass = data.retreating ? ' is-retreating' : moralePct < 0.5 ? ' is-low-morale' : '';
   const blockading = isNavy && (data as NavyGlanceData).blockading;
   const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
-  const militaryTypeIcon = WebkilnAssetPath(isNavy ? '/assets/icons/I_Anchor.png' : '/assets/icons/I_Swords.png');
+  const militaryTypeIcon = WebkilnAssetPath(isNavy ? NAVY_TYPE_ICON : ARMY_TYPE_ICON);
   const statusIcon = blockading ? '/assets/icons/I_Siege.png' : data.raiding ? '/assets/icons/I_RaidingTorch.png' : '';
   const attritionIcon = WebkilnAssetPath(data.attritionIcon || '/assets/icons/Terrain/I_Attrition.png');
   const visibleStatusCount = (statusIcon ? 1 : 0) + (data.attrition ? 1 : 0) + (embarkedArmyCount > 0 ? 1 : 0);
   const crownCount = 1 + visibleStatusCount;
+  const atWar = isHostileGlance(data.faction.relation);
+  const typeMark = (
+    <img
+      className={`glance-military-type-mark${isNavy ? ' glance-military-type-mark--navy' : ' glance-military-type-mark--army'}`}
+      src={militaryTypeIcon}
+      alt=""
+    />
+  );
 
   const glance = data.garrisoned ? (
     <div
-      className={`glance glance--military-garrison${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${moraleStateClass}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
+      className={`glance glance--military-garrison${isNavy ? ' glance--navy' : ''}${atWar ? ' glance--enemy is-at-war' : ''}${moraleStateClass}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
       style={{
         '--faction-colour': data.faction.colour,
+        ...relationTextVars(data.faction.relation),
         '--relation-label-bg': relationLabelBackgroundColour(data.faction.relation),
         '--relation-border-top': relationBorderTopColour(data.faction.relation),
         '--garrison-stack-offset': `${(data.garrisonIndex ?? 0) * 1.3636}rem`,
       } as CSSProperties}
     >
+      {atWar && <span className="glance-war-glow" aria-hidden="true" />}
       <span className="glance-military-garrison-hit-target" data-webkiln-anchor-hit aria-hidden="true" />
       <span className="glance-military-alert-flash" aria-hidden="true" />
       <span className="glance-garrison-selection" aria-hidden="true" />
       <span className="glance-garrison-target" aria-hidden="true" />
       <span className="glance-garrison-kind" aria-hidden="true">
-        <img src={militaryTypeIcon} alt="" />
+        <GlanceFactionMark faction={data.faction} className="glance-garrison-faction-roundel" size="xs" />
+      </span>
+      <span className="glance-garrison-type" aria-hidden="true">
+        {typeMark}
       </span>
       <img className="glance-garrison-tier" src={tierTexture(data.tier)} alt="" />
       <span className="glance-garrison-strength">{formatNumber(data.strength)}</span>
     </div>
   ) : (
     <div
-      className={`glance glance--military${isNavy ? ' glance--navy' : ''}${data.faction.relation === 'enemy' ? ' glance--enemy' : ''}${moraleStateClass}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
+      className={`glance glance--military${isNavy ? ' glance--navy' : ''}${atWar ? ' glance--enemy is-at-war' : ''}${moraleStateClass}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
       style={{
         '--faction-colour': data.faction.colour,
+        ...relationTextVars(data.faction.relation),
         '--relation-bg': relationBackgroundColour(data.faction.relation),
         '--relation-target-bg': relationTargetBackgroundColour(data.faction.relation),
         '--relation-label-bg': relationLabelBackgroundColour(data.faction.relation),
@@ -310,6 +505,7 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
         '--morale-colour': moraleColour(moralePct),
       } as CSSProperties}
     >
+      {atWar && <span className="glance-war-glow" aria-hidden="true" />}
       <span className="glance-military-hit-target" data-webkiln-anchor-hit aria-hidden="true" />
       <span className="glance-military-alert-flash" aria-hidden="true" />
       <div className="glance-military-rings" aria-hidden="true">
@@ -319,9 +515,9 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
       <span className="glance-military-target-indicator" aria-hidden="true" />
 
       <div className="glance-military-core">
-        <span className="glance-military-faction-field" aria-hidden="true" />
+        <GlanceFactionMark faction={data.faction} className="glance-military-faction-roundel" size="md" />
         <div className={`glance-military-kind${isNavy ? ' glance-military-kind--navy' : ' glance-military-kind--army'}`}>
-          <img className={`glance-military-type-mark${isNavy ? ' glance-military-type-mark--navy' : ' glance-military-type-mark--army'}`} src={militaryTypeIcon} alt="" />
+          {typeMark}
         </div>
       </div>
       <div className={`glance-military-crown glance-military-crown--count-${String(crownCount)}`}>

@@ -356,24 +356,6 @@
   margin-left: 0;
 }
 
-.char-header-compliance-badge {
-  display: flex;
-  align-items: center;
-
-  font-family: var(--font-header);
-  font-size: 1.05rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  cursor: auto;
-  flex-shrink: 0;
-}
-
-.char-header-compliance-badge-icon {
-  width: 1.3rem;
-  height: 1.3rem;
-}
-
 /* --- Traits --- */
 .char-trait-strip {
   display: flex;
@@ -576,7 +558,6 @@
 
 .char-trait-strip,
 .char-role-experience,
-.char-compliance-row,
 .char-identity-pair,
 .char-duty-list,
 .char-history-list,
@@ -1402,29 +1383,6 @@
   transform: none;
 }
 
-/* --- Compliance icon (right side, above spouse) --- */
-.char-header-compliance {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.6rem;
-  z-index: 4;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* When dead icon is also shown, move compliance down */
-.char-header--dead .char-header-compliance {
-  top: 3rem;
-}
-
-.char-header-compliance-icon {
-  width: 2rem;
-  height: 2rem;
-}
-
 /* --- Rich text activity with clickable links --- */
 .char-header-activity-rich {
   min-width: 0;
@@ -1536,10 +1494,6 @@
 
 .char-header-player-relation > * + * {
   margin-left: 0.2rem;
-}
-
-.char-header-compliance-badge > * + * {
-  margin-left: 0.25rem;
 }
 
 /* --- Traits --- */

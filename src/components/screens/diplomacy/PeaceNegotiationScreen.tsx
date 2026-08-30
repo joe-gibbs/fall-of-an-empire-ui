@@ -8,6 +8,7 @@ import PersonTooltip from '../../common/tooltips/PersonTooltip';
 import Portrait from '../../common/portraits/Portrait';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
 import NumberStepper from '../../common/forms/NumberStepper';
+import ReplaceRulerSelectionModal from '../../modals/diplomacy/ReplaceRulerSelectionModal';
 import { usePeaceNegotiationBridge, type PeaceNegotiationState, type PeaceTermDraft } from '../../../bridge/diplomacy/usePeaceNegotiationBridge';
 import { onBridgeEvent } from '../../../bridge-types.generated.ts';
 import { useGameActions } from '../../../context/GameContext';
@@ -36,6 +37,9 @@ type TermEntry = PeaceNegotiationState['terms'][number];
 type ReplacementCandidate = TermOption['replacementCandidates'][number];
 type AcceptabilityTone = 'green' | 'gold' | 'red';
 type ParticipantRoleKind = 'leader' | 'subject' | null;
+type ReplacementPicker =
+  | { kind: 'add'; option: TermOption }
+  | { kind: 'change'; term: PeaceTermDraft; live?: TermEntry };
 
 const TRIBUTE_DURATION_YEAR_LABELS = ['1', '2', '5', '10'] as const;
 
@@ -379,11 +383,6 @@ function selectedReplacementCandidate(term: PeaceTermDraft, live?: TermEntry): R
   return candidates.find(candidate => candidate.id === (term.replacementRulerId || live?.replacementRulerId)) ?? candidates[0];
 }
 
-function replaceRulerDetail(entry: TermEntry | undefined, draft: PeaceTermDraft): string {
-  const candidate = selectedReplacementCandidate(draft, entry);
-  return candidate?.name || entry?.replacementRulerName || '';
-}
-
 function optionGroupKey(option: TermOption): string {
   return `${option.direction}:${option.type}`;
 }
@@ -554,7 +553,7 @@ function DraftTermChip({
   durationOptionsDays,
   onRemove,
   onChange,
-  onViewCharacter,
+  onOpenReplacementPicker,
 }: {
   term: PeaceTermDraft;
   live?: TermEntry;
@@ -563,19 +562,19 @@ function DraftTermChip({
   durationOptionsDays: number[];
   onRemove: () => void;
   onChange: (patch: Partial<PeaceTermDraft>) => void;
-  onViewCharacter: (personId: string) => void;
+  onOpenReplacementPicker: () => void;
 }) {
   const direction = isConcession(term) ? 'concession' : 'demand';
   const label = live?.label ?? termFallbackLabel(term);
   const isReplaceRuler = term.type === 'replace_ruler';
-  const detail = isReplaceRuler ? replaceRulerDetail(live, term) : termDetail(live, term);
+  const detail = isReplaceRuler ? '' : termDetail(live, term);
   const isTribute = term.type === 'onetime_tribute' || term.type === 'ongoing_tribute';
   const isOngoing = term.type === 'ongoing_tribute';
   const tributeMax = isOneOffTributeTerm(term.type) ? maxGold : undefined;
   const tributeAmount = boundedTributeAmount(term.tributeAmount ?? live?.tributeAmount ?? 0, tributeMax);
   const tributeDurationDays = term.tributeDurationDays || live?.tributeDurationDays || durationOptionsDays[durationOptionsDays.length - 1];
   const candidates = replacementCandidates(term, live);
-  const activeReplacementId = term.replacementRulerId || live?.replacementRulerId || candidates[0]?.id || '';
+  const selectedCandidate = selectedReplacementCandidate(term, live);
 
   return (
     <Tooltip
@@ -633,43 +632,33 @@ function DraftTermChip({
             </div>
           ) : null}
           {isReplaceRuler && candidates.length > 0 ? (
-            <div className="pns-replacement-list">
-              {candidates.map(candidate => (
-                <button
-                  key={candidate.id}
-                  type="button"
-                  className={`pns-replacement-row${candidate.id === activeReplacementId ? ' pns-replacement-row--active' : ''}`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onChange({ replacementRulerId: candidate.id });
-                  }}
-                >
-                  <Portrait
-                    personId={candidate.id}
-                    src={candidate.portrait || undefined}
-                    layers={candidate.portraitLayers}
-                    name={candidate.name}
-                    size="sm"
-                    shape="circle"
-                    showBorder
-                    borderTier="gold"
-                  />
-                  <span className="pns-replacement-copy">
-                    <span className="pns-replacement-name">{candidate.name}</span>
-                    {candidate.title ? <span className="pns-replacement-sub">{candidate.title}</span> : null}
-                  </span>
-                  <span
-                    className="pns-replacement-view"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onViewCharacter(candidate.id);
-                    }}
-                  >
-                    <img src="/assets/icons/I_Characters.png" alt="" />
-                  </span>
-                </button>
-              ))}
-            </div>
+            <button
+              type="button"
+              className="pns-replacement-select"
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpenReplacementPicker();
+              }}
+            >
+              {selectedCandidate ? (
+                <Portrait
+                  personId={selectedCandidate.id}
+                  src={selectedCandidate.portrait || undefined}
+                  layers={selectedCandidate.portraitLayers}
+                  name={selectedCandidate.name}
+                  size="sm"
+                  shape="circle"
+                  showBorder
+                  borderTier="gold"
+                />
+              ) : null}
+              <span className="pns-replacement-copy">
+                <span className="pns-replacement-name">
+                  {selectedCandidate?.name || webUIText('PeaceNegotiation.Term.ReplaceRuler')}
+                </span>
+                {selectedCandidate?.title ? <span className="pns-replacement-sub">{selectedCandidate.title}</span> : null}
+              </span>
+            </button>
           ) : null}
         </div>
         <span className={`pns-term-score pns-term-score--${direction}`}>{formatTermCost(live?.warScoreCost, term.direction)}</span>
@@ -779,7 +768,7 @@ function TermsColumn({
   durationOptionsDays,
   onRemove,
   onChange,
-  onViewCharacter,
+  onOpenReplacementPicker,
 }: {
   title: string;
   targetLabel: string;
@@ -792,7 +781,7 @@ function TermsColumn({
   durationOptionsDays: number[];
   onRemove: (termId: string) => void;
   onChange: (termId: string, patch: Partial<PeaceTermDraft>) => void;
-  onViewCharacter: (personId: string) => void;
+  onOpenReplacementPicker: (term: PeaceTermDraft, live?: TermEntry) => void;
 }) {
   const byId = new Map(stateTerms.map(term => [term.termId, term]));
 
@@ -823,7 +812,7 @@ function TermsColumn({
                 durationOptionsDays={durationOptionsDays}
                 onRemove={() => onRemove(id)}
                 onChange={patch => onChange(id, patch)}
-                onViewCharacter={onViewCharacter}
+                onOpenReplacementPicker={() => onOpenReplacementPicker(term, byId.get(id))}
               />
             );
           }) : (
@@ -979,6 +968,7 @@ function PeaceNegotiationScreenContent({
   const [selectedDemandTargetId, setSelectedDemandTargetId] = useState<string | null>(null);
   const [selectedConcessionGiverId, setSelectedConcessionGiverId] = useState<string | null>(null);
   const [activeSettlementSelectionOptionId, setActiveSettlementSelectionOptionId] = useState<string | null>(null);
+  const [replacementPicker, setReplacementPicker] = useState<ReplacementPicker | null>(null);
   const [initialSourceTerms, setInitialSourceTerms] = useState<PeaceTermDraft[] | null>(null);
   const acceptedCloseTimerRef = useRef<number | null>(null);
   const settlementSelectionActiveRef = useRef(false);
@@ -1184,8 +1174,34 @@ function PeaceNegotiationScreenContent({
       });
       return;
     }
+    if (draft.type === 'replace_ruler' && (option.replacementCandidates?.length ?? 0) > 0) {
+      setActiveSettlementSelectionOptionId(null);
+      setReplacementPicker({ kind: 'add', option });
+      return;
+    }
     setActiveSettlementSelectionOptionId(null);
     setTerms(current => [...current.filter(term => !termsConflict(term, draft)), draft]);
+  };
+
+  const closeReplacementPicker = () => {
+    setReplacementPicker(null);
+  };
+
+  const confirmReplacementRuler = (personId: string) => {
+    if (!replacementPicker) return;
+    setOutcome(null);
+    setAcceptedMessage(null);
+    if (replacementPicker.kind === 'add') {
+      const draft = draftFromOption(replacementPicker.option);
+      draft.replacementRulerId = personId;
+      setTerms(current => [...current.filter(term => !termsConflict(term, draft)), draft]);
+      return;
+    }
+
+    const termId = replacementPicker.term.termId || termKey(replacementPicker.term);
+    setTerms(current => current.map(term => (
+      (term.termId || termKey(term)) === termId ? { ...term, replacementRulerId: personId } : term
+    )));
   };
 
   const removeTerm = (termId: string) => {
@@ -1219,6 +1235,7 @@ function PeaceNegotiationScreenContent({
     setSelectedDemandTargetId(null);
     setSelectedConcessionGiverId(null);
     setActiveSettlementSelectionOptionId(null);
+    setReplacementPicker(null);
     if (hadTerritory || settlementSelectionActiveRef.current) {
       syncMapSelectionToTerms(nextTerms);
     }
@@ -1270,7 +1287,7 @@ function PeaceNegotiationScreenContent({
       <OptionsPanel
         title={webUIText('Auto.Attr.ComponentsScreensPeaceNegotiationScreen.882.16')}
         options={concessionOptions}
-        activeOptionId={activeSettlementSelectionOptionId}
+        activeOptionId={activeSettlementSelectionOptionId ?? (replacementPicker?.kind === 'add' ? replacementPicker.option.optionId : null)}
         onAdd={addTerm}
       />
 
@@ -1288,7 +1305,7 @@ function PeaceNegotiationScreenContent({
             durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}
             onChange={updateTerm}
-            onViewCharacter={id => openSidebar('character', id)}
+            onOpenReplacementPicker={(term, live) => setReplacementPicker({ kind: 'change', term, live })}
           />
 
           <TermsColumn
@@ -1303,7 +1320,7 @@ function PeaceNegotiationScreenContent({
             durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}
             onChange={updateTerm}
-            onViewCharacter={id => openSidebar('character', id)}
+            onOpenReplacementPicker={(term, live) => setReplacementPicker({ kind: 'change', term, live })}
           />
         </div>
 
@@ -1362,7 +1379,7 @@ function PeaceNegotiationScreenContent({
       <OptionsPanel
         title={webUIText('Auto.Attr.ComponentsScreensPeaceNegotiationScreen.965.21')}
         options={demandOptions}
-        activeOptionId={activeSettlementSelectionOptionId}
+        activeOptionId={activeSettlementSelectionOptionId ?? (replacementPicker?.kind === 'add' ? replacementPicker.option.optionId : null)}
         onAdd={addTerm}
       />
     </div>
@@ -1371,6 +1388,22 @@ function PeaceNegotiationScreenContent({
       <div className="pns-empty-state"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.971.16" /></div>
     </Panel>
   );
+
+  const pickerCandidates = replacementPicker
+    ? replacementPicker.kind === 'add'
+      ? replacementPicker.option.replacementCandidates
+      : replacementCandidates(replacementPicker.term, replacementPicker.live)
+    : [];
+  const pickerSelectedId = replacementPicker
+    ? replacementPicker.kind === 'add'
+      ? replacementPicker.option.replacementRulerId
+      : replacementPicker.term.replacementRulerId || replacementPicker.live?.replacementRulerId
+    : undefined;
+  const pickerFactionName = replacementPicker
+    ? replacementPicker.kind === 'add'
+      ? replacementPicker.option.targetFactionName
+      : replacementPicker.live?.targetFactionName
+    : undefined;
 
   return (
     <div className="pns-stage pns-stage--peace">
@@ -1387,6 +1420,18 @@ function PeaceNegotiationScreenContent({
           {body}
         </div>
       </ScreenShell>
+      <ReplaceRulerSelectionModal
+        key={replacementPicker
+          ? `${replacementPicker.kind}:${replacementPicker.kind === 'add' ? replacementPicker.option.optionId : (replacementPicker.term.termId || termKey(replacementPicker.term))}`
+          : 'closed'}
+        open={replacementPicker !== null}
+        candidates={pickerCandidates}
+        initialSelectedId={pickerSelectedId}
+        factionName={pickerFactionName}
+        onClose={closeReplacementPicker}
+        onSelect={confirmReplacementRuler}
+        onOpenCharacter={id => openSidebar('character', id)}
+      />
     </div>
   );
 }

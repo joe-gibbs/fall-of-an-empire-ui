@@ -19,6 +19,22 @@
   margin-top: 0.1rem;
 }
 
+.ftt-name-heading--with-accessory {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.462rem;
+}
+
+.ftt-name-heading--with-accessory .ftt-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ftt-name-heading .tt-footer-shortcut {
+  flex: 0 0 auto;
+}
+
 .ftt-name {
   font-family: var(--font-header);
   font-size: 1.05rem;

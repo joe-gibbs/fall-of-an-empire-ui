@@ -751,16 +751,34 @@
   margin-left: 0.45em;
 }
 
+/*
+  Slot is sized in em on a non-img wrapper. Global `img { font-size: 0 }`
+  would collapse em width/height on the image itself.
+*/
+.date-display-season-icon,
+.date-display-climate-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
 .date-display-season-icon {
   width: 1.4em;
   height: 1.4em;
-  flex-shrink: 0;
 }
 
 .date-display-climate-icon {
   width: 1.28em;
   height: 1.28em;
-  flex-shrink: 0;
+}
+
+.date-display-season-icon img,
+.date-display-climate-icon img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  object-fit: contain;
 }
 
 .date-display-climate-icon--warming {

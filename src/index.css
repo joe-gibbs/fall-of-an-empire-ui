@@ -383,6 +383,13 @@ html.ui-reduce-motion hr {
   --orange: #c47840;
   --purple: #8060a0;
 
+  --diplo-relation-own: var(--text-bright);
+  --diplo-relation-neutral: #b7b2a7;
+  --diplo-relation-subject: #9eb6c2;
+  --diplo-relation-ally: #83aa72;
+  --diplo-relation-war: #d65a57;
+  --diplo-relation-rival: #c58a5c;
+
   --border: rgba(201, 168, 76, 0.25);
   --border-light: rgba(201, 168, 76, 0.4);
   --border-dim: rgba(100, 95, 80, 0.2);

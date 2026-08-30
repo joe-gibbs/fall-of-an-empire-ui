@@ -46,8 +46,25 @@
 }
 
 .dps-office-strip > .tooltip-wrapper {
-  width: 24rem;
+  width: max-content;
   max-width: 100%;
+}
+
+.dps-office-strip .court-office-summary {
+  width: max-content;
+  max-width: 100%;
+}
+
+.dps-office-strip .court-office-main {
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-width: max-content;
+}
+
+.dps-office-strip .court-office-title,
+.dps-office-strip .court-office-holder {
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .dps-wrap {

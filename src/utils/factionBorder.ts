@@ -7,6 +7,31 @@ export interface FactionBorderSource {
   isPlayer?: boolean;
   isRebel?: boolean;
   playable?: boolean;
+  relation?: string;
+}
+
+export interface FactionRoundelDiplomacyProps {
+  diplomaticStatus?: string;
+  subjectSubtype?: string;
+  isPlayer?: boolean;
+  isRebel?: boolean;
+}
+
+export function roundelDiplomacyProps(source?: FactionBorderSource | null): FactionRoundelDiplomacyProps {
+  if (!source) {
+    return {};
+  }
+
+  const relation = (source.relation ?? '').trim().toLowerCase();
+  const diplomaticStatus = source.diplomaticStatus
+    ?? (relation === 'own' ? 'player' : relation === 'subject' ? 'subject' : (relation || undefined));
+
+  return {
+    diplomaticStatus,
+    subjectSubtype: source.subjectSubtype,
+    isPlayer: source.isPlayer ?? (relation === 'own' ? true : undefined),
+    isRebel: source.isRebel,
+  };
 }
 
 export function resolveFactionBorderVariant(source?: FactionBorderSource | null): FactionBorderVariant {

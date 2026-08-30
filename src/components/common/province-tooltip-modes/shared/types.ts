@@ -81,6 +81,8 @@ export interface ProvinceTooltipModeData {
   complianceTargetIsRuler: boolean;
   complianceLuxuryLabel: string;
   complianceLuxuryStatus: string;
+  luxurySlotsRequired: number;
+  luxurySlotsProvided: number;
   regionName: string;
   landName: string;
   domainName: string;
@@ -141,6 +143,8 @@ export function provinceTooltipDataFromResponse(tooltip: GetProvinceTooltipRespo
     complianceTargetIsRuler: tooltip.complianceTargetIsRuler,
     complianceLuxuryLabel: tooltip.complianceLuxuryLabel,
     complianceLuxuryStatus: tooltip.complianceLuxuryStatus,
+    luxurySlotsRequired: tooltip.luxurySlotsRequired,
+    luxurySlotsProvided: tooltip.luxurySlotsProvided,
     regionName: tooltip.regionName,
     landName: tooltip.landName,
     domainName: tooltip.domainName,

@@ -523,6 +523,10 @@ function EmpireTab({ overview, onOpenCharacter }: { overview: ProvinceModeOvervi
                 size="lg"
                 showRing
                 resolveFaction={false}
+                diplomaticStatus={summary?.diplomaticStatus}
+                subjectSubtype={summary?.subjectSubtype}
+                isPlayer={summary?.isPlayer}
+                isRebel={summary?.isRebel}
               />
               <Portrait
                 personId={overview?.emperor.id}

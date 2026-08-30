@@ -392,10 +392,12 @@ function ConvoyDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
       {cargo.length > 0 && (
         <div className="province-tooltip-convoy-cargo">
           <div className="province-tooltip-section-label">{tooltip.convoyCargoLabel}</div>
-          <div className="province-tooltip-mode-rows">
+          <div className="province-tooltip-mode-rows province-tooltip-mode-rows--icons">
             {cargo.map((item, index) => (
               <div key={`${item.label}:${String(index)}`} className="province-tooltip-mode-row">
-                {item.icon && <img className="province-tooltip-mode-icon" src={WebkilnAssetPath(item.icon)} alt="" />}
+                <span className="province-tooltip-mode-icon">
+                  {item.icon ? <img src={WebkilnAssetPath(item.icon)} alt="" /> : null}
+                </span>
                 <span className="province-tooltip-mode-label">{item.label}</span>
                 <span className="province-tooltip-mode-value">{formatNumber(item.amount, { maximumFractionDigits: 1 })}</span>
               </div>

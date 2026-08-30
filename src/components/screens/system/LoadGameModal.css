@@ -73,6 +73,10 @@
   align-items: center;
 }
 .load-game__header-actions > * + * { margin-left: 0.7273rem; }
+.load-game__open-folder {
+  font-size: 0.85rem;
+  padding: 0.3636rem 0.7273rem;
+}
 .load-game__list-frame {
   height: 43.6364rem;
 }

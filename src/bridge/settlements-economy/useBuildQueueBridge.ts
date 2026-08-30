@@ -53,6 +53,8 @@ function resourceIcon(name: string): string {
 }
 
 function itemIcon(item: BuildQueueItemGroup): string {
+  const portrait = WebkilnAssetPath(item.portrait);
+  if (portrait) return portrait;
   if (item.itemKind === 'building' && item.assetKey) {
     return WebkilnAssetPath(`/assets/buildings/portraits/${toKebabCase(item.assetKey)}.png`);
   }

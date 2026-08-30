@@ -12,7 +12,7 @@ interface TooltipLine {
   label: React.ReactNode;
   labelColor?: string;
   labelIcon?: string;
-  value?: string;
+  value?: React.ReactNode;
   valueColor?: string;
   valueIcon?: string;
   subTooltip?: TooltipContent;
@@ -23,6 +23,8 @@ interface TooltipLine {
 interface TooltipContent {
   header?: React.ReactNode;
   title?: string;
+  /** Keycap or other control shown on the title row, top-right. */
+  titleAccessory?: React.ReactNode;
   body?: React.ReactNode;
   lines?: TooltipLine[];
   afterLines?: React.ReactNode;
@@ -306,6 +308,7 @@ function hasTooltipContent(content: React.ReactNode | TooltipContent): boolean {
   if (!isTooltipContent(content)) return true;
   return Boolean(
     content.title
+    || content.titleAccessory
     || content.header
     || content.body
     || content.afterLines
@@ -336,6 +339,11 @@ function isPointerOverTooltipSurface(id: number): boolean {
     && Boolean(lastPointerNode.closest(`[data-tooltip-surface="${id}"]`));
 }
 
+function isPointerOverTooltipInteraction(): boolean {
+  return lastPointerNode instanceof Element
+    && Boolean(lastPointerNode.closest('.tooltip-wrapper, .tooltip-wrapper-inline, [data-tooltip-surface]'));
+}
+
 function TooltipBody({
   data,
   sidebar,
@@ -350,7 +358,12 @@ function TooltipBody({
   return (
     <>
       {data.header}
-      {data.title && <div className="tt-title">{data.title}</div>}
+      {(data.title || data.titleAccessory) && (
+        <div className={data.titleAccessory ? 'tt-title tt-title--with-accessory' : 'tt-title'}>
+          {data.title && <span className="tt-title-text">{data.title}</span>}
+          {data.titleAccessory}
+        </div>
+      )}
       {data.body && <div className="tt-body">{renderTooltipBody(data.body)}</div>}
       {data.lines && data.lines.length > 0 && (
         <div className={sidebar ? 'tt-lines tt-lines--sidebar' : 'tt-lines'}>
@@ -374,6 +387,19 @@ function TooltipBody({
         <div className={sidebar ? 'tt-footer tt-footer--sidebar' : 'tt-footer'}>{data.footer}</div>
       )}
     </>
+  );
+}
+
+function TooltipHeaderValue({ line }: { line: TooltipLine }) {
+  if (line.value === undefined && !line.valueIcon) return null;
+  return (
+    <span
+      className="tt-line-value tt-line-value--header"
+      style={line.valueColor ? { color: readableFactionTextColour(line.valueColor) } : undefined}
+    >
+      {line.valueIcon && <img src={WebkilnAssetPath(line.valueIcon)} alt="" className="tt-line-icon" draggable={false} />}
+      {line.value !== undefined && <span>{line.value}</span>}
+    </span>
   );
 }
 
@@ -537,6 +563,7 @@ function TooltipLineItem({
           <img src={WebkilnAssetPath(line.labelIcon ?? '/assets/lozenge.png')} alt="" className="tt-header-lozenge" />
           <span className="tt-line-header-label">{line.label}</span>
           <span className="tt-header-rule" />
+          <TooltipHeaderValue line={line} />
         </div>
       );
     }
@@ -546,6 +573,7 @@ function TooltipLineItem({
           {line.labelIcon && <img src={WebkilnAssetPath(line.labelIcon)} alt="" className="tt-line-label-icon" draggable={false} />}
           {line.label}
         </span>
+        <TooltipHeaderValue line={line} />
       </div>
     );
   }
@@ -593,7 +621,9 @@ interface NestedTooltipProps {
   inline?: boolean;
   disabled?: boolean;
   wrapperClassName?: string;
+  wrapperStyle?: React.CSSProperties;
   bubbleClassName?: string;
+  onShowIntent?: () => void;
 }
 
 function NestedTooltip({
@@ -603,7 +633,9 @@ function NestedTooltip({
   inline = false,
   disabled = false,
   wrapperClassName,
+  wrapperStyle,
   bubbleClassName,
+  onShowIntent,
 }: NestedTooltipProps) {
   const nesting = useContext(TooltipNestingContext);
   const [visible, setVisible] = useState(false);
@@ -613,6 +645,18 @@ function NestedTooltip({
   const hideRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const placementFrameRef = useRef<number | null>(null);
   const placementRetryFrameRef = useRef<number | null>(null);
+  const onShowIntentRef = useRef(onShowIntent);
+  const hoveredRef = useRef(false);
+  const contentRef = useRef(content);
+  const canShow = !disabled && hasTooltipContent(content);
+
+  useLayoutEffect(() => {
+    onShowIntentRef.current = onShowIntent;
+  }, [onShowIntent]);
+
+  useLayoutEffect(() => {
+    contentRef.current = content;
+  }, [content]);
 
   const setWrapperRef = useCallback((node: HTMLElement | null) => {
     wrapperRef.current = node;
@@ -638,15 +682,18 @@ function NestedTooltip({
   }, [clearHide, nesting]);
 
   const show = useCallback(() => {
-    if (disabled || !hasTooltipContent(content)) return;
+    hoveredRef.current = true;
     keepOpen();
+    onShowIntentRef.current?.();
+    if (disabled || !hasTooltipContent(contentRef.current)) return;
     clearShow();
     showRef.current = setTimeout(() => {
       showRef.current = null;
+      if (!hoveredRef.current || !hasTooltipContent(contentRef.current)) return;
       nesting?.keepOpen();
       setVisible(true);
     }, delay);
-  }, [clearShow, content, delay, disabled, keepOpen, nesting]);
+  }, [clearShow, delay, disabled, keepOpen, nesting]);
 
   const hide = useCallback(() => {
     clearShow();
@@ -656,6 +703,7 @@ function NestedTooltip({
       if (wrapperRef.current?.contains(lastPointerNode as Node) || subRef.current?.contains(lastPointerNode as Node)) {
         return;
       }
+      hoveredRef.current = false;
       setVisible(false);
     }, HIDE_GRACE_MS);
   }, [clearShow]);
@@ -747,10 +795,18 @@ function NestedTooltip({
   }, [cancelPlacementFrames, clearHide, clearShow]);
 
   useEffect(() => subscribeTooltipDismissEvent(() => {
+    hoveredRef.current = false;
     clearShow();
     clearHide();
     setVisible(false);
   }), [clearHide, clearShow]);
+
+  useEffect(() => {
+    if (!hoveredRef.current || visible || !canShow) {
+      return;
+    }
+    show();
+  }, [canShow, show, visible]);
 
   useLayoutEffect(() => {
     placeSubTooltip();
@@ -778,6 +834,7 @@ function NestedTooltip({
       <Wrapper
         ref={setWrapperRef}
         className={`${inline ? 'tooltip-wrapper-inline' : 'tooltip-wrapper'}${wrapperClassName ? ` ${wrapperClassName}` : ''}`}
+        style={wrapperStyle}
         onMouseEnter={show}
         onMouseLeave={hide}
       >
@@ -808,7 +865,7 @@ function isTooltipContent(c: unknown): c is TooltipContent {
   return typeof c === 'object'
     && c !== null
     && !React.isValidElement(c)
-    && ('header' in c || 'title' in c || 'body' in c || 'lines' in c || 'afterLines' in c || 'footer' in c);
+    && ('header' in c || 'title' in c || 'titleAccessory' in c || 'body' in c || 'lines' in c || 'afterLines' in c || 'footer' in c);
 }
 
 function globalTooltipDelay(): number {
@@ -832,6 +889,9 @@ type TooltipListener = (active: ActiveTooltip | null) => void;
 
 let activeTooltip: ActiveTooltip | null = null;
 let tooltipHideTimer: ReturnType<typeof setTimeout> | null = null;
+// After a tooltip has opened, later triggers skip the open delay until the
+// pointer leaves for a non-tooltip area and the current tooltip closes.
+let skipOpenDelay = false;
 const tooltipListeners = new Set<TooltipListener>();
 
 function emitTooltipState() {
@@ -853,6 +913,7 @@ function showSharedTooltip(next: ActiveTooltip) {
     clearTimeout(tooltipHideTimer);
     tooltipHideTimer = null;
   }
+  skipOpenDelay = true;
   activeTooltip = next;
   emitTooltipState();
 }
@@ -900,6 +961,7 @@ function dismissOpenTooltips() {
     clearTimeout(tooltipHideTimer);
     tooltipHideTimer = null;
   }
+  skipOpenDelay = false;
   if (activeTooltip) {
     activeTooltip = null;
     emitTooltipState();
@@ -908,6 +970,9 @@ function dismissOpenTooltips() {
 }
 
 function scheduleSharedTooltipHide(id: number, delayMs: number) {
+  if (activeTooltip?.id === id && activeTooltip.controlled) {
+    return;
+  }
   if (delayMs <= 0) {
     hideSharedTooltip(id);
     return;
@@ -926,7 +991,10 @@ function scheduleSharedTooltipHide(id: number, delayMs: number) {
       return;
     }
     if (isPointerOverTooltipTree(id)) return;
-    dismissOpenTooltips();
+    // Close only this tooltip. A global dismiss also resets every other
+    // trigger's hover state and pending show timer, so moving A → B would
+    // hide A and then never open B.
+    hideSharedTooltip(id);
   }, delayMs);
 }
 
@@ -937,6 +1005,9 @@ function hideSharedTooltip(id: number) {
   }
   if (activeTooltip?.id === id) {
     activeTooltip = null;
+    if (!isPointerOverTooltipInteraction()) {
+      skipOpenDelay = false;
+    }
     emitTooltipState();
   }
 }
@@ -1096,7 +1167,11 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
         style={{ visibility: 'hidden' }}
         data-tooltip-surface={active.id}
         onMouseEnter={() => cancelSharedTooltipHide(active.id)}
-        onMouseLeave={() => scheduleSharedTooltipHide(active.id, HIDE_GRACE_MS)}
+        onMouseLeave={() => {
+          if (!active.controlled) {
+            scheduleSharedTooltipHide(active.id, HIDE_GRACE_MS);
+          }
+        }}
         onLoadCapture={schedulePlacement}
       >
         <TooltipNestingContext.Provider value={{
@@ -1120,6 +1195,9 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
 
 function handleTooltipPointerEvent(event: Event) {
   lastPointerNode = event.target;
+  if (!activeTooltip && !tooltipHideTimer && !isPointerOverTooltipInteraction()) {
+    skipOpenDelay = false;
+  }
   const active = activeTooltip;
   if (!active || active.controlled) return;
 
@@ -1188,8 +1266,48 @@ function TooltipHost() {
   return createPortal(<TooltipHostContent key={active.id} active={active} />, document.body);
 }
 
+function toNestedTooltipContent(content: React.ReactNode | TooltipContent): TooltipContent {
+  if (isTooltipContent(content)) return content;
+  if (content === null || content === undefined || content === false) return {};
+  if (typeof content === 'string' || typeof content === 'number') {
+    return { body: String(content) };
+  }
+  return { afterLines: content };
+}
+
+function NestedFromSharedTooltip({
+  content,
+  children,
+  delay,
+  variant = 'default',
+  bubbleClassName,
+  inline = false,
+  disabled = false,
+  onShowIntent,
+  wrapperClassName,
+  wrapperStyle,
+}: TooltipProps) {
+  const nestedClass = [variant === 'sidebar' ? 'tt-bubble--sidebar' : '', bubbleClassName]
+    .filter(Boolean)
+    .join(' ');
+  return (
+    <NestedTooltip
+      content={toNestedTooltipContent(content)}
+      delay={delay ?? 180}
+      inline={inline}
+      disabled={disabled}
+      wrapperClassName={wrapperClassName}
+      wrapperStyle={wrapperStyle}
+      bubbleClassName={nestedClass || undefined}
+      onShowIntent={onShowIntent}
+    >
+      {children}
+    </NestedTooltip>
+  );
+}
+
 /** Tooltip that usually portals to the document root to escape stacking contexts. */
-const Tooltip: React.FC<TooltipProps> = ({
+const SharedTooltip: React.FC<TooltipProps> = ({
   content,
   children,
   open,
@@ -1277,6 +1395,15 @@ const Tooltip: React.FC<TooltipProps> = ({
     if (alreadyActive && showRef.current) {
       return;
     }
+    const wrapper = wrapperRef.current;
+    if (skipOpenDelay && wrapper) {
+      if (showRef.current) {
+        clearTimeout(showRef.current);
+        showRef.current = null;
+      }
+      showSharedTooltip(buildActiveTooltipRef.current(wrapper));
+      return;
+    }
     scheduleShow(alreadyActive ? 0 : effectiveDelay);
   }, [effectiveDelay, scheduleShow]);
 
@@ -1342,7 +1469,7 @@ const Tooltip: React.FC<TooltipProps> = ({
 
     if ((hoveredRef.current || focusedRef.current) && activeTooltip?.id !== tooltipIdRef.current && !showRef.current) {
       const elapsed = Date.now() - hoverStartedAtRef.current;
-      scheduleShow(Math.max(0, effectiveDelay - elapsed));
+      scheduleShow(skipOpenDelay ? 0 : Math.max(0, effectiveDelay - elapsed));
     }
   }, [disabled, effectiveDelay, scheduleShow]);
 
@@ -1371,7 +1498,7 @@ const Tooltip: React.FC<TooltipProps> = ({
 
     if (hoveredRef.current || focusedRef.current) {
       const elapsed = Date.now() - hoverStartedAtRef.current;
-      scheduleShow(Math.max(0, effectiveDelay - elapsed));
+      scheduleShow(skipOpenDelay ? 0 : Math.max(0, effectiveDelay - elapsed));
     }
   }, [buildActiveTooltip, effectiveDelay, scheduleShow]);
 
@@ -1418,6 +1545,14 @@ const Tooltip: React.FC<TooltipProps> = ({
       )}
     </>
   );
+};
+
+const Tooltip: React.FC<TooltipProps> = (props) => {
+  const nesting = useContext(TooltipNestingContext);
+  if (nesting && props.open === undefined) {
+    return <NestedFromSharedTooltip {...props} />;
+  }
+  return <SharedTooltip {...props} />;
 };
 
 export default Tooltip;

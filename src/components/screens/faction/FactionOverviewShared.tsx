@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
 import Portrait from '../../common/portraits/Portrait';
 import Tooltip, { type TooltipContent } from '../../common/tooltips/Tooltip';
-import StructuredDisplayText from '../../common/layout/content/StructuredDisplayText';
+import InteractionEffectsTooltip from '../../common/tooltips/InteractionEffectsTooltip';
+import { displayTextToPlain } from '../../../utils/displayText';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import GameCheckButton from '../../common/buttons/GameCheckButton';
 import CourtAppointmentModal from '../../modals/characters/CourtAppointmentModal';
@@ -9,7 +10,7 @@ import { BureaucraticInlineValue, BureaucraticRushTooltipAction } from '../../bu
 import { bureaucraticTooltipLine } from '../../bureaucracy/BureaucraticThroughputModel';
 import { cancelFactionCurrentInteraction, startFactionPolicyAdjustment } from '../../../bridge/diplomacy/useFactionBridge';
 import { setAutoAssignCourt, useCourtPositionsBridgeState, type CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
-import type { FactionModifier, FactionPolicy, FactionPolicyLevel } from '../../../data/types';
+import type { DisplayTextLine, FactionModifier, FactionPolicy, FactionPolicyLevel } from '../../../data/types';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
 import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../localization/WebUITextContext';
@@ -329,29 +330,17 @@ function policyStep(policy: FactionPolicy) {
   return { stepCount, progressValue, displayPercent, fillPercent: displayPercent };
 }
 
-function policyPercentForValue(policy: FactionPolicy, value: number): number {
-  const range = policy.maxValue - policy.minValue;
-  const stepCount = Math.max(Math.round(range + 1), 1);
-  if (range <= 0) return 0;
-
-  const normalised = (value - policy.minValue) / range;
-  const progressValue = Math.max(0, Math.min(stepCount, Math.round(normalised * stepCount)));
-  return Math.round((progressValue / stepCount) * 100);
-}
-
 function policyIcon(policy: FactionPolicy): string {
   const key = policy.key || policy.id;
   return WebkilnAssetPath(policy.iconId || `/assets/policies/${key}.png`) ?? '/assets/icons/I_Chart.png';
 }
 
-function TooltipEffectLines({ lines }: { lines?: FactionPolicyLevel['effectLines'] }) {
-  if ((lines?.length ?? 0) === 0) return null;
+function policyStanceText(lines?: DisplayTextLine[]): string {
+  return displayTextToPlain((lines ?? []).filter(line => line.kind === 'header'));
+}
 
-  return (
-    <div className="fov-tooltip-effects">
-      <StructuredDisplayText lines={lines} lineClassName="fov-tooltip-effect-line" />
-    </div>
-  );
+function policyMechanicalEffectLines(lines?: DisplayTextLine[]): DisplayTextLine[] {
+  return (lines ?? []).filter(line => line.kind !== 'header');
 }
 
 function directionLabel(direction: 'increase' | 'decrease', t: WebUITextFormatter): string {
@@ -362,14 +351,17 @@ function policyAdjustmentTooltip(policy: FactionPolicy, direction: 'increase' | 
   const cost = direction === 'increase' ? policy.increaseCost : policy.decreaseCost;
   const duration = direction === 'increase' ? policy.increaseDuration : policy.decreaseDuration;
   const unrest = direction === 'increase' ? policy.increaseCausesUnrest : policy.decreaseCausesUnrest;
-  const previewLines = direction === 'increase' ? policy.increaseEffectLines : policy.decreaseEffectLines;
+  const directedLines = direction === 'increase' ? policy.increaseEffectLines : policy.decreaseEffectLines;
+  const previewLines = (directedLines?.length ?? 0) > 0 ? directedLines : policy.effectLines;
   const throughputLine = bureaucraticTooltipLine(
     direction === 'increase' ? policy.bureaucraticIncreaseLoad : policy.bureaucraticDecreaseLoad,
   );
+  const stance = policyStanceText(previewLines);
+  const effects = policyMechanicalEffectLines(previewLines);
 
   return {
     get title() { return webUIText("Auto.Prop.componentsscreensFactionOverviewScreen.192.1", { Value1: directionLabel(direction, t), Value2: policy.name }); },
-    body: <StructuredDisplayText lines={(previewLines?.length ?? 0) > 0 ? previewLines : policy.effectLines} />,
+    body: stance || undefined,
     lines: [
       { label: t('Common.Cost'), value: cost > 0 ? fmtFull(cost) : t('Common.Free'), valueIcon: cost > 0 ? '/assets/icons/I_Coins.png' : undefined },
       { label: t('Common.Duration'), value: `${duration} ${t(duration === 1 ? 'Common.Day' : 'Common.Days')}` },
@@ -379,6 +371,7 @@ function policyAdjustmentTooltip(policy: FactionPolicy, direction: 'increase' | 
         { label: t('FactionOverview.Governors'), value: t('FactionOverview.GovernorsOpinionValue'), valueColor: 'var(--red)' },
       ] : []),
     ],
+    afterLines: <InteractionEffectsTooltip lines={effects} />,
   };
 }
 
@@ -387,17 +380,16 @@ function policyLevels(policy: FactionPolicy): FactionPolicyLevel[] {
 }
 
 function policyLevelTooltip(policy: FactionPolicy, level: FactionPolicyLevel, index: number, total: number, t: WebUITextFormatter): TooltipContent {
-  const percent = policyPercentForValue(policy, level.value);
-  const title = t('FactionOverview.PolicyLevelTitle', { PolicyName: policy.name, Level: index + 1, Total: total });
+  const stance = policyStanceText(level.effectLines);
 
   return {
-    title,
+    title: stance || policy.name,
     lines: [{
       label: level.isCurrent ? t('FactionOverview.CurrentLevel') : t('FactionOverview.Level'),
-      value: `${fmtFull(percent)}%`,
+      value: t('FactionOverview.PolicyLevelValue', { Level: index + 1, Total: total }),
       valueColor: level.isCurrent ? 'var(--gold)' : undefined,
     }],
-    afterLines: <TooltipEffectLines lines={level.effectLines} />,
+    afterLines: <InteractionEffectsTooltip lines={policyMechanicalEffectLines(level.effectLines)} />,
   };
 }
 
@@ -448,7 +440,7 @@ export function PolicyEntry({
     lines: policyTooltipLines,
     afterLines: (
       <>
-        <TooltipEffectLines lines={policy.effectLines} />
+        <InteractionEffectsTooltip lines={policyMechanicalEffectLines(policy.effectLines)} />
         {policy.inProgress && !readOnly && (
           <BureaucraticRushTooltipAction
             actionId={`policy:${policy.id}`}

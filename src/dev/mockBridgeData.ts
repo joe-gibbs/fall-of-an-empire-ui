@@ -45,11 +45,11 @@ export interface MockLaunchRequest {
   defeatCause?: MockDefeatCause;
 }
 
-function mockDisplayLine(text: string, tone: string = ''): WebUIDisplayLine {
+function mockDisplayLine(text: string, tone: string = '', kind: string = 'body', conceptId: string = ''): WebUIDisplayLine {
   return {
-    kind: 'body',
+    kind,
     tone,
-    conceptId: '',
+    conceptId,
     segments: [
       {
         text,
@@ -63,8 +63,8 @@ function mockDisplayLine(text: string, tone: string = ''): WebUIDisplayLine {
   };
 }
 
-function mockDisplayLines(text: string, tone: string = ''): WebUIDisplayLine[] {
-  return text ? [mockDisplayLine(text, tone)] : [];
+function mockDisplayLines(text: string, tone: string = '', kind: string = 'body', conceptId: string = ''): WebUIDisplayLine[] {
+  return text ? [mockDisplayLine(text, tone, kind, conceptId)] : [];
 }
 
 function mockRoleTier(xp: number): WebUIRoleTierData {
@@ -325,6 +325,7 @@ export const MOCK_IDS = {
   playerFaction: 'mock-faction-player',
   rivalFaction: 'mock-faction-rival',
   subjectFaction: 'mock-faction-subject',
+  foederatiFaction: 'mock-faction-river-marches',
   settlement: 'mock-settlement-capital',
   portSettlement: 'mock-settlement-port',
   character: 'mock-person-ruler',
@@ -407,6 +408,9 @@ interface MockFactionReference {
   secondaryColour: string;
   cultureGroup: string;
   emblem: string;
+  diplomaticStatus?: string;
+  subjectSubtype: string;
+  isPlayer?: boolean;
   isRebel: boolean;
 }
 
@@ -421,6 +425,7 @@ const MOCK_DEBUG_SHORT_IDS: Record<string, number> = {
   [MOCK_IDS.playerFaction]: 101,
   [MOCK_IDS.rivalFaction]: 201,
   [MOCK_IDS.subjectFaction]: 301,
+  [MOCK_IDS.foederatiFaction]: 302,
   [MOCK_IDS.settlement]: 401,
   [MOCK_IDS.portSettlement]: 402,
   [MOCK_IDS.character]: 501,
@@ -651,6 +656,9 @@ function playerFactionReference() {
     secondaryColour: PLAYER_SECONDARY,
     cultureGroup: 'Rephsian',
     emblem: 'Rephsian_1',
+    diplomaticStatus: 'player',
+    subjectSubtype: '',
+    isPlayer: true,
     isRebel: false,
   };
 }
@@ -664,6 +672,9 @@ function rivalFactionReference() {
     secondaryColour: RIVAL_SECONDARY,
     cultureGroup: 'Aurestian',
     emblem: 'Aurestian_1',
+    diplomaticStatus: 'war',
+    subjectSubtype: '',
+    isPlayer: false,
     isRebel: false,
   };
 }
@@ -677,6 +688,9 @@ function subjectFactionReference() {
     secondaryColour: SUBJECT_SECONDARY,
     cultureGroup: 'Rephsian',
     emblem: 'Rephsian_2',
+    diplomaticStatus: 'subject',
+    subjectSubtype: 'province',
+    isPlayer: false,
     isRebel: false,
   };
 }
@@ -690,6 +704,9 @@ function customFactionReference(id: string, name: string, colour: string, second
     secondaryColour,
     cultureGroup,
     emblem,
+    diplomaticStatus: isRebel ? 'war' : 'neutral',
+    subjectSubtype: '',
+    isPlayer: false,
     isRebel,
   };
 }
@@ -900,11 +917,11 @@ function mockPolicy(id: string, name: string, value: number) {
     name,
     description: `Current ${name.toLowerCase()} posture for the realm.`,
     effectDescription,
-    effectLines: mockDisplayLines(effectDescription, value >= 0 ? 'positive' : 'negative'),
+    effectLines: mockDisplayLines(effectDescription, value >= 0 ? 'positive' : 'negative', 'effect'),
     increaseEffectDescription,
-    increaseEffectLines: mockDisplayLines(increaseEffectDescription, 'positive'),
+    increaseEffectLines: mockDisplayLines(increaseEffectDescription, 'positive', 'effect'),
     decreaseEffectDescription,
-    decreaseEffectLines: mockDisplayLines(decreaseEffectDescription, 'negative'),
+    decreaseEffectLines: mockDisplayLines(decreaseEffectDescription, 'negative', 'effect'),
     levelEffects: Array.from({ length: 5 }).map((_, index) => {
       const level = index - 2;
       const levelEffectDescription = level >= 0 ? `+${(level + 1) * 5}% stability` : `${level * 5}% unrest control`;
@@ -912,7 +929,7 @@ function mockPolicy(id: string, name: string, value: number) {
         level,
         value: level,
         effectDescription: levelEffectDescription,
-        effectLines: mockDisplayLines(levelEffectDescription, level >= 0 ? 'positive' : 'negative'),
+        effectLines: mockDisplayLines(levelEffectDescription, level >= 0 ? 'positive' : 'negative', 'effect'),
         isCurrent: level === value,
       };
     }),
@@ -1011,6 +1028,8 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
   armies: 3,
   usesLevies: false,
   levyStrength: 0,
+  isFoederatiCalledUp: false,
+  canCallFoederati: false,
   gold: 4280,
   income: 186,
   strength: 18400,
@@ -1045,6 +1064,10 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
       withFactionCulture: 'Rephsian',
       withFactionCultureGroup: 'Rephsian',
       withFactionEmblem: 'Rephsian_2',
+      withFactionDiplomaticStatus: 'subject',
+      withFactionSubjectSubtype: 'province',
+      withFactionIsPlayer: false,
+      withFactionIsRebel: false,
       daysRemaining: 0,
       isPerpetual: true,
       canBreak: true,
@@ -1064,6 +1087,10 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
       withFactionCulture: 'Aurestian',
       withFactionCultureGroup: 'Aurestian',
       withFactionEmblem: 'Aurestian_1',
+      withFactionDiplomaticStatus: 'war',
+      withFactionSubjectSubtype: '',
+      withFactionIsPlayer: false,
+      withFactionIsRebel: false,
       daysRemaining: 720,
       isPerpetual: false,
       canBreak: true,
@@ -1080,6 +1107,10 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
       secondaryColour: RIVAL_SECONDARY,
       cultureGroup: 'Aurestian',
       emblem: 'Aurestian_1',
+      diplomaticStatus: 'war',
+      subjectSubtype: '',
+      isPlayer: false,
+      isRebel: false,
     },
     {
       id: 'mock-faction-raiders',
@@ -1089,6 +1120,10 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
       secondaryColour: '#B8A070',
       cultureGroup: 'Aurestian',
       emblem: 'Aurestian_3',
+      diplomaticStatus: 'war',
+      subjectSubtype: '',
+      isPlayer: false,
+      isRebel: true,
     },
   ],
   policies: [
@@ -1187,8 +1222,8 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
   ],
   opinionBreakdown: [],
   complianceBreakdown: [
-    { label: 'Imperial legitimacy', value: 25 },
-    { label: 'Recent victories', value: 12 },
+    { key: 'Loyalty', label: 'Loyalty', value: 25 },
+    { key: 'OpinionOfYou', label: 'Opinion of You', value: 12 },
   ],
   assignedDiplomatId: MOCK_IDS.governor,
   assignedDiplomatName: 'Marcia Vennor',
@@ -1266,6 +1301,10 @@ const rivalFaction: BridgeResponse<'game.get_faction_data'> = {
     secondaryColour: PLAYER_SECONDARY,
     cultureGroup: 'Rephsian',
     emblem: 'Rephsian_1',
+    diplomaticStatus: 'player',
+    subjectSubtype: '',
+    isPlayer: true,
+    isRebel: false,
   }, {
     id: MOCK_IDS.subjectFaction,
     debugShortId: mockDebugShortId(MOCK_IDS.subjectFaction),
@@ -1274,12 +1313,16 @@ const rivalFaction: BridgeResponse<'game.get_faction_data'> = {
     secondaryColour: SUBJECT_SECONDARY,
     cultureGroup: 'Rephsian',
     emblem: 'Rephsian_2',
+    diplomaticStatus: 'subject',
+    subjectSubtype: 'province',
+    isPlayer: false,
+    isRebel: false,
   }],
   policies: [],
   modifiers: [],
   opinionBreakdown: [
-    { label: 'Border war', value: -45 },
-    { label: 'Shared merchants', value: 8 },
+    { key: '', label: 'Border war', value: -45 },
+    { key: '', label: 'Shared merchants', value: 8 },
   ],
   complianceBreakdown: [],
   assignedDiplomatId: '',
@@ -1357,6 +1400,93 @@ const subjectFaction: BridgeResponse<'game.get_faction_data'> = {
   effectiveHeirName: 'Cassian Arcastus',
 };
 
+const mockRiverFoederatiCallup = {
+  calledUp: false,
+  availableStrength: 1400,
+  activeStrength: 0,
+};
+
+function riverFoederatiLevyStrength(): number {
+  return mockRiverFoederatiCallup.calledUp
+    ? mockRiverFoederatiCallup.activeStrength
+    : mockRiverFoederatiCallup.availableStrength;
+}
+
+const foederatiFaction: BridgeResponse<'game.get_faction_data'> = {
+  ...subjectFaction,
+  id: MOCK_IDS.foederatiFaction,
+  debugShortId: mockDebugShortId(MOCK_IDS.foederatiFaction),
+  name: 'River Marches',
+  colour: '#6E4B76',
+  secondaryColour: '#D8C27A',
+  capital: 'Varenton',
+  rulerName: 'Oren Tullus',
+  rulerId: 'mock-person-march-lord',
+  rulerDebugShortId: mockDebugShortId('mock-person-march-lord'),
+  rulerPortrait: MALE_PORTRAIT_2,
+  rulerPortraitLayers: mockPortraitLayers(MALE_PORTRAIT_2),
+  population: 188000,
+  directPopulation: 188000,
+  subjectPopulation: 0,
+  populationMonthlyChange: 210,
+  populationGrowthBreakdown: [
+    { name: 'Food Surplus', value: 280 },
+    { name: 'Unrest', value: -70 },
+  ],
+  settlements: 3,
+  subjectSettlements: 0,
+  armies: 0,
+  usesLevies: true,
+  levyStrength: riverFoederatiLevyStrength(),
+  isFoederatiCalledUp: mockRiverFoederatiCallup.calledUp,
+  canCallFoederati: !mockRiverFoederatiCallup.calledUp,
+  gold: 240,
+  income: 18,
+  strength: 2800,
+  compliance: 55,
+  isPlayer: false,
+  diplomaticStatus: 'subject',
+  subjectType: 'Foederati',
+  subjectSubtype: 'foederati',
+  government: 'Tribe',
+  governmentDisplayName: 'Tribe',
+  governmentDescription: 'A tribal people bound by personal oaths and levy service rather than standing armies.',
+  governmentCapabilities: [
+    'Raises levies from tribal lands and sworn followers.',
+    'Succession follows the ruling house.',
+  ],
+  generatesLeaderOnSuccession: false,
+  opinion: 42,
+  vassalCount: 0,
+  treaties: [],
+  wars: [],
+  policies: [],
+  modifiers: [],
+  assignedDiplomatId: '',
+  assignedDiplomatName: '',
+  assignedSpyId: '',
+  assignedSpyName: '',
+  spyNetworkStrength: 0,
+  spyHeat: 0,
+  spyNetworkGrowthPerMonth: 0,
+  spyCunning: 0,
+  canSetDesignatedHeir: false,
+  designatedHeirId: '',
+  designatedHeirName: '',
+  effectiveHeirId: '',
+  effectiveHeirName: '',
+};
+
+function applyFoederatiCallup(factionId: string, calledUp: boolean): void {
+  if (factionId !== MOCK_IDS.foederatiFaction) return;
+  mockRiverFoederatiCallup.calledUp = calledUp;
+  mockRiverFoederatiCallup.activeStrength = calledUp ? mockRiverFoederatiCallup.availableStrength : 0;
+  foederatiFaction.isFoederatiCalledUp = calledUp;
+  foederatiFaction.canCallFoederati = !calledUp;
+  foederatiFaction.levyStrength = riverFoederatiLevyStrength();
+  foederatiFaction.strength = riverFoederatiLevyStrength() + 1400;
+}
+
 function readOnlyLiegePolicy(policy: ReturnType<typeof mockPolicy>) {
   return {
     ...policy,
@@ -1399,6 +1529,10 @@ const provincePlayerFaction: BridgeResponse<'game.get_faction_data'> = {
       withFactionCulture: playerFaction.culture,
       withFactionCultureGroup: playerFaction.cultureGroup,
       withFactionEmblem: playerFaction.emblem,
+      withFactionDiplomaticStatus: 'player',
+      withFactionSubjectSubtype: '',
+      withFactionIsPlayer: true,
+      withFactionIsRebel: false,
       daysRemaining: 0,
       isPerpetual: true,
       canBreak: false,
@@ -1449,6 +1583,7 @@ function factionById(id: string, provinceMode = false): BridgeResponse<'game.get
   }
   if (id === MOCK_IDS.rivalFaction) return rivalFaction;
   if (id === MOCK_IDS.subjectFaction) return subjectFaction;
+  if (id === MOCK_IDS.foederatiFaction) return foederatiFaction;
   return playerFaction;
 }
 
@@ -1465,6 +1600,10 @@ function mockProvinceModeFactionSummary(
     cultureGroup: faction.cultureGroup ?? '',
     religion: faction.religion,
     emblem: faction.emblem ?? '',
+    diplomaticStatus: faction.diplomaticStatus,
+    subjectSubtype: faction.subjectSubtype || '',
+    isPlayer: faction.isPlayer,
+    isRebel: faction.isRebel,
     capital: faction.capital,
     gold: faction.gold,
     income: faction.income,
@@ -1707,6 +1846,10 @@ function personById(id: string): BridgeResponse<'game.get_person_data'> {
     factionSecondaryColour: PLAYER_SECONDARY,
     factionEmblem: 'Rephsian_1',
     factionCultureGroup: 'Rephsian',
+    factionDiplomaticStatus: 'player',
+    factionSubjectSubtype: '',
+    factionIsPlayer: true,
+    factionIsRebel: false,
     cultureId: rephsianCulture.id,
     culture: rephsianCulture.name,
     religionId: rephsianReligion.id,
@@ -1732,17 +1875,20 @@ function personById(id: string): BridgeResponse<'game.get_person_data'> {
     isSubordinateOfPlayer: !isRuler,
     complianceTowardPlayer: profile.compliance,
     complianceBreakdown: [
-      { label: 'Personal loyalty', value: isHeir ? 12 : 22 },
-      { label: 'Court expectation', value: 8 },
+      { key: 'Loyalty', label: 'Loyalty', value: isHeir ? 12 : 22 },
+      { key: 'OpinionOfYou', label: 'Opinion of You', value: isHeir ? 20 : 28 },
+      { key: 'Patronage', label: 'Patronage', value: 8 },
+      { key: 'Honour', label: 'Respects Your Honour', value: 6 },
+      { key: 'PowerBloc', label: 'Senate', value: isGovernor ? 4 : -3 },
     ],
     opinionTowardPlayer: isHeir ? 34 : isGovernor ? 46 : 0,
     opinionBreakdown: [
-      { label: 'Recent appointment', value: 16 },
-      { label: 'Shared ceremonies', value: 9 },
+      { key: '', label: 'Recent appointment', value: 16 },
+      { key: '', label: 'Shared ceremonies', value: 9 },
     ],
     honourDreadBreakdown: [
-      { label: 'Public justice', value: 12 },
-      { label: 'Merciful verdicts', value: -4 },
+      { key: '', label: 'Public justice', value: 12 },
+      { key: '', label: 'Merciful verdicts', value: -4 },
     ],
     isImprisoned,
     imprisonedBy: isImprisoned ? 'Aurestian League' : '',
@@ -1788,6 +1934,14 @@ function personById(id: string): BridgeResponse<'game.get_person_data'> {
       isNavy: false,
       rank: '',
     },
+    luxuryNeeds: isRuler || isGovernor ? [
+      { name: 'Precious Metals', icon: '/assets/resources/PreciousMetals.png', required: 1, provided: 1 },
+      { name: 'Silk', icon: '/assets/resources/Silk.png', required: 1, provided: isGovernor ? 0 : 1 },
+      ...(isRuler ? [
+        { name: 'Fine Clothes', icon: '/assets/resources/FineClothes.png', required: 1, provided: 1 },
+        { name: 'Wine', icon: '/assets/resources/Wine.png', required: 1, provided: 0 },
+      ] : []),
+    ] : [],
     relationships: [
       { id: MOCK_IDS.character, name: 'Valen Arcastus', portrait: MALE_PORTRAIT_1, portraitLayers: mockPortraitLayers(MALE_PORTRAIT_1), type: isHeir ? 'Father' : 'Ruler', age: 51, isAlive: true },
       { id: MOCK_IDS.heir, name: 'Cassian Arcastus', portrait: MALE_PORTRAIT_2, portraitLayers: mockPortraitLayers(MALE_PORTRAIT_2), type: 'Heir', age: 24, isAlive: true },
@@ -1844,6 +1998,10 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     factionSecondaryColour: PLAYER_SECONDARY,
     factionEmblem: 'Rephsian_1',
     factionCultureGroup: 'Rephsian',
+    factionDiplomaticStatus: 'player',
+    factionSubjectSubtype: '',
+    factionIsPlayer: true,
+    factionIsRebel: false,
     factionId: MOCK_IDS.playerFaction,
     factionDebugShortId: mockDebugShortId(MOCK_IDS.playerFaction),
     isCapital: !isPort,
@@ -2227,6 +2385,10 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     hostileFactionSecondaryColour: isSiegeMock ? rival.secondaryColour : '',
     hostileFactionEmblem: isSiegeMock ? rival.emblem : '',
     hostileFactionCultureGroup: isSiegeMock ? rival.cultureGroup : '',
+    hostileFactionDiplomaticStatus: isSiegeMock ? 'war' : '',
+    hostileFactionSubjectSubtype: '',
+    hostileFactionIsPlayer: false,
+    hostileFactionIsRebel: false,
     besiegingArmies: isSiegeMock ? [
       {
         kind: 'army',
@@ -2594,6 +2756,10 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     currentOrder: isEmbarked ? 'Embarked in Classis Meridian' : profile.currentOrder,
     formationTemplate: profile.formationTemplate,
     garrisonedAt: isEmbarked ? '' : profile.garrisonedAt,
+    garrisonedAtId: isEmbarked ? '' : (isNavy ? MOCK_IDS.portSettlement : MOCK_IDS.settlement),
+    currentOrderTargetId: isEmbarked ? MOCK_IDS.navy : (isNavy ? MOCK_IDS.portSettlement : MOCK_IDS.settlement),
+    currentOrderTargetName: isEmbarked ? 'Classis Meridian' : profile.garrisonedAt,
+    currentOrderTargetType: isEmbarked ? 'military' : 'settlement',
     embarkedNavyId: isEmbarked ? MOCK_IDS.navy : '',
     embarkedNavyName: isEmbarked ? 'Classis Meridian' : '',
     commandDoctrine: 'concentrate',
@@ -2859,6 +3025,7 @@ function mapModes(activeMode: string): BridgeResponse<'game.get_map_modes'> {
       { id: 'militaries', label: 'Military Recruitment', description: 'Recruitment activity.', tooltip: '<header>Military Recruitment</><bullet>Shows recruitment activity.</>', shortcut: '' },
       { id: 'unrest', label: 'Unrest', description: 'Local instability.', tooltip: '<header>Unrest</><bullet>Highlights risky settlements.</>', shortcut: '4' },
       { id: 'loyalty', label: 'Compliance', description: 'Ruler compliance.', tooltip: '<header>Compliance</><bullet>Shows compliance.</>', shortcut: '' },
+      { id: 'luxury', label: 'Luxuries', description: 'Court luxury supply.', tooltip: '<header>Luxuries</><bullet>Shows missing luxury goods.</>', shortcut: '' },
       { id: 'economicProsperity', label: 'Economy & Construction', description: 'Income and building queues.', tooltip: '<header>Economy & Construction</><bullet>Shows income and construction.</>', shortcut: '3' },
       { id: 'adminRegion', label: 'Administrative Regions', description: 'Administrative regions.', tooltip: '<header>Administrative Regions</><bullet>Shows regions.</>', shortcut: '' },
       { id: 'adminLand', label: 'Administrative Lands', description: 'Administrative lands.', tooltip: '<header>Administrative Lands</><bullet>Shows lands.</>', shortcut: '' },
@@ -3799,7 +3966,7 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
       { ...subjectFactionReference(), rulerId: 'mock-person-subject', rulerName: 'Iulia Seran', capital: 'Namaris', diplomaticStatus: 'subject', diplomaticStatusLabel: 'Subject', subjectType: 'Prefecture', subjectSubtype: 'province', buildFocusKey: 'economic', buildFocus: 'Economic', taxRate: 0.22, goldTribute: 510, opinion: 68, compliance: 72, hasCompliance: true, population: 312000, settlements: 4, strength: 3600, treaties: 1, isRebel: false, isAtWar: false, canSetBuildFocus: true, buildFocusBlockedReason: '' },
       { id: 'mock-faction-heartland-prefecture', name: 'Heartland Prefecture', colour: '#8A5F3C', secondaryColour: '#D8C27A', cultureGroup: 'Rephsian', emblem: 'Rephsian_2', rulerId: MOCK_IDS.governor, rulerName: 'Marcia Vennor', capital: 'Rephsia', diplomaticStatus: 'subject', diplomaticStatusLabel: 'Subject', subjectType: 'Prefecture', subjectSubtype: 'province', buildFocusKey: 'administrative', buildFocus: 'Administrative', taxRate: 0.18, goldTribute: 430, opinion: 54, compliance: 81, hasCompliance: true, population: 438000, settlements: 5, strength: 4200, treaties: 1, isRebel: false, isAtWar: false, canSetBuildFocus: true, buildFocusBlockedReason: '' },
       { id: 'mock-faction-western-revolt', name: 'Western Revolt', colour: '#6D252B', secondaryColour: '#D8C27A', cultureGroup: 'Rephsian', emblem: 'Rephsian_5', rulerId: 'mock-person-rebel-leader', rulerName: 'Titus Varro', capital: 'Valemor', diplomaticStatus: 'war', diplomaticStatusLabel: 'At War', subjectType: 'Rebellion', subjectSubtype: 'rebel', buildFocusKey: '', buildFocus: '', taxRate: 0, goldTribute: 0, opinion: -86, compliance: 0, hasCompliance: false, population: 226000, settlements: 3, strength: 5100, treaties: 0, isRebel: true, isAtWar: true, canSetBuildFocus: false, buildFocusBlockedReason: '' },
-      { id: 'mock-faction-river-marches', name: 'River Marches', colour: '#6E4B76', secondaryColour: '#D8C27A', cultureGroup: 'Rephsian', emblem: 'Rephsian_3', rulerId: 'mock-person-march-lord', rulerName: 'Oren Tullus', capital: 'Varenton', diplomaticStatus: 'subject', diplomaticStatusLabel: 'Foederati', subjectType: 'March', subjectSubtype: 'foederati', buildFocusKey: '', buildFocus: '', taxRate: 0, goldTribute: 0, opinion: 42, compliance: 55, hasCompliance: true, population: 188000, settlements: 3, strength: 2800, treaties: 0, isRebel: false, isAtWar: false, canSetBuildFocus: false, buildFocusBlockedReason: '' },
+      { id: MOCK_IDS.foederatiFaction, name: 'River Marches', colour: '#6E4B76', secondaryColour: '#D8C27A', cultureGroup: 'Rephsian', emblem: 'Rephsian_3', rulerId: 'mock-person-march-lord', rulerName: 'Oren Tullus', capital: 'Varenton', diplomaticStatus: 'subject', diplomaticStatusLabel: 'Foederati', subjectType: 'Foederati', subjectSubtype: 'foederati', buildFocusKey: '', buildFocus: '', taxRate: 0, goldTribute: 0, opinion: 42, compliance: 55, hasCompliance: true, population: 188000, settlements: 3, strength: 2800, treaties: 0, isRebel: false, isAtWar: false, canSetBuildFocus: false, buildFocusBlockedReason: '' },
     ],
     foreignPowers: [
       { ...rival, rulerId: 'mock-person-rival', rulerName: 'Soran Velk', capital: 'Velath Keep', diplomaticStatus: 'war', diplomaticStatusLabel: 'At War', subjectType: '', subjectSubtype: '', buildFocusKey: '', buildFocus: '', taxRate: 0, goldTribute: 0, opinion: 18, compliance: 0, hasCompliance: false, population: 642000, settlements: 7, strength: 9100, treaties: 0, isRebel: false, isAtWar: true, canSetBuildFocus: false, buildFocusBlockedReason: '' },
@@ -3820,7 +3987,7 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
         ourLeader: player,
         theirLeader: rival,
         ourParticipants: [player, subjectFactionReference()],
-        theirParticipants: [rival, { id: 'mock-faction-salt-league', name: 'Salt League', colour: '#8A6930', secondaryColour: '#CFC4AA', cultureGroup: 'Aurestian', emblem: 'Aurestian_2' }],
+        theirParticipants: [rival, { id: 'mock-faction-salt-league', name: 'Salt League', colour: '#8A6930', secondaryColour: '#CFC4AA', cultureGroup: 'Aurestian', emblem: 'Aurestian_2', diplomaticStatus: 'neutral', subjectSubtype: '', isPlayer: false, isRebel: false }],
         warScore: 18,
         warScoreBreakdown: [
           { label: 'Battles', score: 12, eventCount: 3, isOurs: true, depth: 0 },
@@ -3837,10 +4004,10 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
         id: 'mock-war-raiders',
         name: 'Raiders of the Salt Road',
         ourLeader: player,
-        theirLeader: { id: 'mock-faction-raiders', name: 'Salt Road Raiders', colour: '#604040', secondaryColour: '#B8A070', cultureGroup: 'Aurestian', emblem: 'Aurestian_3' },
+        theirLeader: { id: 'mock-faction-raiders', name: 'Salt Road Raiders', colour: '#604040', secondaryColour: '#B8A070', cultureGroup: 'Aurestian', emblem: 'Aurestian_3', diplomaticStatus: 'war', subjectSubtype: '', isPlayer: false, isRebel: true },
         ourParticipants: [player, subjectFactionReference()],
         theirParticipants: [
-          { id: 'mock-faction-raiders', name: 'Salt Road Raiders', colour: '#604040', secondaryColour: '#B8A070', cultureGroup: 'Aurestian', emblem: 'Aurestian_3' },
+          { id: 'mock-faction-raiders', name: 'Salt Road Raiders', colour: '#604040', secondaryColour: '#B8A070', cultureGroup: 'Aurestian', emblem: 'Aurestian_3', diplomaticStatus: 'war', subjectSubtype: '', isPlayer: false, isRebel: true },
           rival,
         ],
         warScore: -6,
@@ -3866,6 +4033,10 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
         withFactionSecondaryColour: SUBJECT_SECONDARY,
         withFactionCultureGroup: 'Rephsian',
         withFactionEmblem: 'Rephsian_2',
+        withFactionDiplomaticStatus: 'subject',
+        withFactionSubjectSubtype: 'province',
+        withFactionIsPlayer: false,
+        withFactionIsRebel: false,
         daysRemaining: 0,
         isPerpetual: true,
         canBreak: true,
@@ -3883,6 +4054,10 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
         withFactionSecondaryColour: '#CFC4AA',
         withFactionCultureGroup: 'Aurestian',
         withFactionEmblem: 'Aurestian_2',
+        withFactionDiplomaticStatus: 'neutral',
+        withFactionSubjectSubtype: '',
+        withFactionIsPlayer: false,
+        withFactionIsRebel: false,
         daysRemaining: 720,
         isPerpetual: false,
         canBreak: true,
@@ -3983,8 +4158,8 @@ function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
       { id: 'mock-navy-riverwatch', name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', factionVisual: playerVisual, kind: 'Navy', commanderId: 'mock-person-tribune', commanderName: 'Severus Laco', strength: 900, maxStrength: 1100, morale: 69, upkeep: 38, supplyDays: 61, location: 'Tavarii Ford', unitCount: 8 },
     ],
     factions: [
-      { id: MOCK_IDS.playerFaction, name: 'Rephsian Empire', visual: playerVisual, rulerId: MOCK_IDS.character, rulerName: 'Valen Arcastus', diplomaticStatus: 'Player', settlementCount: 14, population: 1284000, gold: 4280, income: 186, strength: 18400, armyCount: 3, navyCount: 2, vassalCount: 2, isPlayer: true, isRebel: false },
-      { id: MOCK_IDS.rivalFaction, name: 'Aurestian League', visual: rivalVisual, rulerId: 'mock-person-rival', rulerName: 'Soran Velk', diplomaticStatus: 'War', settlementCount: 7, population: 642000, gold: 1130, income: 58, strength: 9100, armyCount: 2, navyCount: 0, vassalCount: 0, isPlayer: false, isRebel: false },
+      { id: MOCK_IDS.playerFaction, name: 'Rephsian Empire', visual: playerVisual, rulerId: MOCK_IDS.character, rulerName: 'Valen Arcastus', diplomaticStatus: 'Player', subjectSubtype: '', settlementCount: 14, population: 1284000, gold: 4280, income: 186, strength: 18400, armyCount: 3, navyCount: 2, vassalCount: 2, isPlayer: true, isRebel: false },
+      { id: MOCK_IDS.rivalFaction, name: 'Aurestian League', visual: rivalVisual, rulerId: 'mock-person-rival', rulerName: 'Soran Velk', diplomaticStatus: 'War', subjectSubtype: '', settlementCount: 7, population: 642000, gold: 1130, income: 58, strength: 9100, armyCount: 2, navyCount: 0, vassalCount: 0, isPlayer: false, isRebel: false },
     ],
     resources: [
       { id: 'food', name: 'Food', category: 'Food', stockpile: 1630, production: 1520, consumption: 1898, netPerMonth: -378, settlementCount: 14, isFood: true },
@@ -4160,8 +4335,8 @@ function militaryOverview(): BridgeResponse<'game.get_military_overview'> {
       { id: 'mock-navy-riverwatch', debugShortId: mockDebugShortId('mock-navy-riverwatch'), name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.navy, rank: 'Legatus', commanderName: 'Severus Laco', commanderId: 'mock-person-tribune', commanderDebugShortId: mockDebugShortId('mock-person-tribune'), strength: 900, maxStrength: 1100, morale: 69, supplyDays: 61, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'River Patrol', location: 'Tavarii Ford', currentOrder: 'Watching the ford crossings', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
     ],
     foederati: [
-      { id: 'mock-foederati-subject', factionId: MOCK_IDS.subjectFaction, factionName: 'Meridian Prefecture', factionColour: SUBJECT_COLOUR, factionSecondaryColour: SUBJECT_SECONDARY, factionEmblem: 'Rephsian_2', factionCultureGroup: 'Rephsian', rulerName: 'Iulia Seran', rulerId: 'mock-person-subject', rulerPortrait: FEMALE_PORTRAIT_1, rulerPortraitLayers: mockPortraitLayers(FEMALE_PORTRAIT_1), strength: 2400, availableStrength: 1800, activeStrength: 600, isCalledUp: true, compliance: 72, canCall: true },
-      { id: 'mock-foederati-river', factionId: 'mock-faction-river-marches', factionName: 'River Marches', factionColour: '#6E4B76', factionSecondaryColour: '#D8C27A', factionEmblem: 'Rephsian_3', factionCultureGroup: 'Rephsian', rulerName: 'Oren Tullus', rulerId: 'mock-person-march-lord', rulerPortrait: MALE_PORTRAIT_2, rulerPortraitLayers: mockPortraitLayers(MALE_PORTRAIT_2), strength: 1800, availableStrength: 1400, activeStrength: 0, isCalledUp: false, compliance: 55, canCall: true },
+      { id: 'mock-foederati-subject', factionId: MOCK_IDS.subjectFaction, factionName: 'Meridian Prefecture', factionColour: SUBJECT_COLOUR, factionSecondaryColour: SUBJECT_SECONDARY, factionEmblem: 'Rephsian_2', factionCultureGroup: 'Rephsian', factionDiplomaticStatus: 'subject', factionSubjectSubtype: 'province', factionIsPlayer: false, factionIsRebel: false, rulerName: 'Iulia Seran', rulerId: 'mock-person-subject', rulerPortrait: FEMALE_PORTRAIT_1, rulerPortraitLayers: mockPortraitLayers(FEMALE_PORTRAIT_1), strength: 2400, availableStrength: 1800, activeStrength: 600, isCalledUp: true, compliance: 72, canCall: true },
+      { id: 'mock-foederati-river', factionId: MOCK_IDS.foederatiFaction, factionName: 'River Marches', factionColour: '#6E4B76', factionSecondaryColour: '#D8C27A', factionEmblem: 'Rephsian_3', factionCultureGroup: 'Rephsian', factionDiplomaticStatus: 'subject', factionSubjectSubtype: 'foederati', factionIsPlayer: false, factionIsRebel: false, rulerName: 'Oren Tullus', rulerId: 'mock-person-march-lord', rulerPortrait: MALE_PORTRAIT_2, rulerPortraitLayers: mockPortraitLayers(MALE_PORTRAIT_2), strength: riverFoederatiLevyStrength(), availableStrength: mockRiverFoederatiCallup.availableStrength, activeStrength: mockRiverFoederatiCallup.activeStrength, isCalledUp: mockRiverFoederatiCallup.calledUp, compliance: 55, canCall: !mockRiverFoederatiCallup.calledUp },
     ],
     totalArmyStrength: 8820,
     totalArmyMaxStrength: 9920,
@@ -4390,7 +4565,7 @@ function peaceState(): BridgeResponse<'game.get_peace_negotiation_state'> {
   const player = { ...playerFactionReference(), rulerId: MOCK_IDS.character, rulerName: 'Valen Arcastus', strength: 18400, gold: 4280, settlements: 14 };
   const rival = { ...rivalFactionReference(), rulerId: 'mock-person-rival', rulerName: 'Soran Velk', strength: 9100, gold: 1130, settlements: 7 };
   const subject = { ...subjectFactionReference(), rulerId: 'mock-person-subject', rulerName: 'Iulia Seran', strength: 3600, gold: 690, settlements: 4 };
-  const saltLeague = { id: 'mock-faction-salt-league', name: 'Salt League', colour: '#8A6930', secondaryColour: '#CFC4AA', cultureGroup: 'Aurestian', emblem: 'Aurestian_2', rulerId: 'mock-person-salt-leader', rulerName: 'Nera Solun', strength: 4200, gold: 820, settlements: 5 };
+  const saltLeague = { id: 'mock-faction-salt-league', name: 'Salt League', colour: '#8A6930', secondaryColour: '#CFC4AA', cultureGroup: 'Aurestian', emblem: 'Aurestian_2', diplomaticStatus: 'neutral', subjectSubtype: '', isPlayer: false, isRebel: false, rulerId: 'mock-person-salt-leader', rulerName: 'Nera Solun', strength: 4200, gold: 820, settlements: 5 };
   const rivalReplacementCandidates = [peaceReplacementCandidate('mock-person-salt-leader'), peaceReplacementCandidate('mock-person-subject')];
   return {
     found: true,
@@ -5317,6 +5492,10 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       secondaryColour: ref.secondaryColour,
       cultureGroup: ref.cultureGroup,
       emblem: ref.emblem,
+      diplomaticStatus: ref.diplomaticStatus ?? 'ally',
+      subjectSubtype: ref.subjectSubtype,
+      isPlayer: ref.isPlayer ?? false,
+      isRebel: ref.isRebel,
       strength,
       strengthRatio,
       callLikelihoodPercent: callLikelihoodReason.finalPercent,
@@ -6023,8 +6202,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           viewportHeight: window.innerHeight || 1080,
           snapshotRevision: 0,
           settlements: [
-            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, warWithPlayer: false },
-            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, warWithPlayer: false },
+            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, luxurySlotsRequired: 3, luxurySlotsProvided: 2, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, warWithPlayer: false },
+            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, luxurySlotsRequired: 2, luxurySlotsProvided: 1, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, warWithPlayer: false },
           ],
           ports: [
             { id: MOCK_IDS.portSettlement, screenX: 1088, screenY: 650, scale: 0.94, opacity: 1, zOrder: 10, detailLevel: 'name', selected: false, targeted: false, faction: { ...playerFactionReference(), relation: 'own' }, level: 3, blockaded: true },
@@ -6258,6 +6437,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           complianceTargetIsRuler: false,
           complianceLuxuryLabel: 'Luxuries:',
           complianceLuxuryStatus: '',
+          luxurySlotsRequired: 0,
+          luxurySlotsProvided: 0,
           regionName: '',
           landName: '',
           domainName: '',
@@ -6292,10 +6473,10 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         if (state.provinceMode) {
           return { enabled: false, completedConditions: 0, totalConditions: 0, tiers: [] } satisfies BridgeResponse<'game.get_victory_conditions'>;
         }
-        return { enabled: true, completedConditions: 4, totalConditions: 7, tiers: [
-          { id: 'default', name: 'Survival', iconPath: '/assets/icons/Victory/I_Victory_Bronze.png', isAchieved: true, conditions: [{ id: 'default-year', kind: 'deadline', label: 'Survive the Collapse', description: '<p>Keep the realm alive until the survival target year.</p>', domains: [], progress: 100, detailText: 'Survival secured.', isMet: true }] },
-          { id: 'extended', name: 'Restoration', iconPath: '/assets/icons/Victory/I_Victory_Silver.png', isAchieved: true, conditions: [{ id: 'extended-domains', kind: 'domains', label: 'Restore Required Domains', description: '<p>Control every domain required for restoration.</p>', domains: [], progress: 100, detailText: 'Required domains controlled.', isMet: true }, { id: 'extended-year', kind: 'deadline', label: 'Meet Restoration Deadline', description: '<p>Complete restoration before the target year.</p>', domains: [], progress: 100, detailText: 'Deadline met.', isMet: true }] },
-          { id: 'ultimate', name: 'Total Victory', iconPath: '/assets/icons/Victory/I_Victory_Gold.png', isAchieved: false, conditions: [{ id: 'ultimate-domains', kind: 'domains', label: 'Rule Every Required Domain', description: '<p>Control every domain required for total victory.</p>', domains: [], progress: 64, detailText: '5 of 8 domains controlled.', isMet: false }, { id: 'ultimate-conversion', kind: 'conversion', label: 'Convert the Realm', description: '<p>Bring every settlement to the required state religion threshold.</p>', domains: [], progress: 72, detailText: '72% realm conversion.', isMet: false }, { id: 'ultimate-year', kind: 'deadline', label: 'Meet Ultimate Deadline', description: '<p>Complete total victory before the target year.</p>', domains: [], progress: 100, detailText: 'Still within the deadline.', isMet: true }] },
+        return { enabled: true, completedConditions: 3, totalConditions: 6, tiers: [
+          { id: 'default', name: 'Survival', iconPath: '/assets/icons/Victory/I_Victory_Bronze.png', isAchieved: true, conditions: [{ id: 'default-year', kind: 'year', label: 'Survive until 1000', description: 'Survive until the target year.', domains: [], progress: 100, currentCount: 1000, targetCount: 1000, detailText: '1000 of 1000', isMet: true }] },
+          { id: 'extended', name: 'Restoration', iconPath: '/assets/icons/Victory/I_Victory_Silver.png', isAchieved: true, conditions: [{ id: 'extended-year', kind: 'year', label: 'Survive until 1100', description: 'Survive until the restoration target year.', domains: [], progress: 100, currentCount: 1100, targetCount: 1100, detailText: '1100 of 1100', isMet: true }, { id: 'extended-domains', kind: 'domains', label: 'Control the required domains', description: 'Control every settlement in the listed domains.', domains: [{ name: 'Carnovia', controlledSettlements: 88, totalSettlements: 88, isMet: true }, { name: 'Oretania', controlledSettlements: 58, totalSettlements: 58, isMet: true }, { name: 'Septentria', controlledSettlements: 36, totalSettlements: 36, isMet: true }, { name: 'Rephsia', controlledSettlements: 109, totalSettlements: 109, isMet: true }, { name: 'Tamarsia', controlledSettlements: 48, totalSettlements: 48, isMet: true }, { name: 'Sarghana', controlledSettlements: 37, totalSettlements: 37, isMet: true }], progress: 100, currentCount: 376, targetCount: 376, detailText: '376 of 376 settlements controlled', isMet: true }] },
+          { id: 'ultimate', name: 'Total Victory', iconPath: '/assets/icons/Victory/I_Victory_Gold.png', isAchieved: false, conditions: [{ id: 'ultimate-year', kind: 'year', label: 'Survive until 1100', description: 'Survive until the ultimate victory target year.', domains: [], progress: 71, currentCount: 784, targetCount: 1100, detailText: '784 of 1100', isMet: false }, { id: 'ultimate-domains', kind: 'domains', label: 'Control every required domain', description: 'Control every settlement in all required domains.', domains: [{ name: 'Carnovia', controlledSettlements: 88, totalSettlements: 88, isMet: true }, { name: 'Oretania', controlledSettlements: 24, totalSettlements: 58, isMet: false }, { name: 'Septentria', controlledSettlements: 36, totalSettlements: 36, isMet: true }, { name: 'Rephsia', controlledSettlements: 102, totalSettlements: 109, isMet: false }, { name: 'Tamarsia', controlledSettlements: 48, totalSettlements: 48, isMet: true }, { name: 'Sarghana', controlledSettlements: 37, totalSettlements: 37, isMet: true }, { name: 'Amarghan', controlledSettlements: 0, totalSettlements: 22, isMet: false }, { name: 'Neutarnia', controlledSettlements: 0, totalSettlements: 35, isMet: false }], progress: 77, currentCount: 335, targetCount: 433, detailText: '335 of 433 settlements controlled', isMet: false }, { id: 'ultimate-conversion', kind: 'religion', label: 'Unite the realm in faith', description: 'Bring every settlement in your realm to the required state religion share.', domains: [], progress: 0, currentCount: 0, targetCount: 44, detailText: '0 of 44 settlements meet the threshold', isMet: false }] },
         ] } satisfies BridgeResponse<'game.get_victory_conditions'>;
       case 'game.get_achievements':
         return {
@@ -6328,6 +6509,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return { completed: true } satisfies BridgeResponse<'game.complete_initial_setup'>;
       case 'game.get_languages':
         return { currentLocale: 'en', languages: [{ code: 'en', name: 'English' }, { code: 'de', name: 'Deutsch' }] } satisfies BridgeResponse<'game.get_languages'>;
+      case 'game.get_mod_load_state':
+        return { communityModsSkipped: false, showRecoveryPrompt: false } satisfies BridgeResponse<'game.get_mod_load_state'>;
       case 'game.list_mods':
         return { mods: [
           { id: 'mock-mod', name: 'Mock Dev Content', version: '1.0', gameVersion: '2.05.4', author: 'Local', description: 'Fixture mod entry for browser UI testing.', loadOrder: 0, enabled: true, pakMounted: false, hasScripts: false, compatible: true, compatibilityError: '', canUploadToWorkshop: true },
@@ -7141,7 +7324,11 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.demote_military_command':
       case 'game.promote_military_command':
       case 'game.ungarrison_military':
-      case 'game.toggle_foederati_callup':
+      case 'game.toggle_foederati_callup': {
+        applyFoederatiCallup(payloadString(payload, 'factionId', ''), payloadBoolean(payload, 'calledUp', false));
+        emit('game.get_military_overview', namedMilitaryOverview());
+        return undefined;
+      }
       case 'game.set_province_build_focus':
       case 'game.adjust_subject_tax_rate':
       case 'game.handle_world_glance_input':
@@ -7149,6 +7336,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.diplomatic_notification_events':
       case 'game.warning_events':
       case 'game.set_faction_border_highlight':
+      case 'game.open_save_games_folder':
+      case 'game.open_mods_folder':
       case 'ui.open_external_url':
       case 'ui.open_external_link':
       case 'ui.escape_pressed':

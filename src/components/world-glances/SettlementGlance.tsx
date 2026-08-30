@@ -5,7 +5,8 @@ import { clampUnitFraction, percentWidth } from './glanceMath';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
 import { WebkilnAssetPath } from '../../utils/assets';
-import { readableFactionTextColour } from '../../utils/colorFormatters';
+import { roundelDiplomacyProps } from '../../utils/factionBorder';
+import { isHostileGlance, readableFactionTextColour, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
 
 import { webUIText } from '../../localization/WebUITextContext';
 import { formatSettlementType } from '../../utils/displayLabels';
@@ -145,6 +146,15 @@ function loyaltyColour(l: number): string {
   return 'var(--green)';
 }
 
+function luxuryColour(required: number, provided: number): string {
+  if (required <= 0) return 'var(--text-muted)';
+  const missing = required - provided;
+  if (missing <= 0) return 'var(--green)';
+  if (missing === 1) return '#c88a3a';
+  if (missing === 2) return '#c86b2a';
+  return 'var(--red)';
+}
+
 function corruptionColour(value: number): string {
   if (value >= 0.75) return 'var(--red)';
   if (value >= 0.5) return '#c86b2a';
@@ -169,21 +179,6 @@ type SettlementBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'enamel-li
 
 function settlementBadgeLayerPath(type: SettlementType, layer: SettlementBadgeLayer): string {
   return `/assets/glance/settlement-types-v3/layers/settlement-badge-${type}-${layer}.png`;
-}
-
-function relationLabel(relation: SettlementGlanceData['faction']['relation'], atWar?: boolean): string {
-  if (atWar || relation === 'enemy') return webUIText('WorldGlances.Relation.Hostile');
-  if (relation === 'own') return webUIText('WorldGlances.Relation.Own');
-  if (relation === 'subject') return webUIText('WorldGlances.Relation.Subject');
-  if (relation === 'ally') return webUIText('WorldGlances.Relation.Allied');
-  return webUIText('WorldGlances.Relation.Neutral');
-}
-
-function relationColour(relation: SettlementGlanceData['faction']['relation'], atWar?: boolean): string {
-  if (atWar || relation === 'enemy') return 'var(--red)';
-  if (relation === 'own' || relation === 'subject') return 'var(--gold-light)';
-  if (relation === 'ally') return 'var(--green-light)';
-  return 'var(--text-bright)';
 }
 
 function relationBackgroundColour(relation: SettlementGlanceData['faction']['relation'], atWar?: boolean): string {
@@ -290,13 +285,26 @@ function renderInfo(data: SettlementGlanceData) {
     case 'overlord':
       return renderGoldInfo(data);
     case 'diplomaticRelation':
-      return renderInfoRow('/assets/icons/I_Peace.png', relationLabel(controller.relation, data.warWithPlayer), relationColour(controller.relation, data.warWithPlayer));
+      return renderInfoRow('/assets/icons/I_Peace.png', relationDisplayLabel(controller.relation, data.warWithPlayer), relationDisplayColour(controller.relation, data.warWithPlayer));
     case 'population':
       return renderInfoRow('/assets/icons/I_ModPopulation.png', formatNumber(data.population), undefined, true);
     case 'unrest':
       return renderInfoRow('/assets/icons/I_Unrest.png', formatPercent(data.unrest * 100), unrestColour(data.unrest), true);
     case 'loyalty':
       return renderInfoRow('/assets/icons/I_Loyalty.png', formatSignedNumber(data.loyalty), loyaltyColour(data.loyalty), true);
+    case 'luxury': {
+      const required = data.luxurySlotsRequired ?? 0;
+      const provided = data.luxurySlotsProvided ?? 0;
+      if (required <= 0) {
+        return renderInfoRow('/assets/icons/I_Luxury.png', webUIText('WorldGlances.Settlement.NoLuxuryNeeds'), 'var(--text-muted)');
+      }
+      return renderInfoRow(
+        '/assets/icons/I_Luxury.png',
+        `${formatNumber(provided)}/${formatNumber(required)}`,
+        luxuryColour(required, provided),
+        true,
+      );
+    }
     case 'garrison':
     case 'militaries':
     case 'garrisons':
@@ -361,10 +369,12 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
     ? '/assets/icons/I_Capital.png'
     : data.isProvincialCapital ? '/assets/icons/I_ProvincialCapital.png' : '';
   const capitalIcon = capitalIconPath ? WebkilnAssetPath(capitalIconPath) : '';
+  const atWar = isHostileGlance(controller.relation, data.warWithPlayer);
   const rootClass = [
     'glance',
     'glance--settlement',
     data.targeted ? 'is-targeted' : '',
+    atWar ? 'is-at-war' : '',
     besieged ? 'is-besieged' : '',
     data.starving ? 'is-starving' : '',
     data.diseased ? 'is-diseased' : '',
@@ -375,11 +385,13 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
       className={rootClass}
       style={{
         '--faction-colour': factionColour,
+        ...relationTextVars(controller.relation, data.warWithPlayer),
         '--settlement-label-bg': relationBackgroundColour(controller.relation, data.warWithPlayer),
         '--settlement-badge-scale': data.badgeScale,
         '--settlement-badge-overhang': `${badgeOverhangRem}rem`,
       } as CSSProperties}
     >
+      {atWar && <span className="glance-war-glow" aria-hidden="true" />}
       {debugMode && data.debugShortId !== undefined && (
         <div className="glance-debug-id">#{formatNumber(data.debugShortId)}</div>
       )}
@@ -416,6 +428,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
               size="xs"
               showRing
               resolveFaction={false}
+              {...roundelDiplomacyProps(data.occupier)}
             />
           )}
           {capitalIcon && (

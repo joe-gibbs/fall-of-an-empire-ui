@@ -36,10 +36,6 @@
   transition: none !important;
 }
 
-.glance-atlas-plate .glance--military {
-  align-items: flex-start;
-}
-
 .glance-atlas-plate .glance--military-garrison {
   transform: translateY(calc(5rem + var(--garrison-stack-offset, 0rem)));
 }
@@ -48,15 +44,6 @@
    this offset places the garrison tab's centre exactly on its former projected anchor. */
 .glance-atlas-plate.detail-location-faded .glance--military-garrison {
   transform: translateY(calc(2.2273rem + var(--garrison-stack-offset, 0rem)));
-}
-
-.glance-atlas-plate .glance-military-core {
-  margin-top: 0.9545rem;
-}
-
-.glance-atlas-plate.detail-flag .glance-military-core,
-.glance-atlas-plate.detail-name .glance-military-core {
-  margin-top: 0.8432rem;
 }
 
 /* Population-scaled settlement badges overflow their layout box. Give only those enlarged

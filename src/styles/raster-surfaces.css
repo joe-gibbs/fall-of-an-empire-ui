@@ -11,7 +11,8 @@
 .gfov-empire-finance-summary,
 .gfov-appointment-progress-panel,
 .pns-option-group,
-.diplo-selection-panel {
+.diplo-selection-panel,
+.ui-recovery__panel {
   border-width: 0.231rem;
   border-style: solid;
   border-color: transparent;
@@ -31,7 +32,7 @@
 .vc-condition,
 .ftt-treaty-row,
 .cam-consequence-row,
-.cam-consequence-card,
+.cam-consequence-people,
 .acd-row,
 .acd-empty,
 .fii-selected-faction__main,
@@ -42,7 +43,7 @@
 .pns-participant-row,
 .pns-draft-chip,
 .pns-term-row,
-.pns-replacement-row,
+.pns-replacement-select,
 .pns-resource-select-button,
 .pns-resource-select-option,
 .pns-empty-state,

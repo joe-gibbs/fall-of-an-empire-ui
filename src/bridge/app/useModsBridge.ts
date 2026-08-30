@@ -204,7 +204,7 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     setWorkshopQueryInProgress(Boolean(event.queryInProgress));
   }, []);
 
-  const applyWorkshopOperation = useCallback((event: SteamWorkshopItemOperationResponse, bRequireRestartOnInstall = false) => {
+  const applyWorkshopOperation = useCallback((event: SteamWorkshopItemOperationResponse) => {
     const publishedFileId = event.publishedFileId || event.item?.publishedFileId;
     if (!publishedFileId) return;
 
@@ -226,8 +226,10 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
       });
     }
 
-    if (bRequireRestartOnInstall && event.state === 'installed') {
+    if (event.state === 'installed') {
       setWorkshopChangesRequireRestart(true);
+      void refreshMods().catch(acknowledgeBridgeFailure);
+    } else if (event.state === 'unsubscribed') {
       void refreshMods().catch(acknowledgeBridgeFailure);
     }
   }, [refreshMods]);
@@ -235,9 +237,9 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
   useEffect(() => {
     if (!enabled) return;
     const unsubBrowse = onBridgeEvent('game.browse_steam_workshop', applyWorkshopQuery);
-    const unsubSubscribe = onBridgeEvent('game.subscribe_steam_workshop_item', event => applyWorkshopOperation(event, false));
-    const unsubUnsubscribe = onBridgeEvent('game.unsubscribe_steam_workshop_item', event => applyWorkshopOperation(event, false));
-    const unsubDownload = onBridgeEvent('game.download_steam_workshop_item', event => applyWorkshopOperation(event, true));
+    const unsubSubscribe = onBridgeEvent('game.subscribe_steam_workshop_item', applyWorkshopOperation);
+    const unsubUnsubscribe = onBridgeEvent('game.unsubscribe_steam_workshop_item', applyWorkshopOperation);
+    const unsubDownload = onBridgeEvent('game.download_steam_workshop_item', applyWorkshopOperation);
     return () => {
       unsubBrowse();
       unsubSubscribe();
@@ -343,7 +345,7 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'subscribing', error: '' } }));
     try {
       const res = await bridgeCall('game.subscribe_steam_workshop_item', { publishedFileId });
-      applyWorkshopOperation(res, false);
+      applyWorkshopOperation(res);
     } catch (error) {
       acknowledgeBridgeFailure(error);
       setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'failed', error: error instanceof Error ? error.message : '' } }));
@@ -354,7 +356,7 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'unsubscribing', error: '' } }));
     try {
       const res = await bridgeCall('game.unsubscribe_steam_workshop_item', { publishedFileId });
-      applyWorkshopOperation(res, false);
+      applyWorkshopOperation(res);
     } catch (error) {
       acknowledgeBridgeFailure(error);
       setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'failed', error: error instanceof Error ? error.message : '' } }));
@@ -365,7 +367,7 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'downloading', error: '' } }));
     try {
       const res = await bridgeCall('game.download_steam_workshop_item', { publishedFileId });
-      applyWorkshopOperation(res, true);
+      applyWorkshopOperation(res);
     } catch (error) {
       acknowledgeBridgeFailure(error);
       setWorkshopOperations(prev => ({ ...prev, [publishedFileId]: { state: 'failed', error: error instanceof Error ? error.message : '' } }));

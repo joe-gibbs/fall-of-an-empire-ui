@@ -1,10 +1,10 @@
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import Tooltip from '../../common/tooltips/Tooltip';
 import GameCheckButton from '../../common/buttons/GameCheckButton';
 import CourtOfficeSummary from '../../common/entities/CourtOfficeSummary';
-import ZoomPanCanvas, { type ZoomPanView } from '../../common/layout/scrolling/ZoomPanCanvas';
+import ZoomPanCanvas, { type ZoomPanPoint } from '../../common/layout/scrolling/ZoomPanCanvas';
 import CourtAppointmentModal from '../../modals/characters/CourtAppointmentModal';
 import { useGameActions } from '../../../context/GameContext';
 import { useCourtPositions, useMilitaryOverview, usePlayerFactionId } from '../../../data-source/index';
@@ -20,10 +20,10 @@ import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import type { CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
 import {
   type Force,
-  subtree,
-  RANK_META,
   rankLabel,
+  subtree,
 } from './forces';
+import { canDragMilitaryCommand, collectAssignableCommands, validateCommandAssignment } from '../../../utils/militaryCommandAssignment';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import { designRem, designUnitScale, toRootRem } from '../../../utils/cssUnits';
 import {
@@ -37,11 +37,12 @@ import {
   CANVAS_PAD,
   CHART_ZOOM_STEP,
   DRAG_THRESHOLD,
-  INITIAL_CHART_ZOOM,
   MAX_CHART_ZOOM,
   MIN_CHART_ZOOM,
+  chartSelectionRect,
+  forceIdsInChartSelection,
   layoutTree,
-  type PlacedNode,
+  type ChartSelectionBox,
 } from './forceTreeLayout';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
 import {
@@ -186,23 +187,17 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
     baseKey: string;
     forces: Force[];
   } | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectionBox, setSelectionBox] = useState<ChartSelectionBox | null>(null);
   const [courtPosition, setCourtPosition] = useState<CourtPositionView | null>(null);
   const [highlight, setHighlight] = useState<HighlightKey>(null);
   const initialTemplateId = useMemo(() => templateIdFromScreenId(screenId), [screenId]);
   const initialCreateType = useMemo(() => createTypeFromScreenId(screenId), [screenId]);
   const assignmentTargetId = useMemo(() => assignmentTargetFromScreenId(screenId), [screenId]);
   const allForces = localView?.baseKey === overviewKey ? localView.forces : overviewForces;
-  const effectiveSelectedId = selectedId && allForces.some((force) => force.id === selectedId) ? selectedId : null;
 
   const viewport = useRef<HTMLDivElement | null>(null);
-  const chartViewRef = useRef<ZoomPanView>({
-    zoom: INITIAL_CHART_ZOOM,
-    panX: CANVAS_PAD * designUnitScale(),
-    panY: CANVAS_PAD * designUnitScale(),
-  });
   const forcesRef = useRef(allForces);
-  const nodesRef = useRef<PlacedNode[]>([]);
   useEffect(() => { forcesRef.current = allForces; }, [allForces]);
 
   const forces = useMemo(
@@ -212,11 +207,19 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
 
   const layout = useMemo(() => layoutTree(forces), [forces]);
   const chartInitialView = useMemo(() => buildChartInitialView(), []);
-  useEffect(() => { nodesRef.current = layout.nodes; }, [layout.nodes]);
+  const layoutRef = useRef(layout);
+  useEffect(() => { layoutRef.current = layout; }, [layout]);
 
+  const visibleSelectedIds = useMemo(
+    () => selectedIds.filter(id => forces.some(force => force.id === id)),
+    [forces, selectedIds],
+  );
+  const selectedIdsRef = useRef(visibleSelectedIds);
+  useEffect(() => { selectedIdsRef.current = visibleSelectedIds; }, [visibleSelectedIds]);
+  const effectiveSelectedId = visibleSelectedIds.length === 1 ? visibleSelectedIds[0] : null;
 
   const highlightIds = useMemo(() => {
-    if (!effectiveSelectedId) return null;
+    if (visibleSelectedIds.length !== 1 || !effectiveSelectedId) return null;
     const ids = new Set<string>(subtree(forces, effectiveSelectedId).map(f => f.id));
     let cur = forces.find(f => f.id === effectiveSelectedId);
     while (cur && cur.parentId) {
@@ -224,7 +227,7 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       cur = forces.find(f => f.id === cur!.parentId);
     }
     return ids;
-  }, [effectiveSelectedId, forces]);
+  }, [effectiveSelectedId, forces, visibleSelectedIds.length]);
 
   // Pointer pipeline
   useEffect(() => {
@@ -241,20 +244,12 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
     let ghost: HTMLDivElement | null = null;
 
     const nodeAt = (clientX: number, clientY: number): string | null => {
-      if (!viewport.current) return null;
-      const rect = viewport.current.getBoundingClientRect();
-      const vx = clientX - rect.left;
-      const vy = clientY - rect.top;
-      const view = chartViewRef.current;
-      const z = view.zoom;
-      const unitScale = designUnitScale();
-      const wx = (vx - view.panX) / z / unitScale;
-      const wy = (vy - view.panY) / z / unitScale;
-      const nodes = nodesRef.current;
-      for (let i = nodes.length - 1; i >= 0; i--) {
-        const n = nodes[i];
-        if (wx >= n.x && wx < n.x + n.w && wy >= n.y && wy < n.y + n.h) {
-          return n.force.id;
+      const wraps = el.querySelectorAll<HTMLElement>('.chart-node-wrap');
+      for (let i = wraps.length - 1; i >= 0; i--) {
+        const wrap = wraps[i];
+        const rect = wrap.getBoundingClientRect();
+        if (clientX >= rect.left && clientX < rect.right && clientY >= rect.top && clientY < rect.bottom) {
+          return wrap.dataset.id ?? null;
         }
       }
       return null;
@@ -268,43 +263,27 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       ghost?.querySelector('.chart-drag-ghost-reason')?.remove();
     };
 
-    const validateDrop = (srcId: string, tgtId: string): { ok: true; reason: string } | { ok: false; reason: string } => {
+    const dragSourceIds = (srcId: string): Force[] => {
+      const byId = new Map(forcesRef.current.map(f => [f.id, f]));
+      const ids = selectedIdsRef.current.includes(srcId) ? selectedIdsRef.current : [srcId];
+      return ids.map(id => byId.get(id)).filter((force): force is Force => !!force);
+    };
+
+    const validateDrop = (srcId: string, tgtId: string) => {
       const byId = new Map(forcesRef.current.map(f => [f.id, f]));
       const src = byId.get(srcId);
       const tgt = byId.get(tgtId);
-      if (!src || !tgt) return { ok: false, reason: webUIText('Military.Command.UnknownTarget') };
-      if (src.isPersonalGuard || tgt.isPersonalGuard) {
-        return { ok: false, reason: webUIText('Military.PersonalGuard.CommandRestriction') };
+      if (!src || !tgt) return { ok: false as const, reason: webUIText('Military.Command.UnknownTarget') };
+      const accepted = collectAssignableCommands(dragSourceIds(srcId), srcId, tgt, forcesRef.current);
+      if (accepted.length === 0) {
+        return validateCommandAssignment(src, tgt, forcesRef.current);
       }
-      if (!src.isPlayerControlled) return { ok: false, reason: webUIText('Military.Command.NotCommandingSource') };
-      if (!tgt.isPlayerControlled) return { ok: false, reason: webUIText('Military.Command.NotCommandingParent') };
-      if (srcId === tgtId) return { ok: false, reason: webUIText('Military.Command.CannotReportToSelf') };
-
-      let cur: Force | undefined = tgt;
-      while (cur) {
-        if (cur.id === srcId) return { ok: false, reason: webUIText('Military.Command.CannotReportToSubordinate') };
-        cur = cur.parentId ? byId.get(cur.parentId) : undefined;
-      }
-
-      if (src.parentId === tgtId) return { ok: false, reason: webUIText('Military.Command.AlreadyReportsHere') };
-      if (src.isNavy !== tgt.isNavy) {
-        return { ok: false, reason: webUIText('Military.Command.LandNavalMix') };
-      }
-
-      const srcTier = RANK_META[src.rank].tier;
-      const tgtTier = RANK_META[tgt.rank].tier;
-      if (srcTier >= tgtTier) {
-        const sourceRank = rankLabel(src);
-        const targetRank = rankLabel(tgt);
-        return {
-          ok: false,
-          reason: srcTier === tgtTier
-            ? webUIText('Military.Command.SameRankCannotReport', { Rank: sourceRank })
-            : webUIText('Military.Command.LowerRankCannotReport', { SourceRank: sourceRank, TargetRank: targetRank }),
-        };
-      }
-
-      return { ok: true, reason: webUIText('Military.Command.ReportsTo', { Name: tgt.name }) };
+      return {
+        ok: true as const,
+        reason: accepted.length === 1
+          ? webUIText('Military.Command.ReportsTo', { Name: tgt.name })
+          : webUIText('Military.Command.ReportsToMany', { Count: formatNumber(accepted.length), Name: tgt.name }),
+      };
     };
 
     const isValidDrop = (srcId: string, tgtId: string): boolean => validateDrop(srcId, tgtId).ok;
@@ -339,12 +318,16 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
     const createGhost = (srcId: string) => {
       const src = forcesRef.current.find(f => f.id === srcId);
       if (!src) return;
-      const subCount = subtree(forcesRef.current, srcId).length - 1;
+      const extraSelected = Math.max(0, dragSourceIds(srcId).length - 1);
+      const subCount = extraSelected > 0 ? extraSelected : subtree(forcesRef.current, srcId).length - 1;
       ghost = document.createElement('div');
       ghost.className = `chart-drag-ghost${subCount > 0 ? ' is-stacked' : ''}`;
-      const tail = subCount > 0
-        ? `<span class="chart-drag-ghost-sub">${webUIText('Military.DragGhostSubordinates', { Count: formatNumber(subCount), Unit: webUIText(subCount === 1 ? 'Common.Subordinate' : 'Common.Subordinates') })}</span>`
-        : '';
+      ghost.style.pointerEvents = 'none';
+      const tail = extraSelected > 0
+        ? `<span class="chart-drag-ghost-sub">${webUIText('Military.Selection.Count', { Count: formatNumber(extraSelected + 1) })}</span>`
+        : subCount > 0
+          ? `<span class="chart-drag-ghost-sub">${webUIText('Military.DragGhostSubordinates', { Count: formatNumber(subCount), Unit: webUIText(subCount === 1 ? 'Common.Subordinate' : 'Common.Subordinates') })}</span>`
+          : '';
       ghost.innerHTML =
         `<span class="chart-drag-ghost-rank">${rankLabel(src)}</span>` +
         `<span class="chart-drag-ghost-name">${src.name}</span>` + tail;
@@ -364,11 +347,16 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       el.querySelectorAll('.is-drag-source, .is-drag-subtree')
         .forEach(n => n.classList.remove('is-drag-source', 'is-drag-subtree'));
       if (!id) return;
-      const sub = subtree(forcesRef.current, id);
-      el.querySelector(`.chart-node-wrap[data-id="${id}"]`)?.classList.add('is-drag-source');
-      for (const f of sub) {
-        if (f.id === id) continue;
-        el.querySelector(`.chart-node-wrap[data-id="${f.id}"]`)?.classList.add('is-drag-subtree');
+      const sourceIds = dragSourceIds(id).map(force => force.id);
+      for (const sourceId of sourceIds) {
+        el.querySelector(`.chart-node-wrap[data-id="${sourceId}"]`)?.classList.add('is-drag-source');
+      }
+      for (const sourceId of sourceIds) {
+        const sub = subtree(forcesRef.current, sourceId);
+        for (const f of sub) {
+          if (sourceIds.includes(f.id)) continue;
+          el.querySelector(`.chart-node-wrap[data-id="${f.id}"]`)?.classList.add('is-drag-subtree');
+        }
       }
     };
 
@@ -390,7 +378,8 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       startY = e.clientY;
       mode = 'node-pending';
       dragSourceId = hitId;
-      dragSourceCanDrag = forcesRef.current.find(f => f.id === hitId)?.isPlayerControlled ?? false;
+      const hitForce = forcesRef.current.find(f => f.id === hitId);
+      dragSourceCanDrag = hitForce ? canDragMilitaryCommand(hitForce) : false;
     };
 
     const onMouseMove = (e: MouseEvent) => {
@@ -416,33 +405,60 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       }
     };
 
-    const onMouseUp = () => {
+    const onMouseUp = (e: MouseEvent) => {
       if (mode === 'node-drag') {
+        updateHover(e.clientX, e.clientY);
         if (lastHoveredId && dragSourceId && isValidDrop(dragSourceId, lastHoveredId)) {
           const src = dragSourceId;
           const tgt = lastHoveredId;
+          const target = forcesRef.current.find(force => force.id === tgt);
+          const accepted = target
+            ? collectAssignableCommands(dragSourceIds(src), src, target, forcesRef.current)
+            : [];
+          const acceptedIds = new Set(accepted.map(force => force.id));
+          const previousParentCounts = new Map<string, number>();
+          for (const force of accepted) {
+            if (!force.parentId || acceptedIds.has(force.parentId)) continue;
+            previousParentCounts.set(force.parentId, (previousParentCounts.get(force.parentId) ?? 0) + 1);
+          }
           setLocalView({
             baseKey: overviewKey,
-            forces: allForces.map((force) => (force.id === src ? { ...force, parentId: tgt } : force)),
+            forces: allForces.map((force) => {
+              if (acceptedIds.has(force.id)) return { ...force, parentId: tgt };
+              if (force.id === tgt) {
+                return { ...force, subordinateCount: (force.subordinateCount ?? 0) + accepted.length };
+              }
+              const detached = previousParentCounts.get(force.id);
+              if (detached) {
+                return { ...force, subordinateCount: Math.max(0, (force.subordinateCount ?? 0) - detached) };
+              }
+              return force;
+            }),
           });
-          setMilitaryParentBridge(src, tgt).catch(() => {
+          void Promise.all(accepted.map(force => setMilitaryParentBridge(force.id, tgt))).catch(error => {
             setLocalView(null);
+            acknowledgeBridgeFailure(error, 'game.set_military_parent');
           });
-          flashDropConfirmed(src);
+          flashDropConfirmed(tgt);
         }
         markSource(null);
         removeGhost();
         clearHover();
         el.classList.remove('is-node-dragging');
       } else if (mode === 'node-pending' && dragSourceId) {
-        // Click a node → open the standard Military sidebar on the left.
-        // The selection state keeps the card's highlighted chain visible.
-        setSelectedId(dragSourceId);
-        const selectedForce = forcesRef.current.find(force => force.id === dragSourceId);
-        if (selectedForce?.isPlayerControlled) {
-          selectMilitaryBridge(dragSourceId).catch(acknowledgeBridgeFailure);
+        const clickedId = dragSourceId;
+        if (e.shiftKey) {
+          setSelectedIds(prev => (prev.includes(clickedId)
+            ? prev.filter(id => id !== clickedId)
+            : [...prev, clickedId]));
+        } else {
+          setSelectedIds([clickedId]);
+          const selectedForce = forcesRef.current.find(force => force.id === clickedId);
+          if (selectedForce?.isPlayerControlled) {
+            selectMilitaryBridge(clickedId).catch(acknowledgeBridgeFailure);
+          }
+          openSidebar('military', clickedId);
         }
-        openSidebar('military', dragSourceId);
       }
       mode = 'idle';
       dragSourceId = null;
@@ -459,6 +475,11 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       removeGhost();
     };
   }, [allForces, openSidebar, overviewKey, showOnly]);
+
+  const handleChartSelectionEnd = useCallback((start: ZoomPanPoint, end: ZoomPanPoint) => {
+    setSelectionBox(null);
+    setSelectedIds(forceIdsInChartSelection(layoutRef.current, { start, end }));
+  }, []);
 
   const tabs = [
     { id: 'land',      label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.986.35') },
@@ -539,7 +560,14 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       advisorTopic="militaryScreen"
       className={`chart-screen${showOnly === 'templates' ? ' chart-screen--templates' : ''}${showOnly === 'guard' ? ' chart-screen--guard' : ''}`}
       contentClassName="chart-content"
-      tabs={<SidebarTabBar tabs={tabs} activeTab={showOnly} onTabChange={(id) => setShowOnly(id as MilitaryScreenTab)} />}
+      tabs={<SidebarTabBar tabs={tabs} activeTab={showOnly} onTabChange={(id) => {
+        const next = id as MilitaryScreenTab;
+        if (next !== showOnly) {
+          setSelectedIds([]);
+          setSelectionBox(null);
+        }
+        setShowOnly(next);
+      }} />}
     >
       {topControls}
       {officeStrip}
@@ -572,11 +600,14 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
         panMode="bounded"
         panMarginPx={CANVAS_PAD * designUnitScale()}
         viewportRef={viewport}
+        leftDragMode="select"
         ignoreLeftDragFrom={(target) => !!target.closest('.chart-node-wrap')}
-        onContentLeftClick={() => setSelectedId(null)}
-        onViewChange={(view) => {
-          chartViewRef.current = view;
+        onContentLeftClick={() => {
+          setSelectedIds([]);
+          setSelectionBox(null);
         }}
+        onContentLeftDragUpdate={(start, end) => setSelectionBox({ start, end })}
+        onContentLeftDragEnd={handleChartSelectionEnd}
         controls={({ zoom, zoomIn, zoomOut }) => (
           <div className="chart-zoom-float">
             <Tooltip content={webUIText("Auto.Attr.componentsscreensMilitaryMilitaryScreen.1090.1")}>
@@ -640,13 +671,27 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
                 <NodeCard
                   force={n.force}
                   allForces={allForces}
-                  selected={n.force.id === effectiveSelectedId}
+                  selected={visibleSelectedIds.includes(n.force.id)}
                   highlighted={highlight !== null && matches}
                   dimmed={!inChain || (highlight !== null && !matches)}
                 />
               </div>
             );
           })}
+          {selectionBox && (() => {
+            const rect = chartSelectionRect(selectionBox);
+            return (
+              <span
+                className="chart-selection-box"
+                style={{
+                  left: `${rect.left.toFixed(2)}%`,
+                  top: `${rect.top.toFixed(2)}%`,
+                  width: `${rect.width.toFixed(2)}%`,
+                  height: `${rect.height.toFixed(2)}%`,
+                }}
+              />
+            );
+          })()}
       </ZoomPanCanvas>
       )}
       <CourtAppointmentModal

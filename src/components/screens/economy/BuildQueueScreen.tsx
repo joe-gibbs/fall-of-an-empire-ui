@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
@@ -7,9 +7,11 @@ import { playSound } from '../../../hooks/useSound';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { useBuildQueueBridge, unqueueBuildQueueItem, type BuildQueueCostView, type BuildQueueItemView } from '../../../bridge/settlements-economy/useBuildQueueBridge';
 import { registerScreen } from '../../../registry/index';
-import { UI_PRESENTATION } from '../../../config/presentation';
 import { formatNumber } from '../../../utils/numberFormat';
 import ResourceLink from '../../common/resources/ResourceLink';
+import EntityLink from '../../common/entities/EntityLink';
+import FactionRoundel from '../../common/entities/FactionRoundel';
+import FactionTooltip from '../../common/tooltips/FactionTooltip';
 import './BuildQueueScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -30,8 +32,8 @@ const SORT_OPTIONS: SortOption[] = [
 ];
 
 const EMPTY_ITEMS: BuildQueueItemView[] = [];
-/** Matches .buildq-row min-height plus a little slack for multi-line costs. */
-const BUILDQ_ROW_HEIGHT_REM = 6.6;
+/** Matches .buildq-row height. Must fit title, roundel subtitle, costs, and progress or missing line. */
+const BUILDQ_ROW_HEIGHT_REM = 8;
 
 function n(value: number | undefined): string {
   return formatNumber(value ?? 0);
@@ -120,38 +122,36 @@ function ResourceCosts({ costs }: { costs: BuildQueueCostView[] }) {
   );
 }
 
-function EntityButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      className="buildq-link"
-      onClick={(event) => {
-        event.preventDefault();
-        playSound('click');
-        onClick();
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 function QueueRow({
   item,
   pending,
-  onOpenSettlement,
   onCancel,
 }: {
   item: BuildQueueItemView;
   pending: boolean;
-  onOpenSettlement: (settlementId: string) => void;
   onCancel: (item: BuildQueueItemView) => void;
 }) {
+  const { openSidebar } = useGameActions();
   const hasProgress = item.hasActiveItem && item.state === 'building';
   const progressWidth = Math.max(0, Math.min(100, item.progressPercent));
   const countLabel = item.count > 1 ? webUIText("BuildQueue.Multiplier", { Value1: n(item.count) }) : '';
   const statusClass = item.state ? ` buildq-status--${item.state}` : '';
   const cancelClass = `buildq-cancel${pending ? ' buildq-cancel--pending' : ''}`;
+  const factionContent = item.factionId || item.factionName ? (
+    <span className="buildq-faction">
+      {item.factionId && (
+        <FactionRoundel
+          factionId={item.factionId}
+          name={item.factionName}
+          size="xs"
+          onClick={() => openSidebar('diplomacy', item.factionId)}
+        />
+      )}
+      <EntityLink type="faction" id={item.factionId} className="buildq-link" fallbackClassName="buildq-faction-name">
+        {item.factionName}
+      </EntityLink>
+    </span>
+  ) : null;
 
   return (
     <div className={`buildq-row${item.hasActiveItem ? ' buildq-row--active' : ''}`}>
@@ -165,8 +165,15 @@ function QueueRow({
           <div className="buildq-title-wrap">
             <span className="buildq-title">{item.itemName}</span>
             <span className="buildq-subtitle">
-              <EntityButton onClick={() => onOpenSettlement(item.settlementId)}>{item.settlementName}</EntityButton>
-              {item.isVassal && item.factionName && <span className="buildq-vassal">{`- ${item.factionName}`}</span>}
+              {item.factionId ? (
+                <FactionTooltip factionId={item.factionId} factionName={item.factionName} delay={150}>
+                  {factionContent}
+                </FactionTooltip>
+              ) : factionContent}
+              {factionContent && item.settlementName && <span className="buildq-subtitle-sep">-</span>}
+              <EntityLink type="settlement" id={item.settlementId} className="buildq-link">
+                {item.settlementName}
+              </EntityLink>
             </span>
           </div>
           <div className={`buildq-status${statusClass}`}>
@@ -220,32 +227,11 @@ function QueueRow({
 
 export default function BuildQueueScreen({ onClose }: { onClose: () => void }) {
   const data = useBuildQueueBridge();
-  const { openSidebar } = useGameActions();
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('settlement');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [pendingKeys, setPendingKeys] = useState<string[]>([]);
-  const [virtualRowHeight, setVirtualRowHeight] = useState(() => (
-    Math.ceil(UI_PRESENTATION.rootFontSizePx * BUILDQ_ROW_HEIGHT_REM)
-  ));
-
-  useEffect(() => {
-    const updateVirtualRowHeight = () => {
-      const rootFontSize = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize);
-      const safeFontSize = Number.isFinite(rootFontSize) && rootFontSize > 0
-        ? rootFontSize
-        : UI_PRESENTATION.rootFontSizePx;
-      setVirtualRowHeight(Math.ceil(safeFontSize * BUILDQ_ROW_HEIGHT_REM));
-    };
-    updateVirtualRowHeight();
-    window.addEventListener('webkiln:runtime-viewport', updateVirtualRowHeight);
-    window.addEventListener('resize', updateVirtualRowHeight);
-    return () => {
-      window.removeEventListener('webkiln:runtime-viewport', updateVirtualRowHeight);
-      window.removeEventListener('resize', updateVirtualRowHeight);
-    };
-  }, []);
 
   const items = data?.items ?? EMPTY_ITEMS;
   const filterTabs = [
@@ -293,7 +279,6 @@ export default function BuildQueueScreen({ onClose }: { onClose: () => void }) {
         <QueueRow
           item={item}
           pending={pendingKeys.includes(pendingKey)}
-          onOpenSettlement={(settlementId) => openSidebar('settlement', settlementId)}
           onCancel={cancelItem}
         />
       );
@@ -352,7 +337,7 @@ export default function BuildQueueScreen({ onClose }: { onClose: () => void }) {
           styledScrollbar
           virtualized
           virtualizeThreshold={24}
-          virtualRowHeight={virtualRowHeight}
+          virtualRowHeightRem={BUILDQ_ROW_HEIGHT_REM}
           virtualOverscan={8}
         />
       </div>

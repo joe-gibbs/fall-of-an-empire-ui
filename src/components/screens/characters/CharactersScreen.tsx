@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { createContext, memo, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Portrait from '../../common/portraits/Portrait';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
@@ -20,7 +20,14 @@ import {
   usePersonInteractionsBridge,
   type PersonInteractionView,
 } from '../../../bridge/characters/usePersonInteractionsBridge';
+import { usePersonTooltipBridge } from '../../../bridge/characters/usePersonBridge';
+import type { Character, StatKey } from '../../../data/types';
 import { getComplianceState, getStatColor } from '../../../utils/colorFormatters';
+import {
+  buildCharacterStatTooltip,
+  buildComplianceTooltip,
+  characterStatGlossary,
+} from '../../../utils/characterTooltipContent';
 import { STAT_ICONS } from '../../../utils/iconMaps';
 import { formatNumber } from '../../../utils/numberFormat';
 import { formatPersonActivity } from '../../../utils/displayLabels';
@@ -60,7 +67,7 @@ const FILTERS = [
   { id: 'prisoners', get label() { return webUIText('Auto.TopProp.ComponentsScreensCharactersScreen.47.7'); } },
 ];
 
-const STAT_ORDER: Array<{ key: keyof CharacterListStats; label: string }> = [
+const STAT_ORDER: Array<{ key: StatKey; label: string }> = [
   { key: 'tactics', get label() { return webUIText('Auto.TopProp.ComponentsScreensCharactersScreen.52.9'); } },
   { key: 'authority', get label() { return webUIText('Auto.TopProp.ComponentsScreensCharactersScreen.53.10'); } },
   { key: 'cunning', get label() { return webUIText('Auto.TopProp.ComponentsScreensCharactersScreen.54.11'); } },
@@ -167,6 +174,39 @@ function characterHasTrait(character: CharacterListEntry, traitId: string): bool
   return traitId === ALL_FILTER || character.traits.some(trait => trait.id === traitId);
 }
 
+interface CharacterTooltipData {
+  request: (personId: string) => void;
+  person: Character | null;
+}
+
+const CharacterTooltipDataContext = createContext<CharacterTooltipData>({
+  request: () => undefined,
+  person: null,
+});
+
+function CharacterTooltipDataProvider({ children }: { children: ReactNode }) {
+  const [personId, setPersonId] = useState<string | null>(null);
+  const person = usePersonTooltipBridge(personId);
+  const request = useCallback((id: string) => {
+    setPersonId(current => (current === id ? current : id));
+  }, []);
+  const value = useMemo(() => ({ request, person }), [person, request]);
+  return (
+    <CharacterTooltipDataContext.Provider value={value}>
+      {children}
+    </CharacterTooltipDataContext.Provider>
+  );
+}
+
+function useCharacterTooltipData(personId: string) {
+  const { request, person } = useContext(CharacterTooltipDataContext);
+  const onShowIntent = useCallback(() => request(personId), [personId, request]);
+  return {
+    onShowIntent,
+    character: person?.id === personId ? person : null,
+  };
+}
+
 function isStatColumn(id: SortKey): boolean {
   return STAT_ORDER.some(stat => stat.key === id);
 }
@@ -201,7 +241,8 @@ function characterSortValue(character: CharacterListEntry, sortKey: SortKey): st
   return character.name;
 }
 
-const StatHeaderLabel = memo(function StatHeaderLabel({ stat }: { stat: { key: keyof CharacterListStats; label: string } }) {
+const StatHeaderLabel = memo(function StatHeaderLabel({ stat }: { stat: { key: StatKey; label: string } }) {
+  const glossary = characterStatGlossary(stat.key);
   return (
     <CompactStat
       mode="icon"
@@ -209,18 +250,22 @@ const StatHeaderLabel = memo(function StatHeaderLabel({ stat }: { stat: { key: k
       label={stat.label}
       className="chs-stat-header-label"
       iconClassName="chs-stat-header-icon"
+      tooltip={{ title: glossary.title, body: glossary.body }}
     />
   );
 });
 
 const CharacterStatCell = memo(function CharacterStatCell({
+  characterId,
   stats,
   stat,
 }: {
+  characterId: string;
   stats: CharacterListStats;
-  stat: { key: keyof CharacterListStats; label: string };
+  stat: { key: StatKey; label: string };
 }) {
   const value = stats[stat.key];
+  const { onShowIntent, character } = useCharacterTooltipData(characterId);
   return (
     <CompactStat
       mode="value"
@@ -229,12 +274,14 @@ const CharacterStatCell = memo(function CharacterStatCell({
       value={formatWhole(value)}
       valueColor={getStatColor(value)}
       valueClassName="chs-stat-number"
-      tooltip={{ title: stat.label, lines: [{ label: webUIText('Auto.Prop.ComponentsScreensCharactersScreen.122.1'), value: formatNumber(value), valueColor: getStatColor(value) }] }}
+      tooltip={buildCharacterStatTooltip(stat.key, value, character)}
+      onShowIntent={onShowIntent}
     />
   );
 });
 
 const ComplianceCell = memo(function ComplianceCell({ character }: { character: CharacterListEntry }) {
+  const { onShowIntent, character: tooltipCharacter } = useCharacterTooltipData(character.id);
   if (!character.hasCompliance) {
     return <span className="chs-muted">-</span>;
   }
@@ -242,11 +289,9 @@ const ComplianceCell = memo(function ComplianceCell({ character }: { character: 
   const state = getComplianceState(character.complianceTowardPlayer);
   return (
     <Tooltip
-      content={{
-        get title() { return webUIText("Auto.Prop.componentsscreensCharactersScreen.143.1", { Label: state.label }); },
-        lines: [{ label: webUIText('Auto.Prop.ComponentsScreensCharactersScreen.144.2'), value: formatNumber(character.complianceTowardPlayer), valueColor: state.color }],
-      }}
+      content={buildComplianceTooltip(character.complianceTowardPlayer, tooltipCharacter)}
       delay={120}
+      onShowIntent={onShowIntent}
     >
       <span className="chs-compliance" style={{ color: state.color }}>
         <img className="chs-compliance-icon" src={state.icon} alt="" />
@@ -436,7 +481,7 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
   const statColumns = useMemo<Array<DataTableColumn<CharacterListEntry, SortKey>>>(() => STAT_ORDER.map(stat => ({
     id: stat.key,
     label: <StatHeaderLabel stat={stat} />,
-    render: character => <CharacterStatCell stats={character.stats} stat={stat} />,
+    render: character => <CharacterStatCell characterId={character.id} stats={character.stats} stat={stat} />,
     sortValue: character => characterSortValue(character, stat.key),
   })), []);
 
@@ -531,6 +576,7 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
       tabs={<SidebarTabBar tabs={filterTabs} activeTab={filter} onTabChange={setFilter} />}
       contentClassName="chs-content"
     >
+      <CharacterTooltipDataProvider>
       <DataTable
         key={showPrisonActions ? 'characters-prisoners' : 'characters-standard'}
         className={`chs-table-block${showPrisonActions ? ' chs-table-block--prisoners' : ''}`}
@@ -571,6 +617,7 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
         virtualOverscan={8}
         styledScrollbar
       />
+      </CharacterTooltipDataProvider>
     </ScreenShell>
   );
 });

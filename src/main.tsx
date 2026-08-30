@@ -1,8 +1,9 @@
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/game-ui.css'
-import { createReactRootErrorOptions, installReactErrorDecoder } from './utils/reactErrorDecoder'
+import { installReactErrorDecoder } from './utils/reactErrorDecoder'
+import { mountRecoverableRoot } from './utils/reactRootRecovery'
+import RootRecoveryBoundary from './components/app-shell/RootRecoveryBoundary'
 
 // React is built as the development bundle so thrown errors already carry full
 // text. The decoder expands leftover minified codes and formats createRoot /
@@ -12,8 +13,6 @@ import { createReactRootErrorOptions, installReactErrorDecoder } from './utils/r
 // wrapping useSyncExternalStore re-subscribe paths previously restarted the
 // world-glances store every render and caused React #185 (blank atlas).
 installReactErrorDecoder()
-
-const reactRootErrorOptions = createReactRootErrorOptions()
 
 // Publish the mod SDK on window.FOAE. Must run before builtins (so the
 // registry functions exist on the global) and before any mod is loaded.
@@ -365,11 +364,21 @@ async function bootstrap() {
   installImageAutosize();
   await modsReady;
 
-  createRoot(document.getElementById('root')!, reactRootErrorOptions).render(
+  const hudRoot = document.getElementById('root')!
+  mountRecoverableRoot(hudRoot, ({ controller, remount }) => (
     <StrictMode>
-      <App />
-    </StrictMode>,
-  );
+      <RootRecoveryBoundary
+        controller={controller}
+        fallback="panel"
+        onReload={() => {
+          controller.reset()
+          remount()
+        }}
+      >
+        <App />
+      </RootRecoveryBoundary>
+    </StrictMode>
+  ));
   void window.gameUI?.markReady().catch(error => {
     console.error('Webkiln application readiness failed', error);
   });
@@ -404,17 +413,27 @@ async function bootstrapWorldAnchors() {
     import('./context/EscapeStackProvider'),
     import('./context/WorldAnchorGameStateProvider'),
   ]);
-  createRoot(document.getElementById('root')!, reactRootErrorOptions).render(
+  const atlasRoot = document.getElementById('root')!
+  mountRecoverableRoot(atlasRoot, ({ controller, remount }) => (
     <StrictMode>
-      <WorldAnchorGameStateProvider>
-        <EscapeStackProvider>
-          <WorldAnchorHost>
-            <GlanceAtlasRoot />
-          </WorldAnchorHost>
-        </EscapeStackProvider>
-      </WorldAnchorGameStateProvider>
-    </StrictMode>,
-  );
+      <RootRecoveryBoundary
+        controller={controller}
+        fallback="empty"
+        onReload={() => {
+          controller.reset()
+          remount()
+        }}
+      >
+        <WorldAnchorGameStateProvider>
+          <EscapeStackProvider>
+            <WorldAnchorHost>
+              <GlanceAtlasRoot />
+            </WorldAnchorHost>
+          </EscapeStackProvider>
+        </WorldAnchorGameStateProvider>
+      </RootRecoveryBoundary>
+    </StrictMode>
+  ));
 
   // Base-game atlas plates and readiness must not wait for optional content-pack discovery.
   // Mod renderers register dynamically and trigger their own atlas admission after modsReady.

@@ -6,7 +6,8 @@ import { formatNumber, formatPercent } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
 import { WebkilnAssetPath } from '../../utils/assets';
 import FactionRoundel from '../common/entities/FactionRoundel';
-import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel } from './WorldGlancePresentation';
+import { roundelDiplomacyProps } from '../../utils/factionBorder';
+import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
 import GlanceRelationFrame from './GlanceRelationFrame';
 
 import { webUIText } from '../../localization/WebUITextContext';
@@ -163,6 +164,7 @@ export default function ConvoyGlance({ data }: ConvoyGlanceProps) {
         className={`glance glance--convoy glance--convoy-${data.routeType}`}
         style={{
           '--faction-colour': data.faction.colour,
+          ...relationTextVars(data.faction.relation),
         } as CSSProperties}
       >
         <div className="gconv-marker" aria-hidden="true">
@@ -177,6 +179,7 @@ export default function ConvoyGlance({ data }: ConvoyGlanceProps) {
               size="xs"
               showRing={false}
               resolveFaction={false}
+              {...roundelDiplomacyProps(data.faction)}
             />
           </div>
 

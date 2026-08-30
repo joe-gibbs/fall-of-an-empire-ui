@@ -1,25 +1,15 @@
 import type { CSSProperties } from 'react';
 import FactionRoundel from '../common/entities/FactionRoundel';
+import { roundelDiplomacyProps } from '../../utils/factionBorder';
 import Tooltip, { type TooltipContent } from '../common/tooltips/Tooltip';
-import type { BattleGlanceData, BattleSideData, FactionRelation } from './WorldGlanceTypes';
+import type { BattleGlanceData, BattleSideData } from './WorldGlanceTypes';
+import { relationDisplayColour } from './WorldGlancePresentation';
 import { clampUnitFraction } from './glanceMath';
 import { formatCompactNumber, formatNumber, formatPercent } from '../../utils/numberFormat';
 import type { GetWorldGlanceTooltipResponse } from '../../bridge-types.generated';
 import { useWorldGlanceTooltip } from '../../bridge/app/useWorldGlanceTooltip';
 
 import { webUIText } from '../../localization/WebUITextContext';
-
-function relationColour(r: FactionRelation): string {
-  switch (r) {
-    case 'own':
-    case 'subject':
-      return '#6ba84a';
-    case 'ally': return '#4a78c8';
-    case 'neutral': return '#c9a042';
-    case 'enemy': return '#d04048';
-  }
-  return '#c9a042';
-}
 
 function battleTooltip(
   data: BattleGlanceData,
@@ -84,8 +74,8 @@ function BattleFactionRoundel({ side }: { side: BattleSideData }) {
       emblem={faction?.emblem}
       name={faction?.name}
       size="xs"
-      isRebel={faction?.isRebel}
       resolveFaction={false}
+      {...roundelDiplomacyProps(faction)}
       className="battle-faction-roundel"
     />
   );
@@ -145,8 +135,8 @@ export default function BattleGlance({ data }: BattleGlanceProps) {
   const { detail, request } = useWorldGlanceTooltip('battle', data.id);
   const attackerParticipant = data.attacker.participants[0];
   const defenderParticipant = data.defender.participants[0];
-  const attColour = relationColour(attackerParticipant?.faction.relation ?? 'neutral');
-  const defColour = relationColour(defenderParticipant?.faction.relation ?? 'neutral');
+  const attColour = relationDisplayColour(attackerParticipant?.faction.relation ?? 'neutral');
+  const defColour = relationDisplayColour(defenderParticipant?.faction.relation ?? 'neutral');
   const attackerMorale = clampUnitFraction(data.attacker.morale);
   const defenderMorale = clampUnitFraction(data.defender.morale);
   const total = data.attacker.totalStrength + data.defender.totalStrength;

@@ -85,7 +85,7 @@
   --diplo-status-background: rgba(31, 31, 28, 0.9);
   --diplo-status-highlight: rgba(143, 139, 124, 0.12);
   --diplo-status-shade: rgba(14, 15, 14, 0.32);
-  --diplo-status-text: #b7b2a7;
+  --diplo-status-text: var(--diplo-relation-neutral);
   display: flex;
   align-items: center;
   margin-left: 0.14rem;
@@ -116,28 +116,28 @@
   --diplo-status-background: rgba(20, 34, 43, 0.9);
   --diplo-status-highlight: rgba(101, 131, 145, 0.18);
   --diplo-status-shade: rgba(9, 15, 19, 0.32);
-  --diplo-status-text: #9eb6c2;
+  --diplo-status-text: var(--diplo-relation-subject);
 }
 
 .diplo-status-badge--war {
   --diplo-status-background: rgba(43, 20, 21, 0.92);
   --diplo-status-highlight: rgba(168, 55, 52, 0.18);
   --diplo-status-shade: rgba(22, 8, 9, 0.36);
-  --diplo-status-text: #d65a57;
+  --diplo-status-text: var(--diplo-relation-war);
 }
 
 .diplo-status-badge--ally {
   --diplo-status-background: rgba(24, 39, 24, 0.9);
   --diplo-status-highlight: rgba(91, 134, 73, 0.16);
   --diplo-status-shade: rgba(10, 18, 10, 0.34);
-  --diplo-status-text: #83aa72;
+  --diplo-status-text: var(--diplo-relation-ally);
 }
 
 .diplo-status-badge--rival {
   --diplo-status-background: rgba(43, 31, 20, 0.9);
   --diplo-status-highlight: rgba(160, 102, 55, 0.16);
   --diplo-status-shade: rgba(21, 13, 7, 0.34);
-  --diplo-status-text: #c58a5c;
+  --diplo-status-text: var(--diplo-relation-rival);
 }
 
 .diplo-header-capital {
@@ -447,15 +447,22 @@
   min-width: 0;
 }
 
-.diplo-view-characters-button {
+.diplo-section-heading-with-action > .tooltip-wrapper {
+  flex-shrink: 0;
+}
+
+.diplo-view-characters-button,
+.diplo-levy-action-button {
   flex-shrink: 0;
   height: 1.65rem;
   padding: 0 0.5rem;
   margin-right: 0.462rem;
   font-size: 0.72rem;
+  white-space: nowrap;
 }
 
-.diplo-view-characters-button .btn-icon {
+.diplo-view-characters-button .btn-icon,
+.diplo-levy-action-button .btn-icon {
   width: 0.88rem;
   height: 0.88rem;
 }
@@ -921,6 +928,10 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
+}
+
+.diplo-successor-action-wrap {
+  flex-shrink: 0;
 }
 
 .diplo-successor-action:hover {
