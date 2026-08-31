@@ -1,4 +1,4 @@
-import { memo, type MouseEvent } from 'react';
+import { memo, type KeyboardEvent, type MouseEvent } from 'react';
 import { useWebUIText } from '../../../localization/WebUITextContext';
 import {
   noteModifierKeysFromEvent,
@@ -17,6 +17,8 @@ import './NumberStepper.css';
 interface NumberStepperProps {
   value: number;
   onChange: (value: number) => void;
+  /** Fired for button clicks, Enter, and blur. Use this for committed quantities. */
+  onCommit?: (value: number) => void;
   step?: number;
   min?: number;
   max?: number;
@@ -48,6 +50,7 @@ function bounded(value: number, min: number | undefined, max: number | undefined
 const NumberStepper = memo(function NumberStepper({
   value,
   onChange,
+  onCommit,
   step = 1,
   min = 0,
   max,
@@ -85,14 +88,20 @@ const NumberStepper = memo(function NumberStepper({
   const decrementLabel = stepButtonLabel(-1, effectiveStep);
   const incrementLabel = stepButtonLabel(1, effectiveStep);
 
-  const apply = (next: number) => {
+  const apply = (next: number, committed = false) => {
     if (disabled) return;
-    onChange(bounded(next, min, max));
+    const resolved = bounded(next, min, max);
+    onChange(resolved);
+    if (committed) onCommit?.(resolved);
   };
 
   const nudge = (event: MouseEvent<HTMLButtonElement>, direction: 1 | -1) => {
     event.preventDefault();
-    apply(value + direction * stepAmountFromEvent(event, step));
+    apply(value + direction * stepAmountFromEvent(event, step), true);
+  };
+
+  const commitFromInput = (raw: string) => {
+    apply(parseValue(raw), true);
   };
 
   return (
@@ -117,10 +126,18 @@ const NumberStepper = memo(function NumberStepper({
       </Tooltip>
       <input
         type="text"
+        inputMode="numeric"
         className={classNames('number-stepper__input', inputClassName)}
         value={formatValue(value)}
         disabled={disabled}
         onChange={event => apply(parseValue(event.currentTarget.value))}
+        onBlur={event => commitFromInput(event.currentTarget.value)}
+        onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          commitFromInput(event.currentTarget.value);
+          event.currentTarget.blur();
+        }}
       />
       <Tooltip content={{ title: incrementLabel, body: modifierHint }} position="top" delay={200} wrapperClassName="number-stepper__tooltip">
         <button

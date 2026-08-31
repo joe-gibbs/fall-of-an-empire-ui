@@ -381,16 +381,9 @@
 }
 
 .chs-small-badge {
-  display: block;
   flex-grow: 0;
   flex-shrink: 0;
-  padding: 0.05rem 0.28rem;
   margin-left: 0.35rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  font-size: 0.66rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .chs-detail {
@@ -473,10 +466,7 @@
   color: var(--text-dark);
 }
 
-.chs-tone--gold {
-  color: var(--gold);
-  border-color: rgba(201, 168, 76, 0.55);
-}
+
 
 .chs-header-cell--stat .sortable-header-content {
   justify-content: center;

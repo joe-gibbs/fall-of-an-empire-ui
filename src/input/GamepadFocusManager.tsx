@@ -37,6 +37,7 @@ const ROOT_SELECTOR = [
   '.map-mode-picker-panel',
   '.notification-banner--decision',
   '.notification-options-popover',
+  '.buildq-completion-toast',
   '.advisor-drag-frame',
   '.mm-root',
   '.fs-root',
@@ -103,7 +104,7 @@ function rootPriority(root: HTMLElement): number {
   if (root.matches('.modal, [aria-modal="true"], .pause-overlay, .event-popup, .outcome-screen, .settings-rebind-modal, .settings-display-confirm-modal, .mm-lang-modal, .erd-modal, .tpl-picker-dialog, .chart-unit-picker-dialog, .notification-banner--decision')) return 500;
   if (root.matches('.screen, .fs-root')) return 400;
   if (root.matches('.sidebar-left, .sidebar-right, .advisor-drag-frame')) return 300;
-  if (root.matches('.world-search, .pinned-dropdown, .vc-dropdown, .screens-menu-panel, .map-mode-picker-panel, .notification-options-popover')) return 250;
+  if (root.matches('.world-search, .pinned-dropdown, .vc-dropdown, .screens-menu-panel, .map-mode-picker-panel, .notification-options-popover, .buildq-completion-toast')) return 250;
   if (root.matches('.mm-root')) return 200;
   return 100;
 }

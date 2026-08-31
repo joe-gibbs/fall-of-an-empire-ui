@@ -70,7 +70,7 @@ export interface PersonInteractionView {
   needsGiftSelection: boolean;
   initiatorRequirementDescription: string;
   reasons: { reason: string; status: InteractionAvailability }[];
-  successFactors: { name: string; percent: number }[];
+  successFactors: { key?: string; name: string; percent: number }[];
   effectLines: DisplayTextLine[];
   initiatorCandidates: PersonInteractionCandidateView[];
   giftOptions: PersonInteractionGiftOptionView[];
@@ -181,6 +181,7 @@ export function mapPersonInteractionEntry(entry: PersonInteractionEntry): Person
       status: toAvailability(reason.status),
     })),
     successFactors: entry.successFactors.map((factor) => ({
+      key: factor.key || undefined,
       name: factor.name,
       percent: factor.percent,
     })),

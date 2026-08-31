@@ -1,10 +1,11 @@
 import type { TooltipContent, TooltipLine } from '../components/common/tooltips/Tooltip';
-import type { Character, CharacterStatModifier, StatKey } from '../data/types';
+import type { Character, CharacterStatModifier, StatKey, WebUIRoleTierData } from '../data/types';
 import { getGlossaryEntry } from '../data/glossary';
 import { webUIText } from '../localization/WebUITextContext';
 import { characterStatEffectLines } from './characterStatEffects';
+import { STAT_ICONS } from './iconMaps';
 import { getComplianceState, getOpinionColor } from './colorFormatters';
-import { formatNumber, formatSignedNumber } from './numberFormat';
+import { formatNumber, formatPercent, formatSignedNumber } from './numberFormat';
 
 const STAT_GLOSSARY_KEYS: Record<StatKey, string> = {
   tactics: 'Tactics',
@@ -35,6 +36,40 @@ export interface ModifierTooltipEntry {
   value: number;
 }
 
+function normaliseModifierId(value: string | undefined): string {
+  return (value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+}
+
+export function knownModifierSubTooltip(key?: string, label?: string): TooltipContent | undefined {
+  const relationshipTitle = webUIText('Interaction.Factor.Relationship.Title');
+  const relationshipIds = [
+    'relationship',
+    'relationships',
+    normaliseModifierId(relationshipTitle),
+    normaliseModifierId(webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1144.37')),
+    normaliseModifierId(webUIText('Auto.ComponentsModalsPersonInteractionGiftModal.191.7')),
+  ];
+  const candidates = [key, label].map(normaliseModifierId);
+  if (candidates.some(id => id.length > 0 && relationshipIds.includes(id))) {
+    return {
+      title: relationshipTitle,
+      body: webUIText('Interaction.Factor.Relationship.Body'),
+    };
+  }
+
+  if (candidates.some(id => id === 'lackingluxuries' || id.includes('lackingluxur'))) {
+    return {
+      title: webUIText('CharacterSidebar.LuxuryNeeds'),
+      body: webUIText('CharacterSidebar.LuxuryNeeds.ShortageBody'),
+    };
+  }
+
+  return undefined;
+}
+
 export function modifierTooltipLines(
   entries?: ModifierTooltipEntry[],
   maximumFractionDigits = 1,
@@ -43,6 +78,7 @@ export function modifierTooltipLines(
     label: entry.label,
     value: formatSignedNumber(entry.value, { maximumFractionDigits }),
     valueColor: modifierValueColor(entry.value),
+    subTooltip: knownModifierSubTooltip(entry.key, entry.label),
   }));
 }
 
@@ -79,6 +115,83 @@ function traitContributionLines(character: Character, stat: StatKey): TooltipLin
         valueColor: effect.isPositive ? 'var(--green)' : 'var(--red)',
       })),
   );
+}
+
+export type RoleSkillKey = 'military' | 'administrative' | 'diplomatic' | 'intrigue';
+
+const ROLE_SPECIALIST_TRAIT_IDS: Record<RoleSkillKey, string[]> = {
+  military: ['legendarygeneral', 'veterancommander'],
+  administrative: ['masterbureaucrat', 'seasonedadministrator'],
+  diplomatic: ['masternegotiator', 'skilleddiplomat'],
+  intrigue: ['spymaster', 'accomplishedschemer'],
+};
+
+const ROLE_EFFECT_TEXT_KEYS: Record<RoleSkillKey, string> = {
+  military: 'CharacterSidebar.Role.Effect.Military',
+  administrative: 'CharacterSidebar.Role.Effect.Administrative',
+  diplomatic: 'CharacterSidebar.Role.Effect.Diplomatic',
+  intrigue: 'CharacterSidebar.Role.Effect.Intrigue',
+};
+
+/** Matches URoleSpecialisationHelpers::GetEffectivenessForExperienceLevel. */
+export function roleExperienceEffectiveness(stars: number): number {
+  if (stars >= 5) return 0.20;
+  if (stars >= 4) return 0.15;
+  if (stars >= 3) return 0.10;
+  if (stars >= 2) return 0.05;
+  return 0;
+}
+
+function signedPercent(value: number, maximumFractionDigits = 0): string {
+  const formatted = formatPercent(value * 100, maximumFractionDigits);
+  return value > 0 ? `+${formatted}` : formatted;
+}
+
+function specialistTraitForRole(character: Character | null | undefined, role: RoleSkillKey) {
+  const ids = ROLE_SPECIALIST_TRAIT_IDS[role];
+  return character?.traits.find(trait => ids.includes(trait.id.trim().toLowerCase()));
+}
+
+export function buildRoleSkillTooltip(options: {
+  role: RoleSkillKey;
+  label: string;
+  xp: number;
+  tier: WebUIRoleTierData;
+  bodyKey: string;
+  character?: Character | null;
+}): TooltipContent {
+  const effectiveness = roleExperienceEffectiveness(options.tier.stars);
+  const lines: TooltipLine[] = [
+    { label: webUIText('CharacterStats.CurrentEffects'), isHeader: true },
+    {
+      label: webUIText(ROLE_EFFECT_TEXT_KEYS[options.role]),
+      value: signedPercent(effectiveness),
+      valueColor: modifierValueColor(effectiveness),
+    },
+  ];
+
+  const specialist = specialistTraitForRole(options.character, options.role);
+  if (specialist) {
+    const traitEffects = (specialist.effects ?? []).map(effect => ({
+      label: effect.label,
+      labelIcon: STAT_ICONS[effect.stat],
+      value: effect.value,
+      valueColor: effect.isPositive ? 'var(--green)' : 'var(--red)',
+    }));
+    if (traitEffects.length > 0) {
+      lines.push({ label: specialist.name, isHeader: true });
+      lines.push(...traitEffects);
+    }
+  }
+
+  return {
+    title: webUIText('Auto.Prop.componentssidebarsCharacterSidebar.1230.1', {
+      Label: options.label,
+      Label2: options.tier.label,
+    }),
+    body: webUIText(options.bodyKey, { Xp: options.xp }),
+    lines,
+  };
 }
 
 export function characterStatGlossary(stat: StatKey): { title: string; body: string } {

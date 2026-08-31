@@ -19,17 +19,18 @@ interface RegionTooltipProps {
   children: React.ReactNode;
 }
 
-const TIER_LABEL: Record<Tier, string> = {
-  region: 'Region',
-  land: 'Land',
-  domain: 'Domain',
-};
+function geographyTierLabel(tier: Tier): string {
+  if (tier === 'region') return webUIText('SettlementSidebar.Region');
+  if (tier === 'land') return webUIText('RegionTooltip.Land');
+  return webUIText('RegionTooltip.Domain');
+}
 
-const CHILD_HEADING: Record<string, string> = {
-  settlement: 'Settlements',
-  region: 'Regions',
-  land: 'Lands',
-};
+function geographyChildHeading(childTier: string): string {
+  if (childTier === 'settlement') return webUIText('Economy.Settlements');
+  if (childTier === 'region') return webUIText('BottomBar.GovernorAssignment.Regions');
+  if (childTier === 'land') return webUIText('RegionTooltip.Lands');
+  return webUIText('RegionTooltip.Contains');
+}
 
 interface CachedEntry {
   data: GetGeographicSummaryResponse | null;
@@ -89,7 +90,7 @@ const RegionTooltip: React.FC<RegionTooltipProps> = ({ tier, regionKey, name, po
   if (data) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsCommonRegionTooltip.89.1'), value: formatNumber(data.totalPopulation) });
     if (data.children.length > 0) {
-      lines.push({ get label() { return CHILD_HEADING[data.childTier] ?? webUIText("RegionTooltip.Contains"); }, isHeader: true });
+      lines.push({ get label() { return geographyChildHeading(data.childTier); }, isHeader: true });
       for (const child of data.children) {
         lines.push({ label: child.name, value: formatNumber(child.population) });
       }
@@ -98,7 +99,7 @@ const RegionTooltip: React.FC<RegionTooltipProps> = ({ tier, regionKey, name, po
 
   const content = {
     title: name,
-    body: TIER_LABEL[tier],
+    get body() { return geographyTierLabel(tier); },
     lines: lines.length > 0 ? lines : undefined,
   };
 

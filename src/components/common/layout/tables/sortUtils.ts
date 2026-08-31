@@ -34,6 +34,12 @@ export function normaliseSortText(value: unknown): string {
   ));
 }
 
+export function textMatchesSearch(haystack: unknown, query: unknown): boolean {
+  const needle = normaliseSortText(query).trim();
+  if (!needle) return true;
+  return normaliseSortText(haystack).includes(needle);
+}
+
 function normaliseSortValue(value: unknown): string {
   return normaliseSortText(value);
 }

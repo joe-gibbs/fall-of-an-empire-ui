@@ -25,9 +25,9 @@ import { sidebarTypeForEntity } from '../../common/entities/entityLinkUtils';
 import { renderRichText } from '../../../utils/richText';
 import type { PortraitLayerData } from '../../../data/types';
 import type { AppointmentContestView } from '../../../bridge/characters/useCourtAppointmentContestsBridge';
-import { runCourtOfficeAction, runGovernorMissionAction, type ProvinceModeCourtOfficeAction, type ProvinceModeMissionStatus, type ProvinceModeOverview } from '../../../bridge/provinces/useProvinceModeOverviewBridge';
+import { runCourtOfficeAction, runGovernorMissionAction, type ProvinceModeCourtOfficeAction, type ProvinceModeMissionStatus, type ProvinceModeOverview, type ProvinceModeScorePart } from '../../../bridge/provinces/useProvinceModeOverviewBridge';
 import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
-import Tooltip from '../../common/tooltips/Tooltip';
+import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
 import { cultureIconPath } from '../../../utils/cultureIcons';
 import { registerScreen } from '../../../registry/index';
 import { useWebUIText } from '../../../localization/WebUITextContext';
@@ -56,6 +56,7 @@ interface ThreatRow {
   value: number;
   remainingDays?: number;
   tone: 'high' | 'medium' | 'low';
+  parts: ProvinceModeScorePart[];
 }
 
 interface StandingModifierRow {
@@ -67,6 +68,7 @@ interface StandingModifierRow {
   value: number;
   remainingDays: number;
   tone: 'positive' | 'negative' | 'neutral';
+  parts: ProvinceModeScorePart[];
 }
 
 interface MissionRow {
@@ -154,6 +156,12 @@ function scoreColour(score: number): string {
   return 'var(--orange)';
 }
 
+function trendColour(trend: number): string {
+  if (trend > 0) return 'var(--green)';
+  if (trend < 0) return 'var(--red)';
+  return 'var(--text-muted)';
+}
+
 function threatColour(score: number): string {
   if (score >= 60) return 'var(--red)';
   if (score >= 35) return 'var(--orange)';
@@ -168,6 +176,68 @@ function threatTone(tone: string): ThreatRow['tone'] {
 function standingTone(tone: string): StandingModifierRow['tone'] {
   if (tone === 'positive' || tone === 'negative' || tone === 'neutral') return tone;
   return 'neutral';
+}
+
+function threatValueColour(tone: ThreatRow['tone']): string {
+  if (tone === 'high') return 'var(--red)';
+  if (tone === 'medium') return 'var(--orange)';
+  return 'var(--text-muted)';
+}
+
+function standingValueColour(tone: StandingModifierRow['tone']): string {
+  if (tone === 'positive') return 'var(--green)';
+  if (tone === 'negative') return 'var(--red)';
+  return 'var(--text-muted)';
+}
+
+function scorePartColour(kind: 'threat' | 'standing', value: number): string {
+  if (value === 0) return 'var(--text-muted)';
+  if (kind === 'threat') return value > 0 ? 'var(--red)' : 'var(--green)';
+  return value > 0 ? 'var(--green)' : 'var(--red)';
+}
+
+function scoreRowTooltip(
+  label: string,
+  description: string | undefined,
+  value: number,
+  remainingDays: number | undefined,
+  valueColor: string,
+  parts: ProvinceModeScorePart[] | undefined,
+  kind: 'threat' | 'standing',
+  t: ReturnType<typeof useWebUIText>,
+): TooltipContent {
+  const remaining = remainingDays !== undefined && remainingDays > 0
+    ? t('ProvinceMode.StandingModifier.Remaining', { Days: formatNumber(remainingDays) })
+    : undefined;
+  const sources = parts ?? [];
+  const lines: TooltipLine[] = [
+    {
+      label: t('FactionOverview.ModifierTotal'),
+      value: formatSignedNumber(value),
+      valueColor,
+    },
+  ];
+
+  if (sources.length > 0) {
+    lines.push({ label: t('FactionOverview.ModifierSources'), isHeader: true });
+    for (const part of sources) {
+      lines.push({
+        label: part.label,
+        value: formatSignedNumber(part.value),
+        valueColor: scorePartColour(kind, part.value),
+      });
+    }
+  }
+
+  if (remaining) {
+    lines.push({ label: remaining, stacked: true });
+  }
+
+  return {
+    title: label,
+    body: description || undefined,
+    lines,
+  };
 }
 
 function missionStatusKey(status: MissionRow['status']): string {
@@ -400,6 +470,60 @@ function compareAppointmentRoles(left: AppointmentRole, right: AppointmentRole):
   const availableDiff = left.availableInDays - right.availableInDays;
   if (availableDiff !== 0) return availableDiff;
   return left.remainingDays - right.remainingDays;
+}
+
+function scoreBarMax(rows: { value: number }[]): number {
+  return Math.max(1, ...rows.map(row => Math.abs(row.value)));
+}
+
+function GovernorScoreRow({
+  rowClassName,
+  icon,
+  iconClassName,
+  label,
+  description,
+  remainingDays,
+  value,
+  valueClassName,
+  valueColor,
+  parts,
+  kind,
+  barMax,
+}: {
+  rowClassName: string;
+  icon: string;
+  iconClassName?: string;
+  label: string;
+  description?: string;
+  remainingDays?: number;
+  value: number;
+  valueClassName: string;
+  valueColor: string;
+  parts?: ProvinceModeScorePart[];
+  kind: 'threat' | 'standing';
+  barMax: number;
+}) {
+  const t = useWebUIText();
+  const tooltip = scoreRowTooltip(label, description, value, remainingDays, valueColor, parts, kind, t);
+
+  return (
+    <div className={rowClassName}>
+      <Tooltip content={tooltip} position="top" delay={150} wrapperClassName="gfov-score-row-hit">
+        <div className="gfov-score-row-main">
+          <div className="gfov-score-row-label">
+            <img className={iconClassName} src={icon} alt="" draggable={false} />
+            {label}
+          </div>
+          <span className={valueClassName}>{formatSignedNumber(value)}</span>
+        </div>
+        {value !== 0 && (
+          <div className="gfov-score-row-bar">
+            <GameBar value={Math.abs(value)} max={barMax} colour={valueColor} size="sm" />
+          </div>
+        )}
+      </Tooltip>
+    </div>
+  );
 }
 
 function RecallStatusPanel({
@@ -1084,8 +1208,10 @@ function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceMode
 function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOverview | null; onOpenCharacter: (id: string) => void }) {
   const t = useWebUIText();
   const standingScore = overview?.standingScore ?? 0;
+  const standingTrend = overview?.standingTrend ?? 0;
   const threatScore = overview?.threatScore ?? 0;
   const standingColour = scoreColour(standingScore);
+  const standingTrendColour = trendColour(standingTrend);
   const threatColourValue = threatColour(threatScore);
   const reviewDays = overview?.nextReviewDays ?? 0;
   const reviewIntervalDays = overview?.reviewIntervalDays ?? 0;
@@ -1094,6 +1220,8 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
   const provinceName = overview?.province.name || '';
   const threatRows: ThreatRow[] = (overview?.threatRows ?? []).map(row => ({ ...row, tone: threatTone(row.tone) }));
   const standingRows: StandingModifierRow[] = (overview?.standingRows ?? []).map(row => ({ ...row, tone: standingTone(row.tone) }));
+  const threatBarMax = scoreBarMax(threatRows);
+  const standingBarMax = scoreBarMax(standingRows);
   const recallStage = overview?.recallStage ?? 0;
 
   return (
@@ -1126,6 +1254,26 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
             <div className="gfov-meter-score-row">
               <span className="gfov-meter-score" style={{ color: standingColour }}>{formatNumber(standingScore)}</span>
               <span className="gfov-meter-max">/ 100</span>
+              <Tooltip
+                content={{
+                  title: t('ImperialStanding.Trend'),
+                  body: t('ProvinceMode.StandingTrendTooltip'),
+                  lines: [
+                    {
+                      label: t('ImperialStanding.Trend'),
+                      value: t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(standingTrend) }),
+                      valueColor: standingTrendColour,
+                    },
+                  ],
+                }}
+                position="bottom"
+                delay={150}
+                inline
+              >
+                <span className="gfov-meter-trend" style={{ color: standingTrendColour }}>
+                  {t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(standingTrend) })}
+                </span>
+              </Tooltip>
             </div>
             <GameBar value={standingScore} max={100} colour={standingColour} size="sm" />
           </div>
@@ -1159,73 +1307,64 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
       <RecallStatusPanel
         activeStage={recallStage}
       />
-          <EmperorPanel overview={overview} onOpenCharacter={onOpenCharacter} />
 
-      <div className="gfov-two-cols">
-        <div className="gfov-col">
-          <div className="gfov-panel">
-            <div className="gfov-panel-header">
-              <img className="gfov-panel-icon" src="/assets/icons/I_Dread.png" alt="" draggable={false} />
-              <SectionHeading title={t('ProvinceMode.ThreatTitle')} variant="ornate" />
-            </div>
-            <div className="gfov-threat-rows">
-              {threatRows.map(row => (
-                <div className="gfov-threat-row" key={row.id}>
-                  <div className="gfov-threat-row-copy">
-                    <div className="gfov-threat-row-label">
-                      <img src={row.icon} alt="" draggable={false} />
-                      {row.label ?? keyedText(t, row.labelKey)}
-                    </div>
-                    {row.description && (
-                      <span className="gfov-threat-row-description">
-                        {row.description}
-                      </span>
-                    )}
-                    {row.remainingDays !== undefined && row.remainingDays > 0 && (
-                      <span className="gfov-threat-row-time">
-                        {t('ProvinceMode.StandingModifier.Remaining', { Days: formatNumber(row.remainingDays) })}
-                      </span>
-                    )}
-                  </div>
-                  <span className={`gfov-threat-value gfov-threat-value--${row.tone}`}>
-                    {row.value > 0 ? `+${formatNumber(row.value)}` : formatNumber(row.value)}
-                  </span>
-                </div>
-              ))}
-            </div>
+      <div className="gfov-province-body">
+        <div className="gfov-panel gfov-province-threat">
+          <div className="gfov-panel-header">
+            <img className="gfov-panel-icon" src="/assets/icons/I_Dread.png" alt="" draggable={false} />
+            <SectionHeading title={t('ProvinceMode.ThreatTitle')} variant="ornate" />
+          </div>
+          <div className="gfov-threat-rows">
+            {threatRows.map(row => {
+              const label = row.label ?? keyedText(t, row.labelKey);
+              return (
+                <GovernorScoreRow
+                  key={row.id}
+                  rowClassName="gfov-threat-row"
+                  icon={row.icon}
+                  label={label}
+                  description={row.description}
+                  remainingDays={row.remainingDays}
+                  value={row.value}
+                  valueClassName={`gfov-threat-value gfov-threat-value--${row.tone}`}
+                  valueColor={threatValueColour(row.tone)}
+                  parts={row.parts}
+                  kind="threat"
+                  barMax={threatBarMax}
+                />
+              );
+            })}
           </div>
         </div>
 
-        <div className="gfov-col">
-          <div className="gfov-panel">
+        <div className="gfov-province-aside">
+          <EmperorPanel overview={overview} onOpenCharacter={onOpenCharacter} />
+          <div className="gfov-panel gfov-province-standing">
             <div className="gfov-panel-header">
               <img className="gfov-panel-icon" src="/assets/icons/I_Compliance.png" alt="" draggable={false} />
               <SectionHeading title={t('ProvinceMode.StandingBreakdownTitle')} variant="ornate" />
             </div>
             <div className="gfov-standing-rows">
-              {standingRows.map(row => (
-                <div className="gfov-standing-row" key={row.id}>
-                  <div className="gfov-standing-row-copy">
-                    <div className="gfov-standing-row-label">
-                      <img className="gfov-standing-row-marker" src={row.icon || '/assets/icons/I_Compliance.png'} alt="" draggable={false} />
-                      {row.label ?? keyedText(t, row.labelKey)}
-                    </div>
-                    {row.description && (
-                      <span className="gfov-standing-row-description">
-                        {row.description}
-                      </span>
-                    )}
-                    {row.remainingDays > 0 && (
-                      <span className="gfov-standing-row-time">
-                        {t('ProvinceMode.StandingModifier.Remaining', { Days: formatNumber(row.remainingDays) })}
-                      </span>
-                    )}
-                  </div>
-                  <span className={`gfov-standing-value gfov-standing-value--${row.tone}`}>
-                    {formatSignedNumber(row.value)}
-                  </span>
-                </div>
-              ))}
+              {standingRows.map(row => {
+                const label = row.label ?? keyedText(t, row.labelKey);
+                return (
+                  <GovernorScoreRow
+                    key={row.id}
+                    rowClassName="gfov-standing-row"
+                    icon={row.icon || '/assets/icons/I_Compliance.png'}
+                    iconClassName="gfov-standing-row-marker"
+                    label={label}
+                    description={row.description}
+                    remainingDays={row.remainingDays}
+                    value={row.value}
+                    valueClassName={`gfov-standing-value gfov-standing-value--${row.tone}`}
+                    valueColor={standingValueColour(row.tone)}
+                    parts={row.parts}
+                    kind="standing"
+                    barMax={standingBarMax}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
@@ -1302,6 +1441,9 @@ function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => vo
                 <div className="gfov-reggov-region">
                   <span className="gfov-reggov-region-name">{row.regionName}</span>
                   <span className="gfov-reggov-region-sub">{row.settlementName}</span>
+                  {row.ownerFactionName && row.ownerFactionId && row.ownerFactionId !== diplomacy?.playerFactionId ? (
+                    <span className="gfov-reggov-region-sub">{row.ownerFactionName}</span>
+                  ) : null}
                 </div>
                 <div className="gfov-reggov-governor">
                   <span className={row.governorId ? 'gfov-reggov-governor-name' : 'gfov-reggov-governor-name gfov-reggov-governor-name--empty'}>

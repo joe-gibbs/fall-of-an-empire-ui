@@ -81,6 +81,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
     food: 0,
     foodProduction: data.foodProduction,
     foodConsumption: data.foodConsumption,
+    corruption: data.corruption,
     fortificationLevel: data.fortificationLevel,
     governor: data.hasGovernor ? {
       id: data.governor.personId,
@@ -274,6 +275,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
     growthBreakdown: data.growthBreakdown.map(s => ({ name: s.name, value: s.value })),
     foodBreakdown: data.foodBreakdown.map(s => ({ name: s.name, value: s.value })),
     fortificationBreakdown: data.fortificationBreakdown.map(s => ({ name: s.name, value: s.value })),
+    corruptionBreakdown: data.corruptionBreakdown.map(s => ({ key: s.key, name: s.name, value: s.value })),
     siege: data.siegeStateKind === 'siege' || data.siegeStateKind === 'blockade' || data.siegeStateKind === 'occupation'
       ? {
           state: data.siegeStateKind,

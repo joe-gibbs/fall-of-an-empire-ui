@@ -5,6 +5,7 @@ import PersonTooltip from '../../common/tooltips/PersonTooltip';
 import Tooltip from '../../common/tooltips/Tooltip';
 import GameButton from '../../common/buttons/GameButton';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
+import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import CompactStat from '../../common/data-display/stats/CompactStat';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
@@ -99,10 +100,6 @@ const DEFAULT_CHARACTER_FILTERS: CharacterFilters = {
 
 function formatWhole(value: number): string {
   return formatNumber(value);
-}
-
-function normaliseText(value: string): string {
-  return value.trim().toLowerCase();
 }
 
 function matchFilter(filterValue: string, rowValue: string): boolean {
@@ -335,7 +332,7 @@ const CharacterRoleCell = memo(function CharacterRoleCell({ character }: { chara
     <>
       <div className="chs-role-line">
         <span className="chs-role">{character.role}</span>
-        {character.isHeir && <span className="chs-small-badge chs-tone--gold"><WebUIText textKey="Auto.ComponentsScreensCharactersScreen.178.1" /></span>}
+        {character.isHeir && <span className="badge badge--gold chs-small-badge"><WebUIText textKey="Auto.ComponentsScreensCharactersScreen.178.1" /></span>}
       </div>
       <div className="chs-detail">{detail || categoryLabel(character.category)}</div>
     </>
@@ -545,8 +542,8 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
       character.factionName,
       ...character.traits.map(trait => trait.name),
       activityText(character),
-    ].join(' ').toLowerCase();
-    return haystack.includes(normaliseText(query));
+    ].join(' ');
+    return textMatchesSearch(haystack, query);
   }, []);
 
   const filterPredicate = useCallback((character: CharacterListEntry) => (

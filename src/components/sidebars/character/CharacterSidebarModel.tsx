@@ -2,6 +2,7 @@ import InteractionEffectsTooltip from '../../common/tooltips/InteractionEffectsT
 import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
 import type { Character, SettlementTier } from '../../../data/types';
 import type { PersonInteractionView } from '../../../bridge/characters/usePersonInteractionsBridge';
+import { knownModifierSubTooltip } from '../../../utils/characterTooltipContent';
 import { successChanceColour } from '../../../utils/colorFormatters';
 import { BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
@@ -217,6 +218,7 @@ export function buildInteractionTooltip(interaction: PersonInteractionView, targ
         label: factor.name,
         value: `${formatSignedNumber(factor.percent)}%`,
         valueColor: factor.percent >= 0 ? 'var(--green)' : 'var(--red)',
+        subTooltip: knownModifierSubTooltip(factor.key, factor.name),
       });
     }
   }

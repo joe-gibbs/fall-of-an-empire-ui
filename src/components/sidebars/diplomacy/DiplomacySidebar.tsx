@@ -177,7 +177,7 @@ function getStatusBadgeText(faction: Faction): string {
 }
 
 function DiplomacyStatusBadge({ text, status }: { text: string; status: string }) {
-  return <span className={`diplo-status-badge diplo-status-badge--${status}`}>{text}</span>;
+  return <span className={`badge badge--${status} diplo-status-badge`}>{text}</span>;
 }
 
 function getOpinionColor(opinion: number): string {

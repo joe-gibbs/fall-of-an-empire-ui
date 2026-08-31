@@ -36,6 +36,7 @@ import {
   type ScenarioMapWarDto,
 } from '../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../bridge/core/runtimeEngine';
+import { textMatchesSearch } from '../components/common/layout/tables/sortUtils';
 import './FactionSelection.css';
 
 import { WebUIText } from '../localization/WebUITextContext';
@@ -218,12 +219,12 @@ function factionMatchesSearch(faction: ScenarioMapFactionDto, query: string): bo
   }
 
   return (
-    faction.displayName.toLowerCase().includes(query) ||
-    faction.realm.toLowerCase().includes(query) ||
-    faction.cultureDisplayName.toLowerCase().includes(query) ||
-    faction.cultureInfo.groupDisplayName.toLowerCase().includes(query) ||
-    faction.religionDisplayName.toLowerCase().includes(query) ||
-    faction.capitalSettlementName.toLowerCase().includes(query)
+    textMatchesSearch(faction.displayName, query) ||
+    textMatchesSearch(faction.realm, query) ||
+    textMatchesSearch(faction.cultureDisplayName, query) ||
+    textMatchesSearch(faction.cultureInfo.groupDisplayName, query) ||
+    textMatchesSearch(faction.religionDisplayName, query) ||
+    textMatchesSearch(faction.capitalSettlementName, query)
   );
 }
 
@@ -903,7 +904,7 @@ function FactionSelectionTabletopMap({
             </span>
             <span>{hoveredFaction.displayName}</span>
             {!hoveredFaction.playable && (
-              <span className="fs-map-hover-tag fs-map-hover-tag--locked">{t('MainMenu.Locked')}</span>
+              <span className="badge badge--gold fs-map-hover-tag">{t('MainMenu.Locked')}</span>
             )}
           </div>
         )}
@@ -988,7 +989,7 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
       [factions],
     );
     const hovered = hoveredBaseName ? factionsByBase.get(hoveredBaseName) ?? null : null;
-    const searchQuery = search.trim().toLowerCase();
+    const searchQuery = search.trim();
 
     const visibleFactions = useMemo(
       () => factions.filter((faction) => {
@@ -1267,7 +1268,7 @@ function FactionSelectionDetailPanel({
           </span>
           <div className="fs-detail-hero-info">
             {!selected.playable && (
-              <div className="fs-detail-hero-status">
+              <div className="badge badge--gold fs-detail-hero-status">
                 {showPurchaseForSelected ? t('Demo.BuyFullGame') : t('MainMenu.Locked')}
               </div>
             )}

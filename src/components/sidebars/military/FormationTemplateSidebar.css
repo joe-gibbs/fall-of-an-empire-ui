@@ -526,20 +526,6 @@
 
 .tpl-core-badge {
   flex-shrink: 0;
-  padding: 0.08rem 0.4rem;
-  color: var(--gold-light);
-  background-color: rgba(201, 168, 76, 0.15);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: var(--gold-muted);
-  border-left-color: var(--gold-muted);
-  font-family: var(--font-header);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .tpl-unit-type-row {

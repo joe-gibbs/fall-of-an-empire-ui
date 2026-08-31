@@ -236,7 +236,7 @@ export interface Character {
   /** Net opinion this character has towards the player (sum of modifiers). */
   opinionTowardPlayer?: number;
   /** Sorted modifier breakdown of this character's opinion towards the player. */
-  opinionBreakdown?: { label: string; value: number }[];
+  opinionBreakdown?: { key?: string; label: string; value: number }[];
   /** Sorted modifier breakdown for honour/dread. */
   honourDreadBreakdown?: { label: string; value: number }[];
   /** Regions this character governs */
@@ -530,6 +530,8 @@ export interface BuildingBuildState {
   state: 'visible' | 'greyed' | 'hidden';
   /** Displayed when greyed (e.g. "Requires Palisades at maximum level (2/3)."). */
   reason?: string;
+  /** True when the lock comes from Common_RequiresPopulation. */
+  blockedByPopulation?: boolean;
 }
 
 export interface Building {
@@ -587,6 +589,10 @@ export interface Building {
   downgradeReason?: string;
   downgradeTargetName?: string;
   downgradeTargetLevel?: number;
+  canRepair?: boolean;
+  repairReason?: string;
+  repairGoldCost?: number;
+  repairResourceCost?: BuildingResourceCost[];
 }
 
 /** One cross-chain prerequisite entry. */
@@ -879,6 +885,7 @@ export interface PopGroup {
 export interface ModifierSource {
   name: string;
   value: number;
+  key?: string;
 }
 
 export interface SettlementModifier {
@@ -957,6 +964,8 @@ export interface Settlement {
   food: number;
   foodProduction: number;
   foodConsumption: number;
+  /** Administrative corruption (0-1). */
+  corruption: number;
   fortificationLevel: number;
   governor: Character | null;
   culture: string;
@@ -1001,6 +1010,7 @@ export interface Settlement {
   growthBreakdown?: ModifierSource[];
   foodBreakdown?: ModifierSource[];
   fortificationBreakdown?: ModifierSource[];
+  corruptionBreakdown?: ModifierSource[];
   bishop?: Character | null;
   bishopReligion?: string;
   /** Active hostile state on the settlement. Undefined when None. */
@@ -1163,6 +1173,7 @@ export interface ArmySubordinate {
   maxStrength: number;
   unitTypes: ArmyUnitTypeStrength[];
   withinCommandRange: boolean;
+  receivesCommandBenefits: boolean;
   distanceToSuperior: number;
   superiorCommandRadius: number;
   hierarchyTacticsBonus: number;
@@ -1246,6 +1257,7 @@ export interface Army {
   subordinates?: ArmySubordinate[];
   commandSubordinateCount?: number;
   commandSubordinateCapacity?: number;
+  receivesCommandBenefits?: boolean;
   commandMaintenance?: number;
   commandBuffRadius?: number;
   hierarchyTacticsBonus?: number;
@@ -1305,6 +1317,8 @@ export interface MilitaryForce {
   isPlayerControlled: boolean;
   subordinateCount: number;
   subordinateCapacity: number;
+  parentSlotIndex?: number;
+  receivesCommandBenefits?: boolean;
 }
 
 export interface MilitaryFoederatiEntry {

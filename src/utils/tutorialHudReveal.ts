@@ -27,6 +27,7 @@ const SCREENS_MENU_ENTRY_TOKENS = new Set([
   'encyclopediabutton',
   'buildqueuebutton',
   'victoryconditionsbutton',
+  'worldsearchbutton',
   'pinneditemstogglebutton',
   'ledgerbutton',
 ]);

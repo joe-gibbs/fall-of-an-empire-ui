@@ -7,25 +7,30 @@ import { playSound } from '../../hooks/useSound';
 import { formatNumber } from '../../utils/numberFormat';
 import { useWebUIText } from '../../localization/WebUITextContext';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
+import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 import { useEncyclopediaBridge } from '../../bridge/settlements-economy/useEncyclopediaBridge';
 import {
   autoAssignGovernorsBridge,
   cancelBuildingPlacementBridge,
   cancelFormationSelectionBridge,
+  cancelResettlementSelectionBridge,
   confirmFormationSelectionBridge,
   confirmBuildingPlacementBridge,
+  confirmResettlementSelectionBridge,
   finishGovernorAssignmentBridge,
   selectGovernorCandidateBridge,
   undoBuildingPlacementBridge,
   useBuildingPlacementOperation,
   useFormationSelectionOperation,
   useGovernorAssignmentOperation,
+  useResettlementSelectionOperation,
 } from '../../bridge/military-map/useBottomBarOperationsBridge';
 import type {
   BuildingPlacementOperation,
   FormationSelectionOperation,
   GovernorAssignmentCandidateView,
   GovernorAssignmentOperation,
+  ResettlementSelectionOperation,
 } from '../../bridge/military-map/useBottomBarOperationsBridge';
 import type { EncyclopediaBuildingDTO } from '../../bridge-types.generated.ts';
 import BuildingEffects from '../common/content/BuildingEffects';
@@ -43,6 +48,7 @@ const ICONS = {
   undo: '/assets/icons/I_ResetView.png',
   army: '/assets/icons/Armies/I_ArmyRephsian.png',
   navy: '/assets/icons/I_NaviesQuickButton.png',
+  resettle: '/assets/icons/I_Resettle.png',
 };
 
 function fmt(value: number): string {
@@ -364,6 +370,45 @@ function BuildingPlacementPanel({ operation }: { operation: BuildingPlacementOpe
   );
 }
 
+function ResettlementSelectionPanel({ operation }: { operation: ResettlementSelectionOperation }) {
+  const t = useWebUIText();
+  const title = operation.interactionName || t('BottomBar.Resettlement.Title');
+  const detail = operation.description || operation.message;
+  return (
+    <div className="operation-bar operation-bar--resettlement">
+      <OperationHeader
+        icon={ICONS.resettle}
+        title={title}
+        detail={detail}
+      />
+      <div className="operation-building-summary">
+        {operation.goldCost > 0 && (
+          <span className="operation-cost">
+            <img src={ICONS.gold} alt="" draggable={false} />
+            {t('BottomBar.Resettlement.GoldCost', { Amount: fmt(operation.goldCost) })}
+          </span>
+        )}
+        {operation.message && <span className="operation-muted">{operation.message}</span>}
+      </div>
+      <div className="operation-actions">
+        <OperationButton
+          icon={ICONS.confirm}
+          label={t('Common.Confirm')}
+          variant="confirm"
+          disabled={!operation.canConfirm}
+          onPress={() => { confirmResettlementSelectionBridge().catch(acknowledgeBridgeFailure); }}
+        />
+        <OperationButton
+          icon={ICONS.cancel}
+          label={t('Common.Cancel')}
+          variant="danger"
+          onPress={() => { cancelResettlementSelectionBridge().catch(acknowledgeBridgeFailure); }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function FormationSelectionPanel({ operation }: { operation: FormationSelectionOperation }) {
   const t = useWebUIText();
   const icon = operation.templateType === 'naval' ? ICONS.navy : ICONS.army;
@@ -407,6 +452,7 @@ const OperationBar: React.FC = () => {
   const buildingPlacement = useBuildingPlacementOperation();
   const governorAssignment = useGovernorAssignmentOperation();
   const formationSelection = useFormationSelectionOperation();
+  const resettlementSelection = useResettlementSelectionOperation();
   const [governorPickerRequested, setGovernorPickerRequested] = React.useState(false);
 
   React.useEffect(() => {
@@ -435,6 +481,10 @@ const OperationBar: React.FC = () => {
 
   if (formationSelection) {
     return <FormationSelectionPanel operation={formationSelection} />;
+  }
+
+  if (resettlementSelection) {
+    return <ResettlementSelectionPanel operation={resettlementSelection} />;
   }
 
   return null;

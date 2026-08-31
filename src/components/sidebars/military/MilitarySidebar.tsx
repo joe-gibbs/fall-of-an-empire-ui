@@ -85,7 +85,7 @@ import {
 } from './MilitarySidebarPresentation';
 
 import { webUIText } from '../../../localization/WebUITextContext';
-import { RANK_META } from '../../screens/Military/forces';
+import { RANK_META, commandSupportTooltip, hasOverallCommand } from '../../screens/Military/forces';
 interface MilitarySidebarProps {
   army: Army;
   onClose: () => void;
@@ -140,6 +140,10 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const isReplenishing = army.isReplenishing ?? false;
   const movementSpeed = isForcedMarching ? derived.speed * 2 : derived.speed;
   const canHaveSubordinates = army.commandRank === 'Dux' || army.commandRank === 'Praefectus';
+  const overallCommandTaken = hasOverallCommand(militaryOverview?.forces ?? [], {
+    id: army.id,
+    isNavy: !!army.isNavy,
+  });
   const headerBg = army.isNavy ? '/assets/events/naval-battle.png' : '/assets/events/cavalry-charge.png';
   const isPlayerControlled = army.isPlayerControlled;
   const resourceRows = sortResourceRowsByUrgency(buildResourceRows(army));
@@ -395,9 +399,11 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     ...(army.commandRank !== 'Dux' ? [{
       label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.468.2'),
       icon: '/assets/icons/I_Promote.png',
-      description: army.commandRank === 'Legatus' ? RANK_META.Praefectus.desc : RANK_META.Dux.desc,
+      description: army.commandRank === 'Praefectus' && overallCommandTaken
+        ? webUIText(army.isNavy ? 'Military.Command.AlreadyHasOverallFleet' : 'Military.Command.AlreadyHasOverallArmy')
+        : (army.commandRank === 'Legatus' ? RANK_META.Praefectus.desc : RANK_META.Dux.desc),
       tutorialTarget: 'PromoteMilitaryCommandButton',
-      disabled: !isPlayerControlled,
+      disabled: !isPlayerControlled || (army.commandRank === 'Praefectus' && overallCommandTaken),
       onClick: () => {
         promoteMilitaryCommandBridge(army.id).catch(acknowledgeBridgeFailure);
       },
@@ -772,11 +778,15 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 <Tooltip
                   content={{
                     title: army.parentCommand,
-                    get body() { return webUIText('MilitarySidebar.Under', { ParentCommand: army.parentCommand }); },
+                    get body() {
+                      return army.receivesCommandBenefits === false
+                        ? webUIText('Military.Command.Unsupported')
+                        : webUIText('MilitarySidebar.Under', { ParentCommand: army.parentCommand });
+                    },
                     lines: [
-                      { label: webUIText('Military.Command.TacticsBonus'), value: formatPercent((army.hierarchyTacticsBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
-                      { label: webUIText('Military.Command.MoraleBonus'), value: formatPercent((army.hierarchyMoraleBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
-                      { label: webUIText('Military.Command.SpeedBonus'), value: formatPercent((army.hierarchySpeedBonus ?? 0) * 100, 1), valueColor: 'var(--green)' },
+                      { label: webUIText('Military.Command.TacticsBonus'), value: formatPercent((army.hierarchyTacticsBonus ?? 0) * 100, 1), valueColor: army.receivesCommandBenefits === false ? 'var(--red)' : 'var(--green)' },
+                      { label: webUIText('Military.Command.MoraleBonus'), value: formatPercent((army.hierarchyMoraleBonus ?? 0) * 100, 1), valueColor: army.receivesCommandBenefits === false ? 'var(--red)' : 'var(--green)' },
+                      { label: webUIText('Military.Command.SpeedBonus'), value: formatPercent((army.hierarchySpeedBonus ?? 0) * 100, 1), valueColor: army.receivesCommandBenefits === false ? 'var(--red)' : 'var(--green)' },
                     ],
                   }}
                   position="right"
@@ -807,8 +817,25 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
           {canHaveSubordinates && (
             <div className="mil-command-stats">
               <div>
-                <span>{webUIText('Military.Command.SubordinateCapacity')}</span>
-                <strong>{formatNumber(army.commandSubordinateCount ?? 0)} / {formatNumber(army.commandSubordinateCapacity ?? 0)}</strong>
+                <Tooltip
+                  content={commandSupportTooltip({
+                    commanderName: army.commanderName,
+                    isNavy: !!army.isNavy,
+                    subordinateCapacity: army.commandSubordinateCapacity,
+                  })}
+                  position="right"
+                  delay={150}
+                >
+                  <div>
+                    <span>{webUIText('Military.Command.SubordinateCapacity')}</span>
+                    <strong className={(army.commandSubordinateCount ?? 0) > (army.commandSubordinateCapacity ?? 0) ? 'is-over' : undefined}>
+                      {webUIText('Military.Command.SupportCount', {
+                        Current: formatNumber(army.commandSubordinateCount ?? 0),
+                        Max: formatNumber(army.commandSubordinateCapacity ?? 0),
+                      })}
+                    </strong>
+                  </div>
+                </Tooltip>
               </div>
               <div>
                 <span>{webUIText('Military.Command.BuffRadius')}</span>
@@ -892,17 +919,18 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                       { label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.615.19'), value: formatSupplyWindow(force.supplyDays), valueColor: force.supplyDays > 30 ? 'var(--green)' : 'var(--red)' },
                     ] : []),
                     { label: webUIText('Military.Command.RangeStatus'), value: webUIText(sub.withinCommandRange ? 'Military.Command.InRange' : 'Military.Command.OutOfRange'), valueColor: sub.withinCommandRange ? 'var(--green)' : 'var(--red)' },
+                    { label: webUIText('Military.Command.SupportStatus'), value: webUIText(sub.receivesCommandBenefits ? 'Military.Command.Supported' : 'Military.Command.Unsupported'), valueColor: sub.receivesCommandBenefits ? 'var(--green)' : 'var(--red)' },
                     { label: webUIText('Military.Command.Distance'), value: `${formatNumber(sub.distanceToSuperior)} / ${formatNumber(sub.superiorCommandRadius)}` },
-                    { label: webUIText('Military.Command.TacticsBonus'), value: formatPercent(sub.hierarchyTacticsBonus * 100, 1), valueColor: sub.withinCommandRange ? 'var(--green)' : 'var(--text-muted)' },
-                    { label: webUIText('Military.Command.MoraleBonus'), value: formatPercent(sub.hierarchyMoraleBonus * 100, 1), valueColor: sub.withinCommandRange ? 'var(--green)' : 'var(--text-muted)' },
-                    { label: webUIText('Military.Command.SpeedBonus'), value: formatPercent(sub.hierarchySpeedBonus * 100, 1), valueColor: sub.withinCommandRange ? 'var(--green)' : 'var(--text-muted)' },
+                    { label: webUIText('Military.Command.TacticsBonus'), value: formatPercent(sub.hierarchyTacticsBonus * 100, 1), valueColor: sub.withinCommandRange && sub.receivesCommandBenefits ? 'var(--green)' : 'var(--text-muted)' },
+                    { label: webUIText('Military.Command.MoraleBonus'), value: formatPercent(sub.hierarchyMoraleBonus * 100, 1), valueColor: sub.withinCommandRange && sub.receivesCommandBenefits ? 'var(--green)' : 'var(--text-muted)' },
+                    { label: webUIText('Military.Command.SpeedBonus'), value: formatPercent(sub.hierarchySpeedBonus * 100, 1), valueColor: sub.withinCommandRange && sub.receivesCommandBenefits ? 'var(--green)' : 'var(--text-muted)' },
                     ...subUnitTypes.map((entry) => ({ label: formatUnitTypeName(entry.type), value: formatNumber(entry.count) })),
                   ],
                 }}
                 position="right"
                 delay={200}
               >
-                <div className={`mil-sub-row${sub.depth > 0 ? ' mil-sub-row--nested' : ''}${sub.withinCommandRange ? '' : ' mil-sub-row--out-of-range'}${sub.id ? ' is-clickable' : ''}`} onClick={sub.id ? () => openSidebar('military', sub.id) : undefined}>
+                <div className={`mil-sub-row${sub.depth > 0 ? ' mil-sub-row--nested' : ''}${sub.withinCommandRange ? '' : ' mil-sub-row--out-of-range'}${sub.receivesCommandBenefits ? '' : ' mil-sub-row--unsupported'}${sub.id ? ' is-clickable' : ''}`} onClick={sub.id ? () => openSidebar('military', sub.id) : undefined}>
                   <img src={army.isNavy ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/I_ArmiesQuickButton.png'} alt="" className="mil-sub-icon" />
                   <div className="mil-sub-info">
                     <span className="mil-sub-name">{sub.name}</span>

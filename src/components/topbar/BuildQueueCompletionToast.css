@@ -1,0 +1,171 @@
+.buildq-completion-toast-slot {
+  position: fixed;
+  z-index: 110;
+  pointer-events: none;
+}
+
+.buildq-completion-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 18.5rem;
+  max-width: calc(100vw - 1.5rem);
+  padding: 0.45rem 0.5rem;
+  overflow: hidden;
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: #151b20;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+  cursor: var(--cursor-pointer);
+  transform-origin: top center;
+  mask-image: url('/assets/event-wipe-mask.png');
+  mask-position: 0% 0%;
+  mask-repeat: no-repeat;
+  mask-size: 300% 100%;
+  animation: buildq-completion-toast-in 0.34s cubic-bezier(0.16, 0.84, 0.22, 1) both;
+}
+
+.buildq-completion-toast--closing {
+  mask-image: url('/assets/event-wipe-mask-close.png');
+  animation: buildq-completion-toast-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.buildq-completion-toast-icon {
+  flex: 0 0 auto;
+  width: 2.1rem;
+  height: 2.1rem;
+  object-fit: contain;
+  transform-origin: center center;
+  animation: buildq-completion-toast-icon-in 0.26s cubic-bezier(0.16, 0.84, 0.22, 1) 0.08s both;
+}
+
+.buildq-completion-toast--closing .buildq-completion-toast-icon {
+  animation: buildq-completion-toast-icon-out 0.16s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.buildq-completion-toast-copy {
+  min-width: 0;
+  flex-grow: 1;
+  margin-left: 0.5rem;
+  margin-right: 0.35rem;
+  animation: buildq-completion-toast-copy-in 0.28s cubic-bezier(0.16, 0.84, 0.22, 1) 0.1s both;
+}
+
+.buildq-completion-toast--closing .buildq-completion-toast-copy {
+  animation: buildq-completion-toast-copy-out 0.16s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.buildq-completion-toast-title {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buildq-completion-toast-body {
+  margin-top: 0.12rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buildq-completion-toast-close {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border-width: 0;
+  background-color: transparent;
+  cursor: var(--cursor-pointer);
+}
+
+.buildq-completion-toast-close-icon {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+@keyframes buildq-completion-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-1.15rem) scale(0.58);
+    mask-position: 100% 0%;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    mask-position: 0% 0%;
+  }
+}
+
+@keyframes buildq-completion-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    mask-position: 100% 0%;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.85rem) scale(0.7);
+    mask-position: 0% 0%;
+  }
+}
+
+@keyframes buildq-completion-toast-icon-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4rem) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes buildq-completion-toast-icon-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.28rem) scale(0.8);
+  }
+}
+
+@keyframes buildq-completion-toast-copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.28rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes buildq-completion-toast-copy-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.2rem);
+  }
+}

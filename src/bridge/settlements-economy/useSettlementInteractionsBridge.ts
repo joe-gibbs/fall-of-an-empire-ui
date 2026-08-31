@@ -3,10 +3,12 @@ import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type {
   GetSettlementInteractionsResponse,
   SettlementInteractionEntry,
+  StartSettlementInteractionResponse,
 } from '../../bridge-types.generated.ts';
 import type { DisplayTextLine } from '../../data/types';
 import { interactionAssetPath } from '../../utils/assets';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
+import { bridgeEvents } from '../core/bridgeEvents';
 
 export type InteractionAvailability = 'available' | 'greyed' | 'hidden';
 export type InteractionScope = 'settlement' | 'region';
@@ -106,7 +108,7 @@ function mapResponse(data: GetSettlementInteractionsResponse): SettlementInterac
 
 export interface SettlementInteractionsBridge {
   state: SettlementInteractionsState | null;
-  start: (interactionId: string) => void;
+  start: (interactionId: string) => Promise<StartSettlementInteractionResponse | void>;
   cancel: () => void;
 }
 
@@ -245,8 +247,8 @@ export function useSettlementInteractionsBridge(settlementId: string | null): Se
   const state = interactionsState?.settlementId === settlementId ? interactionsState : null;
 
   const start = useCallback((interactionId: string) => {
-    if (!settlementId) return;
-    bridgeCall('game.start_settlement_interaction', { settlementId, interactionId }).catch(acknowledgeBridgeFailure);
+    if (!settlementId) return Promise.resolve();
+    return bridgeCall('game.start_settlement_interaction', { settlementId, interactionId }).catch(acknowledgeBridgeFailure);
   }, [settlementId]);
 
   const cancel = useCallback(() => {

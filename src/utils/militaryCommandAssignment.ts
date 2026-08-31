@@ -110,8 +110,8 @@ export function validateCommandAssignment(
 
   const used = (target.subordinateCount ?? 0) + extraAssignedCount;
   const capacity = target.subordinateCapacity ?? 0;
-  if (used >= capacity) {
-    return { ok: false, reason: webUIText('Military.Command.NoSubordinateCapacity') };
+  if (capacity > 0 && used >= capacity) {
+    return { ok: true, reason: webUIText('Military.Command.ReportsToWithoutBonus', { Name: target.name }) };
   }
 
   return { ok: true, reason: webUIText('Military.Command.ReportsTo', { Name: target.name }) };
@@ -123,9 +123,6 @@ export function collectAssignableCommands(
   target: CommandAssignmentForce,
   forces: CommandAssignmentForce[],
 ): CommandAssignmentForce[] {
-  const remaining = Math.max(0, (target.subordinateCapacity ?? 0) - (target.subordinateCount ?? 0));
-  if (remaining <= 0) return [];
-
   const preferred = selected.find(force => force.id === preferredSourceId);
   const ordered = [
     ...(preferred ? [preferred] : []),
@@ -134,7 +131,6 @@ export function collectAssignableCommands(
 
   const accepted: CommandAssignmentForce[] = [];
   for (const source of ordered) {
-    if (accepted.length >= remaining) break;
     if (validateCommandAssignment(source, target, forces, accepted.length).ok) {
       accepted.push(source);
     }

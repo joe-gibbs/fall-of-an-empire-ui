@@ -83,6 +83,23 @@ const SETTLEMENT_TYPE_LABEL_KEYS: Record<string, string> = {
   mining: 'Ledger.SettlementType.Mining',
 };
 
+const UNIT_TYPE_LABEL_KEYS: Record<string, string> = {
+  infantry: 'Military.UnitType.Infantry',
+  cavalry: 'Military.UnitType.Cavalry',
+  ranged: 'Military.UnitType.Ranged',
+  siege: 'Military.UnitType.Siege',
+  special: 'Military.UnitType.Special',
+  scout: 'Military.UnitType.Scout',
+  transport: 'Military.UnitType.Transport',
+  galley: 'Military.UnitType.Galley',
+  trireme: 'Military.UnitType.Trireme',
+  quinquereme: 'Military.UnitType.Quinquereme',
+  navy: 'WorldSearch.Type.Navy',
+  naval: 'WorldSearch.Type.Navy',
+  garrison: 'Settlement.Siege.Garrison',
+  other: 'Military.UnitType.Other',
+};
+
 export function formatPersonActivity(value: string | null | undefined): string {
   const source = (value ?? '').trim();
   if (!source) return '';
@@ -109,4 +126,10 @@ export function formatSettlementType(value: string | null | undefined): string {
   if (!source) return '';
   const key = SETTLEMENT_TYPE_LABEL_KEYS[source];
   return key ? webUIText(key) : '';
+}
+
+export function unitTypeLabel(type: string): string {
+  const key = UNIT_TYPE_LABEL_KEYS[type] ?? UNIT_TYPE_LABEL_KEYS[type.toLowerCase()];
+  if (key) return webUIText(key);
+  return type.replace(/(^|-|_)([a-z])/g, (_match, prefix: string, letter: string) => `${prefix ? ' ' : ''}${letter.toUpperCase()}`);
 }

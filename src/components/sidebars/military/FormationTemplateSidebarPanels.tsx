@@ -205,7 +205,7 @@ export function UnitRow({
           <span className="tpl-unit-name">{unit.name}</span>
           {includesCore && (
             <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.530.20'), body: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.530.21') }} position="bottom" delay={200}>
-              <span className="tpl-core-badge"><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.530.1" /></span>
+              <span className="badge badge--gold tpl-core-badge"><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.530.1" /></span>
             </Tooltip>
           )}
         </div>

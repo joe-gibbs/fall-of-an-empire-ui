@@ -1290,6 +1290,9 @@
 }
 
 .fov-ruler-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   font-family: var(--font-header);
   font-size: 1rem;
   color: var(--text-header);
@@ -1297,7 +1300,6 @@
 
 .fov-ruler-name .badge {
   margin-left: 0.4rem;
-  vertical-align: middle;
 }
 
 .fov-ruler-reign {

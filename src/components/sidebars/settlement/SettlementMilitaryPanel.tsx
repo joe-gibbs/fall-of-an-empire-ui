@@ -34,6 +34,9 @@ import { formatNumber } from '../../../utils/numberFormat';
 import './SettlementMilitaryPanel.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
+import { unitTypeLabel } from '../../../utils/displayLabels';
+import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
+
 interface Props {
   settlement: Settlement;
 }
@@ -41,14 +44,6 @@ interface Props {
 const n = (v: number): string => formatNumber(v);
 
 const TYPE_ORDER: ArmyUnitType[] = ['infantry', 'cavalry', 'ranged', 'siege', 'navy'];
-
-const TYPE_LABELS: Record<ArmyUnitType, string> = {
-  infantry: 'Infantry',
-  cavalry: 'Cavalry',
-  ranged: 'Ranged',
-  siege: 'Siege',
-  navy: 'Navy',
-};
 
 const TYPE_ICONS: Record<ArmyUnitType, string> = {
   infantry: '/assets/icons/UnitTypes/I_ArmyInfantry.png',
@@ -151,7 +146,7 @@ function unitTooltipData(u: RecruitableUnit): UnitTooltipData {
     name: u.name,
     description: u.description,
     portrait: u.portrait,
-    typeLabel: TYPE_LABELS[u.type],
+    typeLabel: unitTypeLabel(u.type),
     typeIcon: TYPE_ICONS[u.type],
     tier: u.tier,
     sourceBuilding: u.sourceBuilding,
@@ -378,7 +373,7 @@ function FormationCard({
   const iconProfile = getFormationTemplateIcon(f.type, f.composition);
   const tooltip: TooltipContent = {
     title: f.name,
-    get body() { return webUIText("Auto.Prop.componentssidebarsSettlementMilitaryPanel.169.1", { Value1: f.type === 'land' ? 'Land' : 'Naval', Value2: n(f.composition.reduce((a, b) => a + b.count, 0)) }); },
+    get body() { return webUIText("Auto.Prop.componentssidebarsSettlementMilitaryPanel.169.1", { Value1: webUIText(f.type === 'land' ? 'Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.986.35' : 'Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.987.36'), Value2: n(f.composition.reduce((a, b) => a + b.count, 0)) }); },
     lines: [
       { label: webUIText('Auto.Prop.ComponentsSidebarsSettlementMilitaryPanel.171.3'), value: n(f.totalStrength), valueColor: 'var(--gold)' },
       { label: webUIText('Auto.Prop.ComponentsSidebarsSettlementMilitaryPanel.172.4'), value: n(f.totalPrice), valueIcon: '/assets/icons/I_Coins.png' },
@@ -482,7 +477,7 @@ function FormationSlotIcon({
     )
     : {
         get title() { return webUIText("Auto.Prop.componentssidebarsSettlementMilitaryPanel.253.1", { Value1: n(slot.count), Value2: slot.unitName }); },
-        get body() { return webUIText("Auto.Prop.componentssidebarsSettlementMilitaryPanel.254.1", { Value1: TYPE_LABELS[slot.type], Value2: n(slot.tier) }); },
+        get body() { return webUIText("Auto.Prop.componentssidebarsSettlementMilitaryPanel.254.1", { Value1: unitTypeLabel(slot.type), Value2: n(slot.tier) }); },
       } as TooltipContent;
 
   return (
@@ -551,7 +546,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
     setSearchSettlementId(settlement.id);
     setTemplateSearch('');
   }
-  const templateSearchQuery = templateSearch.trim().toLocaleLowerCase();
+  const templateSearchQuery = templateSearch.trim();
 
   const visibleFormations = React.useMemo(() => {
     if (!templateSearchQuery) return formations;
@@ -560,8 +555,8 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
         ? webUIText('SettlementMilitary.Legion')
         : webUIText('Common.Fleet');
       const unitNames = formation.composition.map(slot => slot.unitName).join(' ');
-      const haystack = `${formation.name} ${typeLabel} ${unitNames}`.toLocaleLowerCase();
-      return haystack.includes(templateSearchQuery);
+      const haystack = `${formation.name} ${typeLabel} ${unitNames}`;
+      return textMatchesSearch(haystack, templateSearchQuery);
     });
   }, [formations, templateSearchQuery]);
 
@@ -682,7 +677,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
               const locked = cap === 0 || list.length === 0;
               const available = list.filter(e => e.available).map(e => e.unit);
               const rowTooltip: TooltipContent = {
-                title: TYPE_LABELS[type],
+                title: unitTypeLabel(type),
                 get body() { return locked ? webUIText("SettlementMilitary.CannotTrainHere") : webUIText("SettlementMilitary.UpToTier", { Value1: n(cap as number) }); },
                 lines: locked
                   ? undefined
@@ -699,7 +694,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
                   </Tooltip>
                   <div className="mil-cap-body">
                     <Tooltip content={rowTooltip} position="left" delay={200}>
-                      <span className="mil-cap-label">{TYPE_LABELS[type]}</span>
+                      <span className="mil-cap-label">{unitTypeLabel(type)}</span>
                     </Tooltip>
                     {locked ? (
                       <span className="mil-cap-locked-text">

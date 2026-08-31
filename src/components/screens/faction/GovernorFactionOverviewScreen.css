@@ -14,13 +14,43 @@
   white-space: nowrap;
 }
 
+.screen--gov-faction-overview > .screen-content.styled-scroll-area > .styled-scroll-area__viewport {
+  display: flex;
+  flex-direction: column;
+}
+
 .gfov-province-tab {
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
   padding: 0.7rem 0.9rem 0.9rem;
 }
 
 .gfov-province-tab > * + * {
+  margin-top: 0.7rem;
+}
+
+.gfov-province-body {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.gfov-province-threat {
+  flex: 1.15;
+  min-width: 0;
+}
+
+.gfov-province-aside {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  margin-left: 0.7rem;
+}
+
+.gfov-province-standing {
   margin-top: 0.7rem;
 }
 
@@ -346,6 +376,13 @@
   margin-left: 0.25rem;
   color: var(--text-muted);
   font-size: 0.88rem;
+}
+
+.gfov-meter-trend {
+  margin-left: 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .gfov-meter-review-row {
@@ -792,28 +829,35 @@
 }
 
 .gfov-threat-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 0.3rem 0.45rem;
+  padding: 0.32rem 0.4rem;
   background: transparent;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
 }
 
-.gfov-threat-row-copy {
+.gfov-score-row-hit {
+  width: 100%;
+}
+
+.gfov-score-row-main {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   min-width: 0;
 }
 
-.gfov-threat-row-label {
+.gfov-score-row-label {
   display: flex;
   align-items: center;
   color: var(--text);
   min-width: 0;
 }
 
-.gfov-threat-row-label img {
+.gfov-score-row-bar {
+  margin-top: 0.22rem;
+  margin-left: 1.4rem;
+}
+
+.gfov-score-row-label img {
   width: 1rem;
   height: 1rem;
   opacity: 0.8;
@@ -821,23 +865,9 @@
   margin-right: 0.4rem;
 }
 
-.gfov-threat-row-description,
-.gfov-threat-row-time {
-  margin-top: 0.15rem;
-  margin-left: 1.4rem;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  line-height: 0.92rem;
-}
-
-.gfov-threat-row-time {
-  text-transform: uppercase;
-}
-
 .gfov-threat-value {
   font-weight: 600;
   flex-shrink: 0;
-  margin-top: 0.05rem;
   margin-left: 1rem;
 }
 
@@ -850,7 +880,7 @@
 .gfov-standing-rows {
   display: flex;
   flex-direction: column;
-  margin-top: 0.45rem;
+  margin-top: 0.2rem;
 }
 
 .gfov-standing-rows > * + * {
@@ -858,55 +888,20 @@
 }
 
 .gfov-standing-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 0.3rem 0.45rem;
+  padding: 0.32rem 0.4rem;
   background: transparent;
-  font-size: 0.9rem;
-}
-
-.gfov-standing-row-label {
-  display: flex;
-  align-items: center;
-  color: var(--text);
-  min-width: 0;
-}
-
-.gfov-standing-row-copy {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+  font-size: 0.92rem;
 }
 
 .gfov-standing-row-marker {
   width: 0.72rem;
   height: 0.72rem;
-  flex-shrink: 0;
-  margin-right: 0.4rem;
   opacity: 0.88;
-}
-
-.gfov-standing-row-time {
-  margin-top: 0.15rem;
-  margin-left: 1.12rem;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-}
-
-.gfov-standing-row-description {
-  margin-top: 0.15rem;
-  margin-left: 1.12rem;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  line-height: 0.92rem;
 }
 
 .gfov-standing-value {
   font-weight: 600;
   flex-shrink: 0;
-  margin-top: 0.05rem;
   margin-left: 1rem;
 }
 

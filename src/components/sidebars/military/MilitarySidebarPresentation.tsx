@@ -8,6 +8,7 @@ import { characterStatEffectLines } from '../../../utils/characterStatEffects';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import glossary from '../../../data/glossary';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
+import { unitTypeLabel } from '../../../utils/displayLabels';
 
 const unitTypeIcons: Record<string, string> = {
   'Heavy Infantry': '/assets/icons/UnitTypes/I_ArmyInfantry.png',
@@ -318,7 +319,7 @@ export function resourceIconPath(resourceId: string): string {
 }
 
 export function formatUnitTypeName(type: string): string {
-  return type.length > 0 ? type.charAt(0).toUpperCase() + type.slice(1) : type;
+  return unitTypeLabel(type);
 }
 
 export function unitTypeIconPath(type: string): string {

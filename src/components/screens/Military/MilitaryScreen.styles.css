@@ -4352,6 +4352,17 @@
   border-left-color: rgba(105, 112, 118, 0.38);
 }
 
+.chart-node--unsupported .chart-node-inner {
+  border-top-color: rgba(180, 48, 48, 0.95);
+  border-right-color: rgba(180, 48, 48, 0.95);
+  border-bottom-color: rgba(180, 48, 48, 0.95);
+  border-left-color: rgba(180, 48, 48, 0.95);
+  box-shadow:
+    0 0 0.35rem rgba(196, 64, 64, 0.95),
+    0 0 1.15rem rgba(140, 24, 24, 0.88),
+    0 0 1.8rem rgba(110, 16, 16, 0.55);
+}
+
 /* ── Crest column (rank icon + label) ────────────────────────────────── */
 .chart-node-crest {
   flex-grow: 0;
@@ -4614,6 +4625,14 @@
 .chart-node-command-mark.is-squash.is-on {
   border-color: rgba(120, 175, 112, 0.62);
   color: var(--green-light);
+}
+
+.chart-node-command-mark.is-support {
+  color: var(--gold-light);
+}
+
+.chart-node-command-mark.is-support.is-over {
+  color: var(--red);
 }
 
 .chart-node-command-icon {

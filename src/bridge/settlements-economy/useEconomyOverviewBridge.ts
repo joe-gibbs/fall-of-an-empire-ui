@@ -100,6 +100,13 @@ export function setResourceAutoSellBridge(resourceId: string, enabled: boolean, 
   });
 }
 
+export function setResourceAutoBuyBridge(resourceId: string, enabled: boolean, threshold: number): Promise<void> {
+  return bridgeCall('game.set_resource_auto_buy', { resourceId, enabled, threshold }).then(() => {
+    clearEconomyOverviewCache();
+    return undefined;
+  });
+}
+
 export function setResourcePriorityBridge(targetType: string, targetId: string, priority: string): Promise<void> {
   return bridgeCall('game.set_resource_priority', { targetType, targetId, priority }).then(() => {
     clearEconomyOverviewCache();

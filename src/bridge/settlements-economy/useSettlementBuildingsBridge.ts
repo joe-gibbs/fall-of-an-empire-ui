@@ -93,6 +93,7 @@ function toBuildState(raw: RawBuildState): BuildingBuildState {
       ? raw.state
       : 'hidden',
     reason: raw.reason || undefined,
+    blockedByPopulation: raw.blockedByPopulation || undefined,
   };
 }
 
@@ -158,6 +159,10 @@ function mapBuiltBuilding(entry: SettlementBuiltBuildingEntry): Building {
     downgradeReason: entry.downgradeReason || undefined,
     downgradeTargetName: entry.downgradeTargetName || undefined,
     downgradeTargetLevel: entry.downgradeTargetLevel > 0 ? entry.downgradeTargetLevel : undefined,
+    canRepair: entry.canRepair,
+    repairReason: entry.repairReason || undefined,
+    repairGoldCost: entry.repairGoldCost > 0 ? entry.repairGoldCost : undefined,
+    repairResourceCost: entry.repairResourceCost.map(mapCost),
   };
 }
 
@@ -263,12 +268,21 @@ function mergeResponse(
     return current;
   }
 
-  const conditions = new Map(data.buildings.map(building => [building.id, building.condition]));
+  const updates = new Map(data.buildings.map(building => [building.id, building]));
   return {
     ...current,
-    buildings: current.buildings.map(building => conditions.has(building.id)
-      ? { ...building, condition: conditions.get(building.id)! }
-      : building),
+    buildings: current.buildings.map(building => {
+      const next = updates.get(building.id);
+      if (!next) return building;
+      return {
+        ...building,
+        condition: next.condition,
+        canRepair: next.canRepair,
+        repairReason: next.repairReason || undefined,
+        repairGoldCost: next.repairGoldCost > 0 ? next.repairGoldCost : undefined,
+        repairResourceCost: next.repairResourceCost.map(mapCost),
+      };
+    }),
   };
 }
 
@@ -316,4 +330,8 @@ export function demolishSettlementBuilding(settlementId: string, buildingId: str
 
 export function downgradeSettlementBuilding(settlementId: string, buildingId: string): Promise<void> {
   return bridgeCall('game.downgrade_settlement_building', { settlementId, buildingId });
+}
+
+export function repairSettlementBuilding(settlementId: string, buildingId: string): Promise<void> {
+  return bridgeCall('game.repair_settlement_building', { settlementId, buildingId });
 }

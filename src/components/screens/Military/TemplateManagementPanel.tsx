@@ -40,6 +40,7 @@ import {
   getFormationTemplateIcon,
 } from '../../../utils/formationTemplatePresentation';
 import { WebUIText, webUIText } from '../../../localization/WebUITextContext';
+import { unitTypeLabel } from '../../../utils/displayLabels';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import type { TemplateCreateType } from './screenTokens';
 import { TemplateBattlePlanner } from './TemplateBattlePlanner';
@@ -110,7 +111,7 @@ function templateUnitSummary(template: FormationTemplateEntry): string {
 }
 
 function templateUnitTypeLabel(unit: FormationTemplateUnitEntry): string {
-  return unit.unitTypeLabel || unit.type || unit.category;
+  return unit.unitTypeLabel || unitTypeLabel(unit.type || unit.category);
 }
 
 function templateUnitTypeIcon(unit: FormationTemplateUnitEntry): string {

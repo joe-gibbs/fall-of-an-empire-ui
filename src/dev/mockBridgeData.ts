@@ -3,6 +3,7 @@ import {
   GOVERNOR_MISSION_ICON,
   GOVERNOR_MISSION_SUPPRESS_UNREST_ICON,
 } from '../utils/iconMaps';
+import { textMatchesSearch } from '../components/common/layout/tables/sortUtils';
 
 type BridgeActionName = keyof BridgeActions;
 type BridgeResponse<A extends BridgeActionName> = BridgeActions[A]['response'];
@@ -31,6 +32,7 @@ export interface MockLaunchRequest {
   sidebarTabIndex?: number;
   notification?: boolean;
   regularNotification?: boolean;
+  buildQueueToast?: boolean;
   actionResultNotification?: boolean;
   battleAarNotification?: boolean;
   battleAarOutcome?: MockOutcome;
@@ -397,6 +399,8 @@ interface MockBridgeState {
   buildingPlacementTotalCost: number;
   formationSelectionActive: boolean;
   formationSelectionTemplateId: string;
+  resettlementSelectionActive: boolean;
+  resettlementDestinationId: string;
   militaryCustomNames: Record<string, string>;
 }
 
@@ -1653,17 +1657,133 @@ function mockProvinceModeOverview(state: MockBridgeState): BridgeResponse<'game.
     nextReviewDays: 27,
     reviewIntervalDays: 168,
     threatRows: active ? [
-      { id: 'fame', icon: '/assets/icons/I_Fame.png', label: 'Fame', description: 'Governor fame and authority make recall politically harder: +14 from 112 fame.', value: 14, remainingDays: 0, tone: 'high' },
-      { id: 'clients', icon: '/assets/icons/I_Characters.png', label: 'Clients', description: 'Clients and patrons +16; emperor as client 0.', value: 16, remainingDays: 0, tone: 'high' },
-      { id: 'bloc', icon: '/assets/icons/I_PowerBlocs.png', label: 'Power bloc', description: 'The governor belongs to a power bloc, giving them allies at court.', value: 6, remainingDays: 0, tone: 'medium' },
-      { id: 'military', icon: '/assets/icons/I_ArmiesQuickButton.png', label: 'Military command', description: 'The governor does not command an army or navy.', value: 0, remainingDays: 0, tone: 'low' },
-      { id: 'wealth', icon: '/assets/icons/I_Coins.png', label: 'Treasury', description: 'Provincial treasury contributes +2 from 2400 gold.', value: 2, remainingDays: 0, tone: 'low' },
+      {
+        id: 'province-value',
+        icon: '/assets/icons/I_Domain.png',
+        label: 'Province value',
+        description: '',
+        value: 10,
+        remainingDays: 0,
+        tone: 'medium',
+        parts: [
+          { label: 'Settlements', value: 10 },
+          { label: 'Population', value: 0 },
+          { label: 'Military strength', value: 0 },
+          { label: 'Projected monthly surplus', value: 0 },
+        ],
+      },
+      {
+        id: 'fame',
+        icon: '/assets/icons/I_Fame.png',
+        label: 'Fame',
+        description: 'Governor fame and authority make recall politically harder.',
+        value: 14,
+        remainingDays: 0,
+        tone: 'high',
+        parts: [{ label: 'Fame', value: 14 }],
+      },
+      {
+        id: 'clients',
+        icon: '/assets/icons/I_Characters.png',
+        label: 'Clients',
+        description: '',
+        value: 16,
+        remainingDays: 0,
+        tone: 'high',
+        parts: [
+          { label: 'Clients and patrons', value: 16 },
+          { label: 'Emperor as client', value: 0 },
+        ],
+      },
+      {
+        id: 'bloc',
+        icon: '/assets/icons/I_PowerBlocs.png',
+        label: 'Power bloc',
+        description: 'The governor belongs to a power bloc, giving them allies at court.',
+        value: 6,
+        remainingDays: 0,
+        tone: 'medium',
+        parts: [],
+      },
+      {
+        id: 'military',
+        icon: '/assets/icons/I_ArmiesQuickButton.png',
+        label: 'Military command',
+        description: 'The governor does not command an army or navy.',
+        value: 0,
+        remainingDays: 0,
+        tone: 'low',
+        parts: [],
+      },
+      {
+        id: 'wealth',
+        icon: '/assets/icons/I_Coins.png',
+        label: 'Treasury',
+        description: '',
+        value: 2,
+        remainingDays: 0,
+        tone: 'low',
+        parts: [{ label: 'Treasury', value: 2 }],
+      },
     ] : [],
     standingRows: active ? [
-      { id: 'loyalty', icon: '/assets/icons/StatIcons/I_Loyalty.png', label: 'Loyalty', description: "Part of the governor's personal compliance with the emperor.", value: 31, remainingDays: 0, tone: 'positive' },
-      { id: 'patronage', icon: '/assets/icons/Relations/I_Patron.png', label: 'Patronage', description: 'Patrons +2; emperor as patron 0; emperor as client 0.', value: 10, remainingDays: 0, tone: 'positive' },
-      { id: 'governor-office', icon: '/assets/icons/I_VacantCourt.png', label: 'Court office', description: 'Subordinate in Magister Militum: +4.', value: 6, remainingDays: 0, tone: 'positive' },
-      { id: 'threat', icon: '/assets/icons/I_Dread.png', label: 'Political danger', description: 'Threat reduces standing by 1 for each 10 threat, up to 10.', value: -3, remainingDays: 0, tone: 'negative' },
+      {
+        id: 'standing-province-value',
+        icon: '/assets/icons/I_Domain.png',
+        label: 'Valuable province',
+        description: '',
+        value: 8,
+        remainingDays: 0,
+        tone: 'positive',
+        parts: [
+          { label: 'Settlements', value: 8 },
+          { label: 'Projected monthly surplus', value: 0 },
+        ],
+      },
+      {
+        id: 'loyalty',
+        icon: '/assets/icons/StatIcons/I_Loyalty.png',
+        label: 'Loyalty',
+        description: "Part of the governor's personal compliance with the emperor.",
+        value: 31,
+        remainingDays: 0,
+        tone: 'positive',
+        parts: [],
+      },
+      {
+        id: 'patronage',
+        icon: '/assets/icons/Relations/I_Patron.png',
+        label: 'Patronage',
+        description: '',
+        value: 10,
+        remainingDays: 0,
+        tone: 'positive',
+        parts: [
+          { label: 'Patrons', value: 2 },
+          { label: 'Emperor as patron', value: 0 },
+          { label: 'Emperor as client', value: 8 },
+        ],
+      },
+      {
+        id: 'governor-office',
+        icon: '/assets/icons/I_VacantCourt.png',
+        label: 'Court office',
+        description: '',
+        value: 6,
+        remainingDays: 0,
+        tone: 'positive',
+        parts: [{ label: 'Magister Militum', value: 6 }],
+      },
+      {
+        id: 'threat',
+        icon: '/assets/icons/I_Dread.png',
+        label: 'Political danger',
+        description: 'Threat reduces standing by 1 for each 10 threat, up to 10.',
+        value: -3,
+        remainingDays: 0,
+        tone: 'negative',
+        parts: [],
+      },
     ] : [],
     courtOfficeActions: [],
     missions: active ? [
@@ -1885,6 +2005,7 @@ function personById(id: string): BridgeResponse<'game.get_person_data'> {
     opinionBreakdown: [
       { key: '', label: 'Recent appointment', value: 16 },
       { key: '', label: 'Shared ceremonies', value: 9 },
+      ...(isGovernor ? [{ key: 'LackingLuxuries', label: 'Lacking Luxuries', value: -20 }] : []),
     ],
     honourDreadBreakdown: [
       { key: '', label: 'Public justice', value: 12 },
@@ -1951,7 +2072,7 @@ function personById(id: string): BridgeResponse<'game.get_person_data'> {
   };
 }
 
-function settlementBuilding(assetKey: string, name: string, level: number, category: string) {
+function settlementBuilding(assetKey: string, name: string, level: number, category: string, condition = 92) {
   return {
     id: `mock-building-${assetKey}`,
     assetKey,
@@ -1962,7 +2083,7 @@ function settlementBuilding(assetKey: string, name: string, level: number, categ
     chainName: name,
     description: `A ${name.toLowerCase()} serving the settlement.`,
     effectsHtml: '<bullet><colour green>Improves local output</></>',
-    condition: 92,
+    condition,
     monthlyConditionChange: -0.05,
     maintenanceGovernanceThreshold: 5,
     nextLevelPrice: 520,
@@ -1970,7 +2091,7 @@ function settlementBuilding(assetKey: string, name: string, level: number, categ
     upkeep: 12,
     resourceCost: [{ name: 'Stone', displayName: 'Stone', amount: 40 }, { name: 'Wood', displayName: 'Wood', amount: 25 }],
     dismantleSpoils: [{ name: 'Gold', displayName: 'Gold', amount: 130 }, { name: 'Stone', displayName: 'Stone', amount: 16 }, { name: 'Wood', displayName: 'Wood', amount: 10 }],
-    nextBuildState: { state: 'visible', reason: '' },
+    nextBuildState: { state: 'visible', reason: '', blockedByPopulation: false },
     developedFrom: '',
     canBeDevelopedInto: [],
     requiredBuildings: [],
@@ -1982,6 +2103,13 @@ function settlementBuilding(assetKey: string, name: string, level: number, categ
     downgradeReason: level > 1 ? '' : 'This building has no lower step.',
     downgradeTargetName: level > 1 ? name : '',
     downgradeTargetLevel: level > 1 ? level - 1 : 0,
+    canRepair: condition < 100 && condition > 0,
+    repairReason: '',
+    repairGoldCost: Math.round(520 * ((100 - condition) / 100) * 0.5),
+    repairResourceCost: [
+      { name: 'Stone', displayName: 'Stone', amount: 40 * ((100 - condition) / 100) * 0.5 },
+      { name: 'Wood', displayName: 'Wood', amount: 25 * ((100 - condition) / 100) * 0.5 },
+    ],
   };
 }
 
@@ -2013,6 +2141,7 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     income: isPort ? 46 : 122,
     foodProduction: isPort ? 540 : 980,
     foodConsumption: isPort ? 610 : 1210,
+    corruption: isPort ? 0.28 : 0.14,
     fortificationLevel: isPort ? 2 : 4,
     unrest: isPort ? 0.18 : 0.08,
     unrestLabel: isPort ? 'Restless' : 'Calm',
@@ -2187,6 +2316,17 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     growthBreakdown: [{ name: 'Food supply', value: isPort ? 720 : 2140 }, { name: 'Urban crowding', value: isPort ? -120 : -320 }],
     foodBreakdown: [{ name: 'Farms', value: isPort ? 320 : 740 }, { name: 'Population', value: isPort ? -610 : -1210 }],
     fortificationBreakdown: [{ name: 'Walls', value: isPort ? 2 : 4 }, { name: 'Watch posts', value: 1 }],
+    corruptionBreakdown: isPort
+      ? [
+          { key: 'CorruptionGraft', name: 'Graft', value: 1 },
+          { key: 'DistanceFromCapital', name: 'Distance from Capital', value: 1.6 },
+          { key: 'UngovernedRegion', name: 'Ungoverned Region', value: 2 },
+        ]
+      : [
+          { key: 'CorruptionGraft', name: 'Graft', value: 1 },
+          { key: 'GovernorOversight', name: 'Governor', value: -0.6 },
+          { key: 'Tribunal', name: 'Tribunal', value: -1 },
+        ],
     buildings: [
       { name: 'Forum', level: 3 },
       { name: 'Granary', level: 2 },
@@ -2449,7 +2589,7 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
     conditionOnly: false,
     buildings: [
       settlementBuilding('Forum', 'Forum', 3, 'administrative'),
-      settlementBuilding('Granary', 'Granary', 2, 'economic'),
+      settlementBuilding('Granary', 'Granary', 2, 'economic', 42),
       settlementBuilding(id === MOCK_IDS.portSettlement ? 'Docks' : 'Barracks', id === MOCK_IDS.portSettlement ? 'Docks' : 'Barracks', 2, id === MOCK_IDS.portSettlement ? 'naval' : 'military'),
     ],
     availableBuildings: [
@@ -2458,14 +2598,14 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
         level: undefined,
         price: 720,
         buildTime: 120,
-        buildState: { state: 'visible', reason: '' },
+        buildState: { state: 'visible', reason: '', blockedByPopulation: false },
       },
       {
         ...settlementBuilding('GreatStoneWall', 'Great Stone Wall', 0, 'defensive'),
         level: undefined,
         price: 1120,
         buildTime: 180,
-        buildState: { state: 'greyed', reason: 'Requires Stone stockpile of 400.' },
+        buildState: { state: 'greyed', reason: 'Requires Stone stockpile of 400.', blockedByPopulation: false },
       },
     ].map(entry => ({
       id: entry.id,
@@ -2766,8 +2906,8 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     delegated: false,
     autoSquashRebels: true,
     subordinates: isNavy || profile.parentCommandId ? [] : [
-      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), depth: 0, name: 'Aurelion Detachment', commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, unitTypes: [{ type: 'Infantry', count: 7 }, { type: 'Cavalry', count: 2 }], withinCommandRange: true, distanceToSuperior: 42, superiorCommandRadius: 100, hierarchyTacticsBonus: 0.08, hierarchyMoraleBonus: 0.06, hierarchySpeedBonus: 0.04 },
-      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), depth: 1, name: 'Western Scouts', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, unitTypes: [{ type: 'Ranged', count: 2 }, { type: 'Cavalry', count: 1 }], withinCommandRange: false, distanceToSuperior: 126, superiorCommandRadius: 80, hierarchyTacticsBonus: 0, hierarchyMoraleBonus: 0, hierarchySpeedBonus: 0 },
+      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), depth: 0, name: 'Aurelion Detachment', commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, unitTypes: [{ type: 'Infantry', count: 7 }, { type: 'Cavalry', count: 2 }], withinCommandRange: true, receivesCommandBenefits: true, distanceToSuperior: 42, superiorCommandRadius: 100, hierarchyTacticsBonus: 0.08, hierarchyMoraleBonus: 0.06, hierarchySpeedBonus: 0.04 },
+      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), depth: 1, name: 'Western Scouts', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, unitTypes: [{ type: 'Ranged', count: 2 }, { type: 'Cavalry', count: 1 }], withinCommandRange: false, receivesCommandBenefits: true, distanceToSuperior: 126, superiorCommandRadius: 80, hierarchyTacticsBonus: 0, hierarchyMoraleBonus: 0, hierarchySpeedBonus: 0 },
     ],
     commandSubordinateCount: isNavy || profile.parentCommandId ? 0 : 2,
     commandSubordinateCapacity: isNavy ? 0 : 4,
@@ -2779,6 +2919,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     parentCommand: profile.parentCommand,
     parentCommandId: profile.parentCommandId,
     parentCommandDebugShortId: profile.parentCommandId ? mockDebugShortId(profile.parentCommandId) : 0,
+    receivesCommandBenefits: true,
     capacity: isNavy && !isRiverwatch ? 3000 : 0,
     usedCapacity: isNavy && !isRiverwatch ? 1200 : 0,
     embarkedArmies: isNavy && !isRiverwatch ? [
@@ -3472,6 +3613,56 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
     autoBuyEnabled: true,
     resources: [
       {
+        id: 'Food',
+        name: 'Food',
+        category: 'food',
+        amount: 1285,
+        production: 148,
+        vassalContribution: 104,
+        treatyIncome: 0,
+        militaryUsage: 54,
+        queuedUsage: 0,
+        settlementConsumption: 180,
+        decayLoss: 0,
+        netPerMonth: 18,
+        marketMultiplier: 1,
+        buyPrice: 0,
+        sellPrice: 0,
+        autoSellEnabled: false,
+        autoSellThreshold: 0,
+        autoSellSliderMax: 0,
+        autoBuyEnabled: false,
+        autoBuyThreshold: 0,
+        autoBuySliderMax: 0,
+        stockpileCap: 2500,
+        aggregate: true,
+        producers: [
+          { name: 'Rephsia', amount: 42, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'Ara Salimba', amount: 26, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
+          { name: 'Lacertum', amount: 22, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
+          { name: 'Ingalia', amount: 18, linkType: 'faction', linkId: 'mock-faction-ingalia' },
+          { name: 'Vallis Regio', amount: 18, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
+          { name: 'Tavarli', amount: 14, linkType: 'faction', linkId: 'mock-faction-tavarli' },
+          { name: 'Sarmachia', amount: 38, linkType: 'settlement', linkId: 'mock-settlement-sarmachia' },
+        ],
+        stockpiles: [
+          { name: 'Rephsia', amount: 842, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'Sarmachia', amount: 210, linkType: 'settlement', linkId: 'mock-settlement-sarmachia' },
+          { name: 'I Field Army', amount: 180, linkType: 'military', linkId: MOCK_IDS.military },
+          { name: 'Ara Salimba', amount: 128, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
+          { name: 'Vallis Regio', amount: 90, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
+          { name: 'Theratium', amount: 0, linkType: 'settlement', linkId: 'mock-settlement-theratium' },
+        ],
+        consumers: [
+          { name: 'Rephsia', amount: 70, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'I Field Army', amount: 36, linkType: 'military', linkId: MOCK_IDS.military },
+          { name: 'Vallis Regio', amount: 22, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
+          { name: 'Classis Meridian', amount: 18, linkType: 'military', linkId: MOCK_IDS.navy },
+          { name: 'Theratium', amount: 8, linkType: 'settlement', linkId: 'mock-settlement-theratium' },
+          { name: 'Sarmachia', amount: 26, linkType: 'settlement', linkId: 'mock-settlement-sarmachia' },
+        ],
+      },
+      {
         id: 'Grain',
         name: 'Grain',
         category: 'food',
@@ -3490,6 +3681,11 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoSellEnabled: false,
         autoSellThreshold: 576,
         autoSellSliderMax: 1152,
+        autoBuyEnabled: true,
+        autoBuyThreshold: 500,
+        autoBuySliderMax: 1500,
+        stockpileCap: 2500,
+        aggregate: false,
         producers: [
           { name: 'Rephsia', amount: 24, linkType: 'settlement', linkId: MOCK_IDS.settlement },
           { name: 'Cortalium', amount: 16, linkType: 'settlement', linkId: 'mock-settlement-cortalium' },
@@ -3497,6 +3693,18 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
           { name: 'Berginium', amount: 12, linkType: 'settlement', linkId: 'mock-settlement-berginium' },
           { name: 'Lacertum', amount: 8, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
           { name: 'Ara Salimba', amount: 6, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
+        ],
+        stockpiles: [
+          { name: 'Rephsia', amount: 620, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'I Field Army', amount: 140, linkType: 'military', linkId: MOCK_IDS.military },
+          { name: 'Vallis Regio', amount: 48, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
+          { name: 'Theratium', amount: 0, linkType: 'settlement', linkId: 'mock-settlement-theratium' },
+        ],
+        consumers: [
+          { name: 'Rephsia', amount: 52, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'I Field Army', amount: 28, linkType: 'military', linkId: MOCK_IDS.military },
+          { name: 'Vallis Regio', amount: 22, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
+          { name: 'Theratium', amount: 8, linkType: 'settlement', linkId: 'mock-settlement-theratium' },
         ],
       },
       {
@@ -3518,11 +3726,25 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoSellEnabled: true,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
+        autoBuyEnabled: false,
+        autoBuyThreshold: 500,
+        autoBuySliderMax: 1000,
+        stockpileCap: 20000,
+        aggregate: false,
         producers: [
           { name: 'Lacertum', amount: 18, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
           { name: 'Berginium', amount: 12, linkType: 'settlement', linkId: 'mock-settlement-berginium' },
           { name: 'Cortalium', amount: 10, linkType: 'settlement', linkId: 'mock-settlement-cortalium' },
           { name: 'Tavarli', amount: 8, linkType: 'faction', linkId: 'mock-faction-tavarli' },
+        ],
+        stockpiles: [
+          { name: 'Rephsia', amount: 400, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'Lacertum', amount: 84, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
+          { name: 'Berginium', amount: 40, linkType: 'settlement', linkId: 'mock-settlement-berginium' },
+        ],
+        consumers: [
+          { name: 'Rephsia', amount: 22, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'Lacertum', amount: 14, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
         ],
       },
       {
@@ -3544,11 +3766,24 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoSellEnabled: false,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
+        autoBuyEnabled: false,
+        autoBuyThreshold: 500,
+        autoBuySliderMax: 1000,
+        stockpileCap: 20000,
+        aggregate: false,
         producers: [
           { name: 'Vallis Regio', amount: 14, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
           { name: 'Ara Salimba', amount: 8, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
           { name: 'Ingalia', amount: 4, linkType: 'faction', linkId: 'mock-faction-ingalia' },
           { name: 'Berginium', amount: 2, linkType: 'settlement', linkId: 'mock-settlement-berginium' },
+        ],
+        stockpiles: [
+          { name: 'Rephsia', amount: 300, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'Vallis Regio', amount: 80, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
+        ],
+        consumers: [
+          { name: 'Rephsia', amount: 12, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'Vallis Regio', amount: 6, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
         ],
       },
       {
@@ -3570,11 +3805,26 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoSellEnabled: false,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
+        autoBuyEnabled: false,
+        autoBuyThreshold: 500,
+        autoBuySliderMax: 1000,
+        stockpileCap: 2500,
+        aggregate: false,
         producers: [
           { name: 'Ara Salimba', amount: 10, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
           { name: 'Ingalia', amount: 8, linkType: 'faction', linkId: 'mock-faction-ingalia' },
           { name: 'Tavarli', amount: 7, linkType: 'faction', linkId: 'mock-faction-tavarli' },
           { name: 'Cortalium', amount: 5, linkType: 'settlement', linkId: 'mock-settlement-cortalium' },
+        ],
+        stockpiles: [
+          { name: 'Rephsia', amount: 220, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'I Field Army', amount: 40, linkType: 'military', linkId: MOCK_IDS.military },
+          { name: 'Ara Salimba', amount: 55, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
+        ],
+        consumers: [
+          { name: 'Rephsia', amount: 18, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'I Field Army', amount: 8, linkType: 'military', linkId: MOCK_IDS.military },
+          { name: 'Ara Salimba', amount: 12, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
         ],
       },
       {
@@ -3596,11 +3846,24 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoSellEnabled: false,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
+        autoBuyEnabled: false,
+        autoBuyThreshold: 500,
+        autoBuySliderMax: 1000,
+        stockpileCap: 12000,
+        aggregate: false,
         producers: [
           { name: 'Lacertum', amount: 9, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
           { name: 'Vallis Regio', amount: 6, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
           { name: 'Ingalia', amount: 5, linkType: 'faction', linkId: 'mock-faction-ingalia' },
           { name: 'Cortalium', amount: 2, linkType: 'settlement', linkId: 'mock-settlement-cortalium' },
+        ],
+        stockpiles: [
+          { name: 'Rephsia', amount: 110, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'Lacertum', amount: 46, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
+        ],
+        consumers: [
+          { name: 'Rephsia', amount: 9, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'Lacertum', amount: 5, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
         ],
       },
       {
@@ -3622,11 +3885,26 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoSellEnabled: false,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
+        autoBuyEnabled: false,
+        autoBuyThreshold: 500,
+        autoBuySliderMax: 1000,
+        stockpileCap: 2500,
+        aggregate: false,
         producers: [
           { name: 'Ara Salimba', amount: 8, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
           { name: 'Rephsia', amount: 5, linkType: 'settlement', linkId: MOCK_IDS.settlement },
           { name: 'Tavarli', amount: 3, linkType: 'faction', linkId: 'mock-faction-tavarli' },
           { name: 'Berginium', amount: 2, linkType: 'settlement', linkId: 'mock-settlement-berginium' },
+        ],
+        stockpiles: [
+          { name: 'Ara Salimba', amount: 70, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
+          { name: 'Rephsia', amount: 40, linkType: 'settlement', linkId: MOCK_IDS.settlement },
+          { name: 'Classis Meridian', amount: 18, linkType: 'military', linkId: MOCK_IDS.navy },
+        ],
+        consumers: [
+          { name: 'Ara Salimba', amount: 16, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
+          { name: 'Classis Meridian', amount: 10, linkType: 'military', linkId: MOCK_IDS.navy },
+          { name: 'Rephsia', amount: 9, linkType: 'settlement', linkId: MOCK_IDS.settlement },
         ],
       },
     ],
@@ -3910,6 +4188,7 @@ function economyResourceDetails(resourceId: string): BridgeResponse<'game.get_ec
     tier: 'primary',
     decayRate: resource.decayLoss > 0 && resource.amount > 0 ? resource.decayLoss / resource.amount : 0,
     foodValue: resource.category === 'food' ? 1 : 0,
+    stockpileCap: resource.stockpileCap,
     sharedFoodDemand: resource.category === 'food' ? 180 : 0,
     producers: resource.producers.filter(producer => producer.linkType === 'settlement').map((producer, index) => ({
       settlementId: producer.linkId,
@@ -3977,8 +4256,9 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
       { landId: 'NamarisShore', landName: 'Namaris Shore', settlementCount: 2, controlPercent: 75, cost: 180, bureaucraticLoadChange: -6, canCreate: false, blockedReason: 'Requires full control.' },
     ],
     regionalGovernors: [
-      { regionId: 'Heartland', regionName: 'Heartland', settlementId: 'mock-settlement-capital', settlementName: 'Rephsia', governorId: MOCK_IDS.governor, governorName: 'Marcia Vennor', settlementCount: 5, corruptionPercent: 8, taxBonusPercent: 12, unrestReductionPercent: 6, militaryBonusPercent: 2, bureaucraticGovernorLoad: 0, isLocked: false, canManageGovernor: true },
-      { regionId: 'MeridianCoast', regionName: 'Meridian Coast', settlementId: 'mock-settlement-port', settlementName: 'Namaris', governorId: MOCK_IDS.heir, governorName: 'Cassian Arcastus', settlementCount: 4, corruptionPercent: 14, taxBonusPercent: 6, unrestReductionPercent: 3, militaryBonusPercent: 5, bureaucraticGovernorLoad: 0, isLocked: false, canManageGovernor: true },
+      { regionId: 'Heartland', regionName: 'Heartland', settlementId: 'mock-settlement-capital', settlementName: 'Rephsia', governorId: MOCK_IDS.governor, governorName: 'Marcia Vennor', settlementCount: 5, corruptionPercent: 8, taxBonusPercent: 12, unrestReductionPercent: 6, militaryBonusPercent: 2, bureaucraticGovernorLoad: 0, isLocked: false, canManageGovernor: true, ownerFactionId: MOCK_IDS.playerFaction, ownerFactionName: 'Rephsian Empire' },
+      { regionId: 'MeridianCoast', regionName: 'Meridian Coast', settlementId: 'mock-settlement-port', settlementName: 'Namaris', governorId: MOCK_IDS.heir, governorName: 'Cassian Arcastus', settlementCount: 4, corruptionPercent: 14, taxBonusPercent: 6, unrestReductionPercent: 3, militaryBonusPercent: 5, bureaucraticGovernorLoad: 0, isLocked: false, canManageGovernor: true, ownerFactionId: MOCK_IDS.playerFaction, ownerFactionName: 'Rephsian Empire' },
+      { regionId: 'ApsarosVale', regionName: 'Apsaros Vale', settlementId: 'mock-settlement-apsaros', settlementName: 'Apsaros', governorId: '', governorName: '', settlementCount: 3, corruptionPercent: 11, taxBonusPercent: 0, unrestReductionPercent: 0, militaryBonusPercent: 0, bureaucraticGovernorLoad: 0, isLocked: false, canManageGovernor: true, ownerFactionId: 'mock-faction-heartland-prefecture', ownerFactionName: 'Heartland Prefecture' },
     ],
     activeWars: [
       {
@@ -4328,11 +4608,11 @@ function personalGuardStatus(state: MockBridgeState): BridgeResponse<'game.get_p
 function militaryOverview(): BridgeResponse<'game.get_military_overview'> {
   return {
     forces: [
-      { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), name: 'I Field Army', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Dux', commanderName: 'Valen Arcastus', commanderId: MOCK_IDS.character, commanderDebugShortId: mockDebugShortId(MOCK_IDS.character), strength: 6800, maxStrength: 7600, morale: 84, supplyDays: 54, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'concentrate', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Holding Aurelion', delegated: false, autoSquashRebels: true, isPlayerControlled: true, subordinateCount: 2, subordinateCapacity: 5 },
-      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), name: 'Aurelion Detachment', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, morale: 71, supplyDays: 43, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'garrison', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Garrisoning Aurelion', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
-      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), name: 'Western Scouts', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, morale: 68, supplyDays: 0, attrition: true, isNavy: false, isPersonalGuard: false, doctrine: 'screen', template: 'Light Border Screen', location: 'Berginian March', currentOrder: 'Screening the western road', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
-      { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), name: 'Classis Meridian', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Praefectus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 1800, maxStrength: 2200, morale: 76, supplyDays: 88, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'Coastal Patrol', location: 'Namaris', currentOrder: 'Patrolling Namaris', delegated: false, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 1, subordinateCapacity: 3 },
-      { id: 'mock-navy-riverwatch', debugShortId: mockDebugShortId('mock-navy-riverwatch'), name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.navy, rank: 'Legatus', commanderName: 'Severus Laco', commanderId: 'mock-person-tribune', commanderDebugShortId: mockDebugShortId('mock-person-tribune'), strength: 900, maxStrength: 1100, morale: 69, supplyDays: 61, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'River Patrol', location: 'Tavarii Ford', currentOrder: 'Watching the ford crossings', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0 },
+      { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), name: 'I Field Army', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Dux', commanderName: 'Valen Arcastus', commanderId: MOCK_IDS.character, commanderDebugShortId: mockDebugShortId(MOCK_IDS.character), strength: 6800, maxStrength: 7600, morale: 84, supplyDays: 54, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'concentrate', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Holding Aurelion', delegated: false, autoSquashRebels: true, isPlayerControlled: true, subordinateCount: 2, subordinateCapacity: 5, parentSlotIndex: -1, receivesCommandBenefits: true },
+      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), name: 'Aurelion Detachment', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, morale: 71, supplyDays: 43, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'garrison', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Garrisoning Aurelion', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0, parentSlotIndex: 0, receivesCommandBenefits: true },
+      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), name: 'Western Scouts', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, morale: 68, supplyDays: 0, attrition: true, isNavy: false, isPersonalGuard: false, doctrine: 'screen', template: 'Light Border Screen', location: 'Berginian March', currentOrder: 'Screening the western road', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0, parentSlotIndex: 1, receivesCommandBenefits: true },
+      { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), name: 'Classis Meridian', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Praefectus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 1800, maxStrength: 2200, morale: 76, supplyDays: 88, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'Coastal Patrol', location: 'Namaris', currentOrder: 'Patrolling Namaris', delegated: false, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 1, subordinateCapacity: 3, parentSlotIndex: -1, receivesCommandBenefits: true },
+      { id: 'mock-navy-riverwatch', debugShortId: mockDebugShortId('mock-navy-riverwatch'), name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.navy, rank: 'Legatus', commanderName: 'Severus Laco', commanderId: 'mock-person-tribune', commanderDebugShortId: mockDebugShortId('mock-person-tribune'), strength: 900, maxStrength: 1100, morale: 69, supplyDays: 61, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'River Patrol', location: 'Tavarii Ford', currentOrder: 'Watching the ford crossings', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0, parentSlotIndex: 0, receivesCommandBenefits: true },
     ],
     foederati: [
       { id: 'mock-foederati-subject', factionId: MOCK_IDS.subjectFaction, factionName: 'Meridian Prefecture', factionColour: SUBJECT_COLOUR, factionSecondaryColour: SUBJECT_SECONDARY, factionEmblem: 'Rephsian_2', factionCultureGroup: 'Rephsian', factionDiplomaticStatus: 'subject', factionSubjectSubtype: 'province', factionIsPlayer: false, factionIsRebel: false, rulerName: 'Iulia Seran', rulerId: 'mock-person-subject', rulerPortrait: FEMALE_PORTRAIT_1, rulerPortraitLayers: mockPortraitLayers(FEMALE_PORTRAIT_1), strength: 2400, availableStrength: 1800, activeStrength: 600, isCalledUp: true, compliance: 72, canCall: true },
@@ -4474,6 +4754,8 @@ function settingsResponse(): BridgeResponse<'game.get_settings'> {
     notifications: [
       { id: 'settlement', label: 'Settlement', description: 'Settlement warnings and events.', category: 'settlement', muted: false },
       { id: 'military', label: 'Military', description: 'Army and battle updates.', category: 'military', muted: false },
+      { id: 'BuildingFinished', label: 'Buildings Finished', description: 'Notices when buildings you ordered finish construction.', category: 'settlement', muted: false },
+      { id: 'UnitTrained', label: 'Units Trained', description: 'Notices when soldiers or ships you ordered finish training.', category: 'settlement', muted: false },
     ],
     controls: [
       { index: 0, isAxis: false, scale: 0, actionName: 'Pause', label: 'Pause', category: 'gameSpeed', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'SpaceBar', keyDisplay: 'Space', glyphId: '', shift: false, ctrl: false, alt: false, cmd: false },
@@ -4491,6 +4773,7 @@ function settingsResponse(): BridgeResponse<'game.get_settings'> {
       { index: 9, isAxis: false, scale: 0, actionName: 'MapMode_AdminDomain', label: 'Map: Administrative Domains', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Three', keyDisplay: '3', glyphId: '', shift: false, ctrl: true, alt: false, cmd: false },
       { index: 10, isAxis: false, scale: 0, actionName: 'MapMode_Factions', label: 'Map: Factions', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'F', keyDisplay: 'F', glyphId: '', shift: true, ctrl: true, alt: false, cmd: false },
       { index: 11, isAxis: false, scale: 0, actionName: 'MapMode_Factions', label: 'Map: Factions', category: 'mapModes', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Gamepad_DPad_Left', keyDisplay: 'D-Pad Left', glyphId: 'gamepad_dpad_left', shift: false, ctrl: false, alt: false, cmd: false },
+      { index: 15, isAxis: false, scale: 0, actionName: 'GoToCapital', label: 'Go to Capital', category: 'camera', groupName: '', groupLabel: '', groupItemLabel: '', keyName: 'Home', keyDisplay: 'Home', glyphId: '', shift: false, ctrl: false, alt: false, cmd: false },
       { index: 0, isAxis: true, scale: 1, actionName: 'MoveForward', label: 'Move Forward', category: 'camera', groupName: 'CameraMovement', groupLabel: 'Movement', groupItemLabel: 'Forward', keyName: 'W', keyDisplay: 'W', glyphId: '', shift: false, ctrl: false, alt: false, cmd: false },
       { index: 1, isAxis: true, scale: -1, actionName: 'MoveForward', label: 'Move Backward', category: 'camera', groupName: 'CameraMovement', groupLabel: 'Movement', groupItemLabel: 'Back', keyName: 'S', keyDisplay: 'S', glyphId: '', shift: false, ctrl: false, alt: false, cmd: false },
       { index: 2, isAxis: true, scale: 1, actionName: 'MoveForward', label: 'Move Forward', category: 'camera', groupName: 'CameraMovement', groupLabel: 'Movement', groupItemLabel: 'Forward', keyName: 'Gamepad_LeftY', keyDisplay: 'Left Stick', glyphId: 'gamepad_lstick', shift: false, ctrl: false, alt: false, cmd: false },
@@ -5125,6 +5408,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     buildingPlacementTotalCost: 0,
     formationSelectionActive: false,
     formationSelectionTemplateId: '',
+    resettlementSelectionActive: false,
+    resettlementDestinationId: '',
     militaryCustomNames: {},
   };
 
@@ -5431,6 +5716,25 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       canConfirm: false,
       message: state.formationSelectionActive ? 'Select a settlement to raise this formation.' : '',
     } satisfies BridgeResponse<'game.apply_formation_template'>;
+  }
+
+  function mockResettlementSelection(): BridgeResponse<'game.resettlement_selection'> {
+    const destinationSelected = state.resettlementDestinationId.length > 0;
+    return {
+      active: state.resettlementSelectionActive,
+      sourceSettlementId: MOCK_IDS.settlement,
+      sourceSettlementName: 'Aurelion',
+      destinationSettlementId: destinationSelected ? MOCK_IDS.portSettlement : '',
+      destinationSettlementName: destinationSelected ? 'Ara Salimba' : '',
+      migrantCount: destinationSelected ? 1200 : 0,
+      goldCost: 200,
+      canConfirm: destinationSelected,
+      interactionName: 'Relocate Population',
+      description: 'Relocate people to another settlement. Causes unrest there and angers its leader.',
+      message: destinationSelected
+        ? 'About 1,200 people will migrate to Ara Salimba.'
+        : 'Select a settlement for these people to move to.',
+    } satisfies BridgeResponse<'game.resettlement_selection'>;
   }
 
   function mockAllyCallDialog(open: boolean): BridgeResponse<'ui.ally_call_dialog'> {
@@ -6689,6 +6993,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         state.appMode = 'ingame';
         emitAppMode(emit);
         return action === 'game.load_save' ? ({ started: true } satisfies BridgeResponse<'game.load_save'>) : undefined;
+      case 'game.return_to_main_menu':
       case 'game.quit':
       case 'game.restart':
         state.appMode = 'mainmenu';
@@ -6706,21 +7011,22 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         ], lastCompletedInteractionId: '', lastInteractionSucceeded: false, lastInteractionCompletedDate: 0, lastInteractionOutcomeText: '' } satisfies BridgeResponse<'game.get_spy_interactions'>;
       case 'game.get_person_quick_interactions':
         return { personId: payloadString(payload, 'personId', MOCK_IDS.governor), playerGold: 4280, interactions: [
-          { id: 'OfferGiftMinor', name: 'Host Supper', description: 'Invite the character to a private supper with trusted friends.', effectLines: mockDisplayLines('Cost: 90 gold. Time: 10 days. Success chance: 72%.'), iconId: 'OfferGift', backgroundId: 'OfferGift', showInQuickInteractionMenu: true, category: 'Court', difficulty: 'Medium', goldCost: 90, durationDays: 10, cooldownDays: 60, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 8, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 72, needsInitiatorSelection: false, needsGiftSelection: false, initiatorRequirementDescription: '', reasons: [], successFactors: [{ name: 'Shared allies', percent: 9 }, { name: 'Court mood', percent: 6 }], initiatorCandidates: [], giftOptions: [] },
+          { id: 'OfferGiftMinor', name: 'Host Supper', description: 'Invite the character to a private supper with trusted friends.', effectLines: mockDisplayLines('Cost: 90 gold. Time: 10 days. Success chance: 72%.'), iconId: 'OfferGift', backgroundId: 'OfferGift', showInQuickInteractionMenu: true, category: 'Court', difficulty: 'Medium', goldCost: 90, durationDays: 10, cooldownDays: 60, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 8, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 72, needsInitiatorSelection: false, needsGiftSelection: false, initiatorRequirementDescription: '', reasons: [], successFactors: [{ key: 'Relationship', name: 'Relationships', percent: -12 }, { key: '', name: 'Shared allies', percent: 9 }, { key: '', name: 'Court mood', percent: 6 }], initiatorCandidates: [], giftOptions: [] },
         ], lastCompletedInteractionId: '', lastInteractionSucceeded: false, lastInteractionCompletedDate: 0, lastInteractionOutcomeText: '' } satisfies BridgeResponse<'game.get_person_quick_interactions'>;
       case 'game.get_person_interaction_options':
         return { playerGold: 4280, interaction:
-          { id: payloadString(payload, 'interactionId', 'OfferGift'), name: 'Send Gift', description: 'Offer a carefully chosen gift.', effectLines: mockDisplayLines('Cost depends on gift. Instant. Success chance: 100%.'), iconId: 'OfferGift', backgroundId: 'OfferGift', showInQuickInteractionMenu: false, category: 'Court', difficulty: 'Easy', goldCost: 120, durationDays: 0, cooldownDays: 90, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 0, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, needsInitiatorSelection: false, needsGiftSelection: true, initiatorRequirementDescription: '', reasons: [], successFactors: [{ name: 'Personal taste', percent: 12 }, { name: 'Public ceremony', percent: 8 }], initiatorCandidates: [], giftOptions: [{ index: 0, name: 'Silver Cup', description: 'A formal gift for a senior office holder.', cost: 120, relationshipBonus: 8, iconPath: '/assets/icons/Gifts/GoldChestMedium.png' }, { index: 1, name: 'Gilded Charter', description: 'A legal privilege wrapped as a personal favour.', cost: 220, relationshipBonus: 13, iconPath: '/assets/icons/Gifts/GoldChestMedium.png' }] },
+          { id: payloadString(payload, 'interactionId', 'OfferGift'), name: 'Send Gift', description: 'Offer a carefully chosen gift.', effectLines: mockDisplayLines('Cost depends on gift. Instant. Success chance: 100%.'), iconId: 'OfferGift', backgroundId: 'OfferGift', showInQuickInteractionMenu: false, category: 'Court', difficulty: 'Easy', goldCost: 120, durationDays: 0, cooldownDays: 90, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 0, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, needsInitiatorSelection: false, needsGiftSelection: true, initiatorRequirementDescription: '', reasons: [], successFactors: [{ key: '', name: 'Personal taste', percent: 12 }, { key: '', name: 'Public ceremony', percent: 8 }], initiatorCandidates: [], giftOptions: [{ index: 0, name: 'Silver Cup', description: 'A formal gift for a senior office holder.', cost: 120, relationshipBonus: 8, iconPath: '/assets/icons/Gifts/GoldChestMedium.png' }, { index: 1, name: 'Gilded Charter', description: 'A legal privilege wrapped as a personal favour.', cost: 220, relationshipBonus: 13, iconPath: '/assets/icons/Gifts/GoldChestMedium.png' }] },
         } satisfies BridgeResponse<'game.get_person_interaction_options'>;
       case 'game.get_person_interactions':
         return { personId: payloadString(payload, 'personId', MOCK_IDS.governor), playerGold: 4280, interactions: [
-          { id: 'OfferGift', name: 'Send Gift', description: 'Offer a carefully chosen gift.', effectLines: mockDisplayLines('Cost depends on gift. Instant. Success chance: 100%.'), iconId: 'OfferGift', backgroundId: 'OfferGift', showInQuickInteractionMenu: false, category: 'Court', difficulty: 'Easy', goldCost: 120, durationDays: 0, cooldownDays: 90, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 0, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, needsInitiatorSelection: false, needsGiftSelection: true, initiatorRequirementDescription: '', reasons: [], successFactors: [{ name: 'Personal taste', percent: 12 }, { name: 'Public ceremony', percent: 8 }], initiatorCandidates: [], giftOptions: [] },
-          { id: 'OfferGiftMinor', name: 'Host Supper', description: 'Invite the character to a private supper with trusted friends.', effectLines: mockDisplayLines('Cost: 90 gold. Time: 10 days. Success chance: 72%.'), iconId: 'OfferGift', backgroundId: 'OfferGift', showInQuickInteractionMenu: true, category: 'Court', difficulty: 'Medium', goldCost: 90, durationDays: 10, cooldownDays: 60, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 8, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 72, needsInitiatorSelection: false, needsGiftSelection: false, initiatorRequirementDescription: '', reasons: [], successFactors: [{ name: 'Shared allies', percent: 9 }, { name: 'Court mood', percent: 6 }], initiatorCandidates: [], giftOptions: [] },
+          { id: 'OfferGift', name: 'Send Gift', description: 'Offer a carefully chosen gift.', effectLines: mockDisplayLines('Cost depends on gift. Instant. Success chance: 100%.'), iconId: 'OfferGift', backgroundId: 'OfferGift', showInQuickInteractionMenu: false, category: 'Court', difficulty: 'Easy', goldCost: 120, durationDays: 0, cooldownDays: 90, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 0, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, needsInitiatorSelection: false, needsGiftSelection: true, initiatorRequirementDescription: '', reasons: [], successFactors: [{ key: '', name: 'Personal taste', percent: 12 }, { key: '', name: 'Public ceremony', percent: 8 }], initiatorCandidates: [], giftOptions: [] },
+          { id: 'OfferGiftMinor', name: 'Host Supper', description: 'Invite the character to a private supper with trusted friends.', effectLines: mockDisplayLines('Cost: 90 gold. Time: 10 days. Success chance: 72%.'), iconId: 'OfferGift', backgroundId: 'OfferGift', showInQuickInteractionMenu: true, category: 'Court', difficulty: 'Medium', goldCost: 90, durationDays: 10, cooldownDays: 60, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 8, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 72, needsInitiatorSelection: false, needsGiftSelection: false, initiatorRequirementDescription: '', reasons: [], successFactors: [{ key: 'Relationship', name: 'Relationships', percent: -12 }, { key: '', name: 'Shared allies', percent: 9 }, { key: '', name: 'Court mood', percent: 6 }], initiatorCandidates: [], giftOptions: [] },
         ], lastCompletedInteractionId: '', lastInteractionSucceeded: false, lastInteractionCompletedDate: 0, lastInteractionOutcomeText: '' } satisfies BridgeResponse<'game.get_person_interactions'>;
       case 'game.get_settlement_interactions':
         return { settlementId: payloadString(payload, 'settlementId', MOCK_IDS.settlement), interactions: [
           { id: 'hold-games', name: 'Hold Games', description: 'Spend gold to reduce unrest and raise prestige.', effectLines: mockDisplayLines('Cost: 180 gold. Time: 30 days. Success chance: 100%.'), iconId: 'PromoteCommerceInteraction', backgroundId: 'PromoteCommerceInteraction', scope: 'settlement', goldCost: 180, durationDays: 30, cooldownDays: 180, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 12, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, reasons: [], successFactors: [{ name: 'Forum access', percent: 10 }, { name: 'Temple support', percent: 8 }], needsDestinationSelection: false },
           { id: 'market-charter', name: 'Grant Market Charter', description: 'Encourage merchants with a temporary civic privilege.', effectLines: mockDisplayLines('Cost: 140 gold. Time: 45 days. Success chance: 100%.'), iconId: 'PromoteCommerceInteraction', backgroundId: 'PromoteCommerceInteraction', scope: 'settlement', goldCost: 140, durationDays: 45, cooldownDays: 120, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 16, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, reasons: [], successFactors: [{ name: 'Trade roads', percent: 12 }, { name: 'Governor skill', percent: 7 }], needsDestinationSelection: false },
+          { id: 'relocatepopulationinteraction', name: 'Relocate Population', description: 'Relocate people to another settlement. Causes unrest there and angers its leader.', effectLines: mockDisplayLines('About 1,200 people move to the destination. Unrest there rises by 12, and its leader loses 10 opinion for 180 days.'), iconId: 'RelocatePopulationInteraction', backgroundId: 'RelocatePopulationInteraction', scope: 'settlement', goldCost: 200, durationDays: 30, cooldownDays: 90, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 12, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, reasons: [], successFactors: [{ name: 'Guaranteed', percent: 100 }], needsDestinationSelection: true },
         ], lastCompletedInteractionId: '', lastInteractionSucceeded: false, lastInteractionCompletedDate: 0, lastInteractionOutcomeText: '' } satisfies BridgeResponse<'game.get_settlement_interactions'>;
       case 'game.get_bloc_interactions':
         return { blocId: payloadString(payload, 'blocId', MOCK_IDS.powerBloc), interactions: [
@@ -7054,7 +7360,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.zoom_to':
         return { zoomed: true } satisfies BridgeResponse<'game.zoom_to'>;
       case 'game.world_search': {
-        const query = payloadString(payload, 'query').trim().toLowerCase();
+        const query = payloadString(payload, 'query').trim();
         if (!query) {
           return { results: [] } satisfies BridgeResponse<'game.world_search'>;
         }
@@ -7070,7 +7376,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           { itemType: 'character', itemId: MOCK_IDS.heir, name: 'Prince Marcus', detail: 'Rephsian Empire', factionId: MOCK_IDS.playerFaction, kind: 'character' },
         ];
         const results = catalogue
-          .filter((entry) => entry.name.toLowerCase().includes(query) || entry.detail.toLowerCase().includes(query))
+          .filter((entry) => textMatchesSearch(entry.name, query) || textMatchesSearch(entry.detail, query))
           .slice(0, maxResults)
           .map((entry, index) => ({
             ...entry,
@@ -7180,13 +7486,39 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return { targetFactionId: payloadString(payload, 'targetFactionId', MOCK_IDS.rivalFaction), interactionId: payloadString(payload, 'interactionId', 'mock-spy-interaction'), started: true, inputSelectionRequired: false, playerGold: state.playerGold, interactionName: '', inputSelectionPrompt: '', inputRequirements: [], factionCandidates: [], message: 'Mock interaction started.' } satisfies BridgeResponse<'game.start_spy_interaction'>;
       case 'game.start_policy_adjustment':
         return { started: true, message: 'Mock policy adjustment started.' } satisfies BridgeResponse<'game.start_policy_adjustment'>;
-      case 'game.start_settlement_interaction':
+      case 'game.start_settlement_interaction': {
+        const interactionId = payloadString(payload, 'interactionId', '');
+        if (interactionId === 'relocatepopulationinteraction') {
+          state.resettlementSelectionActive = true;
+          state.resettlementDestinationId = '';
+          const selection = mockResettlementSelection();
+          emit('game.resettlement_selection', selection);
+          return { started: false, needsDestinationSelection: true, message: selection.message } satisfies BridgeResponse<'game.start_settlement_interaction'>;
+        }
         return { started: true, needsDestinationSelection: false, message: 'Mock settlement interaction started.' } satisfies BridgeResponse<'game.start_settlement_interaction'>;
+      }
+      case 'game.resettlement_selection': {
+        const command = payloadString(payload, 'command', 'state');
+        if (command === 'cancel') {
+          state.resettlementSelectionActive = false;
+          state.resettlementDestinationId = '';
+        } else if (command === 'confirm' && state.resettlementDestinationId) {
+          state.resettlementSelectionActive = false;
+          state.resettlementDestinationId = '';
+        }
+        return mockResettlementSelection();
+      }
       case 'game.cancel_bloc_interaction':
       case 'game.cancel_faction_interaction':
       case 'game.cancel_person_interaction':
-      case 'game.cancel_settlement_interaction':
       case 'game.cancel_spy_interaction':
+        return { cancelled: true };
+      case 'game.cancel_settlement_interaction':
+        if (state.resettlementSelectionActive) {
+          state.resettlementSelectionActive = false;
+          state.resettlementDestinationId = '';
+          emit('game.resettlement_selection', mockResettlementSelection());
+        }
         return { cancelled: true };
       case 'game.apply_formation_template': {
         if (payloadBoolean(payload, 'cancelSelection')) {
@@ -7272,6 +7604,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.unqueue_settlement_building':
       case 'game.demolish_settlement_building':
       case 'game.downgrade_settlement_building':
+      case 'game.repair_settlement_building':
       case 'game.set_auto_assign_commands':
       case 'game.set_auto_replenish_formations':
       case 'game.clear_military_selection':
@@ -7331,7 +7664,16 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       }
       case 'game.set_province_build_focus':
       case 'game.adjust_subject_tax_rate':
-      case 'game.handle_world_glance_input':
+        return undefined;
+      case 'game.handle_world_glance_input': {
+        const glanceKind = payloadString(payload, 'kind', '');
+        const glanceId = payloadString(payload, 'id', '');
+        if (state.resettlementSelectionActive && (glanceKind === 'settlement' || glanceKind === 'port') && glanceId && glanceId !== MOCK_IDS.settlement) {
+          state.resettlementDestinationId = glanceId;
+          emit('game.resettlement_selection', mockResettlementSelection());
+        }
+        return undefined;
+      }
       case 'game.notification_events':
       case 'game.diplomatic_notification_events':
       case 'game.warning_events':
@@ -7477,6 +7819,25 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         expiresOnDay: createdOnDay + 4,
         durationDays: 4,
         hasPortrait: false,
+      });
+    },
+    showBuildQueueToast(emit: MockBridgeEventEmitter) {
+      const createdOnDay = state.gameDay;
+      emit('game.notification_shown', {
+        id: `mock-buildq-toast-${createdOnDay}-${Date.now()}`,
+        title: 'Granary finished',
+        description: `in <link type="settlement" id="${MOCK_IDS.settlement}">Aurelion</>`,
+        type: 'settlement',
+        notificationTypeId: 'BuildingFinished',
+        notificationTypeLabel: 'Buildings Finished',
+        iconPath: '/assets/icons/I_BuildingsQuickButton.png',
+        timestamp: '742-06-17',
+        style: 'regular',
+        createdOnDay,
+        expiresOnDay: createdOnDay + 6,
+        durationDays: 6,
+        hasPortrait: false,
+        settlementId: MOCK_IDS.settlement,
       });
     },
     showActionResultNotification(emit: MockBridgeEventEmitter, succeeded = true) {
@@ -7739,6 +8100,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       if (request.sidebar) emit('ui.sidebar_event', { type: request.sidebar, id: request.sidebarId ?? defaultIdForSidebar(request.sidebar), tabIndex: request.sidebarTabIndex });
       if (request.notification) this.showNotification(emit);
       if (request.regularNotification) this.showRegularNotification(emit);
+      if (request.buildQueueToast) this.showBuildQueueToast(emit);
       if (request.actionResultNotification) this.showActionResultNotification(emit);
       if (request.battleAarNotification) this.showBattleAfterActionNotification(emit, request.battleAarOutcome);
       if (request.event) this.showEvent(emit);

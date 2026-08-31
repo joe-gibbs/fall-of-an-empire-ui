@@ -6,10 +6,12 @@ import type {
   BuildingPlacementResponse,
   GovernorAssignmentCandidate,
   GovernorAssignmentResponse,
+  ResettlementSelectionResponse,
 } from '../../bridge-types.generated.ts';
 import type { PortraitLayerData } from '../../data/types';
 import { buildingPortrait } from '../settlements-economy/useSettlementBuildingsBridge';
 import { mapPortraitLayers, mapPortraitPath } from '../characters/portraitMapping';
+import { bridgeEvents } from '../core/bridgeEvents';
 import { useBridgeQuery } from '../core/useBridgeQuery';
 
 type BridgeActionName = keyof BridgeActions;
@@ -62,6 +64,20 @@ export interface FormationSelectionOperation {
   selectedSettlementId: string;
   selectedSettlementName: string;
   canConfirm: boolean;
+  message: string;
+}
+
+export interface ResettlementSelectionOperation {
+  active: boolean;
+  sourceSettlementId: string;
+  sourceSettlementName: string;
+  destinationSettlementId: string;
+  destinationSettlementName: string;
+  migrantCount: number;
+  goldCost: number;
+  canConfirm: boolean;
+  interactionName: string;
+  description: string;
   message: string;
 }
 
@@ -121,6 +137,23 @@ function mapFormationSelection(data: ApplyFormationTemplateResponse): FormationS
   };
 }
 
+function mapResettlementSelection(data: ResettlementSelectionResponse): ResettlementSelectionOperation | null {
+  if (!data.active) return null;
+  return {
+    active: data.active,
+    sourceSettlementId: data.sourceSettlementId,
+    sourceSettlementName: data.sourceSettlementName,
+    destinationSettlementId: data.destinationSettlementId,
+    destinationSettlementName: data.destinationSettlementName,
+    migrantCount: data.migrantCount,
+    goldCost: data.goldCost,
+    canConfirm: data.canConfirm,
+    interactionName: data.interactionName,
+    description: data.description,
+    message: data.message,
+  };
+}
+
 async function callGovernorAssignment(command: string, personId = ''): Promise<GovernorAssignmentResponse> {
   const response = await bridgeCall('game.governor_assignment', { command, personId });
   dispatchBridgeResponse('game.governor_assignment', response);
@@ -161,6 +194,30 @@ export function useFormationSelectionOperation(): FormationSelectionOperation | 
   }), []);
 
   return state;
+}
+
+export function useResettlementSelectionOperation(): ResettlementSelectionOperation | null {
+  const state = useBridgeQuery({
+    action: 'game.resettlement_selection',
+    payload: { command: 'state' },
+    map: mapResettlementSelection,
+  });
+
+  return state;
+}
+
+async function callResettlementSelection(command: string): Promise<ResettlementSelectionResponse> {
+  const response = await bridgeCall('game.resettlement_selection', { command });
+  dispatchBridgeResponse('game.resettlement_selection', response);
+  return response;
+}
+
+export function confirmResettlementSelectionBridge(): Promise<ResettlementSelectionResponse> {
+  return callResettlementSelection('confirm');
+}
+
+export function cancelResettlementSelectionBridge(): Promise<ResettlementSelectionResponse> {
+  return callResettlementSelection('cancel');
 }
 
 export function startGovernorAssignmentBridge(): Promise<GovernorAssignmentResponse> {

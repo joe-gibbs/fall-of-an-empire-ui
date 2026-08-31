@@ -707,7 +707,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
       label: webUIText('Ledger.Column.Decision'),
       align: 'centre',
       render: row => row.hasDecision
-        ? <span className={`ledger-notification-decision${row.isAccepted ? ' ledger-notification-decision--accepted' : ' ledger-notification-decision--declined'}`}>{row.decision}</span>
+        ? <span className={`badge ${row.isAccepted ? 'badge--green' : 'badge--red'} ledger-notification-decision`}>{row.decision}</span>
         : '-',
       sortValue: row => row.decision,
     },

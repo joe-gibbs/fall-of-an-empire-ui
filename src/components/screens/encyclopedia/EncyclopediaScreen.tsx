@@ -14,12 +14,14 @@ import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBo
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import type { EncyclopediaEntryDTO, EncyclopediaBuildingDTO, EncyclopediaCultureDTO, EncyclopediaResourceCostDTO, EncyclopediaUnitDTO } from '../../../bridge-types.generated.ts';
 import { formatNumber } from '../../../utils/numberFormat';
+import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { conceptIconPath, TIER_ICONS } from '../../../utils/iconMaps';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import './EncyclopediaScreen.css';
 
 import { useWebUIText, webUIText, WebUIText } from '../../../localization/WebUITextContext';
+import { unitTypeLabel } from '../../../utils/displayLabels';
 interface Props {
   onClose: () => void;
 }
@@ -156,7 +158,7 @@ function unitTooltipData(unit: EncyclopediaUnitDTO): UnitTooltipData {
     portrait: unit.portrait
       ? WebkilnAssetPath(unit.portrait)
       : WebkilnAssetPath(unit.isNaval ? DEFAULT_NAVY_TOOLTIP_PORTRAIT : DEFAULT_ARMY_TOOLTIP_PORTRAIT),
-    typeLabel: unit.unitTypeLabel || unit.unitType,
+    typeLabel: unit.unitTypeLabel || unitTypeLabel(unit.unitType),
     typeIcon: unitTypeIcon(unit.unitType, unit.isNaval) ?? WebkilnAssetPath(unit.isNaval ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/UnitTypes/I_ArmySpecial.png'),
     tier: unit.tier,
     culture: unit.cultureName || undefined,
@@ -361,12 +363,12 @@ function ArticlesPanel({ entries, categories }: ArticlesPanelProps) {
     setCurrentEntryId(prev);
   }, [history]);
 
-  const lowerSearch = searchText.toLowerCase();
+  const lowerSearch = searchText;
   const filteredEntries = searchText.length < 2
     ? entries
     : entries.filter(e =>
-        e.title.toLowerCase().includes(lowerSearch) ||
-        e.category.toLowerCase().includes(lowerSearch),
+        textMatchesSearch(e.title, lowerSearch) ||
+        textMatchesSearch(e.category, lowerSearch),
       );
 
   const grouped = useMemo(() => {
@@ -845,7 +847,7 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
   const [activeCategories, setActiveCategories] = useState<Set<BuildingCategory>>(new Set(BUILDING_CATEGORIES));
 
   const activeCulture = selectedCultureId(cultures, culture);
-  const lowerSearch = searchText.toLowerCase();
+  const lowerSearch = searchText;
   const placeOnMapLabel = webUIText('BottomBar.BuildingPlacement.PlaceOnMap');
 
   const placeBuildingOnMap = useCallback((building: EncyclopediaBuildingDTO) => {
@@ -927,8 +929,8 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
         .filter(chain => {
           if (searchText.length < 2) return true;
           return chain.some(building => (
-            building.name.toLowerCase().includes(lowerSearch)
-            || building.description.toLowerCase().includes(lowerSearch)
+            textMatchesSearch(building.name, lowerSearch)
+            || textMatchesSearch(building.description, lowerSearch)
           ));
         });
       if (categoryChains.length > 0) result[category] = categoryChains;
@@ -1058,14 +1060,14 @@ function UnitsPanel({ units, cultures }: UnitsPanelProps) {
   const [searchText, setSearchText] = useState('');
 
   const activeCulture = selectedCultureId(cultures, culture);
-  const lowerSearch = searchText.toLowerCase();
+  const lowerSearch = searchText;
 
   const filtered = useMemo(() => (
     units.filter(unit => {
       if (unit.cultureId !== activeCulture) return false;
       if (searchText.length >= 2) {
-        const nameMatches = unit.name.toLowerCase().includes(lowerSearch);
-        const typeMatches = unit.unitTypeLabel.toLowerCase().includes(lowerSearch);
+        const nameMatches = textMatchesSearch(unit.name, lowerSearch);
+        const typeMatches = textMatchesSearch(unit.unitTypeLabel, lowerSearch);
         return nameMatches || typeMatches;
       }
       return true;
@@ -1126,7 +1128,7 @@ function UnitsPanel({ units, cultures }: UnitsPanelProps) {
             <div key={type} className="enc-unit-row enc-unit-row--army">
               <div className="enc-unit-row-heading">
                 {icon && <img className="enc-unit-row-icon" src={icon} alt="" draggable={false} />}
-                <span className="enc-unit-type-name">{typeUnits[0]?.unitTypeLabel || type}</span>
+                <span className="enc-unit-type-name">{typeUnits[0]?.unitTypeLabel || unitTypeLabel(type)}</span>
                 <span className="enc-unit-row-count">{formatNumber(typeUnits.length)}</span>
                 <div className="enc-unit-row-rule" />
               </div>
@@ -1155,7 +1157,7 @@ function UnitsPanel({ units, cultures }: UnitsPanelProps) {
             <div key={type} className="enc-unit-row enc-unit-row--navy">
               <div className="enc-unit-row-heading">
                 {icon && <img className="enc-unit-row-icon" src={icon} alt="" draggable={false} />}
-                <span className="enc-unit-type-name">{typeUnits[0]?.unitTypeLabel || type}</span>
+                <span className="enc-unit-type-name">{typeUnits[0]?.unitTypeLabel || unitTypeLabel(type)}</span>
                 <span className="enc-unit-row-count">{formatNumber(typeUnits.length)}</span>
                 <div className="enc-unit-row-rule" />
               </div>
@@ -1195,7 +1197,7 @@ function UnitCard({ unit }: { unit: EncyclopediaUnitDTO }) {
           </div>
         </div>
         <span className="enc-unit-card-name">{unit.name}</span>
-        <span className="enc-unit-card-type">{unit.unitTypeLabel || unit.unitType}</span>
+        <span className="enc-unit-card-type">{unit.unitTypeLabel || unitTypeLabel(unit.unitType)}</span>
         <div className="enc-unit-stats-row">
           <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={WebkilnAssetPath('/assets/icons/I_Damage_Slash.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.attack)}</span></span>
           <span className="enc-unit-stat"><img className="enc-unit-stat-icon" src={WebkilnAssetPath('/assets/icons/I_Armour_Slash.png')} alt="" draggable={false} /><span className="enc-unit-stat-val">{formatNumber(unit.armour)}</span></span>

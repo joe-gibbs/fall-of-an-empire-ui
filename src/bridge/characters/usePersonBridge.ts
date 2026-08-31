@@ -154,7 +154,13 @@ function mapPerson(data: GetPersonDataResponse): Character {
       }))
       : undefined,
     opinionTowardPlayer: data.opinionBreakdown.length ? data.opinionTowardPlayer : undefined,
-    opinionBreakdown: data.opinionBreakdown.length ? data.opinionBreakdown : undefined,
+    opinionBreakdown: data.opinionBreakdown.length
+      ? data.opinionBreakdown.map(entry => ({
+        key: entry.key || undefined,
+        label: entry.label,
+        value: entry.value,
+      }))
+      : undefined,
     honourDreadBreakdown: data.honourDreadBreakdown.length ? data.honourDreadBreakdown : undefined,
     governedRegions: data.governedRegions.map(region => ({
       id: region.id,

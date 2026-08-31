@@ -680,40 +680,77 @@
 
 
 /* --------------------------------------------------------------------------
-   5. Badges
-   Tint via --badge-color custom property.
-   Usage: <span class="badge" style="--badge-color: var(--green)">Loyal</span>
+   5. Status badges
+   Compact gold-framed labels. Tone with --badge-* variables or .badge--*.
    -------------------------------------------------------------------------- */
 
 .badge {
-  --badge-color: var(--text);
-  display: flex;
+  --badge-background: rgba(31, 31, 28, 0.9);
+  --badge-highlight: rgba(143, 139, 124, 0.12);
+  --badge-shade: rgba(14, 15, 14, 0.32);
+  --badge-color: var(--diplo-relation-neutral);
+  display: inline-flex;
   align-items: center;
-  padding: 0.077rem 0.308rem;
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  line-height: 1.5;
+  flex-shrink: 0;
+  padding: 0.12rem 0.42rem 0.1rem;
+  border: 0.154rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: var(--badge-background);
+  background-image:
+    linear-gradient(180deg, var(--badge-highlight), var(--badge-shade)),
+    url('/assets/baked/texture-overlay-heavy.png');
+  background-repeat: repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem;
   color: var(--badge-color);
-  background-image: url('/assets/baked/badge-gold.png');
-  background-repeat: repeat;
-  background-size: 11.6364rem 4.3636rem;
-  background-color: #24231d;
-  border: 0.154rem solid rgba(201, 168, 76, 0.3);
-  position: relative;
+  font-family: var(--font-header);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.badge::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-image: none;
-  pointer-events: none;
+.badge--gold {
+  --badge-background: rgba(43, 36, 20, 0.9);
+  --badge-highlight: rgba(201, 168, 76, 0.16);
+  --badge-shade: rgba(21, 16, 7, 0.34);
+  --badge-color: var(--gold);
+}
+
+.badge--subject {
+  --badge-background: rgba(20, 34, 43, 0.9);
+  --badge-highlight: rgba(101, 131, 145, 0.18);
+  --badge-shade: rgba(9, 15, 19, 0.32);
+  --badge-color: var(--diplo-relation-subject);
+}
+
+.badge--war,
+.badge--red {
+  --badge-background: rgba(43, 20, 21, 0.92);
+  --badge-highlight: rgba(168, 55, 52, 0.18);
+  --badge-shade: rgba(22, 8, 9, 0.36);
+  --badge-color: var(--diplo-relation-war);
+}
+
+.badge--ally,
+.badge--green {
+  --badge-background: rgba(24, 39, 24, 0.9);
+  --badge-highlight: rgba(91, 134, 73, 0.16);
+  --badge-shade: rgba(10, 18, 10, 0.34);
+  --badge-color: var(--diplo-relation-ally);
+}
+
+.badge--rival,
+.badge--orange {
+  --badge-background: rgba(43, 31, 20, 0.9);
+  --badge-highlight: rgba(160, 102, 55, 0.16);
+  --badge-shade: rgba(21, 13, 7, 0.34);
+  --badge-color: var(--diplo-relation-rival);
 }
 
 

@@ -8,7 +8,7 @@ import type {
 import {
   buyEconomyResourceBridge,
   sellEconomyResourceBridge,
-  setEconomyAutoBuyBridge,
+  setResourceAutoBuyBridge,
   setResourceAutoSellBridge,
   useEconomyResourceDetailsBridge,
 } from '../../../bridge/settlements-economy/useEconomyOverviewBridge';
@@ -19,13 +19,13 @@ import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import {
   stepAmountFromEvent,
   stepAmountFromMultiplier,
-  stepButtonLabel,
   useStepMultiplier,
 } from '../../../utils/stepModifiers';
 import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
 import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
 import CloseButton from '../../common/buttons/CloseButton';
 import GameButton from '../../common/buttons/GameButton';
+import NumberStepper from '../../common/forms/NumberStepper';
 import EntityLink from '../../common/entities/EntityLink';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import SortableHeader from '../../common/layout/tables/SortableHeader';
@@ -39,7 +39,6 @@ type LedgerSortKey = 'name' | 'amount';
 interface Props {
   resource: EconomyOverviewResourceRow | null;
   gold: number;
-  autoBuyEnabled: boolean;
   tradeAmount: number;
   autoSellThresholdStep: number;
   onClose: () => void;
@@ -86,11 +85,30 @@ function FlowName({ flow }: { flow: EconomyResourceFlowDetail }) {
   return <EntityLink type={flow.linkType} id={flow.linkId} inline>{flow.name}</EntityLink>;
 }
 
-function Metric({ label, value, tone, icon }: { label: string; value: string; tone?: string; icon?: string }) {
+function Metric({
+  label,
+  value,
+  tone,
+  icon,
+  tooltip,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+  icon?: string;
+  tooltip?: { title: string; body: string };
+}) {
+  const valueNode = (
+    <strong className={tone}>{icon && <img className="erd-gold-icon" src={icon} alt="" />}{value}</strong>
+  );
   return (
     <div className="erd-metric">
       <span className="erd-metric__label">{label}</span>
-      <strong className={tone}>{icon && <img className="erd-gold-icon" src={icon} alt="" />}{value}</strong>
+      {tooltip ? (
+        <Tooltip content={tooltip} position="top" delay={150} inline wrapperClassName="erd-metric-value-tooltip">
+          {valueNode}
+        </Tooltip>
+      ) : valueNode}
     </div>
   );
 }
@@ -270,7 +288,6 @@ function HistoryCharts({ history }: { history: EconomyResourceHistoryPoint[] }) 
 export default function ResourceDetailsModal({
   resource,
   gold,
-  autoBuyEnabled,
   tradeAmount,
   autoSellThresholdStep,
   onClose,
@@ -282,6 +299,19 @@ export default function ResourceDetailsModal({
   const [historyRange, setHistoryRange] = useState<HistoryRange>('12');
   const [producerSort, setProducerSort] = useState<SortState<LedgerSortKey>>({ key: 'amount', direction: 'desc' });
   const [consumerSort, setConsumerSort] = useState<SortState<LedgerSortKey>>({ key: 'amount', direction: 'desc' });
+  const [autoSellEnabled, setAutoSellEnabled] = useState(false);
+  const [autoBuyEnabled, setAutoBuyEnabled] = useState(false);
+  const [sellDraft, setSellDraft] = useState(0);
+  const [buyDraft, setBuyDraft] = useState(0);
+  const [draftResourceId, setDraftResourceId] = useState('');
+  const resourceId = resource?.id ?? '';
+  if (resourceId !== draftResourceId) {
+    setDraftResourceId(resourceId);
+    setAutoSellEnabled(resource?.autoSellEnabled ?? false);
+    setAutoBuyEnabled(resource?.autoBuyEnabled ?? false);
+    setSellDraft(Math.max(0, resource?.autoSellThreshold ?? 0));
+    setBuyDraft(Math.max(0, resource?.autoBuyThreshold ?? 0));
+  }
   const { mounted, closing, close, stopPropagation } = useModalPresence({
     open: !!resource,
     onClose,
@@ -290,7 +320,6 @@ export default function ResourceDetailsModal({
   });
   const multiplier = useStepMultiplier();
   const effectiveTradeAmount = stepAmountFromMultiplier(multiplier, tradeAmount);
-  const effectiveThresholdStep = stepAmountFromMultiplier(multiplier, autoSellThresholdStep);
   const stepModifiersBody = stepModifiersHelpText(
     t,
     formatActionBinding(settings?.controls, 'IncreaseUnitProduction'),
@@ -385,10 +414,19 @@ export default function ResourceDetailsModal({
   const canSell = sellReturn > 0;
   const totalIn = resource.production + resource.vassalContribution + resource.treatyIncome;
   const totalOut = resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss;
-  const threshold = Math.max(0, resource.autoSellThreshold);
-  const thresholdMax = Math.max(1, resource.autoSellSliderMax);
-  const setAutoSellThreshold = (next: number) => {
-    setResourceAutoSellBridge(resource.id, true, Math.max(0, Math.min(thresholdMax, next))).catch(() => undefined);
+  const sellThresholdMax = Math.max(1, resource.autoSellSliderMax);
+  const buyThresholdMax = Math.max(1, resource.autoBuySliderMax);
+  const commitAutoSellThreshold = (next: number) => {
+    const resolved = Math.max(0, next);
+    setSellDraft(resolved);
+    setAutoSellEnabled(true);
+    setResourceAutoSellBridge(resource.id, true, resolved).catch(() => undefined);
+  };
+  const commitAutoBuyThreshold = (next: number) => {
+    const resolved = Math.max(0, next);
+    setBuyDraft(resolved);
+    setAutoBuyEnabled(true);
+    setResourceAutoBuyBridge(resource.id, true, resolved).catch(() => undefined);
   };
 
   return createPortal(
@@ -420,6 +458,15 @@ export default function ResourceDetailsModal({
               <Metric label={t('Economy.MarketPrice')} value={price(marketPrice)} icon="/assets/icons/I_Coins.png" />
               {isFood && <Metric label={t('Economy.FoodValue')} value={number(details?.foodValue)} />}
               {(details?.decayRate ?? 0) > 0 && <Metric label={t('Economy.DecayRate')} value={`${number((details?.decayRate ?? 0) * 100)}%`} />}
+              <Metric
+                label={t('Economy.WarehouseLimit')}
+                value={formatNumber(details?.stockpileCap ?? resource.stockpileCap, { maximumFractionDigits: 0 })}
+                icon="/assets/icons/I_Warehouse.png"
+                tooltip={{
+                  title: t('Economy.WarehouseLimit'),
+                  body: t('Economy.WarehouseLimitTooltip'),
+                }}
+              />
             </div>
           </section>
 
@@ -463,56 +510,86 @@ export default function ResourceDetailsModal({
               </Tooltip>
             </div>
             <div className="erd-automation">
-              {isFood && (
+              <div className="erd-automation-row">
                 <button
                   type="button"
                   className={`erd-toggle${autoBuyEnabled ? ' erd-toggle--active' : ''}`}
-                  onClick={() => setEconomyAutoBuyBridge(!autoBuyEnabled).catch(() => undefined)}
+                  onClick={() => {
+                    const next = !autoBuyEnabled;
+                    setAutoBuyEnabled(next);
+                    setResourceAutoBuyBridge(resource.id, next, buyDraft).catch(() => undefined);
+                  }}
                 >
                   {t('Economy.AutoBuy')}: {autoBuyEnabled ? t('Economy.Enabled') : t('Economy.Disabled')}
                 </button>
-              )}
-              <button
-                type="button"
-                className={`erd-toggle${resource.autoSellEnabled ? ' erd-toggle--active' : ''}`}
-                onClick={() => setResourceAutoSellBridge(resource.id, !resource.autoSellEnabled, threshold).catch(() => undefined)}
-              >
-                {t('Economy.AutoSell')}: {resource.autoSellEnabled ? t('Economy.Enabled') : t('Economy.Disabled')}
-              </button>
-              {resource.autoSellEnabled && (
-                <Tooltip
-                  content={{
-                    title: t('Economy.AutoSellReserve'),
-                    body: t('Economy.AutoSellReserveExplanation'),
-                    footer: stepModifiersBody,
+                {autoBuyEnabled && (
+                  <Tooltip
+                    content={{
+                      title: t('Economy.AutoBuyTarget'),
+                      body: t('Economy.AutoBuyTargetExplanation'),
+                      footer: stepModifiersBody,
+                    }}
+                    position="left"
+                    wrapperClassName="erd-threshold-tooltip"
+                  >
+                    <div className="erd-threshold">
+                      <span className="erd-threshold__label">{t('Economy.AutoBuyTargetShort')}</span>
+                      <NumberStepper
+                        value={buyDraft}
+                        min={0}
+                        step={autoSellThresholdStep}
+                        className="erd-threshold-stepper"
+                        buttonClassName="erd-threshold-step"
+                        buttonDisabledClassName="erd-threshold-step--disabled"
+                        formatValue={value => String(Math.round(value))}
+                        onChange={setBuyDraft}
+                        onCommit={commitAutoBuyThreshold}
+                      />
+                      <div className="erd-threshold__bar"><span style={{ width: `${Math.min(100, buyDraft / buyThresholdMax * 100)}%` }} /></div>
+                    </div>
+                  </Tooltip>
+                )}
+              </div>
+              <div className="erd-automation-row">
+                <button
+                  type="button"
+                  className={`erd-toggle${autoSellEnabled ? ' erd-toggle--active' : ''}`}
+                  onClick={() => {
+                    const next = !autoSellEnabled;
+                    setAutoSellEnabled(next);
+                    setResourceAutoSellBridge(resource.id, next, sellDraft).catch(() => undefined);
                   }}
-                  position="left"
-                  wrapperClassName="erd-threshold-tooltip"
                 >
-                  <div className="erd-threshold">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setAutoSellThreshold(threshold - stepAmountFromEvent(event, autoSellThresholdStep));
-                      }}
-                    >
-                      {stepButtonLabel(-1, effectiveThresholdStep)}
-                    </button>
-                    <div><span style={{ width: `${Math.min(100, threshold / thresholdMax * 100)}%` }} /></div>
-                    <strong><small>{t('Economy.AutoSellReserveShort')}</small>{number(threshold)}</strong>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setAutoSellThreshold(threshold + stepAmountFromEvent(event, autoSellThresholdStep));
-                      }}
-                    >
-                      {stepButtonLabel(1, effectiveThresholdStep)}
-                    </button>
-                  </div>
-                </Tooltip>
-              )}
+                  {t('Economy.AutoSell')}: {autoSellEnabled ? t('Economy.Enabled') : t('Economy.Disabled')}
+                </button>
+                {autoSellEnabled && (
+                  <Tooltip
+                    content={{
+                      title: t('Economy.AutoSellReserve'),
+                      body: t('Economy.AutoSellReserveExplanation'),
+                      footer: stepModifiersBody,
+                    }}
+                    position="left"
+                    wrapperClassName="erd-threshold-tooltip"
+                  >
+                    <div className="erd-threshold">
+                      <span className="erd-threshold__label">{t('Economy.AutoSellReserveShort')}</span>
+                      <NumberStepper
+                        value={sellDraft}
+                        min={0}
+                        step={autoSellThresholdStep}
+                        className="erd-threshold-stepper"
+                        buttonClassName="erd-threshold-step"
+                        buttonDisabledClassName="erd-threshold-step--disabled"
+                        formatValue={value => String(Math.round(value))}
+                        onChange={setSellDraft}
+                        onCommit={commitAutoSellThreshold}
+                      />
+                      <div className="erd-threshold__bar"><span style={{ width: `${Math.min(100, sellDraft / sellThresholdMax * 100)}%` }} /></div>
+                    </div>
+                  </Tooltip>
+                )}
+              </div>
             </div>
           </section>
 

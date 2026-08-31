@@ -102,6 +102,8 @@ function mapForce(data: MilitaryOverviewForce): MilitaryForce {
     isPlayerControlled: data.isPlayerControlled,
     subordinateCount: data.subordinateCount,
     subordinateCapacity: data.subordinateCapacity,
+    parentSlotIndex: data.parentSlotIndex,
+    receivesCommandBenefits: data.receivesCommandBenefits,
   };
 }
 
@@ -310,6 +312,7 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
         count: entry.count,
       })),
       withinCommandRange: sub.withinCommandRange,
+      receivesCommandBenefits: sub.receivesCommandBenefits,
       distanceToSuperior: sub.distanceToSuperior,
       superiorCommandRadius: sub.superiorCommandRadius,
       hierarchyTacticsBonus: sub.hierarchyTacticsBonus,
@@ -318,6 +321,7 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     })),
     commandSubordinateCount: data.commandSubordinateCapacity > 0 ? data.commandSubordinateCount : undefined,
     commandSubordinateCapacity: data.commandSubordinateCapacity > 0 ? data.commandSubordinateCapacity : undefined,
+    receivesCommandBenefits: data.receivesCommandBenefits,
     commandMaintenance: data.commandMaintenance > 0 ? data.commandMaintenance : undefined,
     commandBuffRadius: data.commandBuffRadius > 0 ? data.commandBuffRadius : undefined,
     hierarchyTacticsBonus: data.hierarchyTacticsBonus,

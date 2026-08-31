@@ -10,6 +10,7 @@ import InteractionCard from '../../common/interactions/InteractionCard';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
+import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipLine } from '../../common/tooltips/Tooltip';
 import CultureTooltip from '../../common/tooltips/CultureTooltip';
@@ -20,7 +21,7 @@ import PersonInteractionInitiatorModal from '../../modals/people/PersonInteracti
 import PersonInteractionGiftModal from '../../modals/people/PersonInteractionGiftModal';
 import type { Character, CharacterRelationship, StatKey } from '../../../data/types';
 import { STAT_ICONS } from '../../../utils/iconMaps';
-import { buildCharacterStatTooltip, buildComplianceTooltip } from '../../../utils/characterTooltipContent';
+import { buildCharacterStatTooltip, buildComplianceTooltip, buildRoleSkillTooltip } from '../../../utils/characterTooltipContent';
 import { useGameActions, useGameState } from '../../../context/GameContext';
 import { bridgeCall, type StartPersonInteractionResponse } from '../../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
@@ -295,10 +296,10 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
 
   // Role experience entries
   const roleEntries = character.roleTiers ? [
-    { key: 'military', label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.803.26'), xp: character.roleExperience.military, tier: character.roleTiers.military },
-    { key: 'administrative', label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.804.27'), xp: character.roleExperience.administrative, tier: character.roleTiers.administrative },
-    { key: 'diplomatic', label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.805.28'), xp: character.roleExperience.diplomatic, tier: character.roleTiers.diplomatic },
-    { key: 'intrigue', label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.806.29'), xp: character.roleExperience.intrigue, tier: character.roleTiers.intrigue },
+    { key: 'military' as const, label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.803.26'), xp: character.roleExperience.military, tier: character.roleTiers.military, bodyKey: 'CharacterSidebar.Role.Military.Body' },
+    { key: 'administrative' as const, label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.804.27'), xp: character.roleExperience.administrative, tier: character.roleTiers.administrative, bodyKey: 'CharacterSidebar.Role.Administrative.Body' },
+    { key: 'diplomatic' as const, label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.805.28'), xp: character.roleExperience.diplomatic, tier: character.roleTiers.diplomatic, bodyKey: 'CharacterSidebar.Role.Diplomatic.Body' },
+    { key: 'intrigue' as const, label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.806.29'), xp: character.roleExperience.intrigue, tier: character.roleTiers.intrigue, bodyKey: 'CharacterSidebar.Role.Intrigue.Body' },
   ] : [];
   const characterHistory = character.history ?? [];
 
@@ -306,7 +307,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
     () => buildFamilyGraph(character, familyTree),
     [character, familyTree],
   );
-  const searchLower = relationshipSearch.trim().toLowerCase();
+  const searchLower = relationshipSearch.trim();
   const visibleFamilyGraph = React.useMemo(() => {
     if (!searchLower) return familyGraph;
     return {
@@ -315,8 +316,8 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         .map(row => ({
           ...row,
           entries: row.entries.filter(entry => (
-            entry.name.toLowerCase().includes(searchLower)
-            || entry.label.toLowerCase().includes(searchLower)
+            textMatchesSearch(entry.name, searchLower)
+            || textMatchesSearch(entry.label, searchLower)
           )),
         }))
         .filter(row => row.entries.length > 0),
@@ -793,7 +794,19 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
           {roleEntries.map(role => {
             const tier = role.tier;
             return (
-              <Tooltip key={role.key} content={{ get title() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1230.1", { Label: role.label, Label2: tier.label }); }, get body() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1230.2", { Xp: role.xp, Value2: role.label.toLowerCase() }); } }} position="bottom" delay={200}>
+              <Tooltip
+                key={role.key}
+                content={buildRoleSkillTooltip({
+                  role: role.key,
+                  label: role.label,
+                  xp: role.xp,
+                  tier,
+                  bodyKey: role.bodyKey,
+                  character,
+                })}
+                position="bottom"
+                delay={200}
+              >
                 <div className="char-role-row">
                   <img src={roleIcons[role.key]} alt="" className="char-role-icon" />
                   <span className="char-role-label">{role.label}</span>
@@ -916,7 +929,13 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         {/* Luxury Needs */}
         {luxuryNeeds.length > 0 && (
           <>
-            <SectionHeading variant="ornate" title={webUIText('CharacterSidebar.LuxuryNeeds')} />
+            <Tooltip content={{
+              title: webUIText('CharacterSidebar.LuxuryNeeds'),
+              body: webUIText('CharacterSidebar.LuxuryNeeds.HeadingBody'),
+              footer: webUIText('CharacterSidebar.LuxuryNeeds.ShortageBody'),
+            }} position="bottom" delay={200}>
+              <SectionHeading variant="ornate" title={webUIText('CharacterSidebar.LuxuryNeeds')} />
+            </Tooltip>
             <div className="char-luxury-list">
               {luxuryNeeds.map(slot => {
                 const pct = slot.required > 0 ? Math.min(100, (slot.provided / slot.required) * 100) : 0;
@@ -924,10 +943,11 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                 return (
                   <Tooltip key={slot.name} content={{
                     title: slot.name,
-                    get body() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1312.1", { Provided: slot.provided, Required: slot.required }); },
+                    get body() { return webUIText('CharacterSidebar.LuxuryNeeds.ItemBody', { Name: slot.name }); },
                     lines: [
+                      { get label() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1312.1", { Provided: slot.provided, Required: slot.required }); } },
                       { label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1314.56'), get value() { return isSatisfied ? webUIText("CharacterSidebar.Satisfied") : webUIText("CharacterSidebar.Shortage"); }, valueColor: isSatisfied ? 'var(--green)' : 'var(--red)' },
-                      ...(!isSatisfied ? [{ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1315.57'), get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1315.1", { Value1: (slot.required - slot.provided) * 20 }); }, valueColor: 'var(--red)' }] : []),
+                      ...(!isSatisfied ? [{ label: webUIText('CharacterSidebar.LuxuryNeeds.PenaltyLabel'), get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1315.1", { Value1: (slot.required - slot.provided) * 20 }); }, valueColor: 'var(--red)' }] : []),
                     ],
                   }} position="bottom" delay={200}>
                     <div className="char-luxury-row">

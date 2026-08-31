@@ -50,6 +50,8 @@ const TARGET_ALIASES: Record<string, string[]> = {
   BuildQueueButton: ['BuildQueueButton'],
   VictoryConditionsButton: ['VictoryConditionsButton'],
   PinnedItemsToggleButton: ['PinnedItemsToggleButton'],
+  WorldSearchButton: ['WorldSearchButton', 'SettlementFinderButton'],
+  SettlementFinderButton: ['WorldSearchButton', 'SettlementFinderButton'],
   MapModeButtonGroup: ['MapModeButtonGroup'],
   MilitaryTemplatesTab: ['MilitaryTemplatesTab', 'SidebarTab:templates'],
   MilitaryPersonalGuardTab: ['MilitaryPersonalGuardTab', 'SidebarTab:guard'],

@@ -321,15 +321,6 @@
   margin-top: 0.18rem;
 }
 
-.dps-tag {
-  padding: 0.08rem 0.28rem;
-  border: 0.077rem solid rgba(176, 72, 72, 0.45);
-  color: var(--red-light);
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
 .dps-effect-list {
   display: flex;
   flex-wrap: wrap;

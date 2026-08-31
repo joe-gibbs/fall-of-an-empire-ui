@@ -21,6 +21,10 @@
   cursor: default;
 }
 
+.game-check-button--disabled .game-check-button__label {
+  cursor: default;
+}
+
 .game-check-button__input {
   appearance: none;
   width: 0.95rem;
@@ -53,6 +57,8 @@
 .game-check-button__label {
   color: var(--text-muted);
   letter-spacing: 0;
+  cursor: var(--cursor-pointer);
+  user-select: none;
 }
 
 .game-check-button__input:checked {

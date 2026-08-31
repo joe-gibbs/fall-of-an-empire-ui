@@ -280,19 +280,14 @@
 }
 
 .bld-queue-card-status {
-  display: flex;
-  align-items: center;
-  padding: 0.07rem 0.28rem;
-  background: rgba(8, 12, 17, 0.28);
-  color: var(--gold-light);
-  font-size: 0.64rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  white-space: nowrap;
+  margin-left: 0.35rem;
 }
 
 .bld-queue-card--awaiting_resources .bld-queue-card-status {
-  color: var(--red-light);
+  --badge-background: rgba(43, 20, 21, 0.92);
+  --badge-highlight: rgba(168, 55, 52, 0.18);
+  --badge-shade: rgba(22, 8, 9, 0.36);
+  --badge-color: var(--diplo-relation-war);
 }
 
 .bld-queue-card-action {
@@ -399,18 +394,30 @@
 
 .bld-search-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem 0.55rem;
   min-width: 0;
 }
 
 .bld-search-field {
-  flex: 1 1 auto;
+  flex: 1 1 8rem;
   min-width: 0;
-  width: 100%;
 }
 
 .bld-search-input {
   width: 100%;
+}
+
+.bld-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem 0.7rem;
+  flex: 0 1 auto;
+  margin-left: auto;
 }
 
 /* ============ Category tabs ============ */

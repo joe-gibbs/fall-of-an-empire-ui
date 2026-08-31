@@ -7,7 +7,7 @@ import type { PlayerFactionSummary } from '../../bridge/app/usePlayerFactionBrid
 import { webUIText } from '../../localization/WebUITextContext';
 import { playSound } from '../../hooks/useSound';
 import { formatNumber, formatSignedNumber } from '../../utils/numberFormat';
-import type { ProvinceModeOverview } from '../../bridge/provinces/useProvinceModeOverviewBridge';
+import type { ProvinceModeOverview, ProvinceModeScoreRow } from '../../bridge/provinces/useProvinceModeOverviewBridge';
 
 interface ImperialStandingIndicatorProps {
   playerFaction: PlayerFactionSummary | null;
@@ -84,6 +84,48 @@ function recallStageSegments(overview: ProvinceModeOverview): number {
   return IMPERIAL_RING_MAX_FILLED_SEGMENTS - overview.recallStage;
 }
 
+function scorePartColour(kind: 'threat' | 'standing', value: number): string {
+  if (value === 0) return 'var(--text-muted)';
+  if (kind === 'threat') return value > 0 ? 'var(--red)' : 'var(--green)';
+  return valueColour(value);
+}
+
+function scoreRowSubTooltip(row: ProvinceModeScoreRow, kind: 'threat' | 'standing'): TooltipContent | undefined {
+  if (row.parts.length === 0 && !row.description) return undefined;
+
+  const lines: TooltipLine[] = [
+    {
+      label: webUIText('FactionOverview.ModifierTotal'),
+      value: formatSignedNumber(row.value),
+      valueColor: kind === 'threat' ? threatCauseColour(row.value) : valueColour(row.value),
+    },
+  ];
+
+  if (row.parts.length > 0) {
+    lines.push({ label: webUIText('FactionOverview.ModifierSources'), isHeader: true });
+    for (const part of row.parts) {
+      lines.push({
+        label: part.label,
+        value: formatSignedNumber(part.value),
+        valueColor: scorePartColour(kind, part.value),
+      });
+    }
+  }
+
+  if (row.remainingDays > 0) {
+    lines.push({
+      label: webUIText('ProvinceMode.StandingModifier.Remaining', { Days: formatNumber(row.remainingDays) }),
+      stacked: true,
+    });
+  }
+
+  return {
+    title: row.label,
+    body: row.description || undefined,
+    lines,
+  };
+}
+
 function recallStatus(overview: ProvinceModeOverview): { label: string; colour: string } {
   if (overview.recallStage >= 4) {
     return { label: webUIText('ProvinceMode.Warning.RecallOrdered'), colour: 'var(--red)' };
@@ -145,6 +187,7 @@ function buildTooltip(playerFaction: PlayerFactionSummary, overview: ProvinceMod
       label: row.label,
       value: formatSignedNumber(row.value),
       valueColor: valueColour(row.value),
+      subTooltip: scoreRowSubTooltip(row, 'standing'),
     })),
     {
       label: webUIText('ProvinceMode.ThreatTitle'),
@@ -154,6 +197,7 @@ function buildTooltip(playerFaction: PlayerFactionSummary, overview: ProvinceMod
       label: row.label,
       value: formatSignedNumber(row.value),
       valueColor: threatCauseColour(row.value),
+      subTooltip: scoreRowSubTooltip(row, 'threat'),
     })),
   ];
 

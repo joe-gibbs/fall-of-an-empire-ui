@@ -22,6 +22,12 @@ export default function GameCheckButton({
   const control = (
     <label
       className={`game-check-button${checked ? ' game-check-button--active' : ''}${disabled ? ' game-check-button--disabled' : ''}${className ? ` ${className}` : ''}`}
+      onClick={(event) => {
+        if (disabled) return;
+        if (event.target instanceof Element && event.target.closest('input')) return;
+        event.preventDefault();
+        onToggle();
+      }}
     >
       <input
         className="game-check-button__input"
@@ -37,7 +43,7 @@ export default function GameCheckButton({
   if (!tooltip) return control;
 
   return (
-    <Tooltip content={tooltip}>
+    <Tooltip content={tooltip} inline>
       {control}
     </Tooltip>
   );

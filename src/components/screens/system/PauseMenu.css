@@ -111,6 +111,7 @@
 .pause-overlay__item:nth-child(5) { animation-delay: 0.16s; }
 .pause-overlay__item:nth-child(7) { animation-delay: 0.22s; }
 .pause-overlay__item:nth-child(8) { animation-delay: 0.25s; }
+.pause-overlay__item:nth-child(9) { animation-delay: 0.28s; }
 
 .pause-overlay--closing .pause-overlay__item {
   animation: pause-slide-out 280ms ease-in both;
@@ -123,6 +124,7 @@
 .pause-overlay--closing .pause-overlay__item:nth-child(5) { animation-delay: 0.08s; }
 .pause-overlay--closing .pause-overlay__item:nth-child(7) { animation-delay: 0.10s; }
 .pause-overlay--closing .pause-overlay__item:nth-child(8) { animation-delay: 0.12s; }
+.pause-overlay--closing .pause-overlay__item:nth-child(9) { animation-delay: 0.14s; }
 
 .pause-overlay__item:hover {
   color: var(--gold-light);

@@ -1,4 +1,5 @@
 import { webUIText } from '../../../localization/WebUITextContext';
+import { formatNumber } from '../../../utils/numberFormat';
 export type Rank = 'Dux' | 'Praefectus' | 'Legatus';
 
 export type Doctrine = 'concentrate' | 'screen' | 'garrison' | 'independent';
@@ -24,6 +25,8 @@ export interface Force {
   factionId?: string;
   subordinateCount?: number;
   subordinateCapacity?: number;
+  parentSlotIndex?: number;
+  receivesCommandBenefits?: boolean;
 }
 
 export function strengthPct(f: Force): number {
@@ -78,6 +81,29 @@ export const RANK_META: Record<Rank, {
     get desc() { return webUIText('Auto.TopProp.ComponentsScreensMilitaryForces.71.13'); },
   },
 };
+
+export function commandSupportForces(force: Pick<Force, 'isNavy'>): string {
+  return webUIText(force.isNavy ? 'Military.Command.SupportForcesSea' : 'Military.Command.SupportForcesLand');
+}
+
+export function commandSupportTooltip(force: Pick<Force, 'commanderName' | 'isNavy' | 'subordinateCapacity'>): {
+  title: string;
+  body: string;
+} {
+  const max = formatNumber(force.subordinateCapacity ?? 0);
+  const forces = commandSupportForces(force);
+  const commander = force.commanderName?.trim();
+  return {
+    title: webUIText('Military.Command.SupportTitle'),
+    body: commander
+      ? webUIText('Military.Command.SupportBody', { Commander: commander, Max: max, Forces: forces })
+      : webUIText('Military.Command.SupportBodyUnnamed', { Max: max, Forces: forces }),
+  };
+}
+
+export function hasOverallCommand(forces: Pick<Force, 'id' | 'rank' | 'isNavy'>[], force: Pick<Force, 'id' | 'isNavy'>): boolean {
+  return forces.some(entry => entry.rank === 'Dux' && entry.isNavy === force.isNavy);
+}
 
 export function rankLabel(f: Force): string {
   if (f.isPersonalGuard) return webUIText('Military.PersonalGuard');

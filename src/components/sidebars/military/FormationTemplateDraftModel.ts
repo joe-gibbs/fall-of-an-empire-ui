@@ -10,6 +10,7 @@ import type {
 import { formatNumber } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { webUIText } from '../../../localization/WebUITextContext';
+import { unitTypeLabel } from '../../../utils/displayLabels';
 
 export type TemplateType = 'land' | 'naval';
 export type TemplateTab = 'composition' | 'combat';
@@ -56,22 +57,6 @@ export interface DerivedTotals {
   resources: ResourceTotal[];
   monthlyResources: ResourceTotal[];
 }
-
-const UNIT_TYPE_LABELS: Record<string, string> = {
-  infantry: 'Infantry',
-  cavalry: 'Cavalry',
-  ranged: 'Ranged',
-  siege: 'Siege',
-  special: 'Special',
-  scout: 'Scout',
-  transport: 'Transport',
-  galley: 'Galley',
-  trireme: 'Trireme',
-  quinquereme: 'Quinquereme',
-  navy: 'Navy',
-  naval: 'Navy',
-  other: 'Unit',
-};
 
 const UNIT_TYPE_ICONS: Record<string, string> = {
   infantry: '/assets/icons/UnitTypes/I_ArmyInfantry.png',
@@ -159,10 +144,7 @@ export function templateTypeName(type: TemplateType): string {
   return webUIText(type === 'naval' ? 'FormationTemplate.Fleet' : 'FormationTemplate.Legion');
 }
 
-export function unitTypeLabel(type: string): string {
-  if (UNIT_TYPE_LABELS[type]) return UNIT_TYPE_LABELS[type];
-  return type.replace(/(^|-|_)([a-z])/g, (_match, prefix: string, letter: string) => `${prefix ? ' ' : ''}${letter.toUpperCase()}`);
-}
+export { unitTypeLabel };
 
 export function unitTypeIcon(type: string, category?: string): string {
   if (type === 'siege' && (category === 'naval' || category === 'navy')) {

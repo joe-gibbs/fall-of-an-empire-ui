@@ -192,14 +192,7 @@
 }
 
 .ftt-tag {
-  display: flex;
-  align-items: center;
   min-height: 1.35rem;
-  padding: 0 0.45rem;
-  font-size: 0.76rem;
-  color: var(--text-bright);
-  background: rgba(201, 168, 76, 0.11);
-  border: 0.0909rem solid rgba(201, 168, 76, 0.22);
 }
 
 .ftt-treaties {

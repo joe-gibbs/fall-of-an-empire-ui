@@ -389,6 +389,18 @@ const glossary: Record<string, GlossaryEntry> = {
     get title() { return webUIText('Glossary.Succession.Title'); },
     get body() { return webUIText('Glossary.Succession.Body'); },
   },
+  Luxury: {
+    get title() { return webUIText('Glossary.Luxury.Title'); },
+    get body() { return webUIText('Glossary.Luxury.Body'); },
+  },
+  Relationship: {
+    get title() { return webUIText('Glossary.Relationship.Title'); },
+    get body() { return webUIText('Glossary.Relationship.Body'); },
+  },
+  Relationships: {
+    get title() { return webUIText('Glossary.Relationship.Title'); },
+    get body() { return webUIText('Glossary.Relationship.Body'); },
+  },
 };
 
 export default glossary;

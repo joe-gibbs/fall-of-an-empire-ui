@@ -74,6 +74,7 @@ function hasLaunchQuery(params: URLSearchParams): boolean {
     || params.has('sidebar')
     || params.has('notification')
     || params.has('regularNotification')
+    || params.has('buildQueueToast')
     || params.has('actionResult')
     || params.has('battleAarNotification')
     || params.has('battleAar')
@@ -130,6 +131,7 @@ function launchRequestFromQuery(params: URLSearchParams): MockLaunchRequest {
     sidebarTabIndex: parseOptionalInteger(params.get('tabIndex') ?? params.get('sidebarTabIndex')),
     notification: params.has('notification'),
     regularNotification: params.has('regularNotification'),
+    buildQueueToast: params.has('buildQueueToast'),
     actionResultNotification: params.has('actionResult'),
     battleAarNotification: params.has('battleAarNotification') || params.has('battleAar'),
     battleAarOutcome,

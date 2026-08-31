@@ -62,6 +62,7 @@ const COMMON_ASSETS = [
   '/assets/icons/I_Resources.png',
   '/assets/icons/I_Population.png',
   '/assets/icons/I_Unrest.png',
+  '/assets/icons/I_Corruption.png',
   '/assets/icons/I_Skull.png',
   '/assets/icons/I_Loyalty.png',
   '/assets/icons/I_Luxury.png',

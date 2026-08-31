@@ -23,6 +23,7 @@ import {
 import { toRootRem } from '../../utils/cssUnits';
 import { UI_MOTION } from '../../config/motion';
 import { UI_PRESENTATION } from '../../config/presentation';
+import { isBuildQueueCompletionNotification } from '../../notifications/buildQueueCompletion';
 import '../world-glances/WorldGlances.css';
 import './NotificationStack.css';
 
@@ -231,12 +232,12 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
   anchorsEnabledRef.current = anchorsEnabled;
 
   const settlementNotifications = useMemo(
-    () => notifications.filter((n) => shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
+    () => notifications.filter((n) => !isBuildQueueCompletionNotification(n) && shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
     [notifications, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds],
   );
 
   const stackNotifications = useMemo(
-    () => notifications.filter((n) => !shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
+    () => notifications.filter((n) => !isBuildQueueCompletionNotification(n) && !shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
     [notifications, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds],
   );
 

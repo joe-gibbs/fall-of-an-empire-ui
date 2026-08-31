@@ -272,6 +272,7 @@
 .ips-governor-header-cell--tax,
 .ips-governor-header-cell--unrest,
 .ips-governor-header-cell--military,
+.ips-governor-header-cell--action,
 .ips-foederati-header-cell--ready,
 .ips-foederati-header-cell--active,
 .ips-foederati-header-cell--strength,
@@ -384,6 +385,20 @@
   flex-shrink: 0;
   padding-left: 0.45rem;
   text-align: right;
+}
+
+.ips-governor-cell--action,
+.ips-governor-header-cell--action {
+  width: 8.6rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
+.ips-governor-cell--action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .ips-foederati-cell--name,

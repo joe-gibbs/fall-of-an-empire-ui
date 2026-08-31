@@ -843,26 +843,7 @@
 }
 
 .fs-map-hover-tag {
-  padding: 0.12rem 0.35rem;
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: var(--gold-muted);
-  border-left-color: var(--gold-muted);
-  font-family: var(--font-body);
-  font-size: 0.66rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-
-.fs-map-hover-tag--locked {
-  border-top-color: var(--border-dim);
-  border-right-color: var(--border-dim);
-  border-bottom-color: var(--border-dim);
-  border-left-color: var(--border-dim);
-  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .fs-zoom-controls {
@@ -1108,18 +1089,7 @@
 }
 
 .fs-detail-hero-status {
-  display: inline-block;
   margin-bottom: 0.22rem;
-  padding: 0.08rem 0.38rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.35);
-  background-color: rgba(8, 12, 17, 0.55);
-  font-family: var(--font-body);
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gold);
 }
 
 .fs-detail-hero-faction-name {

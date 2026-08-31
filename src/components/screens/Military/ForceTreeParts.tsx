@@ -19,6 +19,8 @@ import {
   RANK_META,
   DOCTRINE_META,
   rankLabel,
+  commandSupportTooltip,
+  hasOverallCommand,
   DELEGATION_ICON,
   DIRECT_ICON,
   SQUASH_ICON,
@@ -123,10 +125,25 @@ function buildCardTooltip(force: Force, allForces: Force[]) {
       valueColor: force.autoSquashRebels ? 'var(--green-light)' : 'var(--text-muted)',
     });
   }
+  if (force.rank === 'Dux' || force.rank === 'Praefectus') {
+    const attached = force.subordinateCount ?? 0;
+    const supported = force.subordinateCapacity ?? 0;
+    lines.push({
+      label: webUIText('Military.Command.SubordinateCapacity'),
+      get value() { return webUIText('Military.Command.SupportCount', { Current: fmt(attached), Max: fmt(supported) }); },
+      valueColor: attached > supported ? 'var(--red)' : 'var(--green-light)',
+    });
+  }
   if (subs > 0) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.260.8'),
       get value() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.261.1", { Value1: fmt(subs) }); },
+    });
+  }
+  if (force.parentId && force.receivesCommandBenefits === false) {
+    lines.push({
+      label: webUIText('Military.Command.Unsupported'),
+      valueColor: 'var(--red)',
     });
   }
   lines.push({
@@ -164,7 +181,7 @@ export function NodeCard({
           label: webUIText('QuickInteraction.DetachCommand'),
           onSelect: () => setMilitaryParentBridge(force.id, null).catch(acknowledgeBridgeFailure),
         }] : []),
-        ...(force.rank !== 'Dux' ? [{
+        ...(force.rank === 'Legatus' || (force.rank === 'Praefectus' && !hasOverallCommand(allForces, force)) ? [{
           label: webUIText('QuickInteraction.PromoteCommand'),
           onSelect: () => promoteMilitaryCommandBridge(force.id).catch(acknowledgeBridgeFailure),
         }] : []),
@@ -190,6 +207,7 @@ export function NodeCard({
             highlighted ? 'is-highlighted' : '',
             dimmed ? 'is-dimmed' : '',
             !force.isPlayerControlled ? 'chart-node--uncontrolled' : '',
+            force.parentId && force.receivesCommandBenefits === false ? 'chart-node--unsupported' : '',
             force.isNavy ? 'chart-node--navy' : '',
           ].filter(Boolean).join(' ')}
           onContextMenu={quickMenu.onContextMenu}
@@ -266,6 +284,18 @@ export function NodeCard({
                 <span className="chart-node-command-text">{dm.label}</span>
               </span>
             </Tooltip>
+            {(force.rank === 'Dux' || force.rank === 'Praefectus') && (
+              <Tooltip content={commandSupportTooltip(force)}>
+                <span className={`chart-node-command-mark is-support${(force.subordinateCount ?? 0) > (force.subordinateCapacity ?? 0) ? ' is-over' : ''}`}>
+                  <span className="chart-node-command-text">
+                    {webUIText('Military.Command.SupportCount', {
+                      Current: fmt(force.subordinateCount ?? 0),
+                      Max: fmt(force.subordinateCapacity ?? 0),
+                    })}
+                  </span>
+                </span>
+              </Tooltip>
+            )}
             {showDux && force.autoSquashRebels && (
               <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.379.15'), body: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.379.16') }}>
                 <span className="chart-node-command-mark is-squash is-on">

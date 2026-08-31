@@ -67,6 +67,7 @@ export function layoutTree(forces: Force[]): LayoutResult {
   const byId = new Map(forces.map(f => [f.id, f]));
   const children = new Map<string, Force[]>();
   forces.forEach(f => { if (f.parentId) (children.get(f.parentId) ?? children.set(f.parentId, []).get(f.parentId)!).push(f); });
+  children.forEach(kids => kids.sort((left, right) => (left.parentSlotIndex ?? 0) - (right.parentSlotIndex ?? 0)));
 
   const roots = forces.filter(f => !f.parentId || !byId.has(f.parentId));
   const depthOf = new Map<string, number>();

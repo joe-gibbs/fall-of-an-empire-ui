@@ -161,6 +161,32 @@
   vertical-align: -0.08rem;
 }
 
+.econ-stockpile-with-cap {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.econ-stockpile-cap-tooltip {
+  display: inline-flex;
+  align-items: center;
+}
+
+.econ-stockpile-cap {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.econ-warehouse-icon {
+  width: 0.82rem;
+  height: 0.82rem;
+  margin-right: 0.18rem;
+  object-fit: contain;
+}
+
 .econ-upkeep-value {
   display: inline-flex;
   align-items: center;
@@ -874,43 +900,115 @@ button.econ-command-cost__row:focus-visible {
   min-width: 0;
 }
 
-/* Fit the 60rem economy panel: rebalanced so full headers fit and trade stays on-screen. */
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(1) {
-  flex-basis: 12%;
-  width: 12%;
+.econ-res-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(2) {
-  flex-basis: 12%;
-  width: 12%;
+.econ-res-card {
+  padding: 0.4rem 0.55rem 0.5rem;
+  background-color: #151b20;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.18), rgba(36, 42, 48, 0.18)),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: auto, 23.2727rem 23.2727rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(3),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(4),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(5) {
-  flex-basis: 10%;
-  width: 10%;
+.econ-res-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  margin-bottom: 0.28rem;
 }
 
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(6) {
-  flex-basis: 6%;
-  width: 6%;
+.econ-res-card__head .econ-resource-name,
+.econ-res-card__head .econ-resource-name--button {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(7),
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(9) {
-  flex-basis: 8%;
-  width: 8%;
+.econ-res-card__net {
+  flex: 0 0 auto;
+  min-width: 3.4rem;
+  text-align: right;
+  font-weight: 700;
 }
 
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(8) {
-  flex-basis: 7%;
-  width: 7%;
+.econ-res-card__head .econ-trade-btns {
+  flex: 0 0 7.4rem;
+  width: 7.4rem;
 }
 
-.econ-table--resources .econ-table-row > .econ-table-cell:nth-child(10) {
-  flex-basis: 17%;
-  width: 17%;
+.econ-res-card__flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.econ-res-card__stock {
+  margin-top: 0.55rem;
+  padding-top: 0.4rem;
+  border-top: 0.077rem solid var(--separator);
+}
+
+.econ-flow-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.econ-flow-track {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 0.7273rem;
+  overflow: hidden;
+  border-radius: 0.3636rem;
+  background: url('/assets/bar-track.png') repeat-x;
+  background-size: auto 0.7273rem;
+}
+
+.econ-flow-bar {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 0.3636rem;
+}
+
+.econ-flow-seg-wrap {
+  height: 100%;
+}
+
+.econ-flow-seg-wrap > .tooltip-wrapper,
+.econ-flow-seg-wrap > .tooltip-wrapper > .econ-flow-seg {
+  width: 100%;
+  height: 100%;
+}
+
+.econ-flow-seg {
+  min-width: 0.1818rem;
+  height: 100%;
+  cursor: auto;
+  transition: opacity 0.12s;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(8, 12, 17, 0.1) 52%, rgba(8, 12, 17, 0.28) 100%);
+}
+
+.econ-flow-seg:hover {
+  opacity: 0.8;
+}
+
+.econ-flow-num {
+  flex: 0 0 auto;
+  min-width: 2.6rem;
+  text-align: right;
+  font-size: 0.78rem;
 }
 
 .econ-table--tax-losses .econ-table-row > .econ-table-cell:nth-child(1) {

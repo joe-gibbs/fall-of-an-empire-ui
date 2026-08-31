@@ -2269,6 +2269,10 @@
   color: var(--gold);
 }
 
+.mil-command-stats strong.is-over {
+  color: var(--red);
+}
+
 .mil-sub-row--out-of-range {
   opacity: 0.62;
 }
@@ -3246,6 +3250,13 @@
   border-bottom-color: var(--separator);
   background-image: none;
   background-color: transparent;
+}
+
+.mil-sub-row.mil-sub-row--unsupported {
+  border-bottom-color: rgba(180, 48, 48, 0.9);
+  box-shadow:
+    0 0 0.3rem rgba(196, 64, 64, 0.9),
+    0 0 0.95rem rgba(140, 24, 24, 0.8);
 }
 
 .mil-readiness-deck {

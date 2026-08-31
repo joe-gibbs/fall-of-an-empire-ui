@@ -362,7 +362,7 @@ function FactionTooltipContent({
       {hasTags && (
         <div className="ftt-tags">
           {faction.buildFocus && faction.buildFocus !== 'Balanced' && (
-            <span className="ftt-tag">{webUIText("FactionTooltip.Focus", { BuildFocus: faction.buildFocus })}</span>
+            <span className="badge badge--gold ftt-tag">{webUIText("FactionTooltip.Focus", { BuildFocus: faction.buildFocus })}</span>
           )}
           {treaties.length > 0 && (
             <div className="ftt-treaties">

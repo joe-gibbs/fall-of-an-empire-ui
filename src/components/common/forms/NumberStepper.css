@@ -16,6 +16,10 @@
   box-sizing: border-box;
 }
 
+.number-stepper__input {
+  min-width: 0;
+}
+
 .number-stepper__button {
   cursor: var(--cursor-pointer);
 }

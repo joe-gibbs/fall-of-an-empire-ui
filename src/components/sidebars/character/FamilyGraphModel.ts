@@ -1,6 +1,7 @@
 import type { PortraitBadge } from '../../common/portraits/Portrait';
 import type { Character, CharacterRelationship } from '../../../data/types';
 import { formatRelationshipType } from '../../../utils/displayLabels';
+import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import type { FamilyTreeData, FamilyTreePerson } from '../../../bridge/characters/useCharactersBridge';
 import { webUIText } from '../../../localization/WebUITextContext';
 
@@ -231,8 +232,8 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
 
 export function relationshipMatchesSearch(rel: CharacterRelationship, searchLower: string): boolean {
   if (!searchLower) return true;
-  return rel.characterName.toLowerCase().includes(searchLower)
-    || formatRelationshipType(rel.type).toLowerCase().includes(searchLower);
+  return textMatchesSearch(rel.characterName, searchLower)
+    || textMatchesSearch(formatRelationshipType(rel.type), searchLower);
 }
 
 export function relationshipCardClass(type: string, canOpen: boolean): string {

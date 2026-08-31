@@ -5,6 +5,7 @@ import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import { webUIText, WebUIText } from '../../localization/WebUITextContext';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { MAP_MODE_ICONS } from './mapModeIcons';
+import { textMatchesSearch } from '../common/layout/tables/sortUtils';
 
 function formatAmount(value: number): string {
   return Math.round(value).toLocaleString();
@@ -64,9 +65,9 @@ const MapModeFilterPanel: React.FC = () => {
 
   const visibleEntries = useMemo(() => {
     if (!state) return [];
-    const query = search.trim().toLowerCase();
+    const query = search.trim();
     if (!query) return state.entries;
-    return state.entries.filter(entry => entry.name.toLowerCase().indexOf(query) >= 0);
+    return state.entries.filter(entry => textMatchesSearch(entry.name, query));
   }, [search, state]);
 
   if (!state || !state.supported || state.entries.length === 0) {

@@ -18,6 +18,7 @@ import {
 } from '../characters/CandidateSelectionModal';
 import type { PeaceNegotiationReplacementCandidate } from '../../../bridge-types.generated.ts';
 import { useModalPresence } from '../../../hooks/useModalPresence';
+import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import { formatNumber } from '../../../utils/numberFormat';
 import { useWebUIText } from '../../../localization/WebUITextContext';
 import {
@@ -47,8 +48,7 @@ function sortValue(candidate: PeaceNegotiationReplacementCandidate, sort: SortKe
 
 function candidateMatchesQuery(candidate: PeaceNegotiationReplacementCandidate, query: string): boolean {
   if (!query) return true;
-  const haystack = [candidate.name, candidate.title].join(' ').toLocaleLowerCase();
-  return haystack.includes(query);
+  return textMatchesSearch([candidate.name, candidate.title].join(' '), query);
 }
 
 export default function ReplaceRulerSelectionModal({
@@ -73,7 +73,7 @@ export default function ReplaceRulerSelectionModal({
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null);
 
   const visibleCandidates = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase();
+    const query = search.trim();
     const next = candidates.filter(candidate => candidateMatchesQuery(candidate, query)).slice();
     next.sort((a, b) => {
       const av = sortValue(a, sort);

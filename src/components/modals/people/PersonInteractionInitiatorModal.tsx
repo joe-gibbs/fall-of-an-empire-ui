@@ -8,6 +8,7 @@ import type {
 import { successChanceColour } from '../../../utils/colorFormatters';
 import { formatPersonActivity } from '../../../utils/displayLabels';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
+import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import { useGameActions } from '../../../context/GameContext';
 import { useModalPresence } from '../../../hooks/useModalPresence';
 import {
@@ -77,10 +78,8 @@ function candidateMatchesQuery(candidate: PersonInteractionCandidateView, query:
     candidate.relationToPlayer,
     candidate.relationToTarget,
     formatPersonActivity(candidate.activity),
-  ]
-    .join(' ')
-    .toLocaleLowerCase();
-  return haystack.includes(query);
+  ].join(' ');
+  return textMatchesSearch(haystack, query);
 }
 
 export default function PersonInteractionInitiatorModal({
@@ -115,7 +114,7 @@ export default function PersonInteractionInitiatorModal({
   const error = errorState.key === modalKey ? errorState.message : null;
 
   const candidates = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase();
+    const query = search.trim();
     const next = (activeInteraction?.initiatorCandidates ?? EMPTY_CANDIDATES)
       .filter(candidate => candidateMatchesQuery(candidate, query))
       .slice();

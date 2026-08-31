@@ -703,6 +703,8 @@ export interface DiplomacyRegionalGovernor {
   bureaucraticGovernorLoad: number;
   isLocked: boolean;
   canManageGovernor: boolean;
+  ownerFactionId: string;
+  ownerFactionName: string;
 }
 
 export interface DiplomacyWarScoreEntry {
@@ -921,6 +923,12 @@ export interface TradeEconomyResourceRequest {
 }
 
 export interface SetResourceAutoSellRequest {
+  resourceId: string;
+  enabled: boolean;
+  threshold: number;
+}
+
+export interface SetResourceAutoBuyRequest {
   resourceId: string;
   enabled: boolean;
   threshold: number;
@@ -1869,7 +1877,14 @@ export interface EconomyOverviewResourceRow {
   autoSellEnabled: boolean;
   autoSellThreshold: number;
   autoSellSliderMax: number;
+  autoBuyEnabled: boolean;
+  autoBuyThreshold: number;
+  autoBuySliderMax: number;
+  stockpileCap: number;
   producers: EconomyOverviewResourceSource[];
+  stockpiles: EconomyOverviewResourceSource[];
+  consumers: EconomyOverviewResourceSource[];
+  aggregate: boolean;
 }
 
 export interface EconomyOverviewFoodRow {
@@ -2078,6 +2093,7 @@ export interface GetEconomyResourceDetailsResponse {
   tier: string;
   decayRate: number;
   foodValue: number;
+  stockpileCap: number;
   sharedFoodDemand: number;
   producers: EconomyResourceProducerDetail[];
   externalSources: EconomyResourceFlowDetail[];
@@ -3273,6 +3289,7 @@ export interface PersonInteractionReason {
 }
 
 export interface PersonInteractionFactor {
+  key: string;
   name: string;
   percent: number;
 }
@@ -3533,6 +3550,11 @@ export interface ProvinceModePersonDTO {
   commandName: string;
 }
 
+export interface ProvinceModeScorePartDTO {
+  label: string;
+  value: number;
+}
+
 export interface ProvinceModeScoreRowDTO {
   id: string;
   icon: string;
@@ -3541,6 +3563,7 @@ export interface ProvinceModeScoreRowDTO {
   value: number;
   remainingDays: number;
   tone: string;
+  parts: ProvinceModeScorePartDTO[];
 }
 
 export interface ProvinceModeMissionDTO {
@@ -4064,6 +4087,7 @@ export interface SettlementBuildingRequirement {
 export interface SettlementBuildingBuildState {
   state: string;
   reason: string;
+  blockedByPopulation: boolean;
 }
 
 export interface SettlementBuiltBuildingEntry {
@@ -4096,6 +4120,10 @@ export interface SettlementBuiltBuildingEntry {
   downgradeReason: string;
   downgradeTargetName: string;
   downgradeTargetLevel: number;
+  canRepair: boolean;
+  repairReason: string;
+  repairGoldCost: number;
+  repairResourceCost: SettlementBuildingCost[];
 }
 
 export interface SettlementAvailableBuildingEntry {
@@ -4196,6 +4224,12 @@ export interface SettlementPopEntry {
 }
 
 export interface SettlementModifierSource {
+  name: string;
+  value: number;
+}
+
+export interface SettlementCorruptionSource {
+  key: string;
   name: string;
   value: number;
 }
@@ -4373,6 +4407,7 @@ export interface GetSettlementDataResponse {
   income: number;
   foodProduction: number;
   foodConsumption: number;
+  corruption: number;
   fortificationLevel: number;
   unrest: number;
   unrestLabel: string;
@@ -4409,6 +4444,7 @@ export interface GetSettlementDataResponse {
   growthBreakdown: SettlementModifierSource[];
   foodBreakdown: SettlementModifierSource[];
   fortificationBreakdown: SettlementModifierSource[];
+  corruptionBreakdown: SettlementCorruptionSource[];
   buildings: SettlementBuildingEntry[];
   garrisonedArmies: SettlementGarrisonArmy[];
   garrison: SettlementGarrisonUnit[];
@@ -5192,6 +5228,8 @@ export interface MilitaryOverviewForce {
   isPlayerControlled: boolean;
   subordinateCount: number;
   subordinateCapacity: number;
+  parentSlotIndex: number;
+  receivesCommandBenefits: boolean;
 }
 
 export interface FoederatiOverviewEntry {
@@ -5311,6 +5349,7 @@ export interface MilitarySubordinateEntry {
   maxStrength: number;
   unitTypes: MilitaryUnitTypeStrengthEntry[];
   withinCommandRange: boolean;
+  receivesCommandBenefits: boolean;
   distanceToSuperior: number;
   superiorCommandRadius: number;
   hierarchyTacticsBonus: number;
@@ -5390,6 +5429,7 @@ export interface GetMilitaryDataResponse {
   parentCommand: string;
   parentCommandId: string;
   parentCommandDebugShortId: number;
+  receivesCommandBenefits: boolean;
   capacity: number;
   usedCapacity: number;
   embarkedArmies: EmbarkedArmyEntry[];
@@ -6133,6 +6173,11 @@ export interface ReorderSettlementBuildingRequest {
   targetQueueIndex: number;
 }
 
+export interface RepairSettlementBuildingRequest {
+  settlementId: string;
+  buildingId: string;
+}
+
 export interface ReplacePersonalGuardCompanyRequest {
   slotNumber: number;
   unitId: string;
@@ -6159,6 +6204,24 @@ export interface RequestPortraitResponse {
 
 export interface ResetSettingsRequest {
   page: string;
+}
+
+export interface ResettlementSelectionRequest {
+  command: string;
+}
+
+export interface ResettlementSelectionResponse {
+  active: boolean;
+  sourceSettlementId: string;
+  sourceSettlementName: string;
+  destinationSettlementId: string;
+  destinationSettlementName: string;
+  migrantCount: number;
+  goldCost: number;
+  canConfirm: boolean;
+  interactionName: string;
+  description: string;
+  message: string;
 }
 
 export interface RespondToProvinceRecallRequest {
@@ -6869,6 +6932,7 @@ export interface BridgeActions {
   'game.rename_settlement': { request: RenameSettlementRequest; response: RenameSettlementResponse };
   'game.render_character_creator_preview': { request: RenderCharacterCreatorPreviewRequest; response: void };
   'game.reorder_settlement_building': { request: ReorderSettlementBuildingRequest; response: void };
+  'game.repair_settlement_building': { request: RepairSettlementBuildingRequest; response: void };
   'game.replace_military_commander': { request: ReplaceMilitaryCommanderRequest; response: void };
   'game.replace_personal_guard_company': { request: ReplacePersonalGuardCompanyRequest; response: ReplacePersonalGuardCompanyResponse };
   'game.replenish_military': { request: ReplenishMilitaryRequest; response: void };
@@ -6876,6 +6940,7 @@ export interface BridgeActions {
   'game.request_portrait': { request: RequestPortraitRequest; response: RequestPortraitResponse };
   'game.reset_notification_mutes': { request: void; response: void };
   'game.reset_settings': { request: ResetSettingsRequest; response: GetSettingsResponse };
+  'game.resettlement_selection': { request: ResettlementSelectionRequest; response: ResettlementSelectionResponse };
   'game.respond_to_province_recall': { request: RespondToProvinceRecallRequest; response: RespondToProvinceRecallResponse };
   'game.restart': { request: void; response: void };
   'game.return_to_main_menu': { request: void; response: void };
@@ -6913,6 +6978,7 @@ export interface BridgeActions {
   'game.set_personal_guard_composition': { request: SetPersonalGuardCompositionRequest; response: SetPersonalGuardCompositionResponse };
   'game.set_power_bloc_membership': { request: SetPowerBlocMembershipRequest; response: SetPowerBlocMembershipResponse };
   'game.set_province_build_focus': { request: SetProvinceBuildFocusRequest; response: void };
+  'game.set_resource_auto_buy': { request: SetResourceAutoBuyRequest; response: void };
   'game.set_resource_auto_sell': { request: SetResourceAutoSellRequest; response: void };
   'game.set_resource_priority': { request: SetResourcePriorityRequest; response: void };
   'game.set_settlement_capital': { request: SetSettlementCapitalRequest; response: SetSettlementCapitalResponse };

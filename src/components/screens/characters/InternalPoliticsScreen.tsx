@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Portrait from '../../common/portraits/Portrait';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
@@ -6,6 +6,7 @@ import FactionRoundel from '../../common/entities/FactionRoundel';
 import FactionTooltip from '../../common/tooltips/FactionTooltip';
 import GameBar from '../../common/data-display/bars/GameBar';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
+import GameButton from '../../common/buttons/GameButton';
 import GameCheckButton from '../../common/buttons/GameCheckButton';
 import SortableHeader from '../../common/layout/tables/SortableHeader';
 import Tooltip from '../../common/tooltips/Tooltip';
@@ -15,11 +16,14 @@ import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import { BureaucraticInlineValue } from '../../bureaucracy/BureaucraticThroughput';
 import { bureaucraticTooltipLine } from '../../bureaucracy/BureaucraticThroughputModel';
 import ProvinceCreationLeaderModal from '../../modals/provinces/ProvinceCreationLeaderModal';
+import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
+import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { useGameActions } from '../../../context/GameContext';
 import { useMilitaryOverview, usePlayerFactionId } from '../../../data-source/index';
 import { useCharacterListBridge, type CharacterListEntry } from '../../../bridge/characters/useCharactersBridge';
 import {
   adjustSubjectTaxRateBridge,
+  refreshDiplomacyOverviewBridge,
   setAutoAssignGovernorsBridge,
   setProvinceBuildFocusBridge,
   useDiplomacyOverviewBridge,
@@ -630,12 +634,26 @@ function InternalFactionRow({
   );
 }
 
-function GovernorRow({ row, characters, blocs }: { row: RegionalGovernor; characters: Map<string, CharacterListEntry>; blocs: PowerBloc[] }) {
+function GovernorRow({
+  row,
+  characters,
+  blocs,
+  playerFactionId,
+  onAppoint,
+}: {
+  row: RegionalGovernor;
+  characters: Map<string, CharacterListEntry>;
+  blocs: PowerBloc[];
+  playerFactionId: string;
+  onAppoint: (row: RegionalGovernor) => void;
+}) {
   const { openSidebar } = useGameActions();
   const character = characters.get(row.governorId);
   const corruptionTone = row.corruptionPercent >= 25 ? 'var(--red-light)' : row.corruptionPercent >= 12 ? 'var(--yellow)' : 'var(--green)';
   const bloc = blocForPerson(row.governorId, blocs);
   const governorLoad = row.bureaucraticGovernorLoad;
+  const ownerName = row.ownerFactionId && row.ownerFactionId !== playerFactionId ? row.ownerFactionName : '';
+  const actionLabel = webUIText(row.governorId ? 'FactionOverview.ReplaceAppointment' : 'Settlement.AppointGovernor');
 
   return (
     <div
@@ -646,6 +664,7 @@ function GovernorRow({ row, characters, blocs }: { row: RegionalGovernor; charac
     >
       <div className="ips-governor-cell ips-governor-cell--region">
         <span className="ips-governor-region">{row.regionName}</span>
+        {ownerName ? <span className="ips-governor-sub">{ownerName}</span> : null}
         {row.isLocked ? <span className="ips-governor-sub"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.578.6" /></span> : null}
       </div>
       <div className="ips-governor-cell ips-governor-cell--governor">
@@ -670,6 +689,21 @@ function GovernorRow({ row, characters, blocs }: { row: RegionalGovernor; charac
       </div>
       <div className="ips-governor-cell ips-governor-cell--military">
         <span style={{ color: row.militaryBonusPercent >= 0 ? 'var(--green)' : 'var(--red-light)' }}>{`${formatSignedNumber(row.militaryBonusPercent)}%`}</span>
+      </div>
+      <div
+        className="ips-governor-cell ips-governor-cell--action"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+      >
+        <GameButton
+          variant="burgundy"
+          disabled={!row.canManageGovernor || !row.settlementId}
+          onClick={() => onAppoint(row)}
+        >
+          {actionLabel}
+        </GameButton>
       </div>
     </div>
   );
@@ -920,6 +954,7 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
   const [foederatiSort, setFoederatiSort] = useState<SortState<FoederatiSortKey>>({ key: 'strength', direction: 'desc' });
   const [commandSort, setCommandSort] = useState<SortState<CommandSortKey>>({ key: 'strength', direction: 'desc' });
   const [governorSort, setGovernorSort] = useState<SortState<GovernorSortKey>>({ key: 'corruption', direction: 'desc' });
+  const [editingGovernor, setEditingGovernor] = useState<RegionalGovernor | null>(null);
   const playerFactionId = usePlayerFactionId();
   const diplomacy = useDiplomacyOverviewBridge('internal');
   const internalFactions = diplomacy?.internalFactions ?? EMPTY_INTERNAL_FACTIONS;
@@ -970,6 +1005,9 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
     () => sortGovernorRows(governors, governorSort),
     [governors, governorSort],
   );
+  const refreshGovernors = useCallback(() => {
+    void refreshDiplomacyOverviewBridge('governors').catch(error => acknowledgeBridgeFailure(error, 'game.get_diplomacy_overview'));
+  }, []);
 
   const content = (() => {
     if (resolvedActiveTab === 'governors') {
@@ -992,11 +1030,20 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
               <SortableHeader id="tax" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.835.15')} className="ips-governor-header-cell ips-governor-header-cell--tax" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
               <SortableHeader id="unrest" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.836.16')} className="ips-governor-header-cell ips-governor-header-cell--unrest" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
               <SortableHeader id="military" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.837.17')} className="ips-governor-header-cell ips-governor-header-cell--military" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
+              <span className="ips-governor-header-cell ips-governor-header-cell--action"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.875.10" /></span>
             </div>
             <VirtualList
               items={sortedGovernors}
               getKey={row => row.regionId || row.regionName}
-              renderItem={row => <GovernorRow row={row} characters={charactersById} blocs={blocs} />}
+              renderItem={row => (
+                <GovernorRow
+                  row={row}
+                  characters={charactersById}
+                  blocs={blocs}
+                  playerFactionId={playerFactionId ?? ''}
+                  onAppoint={setEditingGovernor}
+                />
+              )}
               empty={<div className="ips-empty">{diplomacy?.governorEmptyReason || webUIText("InternalPolitics.NoRegionalGovernors")}</div>}
               className="ips-row-scroll-frame"
               viewportClassName="ips-table-body ips-governor-table-body ips-row-viewport"
@@ -1142,6 +1189,17 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
       tabs={<SidebarTabBar tabs={visibleTabs} activeTab={resolvedActiveTab} onTabChange={(id) => setActiveTab(id as InternalPoliticsTab)} />}
     >
       <div className="ips-wrap">{content}</div>
+      {editingGovernor ? (
+        <RegionGovernorAppointmentModal
+          open={!!editingGovernor}
+          settlementId={editingGovernor.settlementId}
+          settlementName={editingGovernor.settlementName}
+          regionName={editingGovernor.regionName}
+          currentGovernorId={editingGovernor.governorId || undefined}
+          onClose={() => setEditingGovernor(null)}
+          onAppointed={refreshGovernors}
+        />
+      ) : null}
     </ScreenShell>
   );
 }

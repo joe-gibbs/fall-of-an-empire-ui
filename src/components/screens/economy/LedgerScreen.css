@@ -527,23 +527,8 @@
 }
 
 .ledger-notification-decision {
-  display: block;
-  width: 4.75rem;
-  padding: 0.08rem 0.25rem;
-  border: 0.077rem solid #3f382f;
-  background: rgba(8, 12, 17, 0.22);
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.ledger-notification-decision--accepted {
-  color: var(--green);
-}
-
-.ledger-notification-decision--declined {
-  color: var(--red);
+  justify-content: center;
+  min-width: 4.75rem;
 }
 
 .ledger-battle-result-button {

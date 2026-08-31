@@ -219,10 +219,31 @@
   max-width: 23rem;
 }
 
-.operation-bar--governor .operation-detail {
+.operation-bar--governor .operation-detail,
+.operation-bar--resettlement .operation-detail {
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
+}
+
+.operation-bar--resettlement .operation-header {
+  min-width: 18rem;
+  max-width: 28rem;
+}
+
+.operation-bar--resettlement .operation-building-summary {
+  align-items: flex-start;
+  min-width: 14rem;
+  max-width: 28rem;
+}
+
+.operation-bar--resettlement .operation-muted {
+  height: auto;
+  min-height: 2rem;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.15rem;
 }
 
 .operation-governor-list {

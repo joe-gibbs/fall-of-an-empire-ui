@@ -26,9 +26,10 @@ import { findActionBinding } from '../../utils/actionBindings';
 import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
 import { KeyGlyph } from '../common/KeyGlyph';
 import { bridgeEvents } from '../../bridge/core/bridgeEvents';
+import { openWorldSearch } from '../hud/panels/openWorldSearch';
 
 interface ActionButtonConfig {
-  id: 'build' | 'victory' | 'pinned';
+  id: 'build' | 'victory' | 'search' | 'pinned';
   labelKey: string;
   icon: string;
   tooltipBodyKey: string;
@@ -57,14 +58,21 @@ const actionButtons: readonly ActionButtonConfig[] = [
     factionMode: 'independent',
   },
   {
+    id: 'search',
+    labelKey: 'WorldSearch.Title',
+    icon: '/assets/icons/I_SearchQuickButton.png',
+    tooltipBodyKey: 'Topbar.WorldSearchTooltipBody',
+    tooltipLineKeysWithBinding: [
+      { textKey: 'Topbar.WorldSearchTooltipLineOne', actionName: 'WorldSearch' },
+    ],
+    tutorialTarget: 'WorldSearchButton',
+  },
+  {
     id: 'pinned',
     labelKey: 'Topbar.PinnedItems',
     icon: '/assets/icons/I_Pin_Pinned.png',
     tooltipBodyKey: 'Topbar.PinnedItemsTooltipBody',
     tooltipLineKeys: ['Topbar.PinnedItemsTooltipLineOne'],
-    tooltipLineKeysWithBinding: [
-      { textKey: 'Topbar.PinnedItemsTooltipLineTwo', actionName: 'WorldSearch' },
-    ],
     tutorialTarget: 'PinnedItemsToggleButton',
   },
 ];
@@ -381,6 +389,7 @@ const TopBar: React.FC<TopBarProps> = ({
                   const handleClick = () => {
                     if (btn.id === 'pinned') onPinnedToggle?.();
                     else if (btn.id === 'victory') onVictoryToggle?.();
+                    else if (btn.id === 'search') openWorldSearch();
                     else onScreenChange?.(btn.id as ScreenId);
                   };
                   return (

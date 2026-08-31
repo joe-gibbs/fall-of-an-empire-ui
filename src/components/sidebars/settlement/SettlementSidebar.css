@@ -228,6 +228,15 @@
 }
 
 /* --- Content --- */
+.settle-stat-grid {
+  padding: 0.3rem 0.22rem;
+}
+
+.settle-stat-grid .stat-cell-icon {
+  width: 1.28rem;
+  height: 1.28rem;
+}
+
 .settle-content {
   padding: 0 0 2.35rem;
 }

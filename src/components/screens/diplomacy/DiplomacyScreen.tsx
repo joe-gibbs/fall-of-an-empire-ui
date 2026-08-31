@@ -675,7 +675,7 @@ function ActiveWars({ rows }: { rows: ActiveWar[] }) {
           <TableCell className="dps-table-col--wide">
             <div className="dps-war-name-cell">
               <span className="dps-strong">{row.name}</span>
-              {row.isRebellionWar && <span className="dps-tag"><WebUIText textKey="Auto.ComponentsScreensDiplomacyScreen.375.4" /></span>}
+              {row.isRebellionWar && <span className="badge badge--war dps-tag"><WebUIText textKey="Auto.ComponentsScreensDiplomacyScreen.375.4" /></span>}
             </div>
           </TableCell>
           <TableCell className="dps-table-col--war-side">

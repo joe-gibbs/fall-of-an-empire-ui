@@ -17,6 +17,7 @@ import FactionRoundel from '../common/entities/FactionRoundel';
 import FactionTooltip from '../common/tooltips/FactionTooltip';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import { requestGamepadFocusRefresh } from '../../input/gamepadFocusEvents';
+import { openWorldSearch } from '../hud/panels/openWorldSearch';
 import './ScreensMenu.css';
 
 export type ScreenMenuId = string;
@@ -177,6 +178,19 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
         },
       });
     }
+
+    extras.push({
+      id: 'search',
+      label: t('WorldSearch.Title'),
+      icon: '/assets/icons/I_SearchQuickButton.png',
+      active: false,
+      tutorialTarget: 'WorldSearchButton',
+      onSelect: () => {
+        playSound('click');
+        close();
+        window.setTimeout(() => openWorldSearch(), 0);
+      },
+    });
 
     extras.push({
       id: 'pinned',

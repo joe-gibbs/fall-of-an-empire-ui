@@ -9,6 +9,7 @@ import type {
   ConstructionQueueItem,
 } from '../../../data/types';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
+import GameCheckButton from '../../common/buttons/GameCheckButton';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
@@ -16,6 +17,7 @@ import {
   demolishSettlementBuilding,
   downgradeSettlementBuilding,
   queueSettlementBuilding,
+  repairSettlementBuilding,
   reorderSettlementBuilding,
   unqueueSettlementBuilding,
   useSettlementBuildingsBridgeState,
@@ -25,6 +27,7 @@ import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import BuildingEffects from '../../common/content/BuildingEffects';
 import ResourceLink from '../../common/resources/ResourceLink';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
+import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import { toRootRem } from '../../../utils/cssUnits';
 import './SettlementBuildingsPanel.css';
 
@@ -93,15 +96,15 @@ const CATEGORY_ORDER: BuildingCategory[] = [
   'other',
 ];
 
-const CATEGORY_LABELS: Record<BuildingCategory, string> = {
-  economic: 'Economic',
-  military: 'Military',
-  defensive: 'Defensive',
-  infrastructure: 'Infrastructure',
-  cultural: 'Cultural',
-  administrative: 'Administrative',
-  naval: 'Naval',
-  other: 'Other',
+const CATEGORY_LABEL_KEYS: Record<BuildingCategory, string> = {
+  economic: 'Ledger.BuildingCategory.Economic',
+  military: 'Ledger.BuildingCategory.Military',
+  defensive: 'Ledger.BuildingCategory.Defensive',
+  infrastructure: 'Ledger.BuildingCategory.Infrastructure',
+  cultural: 'Ledger.BuildingCategory.Cultural',
+  administrative: 'Ledger.BuildingCategory.Administrative',
+  naval: 'Ledger.BuildingCategory.Naval',
+  other: 'Economy.Other',
 };
 
 const GENERIC_ICON = '/assets/icons/I_BuildingsQuickButton.png';
@@ -161,18 +164,53 @@ function nodeSearchHaystack(node: TreeNode): string {
   if (node.kind === 'built') {
     return [node.b.name, node.b.chainName, node.b.description]
       .filter(Boolean)
-      .join(' ')
-      .toLocaleLowerCase();
+      .join(' ');
   }
   return [node.a.name, node.a.chainName, node.a.description]
     .filter(Boolean)
-    .join(' ')
-    .toLocaleLowerCase();
+    .join(' ');
 }
 
 function nodeMatchesSearch(node: TreeNode, query: string): boolean {
   if (!query) return true;
-  return nodeSearchHaystack(node).includes(query);
+  return textMatchesSearch(nodeSearchHaystack(node), query);
+}
+
+function nodeIsRuin(node: TreeNode): boolean {
+  return node.kind === 'built' && node.b.condition !== undefined && node.b.condition <= 0;
+}
+
+function nodeIsMaxed(node: TreeNode): boolean {
+  if (node.kind !== 'built' || nodeIsRuin(node)) return false;
+  return node.b.maxLevel !== undefined && node.b.level >= node.b.maxLevel;
+}
+
+function nodeIsPopulationBlocked(node: TreeNode): boolean {
+  if (node.kind === 'built') return !!node.b.nextBuildState?.blockedByPopulation;
+  return !!node.a.buildState.blockedByPopulation;
+}
+
+function nodeIsUnbuildable(node: TreeNode): boolean {
+  if (node.kind === 'built') return false;
+  return node.a.buildState.state !== 'visible';
+}
+
+interface BuildingHideFilters {
+  hideMaxed: boolean;
+  hideLackingPopulation: boolean;
+  hideUnbuildable: boolean;
+}
+
+function nodeMatchesHideFilters(
+  node: TreeNode,
+  filters: BuildingHideFilters,
+  queued: boolean,
+): boolean {
+  if (queued) return true;
+  if (filters.hideMaxed && nodeIsMaxed(node)) return false;
+  if (filters.hideLackingPopulation && nodeIsPopulationBlocked(node)) return false;
+  if (filters.hideUnbuildable && nodeIsUnbuildable(node)) return false;
+  return true;
 }
 
 function findScrollViewport(element: HTMLElement): HTMLElement | null {
@@ -679,7 +717,7 @@ function EffectsBlock({ text }: { text?: string }) {
   return <BuildingEffects text={text} className="bld-effects" />;
 }
 
-type BuildingManagementAction = 'downgrade' | 'demolish';
+type BuildingManagementAction = 'repair' | 'downgrade' | 'demolish';
 
 function BuildingManagementActions({
   building,
@@ -692,6 +730,11 @@ function BuildingManagementActions({
   pendingAction: BuildingManagementAction | null;
   onAction: (action: BuildingManagementAction, event: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
+  const ruined = building.condition !== undefined && building.condition <= 0;
+  const showRepair = !ruined && building.condition !== undefined && building.condition < 100;
+  const repairLabel = confirmingAction === 'repair'
+    ? webUIText('SettlementBuildings.ConfirmRepair')
+    : webUIText('SettlementBuildings.Repair');
   const downgradeLabel = confirmingAction === 'downgrade'
     ? webUIText('SettlementBuildings.ConfirmDowngrade')
     : webUIText('SettlementBuildings.Downgrade');
@@ -699,12 +742,49 @@ function BuildingManagementActions({
     ? webUIText('SettlementBuildings.ConfirmDismantle')
     : webUIText('SettlementBuildings.Dismantle');
   const actionPending = pendingAction !== null;
+  const repairDisabled = actionPending || !building.canRepair;
   const downgradeDisabled = actionPending || !building.canDowngrade;
   const demolishDisabled = actionPending || !building.canDemolish;
+  const repairCosts = [
+    ...(building.repairGoldCost
+      ? [{ name: 'gold', amount: building.repairGoldCost, icon: '/assets/icons/I_Coins.png' }]
+      : []),
+    ...(building.repairResourceCost ?? []),
+  ];
 
   return (
     <div className="bld-tooltip-actions">
       <div className="bld-tooltip-actions-title">{webUIText('SettlementBuildings.ManageBuilding')}</div>
+      {showRepair && (
+        <button
+          type="button"
+          className={`bld-tooltip-action-btn${confirmingAction === 'repair' ? ' bld-tooltip-action-btn--confirm' : ''}`}
+          disabled={repairDisabled}
+          onClick={event => onAction('repair', event)}
+        >
+          <span className="bld-tooltip-action-name">{repairLabel}</span>
+          <span className="bld-tooltip-action-detail">
+            {building.canRepair ? webUIText('SettlementBuildings.RepairBody') : building.repairReason}
+          </span>
+          {building.canRepair && (
+            <span className="bld-tooltip-spoils">
+              <span className="bld-tooltip-spoils-label">{webUIText('SettlementBuildings.RepairCost')}</span>
+              {repairCosts.length > 0 ? (
+                <span className="bld-tooltip-spoils-list">
+                  {repairCosts.map(cost => (
+                    <span key={cost.name} className="bld-tooltip-spoil">
+                      <img src={cost.icon} alt="" className="bld-tooltip-spoil-icon" draggable={false} />
+                      {n(cost.amount)}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                <span className="bld-tooltip-spoils-empty">{webUIText('SettlementBuildings.NoSpoils')}</span>
+              )}
+            </span>
+          )}
+        </button>
+      )}
       <button
         type="button"
         className={`bld-tooltip-action-btn${confirmingAction === 'downgrade' ? ' bld-tooltip-action-btn--confirm' : ''}`}
@@ -811,6 +891,7 @@ function BuiltCard({
   onPlace,
   onDemolish,
   onDowngrade,
+  onRepair,
   queueSummary,
   queueing = false,
 }: {
@@ -820,6 +901,7 @@ function BuiltCard({
   onPlace?: (buildingId: string) => void;
   onDemolish?: (buildingId: string) => Promise<void>;
   onDowngrade?: (buildingId: string) => Promise<void>;
+  onRepair?: (buildingId: string) => Promise<void>;
   queueSummary?: BuildingQueueSummary;
   queueing?: boolean;
 }) {
@@ -868,8 +950,8 @@ function BuiltCard({
     event.stopPropagation();
     if (pendingAction !== null) return;
 
-    const enabled = action === 'downgrade' ? b.canDowngrade : b.canDemolish;
-    const handler = action === 'downgrade' ? onDowngrade : onDemolish;
+    const enabled = action === 'repair' ? b.canRepair : action === 'downgrade' ? b.canDowngrade : b.canDemolish;
+    const handler = action === 'repair' ? onRepair : action === 'downgrade' ? onDowngrade : onDemolish;
     if (!enabled || !handler) return;
 
     if (confirmingAction !== action) {
@@ -884,8 +966,8 @@ function BuiltCard({
         setPendingAction(null);
         setConfirmingAction(null);
       });
-  }, [b.canDemolish, b.canDowngrade, b.id, confirmingAction, onDemolish, onDowngrade, pendingAction]);
-  const managementActions = (onDemolish || onDowngrade) ? (
+  }, [b.canDemolish, b.canDowngrade, b.canRepair, b.id, confirmingAction, onDemolish, onDowngrade, onRepair, pendingAction]);
+  const managementActions = (onDemolish || onDowngrade || onRepair) ? (
     <BuildingManagementActions
       building={b}
       confirmingAction={confirmingAction}
@@ -976,6 +1058,12 @@ function BuiltCard({
                   {builtStatusLabel}
                 </span>
               )}
+              {b.nextLevelPrice !== undefined && (
+                <span className="bld-node-cost">
+                  <img src="/assets/icons/I_Coins.png" alt="" className="bld-meta-icon" />
+                  {n(b.nextLevelPrice)}
+                </span>
+              )}
               <MapPlaceButton
                 buildingId={b.id}
                 buildingName={b.name}
@@ -988,11 +1076,19 @@ function BuiltCard({
             <RequiresRow items={b.requiredBuildings} />
           )}
           <div className="bld-node-meta">
+            {b.nextLevelBuildTime !== undefined && (
+              <span className="bld-node-meta-item">
+                {webUIText("SettlementBuildings.Days", { Value1: n(b.nextLevelBuildTime) })}
+              </span>
+            )}
             {b.upkeep !== undefined && b.upkeep > 0 && (
               <span className="bld-node-meta-item">
                 <img src="/assets/icons/I_Coins.png" alt="" className="bld-meta-icon" />
                 {n(b.upkeep)}<WebUIText textKey="Auto.ComponentsSidebarsSettlementBuildingsPanel.470.2" />
               </span>
+            )}
+            {b.resourceCost && b.resourceCost.length > 0 && (
+              <ResourceRow items={b.resourceCost} />
             )}
             {showCondition && (
               <span className="bld-node-condition">
@@ -1162,6 +1258,7 @@ function ChainBranch({
   onPlace,
   onDemolish,
   onDowngrade,
+  onRepair,
   queueSummaries,
   queueingBuildingIds,
   isLastChild = false,
@@ -1174,6 +1271,7 @@ function ChainBranch({
   onPlace?: (buildingId: string) => void;
   onDemolish?: (buildingId: string) => Promise<void>;
   onDowngrade?: (buildingId: string) => Promise<void>;
+  onRepair?: (buildingId: string) => Promise<void>;
   queueSummaries: Map<string, BuildingQueueSummary>;
   queueingBuildingIds: Set<string>;
   isLastChild?: boolean;
@@ -1187,7 +1285,7 @@ function ChainBranch({
     : queueingBuildingIds.has(node.a.id);
 
   const card = node.kind === 'built'
-    ? <BuiltCard b={node.b} onQueue={onQueue} onUnqueue={onUnqueue} onPlace={onPlace} onDemolish={onDemolish} onDowngrade={onDowngrade} queueSummary={queueSummary} queueing={queueing} />
+    ? <BuiltCard b={node.b} onQueue={onQueue} onUnqueue={onUnqueue} onPlace={onPlace} onDemolish={onDemolish} onDowngrade={onDowngrade} onRepair={onRepair} queueSummary={queueSummary} queueing={queueing} />
     : <AvailCard a={node.a} onQueue={onQueue} onUnqueue={onUnqueue} onPlace={onPlace} queueSummary={queueSummary} queueing={queueing} />;
 
   return (
@@ -1214,6 +1312,7 @@ function ChainBranch({
               onPlace={onPlace}
               onDemolish={onDemolish}
               onDowngrade={onDowngrade}
+              onRepair={onRepair}
               queueSummaries={queueSummaries}
               queueingBuildingIds={queueingBuildingIds}
               isLastChild={index === children.length - 1}
@@ -1304,7 +1403,7 @@ function QueueItemCard({
           <div className="bld-queue-card-title-wrap">
             <span className="bld-queue-card-title">{item.name}</span>
             {showStatus && item.statusLabel && (
-              <span className="bld-queue-card-status">{item.statusLabel}</span>
+              <span className="badge badge--gold bld-queue-card-status">{item.statusLabel}</span>
             )}
           </div>
           {(canUnqueue || pendingRemoval) && (
@@ -1590,7 +1689,7 @@ function CategoryTabs({
             onClick={disabled ? undefined : () => onChange(cat)}
             disabled={disabled}
           >
-            <span className="bld-cat-tab-label">{CATEGORY_LABELS[cat]}</span>
+            <span className="bld-cat-tab-label">{webUIText(CATEGORY_LABEL_KEYS[cat])}</span>
             <span className="bld-cat-tab-count">{n(count.built)}/{n(count.total)}</span>
           </button>
         );
@@ -1716,6 +1815,9 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const handleDowngradeBuilding = React.useCallback((buildingId: string) => {
     return downgradeSettlementBuilding(settlement.id, buildingId);
   }, [settlement.id]);
+  const handleRepairBuilding = React.useCallback((buildingId: string) => {
+    return repairSettlementBuilding(settlement.id, buildingId);
+  }, [settlement.id]);
 
   const built = React.useMemo(() => data?.buildings ?? [], [data]);
   const available = React.useMemo(() => data?.availableBuildings ?? [], [data]);
@@ -1723,12 +1825,23 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const queue = React.useMemo(() => data?.construction.queue ?? [], [data]);
   const queueSummaries = React.useMemo(() => buildQueueSummaries(queue), [queue]);
   const [buildingSearch, setBuildingSearch] = React.useState('');
+  const [hideMaxed, setHideMaxed] = React.useState(false);
+  const [hideLackingPopulation, setHideLackingPopulation] = React.useState(false);
+  const [hideUnbuildable, setHideUnbuildable] = React.useState(false);
+  const [pinnedBuildingId, setPinnedBuildingId] = React.useState<string | null>(null);
   const [searchSettlementId, setSearchSettlementId] = React.useState(settlement.id);
   if (searchSettlementId !== settlement.id) {
     setSearchSettlementId(settlement.id);
     setBuildingSearch('');
+    setPinnedBuildingId(null);
   }
-  const searchQuery = buildingSearch.trim().toLocaleLowerCase();
+  const searchQuery = buildingSearch.trim();
+  const hideFilters = React.useMemo<BuildingHideFilters>(() => ({
+    hideMaxed,
+    hideLackingPopulation,
+    hideUnbuildable,
+  }), [hideMaxed, hideLackingPopulation, hideUnbuildable]);
+  const filtersActive = hideMaxed || hideLackingPopulation || hideUnbuildable;
 
   const bringBuildingIntoView = React.useCallback((buildingId: string) => {
     const element = findBuildingNode(buildingId);
@@ -1803,9 +1916,12 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   }, [built, available, hasPort]);
 
   const visibleNodes = React.useMemo(() => {
-    if (!searchQuery) return nodes;
-    return nodes.filter(node => nodeMatchesSearch(node, searchQuery));
-  }, [nodes, searchQuery]);
+    return nodes.filter(node => {
+      if (pinnedBuildingId && nodeMatchesBuildingTarget(node, pinnedBuildingId)) return true;
+      if (!nodeMatchesSearch(node, searchQuery)) return false;
+      return nodeMatchesHideFilters(node, hideFilters, queueSummaries.has(nodeAssetKey(node)));
+    });
+  }, [hideFilters, nodes, pinnedBuildingId, queueSummaries, searchQuery]);
 
   // Counts per category for tab badges (respect search filter).
   const counts = React.useMemo(() => {
@@ -1841,6 +1957,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     // Clear search so requirement links can surface buildings outside the
     // current filter, then switch category / scroll into view.
     setBuildingSearch('');
+    setPinnedBuildingId(target);
     pendingBuildingTargetRef.current = target;
     if (targetCategory !== activeTab) {
       setActiveTab(targetCategory);
@@ -1996,7 +2113,51 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
                   className="search-field__input bld-search-input"
                   placeholder={webUIText('SettlementBuildings.SearchPlaceholder')}
                   value={buildingSearch}
-                  onChange={event => setBuildingSearch(event.target.value)}
+                  onChange={event => {
+                    setPinnedBuildingId(null);
+                    setBuildingSearch(event.target.value);
+                  }}
+                />
+              </div>
+              <div className="bld-filter-row">
+                <GameCheckButton
+                  checked={hideMaxed}
+                  label={webUIText('SettlementBuildings.HideMaxed')}
+                  className="game-check-button--compact-label"
+                  onToggle={() => {
+                    setPinnedBuildingId(null);
+                    setHideMaxed(value => !value);
+                  }}
+                  tooltip={{
+                    title: webUIText('SettlementBuildings.HideMaxed'),
+                    body: webUIText('SettlementBuildings.HideMaxedTooltip'),
+                  }}
+                />
+                <GameCheckButton
+                  checked={hideLackingPopulation}
+                  label={webUIText('SettlementBuildings.HideLackingPopulation')}
+                  className="game-check-button--compact-label"
+                  onToggle={() => {
+                    setPinnedBuildingId(null);
+                    setHideLackingPopulation(value => !value);
+                  }}
+                  tooltip={{
+                    title: webUIText('SettlementBuildings.HideLackingPopulation'),
+                    body: webUIText('SettlementBuildings.HideLackingPopulationTooltip'),
+                  }}
+                />
+                <GameCheckButton
+                  checked={hideUnbuildable}
+                  label={webUIText('SettlementBuildings.HideUnbuildable')}
+                  className="game-check-button--compact-label"
+                  onToggle={() => {
+                    setPinnedBuildingId(null);
+                    setHideUnbuildable(value => !value);
+                  }}
+                  tooltip={{
+                    title: webUIText('SettlementBuildings.HideUnbuildable'),
+                    body: webUIText('SettlementBuildings.HideUnbuildableTooltip'),
+                  }}
                 />
               </div>
             </div>
@@ -2013,7 +2174,9 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
                 <WebUIText
                   textKey={searchQuery
                     ? 'SettlementBuildings.NoSearchResults'
-                    : 'Auto.ComponentsSidebarsSettlementBuildingsPanel.963.9'}
+                    : filtersActive
+                      ? 'SettlementBuildings.NoFilterResults'
+                      : 'Auto.ComponentsSidebarsSettlementBuildingsPanel.963.9'}
                 />
               </div>
             )}
@@ -2030,6 +2193,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
                   onPlace={canQueueViaBridge ? handlePlaceBuilding : undefined}
                   onDemolish={canQueueViaBridge ? handleDemolishBuilding : undefined}
                   onDowngrade={canQueueViaBridge ? handleDowngradeBuilding : undefined}
+                  onRepair={canQueueViaBridge ? handleRepairBuilding : undefined}
                   queueSummaries={queueSummaries}
                   queueingBuildingIds={queueingBuildingSet}
                 />

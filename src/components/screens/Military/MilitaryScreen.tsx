@@ -278,10 +278,19 @@ export default function MilitaryScreen({ screenId, onClose }: { screenId: string
       if (accepted.length === 0) {
         return validateCommandAssignment(src, tgt, forcesRef.current);
       }
+      if (accepted.length === 1) {
+        return validateCommandAssignment(accepted[0], tgt, forcesRef.current);
+      }
+      const used = tgt.subordinateCount ?? 0;
+      const capacity = tgt.subordinateCapacity ?? 0;
       return {
         ok: true as const,
-        reason: accepted.length === 1
-          ? webUIText('Military.Command.ReportsTo', { Name: tgt.name })
+        reason: capacity > 0 && used + accepted.length > capacity
+          ? webUIText('Military.Command.ReportsToManyWithoutBonus', {
+            Count: formatNumber(accepted.length),
+            Name: tgt.name,
+            Max: formatNumber(capacity),
+          })
           : webUIText('Military.Command.ReportsToMany', { Count: formatNumber(accepted.length), Name: tgt.name }),
       };
     };

@@ -49,7 +49,7 @@ import '../shared/Sidebar.css';
 import './SettlementSidebar.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
-import { formatSettlementType } from '../../../utils/displayLabels';
+import { formatSettlementType, unitTypeLabel } from '../../../utils/displayLabels';
 type SettlementSidebarTab = 'general' | 'buildings' | 'military' | 'garrison';
 
 interface SettlementSidebarProps {
@@ -82,6 +82,13 @@ function getFoodColor(prod: number, cons: number): string {
   if (net > 2) return 'var(--green)';
   if (net >= 0) return 'var(--gold)';
   return 'var(--red)';
+}
+
+function getCorruptionColor(value: number): string {
+  if (value >= 0.75) return 'var(--red)';
+  if (value >= 0.5) return '#c86b2a';
+  if (value >= 0.25) return '#c88a3a';
+  return 'var(--green)';
 }
 
 const settlementTypeIcons: Record<string, string> = {
@@ -219,6 +226,60 @@ function breakdownLines(
       valueColor: good ? 'var(--green)' : 'var(--red)',
     };
   });
+}
+
+function corruptionSourceId(source: ModifierSource): string {
+  return (source.key || source.name).trim().toLowerCase().replace(/[\s_-]+/g, '');
+}
+
+function corruptionSourceSubTooltip(source: ModifierSource): TooltipContent {
+  switch (corruptionSourceId(source)) {
+    case 'corruptiongraft':
+    case 'graft':
+      return {
+        title: webUIText('SettlementSidebar.CorruptionSource.Graft.Title'),
+        body: webUIText('SettlementSidebar.CorruptionSource.Graft.Body'),
+      };
+    case 'distancefromcapital':
+      return {
+        title: webUIText('SettlementSidebar.CorruptionSource.DistanceFromCapital.Title'),
+        body: webUIText('SettlementSidebar.CorruptionSource.DistanceFromCapital.Body'),
+      };
+    case 'ungovernedregion':
+      return {
+        title: webUIText('SettlementSidebar.CorruptionSource.UngovernedRegion.Title'),
+        body: webUIText('SettlementSidebar.CorruptionSource.UngovernedRegion.Body'),
+      };
+    case 'governordiscontent':
+      return {
+        title: webUIText('SettlementSidebar.CorruptionSource.GovernorDiscontent.Title'),
+        body: webUIText('SettlementSidebar.CorruptionSource.GovernorDiscontent.Body'),
+      };
+    case 'governoroversight':
+    case 'governor':
+      return {
+        title: webUIText('SettlementSidebar.CorruptionSource.Governor.Title'),
+        body: webUIText('SettlementSidebar.CorruptionSource.Governor.Body'),
+      };
+    default:
+      return {
+        title: source.name,
+        body: webUIText(source.value < 0
+          ? 'SettlementSidebar.CorruptionSource.ReductionBody'
+          : 'SettlementSidebar.CorruptionSource.IncreaseBody'),
+      };
+  }
+}
+
+function corruptionBreakdownLines(sources: ModifierSource[] | undefined): TooltipContent['lines'] {
+  if (!sources || sources.length === 0) return undefined;
+  const sorted = [...sources].sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  return sorted.map(source => ({
+    label: source.name,
+    value: `${source.value >= 0 ? '+' : ''}${formatNumber(source.value, { maximumFractionDigits: 1 })}%`,
+    valueColor: source.value < 0 ? 'var(--green)' : 'var(--red)',
+    subTooltip: corruptionSourceSubTooltip(source),
+  }));
 }
 
 interface ShareEntry {
@@ -738,6 +799,9 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
   const foodNetRounded = foodNet >= 0 ? Math.floor(foodNet) : Math.ceil(foodNet);
   const foodProdRounded = Math.round(settlement.foodProduction);
   const foodConsRounded = Math.round(settlement.foodConsumption);
+  const corruptionColor = getCorruptionColor(settlement.corruption);
+  const corruptionPercent = formatPercentValue(settlement.corruption * 100);
+  const corruptionMonthlyChange = (settlement.corruptionBreakdown ?? []).reduce((sum, source) => sum + source.value, 0);
 
   const siege = settlement.siege;
   const canRename = !!settlement.canRename;
@@ -990,7 +1054,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
           )}
 
           {/* Stats row */}
-          <StatCellGrid>
+          <StatCellGrid className="settle-stat-grid">
             <Tooltip content={buildPopulationGrowthTooltip(settlement)} position="bottom" delay={150}>
               <StatCell
                 icon="/assets/icons/I_Population.png"
@@ -1014,6 +1078,15 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
               lines: breakdownLines(settlement.foodBreakdown, v => formatNumber(v, { maximumFractionDigits: 1 })),
             }} position="bottom" delay={150}>
               <StatCell icon="/assets/icons/I_Food.png" value={formatSignedNumber(foodNetRounded)} valueColor={foodColor} />
+            </Tooltip>
+            <Tooltip content={{
+              title: webUIText('SettlementSidebar.CorruptionTitle'),
+              body: webUIText('SettlementSidebar.CorruptionChangeBody', {
+                Change: `${formatSignedNumber(corruptionMonthlyChange, { maximumFractionDigits: 1 })}%`,
+              }),
+              lines: corruptionBreakdownLines(settlement.corruptionBreakdown),
+            }} position="bottom" delay={150}>
+              <StatCell icon="/assets/icons/I_Corruption.png" value={corruptionPercent} valueColor={corruptionColor} />
             </Tooltip>
             <Tooltip content={{
               get title() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1095.1", { Value1: formatNumber(settlement.fortificationLevel) }); },
@@ -1362,7 +1435,11 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                       outcomeKey={outcomeKey}
                       cooldownDays={i.cooldownDays}
                       cooldownRemainingDays={i.cooldownRemainingDays}
-                      onClick={i.availability === 'available' && !i.inProgress ? () => startInteraction(i.id) : undefined}
+                      onClick={i.availability === 'available' && !i.inProgress ? () => {
+                        void startInteraction(i.id).then(response => {
+                          if (response?.needsDestinationSelection) onClose();
+                        });
+                      } : undefined}
                       onCancel={i.inProgress ? cancelInteraction : undefined}
                     />
                   </Tooltip>
@@ -1476,7 +1553,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                         count: unit.count,
                         description: unit.description,
                         portrait: unit.portrait,
-                        typeLabel: unit.type,
+                        typeLabel: unitTypeLabel(unit.type),
                         typeIcon: unit.typeIcon,
                         tier: unit.tier,
                         culture: unit.culture,

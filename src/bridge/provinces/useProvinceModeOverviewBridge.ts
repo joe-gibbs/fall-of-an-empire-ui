@@ -7,6 +7,7 @@ import type {
   ProvinceModeFactionSummaryDTO,
   ProvinceModeMissionDTO,
   ProvinceModePersonDTO,
+  ProvinceModeScorePartDTO,
   ProvinceModeScoreRowDTO,
 } from '../../bridge-types.generated.ts';
 import type { PortraitLayerData } from '../../data/types';
@@ -54,6 +55,11 @@ export interface ProvinceModePerson {
   commandName: string;
 }
 
+export interface ProvinceModeScorePart {
+  label: string;
+  value: number;
+}
+
 export interface ProvinceModeScoreRow {
   id: string;
   icon: string;
@@ -62,6 +68,7 @@ export interface ProvinceModeScoreRow {
   value: number;
   remainingDays: number;
   tone: 'positive' | 'negative' | 'neutral' | 'high' | 'medium' | 'low';
+  parts: ProvinceModeScorePart[];
 }
 
 export type ProvinceModeMissionStatus = 'active' | 'succeeded' | 'failed';
@@ -163,6 +170,13 @@ function mapPerson(data: ProvinceModePersonDTO): ProvinceModePerson {
   };
 }
 
+function mapScorePart(data: ProvinceModeScorePartDTO): ProvinceModeScorePart {
+  return {
+    label: data.label,
+    value: data.value,
+  };
+}
+
 function mapScoreRow(data: ProvinceModeScoreRowDTO): ProvinceModeScoreRow {
   return {
     id: data.id,
@@ -172,6 +186,7 @@ function mapScoreRow(data: ProvinceModeScoreRowDTO): ProvinceModeScoreRow {
     value: data.value,
     remainingDays: data.remainingDays,
     tone: tone(data.tone, ['positive', 'negative', 'neutral', 'high', 'medium', 'low'] as const, 'neutral'),
+    parts: (data.parts ?? []).map(mapScorePart),
   };
 }
 
