@@ -86,8 +86,9 @@
   align-items: center;
   justify-content: center;
   flex-grow: 0;
-  flex-shrink: 0;
+  flex-shrink: 1;
   flex-basis: auto;
+  min-width: 0;
   padding: 0.231rem 0.769rem;
   font-family: var(--font-body);
   font-size: 0.85rem;
@@ -95,6 +96,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
+  overflow: hidden;
   color: var(--text-muted);
   background: transparent;
   border: none;
@@ -102,6 +104,9 @@
   border-right-style: solid;
   border-right-color: var(--border-dim);
   cursor: pointer;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.58rem;
+  game-ui-font-fit-max-size: 0.85rem;
   transition: color 0.15s, background 0.15s;
 }
 

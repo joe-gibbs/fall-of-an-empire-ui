@@ -25,6 +25,8 @@ interface TooltipContent {
   title?: string;
   /** Keycap or other control shown on the title row, top-right. */
   titleAccessory?: React.ReactNode;
+  /** Standalone metric or status line between the title and body. */
+  subtitle?: React.ReactNode;
   body?: React.ReactNode;
   lines?: TooltipLine[];
   afterLines?: React.ReactNode;
@@ -310,6 +312,7 @@ function hasTooltipContent(content: React.ReactNode | TooltipContent): boolean {
     content.title
     || content.titleAccessory
     || content.header
+    || content.subtitle
     || content.body
     || content.afterLines
     || hasFooterContent(content.footer)
@@ -364,6 +367,7 @@ function TooltipBody({
           {data.titleAccessory}
         </div>
       )}
+      {data.subtitle && <div className="tt-subtitle">{renderTooltipBody(data.subtitle)}</div>}
       {data.body && <div className="tt-body">{renderTooltipBody(data.body)}</div>}
       {data.lines && data.lines.length > 0 && (
         <div className={sidebar ? 'tt-lines tt-lines--sidebar' : 'tt-lines'}>
@@ -865,7 +869,7 @@ function isTooltipContent(c: unknown): c is TooltipContent {
   return typeof c === 'object'
     && c !== null
     && !React.isValidElement(c)
-    && ('header' in c || 'title' in c || 'titleAccessory' in c || 'body' in c || 'lines' in c || 'afterLines' in c || 'footer' in c);
+    && ('header' in c || 'title' in c || 'titleAccessory' in c || 'subtitle' in c || 'body' in c || 'lines' in c || 'afterLines' in c || 'footer' in c);
 }
 
 function globalTooltipDelay(): number {

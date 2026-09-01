@@ -1044,6 +1044,11 @@
   font-size: 1rem;
   letter-spacing: 0;
   cursor: var(--cursor-pointer);
+  overflow: hidden;
+  white-space: nowrap;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.72rem;
+  game-ui-font-fit-max-size: 1rem;
 }
 
 .mm-mod-tab:hover,

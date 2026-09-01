@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Badge from '../../common/data-display/stats/Badge';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
+import ConfirmDialog from '../../common/forms/ConfirmDialog';
 import Tooltip from '../../common/tooltips/Tooltip';
+import { dismissSharedTooltips } from '../../common/tooltips/tooltipEvents';
 import {
   applyFormationTemplateBridge,
   deleteFormationTemplateBridge,
@@ -95,7 +98,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
   const [pickerOpen, setPickerOpen] = useState(false);
   const [catalogueRequested, setCatalogueRequested] = useState(false);
   const [message, setMessage] = useState('');
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const assignmentTemplateType = assignmentTarget ? (assignmentTarget.isNavy ? 'naval' : 'land') : null;
   const templatesForMode = useMemo(() => (
@@ -120,7 +123,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
         setNameEdited(false);
         setPickerOpen(false);
         setMessage('');
-        setConfirmDeleteId(null);
+        setConfirmingDelete(false);
       }, 0);
 
       return () => window.clearTimeout(timer);
@@ -143,7 +146,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
           setNameEdited(false);
           setPickerOpen(false);
           setMessage('');
-          setConfirmDeleteId(null);
+          setConfirmingDelete(false);
         }, 0);
 
         return () => window.clearTimeout(timer);
@@ -176,7 +179,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
       setNameEdited(true);
       setPickerOpen(false);
       setMessage('');
-      setConfirmDeleteId(null);
+      setConfirmingDelete(false);
       if (shouldStartRenaming) {
         window.setTimeout(() => {
           titleInputRef.current?.focus();
@@ -313,7 +316,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
     setNameEdited(true);
     setPickerOpen(false);
     setMessage('');
-    setConfirmDeleteId(null);
+    setConfirmingDelete(false);
   };
 
   const beginCreate = () => {
@@ -326,7 +329,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
     setNameEdited(false);
     setPickerOpen(false);
     setMessage('');
-    setConfirmDeleteId(null);
+    setConfirmingDelete(false);
   };
 
   const gotoSibling = (delta: number) => {
@@ -466,7 +469,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
       setRenaming(false);
       setNameEdited(true);
       setPickerOpen(false);
-      setConfirmDeleteId(null);
+      setConfirmingDelete(false);
     });
   };
 
@@ -490,21 +493,22 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
       setBaseline(nextDraft);
       setSelectedId(response.templateId);
       setNameEdited(true);
-      setConfirmDeleteId(null);
+      setConfirmingDelete(false);
     });
   };
 
-  const deleteTemplate = () => {
-    if (!selected) return;
-    if (confirmDeleteId !== selected.id) {
-      setConfirmDeleteId(selected.id);
-      setMessage(webUIText('FormationTemplate.DeleteConfirmMessage'));
-      return;
-    }
+  const requestDeleteTemplate = () => {
+    if (!selected?.canDelete) return;
+    dismissSharedTooltips();
+    setConfirmingDelete(true);
+  };
+
+  const executeDeleteTemplate = () => {
+    if (!selected?.canDelete) return;
 
     void deleteFormationTemplateBridge(selected.id).then(response => {
       setMessage(response.message);
-      setConfirmDeleteId(null);
+      setConfirmingDelete(false);
       if (!response.deleted) return;
 
       const next = templatesForMode.find(template => template.id !== selected.id && normaliseTemplateType(template.type) === draft.type)
@@ -544,10 +548,11 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
     setRenaming(false);
     setPickerOpen(false);
     setMessage('');
-    setConfirmDeleteId(null);
+    setConfirmingDelete(false);
   };
 
   return (
+    <>
     <div className="sidebar sidebar--right sidebar--visible tpl-sidebar">
       <SidebarToolbar
         navButtons={[
@@ -566,7 +571,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
           { icon: '/assets/icons/I_NewTemplate.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.1059.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1059.7'); }, onClick: beginCreate },
           { icon: '/assets/icons/I_DuplicateTemplate.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.1060.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1060.8'); }, onClick: duplicateTemplate, disabled: unitCount === 0 },
           { icon: '/assets/icons/DeselectAll.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.1061.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1061.9'); }, onClick: clearComposition, disabled: unitCount === 0 },
-          { icon: '/assets/icons/I_Close.png', get tooltip() { return confirmDeleteId === selected?.id ? webUIText("FormationTemplateSidebar.ConfirmDelete") : webUIText("FormationTemplateSidebar.DeleteTemplate"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1062.10'); }, onClick: deleteTemplate, disabled: !selected?.canDelete },
+          { icon: '/assets/icons/I_Close.png', get tooltip() { return webUIText("FormationTemplateSidebar.DeleteTemplate"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.1062.10'); }, onClick: requestDeleteTemplate, disabled: !selected?.canDelete },
         ]}
         onClose={onClose}
         closePosition="start"
@@ -719,8 +724,8 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
           </button>
         )}
         {selected && !assignmentTarget && (
-          <button type="button" className="tpl-footer-btn tpl-footer-btn--danger" onClick={deleteTemplate} disabled={!selected.canDelete}>
-            {confirmDeleteId === selected.id ? webUIText("FormationTemplateSidebar.ConfirmDelete") : webUIText("FormationTemplateSidebar.DeleteTemplate")}
+          <button type="button" className="tpl-footer-btn tpl-footer-btn--danger" onClick={requestDeleteTemplate} disabled={!selected.canDelete}>
+            {webUIText("FormationTemplateSidebar.DeleteTemplate")}
           </button>
         )}
         <button type="button" className="tpl-footer-btn tpl-footer-btn--secondary" onClick={revertDraft} disabled={!isDirty || !baseline}>
@@ -731,6 +736,19 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
         </button>
       </div>
     </div>
+    {createPortal(
+      <ConfirmDialog
+        visible={confirmingDelete && selected !== null}
+        title={webUIText('FormationTemplate.DeleteConfirmTitle', { Name: selected?.name ?? '' })}
+        message={webUIText('FormationTemplate.DeleteConfirmMessage')}
+        confirmText={webUIText('FormationTemplate.DeleteButton')}
+        variant="danger"
+        onConfirm={executeDeleteTemplate}
+        onClosed={() => setConfirmingDelete(false)}
+      />,
+      document.body,
+    )}
+    </>
   );
 };
 

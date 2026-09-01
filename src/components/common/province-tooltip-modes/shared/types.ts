@@ -11,6 +11,7 @@ export interface ProvinceTooltipShareView {
   name: string;
   detail?: string;
   percent?: string;
+  amount: number;
   shareValue: number;
   colour?: string;
   change?: string;

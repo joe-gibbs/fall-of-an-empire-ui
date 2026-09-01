@@ -242,6 +242,9 @@
   letter-spacing: 0.03rem;
   white-space: nowrap;
   text-shadow: 0 0.077rem 0.3rem rgba(8, 12, 17, 0.9);
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.82rem;
+  game-ui-font-fit-max-size: 1.25rem;
 }
 
 .char-header-age {
@@ -1433,8 +1436,13 @@
   font-size: 0.85rem;
   color: var(--text);
   white-space: nowrap;
-  width: 6rem;
+  width: 6.8rem;
+  min-width: 0;
   flex-shrink: 0;
+  overflow: hidden;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.52rem;
+  game-ui-font-fit-max-size: 0.85rem;
 }
 
 .char-luxury-bar {

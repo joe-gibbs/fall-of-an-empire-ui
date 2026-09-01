@@ -86,8 +86,8 @@ export function sellEconomyResourceBridge(resourceId: string, amount: number): P
   });
 }
 
-export function setEconomyAutoBuyBridge(enabled: boolean): Promise<void> {
-  return bridgeCall('game.set_economy_auto_buy', { enabled }).then(() => {
+export function setEconomyAutoBuyBridge(enabled: boolean, resourceId: string, threshold: number): Promise<void> {
+  return bridgeCall('game.set_economy_auto_buy', { enabled, resourceId, threshold }).then(() => {
     clearEconomyOverviewCache();
     return undefined;
   });

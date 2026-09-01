@@ -49,7 +49,7 @@ import '../shared/Sidebar.css';
 import './SettlementSidebar.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
-import { formatSettlementType, unitTypeLabel } from '../../../utils/displayLabels';
+import { formatSettlementType, formatSettlementTypeDescription, unitTypeLabel } from '../../../utils/displayLabels';
 type SettlementSidebarTab = 'general' | 'buildings' | 'military' | 'garrison';
 
 interface SettlementSidebarProps {
@@ -146,8 +146,15 @@ function buildInteractionTooltip(i: SettlementInteractionView, settlementId: str
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.111.5'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.111.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   }
 
-  if (i.needsDestinationSelection) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.115.6'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.115.1"); } });
+  if (i.needsDestinationSelection || i.destinationName) {
+    lines.push({
+      label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.115.6'),
+      get value() {
+        return i.destinationName
+          ? i.destinationName
+          : webUIText('Auto.Prop.componentssidebarsSettlementSidebar.115.1');
+      },
+    });
   }
 
   if (i.cooldownDays > 0) {
@@ -669,11 +676,32 @@ function buildUnrestTooltip(settlement: Settlement, unrestRounded: string, unres
   };
 }
 
+function buildPopulationLimitSubTooltip(settlement: Settlement): TooltipContent {
+  return {
+    title: webUIText('SettlementSidebar.PopulationLimit'),
+    body: webUIText('SettlementSidebar.PopulationLimitBody'),
+    lines: breakdownLines(settlement.populationCapacityBreakdown, v => formatNumber(Math.round(v))),
+  };
+}
+
 function buildPopulationGrowthTooltip(settlement: Settlement): TooltipContent {
   const monthlyGrowth = Math.round(settlement.populationGrowth);
+  const capacity = Math.round(settlement.populationCapacity);
+  const overLimit = settlement.population >= capacity;
+  const growthLines = breakdownLines(settlement.growthBreakdown, v => formatNumber(Math.round(v))) ?? [];
   const lines: TooltipLine[] = [
-    ...(breakdownLines(settlement.growthBreakdown, v => formatNumber(Math.round(v))) ?? []),
+    {
+      label: webUIText('SettlementSidebar.PopulationLimit'),
+      value: formatNumber(capacity),
+      valueColor: overLimit ? 'var(--red)' : undefined,
+      subTooltip: buildPopulationLimitSubTooltip(settlement),
+    },
   ];
+
+  if (growthLines.length > 0) {
+    lines.push({ label: webUIText('SettlementSidebar.MonthlyChange'), isHeader: true });
+    lines.push(...growthLines);
+  }
 
   if (settlement.pops.length > 1) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.596.40'), isHeader: true });
@@ -691,6 +719,7 @@ function buildPopulationGrowthTooltip(settlement: Settlement): TooltipContent {
     title: webUIText('SettlementSidebar.PopulationGrowthTitle'),
     body: webUIText('SettlementSidebar.PopulationTooltipBody', {
       Population: formatNumber(settlement.population),
+      Capacity: formatNumber(capacity),
       Change: formatSignedNumber(monthlyGrowth),
     }),
     lines,
@@ -945,7 +974,15 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
       {/* Header */}
       <div className="settle-header">
         <img src={settlementTypeHeaderBg[settlement.type] || "/assets/events/settlement-village.png"} alt="" className="settle-header-bg" />
-        <Tooltip content={{ title: formatSettlementType(settlement.type), body: settlement.region }} position="bottom" delay={200}>
+        <Tooltip
+          content={{
+            title: formatSettlementType(settlement.type),
+            body: formatSettlementTypeDescription(settlement.type, settlement.population),
+          }}
+          position="bottom"
+          delay={200}
+          wrapperClassName="settle-header-type-tooltip"
+        >
           <div className="settle-header-type-badge">
             <img src={WebkilnAssetPath(settlementTypeIcons[settlement.type])} alt="" className="settle-header-type-icon" />
           </div>

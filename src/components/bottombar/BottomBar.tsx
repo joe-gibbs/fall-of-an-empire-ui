@@ -1,16 +1,11 @@
 import React, { useRef } from 'react';
 import Tooltip from '../common/tooltips/Tooltip';
 import IconButton from '../common/buttons/IconButton';
-import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
 import { useMapModeBridge } from '../../bridge/military-map/useMapModeBridge';
-import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
-import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
 import { useCompactHud } from '../../hooks/useCompactHud';
 import type { MapModeEntry } from '../../bridge-types.generated.ts';
-import { findActionBinding, getMapModeActionName } from '../../utils/actionBindings';
-import { MAP_MODE_TOOLTIPS } from './mapModeTooltipContent';
+import { mapModeTooltipForMode } from './mapModeTooltipContent';
 import { MAP_MODE_ICONS } from './mapModeIcons';
-import { MapModeTooltip, TTHeader } from './MapModeTooltip';
 import ConvoyFilterPanel from './ConvoyFilterPanel';
 import GlanceToggleBar from './GlanceToggleBar';
 import MapModeFilterPanel from './MapModeFilterPanel';
@@ -36,40 +31,8 @@ function mapModeIcon(id: string): string {
   return `/assets/map-modes/${id}.png`;
 }
 
-/** Fallback tooltip for custom / uncatalogued map modes, with live KeyGlyph. */
-function FallbackMapModeTooltip({
-  id,
-  label,
-  entry,
-}: {
-  id: string;
-  label: string;
-  entry?: MapModeEntry;
-}) {
-  const { settings } = useSettingsBridge();
-  const activeInputDevice = useActiveInputDevice(
-    settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
-  );
-  const binding = findActionBinding(settings?.controls, getMapModeActionName(id), activeInputDevice);
-  const body = entry?.tooltip || entry?.description;
-
-  return (
-    <MapModeTooltip>
-      <TTHeader>{label}</TTHeader>
-      {body && <p>{body}</p>}
-      {binding && (
-        <div className="mmtt-shortcut">
-          <ActionKeyGlyph binding={binding} />
-        </div>
-      )}
-    </MapModeTooltip>
-  );
-}
-
 function mapModeTooltipContent(id: string, label: string, entry?: MapModeEntry): React.ReactNode {
-  const fixedContent = MAP_MODE_TOOLTIPS[id];
-  if (fixedContent) return fixedContent;
-  return <FallbackMapModeTooltip id={id} label={label} entry={entry} />;
+  return mapModeTooltipForMode(id, label, entry);
 }
 
 const BottomBar: React.FC = () => {

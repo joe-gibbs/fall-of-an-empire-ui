@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type PresencePhase = 'entered' | 'closing' | 'closed';
+type ClosePath = 'request' | 'external';
 
 interface PresenceState {
   observedVisible: boolean;
   phase: PresencePhase;
   closeRequestId: number;
+  closePath?: ClosePath;
 }
 
 interface AnimatedPresenceOptions {
@@ -28,8 +30,14 @@ export function useAnimatedPresence(
     phase: visible ? 'entered' : 'closed',
     closeRequestId: 0,
   }));
-  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const afterCloseRef = useRef<(() => void) | undefined>(undefined);
+  const requestCloseTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const externalCloseTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const requestAfterCloseRef = useRef<(() => void) | undefined>(undefined);
+  const onClosedRef = useRef(onClosed);
+
+  useEffect(() => {
+    onClosedRef.current = onClosed;
+  }, [onClosed]);
 
   let current = state;
   if (visible !== state.observedVisible) {
@@ -38,52 +46,103 @@ export function useAnimatedPresence(
           observedVisible: true,
           phase: 'entered',
           closeRequestId: state.closeRequestId,
+          closePath: undefined,
         }
       : {
           observedVisible: false,
           phase: state.phase === 'closed' ? 'closed' : 'closing',
           closeRequestId: state.phase === 'closed' ? state.closeRequestId : state.closeRequestId + 1,
+          closePath: state.phase === 'closed' ? undefined : 'external',
         };
     setState(current);
   }
 
   const phase = current.phase;
   const closeRequestId = current.closeRequestId;
+  const closePath = current.closePath;
 
   useEffect(() => {
-    if (!visible) return;
-    clearTimeout(timerRef.current);
-    afterCloseRef.current = undefined;
+    if (visible) {
+      clearTimeout(externalCloseTimerRef.current);
+      externalCloseTimerRef.current = undefined;
+      return;
+    }
+
+    clearTimeout(requestCloseTimerRef.current);
+    requestCloseTimerRef.current = undefined;
+    requestAfterCloseRef.current = undefined;
   }, [visible]);
 
   useEffect(() => {
-    if (phase !== 'closing') return;
+    if (phase !== 'closing' || closePath !== 'request') return;
 
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      const afterClose = afterCloseRef.current ?? onClosed;
-      afterCloseRef.current = undefined;
+    clearTimeout(requestCloseTimerRef.current);
+    requestCloseTimerRef.current = setTimeout(() => {
+      requestCloseTimerRef.current = undefined;
+      const afterClose = requestAfterCloseRef.current ?? onClosedRef.current;
+      requestAfterCloseRef.current = undefined;
       setState((nextState) => (
         nextState.phase === 'closing'
-          ? { observedVisible: false, phase: 'closed', closeRequestId: nextState.closeRequestId }
+          && nextState.closePath === 'request'
+          && nextState.closeRequestId === closeRequestId
+          ? {
+              observedVisible: false,
+              phase: 'closed',
+              closeRequestId: nextState.closeRequestId,
+              closePath: undefined,
+            }
           : nextState
       ));
       afterClose?.();
     }, durationMs);
 
-    return () => clearTimeout(timerRef.current);
-  }, [phase, closeRequestId, durationMs, onClosed]);
+    return () => {
+      clearTimeout(requestCloseTimerRef.current);
+      requestCloseTimerRef.current = undefined;
+    };
+  }, [phase, closePath, closeRequestId, durationMs]);
 
-  useEffect(() => () => clearTimeout(timerRef.current), []);
+  useEffect(() => {
+    if (phase !== 'closing' || closePath !== 'external') return;
+
+    clearTimeout(externalCloseTimerRef.current);
+    externalCloseTimerRef.current = setTimeout(() => {
+      externalCloseTimerRef.current = undefined;
+      setState((nextState) => (
+        nextState.phase === 'closing'
+          && nextState.closePath === 'external'
+          && nextState.closeRequestId === closeRequestId
+          ? {
+              observedVisible: false,
+              phase: 'closed',
+              closeRequestId: nextState.closeRequestId,
+              closePath: undefined,
+            }
+          : nextState
+      ));
+      onClosedRef.current?.();
+    }, durationMs);
+
+    return () => {
+      clearTimeout(externalCloseTimerRef.current);
+      externalCloseTimerRef.current = undefined;
+    };
+  }, [phase, closePath, closeRequestId, durationMs]);
+
+  useEffect(() => () => {
+    clearTimeout(requestCloseTimerRef.current);
+    clearTimeout(externalCloseTimerRef.current);
+  }, []);
 
   const requestClose = useCallback((afterClose?: () => void) => {
-    afterCloseRef.current = afterClose;
+    requestAfterCloseRef.current = afterClose;
     setState((nextState) => {
       if (nextState.phase !== 'entered') return nextState;
       return {
         observedVisible: nextState.observedVisible,
         phase: 'closing',
         closeRequestId: nextState.closeRequestId + 1,
+        closePath: 'request',
       };
     });
   }, []);

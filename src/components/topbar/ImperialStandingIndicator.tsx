@@ -170,6 +170,19 @@ function buildTooltip(playerFaction: PlayerFactionSummary, overview: ProvinceMod
       value: webUIText('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(overview.standingTrend) }),
       valueColor: valueColour(overview.standingTrend),
     },
+    ...(overview.standingTrendParts.length > 0 || overview.standingTrendReason
+      ? [
+          { label: webUIText('ProvinceMode.StandingTrendWhy'), isHeader: true },
+          ...overview.standingTrendParts.map(part => ({
+            label: part.label,
+            value: webUIText('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(part.value) }),
+            valueColor: valueColour(part.value),
+          })),
+          ...(overview.standingTrendParts.length === 0
+            ? [{ label: overview.standingTrendReason, stacked: true }]
+            : []),
+        ]
+      : []),
     {
       label: webUIText('ImperialStanding.RecallPressure'),
       value: status.label,

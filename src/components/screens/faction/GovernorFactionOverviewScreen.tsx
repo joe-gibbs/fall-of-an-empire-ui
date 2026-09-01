@@ -196,6 +196,90 @@ function scorePartColour(kind: 'threat' | 'standing', value: number): string {
   return value > 0 ? 'var(--green)' : 'var(--red)';
 }
 
+function standingTrendWhyLines(
+  standingTrendParts: ProvinceModeScorePart[],
+  standingTrendReason: string,
+  t: ReturnType<typeof useWebUIText>,
+): TooltipLine[] {
+  if (standingTrendParts.length === 0 && !standingTrendReason) return [];
+
+  const lines: TooltipLine[] = [
+    { label: t('ProvinceMode.StandingTrendWhy'), isHeader: true },
+  ];
+  for (const part of standingTrendParts) {
+    lines.push({
+      label: part.label,
+      value: t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(part.value) }),
+      valueColor: trendColour(part.value),
+    });
+  }
+  if (standingTrendParts.length === 0) {
+    lines.push({ label: standingTrendReason, stacked: true });
+  }
+  return lines;
+}
+
+function standingMeterTooltip(
+  standingScore: number,
+  standingTrend: number,
+  standingTrendColour: string,
+  standingTrendParts: ProvinceModeScorePart[],
+  standingTrendReason: string,
+  t: ReturnType<typeof useWebUIText>,
+): TooltipContent {
+  return {
+    title: t('ProvinceMode.StandingTitle'),
+    body: t('ProvinceMode.StandingTooltip'),
+    lines: [
+      {
+        label: t('ImperialStanding.Standing'),
+        value: t('ImperialStanding.ScoreOutOf100', { Score: formatNumber(standingScore) }),
+        valueColor: 'var(--gold-light)',
+      },
+      {
+        label: t('ImperialStanding.Trend'),
+        value: t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(standingTrend) }),
+        valueColor: standingTrendColour,
+      },
+      ...standingTrendWhyLines(standingTrendParts, standingTrendReason, t),
+    ],
+  };
+}
+
+function threatMeterTooltip(
+  threatScore: number,
+  threatColourValue: string,
+  t: ReturnType<typeof useWebUIText>,
+): TooltipContent {
+  return {
+    title: t('ProvinceMode.ThreatTitle'),
+    body: t('ProvinceMode.ThreatTooltip'),
+    lines: [
+      {
+        label: t('ProvinceMode.ThreatTitle'),
+        value: t('ImperialStanding.ScoreOutOf100', { Score: formatNumber(threatScore) }),
+        valueColor: threatColourValue,
+      },
+    ],
+  };
+}
+
+function reviewMeterTooltip(
+  reviewDays: number,
+  t: ReturnType<typeof useWebUIText>,
+): TooltipContent {
+  return {
+    title: t('ProvinceMode.NextReviewLabel'),
+    body: t('ProvinceMode.NextReviewTooltip'),
+    lines: [
+      {
+        label: t('ImperialStanding.NextReview'),
+        value: t('ImperialStanding.NextReviewDays', { Days: formatNumber(reviewDays) }),
+      },
+    ],
+  };
+}
+
 function scoreRowTooltip(
   label: string,
   description: string | undefined,
@@ -1209,6 +1293,8 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
   const t = useWebUIText();
   const standingScore = overview?.standingScore ?? 0;
   const standingTrend = overview?.standingTrend ?? 0;
+  const standingTrendParts = overview?.standingTrendParts ?? [];
+  const standingTrendReason = overview?.standingTrendReason ?? '';
   const threatScore = overview?.threatScore ?? 0;
   const standingColour = scoreColour(standingScore);
   const standingTrendColour = trendColour(standingTrend);
@@ -1246,61 +1332,68 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
           </p>
         </div>
         <div className="gfov-header-meters">
-          <div className="gfov-meter-card">
-            <div className="gfov-meter-label">
-              <img src="/assets/icons/I_Compliance.png" alt="" draggable={false} />
-              {t('ProvinceMode.StandingTitle')}
-            </div>
-            <div className="gfov-meter-score-row">
-              <span className="gfov-meter-score" style={{ color: standingColour }}>{formatNumber(standingScore)}</span>
-              <span className="gfov-meter-max">/ 100</span>
-              <Tooltip
-                content={{
-                  title: t('ImperialStanding.Trend'),
-                  body: t('ProvinceMode.StandingTrendTooltip'),
-                  lines: [
-                    {
-                      label: t('ImperialStanding.Trend'),
-                      value: t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(standingTrend) }),
-                      valueColor: standingTrendColour,
-                    },
-                  ],
-                }}
-                position="bottom"
-                delay={150}
-                inline
-              >
+          <Tooltip
+            content={standingMeterTooltip(standingScore, standingTrend, standingTrendColour, standingTrendParts, standingTrendReason, t)}
+            position="bottom"
+            delay={150}
+            wrapperClassName="gfov-meter-tooltip"
+          >
+            <div className="gfov-meter-card">
+              <div className="gfov-meter-label">
+                <img src="/assets/icons/I_Compliance.png" alt="" draggable={false} />
+                {t('ProvinceMode.StandingTitle')}
+              </div>
+              <div className="gfov-meter-score-row">
+                <span className="gfov-meter-score" style={{ color: standingColour }}>{formatNumber(standingScore)}</span>
+                <span className="gfov-meter-max">/ 100</span>
+              </div>
+              <GameBar value={standingScore} max={100} colour={standingColour} size="sm" />
+              <div className="gfov-meter-trend-row">
+                <span className="gfov-meter-trend-label">{t('ImperialStanding.Trend')}</span>
                 <span className="gfov-meter-trend" style={{ color: standingTrendColour }}>
                   {t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(standingTrend) })}
                 </span>
-              </Tooltip>
+              </div>
             </div>
-            <GameBar value={standingScore} max={100} colour={standingColour} size="sm" />
-          </div>
-          <div className="gfov-meter-card">
-            <div className="gfov-meter-label">
-              <img src="/assets/icons/I_Dread.png" alt="" draggable={false} />
-              {t('ProvinceMode.ThreatTitle')}
+          </Tooltip>
+          <Tooltip
+            content={threatMeterTooltip(threatScore, threatColourValue, t)}
+            position="bottom"
+            delay={150}
+            wrapperClassName="gfov-meter-tooltip"
+          >
+            <div className="gfov-meter-card">
+              <div className="gfov-meter-label">
+                <img src="/assets/icons/I_Dread.png" alt="" draggable={false} />
+                {t('ProvinceMode.ThreatTitle')}
+              </div>
+              <div className="gfov-meter-score-row">
+                <span className="gfov-meter-score" style={{ color: threatColourValue }}>{formatNumber(threatScore)}</span>
+                <span className="gfov-meter-max">/ 100</span>
+              </div>
+              <GameBar value={threatScore} max={100} colour={threatColourValue} size="sm" />
             </div>
-            <div className="gfov-meter-score-row">
-              <span className="gfov-meter-score" style={{ color: threatColourValue }}>{formatNumber(threatScore)}</span>
-              <span className="gfov-meter-max">/ 100</span>
+          </Tooltip>
+          <Tooltip
+            content={reviewMeterTooltip(reviewDays, t)}
+            position="bottom"
+            delay={150}
+            wrapperClassName="gfov-meter-tooltip"
+          >
+            <div className="gfov-meter-card gfov-meter-card--review">
+              <div className="gfov-meter-label">
+                <img src="/assets/icons/RecallStatus/I_RecallStatus_Overview.png" alt="" draggable={false} />
+                {t('ProvinceMode.NextReviewLabel')}
+              </div>
+              <div className="gfov-meter-review-row">
+                <span className="gfov-meter-review-days">{formatNumber(reviewDays)}</span>
+                <span className="gfov-meter-review-unit">{t(reviewDays === 1 ? 'Common.Day' : 'Common.Days')}</span>
+              </div>
+              <div className="gfov-meter-review-progress">
+                <GameBar value={reviewElapsedDays} max={reviewIntervalDays} colour="var(--gold)" size="sm" />
+              </div>
             </div>
-            <GameBar value={threatScore} max={100} colour={threatColourValue} size="sm" />
-          </div>
-          <div className="gfov-meter-card gfov-meter-card--review">
-            <div className="gfov-meter-label">
-              <img src="/assets/icons/RecallStatus/I_RecallStatus_Overview.png" alt="" draggable={false} />
-              {t('ProvinceMode.NextReviewLabel')}
-            </div>
-            <div className="gfov-meter-review-row">
-              <span className="gfov-meter-review-days">{formatNumber(reviewDays)}</span>
-              <span className="gfov-meter-review-unit">{t(reviewDays === 1 ? 'Common.Day' : 'Common.Days')}</span>
-            </div>
-            <div className="gfov-meter-review-progress">
-              <GameBar value={reviewElapsedDays} max={reviewIntervalDays} colour="var(--gold)" size="sm" />
-            </div>
-          </div>
+          </Tooltip>
         </div>
       </div>
 

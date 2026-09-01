@@ -878,6 +878,9 @@
   flex-shrink: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.7em;
+  game-ui-font-fit-max-size: 0.95em;
 }
 
 .date-display-status--paused {

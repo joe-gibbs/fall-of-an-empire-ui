@@ -102,49 +102,6 @@ interface CharacterSidebarProps {
   onCloseInitiatorModal?: () => void;
 }
 
-const CHARACTER_HEADER_NAME_MIN_FONT_REM = 0.82;
-const CHARACTER_HEADER_NAME_MAX_FONT_REM = 1.25;
-
-function CharacterHeaderName({ name }: { name: string }) {
-  const nameRef = React.useRef<HTMLSpanElement>(null);
-
-  React.useLayoutEffect(() => {
-    const element = nameRef.current;
-    const row = element?.parentElement;
-    if (!element || !row) return undefined;
-
-    const fitName = () => {
-      const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
-      const minFontSize = CHARACTER_HEADER_NAME_MIN_FONT_REM * rootFontSize;
-      const maxFontSize = CHARACTER_HEADER_NAME_MAX_FONT_REM * rootFontSize;
-      element.style.fontSize = `${maxFontSize}px`;
-
-      const availableWidth = element.clientWidth;
-      const requiredWidth = element.scrollWidth;
-      if (requiredWidth <= availableWidth + 0.5) return;
-
-      const fittedFontSize = Math.max(minFontSize, maxFontSize * ((availableWidth - 1) / requiredWidth));
-      element.style.fontSize = `${fittedFontSize}px`;
-    };
-
-    fitName();
-    const observer = new ResizeObserver(fitName);
-    observer.observe(row);
-
-    let active = true;
-    void document.fonts.ready.then(() => {
-      if (active) fitName();
-    });
-
-    return () => {
-      active = false;
-      observer.disconnect();
-    };
-  }, [name]);
-
-  return <span ref={nameRef} className="char-header-name">{name}</span>;
-}
-
 const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
   character,
   onClose,
@@ -658,7 +615,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
           <div className="char-header-name-row">
             <div className="char-header-main-name">
               {character.shortTitle && <span className="char-header-title-prefix">{character.shortTitle}</span>}
-              <CharacterHeaderName name={character.name} />
+              <span className="char-header-name">{character.name}</span>
               <Tooltip content={headerAgeTooltip} position="bottom" delay={200} inline>
                 <span className="char-header-age">{headerAgeValue}</span>
               </Tooltip>
@@ -988,7 +945,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                     const cardKey = `${character.id}:${section.id}:${interaction.id}`;
 
                     return (
-                      <Tooltip key={cardKey} content={buildInteractionTooltip(interaction, character.id)} position="left" delay={150} variant="sidebar">
+                      <Tooltip key={cardKey} content={buildInteractionTooltip(interaction, character.id, character.name)} position="left" delay={150} variant="sidebar">
                         <InteractionCard
                           title={interaction.name}
                           description={interaction.description}

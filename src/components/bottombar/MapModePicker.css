@@ -139,4 +139,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.62rem;
 }

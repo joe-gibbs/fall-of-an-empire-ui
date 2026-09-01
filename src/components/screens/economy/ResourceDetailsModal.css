@@ -575,6 +575,11 @@
   min-height: 1.55rem;
   padding: 0.18rem 0.45rem;
   margin-left: 0.22rem;
+  overflow: hidden;
+  white-space: nowrap;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.5rem;
+  game-ui-font-fit-max-size: 0.65rem;
 }
 
 .erd-charts {

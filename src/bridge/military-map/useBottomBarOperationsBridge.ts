@@ -220,6 +220,10 @@ export function cancelResettlementSelectionBridge(): Promise<ResettlementSelecti
   return callResettlementSelection('cancel');
 }
 
+export function queryResettlementSelectionBridge(): Promise<ResettlementSelectionResponse> {
+  return callResettlementSelection('state');
+}
+
 export function startGovernorAssignmentBridge(): Promise<GovernorAssignmentResponse> {
   return callGovernorAssignment('start');
 }

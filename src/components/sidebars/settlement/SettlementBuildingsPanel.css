@@ -9,14 +9,15 @@
   padding: 0 0.462rem;
 }
 
-/* ============ Construction queue ============
- * Sticks to the top of the sidebar scroll area so the player always has
- * feedback on what's being built even when scrolled deep into the tree. */
+.bld-construction-slot {
+  flex-shrink: 0;
+  overflow-anchor: none;
+}
+
+/* ============ Construction queue ============ */
 
 .bld-construction {
   position: relative;
-  top: 0;
-  z-index: 3;
   display: flex;
   flex-direction: column;
 
@@ -89,6 +90,10 @@
 .bld-queue-list {
   display: flex;
   flex-direction: column;
+}
+
+.bld-queue-card-tooltip {
+  min-width: 0;
 }
 
 .bld-queue-card {
@@ -279,6 +284,15 @@
   min-width: 0;
 }
 
+.bld-queue-card-count {
+  flex-shrink: 0;
+  margin-left: 0.35rem;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
 .bld-queue-card-status {
   margin-left: 0.35rem;
 }
@@ -327,6 +341,52 @@
   width: 0.92rem;
   height: 0.92rem;
   opacity: 0.9;
+}
+
+.bld-queue-card-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.bld-queue-card-action--plus {
+  min-width: 1.65rem;
+  padding: 0 0.18rem;
+  border-top-color: var(--gold-dark);
+  border-right-color: var(--gold-dark);
+  border-bottom-color: var(--gold-dark);
+  border-left-color: var(--gold-dark);
+  background: rgba(72, 54, 22, 0.78);
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  line-height: 1;
+}
+
+.bld-queue-card-action--plus:hover {
+  background: rgba(96, 72, 28, 0.9);
+  color: var(--text-bright);
+}
+
+.bld-queue-card-action--disabled,
+.bld-queue-card-action--plus.bld-queue-card-action--disabled:hover {
+  cursor: default;
+  opacity: 0.46;
+  border-top-color: rgba(255, 255, 255, 0.14);
+  border-right-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.1);
+  background: rgba(18, 22, 26, 0.78);
+  color: var(--text-muted);
+}
+
+.bld-queue-card-place {
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 0;
 }
 
 .bld-queue-card-meta {
@@ -399,6 +459,7 @@
   justify-content: flex-end;
   gap: 0.35rem 0.55rem;
   min-width: 0;
+  overflow-anchor: none;
 }
 
 .bld-search-field {
@@ -425,6 +486,7 @@
 .bld-cat-tabs {
   display: flex;
   flex-wrap: wrap;
+  overflow-anchor: none;
   padding: 0.1818rem;
   margin: 0.1rem 0 0.45rem;
   border-width: 0.077rem;
@@ -575,30 +637,39 @@
   flex-direction: column;
 }
 
-/* Chain branch tree - depth-based indentation with connector lines */
+/* Chain branch tree.
+ * Solid arrow: this building replaces the one above it.
+ * Dashed T-join: extra building; the one above it stays.
+ * The spine is drawn on the parent and the children box so it actually
+ * leaves the predecessor instead of sitting as a tick on the child. */
 
 .bld-branch {
   position: relative;
   display: flex;
   flex-direction: column;
+  overflow: visible;
+  --bld-gutter: 1.5rem;
+  --bld-rail-thickness: 0.2273rem;
+  --bld-rail-join: 1.5rem;
+  --bld-stub: 0.8rem;
+  --bld-rail-color: var(--gold);
+  --bld-branch-gap: 0.45rem;
 }
 
-.bld-branch--continues::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  transform: translateX(-0.0455rem);
-  top: 2.2rem;
-  bottom: 0;
-  width: 0.0909rem;
-  background-color: var(--gold-muted);
-  pointer-events: none;
+.bld-branch--depth-2,
+.bld-branch--depth-3 {
+  --bld-rail-thickness: 0.2727rem;
+}
+
+.bld-branch--choice {
+  --bld-rail-color: var(--gold-light);
 }
 
 .bld-branch-row {
   display: flex;
   align-items: stretch;
   position: relative;
+  overflow: visible;
 }
 
 .bld-branch-node {
@@ -606,43 +677,178 @@
   min-width: 0;
 }
 
-/* Elbow connector: L-shape linking a child to its parent's vertical line */
-.bld-branch-elbow {
-  position: relative;
+.bld-branch-elbow-wrap {
   flex-grow: 0;
   flex-shrink: 0;
-  flex-basis: 0.9rem;
-  margin-right: 0.25rem;
+  flex-basis: var(--bld-gutter);
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+.bld-branch-elbow {
+  display: block;
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 100%;
 }
 
 .bld-branch-elbow::before {
-  /* Vertical line from top to middle of node */
   content: '';
   position: absolute;
   left: 0;
-  transform: translateX(-0.0455rem);
   top: 0;
-  bottom: 50%;
-  width: 0.0909rem;
-  background-color: var(--gold-muted);
+  width: var(--bld-rail-thickness);
+  height: var(--bld-rail-join);
+  transform: translateX(calc(var(--bld-rail-thickness) / -2));
+  background-color: var(--bld-rail-color);
 }
 
 .bld-branch-elbow::after {
-  /* Horizontal line from parent's vertical to this node's edge */
   content: '';
   position: absolute;
   left: 0;
-  top: 50%;
+  top: var(--bld-rail-join);
   width: 100%;
-  height: 0.0909rem;
-  background-color: var(--gold-muted);
+  height: var(--bld-rail-thickness);
+  transform: translateY(calc(var(--bld-rail-thickness) / -2));
+  background-color: var(--bld-rail-color);
 }
 
-/* Nested children are indented and drop a vertical line down for siblings */
+.bld-branch-elbow--replaces::after {
+  width: calc(100% - 0.22rem);
+}
+
+.bld-branch-elbow--addon::before,
+.bld-branch-elbow--addon::after,
+.bld-branch--continues.bld-branch--addon::before,
+.bld-branch-children--addons::before {
+  background-color: transparent;
+}
+
+.bld-branch-elbow--addon::before,
+.bld-branch--continues.bld-branch--addon::before,
+.bld-branch-children--addons::before {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--bld-rail-color) 0,
+    var(--bld-rail-color) 0.26rem,
+    transparent 0.26rem,
+    transparent 0.46rem
+  );
+}
+
+.bld-branch-elbow--addon::after {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--bld-rail-color) 0,
+    var(--bld-rail-color) 0.26rem,
+    transparent 0.26rem,
+    transparent 0.46rem
+  );
+}
+
+.bld-branch-join-dot {
+  position: absolute;
+  left: 0;
+  top: var(--bld-rail-join);
+  z-index: 1;
+  width: 0.36rem;
+  height: 0.36rem;
+  transform: translate(-50%, -50%);
+  background-color: var(--bld-rail-color);
+  pointer-events: none;
+}
+
+.bld-branch-arrow {
+  position: absolute;
+  right: -0.04rem;
+  top: var(--bld-rail-join);
+  z-index: 1;
+  width: 0;
+  height: 0;
+  transform: translateY(-50%);
+  border-top-width: 0.32rem;
+  border-top-style: solid;
+  border-top-color: transparent;
+  border-bottom-width: 0.32rem;
+  border-bottom-style: solid;
+  border-bottom-color: transparent;
+  border-left-width: 0.44rem;
+  border-left-style: solid;
+  border-left-color: var(--bld-rail-color);
+  pointer-events: none;
+}
+
+.bld-branch--continues::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--bld-rail-join);
+  bottom: calc(var(--bld-branch-gap) * -1);
+  width: var(--bld-rail-thickness);
+  transform: translateX(calc(var(--bld-rail-thickness) / -2));
+  background-color: var(--bld-rail-color);
+  pointer-events: none;
+}
+
 .bld-branch-children {
-  margin-left: 0.65rem;
+  position: relative;
   display: flex;
   flex-direction: column;
+  overflow: visible;
+  padding-top: var(--bld-stub);
+  margin-left: 0;
+}
+
+.bld-branch:not(.bld-branch--depth-0) > .bld-branch-children {
+  margin-left: var(--bld-gutter);
+}
+
+.bld-branch-children::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--bld-rail-thickness);
+  height: var(--bld-stub);
+  transform: translateX(calc(var(--bld-rail-thickness) / -2));
+  background-color: var(--bld-rail-color);
+  pointer-events: none;
+}
+
+.bld-branch-children--fork {
+  --bld-branch-gap: 0.9rem;
+}
+
+.bld-branch-children.bld-branch-children--addons::before {
+  background-color: transparent;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--bld-rail-color) 0,
+    var(--bld-rail-color) 0.26rem,
+    transparent 0.26rem,
+    transparent 0.46rem
+  );
+}
+
+.bld-branch-or {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  transform: translate(-0.15rem, -0.72rem);
+  padding: 0.02rem 0.2rem;
+  background-color: rgba(13, 18, 24, 0.94);
+  font-family: var(--font-header);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 /* ============ Building node card ============ */
@@ -651,6 +857,7 @@
   display: flex;
   align-items: stretch;
   position: relative;
+  overflow-anchor: auto;
   background-color: #20272d;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
@@ -1132,7 +1339,6 @@
   transform: translateY(-0.0909rem);
 }
 
-.bld-tooltip-action-btn--confirm:not(:disabled),
 .bld-tooltip-action-btn:active:not(:disabled) {
   background-color: #0d1218;
   background-image:
@@ -1150,8 +1356,7 @@
   color: var(--red-light);
 }
 
-.bld-tooltip-action-btn--danger:hover:not(:disabled),
-.bld-tooltip-action-btn--danger.bld-tooltip-action-btn--confirm:not(:disabled) {
+.bld-tooltip-action-btn--danger:hover:not(:disabled) {
   color: var(--text-bright);
 }
 
@@ -1204,12 +1409,6 @@
 .bld-tooltip-spoils-empty {
   color: var(--text-muted);
   font-size: 0.68rem;
-}
-
-.bld-tooltip-confirm-note {
-  color: var(--gold-light);
-  font-size: 0.68rem;
-  line-height: 1.25;
 }
 
 /* Meta row (upkeep, time, resources) */
@@ -1482,6 +1681,10 @@
   margin-left: 0.5rem;
 }
 
+.bld-queue-card-actions > * + * {
+  margin-left: 0.22rem;
+}
+
 .bld-queue-card-title-wrap > * {
   margin-right: 0.35rem;
   margin-bottom: 0.35rem;
@@ -1516,13 +1719,13 @@
 
 /* Chain branch tree - depth-based indentation with connector lines */
 
-.bld-branch > * + * {
-  margin-top: 0.3rem;
+.bld-branch-row + .bld-branch-children {
+  margin-top: 0;
 }
 
 /* Nested children are indented and drop a vertical line down for siblings */
 .bld-branch-children > * + * {
-  margin-top: 0.3rem;
+  margin-top: var(--bld-branch-gap);
 }
 
 /* Body */

@@ -9,6 +9,7 @@ import type { DisplayTextLine } from '../../data/types';
 import { interactionAssetPath } from '../../utils/assets';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import { bridgeEvents } from '../core/bridgeEvents';
+import { queryResettlementSelectionBridge } from '../military-map/useBottomBarOperationsBridge';
 
 export type InteractionAvailability = 'available' | 'greyed' | 'hidden';
 export type InteractionScope = 'settlement' | 'region';
@@ -38,6 +39,7 @@ export interface SettlementInteractionView {
   successFactors: { name: string; percent: number }[];
   effectLines: DisplayTextLine[];
   needsDestinationSelection: boolean;
+  destinationName: string;
 }
 
 export interface SettlementInteractionsState {
@@ -92,6 +94,7 @@ function mapEntry(e: SettlementInteractionEntry): SettlementInteractionView {
     successFactors: e.successFactors.map(f => ({ name: f.name, percent: f.percent })),
     effectLines: e.effectLines ?? [],
     needsDestinationSelection: e.needsDestinationSelection,
+    destinationName: e.destinationName ?? '',
   };
 }
 
@@ -246,9 +249,17 @@ export function useSettlementInteractionsBridge(settlementId: string | null): Se
 
   const state = interactionsState?.settlementId === settlementId ? interactionsState : null;
 
-  const start = useCallback((interactionId: string) => {
-    if (!settlementId) return Promise.resolve();
-    return bridgeCall('game.start_settlement_interaction', { settlementId, interactionId }).catch(acknowledgeBridgeFailure);
+  const start = useCallback(async (interactionId: string) => {
+    if (!settlementId) return;
+    try {
+      const response = await bridgeCall('game.start_settlement_interaction', { settlementId, interactionId });
+      if (response.needsDestinationSelection) {
+        await queryResettlementSelectionBridge();
+      }
+      return response;
+    } catch (error) {
+      acknowledgeBridgeFailure(error);
+    }
   }, [settlementId]);
 
   const cancel = useCallback(() => {

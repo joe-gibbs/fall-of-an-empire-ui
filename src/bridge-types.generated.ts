@@ -915,6 +915,8 @@ export interface DowngradeSettlementBuildingRequest {
 
 export interface SetEconomyAutoBuyRequest {
   enabled: boolean;
+  resourceId: string;
+  threshold: number;
 }
 
 export interface TradeEconomyResourceRequest {
@@ -2038,6 +2040,9 @@ export interface GetEconomyOverviewResponse {
   foodExpenseTotal: number;
   foodNet: number;
   autoBuyEnabled: boolean;
+  autoBuyFoodResource: string;
+  autoBuyFoodThreshold: number;
+  autoBuyFoodSliderMax: number;
   resources: EconomyOverviewResourceRow[];
   foodRows: EconomyOverviewFoodRow[];
   history: EconomyOverviewHistoryPoint[];
@@ -3603,6 +3608,8 @@ export interface GetProvinceModeOverviewResponse {
   successor: ProvinceModePersonDTO;
   standingScore: number;
   standingTrend: number;
+  standingTrendParts: ProvinceModeScorePartDTO[];
+  standingTrendReason: string;
   threatScore: number;
   recallStage: number;
   nextReviewDays: number;
@@ -3627,6 +3634,7 @@ export interface ProvinceTooltipShare {
   name: string;
   detail: string;
   percent: string;
+  amount: number;
   shareValue: number;
   colour: string;
   change: string;
@@ -4142,6 +4150,7 @@ export interface SettlementAvailableBuildingEntry {
   developedFrom: string;
   canBeDevelopedInto: string[];
   requiredBuildings: SettlementBuildingRequirement[];
+  replacesParent: boolean;
   buildState: SettlementBuildingBuildState;
 }
 
@@ -4150,6 +4159,8 @@ export interface SettlementConstructionQueueItem {
   queueIndex: number;
   assetKey: string;
   name: string;
+  description: string;
+  effectsHtml: string;
   kind: string;
   toLevel: number;
   goldCost: number;
@@ -4404,6 +4415,8 @@ export interface GetSettlementDataResponse {
   hasPort: boolean;
   population: number;
   populationGrowth: number;
+  populationCapacity: number;
+  populationCapacityBreakdown: SettlementModifierSource[];
   income: number;
   foodProduction: number;
   foodConsumption: number;
@@ -4521,6 +4534,7 @@ export interface SettlementInteractionEntry {
   successFactors: SettlementInteractionFactor[];
   effectLines: WebUIDisplayLine[];
   needsDestinationSelection: boolean;
+  destinationName: string;
 }
 
 export interface GetSettlementInteractionsResponse {

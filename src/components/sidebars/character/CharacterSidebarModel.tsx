@@ -193,7 +193,11 @@ export function compareInteractions(a: PersonInteractionView, b: PersonInteracti
   return a.id.localeCompare(b.id);
 }
 
-export function buildInteractionTooltip(interaction: PersonInteractionView, targetPersonId: string): TooltipContent {
+export function buildInteractionTooltip(
+  interaction: PersonInteractionView,
+  targetPersonId: string,
+  targetPersonName?: string,
+): TooltipContent {
   const lines: TooltipLine[] = [];
   const difficulty = interactionDifficultyMeta[interaction.difficulty] ?? {
     label: interaction.difficulty,
@@ -218,7 +222,7 @@ export function buildInteractionTooltip(interaction: PersonInteractionView, targ
         label: factor.name,
         value: `${formatSignedNumber(factor.percent)}%`,
         valueColor: factor.percent >= 0 ? 'var(--green)' : 'var(--red)',
-        subTooltip: knownModifierSubTooltip(factor.key, factor.name),
+        subTooltip: knownModifierSubTooltip(factor.key, factor.name, targetPersonName),
       });
     }
   }

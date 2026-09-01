@@ -91,6 +91,25 @@ function OperationButton({
   );
 }
 
+function highlightSettlementName(text: string, name: string): React.ReactNode {
+  if (!name) {
+    return text;
+  }
+
+  const index = text.indexOf(name);
+  if (index < 0) {
+    return text;
+  }
+
+  return (
+    <>
+      {text.slice(0, index)}
+      <span className="operation-choice-name">{name}</span>
+      {text.slice(index + name.length)}
+    </>
+  );
+}
+
 function OperationHeader({
   icon,
   title,
@@ -99,7 +118,7 @@ function OperationHeader({
 }: {
   icon: string;
   title: string;
-  detail: string;
+  detail: React.ReactNode;
   tooltip?: TooltipContent;
 }) {
   const header = (
@@ -373,13 +392,20 @@ function BuildingPlacementPanel({ operation }: { operation: BuildingPlacementOpe
 function ResettlementSelectionPanel({ operation }: { operation: ResettlementSelectionOperation }) {
   const t = useWebUIText();
   const title = operation.interactionName || t('BottomBar.Resettlement.Title');
-  const detail = operation.description || operation.message;
+  const detail = highlightSettlementName(
+    operation.message || operation.description,
+    operation.destinationSettlementName,
+  );
+  const tooltip = operation.description
+    ? { title, body: operation.description }
+    : undefined;
   return (
     <div className="operation-bar operation-bar--resettlement">
       <OperationHeader
         icon={ICONS.resettle}
         title={title}
         detail={detail}
+        tooltip={tooltip}
       />
       <div className="operation-building-summary">
         {operation.goldCost > 0 && (
@@ -388,7 +414,6 @@ function ResettlementSelectionPanel({ operation }: { operation: ResettlementSele
             {t('BottomBar.Resettlement.GoldCost', { Amount: fmt(operation.goldCost) })}
           </span>
         )}
-        {operation.message && <span className="operation-muted">{operation.message}</span>}
       </div>
       <div className="operation-actions">
         <OperationButton

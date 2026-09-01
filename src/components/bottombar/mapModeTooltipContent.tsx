@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import LocalizedMapModeTooltip from './LocalizedMapModeTooltip';
+import type { MapModeEntry } from '../../bridge-types.generated.ts';
+import LocalizedMapModeTooltip, { FallbackMapModeTooltip } from './LocalizedMapModeTooltip';
 import type { MapModeTooltipDefinition } from './LocalizedMapModeTooltip';
 
 const DEFINITIONS: Record<string, MapModeTooltipDefinition> = {
@@ -227,3 +228,11 @@ function buildTooltips(definitions: Record<string, MapModeTooltipDefinition>): R
 }
 
 export const MAP_MODE_TOOLTIPS: Record<string, ReactNode> = buildTooltips(DEFINITIONS);
+
+export function mapModeTooltipForMode(
+  id: string,
+  label: string,
+  entry: MapModeEntry | undefined,
+): ReactNode {
+  return MAP_MODE_TOOLTIPS[id] ?? <FallbackMapModeTooltip id={id} label={label} entry={entry} />;
+}

@@ -319,11 +319,21 @@
   margin-left: 1rem;
 }
 
+.gfov-header-meters > .tooltip-wrapper {
+  display: flex;
+}
+
+.gfov-header-meters > .tooltip-wrapper + .tooltip-wrapper {
+  margin-left: 0.65rem;
+}
+
 .gfov-meter-card {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  box-sizing: border-box;
   width: 12rem;
+  height: 100%;
   padding: 0.5rem 0.65rem;
   border: 0.231rem solid transparent;
   border-image-source: url('/assets/gold-frame.png');
@@ -334,10 +344,6 @@
   background-image: url('/assets/chart-noise.png');
   background-size: 5.8182rem 5.8182rem;
   background-color: rgba(8, 12, 17, 0.38);
-}
-
-.gfov-meter-card + .gfov-meter-card {
-  margin-left: 0.65rem;
 }
 
 .gfov-meter-card--review {
@@ -378,8 +384,21 @@
   font-size: 0.88rem;
 }
 
+.gfov-meter-trend-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.32rem;
+  gap: 0.4rem;
+}
+
+.gfov-meter-trend-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
 .gfov-meter-trend {
-  margin-left: 0.5rem;
   font-size: 0.88rem;
   line-height: 1;
   white-space: nowrap;

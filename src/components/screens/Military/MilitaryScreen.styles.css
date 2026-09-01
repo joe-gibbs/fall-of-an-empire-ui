@@ -371,8 +371,7 @@
   border-left-color: var(--red-dark);
 }
 
-.chart-template-delete:hover,
-.chart-template-delete--confirm {
+.chart-template-delete:hover {
   color: var(--text-bright);
   background-color: rgba(120, 32, 42, 0.38);
   border-top-color: var(--red-light);
@@ -1544,8 +1543,7 @@
 }
 
 .chart-template-list-item:hover .chart-template-list-actions,
-.chart-template-list-item--selected .chart-template-list-actions,
-.chart-template-list-item--delete-pending .chart-template-list-actions {
+.chart-template-list-item--selected .chart-template-list-actions {
   opacity: 1;
   pointer-events: auto;
 }
@@ -2829,8 +2827,7 @@
   border-left-color: var(--red-dark);
 }
 
-.chart-template-action-button--danger.btn--outline:hover,
-.chart-template-action-button--confirm.btn--outline {
+.chart-template-action-button--danger.btn--outline:hover {
   color: var(--text-bright);
   background-image:
     linear-gradient(180deg, rgba(120, 32, 42, 0.28), rgba(80, 22, 30, 0.36)),
@@ -2898,14 +2895,6 @@
 
 .chart-template-footer-button--danger {
   color: var(--red-light);
-}
-
-.chart-template-footer-button--confirm {
-  color: var(--text-bright);
-  border-top-color: var(--red-light);
-  border-right-color: var(--red-light);
-  border-bottom-color: var(--red-light);
-  border-left-color: var(--red-light);
 }
 
 .chart-template-footer-button--disabled,
@@ -6298,8 +6287,7 @@
   border-left-color: rgba(255, 255, 255, 0.1);
 }
 
-.chart-screen--templates .chart-template-icon-choice--selected,
-.chart-screen--templates .chart-template-list-delete--confirm {
+.chart-screen--templates .chart-template-icon-choice--selected {
   border-width: 0 !important;
   background-image: none;
   background-color: rgba(201, 168, 76, 0.18);
@@ -6335,16 +6323,11 @@
   color: var(--gold-light);
 }
 
-.chart-screen--templates .chart-template-list-delete--confirm {
-  color: var(--text-bright);
-}
-
 .chart-screen--templates .chart-template-action-button--danger.btn--outline {
   color: var(--red-light);
 }
 
-.chart-screen--templates .chart-template-action-button--danger.btn--outline:hover,
-.chart-screen--templates .chart-template-action-button--confirm.btn--outline {
+.chart-screen--templates .chart-template-action-button--danger.btn--outline:hover {
   color: var(--text-bright);
 }
 

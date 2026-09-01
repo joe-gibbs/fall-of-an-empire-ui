@@ -58,6 +58,7 @@
   transition: background-color 0.12s, color 0.12s, border-color 0.12s, transform 0.12s ease-out;
   position: relative;
   z-index: 1;
+  overflow: hidden;
   white-space: nowrap;
 }
 
@@ -129,6 +130,19 @@
 .sidebar-tab--active .sidebar-tab-count {
   background-color: rgba(22, 18, 11, 0.42);
   color: var(--gold-light);
+}
+
+.sidebar-tab-label {
+  display: block;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.5rem;
+  game-ui-font-fit-max-size: 0.95rem;
 }
 
 .sidebar-tab-icon {

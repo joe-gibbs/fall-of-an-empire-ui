@@ -353,29 +353,26 @@
 }
 
 .province-tooltip-share-mode-list {
-  display: table;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 20rem;
 }
 
 .province-tooltip-share-mode-row {
-  display: table-row;
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
-.province-tooltip-share-mode-swatch-cell,
-.province-tooltip-share-mode-name-wrap,
-.province-tooltip-share-mode-values {
-  display: table-cell;
-  vertical-align: middle;
-}
-
-.province-tooltip-share-mode-row + .province-tooltip-share-mode-row .province-tooltip-share-mode-swatch-cell,
-.province-tooltip-share-mode-row + .province-tooltip-share-mode-row .province-tooltip-share-mode-name-wrap,
-.province-tooltip-share-mode-row + .province-tooltip-share-mode-row .province-tooltip-share-mode-values {
-  padding-top: 0.1364rem;
+.province-tooltip-share-mode-row + .province-tooltip-share-mode-row {
+  margin-top: 0.1364rem;
 }
 
 .province-tooltip-share-mode-swatch-cell {
   width: 0.5455rem;
   padding-right: 0.3636rem;
+  flex-shrink: 0;
 }
 
 .province-tooltip-share-mode-swatch {
@@ -387,8 +384,15 @@
 }
 
 .province-tooltip-share-mode-name-wrap {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  overflow: hidden;
   color: var(--text-bright);
   white-space: nowrap;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.5rem;
 }
 
 .province-tooltip-share-mode-name {
@@ -397,15 +401,24 @@
 
 .province-tooltip-share-mode-detail {
   color: var(--text-muted);
-  font-size: 0.6818rem;
+  font-size: 0.88em;
   line-height: 1.1;
   margin-left: 0.2727rem;
 }
 
 .province-tooltip-share-mode-values {
+  flex-shrink: 0;
   padding-left: 0.7273rem;
   color: var(--text-header);
   white-space: nowrap;
+  text-align: right;
+}
+
+.province-tooltip-share-mode-amount {
+  display: inline-block;
+  min-width: 3.4rem;
+  margin-right: 0.4545rem;
+  color: var(--text);
   text-align: right;
 }
 
@@ -417,7 +430,7 @@
 
 .province-tooltip-share-mode-change {
   display: inline-block;
-  min-width: 3.2rem;
+  min-width: 4.6rem;
   margin-left: 0.3636rem;
   color: var(--text-muted);
   text-align: right;

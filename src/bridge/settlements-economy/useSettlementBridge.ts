@@ -77,6 +77,8 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
     type: (data.type as Settlement['type']) || 'village',
     population: data.population,
     populationGrowth: data.populationGrowth,
+    populationCapacity: data.populationCapacity,
+    populationCapacityBreakdown: data.populationCapacityBreakdown.map(s => ({ name: s.name, value: s.value })),
     income: data.income,
     food: 0,
     foodProduction: data.foodProduction,

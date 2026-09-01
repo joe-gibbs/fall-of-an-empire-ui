@@ -4,6 +4,7 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
 import Tooltip from '../../common/tooltips/Tooltip';
+import NumberStepper from '../../common/forms/NumberStepper';
 import EntityLink from '../../common/entities/EntityLink';
 import CourtOfficeSummary from '../../common/entities/CourtOfficeSummary';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
@@ -37,6 +38,7 @@ import type {
 } from '../../../bridge-types.generated.ts';
 import { useBridgeQuery } from '../../../bridge/core/useBridgeQuery';
 import type { CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import {
   noteModifierKeysFromEvent,
@@ -985,9 +987,9 @@ function ShortagesDashboard({ resources, onOpenResource }: { resources: EconomyO
   );
 }
 
-function SummaryRow({ label, value, tone }: { label: string; value: ReactNode; tone?: string }) {
+function SummaryRow({ label, value, tone, className }: { label: string; value: ReactNode; tone?: string; className?: string }) {
   return (
-    <div className="econ-summary-row">
+    <div className={className ? `econ-summary-row ${className}` : 'econ-summary-row'}>
       <span>{label}</span>
       <strong className={tone}>{value}</strong>
     </div>
@@ -996,21 +998,103 @@ function SummaryRow({ label, value, tone }: { label: string; value: ReactNode; t
 
 function AutoBuyControl({ data }: { data: GetEconomyOverviewResponse | null }) {
   const t = useWebUIText();
-  const enabled = data?.autoBuyEnabled ?? false;
+  const foodTypes = useMemo(
+    () => (data?.resources ?? []).filter(row => row.category.toLowerCase() === 'food' && !row.aggregate),
+    [data?.resources],
+  );
+  const serverFoodId = data?.autoBuyFoodResource && foodTypes.some(row => row.id === data.autoBuyFoodResource)
+    ? data.autoBuyFoodResource
+    : (foodTypes[0]?.id ?? '');
+  const [enabled, setEnabled] = useState(false);
+  const [selectedId, setSelectedId] = useState('');
+  const [buyDraft, setBuyDraft] = useState(0);
+  const [draftKey, setDraftKey] = useState('');
+  const dataKey = `${data?.autoBuyEnabled ?? ''}:${data?.autoBuyFoodResource ?? ''}:${data?.autoBuyFoodThreshold ?? ''}`;
+  if (data && dataKey !== draftKey) {
+    setDraftKey(dataKey);
+    setEnabled(data.autoBuyEnabled);
+    setSelectedId(serverFoodId);
+    setBuyDraft(data.autoBuyFoodThreshold);
+  }
+
+  const commit = (nextEnabled: boolean, resourceId: string, threshold: number) => {
+    if (!data || !resourceId) return;
+    setEnabled(nextEnabled);
+    setSelectedId(resourceId);
+    setBuyDraft(threshold);
+    setEconomyAutoBuyBridge(nextEnabled, resourceId, threshold).catch(() => undefined);
+  };
+
   return (
-    <button
-      type="button"
-      className={`econ-toggle-btn${enabled ? ' econ-toggle-btn--active' : ''}`}
-      disabled={!data}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!data) return;
-        setEconomyAutoBuyBridge(!enabled).catch(() => undefined);
-      }}
-    >
-      {enabled ? t('Economy.Enabled') : t('Economy.Disabled')}
-    </button>
+    <div className="econ-auto-buy">
+      <div className="econ-auto-buy__foods">
+        {foodTypes.map(row => (
+          <Tooltip
+            key={row.id}
+            content={{ title: row.name }}
+            position="top"
+            delay={150}
+            inline
+            wrapperClassName="econ-auto-buy-food-tooltip"
+          >
+            <button
+              type="button"
+              className={`econ-auto-buy__food${row.id === selectedId ? ' econ-auto-buy__food--selected' : ''}`}
+              disabled={!data}
+              aria-pressed={row.id === selectedId}
+              aria-label={row.name}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!data || row.id === selectedId) return;
+                commit(enabled, row.id, buyDraft);
+              }}
+            >
+              <img src={WebkilnAssetPath(`/assets/resources/${row.id}.png`)} alt="" draggable={false} />
+            </button>
+          </Tooltip>
+        ))}
+      </div>
+      <Tooltip
+        content={{
+          title: t('Economy.AutoBuyTarget'),
+          body: t('Economy.AutoBuyFoodExplanation'),
+        }}
+        position="top"
+        delay={150}
+        inline
+        wrapperClassName="econ-auto-buy-amount-tooltip"
+      >
+        <div className="econ-auto-buy__amount">
+          <span className="econ-auto-buy__amount-label">{t('Economy.AutoBuyTargetShort')}</span>
+          <NumberStepper
+            value={buyDraft}
+            min={0}
+            step={data?.autoSellThresholdStep ?? 500}
+            disabled={!data || !selectedId}
+            className="econ-auto-buy-stepper"
+            buttonClassName="econ-auto-buy-step"
+            buttonDisabledClassName="econ-auto-buy-step--disabled"
+            formatValue={value => String(Math.round(value))}
+            onChange={setBuyDraft}
+            onCommit={next => commit(enabled, selectedId, next)}
+          />
+        </div>
+      </Tooltip>
+      <button
+        type="button"
+        className={`econ-toggle-btn${enabled ? ' econ-toggle-btn--active' : ''}`}
+        disabled={!data || !selectedId}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!data || !selectedId) return;
+          commit(!enabled, selectedId, buyDraft);
+        }}
+      >
+        {enabled ? t('Economy.Enabled') : t('Economy.Disabled')}
+      </button>
+    </div>
   );
 }
 
@@ -1792,7 +1876,7 @@ function FoodTab({ data }: { data: GetEconomyOverviewResponse | null }) {
           <SummaryRow label={t('Economy.ForceUse')} value={`${negativeFmt1(data?.militaryFoodConsumption)}${t('Economy.PerMonth')}`} tone="econ-negative" />
           <SummaryRow label={t('Economy.NetChange')} value={`${signed(data?.foodNet)}${t('Economy.PerMonth')}`} tone={valueClass(data?.foodNet)} />
           <SummaryRow label={t('Economy.FoodStockpiles')} value={fmt1(data?.totalFood)} />
-          <SummaryRow label={t('Economy.AutoBuy')} value={<AutoBuyControl data={data} />} />
+          <SummaryRow className="econ-summary-row--auto-buy" label={t('Economy.AutoBuy')} value={<AutoBuyControl data={data} />} />
         </div>
       </section>
       <EconomyTable

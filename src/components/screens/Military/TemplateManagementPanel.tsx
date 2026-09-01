@@ -6,8 +6,10 @@ import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import GameButton from '../../common/buttons/GameButton';
 import GameCheckButton from '../../common/buttons/GameCheckButton';
+import ConfirmDialog from '../../common/forms/ConfirmDialog';
 import ModalDragHandle from '../../common/layout/shell/ModalDragHandle';
 import Tooltip from '../../common/tooltips/Tooltip';
+import { dismissSharedTooltips } from '../../common/tooltips/tooltipEvents';
 import UnitTooltip, { type UnitTooltipData } from '../../common/tooltips/UnitTooltip';
 import { useGameActions } from '../../../context/GameContext';
 import { useMilitary } from '../../../data-source/index';
@@ -194,7 +196,6 @@ function TemplateListItem({
   onSelect,
   onDuplicate,
   onDelete,
-  deletePending,
   duplicateDisabled,
   deleteDisabled,
 }: {
@@ -203,18 +204,15 @@ function TemplateListItem({
   onSelect: (templateId: string) => void;
   onDuplicate: (templateId: string) => void;
   onDelete: (templateId: string) => void;
-  deletePending: boolean;
   duplicateDisabled: boolean;
   deleteDisabled: boolean;
 }) {
   const iconProfile = getFormationTemplateIcon(template.type, template.units, template.iconId);
   const duplicateTitle = webUIText('Auto.Prop.componentssidebarsFormationTemplateSidebar.1060.1');
-  const deleteTitle = deletePending
-    ? webUIText('FormationTemplate.ConfirmDeleteButton')
-    : webUIText('FormationTemplate.DeleteButton');
+  const deleteTitle = webUIText('FormationTemplate.DeleteButton');
 
   return (
-    <div className={`chart-template-list-item${selected ? ' chart-template-list-item--selected' : ''}${deletePending ? ' chart-template-list-item--delete-pending' : ''}`}>
+    <div className={`chart-template-list-item${selected ? ' chart-template-list-item--selected' : ''}`}>
       <button
         type="button"
         className="chart-template-list-select"
@@ -260,13 +258,13 @@ function TemplateListItem({
         <Tooltip
           content={{
             title: deleteTitle,
-            body: deletePending ? webUIText('FormationTemplate.DeleteConfirmMessage') : template.name,
+            body: template.name,
           }}
           position="right"
         >
           <button
             type="button"
-            className={`chart-template-list-delete${deletePending ? ' chart-template-list-delete--confirm' : ''}`}
+            className="chart-template-list-delete"
             aria-label={deleteTitle}
             disabled={!template.canDelete || deleteDisabled}
             onClick={event => {
@@ -1727,7 +1725,7 @@ export function TemplatesPanel({
   const [creatingTemplate, setCreatingTemplate] = useState(initialCreateType !== null);
   const [newTemplateType, setNewTemplateType] = useState<TemplateCreateType>(initialCreateType ?? 'land');
   const [newTemplateVersion, setNewTemplateVersion] = useState(0);
-  const [pendingDeleteTemplateId, setPendingDeleteTemplateId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [listActionActive, setListActionActive] = useState(false);
 
   const selectedTemplateType = !creatingTemplate
@@ -1799,24 +1797,25 @@ export function TemplatesPanel({
     setSelectedTemplateId(null);
     setCreatingTemplate(true);
     setTemplateMessage('');
-    setPendingDeleteTemplateId(null);
+    setDeleteTarget(null);
     setNewTemplateVersion(version => version + 1);
   };
   const selectTemplate = (templateId: string) => {
     setSelectedTemplateId(templateId);
     setCreatingTemplate(false);
     setTemplateMessage('');
-    setPendingDeleteTemplateId(null);
+    setDeleteTarget(null);
   };
-  const deleteTemplateFromList = (templateId: string) => {
+  const requestDeleteTemplateFromList = (templateId: string) => {
     const targetTemplate = visibleTemplates.find(template => template.id === templateId);
     if (!targetTemplate || !targetTemplate.canDelete || listActionActive) return;
 
-    if (pendingDeleteTemplateId !== templateId) {
-      setPendingDeleteTemplateId(templateId);
-      setTemplateMessage(webUIText('FormationTemplate.DeleteConfirmMessage'));
-      return;
-    }
+    dismissSharedTooltips();
+    setDeleteTarget({ id: templateId, name: targetTemplate.name });
+  };
+  const executeDeleteTemplateFromList = () => {
+    const templateId = deleteTarget?.id;
+    if (!templateId || listActionActive) return;
 
     setListActionActive(true);
     setTemplateMessage('');
@@ -1834,7 +1833,7 @@ export function TemplatesPanel({
       })
       .catch(acknowledgeBridgeFailure)
       .finally(() => {
-        setPendingDeleteTemplateId(null);
+        setDeleteTarget(null);
         setListActionActive(false);
       });
   };
@@ -1844,7 +1843,7 @@ export function TemplatesPanel({
 
     setListActionActive(true);
     setTemplateMessage('');
-    setPendingDeleteTemplateId(null);
+    setDeleteTarget(null);
     void saveFormationTemplateBridge({
       templateId: '',
       name: webUIText("FormationTemplateSidebar.Copy", { Value1: sourceTemplate.name.trim() }),
@@ -1879,6 +1878,7 @@ export function TemplatesPanel({
     : `new-${editorType}-${newTemplateVersion}`;
 
   return (
+    <>
     <div className="chart-template-panel">
       {templateMessage && <div className="chart-template-status">{templateMessage}</div>}
       {!assignmentTemplateType && (
@@ -1891,7 +1891,7 @@ export function TemplatesPanel({
               setNewTemplateType(nextType);
               setSelectedTemplateId(null);
               setTemplateMessage('');
-              setPendingDeleteTemplateId(null);
+              setDeleteTarget(null);
             }}
           />
         </div>
@@ -1929,8 +1929,7 @@ export function TemplatesPanel({
               selected={!creatingTemplate && template.id === selectedTemplate?.id}
               onSelect={selectTemplate}
               onDuplicate={duplicateTemplateFromList}
-              onDelete={deleteTemplateFromList}
-              deletePending={pendingDeleteTemplateId === template.id}
+              onDelete={requestDeleteTemplateFromList}
               duplicateDisabled={listActionActive || template.units.every(unit => unit.count <= 0)}
               deleteDisabled={listActionActive}
             />
@@ -1955,5 +1954,18 @@ export function TemplatesPanel({
         />
       </div>
     </div>
+    {createPortal(
+      <ConfirmDialog
+        visible={deleteTarget !== null}
+        title={webUIText('FormationTemplate.DeleteConfirmTitle', { Name: deleteTarget?.name ?? '' })}
+        message={webUIText('FormationTemplate.DeleteConfirmMessage')}
+        confirmText={webUIText('FormationTemplate.DeleteButton')}
+        variant="danger"
+        onConfirm={executeDeleteTemplateFromList}
+        onClosed={() => setDeleteTarget(null)}
+      />,
+      document.body,
+    )}
+    </>
   );
 }

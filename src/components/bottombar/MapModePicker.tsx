@@ -15,7 +15,7 @@ import { requestGamepadFocusRefresh } from '../../input/gamepadFocusEvents';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import Tooltip from '../common/tooltips/Tooltip';
 import { MAP_MODE_ICONS } from './mapModeIcons';
-import { MAP_MODE_TOOLTIPS } from './mapModeTooltipContent';
+import { mapModeTooltipForMode } from './mapModeTooltipContent';
 import './MapModePicker.css';
 
 const ROWS: string[][][] = [
@@ -97,7 +97,7 @@ const MapModePicker: React.FC = () => {
   }, [mounted]);
 
   const triggerTooltip = active
-    ? (MAP_MODE_TOOLTIPS[active] ?? { title: activeLabel })
+    ? mapModeTooltipForMode(active, activeLabel, activeEntry)
     : { title: webUIText('Topbar.MapModes') };
 
   return (
@@ -137,7 +137,7 @@ const MapModePicker: React.FC = () => {
                 const entry = state?.byId.get(id);
                 const label = entry?.label ?? id;
                 const isActive = active === id;
-                const itemTooltip = MAP_MODE_TOOLTIPS[id] ?? { title: label };
+                const itemTooltip = mapModeTooltipForMode(id, label, entry);
                 return (
                   <Tooltip
                     key={id}

@@ -210,6 +210,19 @@
   align-self: center;
 }
 
+.tt-subtitle {
+  font-size: 1.12rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-bright);
+  padding: 0.077rem 0.615rem 0.154rem;
+  overflow-wrap: break-word;
+}
+
+.tt-subtitle + .tt-body {
+  padding-top: 0;
+}
+
 .tt-body {
   font-size: 1rem;
   color: var(--text-muted);

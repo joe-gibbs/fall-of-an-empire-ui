@@ -64,11 +64,16 @@
   min-width: 2.8rem;
 }
 
-.settle-header-type-badge {
+.settle-header-type-tooltip {
   position: absolute;
   top: 0.5rem;
   right: 0.6rem;
   z-index: 3;
+  width: 2rem;
+  height: 2rem;
+}
+
+.settle-header-type-badge {
   width: 2rem;
   height: 2rem;
   display: flex;

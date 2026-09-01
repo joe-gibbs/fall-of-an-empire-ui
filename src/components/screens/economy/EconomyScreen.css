@@ -510,6 +510,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0;
   min-height: 2.35rem;
   padding: 0.32rem 0.7rem;
   border-top: 0.077rem solid rgba(201, 168, 76, 0.32);
@@ -530,6 +532,7 @@
 .econ-flow-footer__aside {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.35rem;
   margin-left: 2rem;
   padding-left: 2rem;
@@ -548,6 +551,109 @@
   align-items: center;
   gap: 0.35rem;
   margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 0.077rem solid rgba(201, 168, 76, 0.22);
+}
+
+.econ-auto-buy {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  text-transform: none;
+}
+
+.econ-auto-buy__foods {
+  display: flex;
+  align-items: center;
+  gap: 0.18rem;
+}
+
+.econ-auto-buy-food-tooltip,
+.econ-auto-buy-amount-tooltip {
+  display: inline-flex;
+}
+
+.econ-auto-buy__food {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  padding: 0.12rem;
+  color: var(--text-muted);
+  background-color: rgba(8, 12, 17, 0.24);
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(201, 168, 76, 0.18);
+  cursor: var(--cursor-pointer);
+}
+
+.econ-auto-buy__food img {
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+}
+
+.econ-auto-buy__food--selected {
+  color: var(--gold-light);
+  background-color: rgba(126, 92, 28, 0.38);
+  border-color: rgba(201, 168, 76, 0.55);
+}
+
+.econ-auto-buy__food[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.econ-auto-buy__amount {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+}
+
+.econ-auto-buy__amount-label {
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.econ-auto-buy-step {
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.15rem;
+  border: 0.077rem solid rgba(201, 168, 76, 0.3);
+  color: var(--text-muted);
+  background: rgba(15, 20, 25, 0.85);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: var(--cursor-pointer);
+}
+
+.econ-auto-buy-step--disabled {
+  opacity: 0.55;
+}
+
+.econ-auto-buy .number-stepper__input {
+  width: 4.2rem;
+  height: 1.35rem;
+  padding: 0 0.22rem;
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 0.7rem;
+  text-align: right;
+}
+
+.econ-summary-row--auto-buy {
+  flex: 1 0 100%;
+  margin-right: 0;
+  align-items: center;
+}
+
+.econ-summary-row--auto-buy strong {
+  white-space: normal;
 }
 
 .econ-breakdown-caret {
@@ -2163,6 +2269,11 @@ button.econ-command-cost__row:focus-visible {
   }
 
   .econ-summary-row:nth-child(2n) {
+    margin-right: 0;
+  }
+
+  .econ-summary-row--auto-buy {
+    flex-basis: 100%;
     margin-right: 0;
   }
 

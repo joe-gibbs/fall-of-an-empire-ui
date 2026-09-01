@@ -43,20 +43,26 @@ function normaliseModifierId(value: string | undefined): string {
     .replace(/[\s_-]+/g, '');
 }
 
-export function knownModifierSubTooltip(key?: string, label?: string): TooltipContent | undefined {
+export function knownModifierSubTooltip(
+  key?: string,
+  label?: string,
+  characterName?: string,
+): TooltipContent | undefined {
   const relationshipTitle = webUIText('Interaction.Factor.Relationship.Title');
   const relationshipIds = [
     'relationship',
     'relationships',
+    'opinionofyou',
     normaliseModifierId(relationshipTitle),
     normaliseModifierId(webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1144.37')),
     normaliseModifierId(webUIText('Auto.ComponentsModalsPersonInteractionGiftModal.191.7')),
   ];
   const candidates = [key, label].map(normaliseModifierId);
   if (candidates.some(id => id.length > 0 && relationshipIds.includes(id))) {
+    const name = characterName?.trim() || webUIText('Interaction.Factor.Relationship.ThisCharacter');
     return {
       title: relationshipTitle,
-      body: webUIText('Interaction.Factor.Relationship.Body'),
+      body: webUIText('Interaction.Factor.Relationship.Body', { Name: name }),
     };
   }
 
@@ -152,6 +158,18 @@ function specialistTraitForRole(character: Character | null | undefined, role: R
   return character?.traits.find(trait => ids.includes(trait.id.trim().toLowerCase()));
 }
 
+/** Role bodies lead with "{Xp}/1000 XP." so that line can sit above the description. */
+function splitRoleExperienceBody(body: string): { subtitle: string; body: string } {
+  const splitAt = body.indexOf('. ');
+  if (splitAt < 0) {
+    return { subtitle: '', body };
+  }
+  return {
+    subtitle: body.slice(0, splitAt),
+    body: body.slice(splitAt + 2),
+  };
+}
+
 export function buildRoleSkillTooltip(options: {
   role: RoleSkillKey;
   label: string;
@@ -184,12 +202,14 @@ export function buildRoleSkillTooltip(options: {
     }
   }
 
+  const { subtitle, body } = splitRoleExperienceBody(webUIText(options.bodyKey, { Xp: options.xp }));
   return {
     title: webUIText('Auto.Prop.componentssidebarsCharacterSidebar.1230.1', {
       Label: options.label,
       Label2: options.tier.label,
     }),
-    body: webUIText(options.bodyKey, { Xp: options.xp }),
+    subtitle: subtitle || undefined,
+    body,
     lines,
   };
 }

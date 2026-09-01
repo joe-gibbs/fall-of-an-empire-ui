@@ -184,6 +184,7 @@ function mapAvailableBuilding(entry: SettlementAvailableBuildingEntry): Availabl
     developedFrom: entry.developedFrom || undefined,
     canBeDevelopedInto: entry.canBeDevelopedInto,
     requiredBuildings: entry.requiredBuildings.map(mapRequirement),
+    replacesParent: entry.replacesParent,
     buildState: toBuildState(entry.buildState),
   };
 }
@@ -195,6 +196,8 @@ function mapQueueItem(item: RawQueueItem): ConstructionQueueItem {
     assetKey: item.assetKey,
     name: item.name,
     icon: buildingPortrait(item.assetKey),
+    description: item.description || undefined,
+    effectsText: item.effectsHtml || undefined,
     kind: item.kind === 'upgrade' || item.kind === 'rebuild' ? item.kind : 'new',
     toLevel: item.toLevel,
     goldCost: item.goldCost,

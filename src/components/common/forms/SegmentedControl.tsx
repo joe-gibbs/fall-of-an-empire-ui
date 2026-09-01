@@ -15,7 +15,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, active, on
         className={`segmented-btn${active === opt.id ? ' segmented-btn--active' : ''}`}
         onClick={() => { playSound('tab'); onChange(opt.id); }}
       >
-        {opt.label}
+        <span className="segmented-btn-label">{opt.label}</span>
       </button>
     ))}
   </div>

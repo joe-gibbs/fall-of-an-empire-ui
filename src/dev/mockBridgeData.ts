@@ -373,6 +373,9 @@ interface MockBridgeState {
   eventKind: MockEventKind;
   tutorialSpotlightVisible: boolean;
   autoAssignGovernorsEnabled: boolean;
+  autoBuyEnabled: boolean;
+  autoBuyFoodResource: string;
+  autoBuyFoodThreshold: number;
   autoAssignCourtEnabled: boolean;
   enteredCourtContestKeys: string[];
   autoAssignClergyEnabled: boolean;
@@ -1651,7 +1654,9 @@ function mockProvinceModeOverview(state: MockBridgeState): BridgeResponse<'game.
     emperor: mockProvinceModePerson(MOCK_IDS.character),
     successor: mockProvinceModePerson(MOCK_IDS.heir),
     standingScore: active ? 72 : 0,
-    standingTrend: active ? 2 : 0,
+    standingTrend: active ? 3 : 0,
+    standingTrendParts: active ? [{ label: 'Standing is 72, above 70', value: 3 }] : [],
+    standingTrendReason: '',
     threatScore: active ? 38 : 0,
     recallStage: active ? 1 : 0,
     nextReviewDays: 27,
@@ -2138,6 +2143,26 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     hasPort: isPort,
     population: isPort ? 142000 : 384000,
     populationGrowth: isPort ? 960 : 1820,
+    populationCapacity: isPort ? 147000 : 340000,
+    populationCapacityBreakdown: isPort
+      ? [
+          { name: 'Natural Limit', value: 75000 },
+          { name: 'Forum', value: 16000 },
+          { name: 'Granary', value: 10000 },
+          { name: 'Well', value: 10000 },
+          { name: 'Horreum', value: 20000 },
+          { name: 'Physicians', value: 16000 },
+        ]
+      : [
+          { name: 'Natural Limit', value: 75000 },
+          { name: 'Capital', value: 15000 },
+          { name: 'Aqueduct', value: 80000 },
+          { name: 'Bathhouse', value: 85000 },
+          { name: 'Forum', value: 24000 },
+          { name: 'Horreum', value: 30000 },
+          { name: 'Granary', value: 15000 },
+          { name: 'Physicians', value: 16000 },
+        ],
     income: isPort ? 46 : 122,
     foodProduction: isPort ? 540 : 980,
     foodConsumption: isPort ? 610 : 1210,
@@ -2588,7 +2613,10 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
     snapshotDay: 249409,
     conditionOnly: false,
     buildings: [
-      settlementBuilding('Forum', 'Forum', 3, 'administrative'),
+      {
+        ...settlementBuilding('Forum', 'Forum', 3, 'administrative'),
+        nextBuildState: { state: 'greyed', reason: 'Upgrade already queued to maximum level.', blockedByPopulation: false },
+      },
       settlementBuilding('Granary', 'Granary', 2, 'economic', 42),
       settlementBuilding(id === MOCK_IDS.portSettlement ? 'Docks' : 'Barracks', id === MOCK_IDS.portSettlement ? 'Docks' : 'Barracks', 2, id === MOCK_IDS.portSettlement ? 'naval' : 'military'),
     ],
@@ -2623,6 +2651,7 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
       developedFrom: entry.developedFrom,
       canBeDevelopedInto: entry.canBeDevelopedInto,
       requiredBuildings: entry.requiredBuildings,
+      replacesParent: entry.replacesParent,
       buildState: entry.buildState,
     })),
     hasPort: id === MOCK_IDS.portSettlement,
@@ -2633,6 +2662,8 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
           queueIndex: 0,
           assetKey: 'Aqueduct',
           name: 'Aqueduct',
+          description: 'A raised channel that brings water into the settlement.',
+          effectsHtml: '<bullet><colour green>+10% population growth per level</></>\n<bullet><colour green>Reduces unrest from overcrowding</></>',
           kind: 'new',
           toLevel: 1,
           goldCost: 720,
@@ -2649,6 +2680,8 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
           queueIndex: 1,
           assetKey: 'Forum',
           name: 'Forum',
+          description: 'A civic centre where magistrates manage records, levies, and petitions.',
+          effectsHtml: '<bullet><colour green>Improves local output</></>',
           kind: 'upgrade',
           toLevel: 4,
           goldCost: 540,
@@ -3611,6 +3644,9 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
     foodExpenseTotal: 234,
     foodNet: 18,
     autoBuyEnabled: true,
+    autoBuyFoodResource: 'Grain',
+    autoBuyFoodThreshold: 500,
+    autoBuyFoodSliderMax: 1500,
     resources: [
       {
         id: 'Food',
@@ -5382,6 +5418,9 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       : searchParams.has('recall') ? 'recall' : 'court',
     tutorialSpotlightVisible: searchParams.has('tutorialSpotlight'),
     autoAssignGovernorsEnabled: true,
+    autoBuyEnabled: true,
+    autoBuyFoodResource: 'Grain',
+    autoBuyFoodThreshold: 500,
     autoAssignCourtEnabled: true,
     enteredCourtContestKeys: ['masterofeconomy'],
     autoAssignClergyEnabled: true,
@@ -5730,7 +5769,9 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       goldCost: 200,
       canConfirm: destinationSelected,
       interactionName: 'Relocate Population',
-      description: 'Relocate people to another settlement. Causes unrest there and angers its leader.',
+      description: destinationSelected
+        ? 'Relocate people from Aurelion to Ara Salimba. Causes unrest there and angers its leader.'
+        : 'Relocate people to another settlement. Causes unrest there and angers its leader.',
       message: destinationSelected
         ? 'About 1,200 people will migrate to Ara Salimba.'
         : 'Select a settlement for these people to move to.',
@@ -6167,8 +6208,22 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           message: 'Your clients have formed a faction around you.',
           blocId: MOCK_IDS.powerBloc,
         } satisfies BridgeResponse<'game.form_personal_power_bloc'>;
-      case 'game.get_economy_overview':
-        return clone(economyOverview());
+      case 'game.get_economy_overview': {
+        const overview = clone(economyOverview());
+        overview.autoBuyEnabled = state.autoBuyEnabled;
+        overview.autoBuyFoodResource = state.autoBuyFoodResource;
+        overview.autoBuyFoodThreshold = state.autoBuyFoodThreshold;
+        return overview;
+      }
+      case 'game.set_economy_auto_buy': {
+        state.autoBuyEnabled = payloadBoolean(payload, 'enabled', false);
+        const resourceId = payloadString(payload, 'resourceId', '');
+        if (resourceId) state.autoBuyFoodResource = resourceId;
+        if (typeof payloadValue(payload, 'threshold') === 'number') {
+          state.autoBuyFoodThreshold = payloadNumber(payload, 'threshold');
+        }
+        return undefined;
+      }
       case 'game.get_economy_resource_details':
         return clone(economyResourceDetails(payloadString(payload, 'resourceId', 'Grain')));
       case 'game.get_diplomacy_overview':
@@ -7024,9 +7079,9 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         ], lastCompletedInteractionId: '', lastInteractionSucceeded: false, lastInteractionCompletedDate: 0, lastInteractionOutcomeText: '' } satisfies BridgeResponse<'game.get_person_interactions'>;
       case 'game.get_settlement_interactions':
         return { settlementId: payloadString(payload, 'settlementId', MOCK_IDS.settlement), interactions: [
-          { id: 'hold-games', name: 'Hold Games', description: 'Spend gold to reduce unrest and raise prestige.', effectLines: mockDisplayLines('Cost: 180 gold. Time: 30 days. Success chance: 100%.'), iconId: 'PromoteCommerceInteraction', backgroundId: 'PromoteCommerceInteraction', scope: 'settlement', goldCost: 180, durationDays: 30, cooldownDays: 180, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 12, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, reasons: [], successFactors: [{ name: 'Forum access', percent: 10 }, { name: 'Temple support', percent: 8 }], needsDestinationSelection: false },
-          { id: 'market-charter', name: 'Grant Market Charter', description: 'Encourage merchants with a temporary civic privilege.', effectLines: mockDisplayLines('Cost: 140 gold. Time: 45 days. Success chance: 100%.'), iconId: 'PromoteCommerceInteraction', backgroundId: 'PromoteCommerceInteraction', scope: 'settlement', goldCost: 140, durationDays: 45, cooldownDays: 120, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 16, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, reasons: [], successFactors: [{ name: 'Trade roads', percent: 12 }, { name: 'Governor skill', percent: 7 }], needsDestinationSelection: false },
-          { id: 'relocatepopulationinteraction', name: 'Relocate Population', description: 'Relocate people to another settlement. Causes unrest there and angers its leader.', effectLines: mockDisplayLines('About 1,200 people move to the destination. Unrest there rises by 12, and its leader loses 10 opinion for 180 days.'), iconId: 'RelocatePopulationInteraction', backgroundId: 'RelocatePopulationInteraction', scope: 'settlement', goldCost: 200, durationDays: 30, cooldownDays: 90, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 12, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, reasons: [], successFactors: [{ name: 'Guaranteed', percent: 100 }], needsDestinationSelection: true },
+          { id: 'hold-games', name: 'Hold Games', description: 'Spend gold to reduce unrest and raise prestige.', effectLines: mockDisplayLines('Cost: 180 gold. Time: 30 days. Success chance: 100%.'), iconId: 'PromoteCommerceInteraction', backgroundId: 'PromoteCommerceInteraction', scope: 'settlement', goldCost: 180, durationDays: 30, cooldownDays: 180, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 12, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, reasons: [], successFactors: [{ name: 'Forum access', percent: 10 }, { name: 'Temple support', percent: 8 }], needsDestinationSelection: false, destinationName: '' },
+          { id: 'market-charter', name: 'Grant Market Charter', description: 'Encourage merchants with a temporary civic privilege.', effectLines: mockDisplayLines('Cost: 140 gold. Time: 45 days. Success chance: 100%.'), iconId: 'PromoteCommerceInteraction', backgroundId: 'PromoteCommerceInteraction', scope: 'settlement', goldCost: 140, durationDays: 45, cooldownDays: 120, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 16, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, reasons: [], successFactors: [{ name: 'Trade roads', percent: 12 }, { name: 'Governor skill', percent: 7 }], needsDestinationSelection: false, destinationName: '' },
+          { id: 'relocatepopulationinteraction', name: 'Relocate Population', description: 'Relocate people from Aurelion to Ara Salimba. Causes unrest there and angers its leader.', effectLines: mockDisplayLines('About 1,200 people move to Ara Salimba. Unrest there rises by 12, and its leader loses 10 opinion for 180 days.'), iconId: 'RelocatePopulationInteraction', backgroundId: 'RelocatePopulationInteraction', scope: 'settlement', goldCost: 200, durationDays: 30, cooldownDays: 90, cooldownRemainingDays: 0, availability: 'available', inProgress: false, remainingDays: 0, bureaucraticLoad: 12, bureaucraticRushDaysSaved: 0, bureaucraticRushLoad: 0, successChancePercent: 100, reasons: [], successFactors: [{ name: 'Guaranteed', percent: 100 }], needsDestinationSelection: true, destinationName: 'Ara Salimba' },
         ], lastCompletedInteractionId: '', lastInteractionSucceeded: false, lastInteractionCompletedDate: 0, lastInteractionOutcomeText: '' } satisfies BridgeResponse<'game.get_settlement_interactions'>;
       case 'game.get_bloc_interactions':
         return { blocId: payloadString(payload, 'blocId', MOCK_IDS.powerBloc), interactions: [
@@ -7826,7 +7881,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       emit('game.notification_shown', {
         id: `mock-buildq-toast-${createdOnDay}-${Date.now()}`,
         title: 'Granary finished',
-        description: `in <link type="settlement" id="${MOCK_IDS.settlement}">Aurelion</>`,
+        description: `In the settlement: <link type="settlement" id="${MOCK_IDS.settlement}">Aurelion</>`,
         type: 'settlement',
         notificationTypeId: 'BuildingFinished',
         notificationTypeLabel: 'Buildings Finished',

@@ -622,6 +622,8 @@ export interface AvailableBuilding {
   developedFrom?: string;
   canBeDevelopedInto?: string[];
   requiredBuildings?: BuildingRequirement[];
+  /** If true, building this removes the predecessor (default behaviour). */
+  replacesParent?: boolean;
   /** Result of GetEffectiveBuildButtonInfo for this settlement. */
   buildState: BuildingBuildState;
 }
@@ -635,6 +637,10 @@ export interface ConstructionQueueItem {
   assetKey: string;
   name: string;
   icon?: string;
+  /** Long description shown in the queue-card tooltip. */
+  description?: string;
+  /** Authored building effect rich text for the queued level. */
+  effectsText?: string;
   /** 'new' = fresh build; 'upgrade' = level+1; 'rebuild' = restore a ruin at its current level. */
   kind: 'new' | 'upgrade' | 'rebuild';
   toLevel: number;
@@ -960,6 +966,10 @@ export interface Settlement {
   population: number;
   /** Absolute monthly population change in people. */
   populationGrowth: number;
+  /** Comfortable population before overcrowding tapers growth. */
+  populationCapacity: number;
+  /** Base limit plus each source that raises or lowers it. */
+  populationCapacityBreakdown?: ModifierSource[];
   income: number;
   food: number;
   foodProduction: number;

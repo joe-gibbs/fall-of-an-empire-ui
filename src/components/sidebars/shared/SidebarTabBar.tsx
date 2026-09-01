@@ -38,7 +38,7 @@ const SidebarTabBar: React.FC<SidebarTabBarProps> = ({ tabs, activeTab, onTabCha
           onClick={() => { playSound('tab'); handleChange(tab.id); }}
         >
           {tab.icon && <img src={WebkilnAssetPath(tab.icon)} alt="" className="sidebar-tab-icon" draggable={false} />}
-          {tab.label}
+          <span className="sidebar-tab-label">{tab.label}</span>
           {tab.count !== undefined && (
             <span className="sidebar-tab-count">{formatNumber(tab.count)}</span>
           )}

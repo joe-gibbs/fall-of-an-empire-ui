@@ -1,4 +1,5 @@
 import { webUIText } from '../localization/WebUITextContext';
+import { formatNumber } from './numberFormat';
 
 const PERSON_ACTIVITY_LABEL_KEYS: Record<string, string> = {
   RulingFaction: 'Display.PersonActivity.RulingFaction',
@@ -83,6 +84,17 @@ const SETTLEMENT_TYPE_LABEL_KEYS: Record<string, string> = {
   mining: 'Ledger.SettlementType.Mining',
 };
 
+const SETTLEMENT_TYPE_BODY_KEYS: Record<string, string> = {
+  village: 'Settlement.Type.Village.Body',
+  town: 'Settlement.Type.Town.Body',
+  city: 'Settlement.Type.City.Body',
+  metropolis: 'Settlement.Type.Metropolis.Body',
+  fortress: 'Settlement.Type.Fortress.Body',
+  monastery: 'Settlement.Type.Monastery.Body',
+  port: 'Settlement.Type.Port.Body',
+  mining: 'Settlement.Type.Mining.Body',
+};
+
 const UNIT_TYPE_LABEL_KEYS: Record<string, string> = {
   infantry: 'Military.UnitType.Infantry',
   cavalry: 'Military.UnitType.Cavalry',
@@ -126,6 +138,16 @@ export function formatSettlementType(value: string | null | undefined): string {
   if (!source) return '';
   const key = SETTLEMENT_TYPE_LABEL_KEYS[source];
   return key ? webUIText(key) : '';
+}
+
+export function formatSettlementTypeDescription(
+  value: string | null | undefined,
+  population?: number,
+): string {
+  const source = (value ?? '').trim().toLowerCase();
+  if (!source) return '';
+  const key = SETTLEMENT_TYPE_BODY_KEYS[source];
+  return key ? webUIText(key, { Population: formatNumber(population ?? 0) }) : '';
 }
 
 export function unitTypeLabel(type: string): string {

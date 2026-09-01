@@ -34,6 +34,7 @@ import { getRuntimeEngine } from './bridge/core/runtimeEngine'
 import { bindUIPerfCommands, recordUIPerfBridgeEvent } from './perf/uiPerfProfiler'
 import { bindBridgeEventRuntime, publishBridgeEvent, subscribeBridgeEvent } from './bridge/core/bridgeEvents'
 import { installImageAutosize } from './utils/imageAutosize'
+import { installFontFit } from './utils/fontFit'
 import { NATIVE_BRIDGE_PROTOCOL } from './native-bridge-protocol.generated'
 import {
   bridgeEventPayload,
@@ -362,6 +363,7 @@ async function bootstrap() {
   }
   configureWebkilnInput();
   installImageAutosize();
+  installFontFit();
   await modsReady;
 
   const hudRoot = document.getElementById('root')!

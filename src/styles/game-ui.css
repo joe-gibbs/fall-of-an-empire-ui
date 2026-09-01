@@ -372,6 +372,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
   padding: 0.308rem 0.769rem;
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -387,6 +388,7 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
   transition: border-color 0.15s, color 0.15s;
 }
 
@@ -445,10 +447,17 @@
 }
 
 .btn-content {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.62rem;
+  game-ui-font-fit-max-size: 0.9rem;
 }
 
 .btn-content > * + * {
@@ -460,6 +469,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
   padding: 0.231rem 0.769rem;
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -475,6 +485,8 @@
   border-bottom-color: var(--border);
   border-left-color: var(--border);
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s ease-out;
 }
 
@@ -499,6 +511,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
   padding: 0.154rem 0.615rem;
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -506,6 +519,8 @@
   background: transparent;
   border: 0.077rem solid transparent;
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
   transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.12s ease-out;
 }
 
@@ -1020,6 +1035,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 1;
+  min-width: 0;
   padding: 0.231rem 0.769rem;
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -1034,7 +1051,22 @@
   border-right-color: var(--border-dim);
   cursor: pointer;
   position: relative;
+  overflow: hidden;
+  white-space: nowrap;
   transition: color 0.15s, background 0.15s, transform 0.12s ease-out;
+}
+
+.segmented-btn-label {
+  display: block;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.62rem;
+  game-ui-font-fit-max-size: 0.9rem;
 }
 
 .segmented-btn:last-child {

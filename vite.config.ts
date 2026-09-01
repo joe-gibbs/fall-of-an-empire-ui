@@ -289,6 +289,23 @@ const NESTED_UPDATE_DEPTH_MESSAGE =
  * createRoot onUncaughtError, so without this the Unreal log only shows the
  * generic message.
  */
+function rewriteGameUiFontFitCss(): Plugin {
+  return {
+    name: 'rewrite-game-ui-font-fit-css',
+    enforce: 'pre',
+    transform(code, id) {
+      const file = id.split('?', 1)[0]
+      if (!file.endsWith('.css')) return null
+      const next = code.replace(
+        /(^|[{;\s])game-ui-font-fit(-mode|-min-size|-max-size)?(\s*:)/g,
+        '$1--game-ui-font-fit$2$3',
+      )
+      if (next === code) return null
+      return { code: next, map: null }
+    },
+  }
+}
+
 function annotateReactNestedUpdateErrors(): Plugin {
   return {
     name: 'annotate-react-nested-update-errors',
@@ -335,6 +352,7 @@ function annotateReactNestedUpdateErrors(): Plugin {
 // https://vite.dev/config/
 export default defineConfig(() => ({
   plugins: [
+    rewriteGameUiFontFitCss(),
     annotateReactNestedUpdateErrors(),
     cleanBuildOutputButKeepPublicFiles(),
     serveOptimisedAssetVariants(),

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import { createPortal } from 'react-dom';
 import Portrait from '../../common/portraits/Portrait';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
 import FactionRoundel from '../../common/entities/FactionRoundel';
@@ -7,8 +8,10 @@ import InfoRow from '../../common/data-display/stats/InfoRow';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
+import ConfirmDialog from '../../common/forms/ConfirmDialog';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent } from '../../common/tooltips/Tooltip';
+import { dismissSharedTooltips } from '../../common/tooltips/tooltipEvents';
 import GameButton from '../../common/buttons/GameButton';
 import MilitaryCommanderAssignmentModal from '../../modals/characters/MilitaryCommanderAssignmentModal';
 import type { Army, ArmyUnitRow, MilitaryDoctrine } from '../../../data/types';
@@ -108,7 +111,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const [autoSquashOverride, setAutoSquashOverride] = useState<{ base: boolean; value: boolean } | null>(null);
   const [subsExpanded, setSubsExpanded] = useState(false);
   const [commanderAssignmentOpen, setCommanderAssignmentOpen] = useState(false);
-  const [confirmDestructiveId, setConfirmDestructiveId] = useState<string | null>(null);
+  const [confirmingDestructive, setConfirmingDestructive] = useState(false);
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
   const [unitSelectionAnchorId, setUnitSelectionAnchorId] = useState<string | null>(null);
   const [unitSelectionBox, setUnitSelectionBox] = useState<UnitSelectionBox | null>(null);
@@ -183,7 +186,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   }, [army.id, selectableUnitIdSet]);
 
   useEffect(() => {
-    setConfirmDestructiveId(null);
+    setConfirmingDestructive(false);
     setSplitInProgress(false);
     setIsRenaming(false);
     setRenameDraft(army.name);
@@ -486,34 +489,26 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     },
   };
 
-  const destructiveAction: MilitaryAction = {
-    get label() { return army.isFoederatiAuxiliary ? webUIText("MilitarySidebar.StandDown") : webUIText("MilitarySidebar.Disband"); },
-    icon: army.isFoederatiAuxiliary ? '/assets/icons/I_Retreat.png' : '/assets/icons/I_DisbandUnits.png',
-    get description() { return army.isFoederatiAuxiliary ? webUIText("MilitarySidebar.ReleaseAuxiliaryBody") : webUIText("MilitarySidebar.DisbandThisForce"); },
-    tone: 'danger',
-    disabled: !isPlayerControlled,
-    onClick: army.isFoederatiAuxiliary && army.foederatiOriginFactionId
-      ? () => { toggleFoederatiCallupBridge(army.foederatiOriginFactionId!, false).catch(acknowledgeBridgeFailure); }
-      : () => { disbandMilitaryBridge(army.id).catch(acknowledgeBridgeFailure); },
-  };
-  const destructiveConfirmPending = confirmDestructiveId === army.id;
-  const handleDestructiveToolbarAction = () => {
-    if (destructiveAction.disabled) return;
-
-    if (!destructiveConfirmPending) {
-      setConfirmDestructiveId(army.id);
+  const isStandDown = Boolean(army.isFoederatiAuxiliary);
+  const executeDestructiveAction = () => {
+    if (!isPlayerControlled) return;
+    if (isStandDown && army.foederatiOriginFactionId) {
+      toggleFoederatiCallupBridge(army.foederatiOriginFactionId, false).catch(acknowledgeBridgeFailure);
       return;
     }
-
-    setConfirmDestructiveId(null);
-    destructiveAction.onClick?.();
+    disbandMilitaryBridge(army.id).catch(acknowledgeBridgeFailure);
   };
-  const destructiveToolbarAction: MilitaryAction = {
-    ...destructiveAction,
-    label: destructiveConfirmPending ? `${webUIText('Common.Confirm')} ${destructiveAction.label}` : destructiveAction.label,
-    icon: destructiveAction.icon,
-    isActive: destructiveConfirmPending,
-    onClick: handleDestructiveToolbarAction,
+  const destructiveAction: MilitaryAction = {
+    get label() { return isStandDown ? webUIText("MilitarySidebar.StandDown") : webUIText("MilitarySidebar.Disband"); },
+    icon: isStandDown ? '/assets/icons/I_Retreat.png' : '/assets/icons/I_DisbandUnits.png',
+    get description() { return isStandDown ? webUIText("MilitarySidebar.ReleaseAuxiliaryBody") : webUIText("MilitarySidebar.DisbandThisForce"); },
+    tone: 'danger',
+    disabled: !isPlayerControlled,
+    onClick: () => {
+      if (!isPlayerControlled) return;
+      dismissSharedTooltips();
+      setConfirmingDestructive(true);
+    },
   };
   const headerCommandActions: MilitaryAction[] = [
     replenishAction,
@@ -521,7 +516,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     ...(garrisonAction ? [garrisonAction] : []),
     ...(embarkAction ? [embarkAction] : []),
     mergeAction,
-    destructiveToolbarAction,
+    destructiveAction,
   ];
 
   const formationActions: MilitaryAction[] = army.isPersonalGuard ? [] : [
@@ -1378,6 +1373,25 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       currentCommanderId={army.commanderId}
       onClose={() => setCommanderAssignmentOpen(false)}
     />
+    {createPortal(
+      <ConfirmDialog
+        visible={confirmingDestructive}
+        title={webUIText(
+          isStandDown ? 'MilitarySidebar.StandDownConfirmTitle' : 'MilitarySidebar.DisbandConfirmTitle',
+          { Name: army.name },
+        )}
+        message={isStandDown
+          ? webUIText('MilitarySidebar.ReleaseAuxiliaryBody')
+          : webUIText('MilitarySidebar.DisbandThisForce')}
+        confirmText={isStandDown
+          ? webUIText('MilitarySidebar.StandDown')
+          : webUIText('MilitarySidebar.Disband')}
+        variant="danger"
+        onConfirm={executeDestructiveAction}
+        onClosed={() => setConfirmingDestructive(false)}
+      />,
+      document.body,
+    )}
     </>
   );
 };

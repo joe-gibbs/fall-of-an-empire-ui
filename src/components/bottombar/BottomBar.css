@@ -203,6 +203,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.62rem;
+  game-ui-font-fit-max-size: 0.9rem;
 }
 
 .operation-detail {
@@ -227,23 +230,16 @@
 }
 
 .operation-bar--resettlement .operation-header {
-  min-width: 18rem;
-  max-width: 28rem;
+  min-width: 12.5rem;
+  max-width: 18rem;
 }
 
 .operation-bar--resettlement .operation-building-summary {
-  align-items: flex-start;
-  min-width: 14rem;
-  max-width: 28rem;
+  min-width: 0;
 }
 
-.operation-bar--resettlement .operation-muted {
-  height: auto;
-  min-height: 2rem;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-  line-height: 1.15rem;
+.operation-choice-name {
+  color: var(--gold-light);
 }
 
 .operation-governor-list {

@@ -110,6 +110,8 @@ export interface ProvinceModeOverview {
   successor: ProvinceModePerson;
   standingScore: number;
   standingTrend: number;
+  standingTrendParts: ProvinceModeScorePart[];
+  standingTrendReason: string;
   threatScore: number;
   recallStage: number;
   nextReviewDays: number;
@@ -254,6 +256,8 @@ function mapResponse(data: GetProvinceModeOverviewResponse): ProvinceModeOvervie
     successor: mapPerson(data.successor),
     standingScore: data.standingScore,
     standingTrend: data.standingTrend,
+    standingTrendParts: data.standingTrendParts.map(mapScorePart),
+    standingTrendReason: data.standingTrendReason,
     threatScore: data.threatScore,
     recallStage: data.recallStage,
     nextReviewDays: data.nextReviewDays,

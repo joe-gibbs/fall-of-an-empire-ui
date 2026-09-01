@@ -1,4 +1,5 @@
 import { ModeRow, ModeRows } from './ModeLayout';
+import { compactNumber } from './format';
 import { webUIText } from '../../../../localization/WebUITextContext';
 import type { ProvinceTooltipModeData, ProvinceTooltipShareView } from './types';
 
@@ -47,6 +48,9 @@ function ShareRows({
               {detail && <span className="province-tooltip-share-mode-detail">({detail})</span>}
             </span>
             <span className="province-tooltip-share-mode-values">
+              {share.percent && (
+                <span className="province-tooltip-share-mode-amount">{compactNumber(share.amount)}</span>
+              )}
               {share.percent && <span className="province-tooltip-share-mode-percent">{share.percent}</span>}
               {showChanges && (
                 <span className={`province-tooltip-share-mode-change province-tooltip-share-mode-change--${share.changeTone || 'neutral'}`}>
