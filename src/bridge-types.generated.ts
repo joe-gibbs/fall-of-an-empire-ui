@@ -913,12 +913,6 @@ export interface DowngradeSettlementBuildingRequest {
   buildingId: string;
 }
 
-export interface SetEconomyAutoBuyRequest {
-  enabled: boolean;
-  resourceId: string;
-  threshold: number;
-}
-
 export interface TradeEconomyResourceRequest {
   resourceId: string;
   amount: number;
@@ -1865,12 +1859,16 @@ export interface EconomyOverviewResourceRow {
   name: string;
   category: string;
   amount: number;
+  capitalAmount: number;
   production: number;
   vassalContribution: number;
+  liegeContribution: number;
   treatyIncome: number;
   militaryUsage: number;
   queuedUsage: number;
   settlementConsumption: number;
+  courtConsumption: number;
+  liegeTribute: number;
   decayLoss: number;
   netPerMonth: number;
   marketMultiplier: number;
@@ -1883,50 +1881,11 @@ export interface EconomyOverviewResourceRow {
   autoBuyThreshold: number;
   autoBuySliderMax: number;
   stockpileCap: number;
+  storageAvailable: number;
   producers: EconomyOverviewResourceSource[];
   stockpiles: EconomyOverviewResourceSource[];
   consumers: EconomyOverviewResourceSource[];
   aggregate: boolean;
-}
-
-export interface EconomyOverviewFoodRow {
-  settlementId: string;
-  settlementName: string;
-  factionId: string;
-  factionName: string;
-  stockpile: number;
-  production: number;
-  consumption: number;
-  netPerMonth: number;
-  shortage: number;
-  isCapital: boolean;
-}
-
-export interface EconomyOverviewHistoryPoint {
-  month: number;
-  year: number;
-  dateText: string;
-  settlementIncome: number;
-  tradeIncome: number;
-  resourceSalesIncome: number;
-  vassalTributeIncome: number;
-  treatyTributeIncome: number;
-  eventIncome: number;
-  lootingIncome: number;
-  otherIncome: number;
-  armyExpense: number;
-  commandMaintenanceExpense: number;
-  treasuryDampeningExpense: number;
-  replenishmentExpense: number;
-  buildingExpense: number;
-  tributePaidToLiege: number;
-  treatyTributePaid: number;
-  eventExpense: number;
-  powerBlocExpense: number;
-  landownerInterestExpense: number;
-  autoAssignCommanderExpense: number;
-  otherExpense: number;
-  netIncome: number;
 }
 
 export interface EconomyOverviewTaxRow {
@@ -2002,6 +1961,7 @@ export interface GetEconomyOverviewResponse {
   tradeTransactionAmount: number;
   autoSellThresholdStep: number;
   gold: number;
+  isVassal: boolean;
   netIncome: number;
   incomeTotal: number;
   expenseTotal: number;
@@ -2039,13 +1999,7 @@ export interface GetEconomyOverviewResponse {
   foodIncomeTotal: number;
   foodExpenseTotal: number;
   foodNet: number;
-  autoBuyEnabled: boolean;
-  autoBuyFoodResource: string;
-  autoBuyFoodThreshold: number;
-  autoBuyFoodSliderMax: number;
   resources: EconomyOverviewResourceRow[];
-  foodRows: EconomyOverviewFoodRow[];
-  history: EconomyOverviewHistoryPoint[];
   taxRows: EconomyOverviewTaxRow[];
   settlements: EconomyOverviewSettlementRow[];
   militaries: EconomyOverviewMilitaryRow[];
@@ -2071,6 +2025,12 @@ export interface EconomyResourceProducerDetail {
   modifiers: EconomyResourceDetailValue[];
 }
 
+export interface EconomyResourceUnitUsageDetail {
+  name: string;
+  count: number;
+  amount: number;
+}
+
 export interface EconomyResourceFlowDetail {
   id: string;
   name: string;
@@ -2078,6 +2038,13 @@ export interface EconomyResourceFlowDetail {
   linkType: string;
   linkId: string;
   amount: number;
+  unitUsage: EconomyResourceUnitUsageDetail[];
+  breakdown: EconomyResourceDetailValue[];
+}
+
+export interface EconomyResourcePotentialUseDetail {
+  name: string;
+  kind: string;
 }
 
 export interface EconomyResourceHistoryPoint {
@@ -2103,6 +2070,7 @@ export interface GetEconomyResourceDetailsResponse {
   producers: EconomyResourceProducerDetail[];
   externalSources: EconomyResourceFlowDetail[];
   consumers: EconomyResourceFlowDetail[];
+  potentialUses: EconomyResourcePotentialUseDetail[];
   history: EconomyResourceHistoryPoint[];
 }
 
@@ -2401,6 +2369,7 @@ export interface GetFactionDataResponse {
   diplomaticStatus: string;
   subjectType: string;
   subjectSubtype: string;
+  overlordName: string;
   buildFocusKey: string;
   buildFocus: string;
   canSetBuildFocus: boolean;
@@ -2480,6 +2449,19 @@ export interface GetFactionInteractionsResponse {
   lastInteractionSucceeded: boolean;
   lastInteractionCompletedDate: number;
   lastInteractionOutcomeText: string;
+}
+
+export interface GetFactionMilitaryOverviewRequest {
+  factionId: string;
+  subscriptionId: string;
+  subscribe: boolean;
+}
+
+export interface GetFactionMilitaryOverviewResponse {
+  factionId: string;
+  factionName: string;
+  canViewFullDetails: boolean;
+  overview: GetMilitaryOverviewResponse;
 }
 
 export interface GetFamilyTreeRequest {
@@ -3605,7 +3587,8 @@ export interface GetProvinceModeOverviewResponse {
   imperialFaction: ProvinceModeFactionSummaryDTO;
   governor: ProvinceModePersonDTO;
   emperor: ProvinceModePersonDTO;
-  successor: ProvinceModePersonDTO;
+  imperialSuccessor: ProvinceModePersonDTO;
+  provinceSuccessor: ProvinceModePersonDTO;
   standingScore: number;
   standingTrend: number;
   standingTrendParts: ProvinceModeScorePartDTO[];
@@ -3748,6 +3731,7 @@ export interface GetProvinceTooltipResponse {
   complianceTargetLabel: string;
   complianceTargetName: string;
   complianceTargetIsRuler: boolean;
+  complianceUsesFactionOpinion: boolean;
   complianceLuxuryLabel: string;
   complianceLuxuryStatus: string;
   luxurySlotsRequired: number;
@@ -3808,6 +3792,24 @@ export interface RegionGovernorCandidate {
 
 export interface GetRegionGovernorCandidatesResponse {
   candidates: RegionGovernorCandidate[];
+}
+
+export interface GetResourceFlowHoverResponse {
+  visible: boolean;
+  screenX: number;
+  screenY: number;
+  resourceName: string;
+  resourceIcon: string;
+  colour: string;
+  originName: string;
+  destinationName: string;
+  flowRole: string;
+  monthlyAmount: number;
+  nextShipmentAmount: number;
+  dispatchDays: number;
+  arrivalDays: number;
+  purpose: string;
+  purposeDetails: string;
 }
 
 export interface GetResourcesResponse {
@@ -4837,6 +4839,7 @@ export interface WorldSettlementGlance {
   complianceTargetLabel: string;
   complianceTargetName: string;
   complianceTargetIsRuler: boolean;
+  complianceUsesFactionOpinion: boolean;
   complianceLuxuryLabel: string;
   complianceLuxuryStatus: string;
   luxurySlotsRequired: number;
@@ -5203,6 +5206,8 @@ export interface MapModeFilterEntry {
   name: string;
   colour: string;
   iconPath: string;
+  groupId: string;
+  groupName: string;
   amount: number;
   active: boolean;
 }
@@ -5213,6 +5218,8 @@ export interface GetMapModeFiltersResponse {
   supported: boolean;
   radioMode: boolean;
   filterActive: boolean;
+  collectionRoutesActive: boolean;
+  distributionRoutesActive: boolean;
   entries: MapModeFilterEntry[];
 }
 
@@ -5400,6 +5407,7 @@ export interface MilitaryAttritionEntry {
 
 export interface GetMilitaryDataResponse {
   found: boolean;
+  canViewFullDetails: boolean;
   id: string;
   updateKind: string;
   debugShortId: number;
@@ -5625,6 +5633,7 @@ export interface BattleAfterActionReportPayload {
   location: string;
   summary: string;
   headerImage: string;
+  warScoreChange: number;
   spoils: string;
   spoilsList: BattleAfterActionSpoilPayload[];
   unitDamage: BattleAfterActionUnitDamagePayload[];
@@ -5656,7 +5665,7 @@ export interface NotificationShownPayload {
   settlementViewportWidth: number;
   settlementViewportHeight: number;
   battleAfterActionReport: BattleAfterActionReportPayload;
-  persistUntilDismissed: boolean;
+  isPlayerActionResult: boolean;
   actionSucceeded: boolean;
 }
 
@@ -6364,6 +6373,8 @@ export interface SetMapModeFiltersRequest {
   filterActive: boolean;
   activeIds: string[];
   selectedEntryId: string;
+  collectionRoutesActive: boolean;
+  distributionRoutesActive: boolean;
 }
 
 export interface SetModEnabledRequest {
@@ -6424,6 +6435,10 @@ export interface SetSpeedRequest {
 export interface SetSpeedResponse {
   isPaused: boolean;
   speedLevel: number;
+}
+
+export interface ShowResourceOnMapRequest {
+  resourceId: string;
 }
 
 export interface ShowScreenRequest {
@@ -6865,6 +6880,7 @@ export interface BridgeActions {
   'game.get_faction_daily_data': { request: GetFactionDailyDataRequest; response: GetFactionDailyDataResponse };
   'game.get_faction_data': { request: GetFactionDataRequest; response: GetFactionDataResponse };
   'game.get_faction_interactions': { request: GetFactionInteractionsRequest; response: GetFactionInteractionsResponse };
+  'game.get_faction_military_overview': { request: GetFactionMilitaryOverviewRequest; response: GetFactionMilitaryOverviewResponse };
   'game.get_family_tree': { request: GetFamilyTreeRequest; response: GetFamilyTreeResponse };
   'game.get_formation_template_catalogue': { request: void; response: GetFormationTemplateCatalogueResponse };
   'game.get_formation_templates': { request: void; response: GetFormationTemplatesResponse };
@@ -6900,6 +6916,7 @@ export interface BridgeActions {
   'game.get_province_tooltip': { request: void; response: GetProvinceTooltipResponse };
   'game.get_region_governor_candidates': { request: GetRegionGovernorCandidatesRequest; response: GetRegionGovernorCandidatesResponse };
   'game.get_religion_conversion': { request: void; response: GetReligionConversionResponse };
+  'game.get_resource_flow_hover': { request: void; response: GetResourceFlowHoverResponse };
   'game.get_resources': { request: void; response: GetResourcesResponse };
   'game.get_season_effects': { request: void; response: GetSeasonEffectsResponse };
   'game.get_selected_militaries': { request: void; response: GetSelectedMilitariesResponse };
@@ -6975,7 +6992,6 @@ export interface BridgeActions {
   'game.set_character_creator_camera_rotation': { request: SetCharacterCreatorCameraRotationRequest; response: void };
   'game.set_convoy_glance_filters': { request: SetConvoyGlanceFiltersRequest; response: void };
   'game.set_designated_heir': { request: SetDesignatedHeirRequest; response: SetDesignatedHeirResponse };
-  'game.set_economy_auto_buy': { request: SetEconomyAutoBuyRequest; response: void };
   'game.set_faction_border_highlight': { request: SetFactionBorderHighlightRequest; response: void };
   'game.set_language': { request: SetLanguageRequest; response: void };
   'game.set_map_mode': { request: SetMapModeRequest; response: void };
@@ -7000,6 +7016,7 @@ export interface BridgeActions {
   'game.set_speed': { request: SetSpeedRequest; response: SetSpeedResponse };
   'game.set_world_glance_visibility': { request: SetWorldGlanceVisibilityRequest; response: GetWorldGlanceVisibilityResponse };
   'game.show_military_sidebar': { request: MilitaryTargetingRequest; response: void };
+  'game.show_resource_on_map': { request: ShowResourceOnMapRequest; response: void };
   'game.split_military': { request: SplitMilitaryRequest; response: SplitMilitaryResponse };
   'game.start_battle_action': { request: StartBattleActionRequest; response: StartBattleActionResponse };
   'game.start_bloc_interaction': { request: StartBlocInteractionRequest; response: StartBlocInteractionResponse };

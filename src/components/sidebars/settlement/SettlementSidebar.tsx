@@ -41,7 +41,13 @@ import ResourceLink from '../../common/resources/ResourceLink';
 import { successChanceColour } from '../../../utils/colorFormatters';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { TIER_ICONS } from '../../../utils/iconMaps';
-import { formatNumber, formatPercent as formatPercentValue, formatSignedNumber } from '../../../utils/numberFormat';
+import {
+  formatNumber,
+  formatPercent as formatPercentValue,
+  formatResourceNumber,
+  formatSignedNumber,
+  formatSignedResourceNumber,
+} from '../../../utils/numberFormat';
 import { compareSortValuesWithDirection, toggleSortState, type SortState } from '../../common/layout/tables/sortUtils';
 import { registerSidebar } from '../../../registry/index';
 import { useSettlement } from '../../../data-source/index';
@@ -518,25 +524,25 @@ function ShareTooltipWrap({
 
 function buildResourceTooltip(r: Resource): TooltipContent {
   const lines: TooltipLine[] = [];
-  const prodStr = formatNumber(r.production, { maximumFractionDigits: 1 });
+  const prodStr = formatResourceNumber(r.production);
   const potential = r.potentialProduction ?? r.production;
-  const potentialStr = formatNumber(potential, { maximumFractionDigits: 1 });
-  const consStr = formatNumber(r.consumption, { maximumFractionDigits: 1 });
+  const potentialStr = formatResourceNumber(potential);
+  const consStr = formatResourceNumber(r.consumption);
   const net = r.production - r.consumption;
-  const netStr = formatSignedNumber(net, { maximumFractionDigits: 1 });
+  const netStr = formatSignedResourceNumber(net);
 
-  lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.440.21'), value: formatNumber(r.amount, { maximumFractionDigits: 1 }), valueColor: 'var(--gold)' });
+  lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.440.21'), value: exactResourceAmount(r.amount), valueColor: 'var(--gold)' });
   if ((r.stockpile ?? r.amount) !== r.amount || (r.reserved ?? 0) > 0 || (r.demand ?? 0) > 0) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.442.22'), value: formatNumber(r.stockpile ?? r.amount, { maximumFractionDigits: 1 }) });
-    if ((r.reserved ?? 0) > 0) lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.443.23'), value: formatNumber(r.reserved ?? 0, { maximumFractionDigits: 1 }), valueColor: 'var(--orange)' });
-    if ((r.demand ?? 0) > 0) lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.444.24'), value: formatNumber(r.demand ?? 0, { maximumFractionDigits: 1 }), valueColor: 'var(--red)' });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.442.22'), value: exactResourceAmount(r.stockpile ?? r.amount) });
+    if ((r.reserved ?? 0) > 0) lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.443.23'), value: exactResourceAmount(r.reserved ?? 0), valueColor: 'var(--orange)' });
+    if ((r.demand ?? 0) > 0) lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.444.24'), value: exactResourceAmount(r.demand ?? 0), valueColor: 'var(--red)' });
   }
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.446.25'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.446.1", { NetStr: netStr }); }, valueColor: net > 0 ? 'var(--green)' : net < 0 ? 'var(--red)' : 'var(--text-muted)' });
   if (r.status) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.448.26'), value: r.status, valueColor: (r.shortage ?? 0) > 0 ? 'var(--red)' : 'var(--green)' });
   }
   if ((r.shortage ?? 0) > 0) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.451.27'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.451.1", { Value1: formatNumber(r.shortage ?? 0, { maximumFractionDigits: 1 }), Value2: formatNumber(r.shortagePercent ?? 0, { maximumFractionDigits: 0 }) }); }, valueColor: 'var(--red)' });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.451.27'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.451.1", { Value1: formatResourceNumber(r.shortage ?? 0), Value2: formatNumber(r.shortagePercent ?? 0, { maximumFractionDigits: 0 }) }); }, valueColor: 'var(--red)' });
   }
   if (r.depleting) {
     const months = r.monthsUntilDepletion ?? 0;
@@ -556,7 +562,7 @@ function buildResourceTooltip(r: Resource): TooltipContent {
   } else if (r.productionSources && r.productionSources.length > 0) {
     lines.push({ get label() { return potential > r.production + 0.05 ? webUIText("SettlementSidebar.ProductionRate", { ProdStr: prodStr, PotentialStr: potentialStr }) : webUIText("SettlementSidebar.ProductionMo", { ProdStr: prodStr }); }, isHeader: true });
     r.productionSources.forEach(s => {
-      lines.push({ label: s.name, get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.464.1", { Value1: formatSignedNumber(s.value, { maximumFractionDigits: 1 }) }); }, valueColor: 'var(--green)' });
+      lines.push({ label: s.name, get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.464.1", { Value1: formatSignedResourceNumber(s.value) }); }, valueColor: 'var(--green)' });
     });
   } else if (r.production > 0.01) {
     // Fallback when bridge did not populate sources.
@@ -576,7 +582,7 @@ function buildResourceTooltip(r: Resource): TooltipContent {
   if (r.consumptionSources && r.consumptionSources.length > 0) {
     lines.push({ get label() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.482.1", { ConsStr: consStr }); }, isHeader: true });
     r.consumptionSources.forEach(s => {
-      lines.push({ label: s.name, get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.484.1", { Value1: formatNumber(s.value, { maximumFractionDigits: 1 }) }); }, valueColor: 'var(--red)' });
+      lines.push({ label: s.name, get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.484.1", { Value1: formatResourceNumber(s.value) }); }, valueColor: 'var(--red)' });
     });
   }
 
@@ -585,6 +591,10 @@ function buildResourceTooltip(r: Resource): TooltipContent {
     get body() { return r.isNatural ? webUIText("SettlementSidebar.NaturalResourceOfRegion", { Value1: r.categoryName ? r.categoryName.toLowerCase() : webUIText("SettlementSidebar.Resource") }) : r.categoryName; },
     lines,
   };
+}
+
+function exactResourceAmount(value: number): string {
+  return Number.isFinite(value) ? String(value) : '0';
 }
 
 /** Horizontal stacked share bar */
@@ -705,12 +715,26 @@ function buildPopulationGrowthTooltip(settlement: Settlement): TooltipContent {
 
   if (settlement.pops.length > 1) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.596.40'), isHeader: true });
+
+    const growthByCulture = new Map<string, { name: string; growth: number }>();
     for (const pop of settlement.pops) {
-      const growth = pop.monthlyGrowth ?? 0;
+      const cultureKey = pop.cultureId ?? pop.culture;
+      const existing = growthByCulture.get(cultureKey);
+      if (existing) {
+        existing.growth += pop.monthlyGrowth ?? 0;
+      } else {
+        growthByCulture.set(cultureKey, {
+          name: pop.culture,
+          growth: pop.monthlyGrowth ?? 0,
+        });
+      }
+    }
+
+    for (const culture of growthByCulture.values()) {
       lines.push({
-        label: pop.culture,
-        value: formatSignedNumber(growth),
-        valueColor: growth > 0 ? 'var(--green)' : growth < 0 ? 'var(--red)' : 'var(--text-muted)',
+        label: culture.name,
+        value: formatSignedNumber(culture.growth),
+        valueColor: culture.growth > 0 ? 'var(--green)' : culture.growth < 0 ? 'var(--red)' : 'var(--text-muted)',
       });
     }
   }
@@ -1112,7 +1136,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
             <Tooltip content={{
               title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1085.61'),
               get body() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1089.1", { Value1: formatNumber(foodProdRounded), Value2: formatNumber(foodConsRounded) }); },
-              lines: breakdownLines(settlement.foodBreakdown, v => formatNumber(v, { maximumFractionDigits: 1 })),
+              lines: breakdownLines(settlement.foodBreakdown, v => formatResourceNumber(v)),
             }} position="bottom" delay={150}>
               <StatCell icon="/assets/icons/I_Food.png" value={formatSignedNumber(foodNetRounded)} valueColor={foodColor} />
             </Tooltip>
@@ -1392,17 +1416,17 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                     {
                       label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1335.76'),
                       value: category.isCapitalStockpile || category.stockpileCap <= 0
-                        ? formatNumber(category.stockpile, { maximumFractionDigits: 0 })
-                        : `${formatNumber(category.stockpile, { maximumFractionDigits: 0 })}/${formatNumber(category.stockpileCap, { maximumFractionDigits: 0 })}`,
+                        ? exactResourceAmount(category.stockpile)
+                        : `${exactResourceAmount(category.stockpile)}/${exactResourceAmount(category.stockpileCap)}`,
                       valueColor: category.hasShortage ? 'var(--red)' : 'var(--gold)',
                     },
                     {
                       label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1342.77'),
-                      get value() { return categoryPotential > category.production + 0.05 ? webUIText("SettlementSidebar.PerMonthRange", { Value1: formatNumber(category.production, { maximumFractionDigits: 1 }), Value2: formatNumber(categoryPotential, { maximumFractionDigits: 1 }) }) : webUIText("SettlementSidebar.PerMonth", { Value1: formatNumber(category.production, { maximumFractionDigits: 1 }) }); },
+                      get value() { return categoryPotential > category.production + 0.05 ? webUIText("SettlementSidebar.PerMonthRange", { Value1: formatResourceNumber(category.production), Value2: formatResourceNumber(categoryPotential) }) : webUIText("SettlementSidebar.PerMonth", { Value1: formatResourceNumber(category.production) }); },
                       valueColor: categoryPotential > category.production + 0.05 ? 'var(--orange)' : 'var(--green)',
                     },
-                    { label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1348.78'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1351.1", { Value1: formatNumber(category.consumption, { maximumFractionDigits: 1 }) }); }, valueColor: category.consumption > 0 ? 'var(--red)' : 'var(--text-muted)' },
-                    { label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1349.79'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1352.1", { Value1: formatSignedNumber(categoryNet, { maximumFractionDigits: 1 }) }); }, valueColor: categoryNet > 0 ? 'var(--green)' : categoryNet < 0 ? 'var(--red)' : 'var(--text-muted)' },
+                    { label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1348.78'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1351.1", { Value1: formatResourceNumber(category.consumption) }); }, valueColor: category.consumption > 0 ? 'var(--red)' : 'var(--text-muted)' },
+                    { label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1349.79'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1352.1", { Value1: formatSignedResourceNumber(categoryNet) }); }, valueColor: categoryNet > 0 ? 'var(--green)' : categoryNet < 0 ? 'var(--red)' : 'var(--text-muted)' },
                   ],
                 };
                 return (
@@ -1412,11 +1436,11 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                         <span className="settle-resource-category-name">{category.name}</span>
                         <span className="settle-resource-category-stock">
                           {category.isCapitalStockpile || category.stockpileCap <= 0
-                            ? formatNumber(category.stockpile, { maximumFractionDigits: 0 })
-                            : `${formatNumber(category.stockpile, { maximumFractionDigits: 0 })}/${formatNumber(category.stockpileCap, { maximumFractionDigits: 0 })}`}
+                            ? formatNumber(Math.floor(category.stockpile))
+                            : `${formatNumber(Math.floor(category.stockpile))}/${formatNumber(category.stockpileCap, { maximumFractionDigits: 0 })}`}
                         </span>
                         <span className="settle-resource-category-net" style={{ color: categoryNet > 0 ? 'var(--green)' : categoryNet < 0 ? 'var(--red)' : 'var(--text-muted)' }}>
-                          {formatSignedNumber(categoryNet, { maximumFractionDigits: 1 })}
+                          {formatSignedResourceNumber(categoryNet)}
                         </span>
                       </div>
                     </Tooltip>
@@ -1424,8 +1448,8 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                       {resources.map(r => {
                         const net = r.production - r.consumption;
                         const netColor = net > 0 ? 'var(--green)' : net < 0 ? 'var(--red)' : 'var(--text-muted)';
-                        const amountStr = formatNumber(r.amount, { maximumFractionDigits: 1 });
-                        const netStr = formatNumber(net, { maximumFractionDigits: 1 });
+                        const amountStr = formatNumber(Math.floor(r.amount));
+                        const netStr = formatResourceNumber(net);
                         return (
                           <Tooltip key={r.id ?? r.name} content={buildResourceTooltip(r)} position="left" delay={200}>
                             <ResourceLink resourceId={r.id ?? r.name} className={`settle-resource-row${(r.shortage ?? 0) > 0 ? ' settle-resource-row--shortage' : ''}`}>

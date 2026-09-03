@@ -22,6 +22,8 @@ function activeIds(state: MapModeFiltersState): string[] {
 function requestForIds(
   state: MapModeFiltersState,
   ids: string[],
+  collectionRoutesActive = state.collectionRoutesActive,
+  distributionRoutesActive = state.distributionRoutesActive,
 ): SetMapModeFiltersRequest {
   const allSelected = ids.length >= state.entries.length;
   return {
@@ -29,6 +31,8 @@ function requestForIds(
     filterActive: !allSelected,
     activeIds: allSelected ? [] : ids,
     selectedEntryId: '',
+    collectionRoutesActive,
+    distributionRoutesActive,
   };
 }
 
@@ -63,6 +67,8 @@ export function useMapModeFiltersBridge() {
       filterActive: false,
       activeIds: [],
       selectedEntryId: entryId,
+      collectionRoutesActive: state.collectionRoutesActive,
+      distributionRoutesActive: state.distributionRoutesActive,
     });
   }, [apply, state]);
 
@@ -73,7 +79,23 @@ export function useMapModeFiltersBridge() {
       filterActive: false,
       activeIds: [],
       selectedEntryId: '',
+      collectionRoutesActive: state.collectionRoutesActive,
+      distributionRoutesActive: state.distributionRoutesActive,
     });
+  }, [apply, state]);
+
+  const setEntriesActive = useCallback((entryIds: string[], active: boolean) => {
+    if (!state) return;
+
+    const nextIds = new Set(activeIds(state));
+    entryIds.forEach((entryId) => {
+      if (active) {
+        nextIds.add(entryId);
+      } else {
+        nextIds.delete(entryId);
+      }
+    });
+    apply(requestForIds(state, Array.from(nextIds)));
   }, [apply, state]);
 
   const showNone = useCallback(() => {
@@ -83,14 +105,28 @@ export function useMapModeFiltersBridge() {
       filterActive: true,
       activeIds: [],
       selectedEntryId: '',
+      collectionRoutesActive: state.collectionRoutesActive,
+      distributionRoutesActive: state.distributionRoutesActive,
     });
+  }, [apply, state]);
+
+  const setFlowRoleActive = useCallback((role: 'collection' | 'distribution', active: boolean) => {
+    if (!state) return;
+    apply(requestForIds(
+      state,
+      activeIds(state),
+      role === 'collection' ? active : state.collectionRoutesActive,
+      role === 'distribution' ? active : state.distributionRoutesActive,
+    ));
   }, [apply, state]);
 
   return {
     state,
     setEntryActive,
+    setEntriesActive,
     selectEntry,
     showAll,
     showNone,
+    setFlowRoleActive,
   };
 }

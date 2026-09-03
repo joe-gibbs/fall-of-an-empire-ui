@@ -22,8 +22,8 @@ interface InteractionCardProps {
   remainingDays?: number;
   /**
    * Outcome of the most recent completion of this action, if any. Consumed
-   * when the card transitions from in-progress → idle, or when `outcomeKey`
-   * changes (for instant interactions that never enter an in-progress state).
+   * when `outcomeKey` changes. An in-progress → idle transition alone can
+   * also mean the player cancelled the action.
    */
   outcome?: InteractionOutcome;
   /** Short text explaining the latest outcome. */
@@ -97,8 +97,9 @@ const InteractionCard: React.FC<InteractionCardProps> = ({
     setPrevInProgress(inProgress);
     setPrevOutcomeKey(outcomeKey);
     const hasReportedOutcome = outcome !== undefined;
-    const finishedDeferred = wasInProgress && !inProgress && hasReportedOutcome;
-    const finishedInstant = hasReportedOutcome && !!outcomeKey && outcomeKey !== hadOutcomeKey && !inProgress;
+    const hasNewOutcome = hasReportedOutcome && !!outcomeKey && outcomeKey !== hadOutcomeKey;
+    const finishedDeferred = wasInProgress && !inProgress && hasNewOutcome;
+    const finishedInstant = !wasInProgress && !inProgress && hasNewOutcome;
     if (finishedDeferred || finishedInstant) {
       setFlash(outcome);
       setFlashOutcomeText(getShortOutcomeText(outcomeText));
@@ -107,7 +108,7 @@ const InteractionCard: React.FC<InteractionCardProps> = ({
 
   useEffect(() => {
     if (!flash) return;
-    playSound(flash === 'success' ? 'notification' : 'error');
+    playSound(flash === 'success' ? 'interactionSuccess' : 'error');
     const id = window.setTimeout(
       () => setFlash(null),
       flash === 'success' ? SUCCESS_FLASH_MS : FAILURE_FLASH_MS,

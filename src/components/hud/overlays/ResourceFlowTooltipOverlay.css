@@ -1,0 +1,68 @@
+.resource-flow-tooltip-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.resource-flow-tooltip-overlay + .province-tooltip-overlay {
+  visibility: hidden;
+}
+
+.resource-flow-tooltip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  width: max-content;
+  max-width: 24rem;
+  pointer-events: none;
+}
+
+.resource-flow-tooltip__card {
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 18rem;
+  max-width: 24rem;
+  padding: 0.55rem 0.7rem 0.62rem;
+  color: var(--text);
+  background-color: #11141b;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-repeat: round;
+  box-shadow: var(--shadow-panel);
+  font-family: var(--font-body);
+  font-size: 0.7727rem;
+}
+
+.resource-flow-tooltip__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.42rem;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+}
+
+.resource-flow-tooltip__heading img {
+  width: 1.55rem;
+  height: 1.55rem;
+  object-fit: contain;
+}
+
+.resource-flow-tooltip__rows {
+  min-width: 17rem;
+}
+
+.resource-flow-tooltip__note {
+  margin-top: 0.42rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}

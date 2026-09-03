@@ -27,6 +27,7 @@ import '../components/screens/encyclopedia/EncyclopediaScreen';
 import '../components/screens/economy/LedgerScreen';
 import '../components/screens/system/AchievementsScreen';
 import '../components/screens/Military/MilitaryScreen';
+import '../components/screens/Military/FactionMilitaryScreen';
 import '../components/screens/Battle/BattleScreen';
 import '../components/screens/system/MockGlanceScreen';
 import '../components/screens/system/TechnologyTreeMockScreen';

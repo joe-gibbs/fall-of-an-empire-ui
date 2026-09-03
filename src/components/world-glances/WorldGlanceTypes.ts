@@ -112,6 +112,7 @@ export interface SettlementGlanceData {
   complianceTargetLabel?: string;
   complianceTargetName?: string;
   complianceTargetIsRuler?: boolean;
+  complianceUsesFactionOpinion?: boolean;
   complianceLuxuryLabel?: string;
   complianceLuxuryStatus?: string;
   luxurySlotsRequired?: number;

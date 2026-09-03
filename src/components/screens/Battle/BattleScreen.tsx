@@ -339,10 +339,6 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
   const formations = useMemo(() => battle?.formations ?? [], [battle?.formations]);
   const battlefieldWidth = battle?.battlefieldWidth ?? 0;
   const battlefieldHeight = battle?.battlefieldHeight ?? 0;
-  const playerReferenceColour = useMemo(() => {
-    const playerFormation = formations.find(formation => formation.isPlayerControlled);
-    return playerFormation?.faction.colour || null;
-  }, [formations]);
   const battleCanvasFrameStyle = useMemo<CSSProperties | undefined>(() => {
     if (battleHeaderHeight <= 0) return undefined;
     return {
@@ -369,8 +365,8 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
   const liveFormationIds = useMemo(() => new Set(formations.map(formation => formation.id)), [formations]);
   const formationsById = useMemo(() => new Map(formations.map(formation => [formation.id, formation])), [formations]);
   const visualAgents = useMemo(
-    () => buildBattleVisualAgents(formations, formationsById, playerReferenceColour, battlefieldWidth, battlefieldHeight, isNavalBattle),
-    [battlefieldHeight, battlefieldWidth, formations, formationsById, isNavalBattle, playerReferenceColour],
+    () => buildBattleVisualAgents(formations, formationsById, battlefieldWidth, battlefieldHeight, isNavalBattle),
+    [battlefieldHeight, battlefieldWidth, formations, formationsById, isNavalBattle],
   );
 
   const meleeEngagementTargets = useMemo(() => {
@@ -842,7 +838,6 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
               battlefieldHeight={battlefieldHeight}
               onSelect={(additive) => handleFormationSelect(formation.id, additive)}
               onHoverChange={setHoveredFormationId}
-              playerReferenceColour={playerReferenceColour}
               showStance={!isNavalBattle}
               isNaval={isNavalBattle}
             />

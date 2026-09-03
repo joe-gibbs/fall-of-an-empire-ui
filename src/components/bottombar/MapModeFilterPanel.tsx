@@ -45,9 +45,8 @@ function FilterRow({ entry, radioMode, onToggle, onSelect }: FilterRowProps) {
       <span
         className="map-filter-swatch"
         style={{ backgroundColor: entry.colour }}
-      >
-        {iconPath ? <img src={iconPath} alt="" draggable={false} /> : null}
-      </span>
+      />
+      {iconPath ? <img className="map-filter-icon" src={iconPath} alt="" draggable={false} /> : null}
       <span className="map-filter-name">{entry.name}</span>
       {amountLabel ? <span className="map-filter-amount">{amountLabel}</span> : null}
     </button>
@@ -55,13 +54,35 @@ function FilterRow({ entry, radioMode, onToggle, onSelect }: FilterRowProps) {
 }
 
 const MapModeFilterPanel: React.FC = () => {
-  const { state, setEntryActive, selectEntry, showAll, showNone } = useMapModeFiltersBridge();
+  const {
+    state,
+    setEntryActive,
+    setEntriesActive,
+    selectEntry,
+    showAll,
+    showNone,
+    setFlowRoleActive,
+  } = useMapModeFiltersBridge();
   const [search, setSearch] = useState('');
+  const [collapsedResourceGroups, setCollapsedResourceGroups] = useState<Set<string>>(() => new Set());
 
   const modeId = state?.modeId ?? '';
   React.useEffect(() => {
     setSearch('');
+    setCollapsedResourceGroups(new Set());
   }, [modeId]);
+
+  const toggleResourceGroupCollapsed = (groupId: string) => {
+    setCollapsedResourceGroups((current) => {
+      const next = new Set(current);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
 
   const visibleEntries = useMemo(() => {
     if (!state) return [];
@@ -69,6 +90,20 @@ const MapModeFilterPanel: React.FC = () => {
     if (!query) return state.entries;
     return state.entries.filter(entry => textMatchesSearch(entry.name, query));
   }, [search, state]);
+
+  const resourceGroups = useMemo(() => {
+    const groups: Array<{ id: string; name: string; entries: MapModeFilterEntry[] }> = [];
+    visibleEntries.forEach((entry) => {
+      const groupId = entry.groupId || 'other';
+      let group = groups.find(candidate => candidate.id === groupId);
+      if (!group) {
+        group = { id: groupId, name: entry.groupName, entries: [] };
+        groups.push(group);
+      }
+      group.entries.push(entry);
+    });
+    return groups;
+  }, [visibleEntries]);
 
   if (!state || !state.supported || state.entries.length === 0) {
     return null;
@@ -131,10 +166,72 @@ const MapModeFilterPanel: React.FC = () => {
         </div>
       )}
 
+      {state.modeId === 'resources' && (
+        <div className="resource-flow-legend">
+          <button
+            type="button"
+            className={`map-filter-preset resource-flow-legend__entry${state.collectionRoutesActive ? ' is-active' : ' is-muted'}`}
+            onClick={() => setFlowRoleActive('collection', !state.collectionRoutesActive)}
+          >
+            <span className="resource-flow-legend__sample is-collection"><span /></span>
+            <WebUIText textKey="ResourceFlow.CollectionLegend" />
+          </button>
+          <button
+            type="button"
+            className={`map-filter-preset resource-flow-legend__entry${state.distributionRoutesActive ? ' is-active' : ' is-muted'}`}
+            onClick={() => setFlowRoleActive('distribution', !state.distributionRoutesActive)}
+          >
+            <span className="resource-flow-legend__sample is-distribution"><span /></span>
+            <WebUIText textKey="ResourceFlow.DistributionLegend" />
+          </button>
+        </div>
+      )}
+
       <StyledScrollArea className="map-filter-list" viewportClassName="map-filter-list__viewport" variant="inline">
         {visibleEntries.length === 0 ? (
           <div className="map-filter-empty"><WebUIText textKey="MapModeFilter.NoMatches" /></div>
-        ) : visibleEntries.map(entry => (
+        ) : state.modeId === 'resources' ? resourceGroups.map(group => {
+          const allGroupEntries = state.entries.filter(entry => entry.groupId === group.id);
+          const activeCount = allGroupEntries.filter(entry => entry.active).length;
+          const allActive = activeCount === allGroupEntries.length;
+          const groupStateClass = allActive ? ' is-active' : activeCount > 0 ? ' is-mixed' : ' is-muted';
+          const collapsed = search.trim() === '' && collapsedResourceGroups.has(group.id);
+          return (
+            <div key={group.id} className="map-filter-group">
+              <div className={`map-filter-group-header${groupStateClass}`}>
+                <button
+                  type="button"
+                  className="map-filter-group-toggle"
+                  aria-label={webUIText('MapModeFilter.ToggleEntry', { Name: group.name })}
+                  onClick={() => setEntriesActive(allGroupEntries.map(entry => entry.id), !allActive)}
+                >
+                  <span className="map-filter-check"><span /></span>
+                </button>
+                <button
+                  type="button"
+                  className={`map-filter-group-disclosure${collapsed ? ' is-collapsed' : ''}`}
+                  aria-expanded={!collapsed}
+                  onClick={() => toggleResourceGroupCollapsed(group.id)}
+                >
+                  <span>{group.name}</span>
+                </button>
+              </div>
+              {!collapsed && (
+                <div className="map-filter-group-entries">
+                  {group.entries.map(entry => (
+                    <FilterRow
+                      key={entry.id || entry.name}
+                      entry={entry}
+                      radioMode={state.radioMode}
+                      onToggle={setEntryActive}
+                      onSelect={selectEntry}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }) : visibleEntries.map(entry => (
           <FilterRow
             key={entry.id || entry.name}
             entry={entry}

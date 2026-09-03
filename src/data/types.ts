@@ -400,6 +400,8 @@ export interface Faction {
   subjectSubtype?: string;
   /** Display label for the subject subtype. */
   subjectType?: string;
+  /** Immediate overlord for a subject faction. */
+  overlordName?: string;
   culture: string;
   /** Culture family name (e.g. "Svaranic", "Rephsian"). */
   cultureGroup?: string;
@@ -868,6 +870,7 @@ export interface ReligionShare {
 }
 
 export interface PopGroup {
+  cultureId?: string;
   culture: string;
   cultureAdjective: string;
   cultureIcon?: string;
@@ -1224,6 +1227,7 @@ export type MilitaryDoctrine = 'concentrate' | 'screen' | 'garrison' | 'independ
 
 export interface Army {
   id: string;
+  canViewFullDetails: boolean;
   debugShortId?: number;
   name: string;
   faction: string;
@@ -1481,7 +1485,7 @@ export interface Notification {
   settlementViewportHeight?: number;
   battleAfterActionReport?: BattleAfterActionReportPayload;
   diplomaticRequest?: DiplomaticRequestNotification;
-  persistUntilDismissed?: boolean;
+  isPlayerActionResult?: boolean;
   actionSucceeded?: boolean;
 }
 

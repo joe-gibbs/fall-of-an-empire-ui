@@ -4,7 +4,7 @@ import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
 
 let economyOverviewCache: GetEconomyOverviewResponse | null = null;
 
-type EconomyOverviewScope = 'overview' | 'resources' | 'food' | 'settlements' | 'military' | 'provinces';
+type EconomyOverviewScope = 'overview' | 'resources' | 'settlements' | 'military' | 'provinces';
 
 export function clearEconomyOverviewCache(): void {
   economyOverviewCache = null;
@@ -17,23 +17,14 @@ function mergeEconomyOverview(value: GetEconomyOverviewResponse, scope: EconomyO
     ...(previous ?? value),
     ...value,
     resources: previous?.resources ?? [],
-    foodRows: previous?.foodRows ?? [],
-    history: previous?.history ?? [],
     taxRows: previous?.taxRows ?? [],
     settlements: previous?.settlements ?? [],
     militaries: previous?.militaries ?? [],
     vassals: previous?.vassals ?? [],
   };
 
-  if (scope === 'overview' || scope === 'resources' || scope === 'food') {
+  if (scope === 'overview' || scope === 'resources') {
     merged.resources = value.resources;
-  }
-  if (scope === 'overview') {
-    merged.history = value.history;
-  }
-  if (scope === 'food') {
-    merged.foodRows = value.foodRows;
-    merged.militaries = value.militaries;
   }
   if (scope === 'settlements') {
     merged.settlements = value.settlements;
@@ -67,7 +58,7 @@ export function useEconomyResourceDetailsBridge(resourceId: string | null): GetE
   return useBridgeQuery({
     action: 'game.get_economy_resource_details',
     payload: resourceId ? { resourceId } : null,
-    cacheResponseMs: 1000,
+    matchPush: data => data.resourceId === resourceId,
     map: data => data,
   });
 }
@@ -81,13 +72,6 @@ export function buyEconomyResourceBridge(resourceId: string, amount: number): Pr
 
 export function sellEconomyResourceBridge(resourceId: string, amount: number): Promise<void> {
   return bridgeCall('game.sell_resource', { resourceId, amount }).then(() => {
-    clearEconomyOverviewCache();
-    return undefined;
-  });
-}
-
-export function setEconomyAutoBuyBridge(enabled: boolean, resourceId: string, threshold: number): Promise<void> {
-  return bridgeCall('game.set_economy_auto_buy', { enabled, resourceId, threshold }).then(() => {
     clearEconomyOverviewCache();
     return undefined;
   });

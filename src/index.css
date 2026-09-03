@@ -389,6 +389,8 @@ html.ui-reduce-motion hr {
   --diplo-relation-ally: #83aa72;
   --diplo-relation-war: #d65a57;
   --diplo-relation-rival: #c58a5c;
+  --glance-relation-garrisonable: #4080c4;
+  --glance-relation-neutral: #777b80;
 
   --border: rgba(201, 168, 76, 0.25);
   --border-light: rgba(201, 168, 76, 0.4);

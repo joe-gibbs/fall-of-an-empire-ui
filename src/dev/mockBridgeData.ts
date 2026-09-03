@@ -368,14 +368,13 @@ interface MockBridgeState {
   activeMapMode: string;
   mapModeFilterActive: boolean;
   activeMapModeFilterIds: string[];
+  collectionRoutesActive: boolean;
+  distributionRoutesActive: boolean;
   selectedBishopricFilterId: string;
   eventVisible: boolean;
   eventKind: MockEventKind;
   tutorialSpotlightVisible: boolean;
   autoAssignGovernorsEnabled: boolean;
-  autoBuyEnabled: boolean;
-  autoBuyFoodResource: string;
-  autoBuyFoodThreshold: number;
   autoAssignCourtEnabled: boolean;
   enteredCourtContestKeys: string[];
   autoAssignClergyEnabled: boolean;
@@ -763,12 +762,16 @@ function mapModeFilterEntry(
   colour: string,
   iconPath: string,
   amount = 0,
+  groupId = '',
+  groupName = '',
 ): BridgeResponse<'game.get_map_mode_filters'>['entries'][number] {
   return {
     id,
     name,
     colour,
     iconPath,
+    groupId,
+    groupName,
     amount,
     active: !state.mapModeFilterActive || state.activeMapModeFilterIds.indexOf(id) >= 0,
   };
@@ -777,6 +780,8 @@ function mapModeFilterEntry(
 function clearMapModeFilters(state: MockBridgeState) {
   state.mapModeFilterActive = false;
   state.activeMapModeFilterIds = [];
+  state.collectionRoutesActive = true;
+  state.distributionRoutesActive = true;
 }
 
 function mapModeFilters(state: MockBridgeState): BridgeResponse<'game.get_map_mode_filters'> {
@@ -787,17 +792,19 @@ function mapModeFilters(state: MockBridgeState): BridgeResponse<'game.get_map_mo
     supported: true,
     radioMode: false,
     filterActive: state.mapModeFilterActive,
+    collectionRoutesActive: state.collectionRoutesActive,
+    distributionRoutesActive: state.distributionRoutesActive,
     entries: [] as BridgeResponse<'game.get_map_mode_filters'>['entries'],
   };
 
   if (modeId === 'resources' || modeId === 'stockpiles') {
     response.modeLabel = modeId === 'stockpiles' ? 'Stockpiles' : 'Resources';
     response.entries = [
-      mapModeFilterEntry(state, 'grain', 'Grain', '#CDB76A', '/assets/icons/Resources/I_Grain.png', 420),
-      mapModeFilterEntry(state, 'iron', 'Iron', '#8A98A6', '/assets/icons/Resources/I_Iron.png', 82),
-      mapModeFilterEntry(state, 'wood', 'Wood', '#7A5B3D', '/assets/icons/Resources/I_Wood.png', 146),
-      mapModeFilterEntry(state, 'weapons', 'Weapons', '#A96348', '/assets/icons/Resources/I_Weapons.png', 34),
-      mapModeFilterEntry(state, 'oil', 'Oil', '#6D8160', '/assets/icons/Resources/I_Oil.png', 18),
+      mapModeFilterEntry(state, 'grain', 'Grain', '#CDB76A', '/assets/icons/Resources/I_Grain.png', 420, 'food', 'Food'),
+      mapModeFilterEntry(state, 'iron', 'Iron', '#8A98A6', '/assets/icons/Resources/I_Iron.png', 82, 'rawMaterials', 'Raw materials'),
+      mapModeFilterEntry(state, 'wood', 'Wood', '#7A5B3D', '/assets/icons/Resources/I_Wood.png', 146, 'rawMaterials', 'Raw materials'),
+      mapModeFilterEntry(state, 'weapons', 'Weapons', '#A96348', '/assets/icons/Resources/I_Weapons.png', 34, 'strategic', 'Strategic'),
+      mapModeFilterEntry(state, 'oil', 'Oil', '#6D8160', '/assets/icons/Resources/I_Oil.png', 18, 'strategic', 'Strategic'),
     ];
   } else if (modeId === 'religion') {
     response.modeLabel = 'Religion';
@@ -1050,6 +1057,7 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
   diplomaticStatus: 'neutral',
   subjectType: '',
   subjectSubtype: '',
+  overlordName: '',
   buildFocusKey: '',
   buildFocus: '',
   canSetBuildFocus: false,
@@ -1377,6 +1385,7 @@ const subjectFaction: BridgeResponse<'game.get_faction_data'> = {
   diplomaticStatus: 'subject',
   subjectType: 'Prefecture',
   subjectSubtype: 'province',
+  overlordName: playerFaction.name,
   government: 'Province',
   governmentDisplayName: 'Province',
   governmentDescription: 'A subject administration governed as part of a larger imperial order.',
@@ -1652,7 +1661,8 @@ function mockProvinceModeOverview(state: MockBridgeState): BridgeResponse<'game.
     imperialFaction: mockProvinceModeFactionSummary(provinceModeOverlordFaction),
     governor: mockProvinceModePerson(MOCK_IDS.governor),
     emperor: mockProvinceModePerson(MOCK_IDS.character),
-    successor: mockProvinceModePerson(MOCK_IDS.heir),
+    imperialSuccessor: mockProvinceModePerson(MOCK_IDS.heir),
+    provinceSuccessor: mockProvinceModePerson(MOCK_IDS.courtier),
     standingScore: active ? 72 : 0,
     standingTrend: active ? 3 : 0,
     standingTrendParts: active ? [{ label: 'Standing is 72, above 70', value: 3 }] : [],
@@ -2899,6 +2909,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
   ];
   return {
     found: true,
+    canViewFullDetails: true,
     id: profile.id,
     updateKind: '',
     debugShortId: mockDebugShortId(profile.id),
@@ -3083,7 +3094,7 @@ const mockHintSeeds: Record<string, MockHintSeed> = {
     hintKey: 'EconomyHint',
     title: 'Economy',
     paragraphs: [
-      'Use Economy to move between overview totals, resources, food, settlements, military, provinces, and the full income breakdown.',
+      'Use Economy to inspect gold and resource flows, then move between settlements, military forces, and provinces.',
       'Use Overview for the biggest gains and losses, Resources and Food for shortages, and Breakdown for income, upkeep, subject contributions, and tax losses.',
     ],
   },
@@ -3198,7 +3209,7 @@ function mapModes(activeMode: string): BridgeResponse<'game.get_map_modes'> {
       { id: 'resources', label: 'Resources', description: 'Resource output.', tooltip: '<header>Resources</><bullet>Shows resource production.</>', shortcut: '' },
       { id: 'militaries', label: 'Military Recruitment', description: 'Recruitment activity.', tooltip: '<header>Military Recruitment</><bullet>Shows recruitment activity.</>', shortcut: '' },
       { id: 'unrest', label: 'Unrest', description: 'Local instability.', tooltip: '<header>Unrest</><bullet>Highlights risky settlements.</>', shortcut: '4' },
-      { id: 'loyalty', label: 'Compliance', description: 'Ruler compliance.', tooltip: '<header>Compliance</><bullet>Shows compliance.</>', shortcut: '' },
+      { id: 'loyalty', label: 'Compliance and Opinion', description: 'Compliance within your realm and outside factions\' opinion of you.', tooltip: '<header>Compliance and Opinion</><bullet>Shows compliance and opinion.</>', shortcut: '' },
       { id: 'luxury', label: 'Luxuries', description: 'Court luxury supply.', tooltip: '<header>Luxuries</><bullet>Shows missing luxury goods.</>', shortcut: '' },
       { id: 'economicProsperity', label: 'Economy & Construction', description: 'Income and building queues.', tooltip: '<header>Economy & Construction</><bullet>Shows income and construction.</>', shortcut: '3' },
       { id: 'adminRegion', label: 'Administrative Regions', description: 'Administrative regions.', tooltip: '<header>Administrative Regions</><bullet>Shows regions.</>', shortcut: '' },
@@ -3600,10 +3611,10 @@ function heirCandidates(): BridgeResponse<'game.get_heir_candidates'> {
 }
 
 function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
-  const historyMonths = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 12, 11];
 
   return {
     gold: 22748,
+    isVassal: false,
     netIncome: 7670,
     incomeTotal: 10820,
     expenseTotal: 3150,
@@ -3643,22 +3654,22 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
     foodIncomeTotal: 252,
     foodExpenseTotal: 234,
     foodNet: 18,
-    autoBuyEnabled: true,
-    autoBuyFoodResource: 'Grain',
-    autoBuyFoodThreshold: 500,
-    autoBuyFoodSliderMax: 1500,
     resources: [
       {
         id: 'Food',
         name: 'Food',
         category: 'food',
         amount: 1285,
+        capitalAmount: 842,
         production: 148,
         vassalContribution: 104,
+        liegeContribution: 0,
         treatyIncome: 0,
         militaryUsage: 54,
         queuedUsage: 0,
         settlementConsumption: 180,
+        courtConsumption: 0,
+        liegeTribute: 0,
         decayLoss: 0,
         netPerMonth: 18,
         marketMultiplier: 1,
@@ -3671,6 +3682,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoBuyThreshold: 0,
         autoBuySliderMax: 0,
         stockpileCap: 2500,
+        storageAvailable: 1395,
         aggregate: true,
         producers: [
           { name: 'Rephsia', amount: 42, linkType: 'settlement', linkId: MOCK_IDS.settlement },
@@ -3703,12 +3715,16 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         name: 'Grain',
         category: 'food',
         amount: 842,
+        capitalAmount: 620,
         production: 96,
         vassalContribution: 0,
+        liegeContribution: 0,
         treatyIncome: 0,
         militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 122,
+        courtConsumption: 0,
+        liegeTribute: 0,
         decayLoss: 0,
         netPerMonth: -26,
         marketMultiplier: 0.85,
@@ -3721,6 +3737,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoBuyThreshold: 500,
         autoBuySliderMax: 1500,
         stockpileCap: 2500,
+        storageAvailable: 1395,
         aggregate: false,
         producers: [
           { name: 'Rephsia', amount: 24, linkType: 'settlement', linkId: MOCK_IDS.settlement },
@@ -3748,12 +3765,16 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         name: 'Timber',
         category: 'rawMaterials',
         amount: 524,
+        capitalAmount: 400,
         production: 48,
         vassalContribution: 0,
+        liegeContribution: 0,
         treatyIncome: 0,
         militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 36,
+        courtConsumption: 0,
+        liegeTribute: 0,
         decayLoss: 0,
         netPerMonth: 7,
         marketMultiplier: 1.05,
@@ -3766,6 +3787,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoBuyThreshold: 500,
         autoBuySliderMax: 1000,
         stockpileCap: 20000,
+        storageAvailable: 19096,
         aggregate: false,
         producers: [
           { name: 'Lacertum', amount: 18, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
@@ -3788,12 +3810,16 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         name: 'Stone',
         category: 'rawMaterials',
         amount: 380,
+        capitalAmount: 300,
         production: 28,
         vassalContribution: 0,
+        liegeContribution: 0,
         treatyIncome: 0,
         militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 18,
+        courtConsumption: 0,
+        liegeTribute: 0,
         decayLoss: 0,
         netPerMonth: 10,
         marketMultiplier: 1.2,
@@ -3806,6 +3832,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoBuyThreshold: 500,
         autoBuySliderMax: 1000,
         stockpileCap: 20000,
+        storageAvailable: 19096,
         aggregate: false,
         producers: [
           { name: 'Vallis Regio', amount: 14, linkType: 'settlement', linkId: 'mock-settlement-vallis-regio' },
@@ -3827,12 +3854,16 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         name: 'Livestock',
         category: 'food',
         amount: 315,
+        capitalAmount: 220,
         production: 34,
         vassalContribution: 0,
+        liegeContribution: 0,
         treatyIncome: 0,
         militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 55,
+        courtConsumption: 0,
+        liegeTribute: 0,
         decayLoss: 0,
         netPerMonth: -21,
         marketMultiplier: 1.15,
@@ -3845,6 +3876,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoBuyThreshold: 500,
         autoBuySliderMax: 1000,
         stockpileCap: 2500,
+        storageAvailable: 1395,
         aggregate: false,
         producers: [
           { name: 'Ara Salimba', amount: 10, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
@@ -3868,14 +3900,18 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         name: 'Iron',
         category: 'strategic',
         amount: 156,
+        capitalAmount: 110,
         production: 22,
         vassalContribution: 0,
+        liegeContribution: 0,
         treatyIncome: 0,
-        militaryUsage: 0,
+        militaryUsage: 8,
         queuedUsage: 0,
         settlementConsumption: 14,
+        courtConsumption: 0,
+        liegeTribute: 0,
         decayLoss: 0,
-        netPerMonth: 8,
+        netPerMonth: 0,
         marketMultiplier: 1.45,
         buyPrice: 0.87,
         sellPrice: 0.435,
@@ -3886,6 +3922,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoBuyThreshold: 500,
         autoBuySliderMax: 1000,
         stockpileCap: 12000,
+        storageAvailable: 11844,
         aggregate: false,
         producers: [
           { name: 'Lacertum', amount: 9, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
@@ -3900,6 +3937,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         consumers: [
           { name: 'Rephsia', amount: 9, linkType: 'settlement', linkId: MOCK_IDS.settlement },
           { name: 'Lacertum', amount: 5, linkType: 'settlement', linkId: 'mock-settlement-lacertum' },
+          { name: 'I Field Army', amount: 8, linkType: 'military', linkId: MOCK_IDS.military },
         ],
       },
       {
@@ -3907,12 +3945,16 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         name: 'Fish',
         category: 'food',
         amount: 128,
+        capitalAmount: 40,
         production: 18,
         vassalContribution: 0,
+        liegeContribution: 0,
         treatyIncome: 0,
         militaryUsage: 0,
         queuedUsage: 0,
         settlementConsumption: 35,
+        courtConsumption: 0,
+        liegeTribute: 0,
         decayLoss: 0,
         netPerMonth: -17,
         marketMultiplier: 0.92,
@@ -3925,6 +3967,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         autoBuyThreshold: 500,
         autoBuySliderMax: 1000,
         stockpileCap: 2500,
+        storageAvailable: 1395,
         aggregate: false,
         producers: [
           { name: 'Ara Salimba', amount: 8, linkType: 'settlement', linkId: MOCK_IDS.portSettlement },
@@ -3944,53 +3987,6 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         ],
       },
     ],
-    foodRows: [
-      { settlementId: MOCK_IDS.settlement, settlementName: 'Rephsia', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', stockpile: 520, production: 42, consumption: 40, netPerMonth: 2, shortage: 0, isCapital: true },
-      { settlementId: MOCK_IDS.portSettlement, settlementName: 'Ara Salimba', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', stockpile: 180, production: 26, consumption: 24, netPerMonth: 2, shortage: 0, isCapital: false },
-      { settlementId: 'mock-settlement-vallis-regio', settlementName: 'Vallis Regio', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', stockpile: 210, production: 18, consumption: 22, netPerMonth: -4, shortage: 0, isCapital: false },
-      { settlementId: 'mock-settlement-lacertum', settlementName: 'Lacertum', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', stockpile: 160, production: 22, consumption: 18, netPerMonth: 4, shortage: 0, isCapital: false },
-      { settlementId: 'mock-settlement-berginium', settlementName: 'Berginium', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', stockpile: 125, production: 16, consumption: 19, netPerMonth: -3, shortage: 0, isCapital: false },
-      { settlementId: 'mock-settlement-cortalium', settlementName: 'Cortalium', factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', stockpile: 90, production: 12, consumption: 11, netPerMonth: 1, shortage: 0, isCapital: false },
-    ],
-    history: historyMonths.map((month, index) => ({
-      month,
-      year: 784,
-      dateText: `${month}/784`,
-      settlementIncome: 6400 + index * 60,
-      tradeIncome: 2180 + index * 45,
-      resourceSalesIncome: 280 + index * 9,
-      vassalTributeIncome: 560 + Math.floor(index / 3) * 40,
-      treatyTributeIncome: 0,
-      eventIncome: index === 4 ? 120 : 0,
-      lootingIncome: index === 8 ? 160 : 0,
-      otherIncome: 0,
-      armyExpense: 1880 + Math.floor(index / 4) * 60,
-      commandMaintenanceExpense: 300 + Math.floor(index / 6) * 20,
-      treasuryDampeningExpense: 0,
-      replenishmentExpense: 80 + (index % 3) * 20,
-      buildingExpense: 420 + (index > 6 ? 60 : 0),
-      tributePaidToLiege: 0,
-      treatyTributePaid: 0,
-      eventExpense: 0,
-      powerBlocExpense: 120 + (index > 5 ? 30 : 0),
-      landownerInterestExpense: 0,
-      autoAssignCommanderExpense: 0,
-      otherExpense: 0,
-      netIncome: (
-        6400 + index * 60
-        + 2180 + index * 45
-        + 280 + index * 9
-        + 560 + Math.floor(index / 3) * 40
-        + (index === 4 ? 120 : 0)
-        + (index === 8 ? 160 : 0)
-      ) - (
-        1880 + Math.floor(index / 4) * 60
-        + 300 + Math.floor(index / 6) * 20
-        + 80 + (index % 3) * 20
-        + 420 + (index > 6 ? 60 : 0)
-        + 120 + (index > 5 ? 30 : 0)
-      ),
-    })),
     taxRows: [
       { factionId: MOCK_IDS.playerFaction, factionName: 'Rephsian Empire', isPlayerFaction: true, isVassal: false, isFoederati: false, effectiveRate: 0.2, baseRate: 0.22, adjustment: -0.02, currentTax: 7060, potentialTax: 7480, leakage: 420, blockadeLoss: 0, culturalLoss: 120, corruptionLoss: 180, ungovernedLoss: 40, complianceLoss: 80, tributeBaseIncome: 0 },
       { factionId: 'mock-faction-ingalia', factionName: 'Ingalia', isPlayerFaction: false, isVassal: true, isFoederati: false, effectiveRate: 0.35, baseRate: 0.35, adjustment: 0, currentTax: 420, potentialTax: 580, leakage: 160, blockadeLoss: 0, culturalLoss: 0, corruptionLoss: 70, ungovernedLoss: 30, complianceLoss: 60, tributeBaseIncome: 420 },
@@ -4214,7 +4210,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
 
 function economyResourceDetails(resourceId: string): BridgeResponse<'game.get_economy_resource_details'> {
   const resource = economyOverview().resources.find(row => row.id === resourceId) ?? economyOverview().resources[0]!;
-  const consumption = resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss;
+  const consumption = resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.courtConsumption + resource.decayLoss;
   return {
     resourceId: resource.id,
     name: resource.name,
@@ -4242,13 +4238,40 @@ function economyResourceDetails(resourceId: string): BridgeResponse<'game.get_ec
       linkType: 'faction',
       linkId: 'mock-subject-source',
       amount: resource.vassalContribution,
+      unitUsage: [],
+      breakdown: [],
     }] : [],
     consumers: [
-      ...(resource.settlementConsumption > 0 ? [{ id: 'settlement-use', name: 'Settlements', kind: 'settlement', linkType: '', linkId: '', amount: resource.settlementConsumption }] : []),
-      ...(resource.militaryUsage > 0 ? [{ id: 'military-use', name: 'Field Army', kind: 'army', linkType: 'military', linkId: MOCK_IDS.military, amount: resource.militaryUsage }] : []),
-      ...(resource.queuedUsage > 0 ? [{ id: 'queued-use', name: 'Recruitment queues', kind: 'queued', linkType: '', linkId: '', amount: resource.queuedUsage }] : []),
-      ...(resource.decayLoss > 0 ? [{ id: 'decay-use', name: 'Spoilage and decay', kind: 'decay', linkType: '', linkId: '', amount: resource.decayLoss }] : []),
+      ...(resource.settlementConsumption > 0 ? [{ id: 'settlement-use', name: 'Settlements', kind: 'settlement', linkType: '', linkId: '', amount: resource.settlementConsumption, unitUsage: [], breakdown: [{ name: 'Workshops', value: resource.settlementConsumption }] }] : []),
+      ...(resource.courtConsumption > 0 ? [{ id: 'court-use', name: 'Court', kind: 'court', linkType: '', linkId: '', amount: resource.courtConsumption, unitUsage: [], breakdown: [] }] : []),
+      ...(resource.militaryUsage > 0 ? [{
+        id: 'military-use',
+        name: 'Field Army',
+        kind: 'army',
+        linkType: 'military',
+        linkId: MOCK_IDS.military,
+        amount: resource.militaryUsage,
+        unitUsage: [
+          { name: 'Comitatenses', count: 2, amount: resource.militaryUsage * 0.625 },
+          { name: 'Limitanei', count: 3, amount: resource.militaryUsage * 0.375 },
+        ],
+        breakdown: [],
+      }] : []),
+      ...(resource.queuedUsage > 0 ? [{ id: 'queued-use', name: 'Recruitment queues', kind: 'queued', linkType: '', linkId: '', amount: resource.queuedUsage, unitUsage: [], breakdown: [] }] : []),
+      ...(resource.decayLoss > 0 ? [{ id: 'decay-use', name: 'Spoilage and decay', kind: 'decay', linkType: '', linkId: '', amount: resource.decayLoss, unitUsage: [], breakdown: [] }] : []),
     ],
+    potentialUses: resource.id === 'Iron'
+      ? [
+          { name: 'Armour Foundry', kind: 'processing' },
+          { name: 'Metal Foundry', kind: 'processing' },
+          { name: 'Siege Workshop', kind: 'processing' },
+          { name: 'Weapon Foundry', kind: 'processing' },
+        ]
+      : resource.id === 'Leather'
+        ? [{ name: 'Armour Foundry', kind: 'processing' }]
+        : resource.id === 'Pitch'
+          ? [{ name: 'Dromones Imperialis', kind: 'military' }]
+          : [],
     history: Array.from({ length: 24 }, (_, index) => {
       const age = 23 - index;
       const wave = Math.sin(index * 0.65) * Math.max(2, Math.abs(resource.netPerMonth) * 0.35);
@@ -4394,6 +4417,7 @@ function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
     location: '',
     summary: '',
     headerImage: '',
+    warScoreChange: 0,
     spoils: '',
     spoilsList: [],
     unitDamage: [],
@@ -4416,6 +4440,7 @@ function ledgerOverview(): BridgeResponse<'game.get_ledger_overview'> {
     location: 'Berginium',
     summary: 'I Field Army broke the rebel line and held the field.',
     headerImage: '/assets/events/military-victory.png',
+    warScoreChange: 8.7,
     ourSide: {
       ...emptyBattleReport.ourSide,
       label: 'Our forces',
@@ -5411,6 +5436,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     activeMapMode: 'political',
     mapModeFilterActive: false,
     activeMapModeFilterIds: [],
+    collectionRoutesActive: true,
+    distributionRoutesActive: true,
     selectedBishopricFilterId: rephsianReligion.id,
     eventVisible: searchParams.has('event'),
     eventKind: searchParams.has('importantEvent') || searchParams.has('important')
@@ -5418,9 +5445,6 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       : searchParams.has('recall') ? 'recall' : 'court',
     tutorialSpotlightVisible: searchParams.has('tutorialSpotlight'),
     autoAssignGovernorsEnabled: true,
-    autoBuyEnabled: true,
-    autoBuyFoodResource: 'Grain',
-    autoBuyFoodThreshold: 500,
     autoAssignCourtEnabled: true,
     enteredCourtContestKeys: ['masterofeconomy'],
     autoAssignClergyEnabled: true,
@@ -5862,9 +5886,60 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
   }
 
   function namedMilitaryData(id: string): BridgeResponse<'game.get_military_data'> {
-    const data = militaryData(id);
-    const customName = state.militaryCustomNames[id];
+    const foreignParts = id.startsWith('foreign:') ? id.split(':') : [];
+    const sourceId = foreignParts.length >= 3 ? foreignParts.slice(2).join(':') : id;
+    const data = militaryData(sourceId);
+    const customName = state.militaryCustomNames[sourceId];
     if (customName) data.name = customName;
+    if (foreignParts.length >= 3) {
+      const faction = factionById(foreignParts[1], state.provinceMode);
+      const foreignId = (militaryId: string) => militaryId ? `foreign:${faction.id}:${militaryId}` : '';
+      data.id = id;
+      data.faction = faction.name;
+      data.factionId = faction.id;
+      data.factionDebugShortId = mockDebugShortId(faction.id);
+      data.canViewFullDetails = false;
+      data.morale = 0;
+      data.units = [];
+      data.unitRows = [];
+      data.battleGroups = [];
+      data.formationTemplate = '';
+      data.embarkedNavyId = '';
+      data.embarkedNavyName = '';
+      data.parentCommandId = foreignId(data.parentCommandId);
+      data.subordinates = data.subordinates.map(subordinate => ({
+        ...subordinate,
+        id: foreignId(subordinate.id),
+        unitTypes: [],
+        withinCommandRange: false,
+        receivesCommandBenefits: false,
+        distanceToSuperior: 0,
+        superiorCommandRadius: 0,
+        hierarchyTacticsBonus: 0,
+        hierarchyMoraleBonus: 0,
+        hierarchySpeedBonus: 0,
+      }));
+      data.commandMaintenance = 0;
+      data.commandBuffRadius = 0;
+      data.hierarchyTacticsBonus = 0;
+      data.hierarchyMoraleBonus = 0;
+      data.hierarchySpeedBonus = 0;
+      data.capacity = 0;
+      data.usedCapacity = 0;
+      data.embarkedArmies = [];
+      data.resources = [];
+      data.attritionSources = [];
+      data.supplyDays = 0;
+      data.isForcedMarching = false;
+      data.canForcedMarch = false;
+      data.canMerge = false;
+      data.canSplit = false;
+      data.isRaiding = false;
+      data.isReplenishing = false;
+      data.replenishCost = 0;
+      data.canReplenish = false;
+      data.isPlayerControlled = false;
+    }
     return data;
   }
 
@@ -5963,6 +6038,31 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return clone(militaryCommanderCandidates(payloadString(payload, 'militaryId', MOCK_IDS.military)));
       case 'game.get_military_overview':
         return clone(namedMilitaryOverview());
+      case 'game.get_faction_military_overview': {
+        const faction = factionById(
+          payloadString(payload, 'factionId', MOCK_IDS.rivalFaction),
+          state.provinceMode,
+        );
+        const overview = namedMilitaryOverview();
+        const foreignId = (militaryId: string) => militaryId ? `foreign:${faction.id}:${militaryId}` : '';
+        overview.forces = overview.forces.map(force => ({
+          ...force,
+          id: foreignId(force.id),
+          parentId: foreignId(force.parentId),
+          factionId: faction.id,
+          morale: 0,
+          supplyDays: 0,
+          attrition: false,
+          template: '',
+          isPlayerControlled: false,
+        }));
+        return {
+          factionId: faction.id,
+          factionName: faction.name,
+          canViewFullDetails: false,
+          overview,
+        } satisfies BridgeResponse<'game.get_faction_military_overview'>;
+      }
       case 'game.get_personal_guard':
         return clone(personalGuardStatus(state));
       case 'game.set_personal_guard_composition': {
@@ -6063,6 +6163,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         } else {
           state.mapModeFilterActive = payloadBoolean(payload, 'filterActive', false);
           state.activeMapModeFilterIds = payloadStringArray(payload, 'activeIds');
+          state.collectionRoutesActive = payloadBoolean(payload, 'collectionRoutesActive', true);
+          state.distributionRoutesActive = payloadBoolean(payload, 'distributionRoutesActive', true);
         }
         emit('game.get_map_mode_filters', responseFor('game.get_map_mode_filters', undefined, emit));
         emit('game.get_world_glances', responseFor('game.get_world_glances', undefined, emit));
@@ -6208,24 +6310,19 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           message: 'Your clients have formed a faction around you.',
           blocId: MOCK_IDS.powerBloc,
         } satisfies BridgeResponse<'game.form_personal_power_bloc'>;
-      case 'game.get_economy_overview': {
-        const overview = clone(economyOverview());
-        overview.autoBuyEnabled = state.autoBuyEnabled;
-        overview.autoBuyFoodResource = state.autoBuyFoodResource;
-        overview.autoBuyFoodThreshold = state.autoBuyFoodThreshold;
-        return overview;
-      }
-      case 'game.set_economy_auto_buy': {
-        state.autoBuyEnabled = payloadBoolean(payload, 'enabled', false);
-        const resourceId = payloadString(payload, 'resourceId', '');
-        if (resourceId) state.autoBuyFoodResource = resourceId;
-        if (typeof payloadValue(payload, 'threshold') === 'number') {
-          state.autoBuyFoodThreshold = payloadNumber(payload, 'threshold');
-        }
-        return undefined;
-      }
+      case 'game.get_economy_overview':
+        return clone(economyOverview());
       case 'game.get_economy_resource_details':
         return clone(economyResourceDetails(payloadString(payload, 'resourceId', 'Grain')));
+      case 'game.get_build_queue':
+        return {
+          items: [],
+          totalItems: 0,
+          activeItems: 0,
+          awaitingResources: 0,
+          settlementCount: 0,
+          vassalItems: 0,
+        } satisfies BridgeResponse<'game.get_build_queue'>;
       case 'game.get_diplomacy_overview':
         return clone(diplomacyOverview(state.autoAssignGovernorsEnabled));
       case 'game.get_ledger_overview':
@@ -6561,8 +6658,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           viewportHeight: window.innerHeight || 1080,
           snapshotRevision: 0,
           settlements: [
-            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, luxurySlotsRequired: 3, luxurySlotsProvided: 2, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, warWithPlayer: false },
-            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, luxurySlotsRequired: 2, luxurySlotsProvided: 1, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, warWithPlayer: false },
+            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, luxurySlotsRequired: 3, luxurySlotsProvided: 2, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, warWithPlayer: false },
+            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, luxurySlotsRequired: 2, luxurySlotsProvided: 1, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, warWithPlayer: false },
           ],
           ports: [
             { id: MOCK_IDS.portSettlement, screenX: 1088, screenY: 650, scale: 0.94, opacity: 1, zOrder: 10, detailLevel: 'name', selected: false, targeted: false, faction: { ...playerFactionReference(), relation: 'own' }, level: 3, blockaded: true },
@@ -6794,6 +6891,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           complianceTargetLabel: 'Governor:',
           complianceTargetName: '',
           complianceTargetIsRuler: false,
+          complianceUsesFactionOpinion: false,
           complianceLuxuryLabel: 'Luxuries:',
           complianceLuxuryStatus: '',
           luxurySlotsRequired: 0,
@@ -7852,8 +7950,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         timestamp: '742-06-17',
         style: 'cinematic',
         createdOnDay,
-        expiresOnDay: createdOnDay + 4,
-        durationDays: 4,
+        expiresOnDay: createdOnDay + 14,
+        durationDays: 14,
         hasPortrait: true,
         characterName: person.name,
         portraitLayers: person.portraitLayers,
@@ -7871,8 +7969,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         timestamp: '742-06-17',
         style: 'regular',
         createdOnDay,
-        expiresOnDay: createdOnDay + 4,
-        durationDays: 4,
+        expiresOnDay: createdOnDay + 14,
+        durationDays: 14,
         hasPortrait: false,
       });
     },
@@ -7889,8 +7987,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         timestamp: '742-06-17',
         style: 'regular',
         createdOnDay,
-        expiresOnDay: createdOnDay + 6,
-        durationDays: 6,
+        expiresOnDay: createdOnDay + 14,
+        durationDays: 14,
         hasPortrait: false,
         settlementId: MOCK_IDS.settlement,
       });
@@ -7910,13 +8008,13 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         timestamp: '742-06-17',
         style: 'regular',
         createdOnDay,
-        expiresOnDay: 0,
-        durationDays: 0,
+        expiresOnDay: createdOnDay + 14,
+        durationDays: 14,
         hasPortrait: true,
         characterName: person.name,
         personId: person.id,
         portraitLayers: person.portraitLayers,
-        persistUntilDismissed: true,
+        isPlayerActionResult: true,
         actionSucceeded: succeeded,
       });
     },
@@ -7942,8 +8040,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         timestamp: '742-06-17',
         style: 'regular',
         createdOnDay,
-        expiresOnDay: createdOnDay + 4,
-        durationDays: 4,
+        expiresOnDay: createdOnDay + 14,
+        durationDays: 14,
         hasPortrait: false,
         battleAfterActionReport: {
           available: true,
@@ -7952,6 +8050,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           location: 'Aurelion',
           summary,
           headerImage: victory ? '/assets/events/military-victory.png' : '/assets/events/mass-grave.png',
+          warScoreChange: victory ? 8.7 : -8.7,
           spoils: victory ? '180 grain, 64 weapons' : '',
           spoilsList: victory ? [
             { resourceId: 'Grain', name: 'Grain', amount: 180, iconPath: '/assets/resources/Grain.png' },

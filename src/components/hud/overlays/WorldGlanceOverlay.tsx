@@ -115,6 +115,7 @@ function mapSettlement(entry: GetWorldGlancesResponse['settlements'][number]): S
     complianceTargetLabel: entry.complianceTargetLabel ?? '',
     complianceTargetName: entry.complianceTargetName ?? '',
     complianceTargetIsRuler: entry.complianceTargetIsRuler ?? false,
+    complianceUsesFactionOpinion: entry.complianceUsesFactionOpinion ?? false,
     complianceLuxuryLabel: entry.complianceLuxuryLabel ?? '',
     complianceLuxuryStatus: entry.complianceLuxuryStatus ?? '',
     luxurySlotsRequired: entry.luxurySlotsRequired ?? 0,
@@ -1140,11 +1141,7 @@ function NativeWorldGlanceInputOverlay() {
   }, [clearReleaseTimer, releaseIfIdle]);
 
   useEffect(() => {
-    const onHover = (event: Event) => {
-      const args = (event as CustomEvent<{ args?: unknown[] }>).detail?.args;
-      const kind = args?.[0];
-      const id = args?.[1];
-      const isHovered = args?.[2];
+    const applyHover = (kind: unknown, id: unknown, isHovered: unknown) => {
       if ((kind !== 'army' && kind !== 'navy' && kind !== 'convoy') || typeof id !== 'string' || typeof isHovered !== 'boolean') {
         return;
       }
@@ -1166,6 +1163,19 @@ function NativeWorldGlanceInputOverlay() {
       }
     };
 
+    const onHover = (event: Event) => {
+      const args = (event as CustomEvent<{ args?: unknown[] }>).detail?.args;
+      applyHover(args?.[0], args?.[1], args?.[2]);
+    };
+
+    const onBridgeHover = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind?: unknown; id?: unknown; hovered?: unknown }>).detail;
+      if (detail?.kind !== 'convoy') {
+        return;
+      }
+      applyHover(detail.kind, detail.id, detail.hovered);
+    };
+
     const onPointerOver = (event: Event) => {
       if (!hoveredRef.current) {
         return;
@@ -1183,9 +1193,11 @@ function NativeWorldGlanceInputOverlay() {
     };
 
     window.addEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
+    bridgeEvents.addEventListener('game.handle_world_glance_hover', onBridgeHover);
     document.addEventListener('pointerover', onPointerOver, true);
     return () => {
       window.removeEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
+      bridgeEvents.removeEventListener('game.handle_world_glance_hover', onBridgeHover);
       document.removeEventListener('pointerover', onPointerOver, true);
       clearReleaseTimer();
     };
@@ -1195,7 +1207,7 @@ function NativeWorldGlanceInputOverlay() {
 
   if (hovered.kind === 'convoy') {
     const entry = data.convoys.find(candidate => candidate.id === hovered.id);
-    return entry ? <NativeConvoyGlanceTooltip data={mapConvoy(entry)} anchor={anchor} /> : null;
+    return entry ? <NativeConvoyGlanceTooltip key={`convoy:${entry.id}`} data={mapConvoy(entry)} anchor={anchor} /> : null;
   }
 
   const entry = hovered.kind === 'navy'
@@ -1204,7 +1216,14 @@ function NativeWorldGlanceInputOverlay() {
   if (!entry) return null;
 
   const tooltipData = hovered.kind === 'navy' ? mapNavy(entry) : mapMilitary(entry);
-  return <NativeMilitaryGlanceTooltip data={tooltipData} isNavy={hovered.kind === 'navy'} anchor={anchor} />;
+  return (
+    <NativeMilitaryGlanceTooltip
+      key={`${hovered.kind}:${entry.id}`}
+      data={tooltipData}
+      isNavy={hovered.kind === 'navy'}
+      anchor={anchor}
+    />
+  );
 }
 
 function BrowserWorldGlanceOverlay({ visible = true }: WorldGlanceOverlayProps) {

@@ -58,6 +58,11 @@ const MILITARY_ATLAS_BLEED_REM = 1.5909;
 const SETTLEMENT_NAMED_ATLAS_CAPACITY_WIDTH_REM = 15.1818;
 const SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM = 4.2727;
 const MILITARY_ATLAS_CAPACITY_REM = 9;
+// Battle plates grow when close zoom switches them from the compact flag treatment to the
+// full strength board. Reserve the largest treatment from first admission so the compositor
+// never samples the expanded board through the compact cell's bounds.
+const BATTLE_ATLAS_CAPACITY_WIDTH_REM = 11.2;
+const BATTLE_ATLAS_CAPACITY_HEIGHT_REM = 3.75;
 const CONVOY_ATLAS_LEFT_BLEED_REM = 0.75;
 const CONVOY_ATLAS_RIGHT_BLEED_REM = 8.75;
 const CONVOY_ATLAS_TOP_BLEED_REM = 0.75;
@@ -196,6 +201,9 @@ function reserveSizeForSection(section: AtlasSection, remPx: number, settlementB
     const heightRem = MILITARY_ATLAS_CAPACITY_REM + Math.max(0, garrisonIndex) * 1.3636;
     return `${width},${(heightRem * remPx).toFixed(2)}`;
   }
+  if (section === 'battle') {
+    return `${(BATTLE_ATLAS_CAPACITY_WIDTH_REM * remPx).toFixed(2)},${(BATTLE_ATLAS_CAPACITY_HEIGHT_REM * remPx).toFixed(2)}`;
+  }
   if (section === 'convoy') {
     const widthRem = CONVOY_ATLAS_LEFT_BLEED_REM + CONVOY_DETAILED_SIZE_REM + CONVOY_ATLAS_RIGHT_BLEED_REM;
     const heightRem = CONVOY_ATLAS_TOP_BLEED_REM + CONVOY_DETAILED_SIZE_REM + CONVOY_ATLAS_BOTTOM_BLEED_REM;
@@ -259,6 +267,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
     '--glance-atlas-raster-scale': rasterScale,
     '--settlement-atlas-bleed': `${settlementBleedRem}rem`,
     '--military-atlas-bleed': `${section === 'army' || section === 'navy' ? MILITARY_ATLAS_BLEED_REM : 0}rem`,
+    '--military-atlas-capacity': `${MILITARY_ATLAS_CAPACITY_REM}rem`,
     '--garrison-stack-offset': `${garrisonIndex * 1.3636}rem`,
     '--convoy-atlas-left-bleed': `${CONVOY_ATLAS_LEFT_BLEED_REM}rem`,
     '--convoy-atlas-right-bleed': `${CONVOY_ATLAS_RIGHT_BLEED_REM}rem`,

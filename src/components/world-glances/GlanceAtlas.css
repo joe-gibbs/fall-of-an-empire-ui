@@ -61,6 +61,26 @@
   padding: var(--military-atlas-bleed, 0);
 }
 
+/* Garrison rows are translated beneath their settlement anchor. Give them an explicit sampled
+   footprint so their paint cannot escape into a neighbouring atlas cell, while preserving the
+   generic military bleed as the row's vertical inset. */
+.glance-atlas-plate.world-glance-node--army.is-garrisoned,
+.glance-atlas-plate.world-glance-node--navy.is-garrisoned {
+  box-sizing: border-box;
+  width: var(--military-atlas-capacity);
+  height: calc(var(--military-atlas-capacity) + var(--garrison-stack-offset, 0rem));
+  padding: 0;
+  overflow: hidden;
+}
+
+.glance-atlas-plate.world-glance-node--army.is-garrisoned > .world-glance-tip,
+.glance-atlas-plate.world-glance-node--navy.is-garrisoned > .world-glance-tip {
+  position: absolute;
+  top: var(--military-atlas-bleed);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 /* Convoy labels and cargo strips are deliberately much wider than their relation frame. Keep
    that overflow inside the convoy's own sampled cell so it cannot paint into adjacent plates. */
 .glance-atlas-plate.world-glance-node--convoy {

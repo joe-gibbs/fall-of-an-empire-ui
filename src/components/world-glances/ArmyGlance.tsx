@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../common/tooltips/Tooltip';
+import { dismissSharedTooltips } from '../common/tooltips/tooltipEvents';
 import FactionTooltip from '../common/tooltips/FactionTooltip';
 import PersonTooltip from '../common/tooltips/PersonTooltip';
 import EntityLink from '../common/entities/EntityLink';
 import FactionRoundel from '../common/entities/FactionRoundel';
+import GameButton from '../common/buttons/GameButton';
 import type { ArmyGlanceData, GlanceFactionStub, NavyGlanceData } from './WorldGlanceTypes';
 import { bridgeCall, type GetMilitaryDataResponse } from '../../bridge-types.generated.ts';
 import { clampUnitFraction } from './glanceMath';
@@ -218,6 +220,7 @@ function militaryTooltip(
   blockading: boolean,
   debugMode: boolean,
   interactive: boolean,
+  onViewMilitary: () => void,
 ): TooltipContent {
   const isRaiding = detail?.isRaiding ?? Boolean(data.raiding);
   const isPersonalGuard = Boolean(detail?.found && detail.isPersonalGuard);
@@ -248,6 +251,18 @@ function militaryTooltip(
       ),
     });
   }
+
+  lines.push({
+    label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.174.4'),
+    value: (
+      <GlanceEntityValue
+        type="faction"
+        id={data.faction.id}
+        name={data.faction.name}
+        interactive={interactive}
+      />
+    ),
+  });
 
   if (garrisonedAt) {
     lines.push({
@@ -359,6 +374,16 @@ function militaryTooltip(
       />
     ),
     lines,
+    footer: (
+      <GameButton
+        variant="burgundy"
+        fullWidth
+        icon={isNavy ? '/assets/icons/I_NaviesQuickButton.png' : '/assets/icons/I_ArmiesQuickButton.png'}
+        onClick={onViewMilitary}
+      >
+        {webUIText('FactionMilitary.ViewMilitary')}
+      </GameButton>
+    ),
   };
 }
 
@@ -377,6 +402,7 @@ interface MilitaryTooltipProps extends ArmyGlanceProps {
 
 function MilitaryTooltip({ data, isNavy = false, children, open, passive = false, wrapperStyle }: MilitaryTooltipProps) {
   const { debugMode } = useGameState();
+  const openSidebar = useOptionalGameActions()?.openSidebar;
   const [tooltipDetail, setTooltipDetail] = useState<{ id: string; data: GetMilitaryDataResponse } | null>(null);
   const requestInFlightIdRef = useRef<string | null>(null);
   const blockading = isNavy && (data as NavyGlanceData).blockading;
@@ -400,9 +426,14 @@ function MilitaryTooltip({ data, isNavy = false, children, open, passive = false
       });
   }, [data.id, tooltipDetail]);
 
+  const viewMilitary = useCallback(() => {
+    dismissSharedTooltips();
+    openSidebar?.('military', data.id);
+  }, [data.id, openSidebar]);
+
   const content = useMemo(
-    () => militaryTooltip(data, resolvedDetail, isNavy, Boolean(blockading), debugMode, true),
-    [blockading, data, debugMode, isNavy, resolvedDetail],
+    () => militaryTooltip(data, resolvedDetail, isNavy, Boolean(blockading), debugMode, true, viewMilitary),
+    [blockading, data, debugMode, isNavy, resolvedDetail, viewMilitary],
   );
 
   return (
@@ -457,6 +488,7 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
   const visibleStatusCount = (statusIcon ? 1 : 0) + (data.attrition ? 1 : 0) + (embarkedArmyCount > 0 ? 1 : 0);
   const crownCount = 1 + visibleStatusCount;
   const atWar = isHostileGlance(data.faction.relation);
+  const relationColour = relationDisplayColour(data.faction.relation);
   const typeMark = (
     <img
       className={`glance-military-type-mark${isNavy ? ' glance-military-type-mark--navy' : ' glance-military-type-mark--army'}`}
@@ -469,7 +501,7 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
     <div
       className={`glance glance--military-garrison${isNavy ? ' glance--navy' : ''}${atWar ? ' glance--enemy is-at-war' : ''}${moraleStateClass}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
       style={{
-        '--faction-colour': data.faction.colour,
+        '--relation-colour': relationColour,
         ...relationTextVars(data.faction.relation),
         '--relation-label-bg': relationLabelBackgroundColour(data.faction.relation),
         '--relation-border-top': relationBorderTopColour(data.faction.relation),
@@ -494,7 +526,7 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
     <div
       className={`glance glance--military${isNavy ? ' glance--navy' : ''}${atWar ? ' glance--enemy is-at-war' : ''}${moraleStateClass}${data.selected ? ' is-selected' : ''}${data.targeted ? ' is-targeted' : ''}`}
       style={{
-        '--faction-colour': data.faction.colour,
+        '--relation-colour': relationColour,
         ...relationTextVars(data.faction.relation),
         '--relation-bg': relationBackgroundColour(data.faction.relation),
         '--relation-target-bg': relationTargetBackgroundColour(data.faction.relation),

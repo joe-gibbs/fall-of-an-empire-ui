@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type {
-  EconomyOverviewResourceRow,
-  EconomyResourceFlowDetail,
-  EconomyResourceHistoryPoint,
+import {
+  bridgeCall,
+  type EconomyOverviewResourceRow,
+  type EconomyResourceFlowDetail,
+  type EconomyResourceHistoryPoint,
 } from '../../../bridge-types.generated.ts';
+import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import {
   buyEconomyResourceBridge,
   sellEconomyResourceBridge,
@@ -15,13 +17,14 @@ import {
 import { useBuildQueueBridge } from '../../../bridge/settlements-economy/useBuildQueueBridge';
 import { useModalPresence } from '../../../hooks/useModalPresence';
 import { useWebUIText } from '../../../localization/WebUITextContext';
-import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
+import { formatNumber, formatResourceNumber, formatSignedResourceNumber } from '../../../utils/numberFormat';
 import {
   stepAmountFromEvent,
   stepAmountFromMultiplier,
   useStepMultiplier,
 } from '../../../utils/stepModifiers';
 import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
+import { useGameActions } from '../../../context/GameContext';
 import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
 import CloseButton from '../../common/buttons/CloseButton';
 import GameButton from '../../common/buttons/GameButton';
@@ -45,7 +48,7 @@ interface Props {
 }
 
 function number(value: number | null | undefined): string {
-  return formatNumber(value, { maximumFractionDigits: 1 });
+  return formatResourceNumber(value);
 }
 
 function price(value: number | null | undefined): string {
@@ -53,7 +56,7 @@ function price(value: number | null | undefined): string {
 }
 
 function signed(value: number | null | undefined): string {
-  return formatSignedNumber(value, { maximumFractionDigits: 1 });
+  return formatSignedResourceNumber(value);
 }
 
 function valueClass(value: number): string {
@@ -165,26 +168,29 @@ function LineChart({ series, dates }: { series: ChartSeries[]; dates: string[] }
           <polyline key={item.className} className={`erd-chart__line erd-chart__line--${item.className}`} points={points(item.values)} />
         ))}
         {hoveredIndex !== null && (
-          <>
-            <line
-              className="erd-chart__hover-line"
-              x1={xForIndex(hoveredIndex, pointCount)}
-              y1="6"
-              x2={xForIndex(hoveredIndex, pointCount)}
-              y2="44"
-            />
-            {series.map(item => item.values[hoveredIndex] !== undefined && (
-              <circle
-                key={item.className}
-                className={`erd-chart__hover-point erd-chart__hover-point--${item.className}`}
-                cx={xForIndex(hoveredIndex, item.values.length)}
-                cy={yForValue(item.values[hoveredIndex])}
-                r="1.15"
-              />
-            ))}
-          </>
+          <line
+            className="erd-chart__hover-line"
+            x1={xForIndex(hoveredIndex, pointCount)}
+            y1="6"
+            x2={xForIndex(hoveredIndex, pointCount)}
+            y2="44"
+          />
         )}
       </svg>
+      {series.flatMap(item => item.values.map((value, index) => (
+        <i
+          className={`erd-chart__point erd-chart__point--${item.className}`}
+          style={{ left: `${xForIndex(index, item.values.length)}%`, top: `${yForValue(value) / 48 * 100}%` }}
+          key={`${item.className}-${index}`}
+        />
+      )))}
+      {hoveredIndex !== null && series.map(item => item.values[hoveredIndex] !== undefined && (
+        <i
+          className={`erd-chart__hover-point erd-chart__hover-point--${item.className}`}
+          style={{ left: `${hoverX}%`, top: `${yForValue(item.values[hoveredIndex]) / 48 * 100}%` }}
+          key={item.className}
+        />
+      ))}
       <div
         className="erd-chart__hit-area"
         onMouseMove={event => updateHoveredPoint(event.clientX, event.currentTarget.getBoundingClientRect())}
@@ -293,6 +299,7 @@ export default function ResourceDetailsModal({
   onClose,
 }: Props) {
   const t = useWebUIText();
+  const { closeScreen } = useGameActions();
   const { settings } = useSettingsBridge();
   const details = useEconomyResourceDetailsBridge(resource?.id ?? null);
   const buildQueue = useBuildQueueBridge(!!resource);
@@ -303,10 +310,12 @@ export default function ResourceDetailsModal({
   const [autoBuyEnabled, setAutoBuyEnabled] = useState(false);
   const [sellDraft, setSellDraft] = useState(0);
   const [buyDraft, setBuyDraft] = useState(0);
-  const [draftResourceId, setDraftResourceId] = useState('');
-  const resourceId = resource?.id ?? '';
-  if (resourceId !== draftResourceId) {
-    setDraftResourceId(resourceId);
+  const resourceAutomationKey = resource
+    ? `${resource.id}:${resource.autoBuyEnabled}:${resource.autoBuyThreshold}:${resource.autoSellEnabled}:${resource.autoSellThreshold}`
+    : '';
+  const [draftKey, setDraftKey] = useState('');
+  if (resourceAutomationKey !== draftKey) {
+    setDraftKey(resourceAutomationKey);
     setAutoSellEnabled(resource?.autoSellEnabled ?? false);
     setAutoBuyEnabled(resource?.autoBuyEnabled ?? false);
     setSellDraft(Math.max(0, resource?.autoSellThreshold ?? 0));
@@ -331,8 +340,8 @@ export default function ResourceDetailsModal({
       return [{
         dateText: t('Economy.Current'),
         stockpile: resource.amount,
-        production: resource.production + resource.vassalContribution + resource.treatyIncome,
-        consumption: resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss,
+        production: resource.production + resource.vassalContribution + resource.liegeContribution + resource.treatyIncome,
+        consumption: resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.courtConsumption + resource.liegeTribute + resource.decayLoss,
         net: resource.netPerMonth,
         marketPrice: Math.ceil(tradeAmount * resource.buyPrice),
       }];
@@ -410,10 +419,10 @@ export default function ResourceDetailsModal({
   const buyCost = Math.ceil(effectiveTradeAmount * resource.buyPrice);
   const sellAmount = Math.min(effectiveTradeAmount, resource.amount);
   const sellReturn = Math.floor(sellAmount * resource.sellPrice);
-  const canBuy = buyCost > 0 && gold >= buyCost;
+  const canBuy = buyCost > 0 && gold >= buyCost && resource.storageAvailable >= effectiveTradeAmount;
   const canSell = sellReturn > 0;
-  const totalIn = resource.production + resource.vassalContribution + resource.treatyIncome;
-  const totalOut = resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.decayLoss;
+  const totalIn = resource.production + resource.vassalContribution + resource.liegeContribution + resource.treatyIncome;
+  const totalOut = resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.courtConsumption + resource.liegeTribute + resource.decayLoss;
   const sellThresholdMax = Math.max(1, resource.autoSellSliderMax);
   const buyThresholdMax = Math.max(1, resource.autoBuySliderMax);
   const commitAutoSellThreshold = (next: number) => {
@@ -441,6 +450,18 @@ export default function ResourceDetailsModal({
               {' - '}{categoryLabel(details?.category || resource.category, t)}
             </span>
           </div>
+          <GameButton
+            variant="burgundy"
+            className="erd-header__map-button"
+            icon="/assets/icons/I_Resources.png"
+            onClick={() => {
+              bridgeCall('game.show_resource_on_map', { resourceId: resource.id }).catch(acknowledgeBridgeFailure);
+              close();
+              closeScreen();
+            }}
+          >
+            {t('Economy.ShowOnMap')}
+          </GameButton>
           <CloseButton size="md" onClick={close} />
         </header>
 
@@ -456,7 +477,7 @@ export default function ResourceDetailsModal({
               <Metric label={t('Economy.Use')} value={`-${number(totalOut)}${t('Economy.PerMonth')}`} tone="erd-negative" />
               <Metric label={t('Economy.NetPerMonth')} value={signed(resource.netPerMonth)} tone={valueClass(resource.netPerMonth)} />
               <Metric label={t('Economy.MarketPrice')} value={price(marketPrice)} icon="/assets/icons/I_Coins.png" />
-              {isFood && <Metric label={t('Economy.FoodValue')} value={number(details?.foodValue)} />}
+              {(details?.foodValue ?? 0) > 0 && <Metric label={t('Economy.FoodValue')} value={number(details?.foodValue)} />}
               {(details?.decayRate ?? 0) > 0 && <Metric label={t('Economy.DecayRate')} value={`${number((details?.decayRate ?? 0) * 100)}%`} />}
               <Metric
                 label={t('Economy.WarehouseLimit')}
@@ -685,11 +706,43 @@ export default function ResourceDetailsModal({
                       <strong className="erd-negative">-{number(row.amount)}</strong>
                     </div>
                   ) : (
-                    <div className="erd-flow-row" role="row" key={row.id}>
-                      <FlowName flow={row.flow} />
-                      <strong className="erd-negative">-{number(row.amount)}</strong>
+                    <div className="erd-flow-consumer" role="row" key={row.id}>
+                      <div className="erd-flow-row">
+                        <FlowName flow={row.flow} />
+                        <strong className="erd-negative">-{number(row.amount)}</strong>
+                      </div>
+                      {row.flow.breakdown.length > 0 && (
+                        <div className="erd-detail-list">
+                          {row.flow.breakdown.map((item, index) => (
+                            <span key={`${item.name}:${index}`}>{item.name} <b className="erd-negative">-{number(item.value)}</b></span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
+                </div>
+              )}
+              {(details?.potentialUses ?? []).length > 0 && (
+                <div className="erd-potential-uses">
+                  <strong>{t('Economy.PotentialUses')}</strong>
+                  {(details?.potentialUses ?? []).filter(use => use.kind === 'processing').length > 0 && (
+                    <div>
+                      <span>{t('Economy.Processing')}</span>
+                      <p>{(details?.potentialUses ?? []).filter(use => use.kind === 'processing').map(use => use.name).join(', ')}</p>
+                    </div>
+                  )}
+                  {(details?.potentialUses ?? []).filter(use => use.kind === 'military').length > 0 && (
+                    <div>
+                      <span>{t('Economy.UsedByMilitary')}</span>
+                      <p>{(details?.potentialUses ?? []).filter(use => use.kind === 'military').map(use => use.name).join(', ')}</p>
+                    </div>
+                  )}
+                  {(details?.potentialUses ?? []).filter(use => use.kind === 'population').length > 0 && (
+                    <div>
+                      <span>{t('Economy.Population')}</span>
+                      <p>{(details?.potentialUses ?? []).filter(use => use.kind === 'population').map(use => use.name).join(', ')}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </section>

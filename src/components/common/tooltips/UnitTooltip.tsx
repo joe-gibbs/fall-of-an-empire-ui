@@ -5,7 +5,7 @@ import { NestedTooltip, type TooltipContent, type TooltipLine } from './Tooltip'
 import { getGlossaryEntry } from '../../../data/glossary';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { TIER_ICONS } from '../../../utils/iconMaps';
-import { formatNumber } from '../../../utils/numberFormat';
+import { formatNumber, formatResourceNumber } from '../../../utils/numberFormat';
 import type { BuildingResourceCost, CultureInfo } from '../../../data/types';
 import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import ResourceLink from '../resources/ResourceLink';
@@ -125,11 +125,6 @@ const BAR_MIN_FILL_PCT = 10;
 
 const n = (v: number): string => formatNumber(v);
 
-function formatResourceAmount(amount: number): string {
-  if (amount >= 1) return n(amount);
-  return formatNumber(amount, { maximumFractionDigits: amount >= 0.1 ? 1 : 2 });
-}
-
 function SectionRule({
   label,
   tooltip,
@@ -244,7 +239,7 @@ function ResourceChip({
   item: BuildingResourceCost;
   perContext: string;
 }) {
-  const valueLabel = formatResourceAmount(item.amount);
+  const valueLabel = formatResourceNumber(item.amount);
   return (
     <NestedTooltip
       inline
@@ -483,7 +478,7 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
         />
         <CostChip
           icon="/assets/icons/I_Food.png"
-          value={`${formatNumber(d.foodConsumption, { maximumFractionDigits: 1 })}${webUIText('Auto.ComponentsCommonUnitTooltip.355.11')}`}
+          value={`${formatResourceNumber(d.foodConsumption)}${webUIText('Auto.ComponentsCommonUnitTooltip.355.11')}`}
           title={webUIText('Auto.ComponentsCommonUnitTooltip.352.10')}
         />
         {resourceCost.map((r) => (

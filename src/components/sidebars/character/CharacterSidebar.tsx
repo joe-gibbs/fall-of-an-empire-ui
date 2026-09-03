@@ -787,7 +787,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                 <div className="painted-bar-fill painted-bar-fill--red" style={{ width: '50%', right: '50%', left: 'auto', borderRadius: 0, transformOrigin: 'right', transform: `scaleX(${Math.abs(hdVal)})` }} />
               )}
               {hdVal > 0 && (
-                <div className="painted-bar-fill painted-bar-fill--green" style={{ width: '50%', left: '50%', borderRadius: 0, transform: `scaleX(${hdVal})` }} />
+                <div className="painted-bar-fill painted-bar-fill--green" style={{ width: '50%', left: '50%', borderRadius: 0, transformOrigin: 'left', transform: `scaleX(${hdVal})` }} />
               )}
               <div className="char-honour-center" />
             </div>

@@ -1,0 +1,32 @@
+.faction-military-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--text);
+}
+
+.faction-military-name {
+  max-width: 16rem;
+  overflow: hidden;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.faction-military-empty {
+  display: grid;
+  place-items: center;
+}
+
+.faction-military-empty-message {
+  min-width: 18rem;
+  padding: 1.2rem 1.8rem;
+  background: url('/assets/baked/panel-charcoal.png') center / 100% 100% no-repeat;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  text-align: center;
+}

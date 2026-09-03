@@ -7,7 +7,7 @@ import type { Notification } from '../../data/types';
 import { useModalPresence } from '../../hooks/useModalPresence';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { renderEventTextChunk } from '../../utils/eventTextFlow';
-import { formatNumber, formatPercent } from '../../utils/numberFormat';
+import { formatNumber, formatPercent, formatSignedNumber } from '../../utils/numberFormat';
 import { renderRichText } from '../../utils/richText';
 import CloseButton from '../common/buttons/CloseButton';
 import FactionRoundel from '../common/entities/FactionRoundel';
@@ -414,6 +414,14 @@ export default function BattleAfterActionModal({
                 {renderBattleAARRichText(report.location || webUIText('Common.Unknown'), onLinkClick)}
               </span>
             </div>
+            {report.warScoreChange !== 0 ? (
+              <div className="battle-aar-meta battle-aar-war-score">
+                <span className="battle-aar-meta-label"><WebUIText textKey="BattleAfterAction.WarScore" /></span>
+                <span className={`battle-aar-meta-value battle-aar-war-score-value${report.warScoreChange > 0 ? ' battle-aar-war-score-value--gain' : ' battle-aar-war-score-value--loss'}`}>
+                  {formatSignedNumber(report.warScoreChange, { maximumFractionDigits: 1 })}
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div className="battle-aar-sides">

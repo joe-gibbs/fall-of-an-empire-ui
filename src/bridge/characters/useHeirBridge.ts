@@ -1,6 +1,10 @@
 import { useBridgeQuery } from '../core/useBridgeQuery';
 import { bridgeCall } from '../../bridge-types.generated.ts';
-import type { GetHeirCandidatesResponse, HeirCandidateEntry } from '../../bridge-types.generated.ts';
+import type {
+  GetHeirCandidatesResponse,
+  HeirCandidateEntry,
+  StartPersonInteractionResponse,
+} from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
 export function useHeirCandidates(enabled: boolean): HeirCandidateEntry[] | null {
@@ -49,5 +53,32 @@ export async function setDesignatedHeir(personId: string, factionId?: string): P
   } catch (error) {
     acknowledgeBridgeFailure(error);
     return false;
+  }
+}
+
+export async function requestProvinceSuccessionApproval(personId: string): Promise<StartPersonInteractionResponse | null> {
+  try {
+    const response = await bridgeCall('game.start_person_interaction', {
+      personId,
+      interactionId: 'RequestProvinceSuccession',
+      initiatorPersonId: '',
+      giftTypeIndex: -1,
+    });
+    if (!response.started) return response;
+
+    try {
+      const overview = await bridgeCall('game.get_province_mode_overview');
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_province_mode_overview', { detail: overview }));
+
+      const candidates = await bridgeCall('game.get_heir_candidates', { factionId: overview.province.id });
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_heir_candidates', { detail: candidates }));
+    } catch (error) {
+      acknowledgeBridgeFailure(error);
+    }
+
+    return response;
+  } catch (error) {
+    acknowledgeBridgeFailure(error);
+    return null;
   }
 }

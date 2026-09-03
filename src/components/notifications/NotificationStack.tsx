@@ -136,7 +136,6 @@ function settlementAnchorMapsEqual(left: SettlementAnchorMap, right: SettlementA
 }
 
 function notificationCountdownProgress(notification: Notification, currentGameDay: number): number | null {
-  if (notification.persistUntilDismissed) return null;
   if ((notification.style ?? 'regular') === 'cinematic') return null;
   const { createdOnDay, expiresOnDay, durationDays } = notification;
   if (
@@ -228,8 +227,6 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
   const exitTimersRef = useRef<Record<string, number>>({});
   const notificationsRef = useRef<Notification[]>(notifications);
   const anchorsEnabledRef = useRef(anchorsEnabled);
-  notificationsRef.current = notifications;
-  anchorsEnabledRef.current = anchorsEnabled;
 
   const settlementNotifications = useMemo(
     () => notifications.filter((n) => !isBuildQueueCompletionNotification(n) && shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
@@ -272,10 +269,15 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
   const settlementExitAnchorsRef = useRef(settlementExitAnchors);
   const worldSettlementAnchorsRef = useRef(worldSettlementAnchors);
   const settlementMissingAnchorIdsRef = useRef(settlementMissingAnchorIds);
-  settlementAnchorsRef.current = settlementAnchors;
-  settlementExitAnchorsRef.current = settlementExitAnchors;
-  worldSettlementAnchorsRef.current = worldSettlementAnchors;
-  settlementMissingAnchorIdsRef.current = settlementMissingAnchorIds;
+
+  useLayoutEffect(() => {
+    notificationsRef.current = notifications;
+    anchorsEnabledRef.current = anchorsEnabled;
+    settlementAnchorsRef.current = settlementAnchors;
+    settlementExitAnchorsRef.current = settlementExitAnchors;
+    worldSettlementAnchorsRef.current = worldSettlementAnchors;
+    settlementMissingAnchorIdsRef.current = settlementMissingAnchorIds;
+  }, [anchorsEnabled, notifications, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds]);
 
   const beginExit = useCallback((id: string, options?: { releaseBridge?: boolean }) => {
     if (exitTimersRef.current[id] !== undefined) return;
@@ -364,8 +366,7 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
     const expiredIds: string[] = [];
     for (const n of notifications) {
       if (
-        !n.persistUntilDismissed
-        && currentGameDay > 0
+        currentGameDay > 0
         && typeof n.expiresOnDay === 'number'
         && n.expiresOnDay <= currentGameDay
         && !exiting.has(n.id)

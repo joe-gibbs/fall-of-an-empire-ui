@@ -261,6 +261,7 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
 
   return {
     id: data.id,
+    canViewFullDetails: data.canViewFullDetails,
     debugShortId: data.debugShortId,
     name: data.name,
     faction: data.faction,
@@ -375,10 +376,41 @@ function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse):
   if (data.updateKind === 'resources') {
     if (!current) return null;
 
+    if (!data.canViewFullDetails) {
+      const restricted: Army = {
+        ...current,
+        canViewFullDetails: false,
+        morale: 0,
+        units: [],
+        unitRows: [],
+        battleGroups: [],
+        formationTemplate: undefined,
+        embarkedNavyId: undefined,
+        embarkedNavyName: undefined,
+        capacity: undefined,
+        usedCapacity: undefined,
+        embarkedArmies: [],
+        resources: [],
+        attritionSources: [],
+        supplyDays: undefined,
+        isForcedMarching: false,
+        canForcedMarch: false,
+        canMerge: false,
+        canSplit: false,
+        isRaiding: false,
+        isReplenishing: false,
+        replenishCost: undefined,
+        canReplenish: false,
+      };
+      militaryCache.set(restricted.id, restricted);
+      return restricted;
+    }
+
     const updated: Army = {
       ...current,
+      canViewFullDetails: data.canViewFullDetails,
       resources: data.resources.map(mapResource),
-      supplyDays: data.supplyDays,
+      supplyDays: data.canViewFullDetails ? data.supplyDays : undefined,
       isReplenishing: data.isReplenishing,
       replenishCost: data.replenishCost > 0 ? data.replenishCost : undefined,
       canReplenish: data.canReplenish,
@@ -477,6 +509,50 @@ export function useMilitaryOverviewBridge(fetch = true): MilitaryOverview | null
   });
 
   return live ?? militaryOverviewCache;
+}
+
+export interface FactionMilitaryOverview {
+  factionId: string;
+  factionName: string;
+  canViewFullDetails: boolean;
+  overview: MilitaryOverview;
+}
+
+export function useFactionMilitaryOverviewBridge(
+  factionId: string | null | undefined,
+): FactionMilitaryOverview | null {
+  const subscriptionId = useId();
+  const live = useBridgeQuery({
+    action: 'game.get_faction_military_overview',
+    payload: factionId ? { factionId, subscriptionId: '', subscribe: false } : null,
+    map: (data) => ({
+      factionId: data.factionId,
+      factionName: data.factionName,
+      canViewFullDetails: data.canViewFullDetails,
+      overview: mapOverview(data.overview),
+    }),
+    matchPush: (data) => data.factionId === factionId,
+  });
+
+  useEffect(() => {
+    if (!factionId) return;
+
+    void bridgeCall('game.get_faction_military_overview', {
+      factionId,
+      subscriptionId,
+      subscribe: true,
+    }).catch(acknowledgeBridgeFailure);
+
+    return () => {
+      void bridgeCall('game.get_faction_military_overview', {
+        factionId,
+        subscriptionId,
+        subscribe: false,
+      }).catch(acknowledgeBridgeFailure);
+    };
+  }, [factionId, subscriptionId]);
+
+  return live;
 }
 
 export function useSelectedMilitariesBridge(): MilitaryForce[] | null {

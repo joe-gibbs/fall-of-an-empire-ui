@@ -31,7 +31,7 @@ import type {
 import type { Army } from '../../../data/types';
 import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import { useDraggableOffset } from '../../../hooks/useDraggableOffset';
-import { formatNumber } from '../../../utils/numberFormat';
+import { formatNumber, formatResourceNumber } from '../../../utils/numberFormat';
 import { stepAmountFromEvent } from '../../../utils/stepModifiers';
 import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
 import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
@@ -898,7 +898,8 @@ export function TemplateUnitSelectorModal({
   return createPortal(
     <div
       className={`chart-unit-picker${closing ? ' chart-unit-picker--closing' : ''}`}
-      onClick={event => {
+      onMouseDown={event => {
+        if (event.button !== 0) return;
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
@@ -1171,13 +1172,11 @@ function TemplateEditor({
   const [actionActive, setActionActive] = useState(false);
   const [renamingTitle, setRenamingTitle] = useState(!template);
   const [renameDraft, setRenameDraft] = useState(() => buildTemplateDraft(template, type).name);
-  const [renameFieldDirty, setRenameFieldDirty] = useState(false);
   const [nameEdited, setNameEdited] = useState(Boolean(template));
   const titleInputRef = useRef<HTMLInputElement>(null);
   const automaticNameRequestRef = useRef(0);
   const renameFieldDirtyRef = useRef(false);
   const gameActions = useGameActions();
-  renameFieldDirtyRef.current = renameFieldDirty;
   const unitById = useMemo(() => {
     const map = new Map<string, FormationTemplateUnitEntry>();
     unitCatalogue.forEach(unit => map.set(unit.id, unit));
@@ -1227,7 +1226,7 @@ function TemplateEditor({
   const beginRename = () => {
     if (!editable) return;
     setRenameDraft(draft.name);
-    setRenameFieldDirty(false);
+    renameFieldDirtyRef.current = false;
     setRenamingTitle(true);
     window.setTimeout(() => {
       titleInputRef.current?.focus();
@@ -1238,7 +1237,7 @@ function TemplateEditor({
   const confirmRename = () => {
     const nextName = renameDraft.trim();
     if (!nextName) return;
-    setRenameFieldDirty(false);
+    renameFieldDirtyRef.current = false;
     setRenamingTitle(false);
     if (nextName !== draft.name) {
       automaticNameRequestRef.current += 1;
@@ -1250,7 +1249,7 @@ function TemplateEditor({
   const cancelRename = () => {
     // New templates always need a name field until saved; cancel only reverts text.
     setRenameDraft(draft.name);
-    setRenameFieldDirty(false);
+    renameFieldDirtyRef.current = false;
     if (template) setRenamingTitle(false);
   };
 
@@ -1476,7 +1475,7 @@ function TemplateEditor({
                     data-tutorial-target="FormationNameInput"
                     value={renameDraft}
                     onChange={event => {
-                      setRenameFieldDirty(true);
+                      renameFieldDirtyRef.current = true;
                       setRenameDraft(event.target.value);
                     }}
                     onKeyDown={handleRenameKeyDown}
@@ -1577,7 +1576,7 @@ function TemplateEditor({
               </div>
               <div className="chart-template-total-row chart-template-total-row--primary">
                 <span className="chart-template-total-label"><img src={SUPPLY_ICON} alt="" className="chart-template-total-icon" draggable={false} />{webUIText('FormationTemplateSidebar.Food')}</span>
-                <strong className="chart-template-total-bad">{webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.452.1", { Value1: formatNumber(totals.food, { maximumFractionDigits: 1 }) })}</strong>
+                <strong className="chart-template-total-bad">{webUIText("Auto.Prop.componentssidebarsFormationTemplateSidebar.452.1", { Value1: formatResourceNumber(totals.food) })}</strong>
               </div>
             </div>
             <div className="chart-template-totals-secondary">

@@ -222,6 +222,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       persecutionResilience: r.persecutionResilience,
     })),
     pops: data.pops.map(p => ({
+      cultureId: p.cultureId || undefined,
       culture: p.culture,
       cultureAdjective: p.cultureAdjective,
       cultureIcon: p.cultureId ? WebkilnAssetPath(`/assets/cultures/${p.cultureId}.png`) : undefined,
@@ -486,12 +487,8 @@ export function useSettlementBridge(settlementId: string | null): Settlement | n
   const [siegePatch, setSiegePatch] = useState<GetSettlementSiegeDataResponse | null>(null);
 
   useEffect(() => {
-    if (!settlementId) {
-      setSiegePatch(null);
-      return undefined;
-    }
+    if (!settlementId) return undefined;
 
-    setSiegePatch(null);
     return onBridgeEvent('game.get_settlement_siege_data', (data) => {
       if (data.id === settlementId) {
         setSiegePatch(data);

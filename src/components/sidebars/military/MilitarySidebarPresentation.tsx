@@ -3,7 +3,7 @@ import CultureTooltip from '../../common/tooltips/CultureTooltip';
 import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
 import type { Army, ArmyUnit, ArmyUnitRow, Character, CharacterStatModifier, MilitaryDoctrine, MilitaryResource, StatKey } from '../../../data/types';
 import { STAT_ICONS, TIER_ICONS } from '../../../utils/iconMaps';
-import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
+import { formatNumber, formatPercent, formatResourceNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { characterStatEffectLines } from '../../../utils/characterStatEffects';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import glossary from '../../../data/glossary';
@@ -336,7 +336,7 @@ export function unitTypeIconPath(type: string): string {
 }
 
 export function formatResourceAmount(value: number): string {
-  return formatNumber(value, { maximumFractionDigits: Math.abs(value) < 10 ? 1 : 0 });
+  return formatResourceNumber(value);
 }
 
 export function formatSupplyWindow(days: number): string {

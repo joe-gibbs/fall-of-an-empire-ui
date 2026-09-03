@@ -107,7 +107,8 @@ export interface ProvinceModeOverview {
   imperialFaction: ProvinceModeFactionSummary;
   governor: ProvinceModePerson;
   emperor: ProvinceModePerson;
-  successor: ProvinceModePerson;
+  imperialSuccessor: ProvinceModePerson;
+  provinceSuccessor: ProvinceModePerson;
   standingScore: number;
   standingTrend: number;
   standingTrendParts: ProvinceModeScorePart[];
@@ -253,7 +254,8 @@ function mapResponse(data: GetProvinceModeOverviewResponse): ProvinceModeOvervie
     imperialFaction: mapFaction(data.imperialFaction),
     governor: mapPerson(data.governor),
     emperor: mapPerson(data.emperor),
-    successor: mapPerson(data.successor),
+    imperialSuccessor: mapPerson(data.imperialSuccessor),
+    provinceSuccessor: mapPerson(data.provinceSuccessor),
     standingScore: data.standingScore,
     standingTrend: data.standingTrend,
     standingTrendParts: data.standingTrendParts.map(mapScorePart),

@@ -32,7 +32,7 @@ export interface NotificationShown {
   settlementViewportWidth?: number;
   settlementViewportHeight?: number;
   battleAfterActionReport?: BattleAfterActionReportPayload;
-  persistUntilDismissed?: boolean;
+  isPlayerActionResult?: boolean;
   actionSucceeded?: boolean;
 }
 
@@ -135,7 +135,7 @@ export function mapNotificationShown(data: NotificationShown): Notification {
     settlementViewportWidth: data.settlementViewportWidth,
     settlementViewportHeight: data.settlementViewportHeight,
     battleAfterActionReport: normaliseBattleAfterActionReport(data.battleAfterActionReport),
-    persistUntilDismissed: data.persistUntilDismissed === true,
+    isPlayerActionResult: data.isPlayerActionResult === true,
     actionSucceeded: data.actionSucceeded === true,
   };
 }

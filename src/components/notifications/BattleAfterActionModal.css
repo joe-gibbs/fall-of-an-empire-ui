@@ -380,6 +380,23 @@
   overflow-wrap: break-word;
 }
 
+.battle-aar-war-score {
+  flex-grow: 0;
+  flex-basis: 8.5rem;
+}
+
+.battle-aar-war-score-value {
+  font-size: 1.1rem;
+}
+
+.battle-aar-war-score-value--gain {
+  color: var(--gold-light);
+}
+
+.battle-aar-war-score-value--loss {
+  color: var(--red-light);
+}
+
 .battle-aar-commander-name--clickable {
   padding: 0;
   background-color: transparent;

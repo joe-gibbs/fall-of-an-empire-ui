@@ -319,6 +319,12 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
   const canNavigateBack = (diplomacyNavigation?.back.length ?? 0) > 0;
   const canNavigateForward = (diplomacyNavigation?.forward.length ?? 0) > 0;
   const statusText = getStatusBadgeText(faction);
+  const realmStatusText = faction.overlordName
+    ? webUIText('DiplomacySidebar.SubjectRealm', {
+      SubjectType: faction.subjectType || webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.121.12'),
+      Faction: faction.overlordName,
+    })
+    : webUIText('ProvinceTooltip.Independent');
   const isProvinceSubject = faction.subjectSubtype === 'province';
   const isPlayerFoederati = !faction.isPlayer && faction.diplomaticStatus === 'subject' && faction.subjectSubtype === 'foederati';
   const canToggleFoederatiCallup = Boolean(faction.isFoederatiCalledUp || faction.canCallFoederati);
@@ -680,6 +686,17 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                 />
               )}
             </div>}
+            <div className="diplo-header-status-row">
+              <img
+                src={faction.overlordName ? statusIcons.subject : statusIcons.neutral}
+                alt=""
+                className="diplo-header-status-icon"
+              />
+              <DiplomacyStatusBadge
+                text={realmStatusText}
+                status={faction.overlordName ? 'subject' : 'neutral'}
+              />
+            </div>
             <div className="diplo-header-capital">
               <img src="/assets/icons/I_Capital.png" alt="" className="diplo-header-capital-icon" />
               <span className="diplo-header-capital-text">{faction.capital}</span>
@@ -835,7 +852,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
                     <div className="painted-bar-fill painted-bar-fill--red" style={{ width: '50%', right: '50%', left: 'auto', borderRadius: 0, transformOrigin: 'right', transform: `scaleX(${opinionFill})` }} />
                   )}
                   {faction.opinion > 0 && (
-                    <div className="painted-bar-fill painted-bar-fill--green" style={{ width: '50%', left: '50%', borderRadius: 0, transform: `scaleX(${opinionFill})` }} />
+                    <div className="painted-bar-fill painted-bar-fill--green" style={{ width: '50%', left: '50%', borderRadius: 0, transformOrigin: 'left', transform: `scaleX(${opinionFill})` }} />
                   )}
                   <div className="diplo-opinion-center" />
                 </div>
@@ -976,6 +993,14 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose })
           {/* Faction overview stats */}
           <div className="diplo-section-heading-with-action">
             <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsDiplomacySidebar.449.32')} />
+            <GameButton
+              variant="outline"
+              icon="/assets/icons/I_ArmiesQuickButton.png"
+              className="diplo-view-military-button"
+              onClick={() => openScreen(faction.isPlayer ? 'military' : 'factionMilitary', faction.isPlayer ? undefined : faction.id)}
+            >
+              {webUIText('FactionMilitary.ViewMilitary')}
+            </GameButton>
             {isPlayerFoederati && (
               <Tooltip
                 inline

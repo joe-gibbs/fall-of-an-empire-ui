@@ -1,10 +1,8 @@
 import { Fragment, memo, useMemo, useState, type Key, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
-import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
 import Tooltip from '../../common/tooltips/Tooltip';
-import NumberStepper from '../../common/forms/NumberStepper';
 import EntityLink from '../../common/entities/EntityLink';
 import CourtOfficeSummary from '../../common/entities/CourtOfficeSummary';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
@@ -13,22 +11,13 @@ import { useGameState } from '../../../context/GameContext';
 import { useCourtPositions } from '../../../data-source/index';
 import {
   adjustEconomySubjectTaxRateBridge,
-  buyEconomyResourceBridge,
-  sellEconomyResourceBridge,
-  setEconomyAutoBuyBridge,
   setResourcePriorityBridge,
   useEconomyOverviewBridge,
-  useEconomyResourceDetailsBridge,
 } from '../../../bridge/settlements-economy/useEconomyOverviewBridge';
 import type {
   CommandUpkeepEntry,
-  EconomyOverviewFoodRow,
-  EconomyOverviewHistoryPoint,
   EconomyOverviewMilitaryRow,
   EconomyOverviewResourceAmount,
-  EconomyOverviewResourceRow,
-  EconomyOverviewResourceSource,
-  EconomyResourceFlowDetail,
   EconomyOverviewSettlementRow,
   EconomyOverviewTaxRow,
   EconomyOverviewVassalRow,
@@ -38,21 +27,18 @@ import type {
 } from '../../../bridge-types.generated.ts';
 import { useBridgeQuery } from '../../../bridge/core/useBridgeQuery';
 import type { CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
-import { WebkilnAssetPath } from '../../../utils/assets';
-import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import {
-  noteModifierKeysFromEvent,
-  stepAmountFromEvent,
-  stepAmountFromMultiplier,
-  useStepMultiplier,
-} from '../../../utils/stepModifiers';
+  formatNumber,
+  formatResourceNumber,
+  formatSignedResourceNumber,
+} from '../../../utils/numberFormat';
 import type { SortDirection } from '../../common/layout/tables/sortUtils';
 import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../localization/WebUITextContext';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
-import { useResourceDetails } from '../../../context/ResourceDetailsContext';
+import ResourceWorkspace from './ResourceWorkspace';
 import './EconomyScreen.css';
 
-type EconomyTab = 'overview' | 'resources' | 'food' | 'settlements' | 'military' | 'provinces';
+type EconomyTab = 'overview' | 'settlements' | 'military' | 'provinces';
 type EconomyMetricKey =
   | 'settlementIncome'
   | 'tradeIncome'
@@ -76,7 +62,6 @@ type EconomyMetricKey =
   | 'otherExpense'
   | 'treasuryAdjustmentIncome'
   | 'treasuryAdjustmentExpense';
-type HistoryMetricKey = Exclude<EconomyMetricKey, 'treasuryAdjustmentIncome' | 'treasuryAdjustmentExpense'>;
 
 interface MetricDef {
   key: EconomyMetricKey;
@@ -111,23 +96,12 @@ const EXPENSE_ROWS: MetricDef[] = [
   { key: 'otherExpense', labelKey: 'Economy.Other' },
 ];
 
-const HISTORY_CHART_SEGMENTS: Array<{ key: HistoryMetricKey; labelKey: string; className: string }> = [
-  { key: 'settlementIncome', labelKey: 'Economy.SettlementTax', className: 'settlement' },
-  { key: 'tradeIncome', labelKey: 'Economy.Trade', className: 'trade' },
-  { key: 'vassalTributeIncome', labelKey: 'Economy.SubjectTribute', className: 'vassal' },
-  { key: 'resourceSalesIncome', labelKey: 'Economy.ResourceSales', className: 'resource' },
-  { key: 'lootingIncome', labelKey: 'Economy.Looting', className: 'looting' },
-  { key: 'eventIncome', labelKey: 'Economy.Events', className: 'events' },
-];
-
-const HISTORY_INCOME_KEYS: HistoryMetricKey[] = HISTORY_CHART_SEGMENTS.map(segment => segment.key);
-
 function fmt(value: number | undefined): string {
   return formatNumber(value);
 }
 
 function fmt1(value: number | undefined): string {
-  return formatNumber(value, { maximumFractionDigits: 1 });
+  return formatResourceNumber(value);
 }
 
 function negativeFmt(value: number | undefined): string {
@@ -135,13 +109,21 @@ function negativeFmt(value: number | undefined): string {
   return formatted === '0' ? '0' : `-${formatted}`;
 }
 
-function negativeFmt1(value: number | undefined): string {
-  const formatted = fmt1(value);
+function resource(value: number | undefined): string {
+  return formatResourceNumber(value);
+}
+
+function negativeResource(value: number | undefined): string {
+  const formatted = resource(value);
   return formatted === '0' ? '0' : `-${formatted}`;
 }
 
+function signedResource(value: number | undefined): string {
+  return formatSignedResourceNumber(value);
+}
+
 function signed(value: number | undefined, suffix = ''): string {
-  return `${formatSignedNumber(value, { maximumFractionDigits: 1 })}${suffix}`;
+  return `${formatSignedResourceNumber(value)}${suffix}`;
 }
 
 function money(value: number | undefined, t: WebUITextFormatter): string {
@@ -179,18 +161,6 @@ function useIncomeBreakdown(enabled: boolean): GetIncomeBreakdownResponse | null
   });
 }
 
-function historyMetric(point: EconomyOverviewHistoryPoint, key: HistoryMetricKey): number {
-  return Number(point[key] ?? 0);
-}
-
-function historySum(point: EconomyOverviewHistoryPoint, keys: HistoryMetricKey[]): number {
-  return keys.reduce((sum, key) => sum + historyMetric(point, key), 0);
-}
-
-function militaryKindLabel(kind: string, t: WebUITextFormatter): string {
-  return kind === 'navy' ? t('Economy.MilitaryKindFleet') : t('Economy.MilitaryKindArmy');
-}
-
 function priorityLabel(priority: string, t: WebUITextFormatter): string {
   if (!priority) return '-';
   const labels: Record<string, string> = {
@@ -207,41 +177,6 @@ function priorityShortLabel(priority: string): string {
   if (key === 'low') return 'I';
   if (key === 'high') return 'III';
   return 'II';
-}
-
-function monthLabel(point: EconomyOverviewHistoryPoint): string {
-  return point.dateText;
-}
-
-function ResourceName({ row, onOpen }: { row: EconomyOverviewResourceRow; onOpen?: (row: EconomyOverviewResourceRow) => void }) {
-  const label = (
-    <ResourceLabel
-      resourceId={row.id}
-      icon={row.id === 'Food' ? '/assets/icons/I_Food.png' : undefined}
-      name={row.name}
-      iconClassName="econ-resource-name__icon"
-    />
-  );
-  if (onOpen && !row.aggregate) {
-    return (
-      <button
-        type="button"
-        className="econ-resource-name econ-resource-name--button"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          onOpen(row);
-        }}
-      >
-        {label}
-      </button>
-    );
-  }
-  return (
-    <span className="econ-resource-name">
-      {label}
-    </span>
-  );
 }
 
 function ResourceAmountTags({
@@ -262,7 +197,7 @@ function ResourceAmountTags({
       {visible.map((value, index) => (
         <span key={`${value.id}:${index}`} className={`econ-resource-tag ${className}`}>
           {index > 0 && <span className="econ-resource-tag-sep">/</span>}
-          {value.name} {sign}{fmt1(value.amount)}
+          {value.name} {sign}{resource(value.amount)}
         </span>
       ))}
       {values.length > visible.length && <span className="econ-muted"> +{formatNumber(values.length - visible.length)}</span>}
@@ -295,7 +230,7 @@ function ResourceAmountDetail({ values, tone }: { values: EconomyOverviewResourc
       ) : values.map((value, index) => (
         <div key={`${value.id}:${index}`} className="econ-detail-item">
           <span className="econ-detail-name">{value.name}</span>
-          <span className={`econ-detail-value ${className}`}>{sign}{fmt1(value.amount)}</span>
+          <span className={`econ-detail-value ${className}`}>{sign}{resource(value.amount)}</span>
         </div>
       ))}
     </div>
@@ -424,38 +359,6 @@ function SettlementResourceTags({ row }: { row: EconomyOverviewSettlementRow }) 
   );
 }
 
-function EconomyTable<T>({
-  title,
-  rows,
-  columns,
-  emptyLabel,
-  initialSort,
-  initialSortDir = 'desc',
-  rowKey,
-}: {
-  title: string;
-  rows: T[];
-  columns: EconomyColumn<T>[];
-  emptyLabel: string;
-  initialSort?: string;
-  initialSortDir?: SortDirection;
-  rowKey?: (row: T, index: number) => Key;
-}) {
-  return (
-    <section className="econ-section">
-      <SectionHeading variant="ornate" title={title} />
-      <EconomyDataTable
-        rows={rows}
-        columns={columns}
-        emptyLabel={emptyLabel}
-        initialSort={initialSort}
-        initialSortDir={initialSortDir}
-        rowKey={rowKey}
-      />
-    </section>
-  );
-}
-
 function StatsBar({ data }: { data: GetEconomyOverviewResponse | null }) {
   const t = useWebUIText();
   const { population, populationDelta } = useGameState();
@@ -478,7 +381,7 @@ function StatsBar({ data }: { data: GetEconomyOverviewResponse | null }) {
         <span className="econ-stat-cell-label">{t('Economy.ExpensesPerMonth')}</span>
       </div>
       <div className="econ-stat-cell">
-        <span className={`econ-stat-cell-val ${valueClass(foodNet)}`}>{signed(foodNet)}</span>
+        <span className={`econ-stat-cell-val ${valueClass(foodNet)}`}>{signedResource(foodNet)}</span>
         <span className="econ-stat-cell-label">{t('Economy.FoodPerMonth')}</span>
       </div>
       <div className="econ-stat-cell">
@@ -800,20 +703,20 @@ function SettlementResourceTooltip({ row, children }: { row: EconomyOverviewSett
         ...row.productionResources.map(resource => ({
           label: resource.name,
           labelIcon: `/assets/resources/${resource.id}.png`,
-          value: `+${fmt1(resource.amount)}${t('Economy.PerMonth')}`,
+          value: `+${formatResourceNumber(resource.amount)}${t('Economy.PerMonth')}`,
           valueColor: 'var(--green-light)',
         })),
         ...row.consumptionResources.map(resource => ({
           label: resource.name,
           labelIcon: `/assets/resources/${resource.id}.png`,
-          value: `-${fmt1(resource.amount)}${t('Economy.PerMonth')}`,
+          value: `-${formatResourceNumber(resource.amount)}${t('Economy.PerMonth')}`,
           valueColor: 'var(--red-light)',
         })),
       ]
     : row.stockpileResources.map(resource => ({
         label: resource.name,
         labelIcon: `/assets/resources/${resource.id}.png`,
-        value: fmt1(resource.amount),
+        value: formatResourceNumber(resource.amount),
       }));
 
   return (
@@ -829,37 +732,6 @@ function SettlementResourceTooltip({ row, children }: { row: EconomyOverviewSett
   );
 }
 
-interface FlowEntry {
-  label: string;
-  value: number;
-}
-
-function FlowColumn({ title, total, entries, tone }: { title: string; total: number; entries: FlowEntry[]; tone: 'income' | 'expense' }) {
-  const t = useWebUIText();
-  const valueTone = tone === 'income' ? 'econ-positive' : 'econ-negative';
-  const visible = entries.filter(entry => entry.value > 0.0001);
-  return (
-    <div className="econ-breakdown-col">
-      <div className="econ-breakdown-header">
-        <span className="econ-breakdown-title">{title}</span>
-        <span className={`econ-breakdown-total-val ${valueTone}`}>
-          {tone === 'expense' ? '-' : '+'}{fmt1(total)}{t('Economy.PerMonth')}
-        </span>
-      </div>
-      <div className="econ-breakdown-list">
-        {visible.length === 0 ? (
-          <div className="econ-breakdown-row"><span className="econ-breakdown-label">{t('Common.None')}</span><span className="econ-breakdown-value">0</span></div>
-        ) : visible.map(entry => (
-          <div className="econ-breakdown-row" key={entry.label}>
-            <span className="econ-breakdown-label">{entry.label}</span>
-            <span className={`econ-breakdown-value ${valueTone}`}>{tone === 'expense' ? '-' : '+'}{fmt1(entry.value)}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function FlowFooter({ label, value, extra }: { label: string; value: ReactNode; extra?: ReactNode }) {
   return (
     <div className="econ-flow-footer">
@@ -870,373 +742,11 @@ function FlowFooter({ label, value, extra }: { label: string; value: ReactNode; 
   );
 }
 
-function largestUseLabel(resource: EconomyOverviewResourceRow, t: WebUITextFormatter): string {
-  const uses = [
-    { value: resource.settlementConsumption, label: t('Economy.UsedBySettlements') },
-    { value: resource.militaryUsage, label: t('Economy.UsedByMilitary') },
-    { value: resource.queuedUsage, label: t('Economy.UsedByRecruitment') },
-    { value: resource.decayLoss, label: t('Economy.LostToDecay') },
-  ];
-  uses.sort((left, right) => right.value - left.value);
-  return uses[0]?.value > 0 ? uses[0].label : '-';
-}
-
-function shortageConsumerIcon(consumer: EconomyResourceFlowDetail): string | null {
-  if (consumer.kind === 'army') return '/assets/icons/I_Swords.png';
-  if (consumer.kind === 'navy') return '/assets/icons/I_Anchor.png';
-  if (consumer.kind === 'settlement') return '/assets/icons/I_City.png';
-  return null;
-}
-
-function ShortageUseBreakdown({ resourceId }: { resourceId: string }) {
-  const t = useWebUIText();
-  const details = useEconomyResourceDetailsBridge(resourceId);
-  if (!details) return null;
-
-  const consumers = details.consumers.filter(consumer => consumer.amount > 0.0001);
-  return (
-    <div className="econ-shortage-breakdown">
-      {consumers.length === 0 ? (
-        <span className="econ-muted">{t('Economy.NoConsumers')}</span>
-      ) : consumers.map(consumer => {
-        const icon = shortageConsumerIcon(consumer);
-        const name = consumer.linkId && consumer.linkType
-          ? <EntityLink type={consumer.linkType} id={consumer.linkId} inline>{consumer.name}</EntityLink>
-          : <span>{consumer.name}</span>;
-        return (
-          <div className="econ-shortage-consumer" key={`${consumer.kind}:${consumer.id}`}>
-            <span className="econ-shortage-consumer__name">
-              {icon && <img src={icon} alt="" draggable={false} />}
-              {name}
-            </span>
-            <strong className="econ-negative">-{fmt1(consumer.amount)}{t('Economy.PerMonth')}</strong>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function ShortagesDashboard({ resources, onOpenResource }: { resources: EconomyOverviewResourceRow[]; onOpenResource: (resource: EconomyOverviewResourceRow) => void }) {
-  const t = useWebUIText();
-  const [expandedResourceId, setExpandedResourceId] = useState<string | null>(null);
-  const shortages = resources
-    .filter(resource => resource.netPerMonth < -0.0001)
-    .sort((left, right) => left.netPerMonth - right.netPerMonth);
-
-  return (
-    <section className="econ-section econ-shortages">
-      <SectionHeading variant="ornate" title={t('Economy.Shortages')} />
-      {shortages.length === 0 ? (
-        <div className="econ-shortages-empty">{t('Economy.NoShortages')}</div>
-      ) : (
-        <div className="econ-shortage-table">
-          <div className="econ-shortage-row econ-shortage-row--head">
-            <span>{t('Economy.Resource')}</span>
-            <span>{t('Economy.Stockpile')}</span>
-            <span>{t('Economy.NetPerMonth')}</span>
-            <span>{t('Economy.Coverage')}</span>
-            <span>{t('Economy.LargestUse')}</span>
-            <span />
-          </div>
-          {shortages.map(resource => {
-            const months = resource.amount / Math.abs(resource.netPerMonth);
-            const coverage = t('Economy.MonthsRemaining', {
-              Count: formatNumber(months, { maximumFractionDigits: 1 }),
-            });
-            const expanded = expandedResourceId === resource.id;
-            return (
-              <div className="econ-shortage-entry" key={resource.id}>
-                <div className="econ-shortage-row">
-                  <ResourceName row={resource} onOpen={onOpenResource} />
-                  <span>{fmt1(resource.amount)}</span>
-                  <strong className="econ-negative">{signed(resource.netPerMonth)}</strong>
-                  <span className={months < 2 ? 'econ-negative' : 'econ-warning'}>{coverage}</span>
-                  <button
-                    type="button"
-                    className={`econ-shortage-use${expanded ? ' econ-shortage-use--expanded' : ''}`}
-                    aria-expanded={expanded}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setExpandedResourceId(current => current === resource.id ? null : resource.id);
-                    }}
-                  >
-                    <span>{largestUseLabel(resource, t)}</span>
-                    <img src="/assets/icons/I_DropdownChevron.png" alt="" draggable={false} />
-                  </button>
-                  <button
-                    type="button"
-                    className="econ-shortage-view"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      onOpenResource(resource);
-                    }}
-                  >
-                    {t('Economy.ViewDetails')}
-                  </button>
-                </div>
-                {expanded && <ShortageUseBreakdown resourceId={resource.id} />}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
-}
-
 function SummaryRow({ label, value, tone, className }: { label: string; value: ReactNode; tone?: string; className?: string }) {
   return (
     <div className={className ? `econ-summary-row ${className}` : 'econ-summary-row'}>
       <span>{label}</span>
       <strong className={tone}>{value}</strong>
-    </div>
-  );
-}
-
-function AutoBuyControl({ data }: { data: GetEconomyOverviewResponse | null }) {
-  const t = useWebUIText();
-  const foodTypes = useMemo(
-    () => (data?.resources ?? []).filter(row => row.category.toLowerCase() === 'food' && !row.aggregate),
-    [data?.resources],
-  );
-  const serverFoodId = data?.autoBuyFoodResource && foodTypes.some(row => row.id === data.autoBuyFoodResource)
-    ? data.autoBuyFoodResource
-    : (foodTypes[0]?.id ?? '');
-  const [enabled, setEnabled] = useState(false);
-  const [selectedId, setSelectedId] = useState('');
-  const [buyDraft, setBuyDraft] = useState(0);
-  const [draftKey, setDraftKey] = useState('');
-  const dataKey = `${data?.autoBuyEnabled ?? ''}:${data?.autoBuyFoodResource ?? ''}:${data?.autoBuyFoodThreshold ?? ''}`;
-  if (data && dataKey !== draftKey) {
-    setDraftKey(dataKey);
-    setEnabled(data.autoBuyEnabled);
-    setSelectedId(serverFoodId);
-    setBuyDraft(data.autoBuyFoodThreshold);
-  }
-
-  const commit = (nextEnabled: boolean, resourceId: string, threshold: number) => {
-    if (!data || !resourceId) return;
-    setEnabled(nextEnabled);
-    setSelectedId(resourceId);
-    setBuyDraft(threshold);
-    setEconomyAutoBuyBridge(nextEnabled, resourceId, threshold).catch(() => undefined);
-  };
-
-  return (
-    <div className="econ-auto-buy">
-      <div className="econ-auto-buy__foods">
-        {foodTypes.map(row => (
-          <Tooltip
-            key={row.id}
-            content={{ title: row.name }}
-            position="top"
-            delay={150}
-            inline
-            wrapperClassName="econ-auto-buy-food-tooltip"
-          >
-            <button
-              type="button"
-              className={`econ-auto-buy__food${row.id === selectedId ? ' econ-auto-buy__food--selected' : ''}`}
-              disabled={!data}
-              aria-pressed={row.id === selectedId}
-              aria-label={row.name}
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                if (!data || row.id === selectedId) return;
-                commit(enabled, row.id, buyDraft);
-              }}
-            >
-              <img src={WebkilnAssetPath(`/assets/resources/${row.id}.png`)} alt="" draggable={false} />
-            </button>
-          </Tooltip>
-        ))}
-      </div>
-      <Tooltip
-        content={{
-          title: t('Economy.AutoBuyTarget'),
-          body: t('Economy.AutoBuyFoodExplanation'),
-        }}
-        position="top"
-        delay={150}
-        inline
-        wrapperClassName="econ-auto-buy-amount-tooltip"
-      >
-        <div className="econ-auto-buy__amount">
-          <span className="econ-auto-buy__amount-label">{t('Economy.AutoBuyTargetShort')}</span>
-          <NumberStepper
-            value={buyDraft}
-            min={0}
-            step={data?.autoSellThresholdStep ?? 500}
-            disabled={!data || !selectedId}
-            className="econ-auto-buy-stepper"
-            buttonClassName="econ-auto-buy-step"
-            buttonDisabledClassName="econ-auto-buy-step--disabled"
-            formatValue={value => String(Math.round(value))}
-            onChange={setBuyDraft}
-            onCommit={next => commit(enabled, selectedId, next)}
-          />
-        </div>
-      </Tooltip>
-      <button
-        type="button"
-        className={`econ-toggle-btn${enabled ? ' econ-toggle-btn--active' : ''}`}
-        disabled={!data || !selectedId}
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (!data || !selectedId) return;
-          commit(!enabled, selectedId, buyDraft);
-        }}
-      >
-        {enabled ? t('Economy.Enabled') : t('Economy.Disabled')}
-      </button>
-    </div>
-  );
-}
-
-function percentOf(value: number, max: number): string {
-  if (max <= 0) return '0%';
-  return `${Math.max(0, Math.min(100, (value / max) * 100)).toFixed(2)}%`;
-}
-
-function IncomeHistoryChart({ data, compact = false }: { data: GetEconomyOverviewResponse | null; compact?: boolean }) {
-  const t = useWebUIText();
-  const points = (data?.history ?? []).slice(-12);
-  const maxValue = Math.max(
-    1,
-    ...points.map(point => historySum(point, HISTORY_INCOME_KEYS)),
-  );
-
-  return (
-    <section className={`econ-section econ-chart-section${compact ? ' econ-chart-section--compact' : ''}`}>
-      <SectionHeading variant="ornate" title={t('Economy.IncomeHistory12Month')} />
-      <div className="econ-chart">
-        <span className="econ-chart-gridline econ-chart-gridline--top" />
-        <span className="econ-chart-gridline econ-chart-gridline--mid" />
-        <span className="econ-chart-zero-line" />
-        {points.length === 0 ? (
-          <div className="econ-mini-empty">{t('Economy.NoIncomeHistory')}</div>
-        ) : points.map((point, index) => {
-          return (
-            <div
-              className="econ-chart-bar-col"
-              key={`${point.year}:${point.month}:${index}`}
-              style={{ gridColumn: 12 - points.length + index + 1 }}
-            >
-              <div className="econ-chart-bar-track">
-                <div className="econ-chart-bar-stack">
-                  {HISTORY_CHART_SEGMENTS.map(segment => {
-                    const value = historyMetric(point, segment.key);
-                    if (value <= 0) return null;
-                    return (
-                      <span
-                        key={segment.key}
-                        className={`econ-chart-segment econ-chart-segment--${segment.className}`}
-                        style={{ height: percentOf(value, maxValue) }}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-              <span className="econ-chart-bar-label">{monthLabel(point)}</span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="econ-chart-legend">
-        {HISTORY_CHART_SEGMENTS.map(segment => (
-          <span className="econ-chart-legend-item" key={segment.key}>
-            <span className={`econ-chart-legend-swatch econ-chart-legend-swatch--${segment.className}`} />
-            {t(segment.labelKey)}
-          </span>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function TradeControls({
-  resource,
-  gold,
-  tradeAmount,
-}: {
-  resource: EconomyOverviewResourceRow;
-  gold: number;
-  tradeAmount: number;
-}) {
-  const t = useWebUIText();
-  const multiplier = useStepMultiplier();
-  const effectiveTradeAmount = stepAmountFromMultiplier(multiplier, tradeAmount);
-  const buyCost = Math.ceil(effectiveTradeAmount * resource.buyPrice);
-  const sellUnits = Math.min(effectiveTradeAmount, resource.amount);
-  const sellReturn = Math.floor(sellUnits * resource.sellPrice);
-  const canBuy = buyCost > 0 && gold >= buyCost;
-  const canSell = sellReturn > 0;
-
-  return (
-    <div
-      className="econ-trade-btns"
-      onPointerEnter={noteModifierKeysFromEvent}
-      onPointerMove={noteModifierKeysFromEvent}
-    >
-      <Tooltip
-        content={{ title: t('Economy.Buy'), body: t('Economy.BuyTradeTooltip') }}
-        position="top"
-        delay={150}
-        wrapperClassName="econ-trade-btn-tooltip"
-      >
-        <button
-          type="button"
-          className="econ-trade-btn econ-trade-btn--buy"
-          disabled={!canBuy}
-          aria-label={t('Economy.Buy')}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            noteModifierKeysFromEvent(event);
-            if (!canBuy) return;
-            buyEconomyResourceBridge(
-              resource.id,
-              stepAmountFromEvent(event, tradeAmount),
-            ).catch(() => undefined);
-          }}
-        >
-          <img className="econ-trade-btn-mark" src="/assets/icons/I_Minus.png" alt="" />
-          <img className="econ-trade-btn-coin" src="/assets/icons/I_Coins.png" alt="" />
-          <span>{fmt(buyCost)}</span>
-        </button>
-      </Tooltip>
-      <Tooltip
-        content={{ title: t('Economy.Sell'), body: t('Economy.SellTradeTooltip') }}
-        position="top"
-        delay={150}
-        wrapperClassName="econ-trade-btn-tooltip"
-      >
-        <button
-          type="button"
-          className="econ-trade-btn econ-trade-btn--sell"
-          disabled={!canSell}
-          aria-label={t('Economy.Sell')}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            noteModifierKeysFromEvent(event);
-            if (!canSell) return;
-            sellEconomyResourceBridge(
-              resource.id,
-              stepAmountFromEvent(event, tradeAmount),
-            ).catch(() => undefined);
-          }}
-        >
-          <img className="econ-trade-btn-mark" src="/assets/icons/I_Plus.png" alt="" />
-          <img className="econ-trade-btn-coin" src="/assets/icons/I_Coins.png" alt="" />
-          <span>{fmt(sellReturn)}</span>
-        </button>
-      </Tooltip>
     </div>
   );
 }
@@ -1411,7 +921,7 @@ function MilitaryDashboard({ rows }: { rows: EconomyOverviewMilitaryRow[] }) {
       ),
       sortValue: row => row.upkeep,
     },
-    { id: 'food', label: t('Economy.FoodPerMonth'), align: 'right', className: 'econ-negative', render: row => negativeFmt1(row.foodConsumption), sortValue: row => row.foodConsumption },
+    { id: 'food', label: t('Economy.FoodPerMonth'), align: 'right', className: 'econ-negative', render: row => negativeResource(row.foodConsumption), sortValue: row => row.foodConsumption },
     {
       id: 'resources',
       label: t('Common.Resources'),
@@ -1425,7 +935,7 @@ function MilitaryDashboard({ rows }: { rows: EconomyOverviewMilitaryRow[] }) {
                 lines: resourceUsage.map(resource => ({
                   label: resource.name,
                   labelIcon: `/assets/resources/${resource.id}.png`,
-                  value: `-${fmt1(resource.amount)}${t('Economy.PerMonth')}`,
+                  value: `-${formatResourceNumber(resource.amount)}${t('Economy.PerMonth')}`,
                   valueColor: 'var(--red-light)',
                 })),
               }}
@@ -1553,7 +1063,7 @@ function VassalDashboard({ rows }: { rows: EconomyOverviewVassalRow[] }) {
   );
 }
 
-function OverviewTab({ data, onOpenResource }: { data: GetEconomyOverviewResponse | null; onOpenResource: (resource: EconomyOverviewResourceRow) => void }) {
+function OverviewTab({ data }: { data: GetEconomyOverviewResponse | null }) {
   const t = useWebUIText();
   const [selectedMetric, setSelectedMetric] = useState<EconomyMetricKey | null>(null);
   const incomeBreakdown = useIncomeBreakdown(selectedMetric !== null);
@@ -1575,44 +1085,7 @@ function OverviewTab({ data, onOpenResource }: { data: GetEconomyOverviewRespons
           extra={<span className="econ-flow-footer__aside">{t('Common.Treasury')} <b><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{fmt(data?.gold)}</b></span>}
         />
       </section>
-      <section className="econ-section">
-        <SectionHeading variant="ornate" title={t('Economy.FoodFlow')} />
-        <div className="econ-overview-top">
-          <FlowColumn
-            title={t('Economy.FoodIn')}
-            total={data?.foodIncomeTotal ?? 0}
-            tone="income"
-            entries={[
-              { label: t('Economy.SettlementHarvests'), value: data?.foodProduction ?? 0 },
-              { label: t('Economy.SubjectFood'), value: data?.foodSubjectContribution ?? 0 },
-              { label: t('Economy.TreatyFood'), value: data?.foodTreatyIncome ?? 0 },
-            ]}
-          />
-          <FlowColumn
-            title={t('Economy.FoodOut')}
-            total={data?.foodExpenseTotal ?? 0}
-            tone="expense"
-            entries={[
-              { label: t('Economy.SettlementUse'), value: data?.settlementFoodConsumption ?? 0 },
-              { label: t('Economy.ForceUse'), value: data?.militaryFoodConsumption ?? 0 },
-              { label: t('Economy.QueuedFood'), value: data?.foodQueuedConsumption ?? 0 },
-              { label: t('Economy.Spoilage'), value: data?.foodDecayLoss ?? 0 },
-            ]}
-          />
-        </div>
-        <FlowFooter
-          label={t('Economy.NetFood')}
-          value={<span className={valueClass(data?.foodNet)}>{signed(data?.foodNet)}{t('Economy.PerMonth')}</span>}
-          extra={(
-            <span className="econ-flow-footer__aside">
-              {t('Economy.FoodStores')} <b>{fmt1(data?.totalFood)}</b>
-              <span className="econ-flow-footer__control">{t('Economy.AutoBuy')} <AutoBuyControl data={data} /></span>
-            </span>
-          )}
-        />
-      </section>
-      <ShortagesDashboard resources={data?.resources ?? []} onOpenResource={onOpenResource} />
-      <IncomeHistoryChart data={data} compact />
+      <ResourceWorkspace data={data} />
     </>
   );
 }
@@ -1623,281 +1096,6 @@ function SettlementsTab({ data }: { data: GetEconomyOverviewResponse | null }) {
 
 function MilitaryTab({ data }: { data: GetEconomyOverviewResponse | null }) {
   return <MilitaryDashboard rows={data?.militaries ?? []} />;
-}
-
-function segmentTotal(segments: EconomyOverviewResourceSource[] | undefined): number {
-  if (!segments) return 0;
-  return segments.reduce((sum, segment) => sum + Math.max(0, segment.amount), 0);
-}
-
-function productionFlow(row: EconomyOverviewResourceRow): number {
-  const fromSegments = segmentTotal(row.producers);
-  return fromSegments > 0 ? fromSegments : row.production + row.vassalContribution + row.treatyIncome;
-}
-
-function usageFlow(row: EconomyOverviewResourceRow): number {
-  const fromSegments = segmentTotal(row.consumers);
-  return fromSegments > 0
-    ? fromSegments
-    : row.militaryUsage + row.queuedUsage + row.settlementConsumption + row.decayLoss;
-}
-
-function stockFlow(row: EconomyOverviewResourceRow): number {
-  const fromSegments = segmentTotal(row.stockpiles);
-  return fromSegments > 0 ? fromSegments : row.amount;
-}
-
-function segmentLabel(segment: EconomyOverviewResourceSource, t: WebUITextFormatter): string {
-  if (segment.linkType === 'other') return t('Economy.Other');
-  if (segment.linkType === 'queued') return t('Economy.UsedByRecruitment');
-  if (segment.linkType === 'decay') return t('Economy.Spoilage');
-  if (segment.linkType === 'treaty') return t('Economy.Treaties');
-  return segment.name;
-}
-
-const PRODUCED_SEGMENT_COLOURS = ['#5ca040', '#78c058', '#3d7a2c', '#8fd46a', '#4a8c34', '#6aad4c'];
-const USE_SEGMENT_COLOURS = ['#c44040', '#e05555', '#8b2020', '#d45a5a', '#a33030', '#b84848'];
-const STOCK_SEGMENT_COLOURS = ['#c9a84c', '#8a7235', '#d6ad52', '#6e5a32', '#b89a58', '#9a7a40'];
-
-function segmentColour(tone: 'stock' | 'produced' | 'use', index: number): string {
-  const palette = tone === 'produced'
-    ? PRODUCED_SEGMENT_COLOURS
-    : tone === 'use'
-      ? USE_SEGMENT_COLOURS
-      : STOCK_SEGMENT_COLOURS;
-  return palette[index % palette.length];
-}
-
-function ResourceFlowBar({
-  segments,
-  total,
-  scaleMax,
-  tone,
-  title,
-}: {
-  segments: EconomyOverviewResourceSource[];
-  total: number;
-  scaleMax: number;
-  tone: 'stock' | 'produced' | 'use';
-  title: string;
-}) {
-  const t = useWebUIText();
-  const fill = scaleMax > 0 ? Math.min(100, (Math.max(0, total) / scaleMax) * 100) : 0;
-  const parts = (segments ?? []).filter(segment => segment.amount > 0.0001);
-  const partTotal = Math.max(segmentTotal(parts), total, 0.0001);
-  const sign = tone === 'use' ? '-' : tone === 'produced' ? '+' : '';
-  return (
-    <div className={`econ-flow-cell econ-flow-cell--${tone}`}>
-      <div className="econ-flow-track">
-        {fill > 0 && (
-          <div className="econ-flow-bar" style={{ width: `${fill}%` }}>
-            {parts.map((segment, index) => (
-              <div
-                key={`${segment.linkType}:${segment.linkId}:${index}`}
-                className="econ-flow-seg-wrap"
-                style={{ width: `${(Math.max(0, segment.amount) / partTotal) * 100}%` }}
-              >
-                <Tooltip
-                  content={{
-                    title: segmentLabel(segment, t),
-                    lines: [{ label: title, value: `${sign}${fmt1(segment.amount)}` }],
-                  }}
-                  position="top"
-                  delay={80}
-                >
-                  <div
-                    className="econ-flow-seg"
-                    style={{ backgroundColor: segmentColour(tone, index) }}
-                  />
-                </Tooltip>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      <span className={`econ-flow-num${tone === 'produced' ? ' econ-positive' : tone === 'use' ? ' econ-negative' : ''}`}>
-        {tone === 'produced' ? `+${fmt1(total)}` : tone === 'use' ? negativeFmt1(total) : fmt1(total)}
-      </span>
-    </div>
-  );
-}
-
-const RESOURCE_CATEGORY_ORDER = ['food', 'rawMaterials', 'strategic', 'luxury'];
-
-function resourceCategoryLabel(category: string, t: WebUITextFormatter): string {
-  const id = category.toLowerCase();
-  if (id === 'food') return t('Economy.ResourceCategoryFood');
-  if (id === 'strategic') return t('Economy.ResourceCategoryStrategic');
-  if (id === 'luxury') return t('Economy.ResourceCategoryLuxury');
-  if (id === 'rawmaterials') return t('Economy.ResourceCategoryRawMaterials');
-  return category;
-}
-
-function ResourceKindRow({
-  row,
-  flowMax,
-  stockMax,
-  gold,
-  tradeAmount,
-  onOpenResource,
-}: {
-  row: EconomyOverviewResourceRow;
-  flowMax: number;
-  stockMax: number;
-  gold: number;
-  tradeAmount: number;
-  onOpenResource: (resource: EconomyOverviewResourceRow) => void;
-}) {
-  const t = useWebUIText();
-  return (
-    <article className="econ-res-card">
-      <header className="econ-res-card__head">
-        <ResourceName row={row} onOpen={onOpenResource} />
-        <span className={`econ-res-card__net ${valueClass(row.netPerMonth)}`}>{signed(row.netPerMonth)}</span>
-        {row.aggregate ? null : (
-          <TradeControls resource={row} gold={gold} tradeAmount={tradeAmount} />
-        )}
-      </header>
-      <div className="econ-res-card__flow">
-        <ResourceFlowBar
-          segments={row.producers}
-          total={productionFlow(row)}
-          scaleMax={flowMax}
-          tone="produced"
-          title={t('Economy.Produced')}
-        />
-        <ResourceFlowBar
-          segments={row.consumers}
-          total={usageFlow(row)}
-          scaleMax={flowMax}
-          tone="use"
-          title={t('Economy.Use')}
-        />
-      </div>
-      <div className="econ-res-card__stock">
-        <ResourceFlowBar
-          segments={row.stockpiles}
-          total={stockFlow(row)}
-          scaleMax={stockMax}
-          tone="stock"
-          title={t('Economy.Stockpile')}
-        />
-      </div>
-    </article>
-  );
-}
-
-function ResourcesTab({ data, onOpenResource }: { data: GetEconomyOverviewResponse | null; onOpenResource: (resource: EconomyOverviewResourceRow) => void }) {
-  const t = useWebUIText();
-  const rows = data?.resources ?? [];
-  const gold = data?.gold ?? 0;
-  const tradeAmount = data?.tradeTransactionAmount ?? 0;
-  const extraCategories = [...new Set(rows.map(row => row.category.toLowerCase()))]
-    .filter(category => !RESOURCE_CATEGORY_ORDER.includes(category));
-  const groups = [...RESOURCE_CATEGORY_ORDER, ...extraCategories]
-    .map(category => {
-      const items = rows.filter(row => row.category.toLowerCase() === category);
-      if (items.length === 0) return null;
-      const goods = items.filter(row => !row.aggregate);
-      const scaleRows = goods.length > 0 ? goods : items;
-      return {
-        category,
-        label: resourceCategoryLabel(category, t),
-        items: [...items].sort((left, right) => {
-          if (left.aggregate !== right.aggregate) return left.aggregate ? -1 : 1;
-          return left.name.localeCompare(right.name);
-        }),
-        flowMax: Math.max(1, ...scaleRows.map(row => Math.max(productionFlow(row), usageFlow(row)))),
-        stockMax: Math.max(1, ...scaleRows.map(row => stockFlow(row))),
-      };
-    })
-    .filter((group): group is NonNullable<typeof group> => group !== null);
-
-  if (groups.length === 0) {
-    return (
-      <section className="econ-section">
-        <div className="econ-muted">{t('Economy.NoResourceStockpiles')}</div>
-      </section>
-    );
-  }
-
-  return (
-    <>
-      {groups.map(group => (
-        <section className="econ-section" key={group.category}>
-          <SectionHeading variant="ornate" title={group.label} />
-          <div className="econ-res-list">
-            {group.items.map(row => (
-              <ResourceKindRow
-                key={row.id}
-                row={row}
-                flowMax={row.aggregate ? Math.max(1, productionFlow(row), usageFlow(row)) : group.flowMax}
-                stockMax={row.aggregate ? Math.max(1, stockFlow(row)) : group.stockMax}
-                gold={gold}
-                tradeAmount={tradeAmount}
-                onOpenResource={onOpenResource}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
-    </>
-  );
-}
-
-function FoodTab({ data }: { data: GetEconomyOverviewResponse | null }) {
-  const t = useWebUIText();
-  const foodColumns: EconomyColumn<EconomyOverviewFoodRow>[] = [
-    { id: 'settlement', label: t('Economy.Settlement'), render: row => <EntityLink type="settlement" id={row.settlementId}>{row.settlementName}</EntityLink>, sortValue: row => row.settlementName },
-    { id: 'stockpile', label: t('Economy.Stockpile'), align: 'right', render: row => fmt1(row.stockpile), sortValue: row => row.stockpile },
-    { id: 'production', label: t('Economy.Production'), align: 'right', className: 'econ-positive', render: row => `+${fmt1(row.production)}`, sortValue: row => row.production },
-    { id: 'use', label: t('Economy.Use'), align: 'right', className: 'econ-negative', render: row => negativeFmt1(row.consumption), sortValue: row => row.consumption },
-    { id: 'net', label: t('Economy.NetPerMonth'), align: 'right', render: row => <span className={valueClass(row.netPerMonth)}>{signed(row.netPerMonth)}</span>, sortValue: row => row.netPerMonth },
-    { id: 'shortage', label: t('Economy.Shortage'), align: 'right', render: row => <span className={row.shortage > 0 ? 'econ-negative' : 'econ-neutral'}>{fmt1(row.shortage)}</span>, sortValue: row => row.shortage },
-  ];
-
-  const militaryColumns: EconomyColumn<EconomyOverviewMilitaryRow>[] = [
-    { id: 'name', label: t('Economy.Force'), render: row => <EntityLink type="military" id={row.id}>{row.name}</EntityLink>, sortValue: row => row.name },
-    { id: 'kind', label: t('Economy.Kind'), render: row => militaryKindLabel(row.kind, t), sortValue: row => row.kind },
-    { id: 'stockpile', label: t('Economy.FoodStoresColumn'), align: 'right', render: row => fmt1(row.foodStockpile), sortValue: row => row.foodStockpile },
-    { id: 'use', label: t('Economy.FoodUse'), align: 'right', className: 'econ-negative', render: row => `${negativeFmt1(row.foodConsumption)}${t('Economy.PerMonth')}`, sortValue: row => row.foodConsumption },
-    { id: 'strength', label: t('Economy.Strength'), align: 'right', render: row => `${fmt(row.strength)} / ${fmt(row.maxStrength)}`, sortValue: row => row.strength },
-    { id: 'priority', label: t('Economy.Priority'), render: row => <PriorityControls targetType="military" targetId={row.id} priority={row.priority} />, sortValue: row => priorityLabel(row.priority, t) },
-    { id: 'location', label: t('Economy.Location'), render: row => <span className="econ-ellipsis">{row.location || '-'}</span>, sortValue: row => row.location },
-  ];
-
-  return (
-    <>
-      <section className="econ-section">
-        <SectionHeading variant="ornate" title={t('Economy.FoodFlow')} />
-        <div className="econ-summary-grid">
-          <SummaryRow label={t('Economy.Production')} value={`${fmt1(data?.foodProduction)}${t('Economy.PerMonth')}`} tone="econ-positive" />
-          <SummaryRow label={t('Economy.SettlementUse')} value={`${negativeFmt1(data?.settlementFoodConsumption)}${t('Economy.PerMonth')}`} tone="econ-negative" />
-          <SummaryRow label={t('Economy.ForceUse')} value={`${negativeFmt1(data?.militaryFoodConsumption)}${t('Economy.PerMonth')}`} tone="econ-negative" />
-          <SummaryRow label={t('Economy.NetChange')} value={`${signed(data?.foodNet)}${t('Economy.PerMonth')}`} tone={valueClass(data?.foodNet)} />
-          <SummaryRow label={t('Economy.FoodStockpiles')} value={fmt1(data?.totalFood)} />
-          <SummaryRow className="econ-summary-row--auto-buy" label={t('Economy.AutoBuy')} value={<AutoBuyControl data={data} />} />
-        </div>
-      </section>
-      <EconomyTable
-        title={t('Economy.SettlementFood')}
-        rows={data?.foodRows ?? []}
-        columns={foodColumns}
-        emptyLabel={t('Economy.NoSettlementFoodRows')}
-        initialSort="net"
-        initialSortDir="asc"
-        rowKey={row => row.settlementId}
-      />
-      <EconomyTable
-        title={t('Economy.ForceFood')}
-        rows={data?.militaries ?? []}
-        columns={militaryColumns}
-        emptyLabel={t('Economy.NoForcesUsingFood')}
-        initialSort="use"
-        rowKey={row => row.id}
-      />
-    </>
-  );
 }
 
 function ProvinceTab({ data }: { data: GetEconomyOverviewResponse | null }) {
@@ -1985,7 +1183,6 @@ const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => 
   const data = useEconomyOverviewBridge(activeTab);
   const court = useCourtPositions(true);
   const [courtPosition, setCourtPosition] = useState<CourtPositionView | null>(null);
-  const { openResource } = useResourceDetails();
   const economyOffice = useMemo(
     () => court?.positions.find(position => position.key === 'masterofeconomy') ?? null,
     [court],
@@ -1993,20 +1190,16 @@ const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => 
 
   const tabs = [
     { id: 'overview', label: t('Economy.TabOverview') },
-    { id: 'resources', label: t('Economy.TabResources') },
-    { id: 'food', label: t('Economy.TabFood') },
     { id: 'settlements', label: t('Economy.TabSettlements') },
     { id: 'military', label: t('Economy.TabMilitary') },
     { id: 'provinces', label: t('Economy.TabProvinces') },
   ];
 
   const content = (() => {
-    if (activeTab === 'resources') return <ResourcesTab data={data} onOpenResource={resource => openResource(resource.id)} />;
-    if (activeTab === 'food') return <FoodTab data={data} />;
     if (activeTab === 'settlements') return <SettlementsTab data={data} />;
     if (activeTab === 'military') return <MilitaryTab data={data} />;
     if (activeTab === 'provinces') return <ProvinceTab data={data} />;
-    return <OverviewTab data={data} onOpenResource={resource => openResource(resource.id)} />;
+    return <OverviewTab data={data} />;
   })();
   const officeStrip = economyOffice ? (
     <div className="econ-office-strip econ-office-strip--top">
@@ -2022,14 +1215,15 @@ const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => 
       title={t('Economy.ScreenTitle')}
       onClose={onClose}
       advisorTopic="economyScreen"
-      className="screen--economy"
+      className={`screen--economy${activeTab === 'overview' ? ' screen--economy-overview' : ''}`}
       tabs={<SidebarTabBar tabs={tabs} activeTab={activeTab} onTabChange={(id) => setActiveTab(id as EconomyTab)} />}
-      headerExtra={<StatsBar data={data} />}
-      contentClassName={`econ-content${activeTab === 'settlements' ? ' econ-content--settlements' : ''}`}
+      headerExtra={activeTab === 'overview' ? undefined : <StatsBar data={data} />}
+      contentClassName={`econ-content${activeTab === 'overview' ? ' econ-content--overview' : ''}${activeTab === 'settlements' ? ' econ-content--settlements' : ''}`}
       styledScrollContent
     >
+      {activeTab === 'overview' && <StatsBar data={data} />}
       {officeStrip}
-      <div className="econ-wrap">{content}</div>
+      <div className={`econ-wrap${activeTab === 'overview' ? ' econ-wrap--overview' : ''}`}>{content}</div>
       <CourtAppointmentModal
         open={!!courtPosition}
         position={courtPosition}

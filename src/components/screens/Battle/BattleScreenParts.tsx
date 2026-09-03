@@ -152,53 +152,17 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-interface RgbColour {
-  r: number;
-  g: number;
-  b: number;
-}
-
-export function parseHexColour(value: string | undefined): RgbColour | null {
-  if (!value) return null;
-  const trimmed = value.trim();
-  const hex = trimmed.charAt(0) === '#' ? trimmed.slice(1) : trimmed;
-  if (hex.length !== 6 || !/^[0-9a-fA-F]+$/.test(hex)) return null;
-  return {
-    r: parseInt(hex.slice(0, 2), 16),
-    g: parseInt(hex.slice(2, 4), 16),
-    b: parseInt(hex.slice(4, 6), 16),
-  };
-}
-
-export function colourDistance(a: string | undefined, b: string | undefined): number {
-  const first = parseHexColour(a);
-  const second = parseHexColour(b);
-  if (!first || !second) return 255;
-  const dr = first.r - second.r;
-  const dg = first.g - second.g;
-  const db = first.b - second.b;
-  return Math.sqrt(dr * dr + dg * dg + db * db);
-}
-
 const PLAYER_BATTLE_COLOUR = '#4f7f9f';
+const ALLY_BATTLE_COLOUR = '#739664';
+const NEUTRAL_BATTLE_COLOUR = '#8a8578';
 const ENEMY_BATTLE_COLOUR = '#b84a3c';
 const BATTLE_COUNTER_MORALE_SEGMENTS = 10;
 
-export function readableCounterColour(formation: BattleFormationLive, playerReferenceColour: string | null): string {
-  if (formation.isPlayerControlled) return PLAYER_BATTLE_COLOUR;
+export function battleCounterColour(formation: BattleFormationLive): string {
+  if (formation.isPlayerControlled || formation.faction.relation === 'own') return PLAYER_BATTLE_COLOUR;
+  if (formation.faction.relation === 'ally' || formation.faction.relation === 'subject') return ALLY_BATTLE_COLOUR;
   if (formation.faction.relation === 'enemy') return ENEMY_BATTLE_COLOUR;
-
-  const primary = formation.faction.colour || '#6d6d6d';
-  const reference = playerReferenceColour || PLAYER_BATTLE_COLOUR;
-  if (colourDistance(primary, reference) >= 105) return primary;
-
-  const secondary = formation.faction.secondaryColour;
-  if (secondary && colourDistance(secondary, reference) >= 105) {
-    return secondary;
-  }
-
-  if (formation.side === 'attacker') return '#8b6842';
-  return '#76623f';
+  return NEUTRAL_BATTLE_COLOUR;
 }
 
 export function unitTypeKey(formation: BattleFormationLive): 'infantry' | 'ranged' | 'cavalry' | 'siege' | 'special' {
@@ -240,7 +204,6 @@ export function formationsAreInMeleeContact(formation: BattleFormationLive, targ
 export function buildBattleVisualAgents(
   formations: BattleFormationLive[],
   formationsById: Map<string, BattleFormationLive>,
-  playerReferenceColour: string | null,
   battlefieldWidth: number,
   battlefieldHeight: number,
   isNavalBattle: boolean,
@@ -257,7 +220,7 @@ export function buildBattleVisualAgents(
   };
   for (const formation of formations) {
     const typeKey = unitTypeKey(formation);
-    const colour = readableCounterColour(formation, playerReferenceColour);
+    const colour = battleCounterColour(formation);
     const formationRotation = Number.isFinite(formation.rotation) ? formation.rotation : 0;
     const agentCount = battleFrameAgentCount(formation);
     const visualCount = isNavalBattle ? Math.max(0, Math.round(formation.shipCount)) : agentCount;
@@ -594,7 +557,6 @@ export function FormationCounter({
   battlefieldHeight,
   onSelect,
   onHoverChange,
-  playerReferenceColour,
   showStance,
   isNaval,
 }: {
@@ -609,13 +571,12 @@ export function FormationCounter({
   battlefieldHeight: number;
   onSelect: (additive: boolean) => void;
   onHoverChange: (formationId: string | null) => void;
-  playerReferenceColour: string | null;
   showStance: boolean;
   isNaval: boolean;
 }) {
   const typeKey = unitTypeKey(formation);
   const footprint = formationAgentFootprint(formation, typeKey, isNaval);
-  const factionColour = readableCounterColour(formation, playerReferenceColour);
+  const factionColour = battleCounterColour(formation);
   const health = formation.maxStrength > 0 ? formation.strength / formation.maxStrength * 100 : formation.healthPercent * 100;
   const morale = clamp((Number.isFinite(formation.morale) ? formation.morale : 1) * 100, 0, 100);
   const moraleClass = morale < 35

@@ -49,6 +49,20 @@ export function formatSignedNumber(value: number | undefined | null, options: Fo
   return numericValue > 0 ? `+${formatted}` : formatted;
 }
 
+function resourceFractionDigits(value: number | undefined | null): number {
+  const absoluteValue = Math.abs(Number(value ?? 0));
+  if (!Number.isFinite(absoluteValue) || absoluteValue === 0) return 0;
+  return absoluteValue >= 0.1 ? 1 : 2;
+}
+
+export function formatResourceNumber(value: number | undefined | null): string {
+  return formatNumber(value, { maximumFractionDigits: resourceFractionDigits(value) });
+}
+
+export function formatSignedResourceNumber(value: number | undefined | null): string {
+  return formatSignedNumber(value, { maximumFractionDigits: resourceFractionDigits(value) });
+}
+
 export function formatCompactNumber(value: number | undefined | null): string {
   const numberValue = Math.round(Number(value ?? 0));
   if (!Number.isFinite(numberValue)) return '0';

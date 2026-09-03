@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../common/tooltips/Tooltip';
 import type { ConvoyGlanceData } from './WorldGlanceTypes';
 import { clampUnitFraction } from './glanceMath';
-import { formatNumber, formatPercent } from '../../utils/numberFormat';
+import { formatNumber, formatPercent, formatResourceNumber } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
 import { WebkilnAssetPath } from '../../utils/assets';
 import FactionRoundel from '../common/entities/FactionRoundel';
@@ -30,11 +30,7 @@ function etaText(days: number): string {
 }
 
 function cargoAmount(amount: number): string {
-  if (Math.abs(amount) < 5) {
-    return formatNumber(amount, { maximumFractionDigits: 1 });
-  }
-
-  return formatNumber(amount);
+  return formatResourceNumber(amount);
 }
 
 function cargoSummary(detail: GetWorldGlanceTooltipResponse): string {
@@ -163,7 +159,7 @@ export default function ConvoyGlance({ data }: ConvoyGlanceProps) {
       <div
         className={`glance glance--convoy glance--convoy-${data.routeType}`}
         style={{
-          '--faction-colour': data.faction.colour,
+          '--relation-colour': relationDisplayColour(data.faction.relation),
           ...relationTextVars(data.faction.relation),
         } as CSSProperties}
       >

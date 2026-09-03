@@ -501,10 +501,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
         id: `n-${Date.now()}`,
         timestamp: `${currentDate.year}-${String(currentDate.month).padStart(2, '0')}-${String(currentDate.day).padStart(2, '0')}`,
         style: 'regular',
-        durationDays: 4,
+        durationDays: 14,
         ...(currentGameDay > 0 ? {
           createdOnDay: currentGameDay,
-          expiresOnDay: currentGameDay + 4,
+          expiresOnDay: currentGameDay + 14,
         } : {}),
       }],
     }));

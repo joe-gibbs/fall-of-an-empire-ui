@@ -80,6 +80,7 @@ export function mapSettlement(entry: GetWorldGlancesResponse['settlements'][numb
     complianceTargetLabel: entry.complianceTargetLabel ?? '',
     complianceTargetName: entry.complianceTargetName ?? '',
     complianceTargetIsRuler: entry.complianceTargetIsRuler ?? false,
+    complianceUsesFactionOpinion: entry.complianceUsesFactionOpinion ?? false,
     complianceLuxuryLabel: entry.complianceLuxuryLabel ?? '',
     complianceLuxuryStatus: entry.complianceLuxuryStatus ?? '',
     luxurySlotsRequired: entry.luxurySlotsRequired ?? 0,

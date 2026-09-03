@@ -53,6 +53,16 @@
   max-width: 60rem;
 }
 
+.screen--economy-overview.screen {
+  width: calc(100vw - 2rem);
+  max-width: 92rem;
+}
+
+.econ-content--overview.styled-scroll-area > .styled-scroll-area__viewport {
+  overflow-y: auto;
+  padding: 0 1.231rem 1.8rem 0;
+}
+
 .screen--economy > .sidebar-tab-bar {
   display: flex;
   flex-wrap: wrap;
@@ -101,6 +111,24 @@
   max-width: 60rem;
   margin: 0 auto;
   min-height: 0;
+}
+
+.econ-wrap.econ-wrap--overview {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
+.econ-wrap--overview > .econ-section {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.econ-wrap--overview > .erw-layout {
+  width: 100%;
+  height: auto;
+  min-height: 38rem;
+  max-height: none;
 }
 
 .econ-stats-grid {
@@ -996,7 +1024,6 @@ button.econ-command-cost__row:focus-visible {
 }
 
 .econ-table--stockpiles .econ-table-row > .econ-table-cell,
-.econ-table--resources .econ-table-row > .econ-table-cell,
 .econ-table--tax-losses .econ-table-row > .econ-table-cell,
 .econ-table--settlements .econ-table-row > .econ-table-cell,
 .econ-table--military .econ-table-row > .econ-table-cell,
@@ -1004,117 +1031,6 @@ button.econ-command-cost__row:focus-visible {
   flex-grow: 0;
   flex-shrink: 0;
   min-width: 0;
-}
-
-.econ-res-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.econ-res-card {
-  padding: 0.4rem 0.55rem 0.5rem;
-  background-color: #151b20;
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.18), rgba(36, 42, 48, 0.18)),
-    url('/assets/baked/card-charcoal.png');
-  background-repeat: repeat;
-  background-size: auto, 23.2727rem 23.2727rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.econ-res-card__head {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  min-width: 0;
-  margin-bottom: 0.28rem;
-}
-
-.econ-res-card__head .econ-resource-name,
-.econ-res-card__head .econ-resource-name--button {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.econ-res-card__net {
-  flex: 0 0 auto;
-  min-width: 3.4rem;
-  text-align: right;
-  font-weight: 700;
-}
-
-.econ-res-card__head .econ-trade-btns {
-  flex: 0 0 7.4rem;
-  width: 7.4rem;
-}
-
-.econ-res-card__flow {
-  display: flex;
-  flex-direction: column;
-  gap: 0.12rem;
-}
-
-.econ-res-card__stock {
-  margin-top: 0.55rem;
-  padding-top: 0.4rem;
-  border-top: 0.077rem solid var(--separator);
-}
-
-.econ-flow-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-width: 0;
-  width: 100%;
-}
-
-.econ-flow-track {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 0.7273rem;
-  overflow: hidden;
-  border-radius: 0.3636rem;
-  background: url('/assets/bar-track.png') repeat-x;
-  background-size: auto 0.7273rem;
-}
-
-.econ-flow-bar {
-  display: flex;
-  height: 100%;
-  overflow: hidden;
-  border-radius: 0.3636rem;
-}
-
-.econ-flow-seg-wrap {
-  height: 100%;
-}
-
-.econ-flow-seg-wrap > .tooltip-wrapper,
-.econ-flow-seg-wrap > .tooltip-wrapper > .econ-flow-seg {
-  width: 100%;
-  height: 100%;
-}
-
-.econ-flow-seg {
-  min-width: 0.1818rem;
-  height: 100%;
-  cursor: auto;
-  transition: opacity 0.12s;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(8, 12, 17, 0.1) 52%, rgba(8, 12, 17, 0.28) 100%);
-}
-
-.econ-flow-seg:hover {
-  opacity: 0.8;
-}
-
-.econ-flow-num {
-  flex: 0 0 auto;
-  min-width: 2.6rem;
-  text-align: right;
-  font-size: 0.78rem;
 }
 
 .econ-table--tax-losses .econ-table-row > .econ-table-cell:nth-child(1) {
@@ -2017,21 +1933,15 @@ button.econ-command-cost__row:focus-visible {
   min-width: 58rem;
 }
 
-.econ-table--resources {
-  min-width: 58rem;
-}
-
 .econ-table--stockpiles .econ-table-row,
 .econ-table--tax-losses .econ-table-row,
 .econ-table--settlements .econ-table-row,
 .econ-table--military .econ-table-row,
-.econ-table--vassals .econ-table-row,
-.econ-table--resources .econ-table-row {
+.econ-table--vassals .econ-table-row {
   min-width: 58rem;
 }
 
 .econ-table--stockpiles .econ-table-cell,
-.econ-table--resources .econ-table-cell,
 .econ-table--tax-losses .econ-table-cell,
 .econ-table--settlements .econ-table-cell,
 .econ-table--military .econ-table-cell,
@@ -2039,131 +1949,6 @@ button.econ-command-cost__row:focus-visible {
   min-width: 5.4rem;
 }
 
-.econ-table--resources .econ-table-cell {
-  min-width: 0;
-}
-
-.econ-table--resources .econ-table-header-cell .sortable-header-label,
-.econ-table--resources .econ-resource-table-header-label {
-  overflow: visible;
-  text-overflow: clip;
-}
-
-.econ-resource-cell {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.econ-resource-primary {
-  margin-top: 0.1rem;
-  color: var(--gold);
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.econ-stock-bar-wrap {
-  position: relative;
-  width: 100%;
-  min-width: 5rem;
-  height: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  background-color: rgba(8, 12, 17, 0.25);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(63, 56, 47, 0.7);
-  overflow: hidden;
-}
-
-.econ-painted-bar--stock {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background-color: rgba(201, 168, 76, 0.22);
-}
-
-.econ-stock-bar-text {
-  position: relative;
-  z-index: 1;
-  padding-right: 0.28rem;
-  color: var(--text-bright);
-  font-family: var(--font-header);
-}
-
-.econ-trade-btns {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-}
-
-.econ-trade-btn-tooltip {
-  flex: 1 1 0;
-  min-width: 2.25rem;
-}
-
-.econ-trade-btn-tooltip + .econ-trade-btn-tooltip {
-  margin-left: 0.18rem;
-}
-
-.econ-trade-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-width: 2.25rem;
-  min-height: 1.25rem;
-  padding: 0 0.18rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.26);
-  background-color: rgba(44, 39, 31, 0.65);
-  color: var(--text-muted);
-  font-size: 0.62rem;
-  font-weight: 700;
-  line-height: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.econ-trade-btn--buy {
-  color: var(--red-light);
-}
-
-.econ-trade-btn--sell {
-  color: var(--green);
-}
-
-.econ-trade-btn-mark,
-.econ-trade-btn-coin {
-  flex-grow: 0;
-  flex-shrink: 0;
-  width: 0.72rem;
-  height: 0.72rem;
-  object-fit: contain;
-}
-
-.econ-trade-btn-mark {
-  margin-right: 0.08rem;
-}
-
-.econ-trade-btn-coin {
-  margin-right: 0.12rem;
-}
-
-.econ-trade-btn span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.econ-trade-btn[disabled],
 .econ-rate-controls button[disabled] {
   opacity: 0.42;
 }

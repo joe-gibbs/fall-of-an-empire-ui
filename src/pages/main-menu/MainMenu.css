@@ -2556,6 +2556,16 @@
   flex-shrink: 0;
 }
 
+.mm-root--mockup-2 .mm-review-prompt {
+  margin: auto 0 0;
+  padding: var(--mm-bar-gap) 0.25rem 0;
+  color: rgba(222, 216, 199, 0.7);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
 .mm-root--mockup-2 .mm-lang-slot {
   position: relative;
   top: auto;

@@ -59,7 +59,7 @@ export function buildChartInitialView(): ZoomPanInitialView {
 
 // ── Node card ───────────────────────────────────────────────────────────
 
-function buildCardTooltip(force: Force, allForces: Force[]) {
+function buildCardTooltip(force: Force, allForces: Force[], showDetailedStats: boolean) {
   const pct = strengthPct(force);
   const dm = DOCTRINE_META[force.doctrine];
   const subs = subtree(allForces, force.id).length - 1;
@@ -97,16 +97,18 @@ function buildCardTooltip(force: Force, allForces: Force[]) {
       value: formatPercent(pct),
       valueColor: strengthTextColor,
     },
-    {
-      label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.231.4'), labelIcon: MORALE_ICON,
-      get value() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.232.1", { Value1: formatNumber(force.morale) }); },
-      valueColor: moraleTextColor,
-    },
-    {
-      label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.236.5'), labelIcon: SUPPLY_ICON,
-      get value() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.237.1", { Value1: formatNumber(force.supplyDays) }); },
-      valueColor: supplyTextColor,
-    },
+    ...(showDetailedStats ? [
+      {
+        label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.231.4'), labelIcon: MORALE_ICON,
+        get value() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.232.1", { Value1: formatNumber(force.morale) }); },
+        valueColor: moraleTextColor,
+      },
+      {
+        label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.236.5'), labelIcon: SUPPLY_ICON,
+        get value() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.237.1", { Value1: formatNumber(force.supplyDays) }); },
+        valueColor: supplyTextColor,
+      },
+    ] : []),
 
     { isHeader: true, label: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.241.6') },
     {
@@ -159,13 +161,15 @@ function buildCardTooltip(force: Force, allForces: Force[]) {
 }
 
 export function NodeCard({
-  force, allForces, selected, highlighted, dimmed,
+  force, allForces, selected, highlighted, dimmed, readOnly = false, showDetailedStats = true,
 }: {
   force: Force;
   allForces: Force[];
   selected: boolean;
   highlighted: boolean;
   dimmed: boolean;
+  readOnly?: boolean;
+  showDetailedStats?: boolean;
 }) {
   const rm = RANK_META[force.rank];
   const dm = DOCTRINE_META[force.doctrine];
@@ -195,18 +199,18 @@ export function NodeCard({
 
   return (
     <>
-      <Tooltip content={buildCardTooltip(force, allForces)} position="right" delay={250} variant="sidebar">
+      <Tooltip content={buildCardTooltip(force, allForces, showDetailedStats)} position="right" delay={250} variant="sidebar">
         <div
           data-tutorial-target={force.isPlayerControlled && force.rank === 'Legatus' ? 'PromotableMilitaryCommand' : undefined}
           className={[
             'chart-node',
             `chart-node--${force.rank.toLowerCase()}`,
             `chart-node--strength-${strengthPaintColor(force)}`,
-            `chart-node--morale-${moralePaintColor(force.morale)}`,
+            showDetailedStats ? `chart-node--morale-${moralePaintColor(force.morale)}` : '',
             selected ? 'is-selected' : '',
             highlighted ? 'is-highlighted' : '',
             dimmed ? 'is-dimmed' : '',
-            !force.isPlayerControlled ? 'chart-node--uncontrolled' : '',
+            !force.isPlayerControlled && !readOnly ? 'chart-node--uncontrolled' : '',
             force.parentId && force.receivesCommandBenefits === false ? 'chart-node--unsupported' : '',
             force.isNavy ? 'chart-node--navy' : '',
           ].filter(Boolean).join(' ')}
@@ -230,11 +234,13 @@ export function NodeCard({
                 <PaintedBar percent={pct} color={strengthPaintColor(force)} className="chart-node-bar" />
               </div>
             </Tooltip>
-            <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.322.11'), get body() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.322.1", { Value1: formatNumber(force.morale) }); } }}>
-              <div className="chart-node-bar-row">
-                <PaintedBar percent={force.morale} color={moralePaintColor(force.morale)} className="chart-node-bar chart-node-bar--morale" />
-              </div>
-            </Tooltip>
+            {showDetailedStats && (
+              <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.322.11'), get body() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.322.1", { Value1: formatNumber(force.morale) }); } }}>
+                <div className="chart-node-bar-row">
+                  <PaintedBar percent={force.morale} color={moralePaintColor(force.morale)} className="chart-node-bar chart-node-bar--morale" />
+                </div>
+              </Tooltip>
+            )}
           </div>
         </div>
         <div className="chart-node-foot">
@@ -245,23 +251,32 @@ export function NodeCard({
                 {fmt(force.strength)}
               </span>
             </Tooltip>
-            <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.337.13'), get body() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.337.1", { Value1: formatNumber(force.morale) }); } }}>
-              <span className="chart-node-morale">
-                <img className="chart-node-foot-icon" src={MORALE_ICON} alt="" draggable={false} />
-                {formatNumber(force.morale)}
-              </span>
-            </Tooltip>
-            <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.343.14'), get body() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.343.1", { Value1: formatNumber(force.supplyDays) }); } }}>
-              <span className="chart-node-supply">
-                <img className="chart-node-foot-icon" src={SUPPLY_ICON} alt="" draggable={false} />
-                {formatNumber(force.supplyDays)}<WebUIText textKey="Auto.ComponentsScreensMilitaryMilitaryScreen.345.1" />
-              </span>
-            </Tooltip>
+            {showDetailedStats && (
+              <>
+                <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.337.13'), get body() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.337.1", { Value1: formatNumber(force.morale) }); } }}>
+                  <span className="chart-node-morale">
+                    <img className="chart-node-foot-icon" src={MORALE_ICON} alt="" draggable={false} />
+                    {formatNumber(force.morale)}
+                  </span>
+                </Tooltip>
+                <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.343.14'), get body() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.343.1", { Value1: formatNumber(force.supplyDays) }); } }}>
+                  <span className="chart-node-supply">
+                    <img className="chart-node-foot-icon" src={SUPPLY_ICON} alt="" draggable={false} />
+                    {formatNumber(force.supplyDays)}<WebUIText textKey="Auto.ComponentsScreensMilitaryMilitaryScreen.345.1" />
+                  </span>
+                </Tooltip>
+              </>
+            )}
           </div>
-          <div className="chart-node-command-row">
+          {showDetailedStats && (
+            <div className="chart-node-command-row">
             <Tooltip content={{
               get title() { return force.delegated ? webUIText("MilitaryScreen.Delegated") : webUIText("MilitaryScreen.DirectControl"); },
-              get body() { return force.delegated ? webUIText("MilitaryScreen.DelegatedDoctrineBody") : webUIText("MilitaryScreen.DirectControlBody"); },
+              get body() {
+                return force.delegated
+                  ? webUIText('MilitaryScreen.DelegatedDoctrineBody')
+                  : webUIText(readOnly ? 'FactionMilitary.DirectControlBody' : 'MilitaryScreen.DirectControlBody');
+              },
             }}>
               <span className={`chart-node-command-mark${force.delegated ? ' is-on' : ''}`}>
                 <img
@@ -305,6 +320,7 @@ export function NodeCard({
               </Tooltip>
             )}
           </div>
+          )}
         </div>
       </div>
         </div>

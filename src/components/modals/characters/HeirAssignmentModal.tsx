@@ -20,7 +20,11 @@ import {
   CandidateStatChips,
   CandidateTraits,
 } from './CandidateSelectionModal';
-import { setDesignatedHeir, useTargetedHeirCandidates } from '../../../bridge/characters/useHeirBridge';
+import {
+  requestProvinceSuccessionApproval,
+  setDesignatedHeir,
+  useTargetedHeirCandidates,
+} from '../../../bridge/characters/useHeirBridge';
 import { useModalPresence } from '../../../hooks/useModalPresence';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { useWebUIText } from '../../../localization/WebUITextContext';
@@ -42,6 +46,7 @@ interface HeirAssignmentModalProps {
   factionId?: string;
   currentHeirId?: string;
   currentDesignatedHeirId?: string;
+  requestProvinceApproval?: boolean;
   onClose: () => void;
   onOpenCharacter: (id: string) => void;
 }
@@ -51,6 +56,7 @@ export default function HeirAssignmentModal({
   factionId,
   currentHeirId,
   currentDesignatedHeirId,
+  requestProvinceApproval = false,
   onClose,
   onOpenCharacter,
 }: HeirAssignmentModalProps) {
@@ -67,6 +73,8 @@ export default function HeirAssignmentModal({
   const candidates = useTargetedHeirCandidates(mounted, factionId ?? '');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [sort, setSort] = useState<HeirSortKey>('fit');
+  const [requestOutcome, setRequestOutcome] = useState<string | null>(null);
+  const [requestingApproval, setRequestingApproval] = useState(false);
   const primaryStat: StatKey = factionId ? 'governance' : 'authority';
   const primaryStatLabel = STAT_LABELS[primaryStat];
   const primaryStatIcon = statIconPath(primaryStat);
@@ -91,10 +99,33 @@ export default function HeirAssignmentModal({
 
   const handleAssign = useCallback(() => {
     if (!selected) return;
+    setRequestOutcome(null);
+
+    if (requestProvinceApproval) {
+      setRequestingApproval(true);
+      void requestProvinceSuccessionApproval(selected.id).then((response) => {
+        setRequestingApproval(false);
+        if (!response) {
+          setRequestOutcome(t('CharacterSidebar.ActionStartFailed'));
+          return;
+        }
+        if (!response.started) {
+          setRequestOutcome(response.message || t('CharacterSidebar.ActionStartFailed'));
+          return;
+        }
+        if (response.completed && !response.succeeded) {
+          setRequestOutcome(response.message || t('ProvinceMode.Succession.RequestRefused'));
+          return;
+        }
+        close();
+      });
+      return;
+    }
+
     void setDesignatedHeir(selected.id, factionId).then((ok) => {
       if (ok) close();
     });
-  }, [close, factionId, selected]);
+  }, [close, factionId, requestProvinceApproval, selected, t]);
 
   const handleClear = useCallback(() => {
     if (!currentDesignatedHeirId) return;
@@ -122,11 +153,13 @@ export default function HeirAssignmentModal({
       closing={closing}
       onClose={close}
       headerIcon="/assets/icons/I_Family.png"
-      title={t('FactionOverview.AssignHeir')}
+      title={t(requestProvinceApproval ? 'ProvinceMode.Succession.ChooseSuccessor' : 'FactionOverview.AssignHeir')}
       backdrop="none"
     >
       <CandidateMissionBar prefix="cam">
-        <CandidateMissionDescription prefix="cam">{t('FactionOverview.AssignHeirDescription')}</CandidateMissionDescription>
+        <CandidateMissionDescription prefix="cam">
+          {t(requestProvinceApproval ? 'ProvinceMode.Succession.ChooseSuccessorBody' : 'FactionOverview.AssignHeirDescription')}
+        </CandidateMissionDescription>
         <CandidateMissionStat prefix="cam" icon={primaryStatIcon} label={t('Common.Priority')} value={primaryStatLabel} />
       </CandidateMissionBar>
 
@@ -150,7 +183,10 @@ export default function HeirAssignmentModal({
               key={candidate.id}
               prefix="cam"
               active={active}
-              onSelect={() => setSelectedId(candidate.id)}
+              onSelect={() => {
+                setSelectedId(candidate.id);
+                setRequestOutcome(null);
+              }}
               onViewCharacter={() => openCharacter(candidate.id)}
               personId={candidate.id}
               portraitSrc={candidate.portrait}
@@ -280,19 +316,23 @@ export default function HeirAssignmentModal({
                 )}
 
                 <CandidateTraits prefix="cam" traits={selectedTraits} />
+
+                {requestOutcome && (
+                  <div className="game-notice game-notice--warning cam-action-error">{requestOutcome}</div>
+                )}
               </div>
 
               <CandidateFooter prefix="cam">
-                {currentDesignatedHeirId ? (
+                {currentDesignatedHeirId && !requestProvinceApproval ? (
                   <GameButton variant="outline" onClick={handleClear}>{t('Common.Clear')}</GameButton>
                 ) : null}
                 <GameButton variant="outline" onClick={() => openCharacter(selected.id)}>{t('Common.View')}</GameButton>
                 <GameButton
                   variant="burgundy"
                   onClick={handleAssign}
-                  disabled={selected.id === currentDesignatedHeirId}
+                  disabled={selected.id === currentDesignatedHeirId || requestingApproval}
                 >
-                  {t('Common.Assign')}
+                  {t(requestProvinceApproval ? 'ProvinceMode.Succession.RequestApproval' : 'Common.Assign')}
                 </GameButton>
               </CandidateFooter>
             </>

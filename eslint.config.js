@@ -35,7 +35,6 @@ export default defineConfig([
       // once the unmigrated screens (MilitaryScreen, FactionOverviewScreen,
       // DiplomacyScreen, etc.) have bridge actions wired up.
       'local/no-unformatted-number-render': 'warn',
-      'local/no-hardcoded-player-text': 'error',
       // Hard error: referenced asset files must exist on disk. No graceful
       // fallbacks for missing icons/textures.
       'local/no-missing-asset': 'error',
@@ -57,6 +56,12 @@ export default defineConfig([
     rules: {
       'local/no-mixed-animation-units': 'error',
       'local/no-expensive-runtime-selectors': 'error',
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'local/no-hardcoded-player-text': 'error',
     },
   },
   {

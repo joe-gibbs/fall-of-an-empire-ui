@@ -141,8 +141,6 @@ export default function BattleGlance({ data }: BattleGlanceProps) {
   const defenderMorale = clampUnitFraction(data.defender.morale);
   const total = data.attacker.totalStrength + data.defender.totalStrength;
   const attackerShare = total > 0 ? clampUnitFraction(data.attacker.totalStrength / total) : 0.5;
-  const attackerFactionColour = attackerParticipant?.faction.colour ?? attColour;
-  const defenderFactionColour = defenderParticipant?.faction.colour ?? defColour;
 
   return (
     <Tooltip
@@ -155,8 +153,8 @@ export default function BattleGlance({ data }: BattleGlanceProps) {
       <div
         className={`glance glance--battle${data.targeted ? ' is-targeted' : ''}`}
         style={{
-          '--attacker-colour': attackerFactionColour,
-          '--defender-colour': defenderFactionColour,
+          '--attacker-colour': attColour,
+          '--defender-colour': defColour,
           '--attacker-strength-colour': attColour,
           '--defender-strength-colour': defColour,
         } as CSSProperties}

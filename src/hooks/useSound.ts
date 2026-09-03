@@ -5,7 +5,7 @@ const SOUND_EVENT_IDS = {
   click: 'UI_ButtonClick',
   hover: 'UI_ButtonClick',
   whoosh: 'UI_EventOpen',
-  notification: 'Notification_Rebellion',
+  interactionSuccess: 'Notification_ActionSuccess',
   confirm: 'UI_ButtonClick',
   error: 'UI_Demolish',
   tab: 'UI_ButtonClick',

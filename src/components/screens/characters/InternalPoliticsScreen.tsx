@@ -6,8 +6,6 @@ import FactionRoundel from '../../common/entities/FactionRoundel';
 import FactionTooltip from '../../common/tooltips/FactionTooltip';
 import GameBar from '../../common/data-display/bars/GameBar';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
-import GameButton from '../../common/buttons/GameButton';
-import GameCheckButton from '../../common/buttons/GameCheckButton';
 import SortableHeader from '../../common/layout/tables/SortableHeader';
 import Tooltip from '../../common/tooltips/Tooltip';
 import EntityLink from '../../common/entities/EntityLink';
@@ -17,6 +15,7 @@ import { BureaucraticInlineValue } from '../../bureaucracy/BureaucraticThroughpu
 import { bureaucraticTooltipLine } from '../../bureaucracy/BureaucraticThroughputModel';
 import ProvinceCreationLeaderModal from '../../modals/provinces/ProvinceCreationLeaderModal';
 import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
+import RegionalGovernorsTable from './RegionalGovernorsTable';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { useGameActions } from '../../../context/GameContext';
 import { useMilitaryOverview, usePlayerFactionId } from '../../../data-source/index';
@@ -50,7 +49,6 @@ type InternalPoliticsTab = 'provinces' | 'foederati' | 'governors' | 'candidates
 type ProvinceSortKey = 'province' | 'ruler' | 'compliance' | 'focus' | 'tax' | 'tribute' | 'scale';
 type FoederatiSortKey = 'name' | 'ruler' | 'compliance' | 'ready' | 'active' | 'strength';
 type CommandSortKey = 'commander' | 'force' | 'type' | 'strength' | 'relation';
-type GovernorSortKey = 'region' | 'governor' | 'settlements' | 'corruption' | 'tax' | 'unrest' | 'military';
 
 interface CommandHeadSummary {
   force: MilitaryForce;
@@ -308,29 +306,6 @@ function sortCommandRows(rows: CommandHeadSummary[], characters: Map<string, Cha
         return compareValues(a.totalStrength, b.totalStrength, sort.direction);
       case 'relation':
         return compareValues(relationA, relationB, sort.direction);
-      default:
-        return 0;
-    }
-  });
-}
-
-function sortGovernorRows(rows: RegionalGovernor[], sort: SortState<GovernorSortKey>): RegionalGovernor[] {
-  return [...rows].sort((a, b) => {
-    switch (sort.key) {
-      case 'region':
-        return compareValues(a.regionName, b.regionName, sort.direction);
-      case 'governor':
-        return compareValues(a.governorName, b.governorName, sort.direction);
-      case 'settlements':
-        return compareValues(a.settlementCount, b.settlementCount, sort.direction);
-      case 'corruption':
-        return compareValues(a.corruptionPercent, b.corruptionPercent, sort.direction);
-      case 'tax':
-        return compareValues(a.taxBonusPercent, b.taxBonusPercent, sort.direction);
-      case 'unrest':
-        return compareValues(a.unrestReductionPercent, b.unrestReductionPercent, sort.direction);
-      case 'military':
-        return compareValues(a.militaryBonusPercent, b.militaryBonusPercent, sort.direction);
       default:
         return 0;
     }
@@ -634,81 +609,6 @@ function InternalFactionRow({
   );
 }
 
-function GovernorRow({
-  row,
-  characters,
-  blocs,
-  playerFactionId,
-  onAppoint,
-}: {
-  row: RegionalGovernor;
-  characters: Map<string, CharacterListEntry>;
-  blocs: PowerBloc[];
-  playerFactionId: string;
-  onAppoint: (row: RegionalGovernor) => void;
-}) {
-  const { openSidebar } = useGameActions();
-  const character = characters.get(row.governorId);
-  const corruptionTone = row.corruptionPercent >= 25 ? 'var(--red-light)' : row.corruptionPercent >= 12 ? 'var(--yellow)' : 'var(--green)';
-  const bloc = blocForPerson(row.governorId, blocs);
-  const governorLoad = row.bureaucraticGovernorLoad;
-  const ownerName = row.ownerFactionId && row.ownerFactionId !== playerFactionId ? row.ownerFactionName : '';
-  const actionLabel = webUIText(row.governorId ? 'FactionOverview.ReplaceAppointment' : 'Settlement.AppointGovernor');
-
-  return (
-    <div
-      className="ips-governor-row"
-      role={row.governorId ? 'button' : undefined}
-      tabIndex={row.governorId ? 0 : undefined}
-      onClick={() => row.governorId && openSidebar('character', row.governorId)}
-    >
-      <div className="ips-governor-cell ips-governor-cell--region">
-        <span className="ips-governor-region">{row.regionName}</span>
-        {ownerName ? <span className="ips-governor-sub">{ownerName}</span> : null}
-        {row.isLocked ? <span className="ips-governor-sub"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.578.6" /></span> : null}
-      </div>
-      <div className="ips-governor-cell ips-governor-cell--governor">
-        <PersonPortrait character={character} personId={row.governorId || undefined} name={row.governorName || row.regionName} />
-        <div className="ips-governor-copy">
-          <EntityLink type="character" id={row.governorId} className="ips-governor-name ips-entity-link" fallbackClassName="ips-governor-name">{row.governorName || webUIText("InternalPolitics.NoGovernor")}</EntityLink>
-          {row.governorId ? <BlocLine bloc={bloc} /> : <span className="ips-governor-bloc"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.584.7" /></span>}
-        </div>
-      </div>
-      <div className="ips-governor-cell ips-governor-cell--settlements">
-        <span>{formatNumber(row.settlementCount)}</span>
-      </div>
-      <div className="ips-governor-cell ips-governor-cell--corruption">
-        <span style={{ color: corruptionTone }}>{`${formatNumber(row.corruptionPercent)}%`}</span>
-        <BureaucraticInlineValue value={governorLoad} compact />
-      </div>
-      <div className="ips-governor-cell ips-governor-cell--tax">
-        <span style={{ color: row.taxBonusPercent >= 0 ? 'var(--green)' : 'var(--red-light)' }}>{`${formatSignedNumber(row.taxBonusPercent)}%`}</span>
-      </div>
-      <div className="ips-governor-cell ips-governor-cell--unrest">
-        <span style={{ color: row.unrestReductionPercent >= 0 ? 'var(--green)' : 'var(--red-light)' }}>{`${formatSignedNumber(row.unrestReductionPercent)}%`}</span>
-      </div>
-      <div className="ips-governor-cell ips-governor-cell--military">
-        <span style={{ color: row.militaryBonusPercent >= 0 ? 'var(--green)' : 'var(--red-light)' }}>{`${formatSignedNumber(row.militaryBonusPercent)}%`}</span>
-      </div>
-      <div
-        className="ips-governor-cell ips-governor-cell--action"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        }}
-      >
-        <GameButton
-          variant="burgundy"
-          disabled={!row.canManageGovernor || !row.settlementId}
-          onClick={() => onAppoint(row)}
-        >
-          {actionLabel}
-        </GameButton>
-      </div>
-    </div>
-  );
-}
-
 function ProvinceCandidateCard({ row, leaderCandidates }: { row: ProvinceCandidate; leaderCandidates: CharacterListEntry[] }) {
   const [leaderModalOpen, setLeaderModalOpen] = useState(false);
   const controlTone = row.controlPercent >= 100 ? 'var(--green)' : row.controlPercent >= 75 ? 'var(--yellow)' : 'var(--red-light)';
@@ -953,7 +853,6 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
   const [provinceSort, setProvinceSort] = useState<SortState<ProvinceSortKey>>({ key: 'province', direction: 'asc' });
   const [foederatiSort, setFoederatiSort] = useState<SortState<FoederatiSortKey>>({ key: 'strength', direction: 'desc' });
   const [commandSort, setCommandSort] = useState<SortState<CommandSortKey>>({ key: 'strength', direction: 'desc' });
-  const [governorSort, setGovernorSort] = useState<SortState<GovernorSortKey>>({ key: 'corruption', direction: 'desc' });
   const [editingGovernor, setEditingGovernor] = useState<RegionalGovernor | null>(null);
   const playerFactionId = usePlayerFactionId();
   const diplomacy = useDiplomacyOverviewBridge('internal');
@@ -983,6 +882,8 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
   const blocs = usePowerBlocsBridge(needsBlocs) ?? EMPTY_BLOCS;
   const foederati = military?.foederati ?? EMPTY_FOEDERATI;
   const charactersById = useMemo(() => characterMap(characters), [characters]);
+  const { openSidebar } = useGameActions();
+  const openCharacter = useCallback((id: string) => openSidebar('character', id), [openSidebar]);
   const sortedProvinceLeaderCandidates = useMemo(() => provinceLeaderCandidates(characters), [characters]);
   const commanderRows = useMemo(() => commandHeads(military?.forces), [military?.forces]);
   const provinceFactions = useMemo(() => internalFactions.filter(isProvince), [internalFactions]);
@@ -1001,10 +902,6 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
     () => sortCommandRows(commanderRows, charactersById, commandSort),
     [commanderRows, charactersById, commandSort],
   );
-  const sortedGovernors = useMemo(
-    () => sortGovernorRows(governors, governorSort),
-    [governors, governorSort],
-  );
   const refreshGovernors = useCallback(() => {
     void refreshDiplomacyOverviewBridge('governors').catch(error => acknowledgeBridgeFailure(error, 'game.get_diplomacy_overview'));
   }, []);
@@ -1012,50 +909,17 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
   const content = (() => {
     if (resolvedActiveTab === 'governors') {
       return (
-        <section className="ips-tab-section">
-          <div className="ips-tab-toolbar">
-            <GameCheckButton
-              checked={autoAssignGovernorsEnabled}
-              label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.824.8')}
-              onToggle={() => { void setAutoAssignGovernorsBridge(!autoAssignGovernorsEnabled).catch(() => undefined); }}
-              tooltip={{ title: webUIText('Auto.Prop.ComponentsScreensInternalPoliticsScreen.826.9'), body: webUIText('Auto.Prop.ComponentsScreensInternalPoliticsScreen.826.10') }}
-            />
-          </div>
-          <div className="ips-table ips-governor-table" role="table">
-            <div className="ips-governor-header" role="row">
-              <SortableHeader id="region" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.831.11')} className="ips-governor-header-cell ips-governor-header-cell--region" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
-              <SortableHeader id="governor" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.832.12')} className="ips-governor-header-cell ips-governor-header-cell--governor" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
-              <SortableHeader id="settlements" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.833.13')} className="ips-governor-header-cell ips-governor-header-cell--settlements" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
-              <SortableHeader id="corruption" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.834.14')} className="ips-governor-header-cell ips-governor-header-cell--corruption" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
-              <SortableHeader id="tax" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.835.15')} className="ips-governor-header-cell ips-governor-header-cell--tax" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
-              <SortableHeader id="unrest" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.836.16')} className="ips-governor-header-cell ips-governor-header-cell--unrest" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
-              <SortableHeader id="military" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.837.17')} className="ips-governor-header-cell ips-governor-header-cell--military" sort={governorSort} onSort={(key) => setGovernorSort(value => toggleInternalSort(value, key))} />
-              <span className="ips-governor-header-cell ips-governor-header-cell--action"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.875.10" /></span>
-            </div>
-            <VirtualList
-              items={sortedGovernors}
-              getKey={row => row.regionId || row.regionName}
-              renderItem={row => (
-                <GovernorRow
-                  row={row}
-                  characters={charactersById}
-                  blocs={blocs}
-                  playerFactionId={playerFactionId ?? ''}
-                  onAppoint={setEditingGovernor}
-                />
-              )}
-              empty={<div className="ips-empty">{diplomacy?.governorEmptyReason || webUIText("InternalPolitics.NoRegionalGovernors")}</div>}
-              className="ips-row-scroll-frame"
-              viewportClassName="ips-table-body ips-governor-table-body ips-row-viewport"
-              itemClassName="ips-row-frame"
-              role="rowgroup"
-              rowHeightRem={3.45}
-              virtualizeThreshold={INTERNAL_LIST_VIRTUALISE_THRESHOLD}
-              overscan={INTERNAL_LIST_OVERSCAN}
-              resetSignal={`${governorSort.key}:${governorSort.direction}`}
-            />
-          </div>
-        </section>
+        <RegionalGovernorsTable
+          governors={governors}
+          characters={charactersById}
+          blocs={blocs}
+          playerFactionId={playerFactionId ?? ''}
+          autoAssignGovernorsEnabled={autoAssignGovernorsEnabled}
+          emptyReason={diplomacy?.governorEmptyReason}
+          onToggleAutoAssign={() => { void setAutoAssignGovernorsBridge(!autoAssignGovernorsEnabled).catch(() => undefined); }}
+          onAppoint={setEditingGovernor}
+          onOpenCharacter={openCharacter}
+        />
       );
     }
 

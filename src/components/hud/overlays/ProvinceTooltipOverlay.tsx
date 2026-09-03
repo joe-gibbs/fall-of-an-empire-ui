@@ -4,7 +4,7 @@ import { useProvinceTooltipBridge } from '../../../bridge/provinces/useProvinceT
 import { useKeyActionResolver } from '../../../hooks/useKeyActionResolver';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { toRootRem } from '../../../utils/cssUnits';
-import { formatNumber } from '../../../utils/numberFormat';
+import { formatResourceNumber } from '../../../utils/numberFormat';
 import { renderRichText } from '../../../utils/richText';
 import ProvinceTooltipModeRenderer from '../../common/province-tooltip-modes/shared/ProvinceTooltipModeRenderer';
 import { provinceTooltipDataFromResponse } from '../../common/province-tooltip-modes/shared/types';
@@ -399,7 +399,7 @@ function ConvoyDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
                   {item.icon ? <img src={WebkilnAssetPath(item.icon)} alt="" /> : null}
                 </span>
                 <span className="province-tooltip-mode-label">{item.label}</span>
-                <span className="province-tooltip-mode-value">{formatNumber(item.amount, { maximumFractionDigits: 1 })}</span>
+                <span className="province-tooltip-mode-value">{formatResourceNumber(item.amount)}</span>
               </div>
             ))}
           </div>

@@ -1,30 +1,35 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { bridgeCall, type GetWorldGlanceTooltipResponse } from '../../bridge-types.generated.ts';
 
 export function useWorldGlanceTooltip(kind: 'port' | 'convoy' | 'battle', id: string) {
-  const [detail, setDetail] = useState<GetWorldGlanceTooltipResponse | null>(null);
+  const [detailResult, setDetailResult] = useState<{
+    key: string;
+    response: GetWorldGlanceTooltipResponse;
+  } | null>(null);
   const detailKeyRef = useRef<string | null>(null);
-  const requestInFlightRef = useRef(false);
+  const requestInFlightKeyRef = useRef<string | null>(null);
+  const requestSequenceRef = useRef(0);
   const requestKey = `${kind}:${id}`;
-
-  useEffect(() => {
-    detailKeyRef.current = null;
-    requestInFlightRef.current = false;
-    setDetail(null);
-  }, [id, kind]);
+  const detail = detailResult?.key === requestKey ? detailResult.response : null;
 
   const request = useCallback(() => {
-    if (detailKeyRef.current === requestKey || requestInFlightRef.current) return;
-    requestInFlightRef.current = true;
+    if (detailKeyRef.current === requestKey || requestInFlightKeyRef.current === requestKey) return;
+
+    const requestSequence = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestSequence;
+    requestInFlightKeyRef.current = requestKey;
     bridgeCall('game.get_world_glance_tooltip', { kind, id })
       .then((response) => {
-        requestInFlightRef.current = false;
+        if (requestSequenceRef.current !== requestSequence) return;
+        requestInFlightKeyRef.current = null;
         if (!response.found) return;
         detailKeyRef.current = requestKey;
-        setDetail(response);
+        setDetailResult({ key: requestKey, response });
       })
       .catch(() => {
-        requestInFlightRef.current = false;
+        if (requestSequenceRef.current === requestSequence) {
+          requestInFlightKeyRef.current = null;
+        }
       });
   }, [id, kind, requestKey]);
 

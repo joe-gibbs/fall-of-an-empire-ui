@@ -4,12 +4,12 @@ import type { PortGlanceData } from './WorldGlanceTypes';
 import { formatNumber } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
 import { WebkilnAssetPath } from '../../utils/assets';
-import { readableFactionTextColour, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
+import { glanceBadgeBackgroundColour, readableFactionTextColour, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
 
 import { webUIText } from '../../localization/WebUITextContext';
 import type { GetWorldGlanceTooltipResponse } from '../../bridge-types.generated';
 import { useWorldGlanceTooltip } from '../../bridge/app/useWorldGlanceTooltip';
-type PortBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'enamel-light' | 'foreground';
+type PortBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'foreground';
 
 function portBadgeLayerPath(layer: PortBadgeLayer): string {
   return `/assets/glance/settlement-types-v3/layers/settlement-badge-port-${layer}.png`;
@@ -110,6 +110,8 @@ interface PortGlanceProps {
 export default function PortGlance({ data }: PortGlanceProps) {
   const { debugMode } = useGameState();
   const { detail, request } = useWorldGlanceTooltip('port', data.id);
+  const relationColour = relationDisplayColour(data.faction.relation);
+  const badgeBackgroundColour = glanceBadgeBackgroundColour(data.faction.relation);
   const rootClass = [
     'glance',
     'glance--port',
@@ -121,7 +123,6 @@ export default function PortGlance({ data }: PortGlanceProps) {
   const badgeShadow = WebkilnAssetPath(portBadgeLayerPath('shadow'));
   const badgeBackground = WebkilnAssetPath(portBadgeLayerPath('background'));
   const badgeMask = WebkilnAssetPath(portBadgeLayerPath('enamel-mask'));
-  const badgeLight = WebkilnAssetPath(portBadgeLayerPath('enamel-light'));
   const badgeForeground = WebkilnAssetPath(portBadgeLayerPath('foreground'));
 
   return (
@@ -135,7 +136,7 @@ export default function PortGlance({ data }: PortGlanceProps) {
       <div
         className={rootClass}
         style={{
-          '--faction-colour': data.faction.colour,
+          '--relation-colour': relationColour,
           ...relationTextVars(data.faction.relation),
         } as CSSProperties}
       >
@@ -147,9 +148,8 @@ export default function PortGlance({ data }: PortGlanceProps) {
             <img className="gport-badge-layer gport-badge-layer--background" src={badgeBackground} alt="" />
             <span
               className="gport-badge-layer gport-badge-layer--tint"
-              style={{ backgroundColor: data.faction.colour, maskImage: `url("${badgeMask}")` }}
+              style={{ backgroundColor: badgeBackgroundColour, maskImage: `url("${badgeMask}")` }}
             />
-            <img className="gport-badge-layer gport-badge-layer--light" src={badgeLight} alt="" />
             <img className="gport-badge-layer gport-badge-layer--foreground" src={badgeForeground} alt="" />
           </span>
         </div>

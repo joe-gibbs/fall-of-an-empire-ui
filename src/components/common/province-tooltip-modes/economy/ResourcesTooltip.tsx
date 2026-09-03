@@ -1,5 +1,5 @@
 import { ModeRow, ModeRows } from '../shared/ModeLayout';
-import { oneDecimal } from '../shared/format';
+import { formatResourceNumber } from '../../../../utils/numberFormat';
 import { webUIText } from '../../../../localization/WebUITextContext';
 import type { ProvinceTooltipModeData } from '../shared/types';
 
@@ -22,7 +22,7 @@ export default function ResourcesTooltip({ data }: { data: ProvinceTooltipModeDa
         <ModeRow
           key={resource.label}
           label={resource.label}
-          value={oneDecimal(resource.amount)}
+          value={formatResourceNumber(resource.amount)}
           icon={resource.icon}
         />
       ))}

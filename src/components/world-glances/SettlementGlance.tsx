@@ -2,11 +2,11 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import FactionRoundel from '../common/entities/FactionRoundel';
 import type { SettlementGlanceData } from './WorldGlanceTypes';
 import { clampUnitFraction, percentWidth } from './glanceMath';
-import { formatNumber, formatPercent, formatSignedNumber } from '../../utils/numberFormat';
+import { formatNumber, formatPercent, formatResourceNumber, formatSignedNumber } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { roundelDiplomacyProps } from '../../utils/factionBorder';
-import { isHostileGlance, readableFactionTextColour, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
+import { glanceBadgeBackgroundColour, isHostileGlance, readableFactionTextColour, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
 
 import { webUIText } from '../../localization/WebUITextContext';
 import { formatSettlementType } from '../../utils/displayLabels';
@@ -108,6 +108,19 @@ function loyaltyColour(l: number): string {
   return 'var(--green)';
 }
 
+function opinionColour(opinion: number): string {
+  if (opinion < -20) return 'var(--red)';
+  if (opinion < 20) return '#c86b2a';
+  if (opinion < 60) return '#c88a3a';
+  return 'var(--green)';
+}
+
+function opinionIcon(opinion: number): string {
+  if (opinion < -20) return '/assets/icons/I_OpinionNegative.png';
+  if (opinion < 20) return '/assets/icons/I_OpinionNeutral.png';
+  return '/assets/icons/I_OpinionPositive.png';
+}
+
 function luxuryColour(required: number, provided: number): string {
   if (required <= 0) return 'var(--text-muted)';
   const missing = required - provided;
@@ -137,7 +150,7 @@ function settlementTypeIcon(t: SettlementType): string {
   }
 }
 
-type SettlementBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'enamel-light' | 'foreground' | 'hover-overlay';
+type SettlementBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'foreground' | 'hover-overlay';
 
 function settlementBadgeLayerPath(type: SettlementType, layer: SettlementBadgeLayer): string {
   return `/assets/glance/settlement-types-v3/layers/settlement-badge-${type}-${layer}.png`;
@@ -148,42 +161,6 @@ function relationBackgroundColour(relation: SettlementGlanceData['faction']['rel
   if (relation === 'own' || relation === 'subject') return 'rgba(64, 38, 48, 0.88)';
   if (relation === 'ally') return 'rgba(32, 66, 44, 0.88)';
   return 'rgba(48, 45, 39, 0.86)';
-}
-
-function settlementTypeTint(type: SettlementType): string {
-  switch (type) {
-    case 'village': return '#78945a';
-    case 'town': return '#b68a45';
-    case 'city': return '#c8ad62';
-    case 'metropolis': return '#d9c986';
-    case 'fortress': return '#8e969e';
-    case 'monastery': return '#b8adce';
-    case 'port': return '#5f93aa';
-    case 'mining': return '#a8744a';
-  }
-}
-
-function parseHexColour(hex: string): [number, number, number] | null {
-  const value = hex.trim();
-  if (!/^#[0-9a-fA-F]{6}$/.test(value)) return null;
-  return [
-    parseInt(value.slice(1, 3), 16),
-    parseInt(value.slice(3, 5), 16),
-    parseInt(value.slice(5, 7), 16),
-  ];
-}
-
-function hexByte(value: number): string {
-  return Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
-}
-
-function tintFactionColourForSettlementType(colour: string, type: SettlementType): string {
-  const base = parseHexColour(colour);
-  const tint = parseHexColour(settlementTypeTint(type));
-  if (!base || !tint) return colour;
-
-  const tintStrength = 0.18;
-  return `#${hexByte(base[0] + (tint[0] - base[0]) * tintStrength)}${hexByte(base[1] + (tint[1] - base[1]) * tintStrength)}${hexByte(base[2] + (tint[2] - base[2]) * tintStrength)}`;
 }
 
 function controllerForSettlement(data: SettlementGlanceData): SettlementGlanceData['faction'] {
@@ -228,7 +205,7 @@ function renderResourceInfo(data: SettlementGlanceData, showStock: boolean) {
     return renderInfoRow('/assets/icons/I_Resources.png', 'None', 'var(--text-muted)');
   }
 
-  const value = showStock ? `${primary.label} ${formatNumber(primary.stock)}` : primary.label;
+  const value = showStock ? `${primary.label} ${formatResourceNumber(primary.stock)}` : primary.label;
   return renderInfoRow('/assets/icons/I_Resources.png', value);
 }
 
@@ -253,7 +230,12 @@ function renderInfo(data: SettlementGlanceData) {
     case 'unrest':
       return renderInfoRow('/assets/icons/I_Unrest.png', formatPercent(data.unrest * 100), unrestColour(data.unrest), true);
     case 'loyalty':
-      return renderInfoRow('/assets/icons/I_Loyalty.png', formatSignedNumber(data.loyalty), loyaltyColour(data.loyalty), true);
+      return renderInfoRow(
+        data.complianceUsesFactionOpinion ? opinionIcon(data.loyalty) : '/assets/icons/I_Loyalty.png',
+        formatSignedNumber(data.loyalty),
+        data.complianceUsesFactionOpinion ? opinionColour(data.loyalty) : loyaltyColour(data.loyalty),
+        true,
+      );
     case 'luxury': {
       const required = data.luxurySlotsRequired ?? 0;
       const provided = data.luxurySlotsProvided ?? 0;
@@ -315,7 +297,8 @@ interface SettlementGlanceProps {
 export default function SettlementGlance({ data }: SettlementGlanceProps) {
   const { debugMode } = useGameState();
   const controller = data.occupier ?? data.faction;
-  const factionColour = tintFactionColourForSettlementType(controller.colour, data.settlementType);
+  const relationColour = relationDisplayColour(controller.relation, data.warWithPlayer);
+  const badgeBackgroundColour = glanceBadgeBackgroundColour(controller.relation, data.warWithPlayer);
   const siegeProgress = clampUnitFraction(data.siegeProgress);
   const buildItemProgress = data.buildItem ? clampUnitFraction(data.buildItem.progress) : 0;
   const besieged = data.besieged === true;
@@ -323,7 +306,6 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
   const badgeShadow = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'shadow'));
   const badgeBackground = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'background'));
   const badgeMask = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'enamel-mask'));
-  const badgeLight = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'enamel-light'));
   const badgeForeground = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'foreground'));
   const badgeHoverOverlay = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'hover-overlay'));
   const badgeOverhangRem = (data.badgeScale - 1) * 2.1364;
@@ -346,7 +328,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
     <div
       className={rootClass}
       style={{
-        '--faction-colour': factionColour,
+        '--relation-colour': relationColour,
         ...relationTextVars(controller.relation, data.warWithPlayer),
         '--settlement-label-bg': relationBackgroundColour(controller.relation, data.warWithPlayer),
         '--settlement-badge-scale': data.badgeScale,
@@ -371,9 +353,8 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
             <img className="gset-badge-layer gset-badge-layer--background" src={badgeBackground} alt="" />
             <span
               className="gset-badge-layer gset-badge-layer--tint"
-              style={{ backgroundColor: factionColour, maskImage: `url("${badgeMask}")` }}
+              style={{ backgroundColor: badgeBackgroundColour, maskImage: `url("${badgeMask}")` }}
             />
-            <img className="gset-badge-layer gset-badge-layer--light" src={badgeLight} alt="" />
             <img className="gset-badge-layer gset-badge-layer--foreground" src={badgeForeground} alt="" />
             <img className="gset-badge-layer gset-badge-layer--hover" src={badgeHoverOverlay} alt="" />
             <img className="gset-badge-layer gset-badge-layer--target" src={badgeHoverOverlay} alt="" />

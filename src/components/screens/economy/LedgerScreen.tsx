@@ -26,7 +26,7 @@ import type {
   LedgerFactionVisual,
 } from '../../../bridge-types.generated.ts';
 import { WebkilnAssetPath } from '../../../utils/assets';
-import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
+import { formatNumber, formatResourceNumber, formatSignedNumber, formatSignedResourceNumber } from '../../../utils/numberFormat';
 import { renderRichText } from '../../../utils/richText';
 import { normaliseBattleAfterActionReport } from '../../../utils/battleAfterActionReport';
 import './LedgerScreen.css';
@@ -624,7 +624,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
     { id: 'region', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.212.9'), render: row => row.region || '-', sortValue: row => row.region },
     { id: 'population', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.213.10'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Population.png">{fmt(row.population)}</LedgerMetric>, sortValue: row => row.population },
     { id: 'income', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.214.11'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Coins.png">{signed(row.income)}</LedgerMetric>, sortValue: row => row.income },
-    { id: 'food', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.215.12'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Food.png">{signed(row.foodProduction - row.foodConsumption)}</LedgerMetric>, sortValue: row => row.foodProduction - row.foodConsumption },
+    { id: 'food', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.215.12'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Food.png">{formatSignedResourceNumber(row.foodProduction - row.foodConsumption)}</LedgerMetric>, sortValue: row => row.foodProduction - row.foodConsumption },
     { id: 'unrest', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.216.13'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Unrest.png">{`${fmt1(row.unrest)}%`}</LedgerMetric>, sortValue: row => row.unrest },
     { id: 'buildings', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.217.14'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_BuildingsQuickButton.png">{fmt(row.buildingCount)}</LedgerMetric>, sortValue: row => row.buildingCount },
   ];
@@ -656,10 +656,10 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   const resourceColumns: Column<LedgerResourceRow>[] = [
     { id: 'name', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.245.33'), render: row => <ResourceLabel resourceId={row.id} name={row.name} className="ledger-resource" />, sortValue: row => row.name },
     { id: 'category', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.246.34'), render: row => resourceCategoryLabel(row.category), sortValue: row => resourceCategoryLabel(row.category) },
-    { id: 'stockpile', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.247.35'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Resources.png">{fmt1(row.stockpile)}</LedgerMetric>, sortValue: row => row.stockpile },
-    { id: 'production', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.248.36'), align: 'right', className: 'ledger-value ledger-value--good', render: row => <LedgerMetric icon="/assets/icons/I_Plus.png">{`+${fmt1(row.production)}`}</LedgerMetric>, sortValue: row => row.production },
-    { id: 'consumption', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.249.37'), align: 'right', className: 'ledger-value ledger-value--bad', render: row => <LedgerMetric icon="/assets/icons/I_Minus.png">{`-${fmt1(row.consumption)}`}</LedgerMetric>, sortValue: row => row.consumption },
-    { id: 'net', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.250.38'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Chart.png">{signed(row.netPerMonth)}</LedgerMetric>, sortValue: row => row.netPerMonth },
+    { id: 'stockpile', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.247.35'), align: 'right', render: row => <LedgerMetric icon="/assets/icons/I_Resources.png">{formatResourceNumber(row.stockpile)}</LedgerMetric>, sortValue: row => row.stockpile },
+    { id: 'production', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.248.36'), align: 'right', className: 'ledger-value ledger-value--good', render: row => <LedgerMetric icon="/assets/icons/I_Plus.png">{`+${formatResourceNumber(row.production)}`}</LedgerMetric>, sortValue: row => row.production },
+    { id: 'consumption', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.249.37'), align: 'right', className: 'ledger-value ledger-value--bad', render: row => <LedgerMetric icon="/assets/icons/I_Minus.png">{`-${formatResourceNumber(row.consumption)}`}</LedgerMetric>, sortValue: row => row.consumption },
+    { id: 'net', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.250.38'), align: 'right', className: 'ledger-value', render: row => <LedgerMetric icon="/assets/icons/I_Chart.png">{formatSignedResourceNumber(row.netPerMonth)}</LedgerMetric>, sortValue: row => row.netPerMonth },
     { id: 'settlements', label: webUIText('Auto.Prop.ComponentsScreensLedgerScreen.251.39'), align: 'right', render: row => fmt(row.settlementCount), sortValue: row => row.settlementCount },
   ];
 

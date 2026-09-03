@@ -86,6 +86,7 @@ function mapFaction(data: GetFactionDataResponse): Faction {
     diplomaticStatus,
     subjectSubtype: data.subjectSubtype || undefined,
     subjectType: data.subjectType || undefined,
+    overlordName: data.overlordName || undefined,
     peaceNegotiationTargetFactionId: data.peaceNegotiationTargetFactionId || undefined,
     opinion: data.opinion,
     population: data.population,

@@ -5,7 +5,13 @@ import { useSettlementBridge } from '../bridge/settlements-economy/useSettlement
 import { usePersonBridge } from '../bridge/characters/usePersonBridge';
 import { useFactionBridge, type FactionBridgeScope } from '../bridge/diplomacy/useFactionBridge';
 import { usePlayerFactionBridge, usePlayerFactionSummaryBridge } from '../bridge/app/usePlayerFactionBridge';
-import { useMilitaryBridge, useMilitaryOverviewBridge, useSelectedMilitariesBridge } from '../bridge/military-map/useMilitaryBridge';
+import {
+  useFactionMilitaryOverviewBridge,
+  useMilitaryBridge,
+  useMilitaryOverviewBridge,
+  useSelectedMilitariesBridge,
+  type FactionMilitaryOverview,
+} from '../bridge/military-map/useMilitaryBridge';
 import {
   useAgentCandidatesBridge,
   type AgentCandidatesResult,
@@ -49,6 +55,12 @@ export function useMilitary(id: string | null | undefined): Army | null {
 
 export function useMilitaryOverview(fetch = true): MilitaryOverview | null {
   return useMilitaryOverviewBridge(fetch);
+}
+
+export function useFactionMilitaryOverview(
+  factionId: string | null | undefined,
+): FactionMilitaryOverview | null {
+  return useFactionMilitaryOverviewBridge(factionId);
 }
 
 export function useSelectedMilitaries(): MilitaryOverview['forces'] | null {

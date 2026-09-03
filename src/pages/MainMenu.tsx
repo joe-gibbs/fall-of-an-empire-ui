@@ -1064,6 +1064,12 @@ const MainMenu: React.FC = () => {
               <span className="mm-load-error-message">{menuError}</span>
             </div>
           )}
+
+          {isDemo === false && (
+            <p className="mm-review-prompt">
+              <WebUIText textKey="MainMenu.ReviewPrompt" />
+            </p>
+          )}
         </div>
       </div>
 

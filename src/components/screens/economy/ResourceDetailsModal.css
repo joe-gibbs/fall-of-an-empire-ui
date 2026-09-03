@@ -93,6 +93,11 @@
   min-width: 0;
 }
 
+.erd-header__map-button {
+  flex: 0 0 auto;
+  margin-right: 0.7rem;
+}
+
 .erd-header h1 {
   margin: 0.06rem 0 0.12rem;
   color: var(--gold-light);
@@ -443,12 +448,14 @@
 }
 
 .erd-source,
-.erd-flow-row {
+.erd-flow-row,
+.erd-flow-consumer {
   border-bottom: 0.077rem solid rgba(91, 82, 69, 0.45);
 }
 
 .erd-source:last-child,
-.erd-flow-row:last-child {
+.erd-flow-row:last-child,
+.erd-flow-consumer:last-child {
   border-bottom: 0;
 }
 
@@ -501,6 +508,43 @@
 .erd-flow-row {
   min-height: 2rem;
   padding: 0.3rem 0.55rem;
+}
+
+.erd-flow-consumer > .erd-flow-row {
+  border-bottom: 0;
+}
+
+.erd-flow-consumer > .erd-detail-list {
+  margin: -0.05rem 0.55rem 0.42rem;
+}
+
+.erd-potential-uses {
+  padding: 0.5rem 0.55rem;
+  border-top: 0.077rem solid rgba(201, 168, 76, 0.2);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.erd-potential-uses > strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+}
+
+.erd-potential-uses div + div {
+  margin-top: 0.35rem;
+}
+
+.erd-potential-uses span {
+  color: var(--gold);
+}
+
+.erd-potential-uses p {
+  margin: 0.08rem 0 0;
+  line-height: 1.35;
 }
 
 .erd-flow-group h3 {
@@ -657,17 +701,33 @@
   pointer-events: none;
 }
 
+.erd-chart__point,
 .erd-chart__hover-point {
-  stroke: rgba(8, 12, 17, 0.9);
-  stroke-width: 1.25;
-  vector-effect: non-scaling-stroke;
+  position: absolute;
+  z-index: 1;
+  width: 0.24rem;
+  height: 0.24rem;
+  border: 0.077rem solid rgba(8, 12, 17, 0.92);
+  border-radius: 50%;
   pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
-.erd-chart__hover-point--stock { fill: #d6ad52; }
-.erd-chart__hover-point--production { fill: #63a94d; }
-.erd-chart__hover-point--use { fill: #b64d45; }
-.erd-chart__hover-point--market { fill: #5b91bd; }
+.erd-chart__hover-point {
+  z-index: 3;
+  width: 0.58rem;
+  height: 0.58rem;
+  box-shadow: 0 0 0 0.077rem rgba(232, 219, 177, 0.24);
+}
+
+.erd-chart__point--stock,
+.erd-chart__hover-point--stock { background: #d6ad52; }
+.erd-chart__point--production,
+.erd-chart__hover-point--production { background: #63a94d; }
+.erd-chart__point--use,
+.erd-chart__hover-point--use { background: #b64d45; }
+.erd-chart__point--market,
+.erd-chart__hover-point--market { background: #5b91bd; }
 
 .erd-chart__value-card {
   position: absolute;

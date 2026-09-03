@@ -11,6 +11,7 @@ import VictoryConditionsDropdown from '../hud/panels/VictoryConditionsDropdown';
 import WorldGlanceOverlay from '../hud/overlays/WorldGlanceOverlay';
 import { isWorldGlanceTutorialTarget } from '../hud/overlays/worldGlanceTutorialTarget';
 import ProvinceTooltipOverlay from '../hud/overlays/ProvinceTooltipOverlay';
+import ResourceFlowTooltipOverlay from '../hud/overlays/ResourceFlowTooltipOverlay';
 import DragSelectionMarquee from '../hud/overlays/DragSelectionMarquee';
 import AchievementUnlockToast from '../hud/overlays/AchievementUnlockToast';
 import BuildQueueCompletionToast from '../topbar/BuildQueueCompletionToast';
@@ -390,7 +391,7 @@ export default function GameUIRoot() {
     && isWorldGlanceTutorialTarget(tutorialSpotlight.spotlight.target)
     ? tutorialSpotlight.spotlight.target
     : '';
-  const actionResultNotifications = notifications.filter(notification => notification.persistUntilDismissed);
+  const actionResultNotifications = notifications.filter(notification => notification.isPlayerActionResult);
   const mapGlancesObscured = Boolean(
     showPause
     || showVictory
@@ -446,6 +447,7 @@ export default function GameUIRoot() {
           visible={!mapGlancesObscured}
           tutorialTarget={tutorialWorldGlanceTarget}
         />
+        <ResourceFlowTooltipOverlay />
         <ProvinceTooltipOverlay />
         <DragSelectionMarquee enabled={!mapAnchorsObscured} />
 
