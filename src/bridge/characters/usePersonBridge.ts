@@ -18,12 +18,8 @@ function normaliseStatKey(raw: string): StatKey | null {
   }
 }
 
-/**
- * Maps a bridge person response to the Character type used by UI components.
- * Fields that don't exist in the bridge response default to benign values.
- */
-function mapPerson(data: GetPersonDataResponse): Character {
-  const temporaryModifiers: CharacterStatModifier[] = data.stats.temporaryModifiers.flatMap((modifier) => {
+function mapStatModifiers(entries: GetPersonDataResponse['stats']['temporaryModifiers']): CharacterStatModifier[] {
+  return entries.flatMap((modifier) => {
     const stat = normaliseStatKey(modifier.stat);
     if (!stat) return [];
 
@@ -35,6 +31,15 @@ function mapPerson(data: GetPersonDataResponse): Character {
       totalDurationDays: modifier.totalDurationDays > 0 ? modifier.totalDurationDays : undefined,
     }];
   });
+}
+
+/**
+ * Maps a bridge person response to the Character type used by UI components.
+ * Fields that don't exist in the bridge response default to benign values.
+ */
+function mapPerson(data: GetPersonDataResponse): Character {
+  const temporaryModifiers = mapStatModifiers(data.stats.temporaryModifiers);
+  const sourceModifiers = mapStatModifiers(data.stats.sourceModifiers);
 
   return {
     id: data.id,
@@ -84,6 +89,7 @@ function mapPerson(data: GetPersonDataResponse): Character {
         constitution: Math.round(data.stats.baseConstitution),
       },
       temporaryModifiers: temporaryModifiers.length > 0 ? temporaryModifiers : undefined,
+      sourceModifiers: sourceModifiers.length > 0 ? sourceModifiers : undefined,
     },
     traits: data.traits.map(t => ({
       id: t.id,

@@ -279,6 +279,7 @@ function hasMapModeContent(tooltip: GetProvinceTooltipResponse): boolean {
 }
 
 function shouldShowTerrainInfo(tooltip: GetProvinceTooltipResponse): boolean {
+  if (tooltip.kind === 'siegeWarning') return false;
   if (tooltip.kind === 'convoy') {
     return false;
   }
@@ -316,6 +317,11 @@ function SettlementActionHint({ tooltip }: { tooltip: GetProvinceTooltipResponse
   );
 }
 
+function SiegeWarning({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
+  if (!tooltip.siegePowerWarning) return null;
+  return <div className="province-tooltip-siege-warning">{tooltip.siegePowerWarning}</div>;
+}
+
 function SettlementMapModeDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   return (
     <div className="province-tooltip-details">
@@ -323,6 +329,7 @@ function SettlementMapModeDetails({ tooltip }: { tooltip: GetProvinceTooltipResp
       {shouldShowTerrainInfo(tooltip) && <TerrainSummary tooltip={tooltip} />}
       <MapModeContent tooltip={tooltip} />
       <SettlementActionHint tooltip={tooltip} />
+      <SiegeWarning tooltip={tooltip} />
     </div>
   );
 }
@@ -337,6 +344,7 @@ function SettlementDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse })
       <div className="province-tooltip-title">{tooltip.settlementName}</div>
       <TerrainSummary tooltip={tooltip} />
       <SettlementActionHint tooltip={tooltip} />
+      <SiegeWarning tooltip={tooltip} />
     </div>
   );
 }
@@ -420,6 +428,15 @@ function TerrainDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
 function ExpandedDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   if (!tooltip.expanded) {
     return null;
+  }
+
+  if (tooltip.kind === 'siegeWarning') {
+    return (
+      <div className="province-tooltip-details">
+        <div className="province-tooltip-title">{tooltip.settlementName}</div>
+        <SiegeWarning tooltip={tooltip} />
+      </div>
+    );
   }
 
   if (tooltip.kind === 'settlement') {

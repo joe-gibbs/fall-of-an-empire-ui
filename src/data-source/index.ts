@@ -4,7 +4,8 @@
 import { useSettlementBridge } from '../bridge/settlements-economy/useSettlementBridge';
 import { usePersonBridge } from '../bridge/characters/usePersonBridge';
 import { useFactionBridge, type FactionBridgeScope } from '../bridge/diplomacy/useFactionBridge';
-import { usePlayerFactionBridge, usePlayerFactionSummaryBridge } from '../bridge/app/usePlayerFactionBridge';
+import { usePlayerFactionBridge, usePlayerFactionSummaryBridge, usePlayerFactionSummaryBridgeState } from '../bridge/app/usePlayerFactionBridge';
+import { isObserverMode } from '../utils/observerMode';
 import {
   useFactionMilitaryOverviewBridge,
   useMilitaryBridge,
@@ -77,6 +78,11 @@ export function usePlayerFactionId(): string | null {
 
 export function usePlayerFactionSummary(): PlayerFactionSummary | null {
   return usePlayerFactionSummaryBridge();
+}
+
+export function useObserverMode(): boolean {
+  const query = usePlayerFactionSummaryBridgeState();
+  return !query.pending && isObserverMode(query.summary);
 }
 
 export function useAgentCandidates(role: 'diplomat' | 'spy' | null, targetFactionId: string | null): AgentCandidatesResult | null {

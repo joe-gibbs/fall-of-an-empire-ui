@@ -74,6 +74,7 @@ interface SiegeViewModel {
   progressPerDay: number;
   progressFactors: SiegeProgressFactor[];
   siegePower: number;
+  siegePowerWarning?: string;
   defenderStrength: number;
   attackerStrength: number;
   morale: number;
@@ -279,6 +280,7 @@ function buildViewModel(settlement: Settlement): SiegeViewModel | null {
     progressPerDay: siege.progressPerDay,
     progressFactors: siege.progressFactors,
     siegePower: siege.totalSiegePower,
+    siegePowerWarning: siege.siegePowerWarning,
     defenderStrength,
     attackerStrength,
     morale: attackerMorale,
@@ -357,10 +359,12 @@ function SiegeOverview({ view, daysValue }: { view: SiegeViewModel; daysValue: s
             {leadCommander || view.hostileFaction}
           </span>
         </div>
-        <div className="siege-overview-power">
-          <span className="siege-overview-power-value">{formatNumber(view.siegePower)}</span>
-          <span className="siege-overview-power-label"><WebUIText textKey="Settlement.Siege.SiegePower" /></span>
-        </div>
+        {!view.siegePowerWarning && (
+          <div className="siege-overview-power">
+            <span className="siege-overview-power-value">{formatNumber(view.siegePower)}</span>
+            <span className="siege-overview-power-label"><WebUIText textKey="Settlement.Siege.SiegePower" /></span>
+          </div>
+        )}
       </div>
 
       <div className="siege-summary-row">
@@ -619,6 +623,11 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
         )}
 
         <SiegeOverview view={view} daysValue={daysValue} />
+        {view.siegePowerWarning && (
+          <div className="game-notice game-notice--danger game-notice--compact siege-power-warning">
+            {view.siegePowerWarning}
+          </div>
+        )}
 
         {commands.length > 0 && (
           <div className="siege-actions-section">

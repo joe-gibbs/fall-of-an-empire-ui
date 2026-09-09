@@ -101,10 +101,6 @@ export function commandSupportTooltip(force: Pick<Force, 'commanderName' | 'isNa
   };
 }
 
-export function hasOverallCommand(forces: Pick<Force, 'id' | 'rank' | 'isNavy'>[], force: Pick<Force, 'id' | 'isNavy'>): boolean {
-  return forces.some(entry => entry.rank === 'Dux' && entry.isNavy === force.isNavy);
-}
-
 export function rankLabel(f: Force): string {
   if (f.isPersonalGuard) return webUIText('Military.PersonalGuard');
   const meta = RANK_META[f.rank];

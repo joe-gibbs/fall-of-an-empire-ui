@@ -358,6 +358,21 @@
   text-transform: uppercase;
 }
 
+.erw-resource-card__shortage {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--yellow);
+  font-size: 0.64rem;
+  line-height: 1.3;
+}
+
+.erw-food-ingredient > .erw-resource-card__shortage {
+  display: block;
+  grid-column: 1 / -1;
+  color: var(--yellow);
+  font-family: var(--font-body);
+}
+
 .erw-reserve-track,
 .erw-capacity-track {
   display: block;
@@ -463,7 +478,8 @@
   grid-template-columns: minmax(0, 1fr) 1.7rem minmax(8.5rem, 0.82fr) 1.7rem minmax(0, 1fr);
   align-items: stretch;
   gap: 0.2rem;
-  min-height: 13rem;
+  flex: 0 0 auto;
+  min-height: 6.5rem;
   margin-top: 0.38rem;
 }
 
@@ -537,7 +553,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 5rem;
+  min-height: 2.5rem;
   font-size: 0.66rem;
 }
 
@@ -574,18 +590,19 @@
 
 .erw-stores-tooltip {
   display: flex;
-  height: 100%;
+  align-self: center;
+  height: auto;
 }
 
 .erw-stores-tooltip .erw-stores {
   width: 100%;
-  height: 100%;
+  height: auto;
 }
 
 .erw-stores > img {
-  width: 4.8rem;
-  height: 4.8rem;
-  margin: 0.35rem 0 0.2rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  margin: 0.2rem 0 0.12rem;
   object-fit: contain;
 }
 
@@ -626,15 +643,14 @@
     'manage'
     'chart';
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(13rem, 1fr);
+  grid-template-rows: auto auto;
   gap: 0.38rem;
-  flex: 1 1 auto;
-  min-height: 13rem;
+  flex: 0 0 auto;
 }
 
 .erw-analysis__bottom--chart-only {
   grid-template-areas: 'chart';
-  grid-template-rows: minmax(13rem, 1fr);
+  grid-template-rows: auto;
 }
 
 .erw-chart-panel,
@@ -682,9 +698,9 @@
 
 .erw-chart {
   position: relative;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   width: 100%;
-  min-height: 7.5rem;
+  height: 7.5rem;
   margin-top: 0.3rem;
   overflow: visible;
   background-color: rgba(5, 9, 13, 0.38);
@@ -844,7 +860,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  height: 7.5rem;
 }
 
 .erw-manage {
@@ -900,14 +917,14 @@
 .erw-manage__automation {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.42rem;
+  gap: 0.8rem;
   margin-top: 0;
   border-top: 0;
 }
 
 .erw-automation-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 0.35rem;
   min-height: 2.3rem;
@@ -915,25 +932,33 @@
 }
 
 .erw-check {
-  font-size: 0.58rem;
+  font-size: 0.65rem;
+  text-transform: none;
+}
+
+.erw-threshold {
+  width: 100%;
+}
+
+.erw-threshold .number-stepper__tooltip {
+  flex: 0 0 auto;
 }
 
 .erw-threshold .number-stepper__input,
 .erw-threshold__input {
-  width: 4.4rem;
-  min-height: 1.45rem;
+  flex: 1 1 auto;
+  width: 0;
+  min-height: 1.7rem;
   padding: 0 0.22rem;
   color: var(--text-bright);
-  background-color: rgba(7, 11, 15, 0.74);
-  border: 0.077rem solid rgba(201, 168, 76, 0.24);
   font-family: var(--font-header);
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   text-align: right;
 }
 
 .erw-threshold__button {
-  min-width: 1.4rem;
-  min-height: 1.45rem;
+  min-width: 2rem;
+  min-height: 1.7rem;
   padding: 0 0.12rem;
   color: var(--gold-light);
   background-image: url('/assets/baked/icon-button.png');

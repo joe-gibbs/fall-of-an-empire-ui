@@ -383,6 +383,7 @@
 .diplo-section-heading-with-action {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   width: 100%;
 }
 
@@ -394,6 +395,12 @@
 
 .diplo-section-heading-with-action > .tooltip-wrapper {
   flex-shrink: 0;
+}
+
+.diplo-section-heading-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
 }
 
 .diplo-view-characters-button,
@@ -604,6 +611,30 @@
 
 .diplo-relation-row--war .diplo-relation-type-label {
   color: var(--red);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diplo-relation-war {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.diplo-relation-war + .diplo-relation-war,
+.diplo-relation-war + .diplo-relation-row {
+  margin-top: 0.35rem;
+}
+
+.diplo-war-score {
+  width: 100%;
+  padding: 0 0 0.15rem;
+  cursor: auto;
+}
+
+.diplo-war-score-tooltip {
+  width: 100%;
 }
 
 .diplo-relation-duration {
@@ -621,6 +652,130 @@
   font-size: 0.85rem;
   color: var(--text-dark);
   padding: 0.2rem 0;
+}
+
+.diplo-policies {
+  padding: 0.1rem 0.462rem 0.35rem;
+}
+
+.diplo-policy-row {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0.28rem 0;
+}
+
+.diplo-policy-main-tooltip {
+  width: 100%;
+}
+
+.diplo-policy-main {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.diplo-policy-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+}
+
+.diplo-policy-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.diplo-policy-name {
+  color: var(--text-header);
+  font-family: var(--font-header);
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diplo-policy-stance {
+  color: var(--gold);
+  font-size: 0.74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diplo-policy-source {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diplo-policy-pips {
+  position: relative;
+  width: 100%;
+  height: 0.5rem;
+  margin-top: 0.22rem;
+}
+
+.diplo-policy-pips-track {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-image: url('/assets/bar-track.png');
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+}
+
+.diplo-policy-pips-fill {
+  height: 100%;
+  background-image: url('/assets/bar-gold.png');
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+}
+
+.diplo-policy-pips-levels {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+}
+
+.diplo-policy-pips-levels .tooltip-wrapper-inline,
+.diplo-policy-pip-wrap {
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  height: 100%;
+}
+
+.diplo-policy-pip {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-right-width: 0.0909rem;
+  border-right-style: solid;
+  border-right-color: rgba(8, 12, 17, 0.5);
+}
+
+.diplo-policy-pip--current {
+  background-color: rgba(229, 201, 107, 0.16);
+}
+
+.diplo-policy-pip--locked {
+  background-color: rgba(8, 12, 17, 0.38);
+}
+
+.diplo-policy-pip--last {
+  border-right-width: 0;
 }
 
 .diplo-player-treaties {
@@ -1281,6 +1436,14 @@
 
 .diplo-player-treaty-row > * + * {
   margin-left: 0.35rem;
+}
+
+.diplo-policy-main > * + * {
+  margin-left: 0.35rem;
+}
+
+.diplo-policy-copy > * + * {
+  margin-top: 0.08rem;
 }
 
 /* --- Agent (Diplomat/Spy) sections --- */

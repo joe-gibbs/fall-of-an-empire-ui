@@ -1202,8 +1202,15 @@ const SettingsPanel: React.FC = () => {
   const audioUi = finiteNumber(audio.ui, appliedSnapshot.audio.ui);
   const audioAmbience = finiteNumber(audio.ambience, appliedSnapshot.audio.ambience);
   const canSelectResolution = video.windowMode !== 'WindowedFullscreen';
-  // TSR stands in wherever DLSS is absent, so upscaling is always offered.
+  const supportsExclusiveFullscreen = settings.supportedWindowModes.includes('Fullscreen');
+  const windowModeOptions = WINDOW_MODE_OPTIONS
+    .filter(option => settings.supportedWindowModes.includes(option.value))
+    .map(option => option.value === 'WindowedFullscreen' && !supportsExclusiveFullscreen
+      ? { value: option.value, label: webUIText('Auto.Prop.ComponentsSettingsSettingsPanel.761.40') }
+      : option);
+  // The native upscaler shares quality choices across supported platforms.
   const usesDLSS = settings.upscalingTechnology === 'DLSS';
+  const usesMetalFX = settings.upscalingTechnology === 'MetalFX';
   const dlssActive = video.dlssMode !== 'Off';
 
   const setVideo = (patch: Partial<typeof video>) => setWorking(w => w && { ...w, video: { ...w.video, ...patch } });
@@ -1399,6 +1406,7 @@ const SettingsPanel: React.FC = () => {
             <SettingsSlider label={webUIText('Settings.UIScrollSpeed.Label')} desc={webUIText('Settings.UIScrollSpeed.Description')} value={toPercent(gameplay.uiScrollSpeed)} min={25} max={300} suffix="%" onChange={v => applyLiveGameplay({ uiScrollSpeed: fromPercent(v) })} />
             <SettingsSlider label={webUIText('Settings.TooltipDelay.Label')} desc={webUIText('Settings.TooltipDelay.Description')} value={Math.round(gameplay.tooltipDelaySeconds * 1000)} min={0} max={2000} suffix="" display={webUIText('Settings.Milliseconds', { Value: Math.round(gameplay.tooltipDelaySeconds * 1000) })} onChange={v => applyLiveGameplay({ tooltipDelaySeconds: v / 1000 })} />
             <Toggle label={webUIText('Settings.ReduceMotion.Label')} desc={webUIText('Settings.ReduceMotion.Description')} checked={gameplay.reduceMotion} onChange={() => setGameplay({ reduceMotion: !gameplay.reduceMotion })} />
+            <Toggle label={webUIText('Settings.KeepConstructionFilters.Label')} desc={webUIText('Settings.KeepConstructionFilters.Description')} checked={gameplay.keepConstructionFilters} onChange={() => setGameplay({ keepConstructionFilters: !gameplay.keepConstructionFilters })} />
             <Toggle label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.752.35')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.752.13')} checked={gameplay.consoleEnabled} onChange={() => setGameplay({ consoleEnabled: !gameplay.consoleEnabled })} />
             <Toggle label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.753.36')} desc={webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.753.14')} checked={gameplay.includeSaveInCrashReport} onChange={() => setGameplay({ includeSaveInCrashReport: !gameplay.includeSaveInCrashReport })} />
           </div>
@@ -1420,7 +1428,7 @@ const SettingsPanel: React.FC = () => {
               label={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.761.39')}
               tooltip={settingsTooltip(webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.761.39'), 'Settings.Tooltip.WindowMode.Body')}
               value={video.windowMode}
-              options={WINDOW_MODE_OPTIONS}
+              options={windowModeOptions}
               onChange={v => setVideo({ windowMode: v })}
             />
             <Toggle
@@ -1453,10 +1461,10 @@ const SettingsPanel: React.FC = () => {
               label={settings.upscalingTechnology}
               desc={usesDLSS
                 ? webUIText('Auto.ExtraAttr.ComponentsSettingsSettingsPanel.766.17')
-                : webUIText('Settings.Upscaling.TSRDesc')}
+                : usesMetalFX ? webUIText('Settings.Upscaling.MetalFXDesc') : webUIText('Settings.Upscaling.TSRDesc')}
               tooltip={settingsTooltip(
                 settings.upscalingTechnology,
-                usesDLSS ? 'Settings.Tooltip.DLSS.Body' : 'Settings.Tooltip.TSR.Body',
+                usesDLSS ? 'Settings.Tooltip.DLSS.Body' : usesMetalFX ? 'Settings.Tooltip.MetalFX.Body' : 'Settings.Tooltip.TSR.Body',
               )}
               value={video.dlssMode}
               options={upscalingModeOptions(usesDLSS)}

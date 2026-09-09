@@ -822,10 +822,14 @@ function NestedTooltip({
       return undefined;
     }
     scheduleSubPlacement();
+    const contentElement = subRef.current?.querySelector('.tt-content');
+    const observer = contentElement ? new ResizeObserver(scheduleSubPlacement) : null;
+    if (contentElement) observer?.observe(contentElement);
     window.addEventListener('resize', scheduleSubPlacement);
     window.addEventListener('scroll', scheduleSubPlacement, true);
     return () => {
       cancelPlacementFrames();
+      observer?.disconnect();
       window.removeEventListener('resize', scheduleSubPlacement);
       window.removeEventListener('scroll', scheduleSubPlacement, true);
     };
@@ -853,11 +857,13 @@ function NestedTooltip({
           onMouseEnter={keepOpen}
           onMouseLeave={hideAndScheduleParent}
         >
-          <TooltipBody
-            data={content}
-            tooltipId={nesting?.tooltipId}
-            keepAncestorOpen={keepOpen}
-          />
+          <div className="tt-content">
+            <TooltipBody
+              data={content}
+              tooltipId={nesting?.tooltipId}
+              keepAncestorOpen={keepOpen}
+            />
+          </div>
         </div>,
         document.body,
       )}
@@ -1132,7 +1138,9 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
 
   useEffect(() => {
     schedulePlacement();
-    const target = tooltipRef.current;
+    // The bubble has a measured height; observe its natural content so bridge
+    // responses and interactive controls can change that height after opening.
+    const target = tooltipRef.current?.querySelector('.tt-content');
     let observer: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined' && target) {
       observer = new ResizeObserver(schedulePlacement);

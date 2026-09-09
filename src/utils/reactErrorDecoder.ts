@@ -1,9 +1,8 @@
 /**
  * Formats React root / window errors for Unreal/Webkiln console logs.
  *
- * The WebUI build resolves React to its development builds so thrown Errors
- * already carry full messages. This module still:
- * - rewrites any leftover "Minified React error #N" text in Error objects
+ * Packaged WebUI uses production React. This module:
+ * - expands "Minified React error #N" text in Error objects
  * - formats createRoot onUncaughtError / onCaughtError / onRecoverableError
  *   payloads so component stacks (and the leaf component) appear in logs
  *

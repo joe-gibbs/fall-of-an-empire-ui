@@ -49,8 +49,10 @@ import { bridgeCall } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { GAMEPLAY_CONTEXT_RESET_EVENT } from '../../bridge/core/gameplayCacheReset';
 import { getScreen, getScreenByBridgeName, getScreenOpenedByTopbar, getSidebar } from '../../registry/index';
-import { usePlayerFactionSummary } from '../../data-source/index';
+import { useObserverMode, usePlayerFactionSummary } from '../../data-source/index';
+import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 import { beginUIPerfInteraction, recordUIPerfReactRender } from '../../perf/uiPerfProfiler';
+import { TUTORIAL_REVEAL_PERSONAL_GUARD, type TutorialHudRevealDetail } from '../../utils/tutorialHudReveal';
 import AnimatedSlot from './AnimatedSlot';
 import EventPopupSlot from './EventPopupSlot';
 export default function GameUIRoot() {
@@ -68,6 +70,7 @@ export default function GameUIRoot() {
     closeAgentSelect,
   } = useGame();
   const playerFaction = usePlayerFactionSummary();
+  const observerMode = useObserverMode();
   const subjectMode = playerFaction?.diplomaticStatus === 'subject';
 
   // Bridge-received navigation uses local-only handlers to avoid echoing the
@@ -84,22 +87,40 @@ export default function GameUIRoot() {
 
   const playerFactionId = playerFaction?.id ?? null;
   useEffect(() => {
+    if (observerMode) {
+      if (activeScreen && activeScreen !== 'encyclopedia') {
+        closeScreen();
+      }
+      dismissAdvisor();
+      return;
+    }
     if (!playerFactionId) return;
-    if (subjectMode && activeScreen === 'faction-overview') {
+    if (subjectMode && (activeScreen === 'faction-overview' || activeScreen === 'factionOverview')) {
       openScreen('governor-faction-overview', activeScreenId ?? undefined);
     } else if (!subjectMode && activeScreen === 'governor-faction-overview') {
-      openScreen('faction-overview', activeScreenId ?? undefined);
+      openScreen('factionOverview', activeScreenId ?? undefined);
     }
-  }, [activeScreen, activeScreenId, openScreen, playerFactionId, subjectMode]);
+  }, [activeScreen, activeScreenId, closeScreen, dismissAdvisor, observerMode, openScreen, playerFactionId, subjectMode]);
 
   // Current LLM/tutorial event pushed from the game (null when nothing is active).
   const { event: bridgeEvent, chooseOption: bridgeChooseOption } = useEventBridge();
   const { event: provinceRecallEvent, chooseOption: chooseProvinceRecallOption } = useProvinceRecallBridge(subjectMode);
-  const presentedEvent = bridgeEvent ?? provinceRecallEvent;
+  const presentedEvent = observerMode ? null : (bridgeEvent ?? provinceRecallEvent);
   const choosePresentedEventOption = bridgeEvent ? bridgeChooseOption : chooseProvinceRecallOption;
 
   const tutorialProgress = useTutorialProgressBridge();
   const tutorialSpotlight = useTutorialSpotlightBridge();
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const tokens = (event as CustomEvent<TutorialHudRevealDetail>).detail?.tokens ?? [];
+      if (tokens.length === 0) return;
+      if (activeScreen === 'military' && activeScreenId === 'guard') return;
+      openScreenFromBridge('military', 'guard');
+    };
+    window.addEventListener(TUTORIAL_REVEAL_PERSONAL_GUARD, handler);
+    return () => window.removeEventListener(TUTORIAL_REVEAL_PERSONAL_GUARD, handler);
+  }, [activeScreen, activeScreenId, openScreenFromBridge]);
 
   // Live pinned-items list from the game (settlements, characters, militaries, factions).
   const { items: pinnedItems, togglePin } = usePinnedItemsBridge();
@@ -156,6 +177,7 @@ export default function GameUIRoot() {
   const closePinned = useCallback(() => setShowPinned(false), []);
   const closeVictoryConditions = useCallback(() => setShowVictoryConditions(false), []);
   const closeProvinceEmperorTakeover = useCallback(() => setProvinceEmperorTakeoverDismissed(true), []);
+  const victoryConditionsOpen = showVictoryConditions && !observerMode;
 
   useEffect(() => {
     const handleReset = () => {
@@ -204,7 +226,7 @@ export default function GameUIRoot() {
   });
   useEscapeStackEntry({
     id: 'ui.victory-conditions',
-    active: showVictoryConditions,
+    active: victoryConditionsOpen,
     onClose: closeVictoryConditions,
   });
   const handleEscape = useCallback((fromInput = false) => {
@@ -349,7 +371,7 @@ export default function GameUIRoot() {
   // push fresh hint events and re-render the whole HUD every time.
   const lastAdvisorTopicRef = useRef<AdvisorTopicId | null | undefined>(undefined);
   useEffect(() => {
-    if (showPause || showVictory || showGameOver || showOutcomeLoad) {
+    if (observerMode || showPause || showVictory || showGameOver || showOutcomeLoad) {
       lastAdvisorTopicRef.current = undefined;
       return;
     }
@@ -357,7 +379,7 @@ export default function GameUIRoot() {
     lastAdvisorTopicRef.current = autoAdvisorTopic;
     if (autoAdvisorTopic) showAdvisor(autoAdvisorTopic);
     else dismissAdvisor();
-  }, [showPause, showVictory, showGameOver, showOutcomeLoad, autoAdvisorTopic, showAdvisor, dismissAdvisor]);
+  }, [observerMode, showPause, showVictory, showGameOver, showOutcomeLoad, autoAdvisorTopic, showAdvisor, dismissAdvisor]);
 
   const advisorPlacement = presentedEvent || activeScreen
     ? 'center'
@@ -406,8 +428,8 @@ export default function GameUIRoot() {
   );
 
   return (
-    <div className="game-container" data-webkiln-world-input>
-      <AchievementUnlockToast />
+    <div className={`game-container${observerMode ? ' game-container--observer' : ''}`} data-webkiln-world-input>
+      {!observerMode && <AchievementUnlockToast />}
       <TopBar
         onScreenChange={handleScreenChange}
         activeScreen={activeScreenButtonId}
@@ -416,16 +438,19 @@ export default function GameUIRoot() {
         isPinnedOpen={showPinned}
         pinnedCount={pinnedItems.length}
         onVictoryToggle={toggleVictoryConditions}
-        isVictoryOpen={showVictoryConditions}
+        isVictoryOpen={victoryConditionsOpen}
       />
-      <BuildQueueCompletionToast
-        notifications={notifications}
-        onDismiss={dismissNotification}
-        onLinkClick={handleEventLinkClick}
-      />
+      {!observerMode && (
+        <BuildQueueCompletionToast
+          notifications={notifications}
+          onDismiss={dismissNotification}
+          currentGameDay={gameDay}
+          onLinkClick={handleEventLinkClick}
+        />
+      )}
 
       <div className="game-main" data-webkiln-world-input>
-        {(warnings.length > 0 || actionResultNotifications.length > 0) && (
+        {!observerMode && (warnings.length > 0 || actionResultNotifications.length > 0) && (
           <div className="hud-attention-strip">
             <ActionResultsBar notifications={actionResultNotifications} />
             {warnings.length > 0 && (
@@ -434,13 +459,15 @@ export default function GameUIRoot() {
           </div>
         )}
 
-        <NotificationStack
-          notifications={notifications}
-          onDismiss={dismissNotification}
-          currentGameDay={gameDay}
-          onLinkClick={handleEventLinkClick}
-          anchorsEnabled={!mapAnchorsObscured}
-        />
+        {!observerMode && (
+          <NotificationStack
+            notifications={notifications}
+            onDismiss={dismissNotification}
+            currentGameDay={gameDay}
+            onLinkClick={handleEventLinkClick}
+            anchorsEnabled={!mapAnchorsObscured}
+          />
+        )}
 
         <BottomBar />
         <WorldGlanceOverlay
@@ -473,11 +500,13 @@ export default function GameUIRoot() {
         </Profiler>
       </div>
 
-      <TutorialProgress
-        progress={tutorialProgress}
-        placement={leftSidebar ? 'shifted' : 'left'}
-        onLinkClick={handleEventLinkClick}
-      />
+      {!observerMode && (
+        <TutorialProgress
+          progress={tutorialProgress}
+          placement={leftSidebar ? 'shifted' : 'left'}
+          onLinkClick={handleEventLinkClick}
+        />
+      )}
       <Profiler id="dropdown:pinned-items" onRender={recordUIPerfReactRender}>
         <PinnedItemsBar
           isOpen={showPinned}
@@ -503,33 +532,41 @@ export default function GameUIRoot() {
       <Profiler id="overlay:world-search" onRender={recordUIPerfReactRender}>
         <WorldSearchBar />
       </Profiler>
-      <VictoryConditionsDropdown
-        isOpen={showVictoryConditions}
-        onClose={() => setShowVictoryConditions(false)}
-      />
-      <AdvisorPanel
-        hint={advisorHint}
-        step={advisorStep}
-        visible={advisorVisible && !showPause && !showVictory && !showGameOver && !showOutcomeLoad}
-        placement={advisorPlacement}
-        onPrevious={previousAdvisorPage}
-        onNext={nextAdvisorPage}
-        onDismiss={dismissAdvisor}
-      />
-      <Profiler id="modal:event-popup" onRender={recordUIPerfReactRender}>
-        <EventPopupSlot
-          event={presentedEvent}
-          onOptionSelect={choosePresentedEventOption}
+      {!observerMode && (
+        <VictoryConditionsDropdown
+          isOpen={victoryConditionsOpen}
+          onClose={() => setShowVictoryConditions(false)}
+        />
+      )}
+      {!observerMode && (
+        <AdvisorPanel
+          hint={advisorHint}
+          step={advisorStep}
+          visible={advisorVisible && !showPause && !showVictory && !showGameOver && !showOutcomeLoad}
+          placement={advisorPlacement}
+          onPrevious={previousAdvisorPage}
+          onNext={nextAdvisorPage}
+          onDismiss={dismissAdvisor}
+        />
+      )}
+      {!observerMode && (
+        <Profiler id="modal:event-popup" onRender={recordUIPerfReactRender}>
+          <EventPopupSlot
+            event={presentedEvent}
+            onOptionSelect={choosePresentedEventOption}
+            onLinkClick={handleEventLinkClick}
+          />
+        </Profiler>
+      )}
+      {!observerMode && (
+        <TutorialSpotlightOverlay
+          spotlight={tutorialSpotlight.spotlight}
+          onResolve={tutorialSpotlight.resolve}
+          onDismiss={tutorialSpotlight.dismiss}
+          onNavigate={tutorialSpotlight.navigate}
           onLinkClick={handleEventLinkClick}
         />
-      </Profiler>
-      <TutorialSpotlightOverlay
-        spotlight={tutorialSpotlight.spotlight}
-        onResolve={tutorialSpotlight.resolve}
-        onDismiss={tutorialSpotlight.dismiss}
-        onNavigate={tutorialSpotlight.navigate}
-        onLinkClick={handleEventLinkClick}
-      />
+      )}
 
       <Profiler id="screen:pause-menu" onRender={recordUIPerfReactRender}>
         <PauseMenu visible={showPause} onClosed={() => setShowPause(false)} />
@@ -556,39 +593,49 @@ export default function GameUIRoot() {
         visible={showOutcomeLoad}
         onClosed={() => setShowOutcomeLoad(false)}
       />
-      <AgentSelectModal
-        key={`${agentSelect.targetFactionId ?? ''}:${agentSelect.role ?? ''}`}
-        open={agentSelect.open}
-        targetFactionId={agentSelect.targetFactionId}
-        role={agentSelect.role}
-        onClose={closeAgentSelect}
-      />
-      <CourtierPromotionModal
-        open={courtierPromotion.open}
-        onClose={closeCourtierPromotion}
-        settlementName={courtierPromotion.settlementName}
-        playerGold={courtierPromotion.playerGold}
-        promotionCost={courtierPromotion.promotionCost}
-        types={courtierPromotion.types}
-        onPromote={promoteCourtier}
-      />
-      <AllyCallDialogModal
-        state={allyCallDialog}
-        onRespond={respondToAllyCall}
-      />
-      <ConfirmDialog
-        visible={militaryMergeConfirm.visible}
-        title={militaryMergeConfirm.title}
-        message={militaryMergeConfirm.message}
-        confirmText={militaryMergeConfirm.confirmText}
-        onConfirm={militaryMergeConfirm.confirm}
-        onClosed={militaryMergeConfirm.cancel}
-      />
-      <ProvinceEmperorTakeoverModal
-        open={provinceEmperorTakeoverOpen}
-        takeover={provinceEmperorTakeover}
-        onClose={closeProvinceEmperorTakeover}
-      />
+      {!observerMode && (
+        <AgentSelectModal
+          key={`${agentSelect.targetFactionId ?? ''}:${agentSelect.role ?? ''}`}
+          open={agentSelect.open}
+          targetFactionId={agentSelect.targetFactionId}
+          role={agentSelect.role}
+          onClose={closeAgentSelect}
+        />
+      )}
+      {!observerMode && (
+        <CourtierPromotionModal
+          open={courtierPromotion.open}
+          onClose={closeCourtierPromotion}
+          settlementName={courtierPromotion.settlementName}
+          playerGold={courtierPromotion.playerGold}
+          promotionCost={courtierPromotion.promotionCost}
+          types={courtierPromotion.types}
+          onPromote={promoteCourtier}
+        />
+      )}
+      {!observerMode && (
+        <AllyCallDialogModal
+          state={allyCallDialog}
+          onRespond={respondToAllyCall}
+        />
+      )}
+      {!observerMode && (
+        <ConfirmDialog
+          visible={militaryMergeConfirm.visible}
+          title={militaryMergeConfirm.title}
+          message={militaryMergeConfirm.message}
+          confirmText={militaryMergeConfirm.confirmText}
+          onConfirm={militaryMergeConfirm.confirm}
+          onClosed={militaryMergeConfirm.cancel}
+        />
+      )}
+      {!observerMode && (
+        <ProvinceEmperorTakeoverModal
+          open={provinceEmperorTakeoverOpen}
+          takeover={provinceEmperorTakeover}
+          onClose={closeProvinceEmperorTakeover}
+        />
+      )}
     </div>
   );
 }

@@ -27,6 +27,7 @@ import { useResourceDetails } from '../../../context/ResourceDetailsContext';
 import GameButton from '../../common/buttons/GameButton';
 import NumberStepper from '../../common/forms/NumberStepper';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
+import ResourceProductionChain from './ResourceProductionChain';
 import './ResourceWorkspace.css';
 
 const RESOURCE_CATEGORY_ORDER = ['food', 'strategic', 'rawmaterials', 'luxury'];
@@ -299,6 +300,9 @@ function ResourceCard({
         </b>
       </span>
       <span className="erw-resource-card__coverage">{coverageLabel(resource, t)}</span>
+      {resource.missingProductionInputs.length > 0 && (
+        <span className="erw-resource-card__shortage">{t('Economy.ShortOfInputs', { Inputs: resource.missingProductionInputs.join(', ') })}</span>
+      )}
       <span className="erw-reserve-track" aria-hidden="true">
         <span className={`erw-reserve-fill erw-reserve-fill--${tone}`} style={{ width: `${coverageWidth(resource)}%` }} />
       </span>
@@ -338,6 +342,9 @@ function FoodResourceGroup({
             <em className={ingredient.netPerMonth < -0.0001 ? 'erw-negative' : ingredient.netPerMonth > 0.0001 ? 'erw-positive' : ''}>
               {signed(ingredient.netPerMonth)}{t('Economy.PerMonth')}
             </em>
+            {ingredient.missingProductionInputs.length > 0 && (
+              <span className="erw-resource-card__shortage">{t('Economy.ShortOfInputs', { Inputs: ingredient.missingProductionInputs.join(', ') })}</span>
+            )}
           </button>
         ))}
       </div>
@@ -362,14 +369,14 @@ function ResourceBoard({
   const food = resources.find(resource => resource.aggregate && resource.category.toLowerCase() === 'food');
   const foodIngredients = resources
     .filter(resource => !resource.aggregate && FOOD_RESOURCE_IDS.includes(resource.id.toLowerCase()))
-    .filter(resource => !shortagesOnly || resource.netPerMonth < -0.0001)
+    .filter(resource => !shortagesOnly || resource.netPerMonth < -0.0001 || resource.missingProductionInputs.length > 0)
     .sort((left, right) => FOOD_RESOURCE_IDS.indexOf(left.id.toLowerCase()) - FOOD_RESOURCE_IDS.indexOf(right.id.toLowerCase()));
   const showFood = !!food && (!shortagesOnly || food.netPerMonth < -0.0001 || foodIngredients.length > 0);
   const visibleResources = resources.filter(resource => (
     !resource.aggregate
     && resource.category.toLowerCase() !== 'food'
     && !FOOD_RESOURCE_IDS.includes(resource.id.toLowerCase())
-    && (!shortagesOnly || resource.netPerMonth < -0.0001)
+    && (!shortagesOnly || resource.netPerMonth < -0.0001 || resource.missingProductionInputs.length > 0)
   ));
   const extraCategories = [...new Set(visibleResources.map(resource => resource.category.toLowerCase()))]
     .filter(category => !RESOURCE_CATEGORY_ORDER.includes(category));
@@ -733,7 +740,11 @@ function ResourceManagement({
   );
 }
 
-function ResourceAnalysis({ resource, data }: { resource: EconomyOverviewResourceRow; data: GetEconomyOverviewResponse }) {
+function ResourceAnalysis({ resource, data, onSelectResource }: {
+  resource: EconomyOverviewResourceRow;
+  data: GetEconomyOverviewResponse;
+  onSelectResource: (id: string) => void;
+}) {
   const t = useWebUIText();
   const { openResource } = useResourceDetails();
   const isAggregateFood = resource.aggregate && resource.category.toLowerCase() === 'food';
@@ -880,6 +891,7 @@ function ResourceAnalysis({ resource, data }: { resource: EconomyOverviewResourc
             </GameButton>
           )}
         </header>
+        {details && !isAggregateFood && <ResourceProductionChain details={details} onSelectResource={onSelectResource} key={details.resourceId} />}
         <div className="erw-flow">
           <FlowList title={t('Economy.Sources')} entries={sourceEntries} tone="positive" />
           <i className="erw-flow-arrow" aria-hidden="true" />
@@ -953,7 +965,7 @@ const ResourceWorkspace = memo(function ResourceWorkspace({ data }: ResourceWork
         onToggleShortages={toggleShortages}
         onSelect={setSelectedId}
       />
-      <ResourceAnalysis resource={selectedResource} data={data} key={selectedResource.id} />
+      <ResourceAnalysis resource={selectedResource} data={data} onSelectResource={setSelectedId} key={selectedResource.id} />
     </div>
   );
 });

@@ -56,7 +56,7 @@ const MILITARY_ATLAS_BLEED_REM = 1.5909;
 // Admitted settlement cells keep one stable footprint across flag/name/detail changes so their
 // atlas coordinates remain valid until the next paint-safe admission generation becomes active.
 const SETTLEMENT_NAMED_ATLAS_CAPACITY_WIDTH_REM = 15.1818;
-const SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM = 4.2727;
+const SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM = 5.4545;
 const MILITARY_ATLAS_CAPACITY_REM = 9;
 // Battle plates grow when close zoom switches them from the compact flag treatment to the
 // full strength board. Reserve the largest treatment from first admission so the compositor
@@ -324,6 +324,8 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
           : undefined;
       }
     }
+    settlementData.selected = selected;
+    settlementData.targeted = targeted;
     content = <SettlementGlance data={settlementData} />;
   }
   else if (section === 'port') content = <PortGlance data={mapPort(entry as GetWorldGlancesResponse['ports'][number])} />;
@@ -525,10 +527,8 @@ export default function GlanceAtlasRoot() {
     let pendingSettlementFrame = false;
     let pendingBattleFrame = false;
     let pendingVisibility: Set<string> | null = null;
-    let flushFrame: number | null = null;
 
     const flushFrameState = () => {
-      flushFrame = null;
       if (pendingDetail) {
         pendingDetail = false;
         setDetailByKey(new Map(detailByKeyRef.current));
@@ -550,13 +550,6 @@ export default function GlanceAtlasRoot() {
         pendingVisibility = null;
         setVisibleAtlasKeys(nextVisible);
       }
-    };
-
-    const scheduleFrameStateFlush = () => {
-      if (flushFrame !== null) {
-        return;
-      }
-      flushFrame = window.requestAnimationFrame(flushFrameState);
     };
 
     const unsubscribeFrame = onWorldGlancesFrame((frame) => {
@@ -659,16 +652,14 @@ export default function GlanceAtlasRoot() {
         || pendingBattleFrame
         || pendingVisibility
       ) {
-        scheduleFrameStateFlush();
+        // Apply in this engine-event turn. Waiting for requestAnimationFrame left
+        // plates stale whenever CEF animation frames were starved at high speed.
+        flushFrameState();
       }
     });
 
     return () => {
       unsubscribeFrame();
-      if (flushFrame !== null) {
-        window.cancelAnimationFrame(flushFrame);
-        flushFrame = null;
-      }
     };
   }, []);
 

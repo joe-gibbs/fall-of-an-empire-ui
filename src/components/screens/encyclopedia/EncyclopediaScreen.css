@@ -138,6 +138,15 @@
   height: 1.1rem;
 }
 
+.enc-culture-tab-sep {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 0.077rem;
+  align-self: stretch;
+  margin: 0.35rem 0.15rem;
+  background-color: var(--separator);
+}
+
 /* ── Category filter pills ─────────────────────────────────────── */
 
 .enc-cat-pills {

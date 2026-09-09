@@ -637,7 +637,7 @@ registerTopbarButton({
 });
 registerScreen({
   id: 'characters',
-  render: ({ screenId, onClose }) => <CharactersScreen screenId={screenId} onClose={onClose} />,
+  render: ({ screenId, onClose }) => <CharactersScreen key={screenId ?? 'player'} screenId={screenId} onClose={onClose} />,
   topbarId: 'characters',
   advisorTopic: 'charactersScreen',
   bridgeNames: ['characters', 'characterlist', 'court'],

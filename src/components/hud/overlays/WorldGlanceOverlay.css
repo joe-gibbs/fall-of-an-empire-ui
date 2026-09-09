@@ -83,7 +83,6 @@
 
 .world-glance-overlay .glance--military-garrison {
   display: flex;
-  width: 7.4545rem;
   height: 1.3636rem;
   min-width: 7.4545rem;
   min-height: 1.3636rem;
@@ -463,11 +462,14 @@
 
 .world-glance-node.detail-name .gset-info-icon,
 .world-glance-node.detail-detailed .gset-info-icon {
+  display: block;
   width: 0.9091rem;
   height: 0.9091rem;
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: 0.9091rem;
+  object-fit: contain;
+  object-position: center;
 }
 
 .world-glance-node.detail-name .gset-info-value,

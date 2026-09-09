@@ -324,57 +324,6 @@
   margin-top: 0.28rem;
 }
 
-.pns-warscore-track {
-  position: relative;
-  width: 100%;
-  height: 0.95rem;
-  border: 0.077rem solid rgba(201, 168, 76, 0.24);
-  background-color: #20242a;
-  background-image: url('/assets/bar-track.png');
-  background-repeat: repeat-x;
-  background-position: center;
-  background-size: auto 100%;
-  overflow: hidden;
-}
-
-.pns-warscore-center {
-  position: absolute;
-  top: -0.12rem;
-  bottom: -0.12rem;
-  left: 50%;
-  width: 0.14rem;
-  background-color: var(--gold);
-  transform: translateX(-50%);
-  z-index: 2;
-}
-
-.pns-warscore-fill {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-}
-
-.pns-warscore-fill--ours {
-  left: 50%;
-  transform-origin: left;
-  background-color: rgba(96, 156, 112, 0.8);
-  background-image: url('/assets/bar-green.png');
-  background-repeat: repeat-x;
-  background-position: center;
-  background-size: auto 100%;
-}
-
-.pns-warscore-fill--theirs {
-  right: 50%;
-  transform-origin: right;
-  background-color: rgba(176, 72, 72, 0.8);
-  background-image: url('/assets/bar-red.png');
-  background-repeat: repeat-x;
-  background-position: center;
-  background-size: auto 100%;
-}
-
 .pns-center-value {
   font-family: var(--font-header);
   font-size: 0.82rem;
@@ -411,22 +360,9 @@
   margin-left: 0.55rem;
 }
 
-.pns-title-progress-track {
+.pns-title-progress .war-score-progress-track {
   width: 22rem;
-  height: 0.88rem;
   flex-grow: 0;
-  flex-shrink: 1;
-  flex-basis: auto;
-}
-
-.pns-title-progress-value {
-  font-family: var(--font-header);
-  font-size: 0.82rem;
-  color: var(--text-header);
-  white-space: nowrap;
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
 }
 
 .pns-header-factions {

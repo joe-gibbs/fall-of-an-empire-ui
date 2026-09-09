@@ -63,6 +63,14 @@ interface DiplomaticNotificationDismissed {
   id: string;
 }
 
+interface WarningEventTarget {
+  label?: string;
+  detail?: string;
+  linkType?: string;
+  linkId?: string;
+  icons?: string[];
+}
+
 interface WarningEvent {
   id: string;
   title: string;
@@ -74,6 +82,7 @@ interface WarningEvent {
   screenTab?: string;
   powerBlocId?: string;
   targetLabels?: string[];
+  targets?: WarningEventTarget[];
 }
 
 interface WarningRemoved {
@@ -157,6 +166,13 @@ function mapWarning(data: WarningEvent): Warning {
     screenTab: data.screenTab || undefined,
     powerBlocId: data.powerBlocId || undefined,
     targetLabels: data.targetLabels ?? [],
+    targets: (data.targets ?? []).map(target => ({
+      label: target.label ?? '',
+      detail: target.detail || undefined,
+      linkType: target.linkType || undefined,
+      linkId: target.linkId || undefined,
+      icons: target.icons ?? [],
+    })),
   };
 }
 

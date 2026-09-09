@@ -2,6 +2,10 @@
   position: fixed;
   z-index: 110;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 0.35rem;
 }
 
 .buildq-completion-toast {

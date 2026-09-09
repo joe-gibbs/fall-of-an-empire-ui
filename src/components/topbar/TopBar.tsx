@@ -12,7 +12,8 @@ import Tooltip, { type TooltipContent, type TooltipLine } from '../common/toolti
 import IconButton from '../common/buttons/IconButton';
 import Portrait from '../common/portraits/Portrait';
 import { BureaucraticThroughputHudValue } from '../bureaucracy/BureaucraticThroughput';
-import { usePlayerFactionSummary } from '../../data-source/index';
+import { useObserverMode, usePlayerFactionSummary } from '../../data-source/index';
+import { isObserverActionButton } from '../../utils/observerMode';
 import { useGameState, useGameActions } from '../../context/GameContext';
 import { playSound } from '../../hooks/useSound';
 import { useCompactHud } from '../../hooks/useCompactHud';
@@ -110,6 +111,7 @@ const TopBar: React.FC<TopBarProps> = ({
   const openScreensBinding = findActionBinding(settings?.controls, 'OpenScreensMenu', 'gamepad');
   const openMapModesBinding = findActionBinding(settings?.controls, 'OpenMapModes', 'gamepad');
   const playerFaction = usePlayerFactionSummary();
+  const observerMode = useObserverMode();
   const subjectMode = playerFaction?.diplomaticStatus === 'subject';
   const playerCharacterId = playerFaction?.rulerId ?? null;
 
@@ -210,19 +212,27 @@ const TopBar: React.FC<TopBarProps> = ({
     </button>
   );
 
-  const portraitNode = playerCharacterId ? (
-    <PersonTooltip characterId={playerCharacterId} position="left" delay={200}>
-      {portraitButton}
-    </PersonTooltip>
-  ) : (
-    portraitButton
+  const emptyPortrait = (
+    <div className="topbar-portrait topbar-portrait--empty" aria-hidden="true">
+      <span className="topbar-portrait-surface" />
+    </div>
   );
+
+  const portraitNode = observerMode
+    ? emptyPortrait
+    : playerCharacterId ? (
+      <PersonTooltip characterId={playerCharacterId} position="left" delay={200}>
+        {portraitButton}
+      </PersonTooltip>
+    ) : (
+      portraitButton
+    );
 
   if (compact) {
     return (
       <>
-        <div className="topbar-shell topbar-shell--compact">
-          <header className="topbar topbar--compact">
+        <div className={`topbar-shell topbar-shell--compact${observerMode ? ' topbar-shell--observer' : ''}`}>
+          <header className={`topbar topbar--compact${observerMode ? ' topbar--observer' : ''}`}>
             <div className="topbar-compact-side topbar-compact-side--left" data-tutorial-target="ScreenButtonGroup">
               {/*
                 StripLeft PNG has the hard/solid end on its RIGHT. Horizontally
@@ -244,6 +254,7 @@ const TopBar: React.FC<TopBarProps> = ({
                 onVictoryToggle={onVictoryToggle}
                 isVictoryOpen={isVictoryOpen}
                 subjectMode={subjectMode}
+                observerMode={observerMode}
               />
               <div className="topbar-compact-speed">
                 <SpeedControls speed={speed} onSpeedChange={handleSpeedChange} />
@@ -262,7 +273,7 @@ const TopBar: React.FC<TopBarProps> = ({
                       <span className="topbar-controller-shortcut-label">{openMapModesBinding.label}</span>
                     </span>
                   )}
-                  {openScreensBinding && (
+                  {!observerMode && openScreensBinding && (
                     <span className="topbar-controller-shortcut">
                       <span className="topbar-controller-shortcut-glyphs">
                         <KeyGlyph glyphId="gamepad_lb" keyDisplay={webUIText('Controller.LeftBumper')} />
@@ -271,7 +282,7 @@ const TopBar: React.FC<TopBarProps> = ({
                       <span className="topbar-controller-shortcut-label">{webUIText('Controller.Prompt.Warnings')}</span>
                     </span>
                   )}
-                  {openScreensBinding && (
+                  {!observerMode && openScreensBinding && (
                     <span className="topbar-controller-shortcut">
                       <span className="topbar-controller-shortcut-glyphs">
                         <KeyGlyph glyphId="gamepad_rb" keyDisplay={webUIText('Controller.RightBumper')} />
@@ -298,7 +309,7 @@ const TopBar: React.FC<TopBarProps> = ({
                   draggable={false}
                 />
                 <DateDisplay />
-                <ResourceDisplay />
+                {!observerMode && <ResourceDisplay />}
               </div>
               <div className="topbar-compact-portrait-island" data-webkiln-hit="alpha" data-tutorial-target="LeaderPortraitSlot">
                 <img
@@ -328,9 +339,9 @@ const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <>
-      <div className="topbar-shell">
+      <div className={`topbar-shell${observerMode ? ' topbar-shell--observer' : ''}`}>
         <div className="topbar-scale">
-          <header className="topbar">
+          <header className={`topbar${observerMode ? ' topbar--observer' : ''}`}>
             <img
               src="/assets/ui-shadowed/T_TopNavbar_Right.png"
               className="topbar-bg-right"
@@ -345,12 +356,14 @@ const TopBar: React.FC<TopBarProps> = ({
               draggable={false}
             />
 
-            <div className="topbar-left" data-tutorial-target="ScreenButtonGroup">
-              <ScreenButtons
-                activeScreen={activeScreen}
-                onScreenChange={onScreenChange}
-              />
-            </div>
+            {!observerMode && (
+              <div className="topbar-left" data-tutorial-target="ScreenButtonGroup">
+                <ScreenButtons
+                  activeScreen={activeScreen}
+                  onScreenChange={onScreenChange}
+                />
+              </div>
+            )}
 
             <div className="topbar-center">
               <img
@@ -380,6 +393,7 @@ const TopBar: React.FC<TopBarProps> = ({
                   placement="right"
                 />
                 {actionButtons.filter((btn) => {
+                  if (observerMode) return isObserverActionButton(btn.id);
                   const mode = btn.factionMode ?? 'all';
                   return mode === 'all' || (subjectMode ? mode === 'subject' : mode === 'independent');
                 }).map((btn) => {
@@ -415,15 +429,17 @@ const TopBar: React.FC<TopBarProps> = ({
                 })}
               </div>
 
-              <div className="topbar-right">
-                <ImperialStandingIndicator
-                  playerFaction={playerFaction}
-                  onOpenSubjectScreen={() => onScreenChange?.('faction')}
-                  tooltipDisabled={activeScreen === 'governor-faction-overview'}
-                />
-                {!subjectMode && <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />}
-                <ResourceDisplay />
-              </div>
+              {!observerMode && (
+                <div className="topbar-right">
+                  <ImperialStandingIndicator
+                    playerFaction={playerFaction}
+                    onOpenSubjectScreen={() => onScreenChange?.('faction')}
+                    tooltipDisabled={activeScreen === 'governor-faction-overview'}
+                  />
+                  {!subjectMode && <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />}
+                  <ResourceDisplay />
+                </div>
+              )}
             </div>
           </header>
 

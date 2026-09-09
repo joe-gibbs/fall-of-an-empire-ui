@@ -2,12 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { clearBridgeQueryCache, useBridgeQueryState } from '../core/useBridgeQuery';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
-import type { GetFactionDailyDataResponse, GetFactionDataResponse } from '../../bridge-types.generated.ts';
+import type {
+  DiplomacyFactionReference,
+  FactionDemographicShare as BridgeFactionDemographicShare,
+  FactionSubjectDemographics as BridgeFactionSubjectDemographics,
+  GetFactionDailyDataResponse,
+  GetFactionDataResponse,
+} from '../../bridge-types.generated.ts';
 import type {
   Faction,
   FactionTreaty,
   FactionOpinionModifier,
+  FactionWarFaction,
   FactionWarPartner,
+  FactionDemographicShare,
+  FactionSubjectDemographics,
   FactionPolicy,
   FactionModifier,
 } from '../../data/types';
@@ -22,6 +31,40 @@ function parseStatus(raw: string): DiplomaticStatus {
 
 function parsePolicyDirection(raw: string): FactionPolicy['activeDirection'] {
   return raw === 'increase' || raw === 'decrease' ? raw : '';
+}
+
+function mapWarFaction(faction: DiplomacyFactionReference): FactionWarFaction {
+  return {
+    id: faction.id,
+    name: faction.name,
+    colour: faction.colour,
+    secondaryColour: faction.secondaryColour || undefined,
+    cultureGroup: faction.cultureGroup || undefined,
+    emblem: faction.emblem || undefined,
+    diplomaticStatus: faction.diplomaticStatus || undefined,
+    subjectSubtype: faction.subjectSubtype || undefined,
+    isPlayer: faction.isPlayer,
+    isRebel: faction.isRebel,
+  };
+}
+
+function mapDemographicShare(share: BridgeFactionDemographicShare): FactionDemographicShare {
+  return {
+    id: share.id,
+    name: share.name,
+    colour: share.colour,
+    iconId: share.iconId,
+    population: share.population,
+  };
+}
+
+function mapSubjectDemographics(entry: BridgeFactionSubjectDemographics): FactionSubjectDemographics {
+  return {
+    faction: mapWarFaction(entry.faction),
+    population: entry.population,
+    cultures: entry.cultures.map(mapDemographicShare),
+    religions: entry.religions.map(mapDemographicShare),
+  };
 }
 
 /** Map the bridge response onto the Faction type the UI consumes. */
@@ -114,6 +157,9 @@ function mapFaction(data: GetFactionDataResponse): Faction {
     canSetBuildFocus: data.canSetBuildFocus,
     buildFocusBlockedReason: data.buildFocusBlockedReason || undefined,
     compliance: !data.isPlayer && diplomaticStatus === 'subject' ? data.compliance : undefined,
+    cultures: data.cultures.map(mapDemographicShare),
+    religions: data.religions.map(mapDemographicShare),
+    subjectDemographics: data.subjectDemographics.map(mapSubjectDemographics),
     wars: data.wars.map<FactionWarPartner>(w => ({
       id: w.id,
       debugShortId: w.debugShortId,
@@ -126,6 +172,11 @@ function mapFaction(data: GetFactionDataResponse): Faction {
       subjectSubtype: w.subjectSubtype || undefined,
       isPlayer: w.isPlayer,
       isRebel: w.isRebel,
+      warId: w.warId || undefined,
+      warName: w.warName || undefined,
+      warScore: w.warScore,
+      warScoreBreakdown: w.warScoreBreakdown,
+      enemyParticipants: w.enemyParticipants.map(mapWarFaction),
     })),
     policies: data.policies.map<FactionPolicy>(p => ({
       id: p.id,

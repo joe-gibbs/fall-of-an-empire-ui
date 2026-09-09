@@ -20,7 +20,6 @@ import {
   DOCTRINE_META,
   rankLabel,
   commandSupportTooltip,
-  hasOverallCommand,
   DELEGATION_ICON,
   DIRECT_ICON,
   SQUASH_ICON,
@@ -185,7 +184,7 @@ export function NodeCard({
           label: webUIText('QuickInteraction.DetachCommand'),
           onSelect: () => setMilitaryParentBridge(force.id, null).catch(acknowledgeBridgeFailure),
         }] : []),
-        ...(force.rank === 'Legatus' || (force.rank === 'Praefectus' && !hasOverallCommand(allForces, force)) ? [{
+        ...(force.rank === 'Legatus' || force.rank === 'Praefectus' ? [{
           label: webUIText('QuickInteraction.PromoteCommand'),
           onSelect: () => promoteMilitaryCommandBridge(force.id).catch(acknowledgeBridgeFailure),
         }] : []),
@@ -259,7 +258,11 @@ export function NodeCard({
                     {formatNumber(force.morale)}
                   </span>
                 </Tooltip>
-                <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.343.14'), get body() { return webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.343.1", { Value1: formatNumber(force.supplyDays) }); } }}>
+                <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsScreensMilitaryMilitaryScreen.343.14'), get body() {
+                  const remaining = webUIText("Auto.Prop.componentsscreensMilitaryMilitaryScreen.343.1", { Value1: formatNumber(force.supplyDays) });
+                  const howTo = webUIText(force.isNavy ? 'MilitarySidebar.SupplyHowNavy' : 'MilitarySidebar.SupplyHowArmy');
+                  return `${remaining} ${howTo}`;
+                } }}>
                   <span className="chart-node-supply">
                     <img className="chart-node-foot-icon" src={SUPPLY_ICON} alt="" draggable={false} />
                     {formatNumber(force.supplyDays)}<WebUIText textKey="Auto.ComponentsScreensMilitaryMilitaryScreen.345.1" />

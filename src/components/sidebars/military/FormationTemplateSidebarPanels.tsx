@@ -9,6 +9,7 @@ import ModalDragHandle from '../../common/layout/shell/ModalDragHandle';
 import Tooltip from '../../common/tooltips/Tooltip';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import ResourceLink from '../../common/resources/ResourceLink';
+import ResourcePurchaseButton from '../../common/resources/ResourcePurchaseButton';
 import { useDraggableOffset } from '../../../hooks/useDraggableOffset';
 import type {
   FormationTemplateAssignedForce,
@@ -66,6 +67,7 @@ export function ResourceStrip({ resources, title }: { resources: ResourceTotal[]
           content={{
             title: resource.displayName,
             body: title,
+            afterLines: <ResourcePurchaseButton resourceId={resource.name} />,
             lines: [
               {
                 label: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.401.1'),

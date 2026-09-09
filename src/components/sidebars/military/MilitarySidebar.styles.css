@@ -2511,6 +2511,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.35rem;
+  flex-wrap: wrap;
   min-height: 2.45rem;
   padding: 0.3rem 0.46rem;
 }
@@ -2518,6 +2520,14 @@
 .mil-unit-split-count {
   color: var(--text-muted);
   font-size: 0.72rem;
+}
+
+.mil-unit-split-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-left: auto;
 }
 
 .mil-unit-split-controls .btn--burgundy {

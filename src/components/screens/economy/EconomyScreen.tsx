@@ -30,6 +30,7 @@ import type { CourtPositionView } from '../../../bridge/characters/useCourtPosit
 import {
   formatNumber,
   formatResourceNumber,
+  formatSignedNumber,
   formatSignedResourceNumber,
 } from '../../../utils/numberFormat';
 import type { SortDirection } from '../../common/layout/tables/sortUtils';
@@ -412,11 +413,16 @@ function BreakdownColumn({
   const entries = rows
     .map(row => ({ ...row, value: metric(data, row.key) }))
     .filter(row => row.value > 0);
+  const factionEntries = data?.factionGoldEntries.filter(entry => tone === 'income' ? entry.amount > 0 : entry.amount < 0) ?? [];
   const adjustment = data?.treasuryAdjustment ?? 0;
+  const settlementIncome = data?.settlementIncome ?? 0;
   if (tone === 'income' && adjustment > 0) {
     entries.push({ key: 'treasuryAdjustmentIncome', labelKey: 'Economy.DebtRelief', value: adjustment });
   } else if (tone === 'expense' && adjustment < 0) {
     entries.push({ key: 'treasuryAdjustmentExpense', labelKey: 'Economy.Leakage', value: Math.abs(adjustment) });
+  }
+  if (tone === 'expense' && settlementIncome < 0) {
+    entries.unshift({ key: 'settlementIncome', labelKey: 'Economy.SettlementTax', value: Math.abs(settlementIncome) });
   }
   const total = tone === 'income' ? data?.incomeTotal ?? 0 : data?.expenseTotal ?? 0;
   const valueTone = tone === 'income' ? 'econ-positive' : 'econ-negative';
@@ -430,7 +436,7 @@ function BreakdownColumn({
         </span>
       </div>
       <div className="econ-breakdown-list">
-        {entries.length === 0 ? (
+        {entries.length === 0 && factionEntries.length === 0 ? (
           <div className="econ-breakdown-row">
             <span className="econ-breakdown-label">{t('Common.None')}</span>
             <span className="econ-breakdown-value">0</span>
@@ -455,6 +461,21 @@ function BreakdownColumn({
               <span className="econ-breakdown-caret" aria-hidden="true">&rsaquo;</span>
             </span>
           </button>
+        ))}
+        {factionEntries.map(entry => (
+          <Tooltip
+            key={entry.name}
+            content={{ title: entry.name, body: entry.description }}
+            disabled={!entry.description}
+            wrapperStyle={{ display: 'block' }}
+          >
+            <div className="econ-breakdown-row">
+              <span className="econ-breakdown-label">{entry.name}</span>
+              <span className={`econ-breakdown-value ${valueTone}`}>
+                <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{signed(entry.amount)}
+              </span>
+            </div>
+          </Tooltip>
         ))}
       </div>
     </div>
@@ -643,14 +664,16 @@ function MoneyFlowDetail({
   const showCommandTree = commandCostMode !== null && commandEntries.length > 0;
   const entries = detailEntriesForMetric(selectedMetric, details, total, label);
   const corruptOfficials = details?.leakageCorruptOfficials ?? [];
+  const headerAmountClass = expense ? 'econ-negative' : valueClass(total);
+  const headerAmountText = expense ? `-${fmt(total)}` : formatSignedNumber(total);
 
   return (
     <div className="econ-money-detail" id="economy-flow-detail">
       <div className="econ-money-detail__header">
         <span>{label}</span>
-        <strong className={expense ? 'econ-negative' : 'econ-positive'}>
+        <strong className={headerAmountClass}>
           <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />
-          {expense ? '-' : '+'}{fmt(total)}{t('Economy.PerMonth')}
+          {headerAmountText}{t('Economy.PerMonth')}
         </strong>
       </div>
       {isLeakage && (
@@ -684,9 +707,9 @@ function MoneyFlowDetail({
                 ? <EntityLink type={entry.linkType} id={entry.id} inline>{entry.name}</EntityLink>
                 : entry.name}
             </span>
-            <strong className={expense ? 'econ-negative' : 'econ-positive'}>
+            <strong className={expense ? 'econ-negative' : valueClass(entry.amount)}>
               <img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />
-              {expense ? '-' : '+'}{fmt(entry.amount)}
+              {expense ? `-${fmt(entry.amount)}` : formatSignedNumber(entry.amount)}
             </strong>
           </div>
         ))}

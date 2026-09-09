@@ -78,10 +78,23 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
         const date = `${state.day}/${state.month}/${state.year}`;
         if (cancelled) return;
         setGameOver(state.gameOver);
-        setSuggestedName(date);
+        let nextName = date;
 
         const faction = await bridgeCall('game.get_player_faction');
-        if (!cancelled && faction.name) setSuggestedName(`${faction.name} - ${date}`);
+        if (cancelled) return;
+        if (faction.name) nextName = `${faction.name} - ${date}`;
+
+        const { saves } = await bridgeCall('game.list_saves');
+        if (cancelled) return;
+        const latestManual = saves
+          .filter(save => (
+            !save.isAutosave
+            && !!save.displayName
+            && (!state.playthroughId || save.playthroughId === state.playthroughId)
+          ))
+          .sort((a, b) => (b.timestamp ?? '').localeCompare(a.timestamp ?? ''))[0];
+        if (latestManual?.displayName) nextName = latestManual.displayName;
+        setSuggestedName(nextName);
       } catch {
         if (!cancelled) setSuggestedName('');
       }
@@ -124,6 +137,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     setShowSave(false);
     const result = await saveGame(name, existingSlotName);
     if (result.saved) {
+      setSuggestedName(name);
       showStatus(webUIText('PauseMenu.GameSaved'));
     } else {
       showSaveFailure(result.failureReason);
@@ -159,12 +173,16 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   const handleSaveDialogConfirm = useCallback(async (name: string) => {
     setShowSave(false);
     try {
-      const { saves } = await bridgeCall('game.list_saves');
+      const [{ saves }, state] = await Promise.all([
+        bridgeCall('game.list_saves'),
+        bridgeCall('game.get_game_state'),
+      ]);
       const normalisedName = name.toLocaleLowerCase();
       const existing = saves
         .filter(save => (
           !save.isAutosave
           && save.displayName.trim().toLocaleLowerCase() === normalisedName
+          && (!state.playthroughId || save.playthroughId === state.playthroughId)
         ))
         .sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0];
       if (existing) {

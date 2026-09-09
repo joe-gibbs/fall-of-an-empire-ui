@@ -9,6 +9,11 @@
   overflow: visible;
 }
 
+.province-tooltip-siege-warning {
+  color: var(--red-light);
+  white-space: pre-line;
+}
+
 .province-tooltip {
   position: absolute;
   left: 0;

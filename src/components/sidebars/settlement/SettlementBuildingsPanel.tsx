@@ -30,9 +30,17 @@ import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBo
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import BuildingEffects from '../../common/content/BuildingEffects';
 import ResourceLink from '../../common/resources/ResourceLink';
+import ResourcePurchaseButton from '../../common/resources/ResourcePurchaseButton';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import { toRootRem } from '../../../utils/cssUnits';
+import {
+  captureBuildingQueueScrollAnchor,
+  restoreBuildingQueueScrollAnchor,
+  watchBuildingQueueScrollAnchor,
+  watchConstructionSlotScrollCompensation,
+  type BuildingQueueScrollAnchor,
+} from './buildingQueueScrollAnchor';
 import './SettlementBuildingsPanel.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -129,6 +137,7 @@ interface PanelBuildingsData {
   construction: { queue: ConstructionQueueItem[] };
   canBuild?: boolean;
   cannotBuildReason?: string;
+  categoryLabels?: Partial<Record<BuildingCategory, string>>;
 }
 
 interface BuildingQueueSummary {
@@ -218,6 +227,26 @@ interface BuildingHideFilters {
   hideMaxed: boolean;
   hideLackingPopulation: boolean;
   hideUnbuildable: boolean;
+}
+
+const CLEARED_HIDE_FILTERS: BuildingHideFilters = {
+  hideMaxed: false,
+  hideLackingPopulation: false,
+  hideUnbuildable: false,
+};
+
+let constructionFilterMemory: BuildingHideFilters = { ...CLEARED_HIDE_FILTERS };
+
+function readConstructionFilterMemory(): BuildingHideFilters {
+  return { ...constructionFilterMemory };
+}
+
+function writeConstructionFilterMemory(next: BuildingHideFilters): void {
+  constructionFilterMemory = { ...next };
+}
+
+function clearConstructionFilterMemory(): void {
+  constructionFilterMemory = { ...CLEARED_HIDE_FILTERS };
 }
 
 function nodeMatchesHideFilters(
@@ -451,6 +480,12 @@ function queueBuildProgressPercent(item: ConstructionQueueItem): number | undefi
   return Math.max(0, Math.min(100, (1 - item.remainingDays / item.durationDays) * 100));
 }
 
+function queueDurationText(remainingDays: number | undefined, durationDays: number): string {
+  return remainingDays !== undefined
+    ? webUIText('SettlementBuildings.Days2', { Value1: n(remainingDays), Value2: n(durationDays) })
+    : webUIText('SettlementBuildings.Days', { Value1: n(durationDays) });
+}
+
 // ---------------------------------------------------------------------------
 // Tree assembly: given a flat list of nodes, build per-chain tree roots.
 // A node is a root of its chain if its developedFrom is undefined OR the
@@ -576,6 +611,18 @@ function addResourceCostLines(lines: TooltipLine[], resourceCost?: BuildingResou
   }
 }
 
+function addFaithLine(lines: TooltipLine[], religionName?: string, religionIcon?: string) {
+  if (!religionName) return;
+  lines.push({
+    label: webUIText('SettlementBuildings.Faith'),
+    value: religionName,
+    labelIcon: religionIcon,
+  });
+  lines.push({
+    label: webUIText('SettlementBuildings.FaithRequirement'),
+  });
+}
+
 function addBuildingRequirementLines(lines: TooltipLine[], requiredBuildings?: BuildingRequirement[]) {
   if (!requiredBuildings || requiredBuildings.length === 0) return;
 
@@ -633,6 +680,7 @@ function builtTooltip(
       valueIcon: '/assets/icons/I_Coins.png',
     });
   }
+  addFaithLine(lines, b.religionName, b.religionIcon);
   if (b.condition !== undefined) {
     const condition = b.condition;
     const color = condition >= 80 ? 'var(--green)'
@@ -721,6 +769,7 @@ function availTooltip(
   const lines: TooltipLine[] = [];
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.281.8'), value: n(a.price), valueIcon: '/assets/icons/I_Coins.png' });
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.282.9'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.278.1", { Value1: n(a.buildTime) }); } });
+  addFaithLine(lines, a.religionName, a.religionIcon);
   if (a.upkeep > 0) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.285.10'),
@@ -807,7 +856,11 @@ function ResourceRow({
       {items.map(r => (
         <Tooltip
           key={r.name}
-          content={{ title: r.displayName || r.name, get body() { return webUIText(amountTooltipKey, { Amount: n(r.amount) }); } }}
+          content={{
+            title: r.displayName || r.name,
+            get body() { return webUIText(amountTooltipKey, { Amount: n(r.amount) }); },
+            afterLines: <ResourcePurchaseButton resourceId={r.name} />,
+          }}
           position="bottom"
           delay={150}
         >
@@ -856,6 +909,27 @@ function MapPlaceButton({
         <img src="/assets/icons/I_Region.png" alt="" className="bld-map-place-icon" draggable={false} />
       </button>
     </Tooltip>
+  );
+}
+
+function FaithRow({ name, icon }: { name: string; icon?: string }) {
+  return (
+    <div className="bld-requires-row">
+      <span className="bld-requires-label"><WebUIText textKey="SettlementBuildings.Faith" /></span>
+      <Tooltip
+        content={{
+          title: name,
+          body: webUIText('SettlementBuildings.FaithRequirement'),
+        }}
+        position="bottom"
+        delay={150}
+      >
+        <span className="bld-faith">
+          {icon && <img src={icon} alt="" className="bld-faith-icon" />}
+          <span className="bld-faith-name">{name}</span>
+        </span>
+      </Tooltip>
+    </div>
   );
 }
 
@@ -1256,6 +1330,9 @@ function BuiltCard({
             </span>
           </div>
           <EffectsBlock text={b.effectsText} />
+          {b.religionName && (
+            <FaithRow name={b.religionName} icon={b.religionIcon} />
+          )}
           {b.requiredBuildings && b.requiredBuildings.length > 0 && (
             <RequiresRow items={b.requiredBuildings} />
           )}
@@ -1411,6 +1488,9 @@ function AvailCard({
             </span>
           </div>
           <EffectsBlock text={a.effectsText} />
+          {a.religionName && (
+            <FaithRow name={a.religionName} icon={a.religionIcon} />
+          )}
           {a.requiredBuildings && a.requiredBuildings.length > 0 && (
             <RequiresRow items={a.requiredBuildings} />
           )}
@@ -1421,7 +1501,7 @@ function AvailCard({
             {a.upkeep > 0 && (
               <span className="bld-node-meta-item bld-node-meta-item--muted">
                 <img src="/assets/icons/I_Coins.png" alt="" className="bld-meta-icon" />
-                {n(a.upkeep)}<WebUIText textKey="Auto.ComponentsSidebarsSettlementBuildingsPanel.553.3" />
+                {`${n(a.upkeep)} ${webUIText('Auto.ComponentsSidebarsSettlementBuildingsPanel.553.3')}`}
               </span>
             )}
               <ResourceRow items={a.resourceCost} />
@@ -1648,7 +1728,7 @@ function QueueItemCard({
   group: QueueGroup;
   order: number;
   onUnqueue?: (queueIndex: number) => void;
-  onQueue?: (buildingId: string) => void;
+  onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
   onPlace?: (buildingId: string) => void;
   buildingSource?: QueueBuildingSource;
   panelLockReason?: string;
@@ -1751,7 +1831,10 @@ function QueueItemCard({
                     onClick={(event) => {
                       event.stopPropagation();
                       if (!plusOneEnabled) return;
-                      onQueue?.(buildingSource.id);
+                      onQueue?.(
+                        buildingSource.id,
+                        event.currentTarget.closest<HTMLDivElement>('.bld-queue-card'),
+                      );
                     }}
                   >
                     {webUIText('SettlementBuildings.QueueNextLevel')}
@@ -1788,13 +1871,20 @@ function QueueItemCard({
         </div>
 
         <div className="bld-queue-card-meta">
-          <span className="bld-node-meta-item">
-            <img src="/assets/icons/I_Coins.png" alt="" className="bld-meta-icon" />
-            {n(group.goldCost)}
+          <span className="bld-queue-card-meta-main">
+            <span className="bld-node-meta-item">
+              <img src="/assets/icons/I_Coins.png" alt="" className="bld-meta-icon" />
+              {n(group.goldCost)}
+            </span>
+            <span className="bld-node-meta-item">
+              {queueDurationText(item.remainingDays, item.durationDays)}
+            </span>
           </span>
-          <span className="bld-node-meta-item">
-            {group.remainingDays !== undefined ? webUIText("SettlementBuildings.Days2", { Value1: n(group.remainingDays), Value2: n(group.durationDays) }) : webUIText("SettlementBuildings.Days", { Value1: n(group.durationDays) })}
-          </span>
+          {group.count > 1 && (
+            <span className="bld-node-meta-item bld-queue-card-meta-total">
+              {queueDurationText(group.remainingDays, group.durationDays)}
+            </span>
+          )}
         </div>
 
         {showStatus && item.statusReason && (
@@ -1836,7 +1926,7 @@ function ConstructionSection({
 }: {
   items: ConstructionQueueItem[];
   onUnqueue?: (queueIndex: number) => void;
-  onQueue?: (buildingId: string) => void;
+  onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
   onPlace?: (buildingId: string) => void;
   onReorder?: (sourceQueueIndex: number, targetQueueIndex: number) => void;
   buildings: Building[];
@@ -2049,15 +2139,24 @@ function emptyCategoryCounts(): Record<BuildingCategory, CategoryCount> {
   };
 }
 
+function categoryTabLabel(
+  category: BuildingCategory,
+  labels?: Partial<Record<BuildingCategory, string>>,
+): string {
+  return labels?.[category] || webUIText(CATEGORY_LABEL_KEYS[category]);
+}
+
 function CategoryTabs({
   active,
   counts,
   disabledCategories,
+  labels,
   onChange,
 }: {
   active: BuildingCategory;
   counts: Record<BuildingCategory, CategoryCount>;
   disabledCategories: Set<BuildingCategory>;
+  labels?: Partial<Record<BuildingCategory, string>>;
   onChange: (c: BuildingCategory) => void;
 }) {
   return (
@@ -2077,7 +2176,7 @@ function CategoryTabs({
             onClick={disabled ? undefined : () => onChange(cat)}
             disabled={disabled}
           >
-            <span className="bld-cat-tab-label">{webUIText(CATEGORY_LABEL_KEYS[cat])}</span>
+            <span className="bld-cat-tab-label">{categoryTabLabel(cat, labels)}</span>
             <span className="bld-cat-tab-count">{n(count.built)}/{n(count.total)}</span>
           </button>
         );
@@ -2104,6 +2203,7 @@ function hasRichBuildingsData(settlement: Settlement): boolean {
 }
 
 const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
+  const { settings } = useSettingsBridge();
   const liveDataState = useSettlementBuildingsBridgeState(settlement.id);
   const liveData = liveDataState.data;
   const inlineData = React.useMemo<PanelBuildingsData | null>(() => {
@@ -2127,6 +2227,9 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const pendingQueueBuildingIdsRef = React.useRef<Set<string>>(new Set());
   const pendingExtraQueueCountsRef = React.useRef<Map<string, number>>(new Map());
   const pendingBuildingTargetRef = React.useRef<string | null>(null);
+  const queueAnchorRef = React.useRef<BuildingQueueScrollAnchor | null>(null);
+  const queueAnchorDisposeRef = React.useRef<(() => void) | null>(null);
+  const constructionSlotRef = React.useRef<HTMLDivElement>(null);
   const pendingUnqueueSet = React.useMemo(
     () => new Set(pendingUnqueueIndices),
     [pendingUnqueueIndices],
@@ -2135,7 +2238,33 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     () => new Set(queueingBuildingIds),
     [queueingBuildingIds],
   );
-  const handleQueueBuilding = React.useCallback((buildingId: string) => {
+  const clearQueueAnchor = React.useCallback(() => {
+    queueAnchorDisposeRef.current?.();
+    queueAnchorDisposeRef.current = null;
+    queueAnchorRef.current = null;
+  }, []);
+  const rememberQueueAnchor = React.useCallback((buildingId: string, element?: HTMLElement | null) => {
+    if (!element) return;
+
+    const nextAnchor = captureBuildingQueueScrollAnchor(buildingId, element);
+    if (!nextAnchor) return;
+
+    clearQueueAnchor();
+    const onRelease = () => {
+      if (queueAnchorRef.current === nextAnchor) {
+        clearQueueAnchor();
+      }
+    };
+    nextAnchor.viewport.addEventListener('wheel', onRelease, { passive: true });
+    const stopWatching = watchBuildingQueueScrollAnchor(nextAnchor, findBuildingNode);
+    queueAnchorDisposeRef.current = () => {
+      stopWatching();
+      nextAnchor.viewport.removeEventListener('wheel', onRelease);
+    };
+    queueAnchorRef.current = nextAnchor;
+  }, [clearQueueAnchor]);
+  const handleQueueBuilding = React.useCallback((buildingId: string, element?: HTMLElement | null) => {
+    rememberQueueAnchor(buildingId, element);
     setQueueingBuildingIds(prev => (prev.includes(buildingId) ? prev : [...prev, buildingId]));
     if (queueingAnimationTimerRef.current !== null) {
       window.clearTimeout(queueingAnimationTimerRef.current);
@@ -2150,6 +2279,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
       queueSettlementBuilding(settlement.id, buildingId)
         .catch(error => {
           pendingExtraQueueCountsRef.current.delete(buildingId);
+          clearQueueAnchor();
           setQueueingBuildingIds(prev => prev.filter(id => id !== buildingId));
           acknowledgeBridgeFailure(error);
         })
@@ -2174,7 +2304,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     }
 
     send();
-  }, [settlement.id]);
+  }, [clearQueueAnchor, rememberQueueAnchor, settlement.id]);
   const handlePlaceBuilding = React.useCallback((buildingId: string) => {
     startBuildingPlacementBridge(buildingId).catch(acknowledgeBridgeFailure);
   }, []);
@@ -2210,9 +2340,11 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const queue = React.useMemo(() => data?.construction.queue ?? [], [data]);
   const queueSummaries = React.useMemo(() => buildQueueSummaries(queue), [queue]);
   const [buildingSearch, setBuildingSearch] = React.useState('');
-  const [hideMaxed, setHideMaxed] = React.useState(false);
-  const [hideLackingPopulation, setHideLackingPopulation] = React.useState(false);
-  const [hideUnbuildable, setHideUnbuildable] = React.useState(false);
+  const keepFilters = settings?.gameplay.keepConstructionFilters === true;
+  const [hideMaxed, setHideMaxed] = React.useState(() => readConstructionFilterMemory().hideMaxed);
+  const [hideLackingPopulation, setHideLackingPopulation] = React.useState(() => readConstructionFilterMemory().hideLackingPopulation);
+  const [hideUnbuildable, setHideUnbuildable] = React.useState(() => readConstructionFilterMemory().hideUnbuildable);
+  const restoredKeepFilters = React.useRef(false);
   const [pinnedBuildingId, setPinnedBuildingId] = React.useState<string | null>(null);
   const [searchSettlementId, setSearchSettlementId] = React.useState(settlement.id);
   if (searchSettlementId !== settlement.id) {
@@ -2227,6 +2359,35 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     hideUnbuildable,
   }), [hideMaxed, hideLackingPopulation, hideUnbuildable]);
   const filtersActive = hideMaxed || hideLackingPopulation || hideUnbuildable;
+
+  React.useLayoutEffect(() => {
+    if (settings == null || restoredKeepFilters.current) return;
+    restoredKeepFilters.current = true;
+    if (keepFilters) {
+      const saved = readConstructionFilterMemory();
+      setHideMaxed(saved.hideMaxed);
+      setHideLackingPopulation(saved.hideLackingPopulation);
+      setHideUnbuildable(saved.hideUnbuildable);
+      return;
+    }
+    setHideMaxed(false);
+    setHideLackingPopulation(false);
+    setHideUnbuildable(false);
+    clearConstructionFilterMemory();
+  }, [keepFilters, settings]);
+
+  React.useEffect(() => {
+    if (settings == null || !restoredKeepFilters.current) return;
+    if (keepFilters) {
+      writeConstructionFilterMemory({
+        hideMaxed,
+        hideLackingPopulation,
+        hideUnbuildable,
+      });
+      return;
+    }
+    clearConstructionFilterMemory();
+  }, [hideLackingPopulation, hideMaxed, hideUnbuildable, keepFilters, settings]);
 
   const bringBuildingIntoView = React.useCallback((buildingId: string) => {
     const element = findBuildingNode(buildingId);
@@ -2262,8 +2423,30 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
       if (queueingAnimationTimerRef.current !== null) {
         window.clearTimeout(queueingAnimationTimerRef.current);
       }
+      queueAnchorDisposeRef.current?.();
+      queueAnchorDisposeRef.current = null;
+      queueAnchorRef.current = null;
     };
   }, []);
+
+  React.useLayoutEffect(() => {
+    const slot = constructionSlotRef.current;
+    if (!slot) return;
+    return watchConstructionSlotScrollCompensation(slot);
+  }, [data ? settlement.id : null]);
+
+  React.useLayoutEffect(() => {
+    const anchor = queueAnchorRef.current;
+    if (!anchor) return;
+
+    restoreBuildingQueueScrollAnchor(anchor, findBuildingNode);
+    const frameId = window.requestAnimationFrame(() => {
+      if (queueAnchorRef.current === anchor) {
+        restoreBuildingQueueScrollAnchor(anchor, findBuildingNode);
+      }
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [queue, queueingBuildingIds]);
 
   // Group built + available into tree nodes per category. Naval hidden when no port.
   const nodes: TreeNode[] = React.useMemo(() => {
@@ -2523,10 +2706,11 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
               active={activeTab}
               counts={counts}
               disabledCategories={disabledCategories}
+              labels={data?.categoryLabels}
               onChange={setActiveTab}
             />
 
-            <div className="bld-construction-slot">
+            <div className="bld-construction-slot" ref={constructionSlotRef}>
               <ConstructionSection
                 items={queue}
                 onUnqueue={canQueueViaBridge && !reorderingQueue ? handleUnqueueBuilding : undefined}

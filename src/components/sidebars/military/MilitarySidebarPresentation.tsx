@@ -1,12 +1,11 @@
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import CultureTooltip from '../../common/tooltips/CultureTooltip';
-import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
+import type { TooltipContent } from '../../common/tooltips/Tooltip';
 import type { Army, ArmyUnit, ArmyUnitRow, Character, CharacterStatModifier, MilitaryDoctrine, MilitaryResource, StatKey } from '../../../data/types';
 import { STAT_ICONS, TIER_ICONS } from '../../../utils/iconMaps';
-import { formatNumber, formatPercent, formatResourceNumber, formatSignedNumber } from '../../../utils/numberFormat';
-import { characterStatEffectLines } from '../../../utils/characterStatEffects';
+import { formatNumber, formatPercent, formatResourceNumber } from '../../../utils/numberFormat';
+import { buildCharacterStatTooltip } from '../../../utils/characterTooltipContent';
 import { WebkilnAssetPath } from '../../../utils/assets';
-import glossary from '../../../data/glossary';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 import { unitTypeLabel } from '../../../utils/displayLabels';
 
@@ -73,9 +72,9 @@ export const commandModeTooltips: Record<CommandMode, TooltipContent> = {
 };
 
 export const commanderStatDefs = [
-  { key: 'tactics' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.28.1'); }, icon: STAT_ICONS.tactics, glossaryKey: 'Tactics' },
-  { key: 'authority' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.29.2'); }, icon: STAT_ICONS.authority, glossaryKey: 'Authority' },
-  { key: 'loyalty' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.32.5'); }, icon: STAT_ICONS.loyalty, glossaryKey: 'Loyalty' },
+  { key: 'tactics' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.28.1'); }, icon: STAT_ICONS.tactics },
+  { key: 'authority' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.29.2'); }, icon: STAT_ICONS.authority },
+  { key: 'loyalty' as const, get label() { return webUIText('Auto.TopProp.ComponentsCommonPersonTooltip.32.5'); }, icon: STAT_ICONS.loyalty },
 ];
 
 export interface UnitStats {
@@ -212,49 +211,10 @@ export function modifierValueColor(value: number): string {
   return 'var(--text-muted)';
 }
 
-function formatTemporaryModifierLabel(modifier: CharacterStatModifier): string {
-  if (modifier.remainingDays === undefined) return modifier.label;
-  const days = Math.round(modifier.remainingDays);
-  return webUIText("Auto.Return.componentscommonPersonTooltip.120.1", { Label: modifier.label, Value2: formatNumber(days), Value3: days === 1 ? webUIText('Common.Day') : webUIText('Common.Days') });
-}
-
-function temporaryModifierTooltipLines(modifiers: CharacterStatModifier[]): TooltipLine[] {
-  if (modifiers.length === 0) return [];
-
-  return [
-    { label: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.127.1'), isHeader: true },
-    ...modifiers.map(modifier => ({
-      label: formatTemporaryModifierLabel(modifier),
-      value: formatSignedNumber(modifier.value, { maximumFractionDigits: 1 }),
-      valueColor: modifierValueColor(modifier.value),
-    })),
-  ];
-}
-
 export function buildCommanderStatEntry(character: Character, statDef: typeof commanderStatDefs[number]) {
   const value = character.stats[statDef.key];
-  const base = character.stats.base?.[statDef.key];
   const temporaryModifiers = getTemporaryStatModifiers(character, statDef.key);
   const temporaryTotal = getTemporaryStatModifierTotal(temporaryModifiers);
-  const contributions = character.traits.flatMap((trait) =>
-    (trait.effects ?? [])
-      .filter((effect) => effect.stat === statDef.key)
-      .map((effect) => ({
-        label: trait.name,
-        value: effect.value,
-        valueColor: effect.isPositive ? 'var(--green)' : 'var(--red)',
-      })),
-  );
-  const baseContent = glossary[statDef.glossaryKey as keyof typeof glossary] || { title: statDef.label, body: '' };
-  const lines: TooltipLine[] = [];
-  if (base !== undefined) lines.push({ label: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.365.6'), value: formatNumber(base) });
-  if (contributions.length > 0) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.367.7'), isHeader: true });
-    lines.push(...contributions);
-  }
-  lines.push(...temporaryModifierTooltipLines(temporaryModifiers));
-  lines.push({ label: webUIText('CharacterStats.CurrentEffects'), isHeader: true });
-  lines.push(...characterStatEffectLines(statDef.key, value));
 
   return {
     id: statDef.key,
@@ -262,7 +222,7 @@ export function buildCommanderStatEntry(character: Character, statDef: typeof co
     value,
     icon: statDef.icon,
     temporaryTotal,
-    tooltip: { title: baseContent.title, body: baseContent.body, lines },
+    tooltip: buildCharacterStatTooltip(statDef.key, value, character),
   };
 }
 
@@ -343,6 +303,69 @@ export function formatSupplyWindow(days: number): string {
   if (days <= 0) return webUIText("MilitarySidebar.Empty");
   if (days >= 120) return webUIText("MilitarySidebar.Long");
   return webUIText("MilitarySidebar.Days", { Value1: formatNumber(days) });
+}
+
+function supplyAdvice(army: Army, status: string, settlement: string, missing: string): string {
+  switch (status) {
+    case 'missing_resources':
+      return settlement
+        ? webUIText('MilitarySidebar.SupplyMissingAtSettlement', { Settlement: settlement, Resources: missing })
+        : webUIText('MilitarySidebar.SupplyMissingNoSettlement', { Resources: missing });
+    case 'refilling_now':
+      return webUIText('MilitarySidebar.SupplyRefillingNow', { Settlement: settlement });
+    case 'refilling_slow':
+      return webUIText('MilitarySidebar.SupplyRefillingSlow', { Settlement: settlement });
+    case 'unfriendly':
+      return webUIText('MilitarySidebar.SupplyUnfriendly', { Settlement: settlement });
+    case 'not_in_port':
+      return settlement
+        ? webUIText('MilitarySidebar.SupplyNavyNotDockedAt', { Settlement: settlement })
+        : webUIText('MilitarySidebar.SupplyNavyNotDocked');
+    case 'no_port':
+      return settlement
+        ? webUIText('MilitarySidebar.SupplyNavyNoPortAt', { Settlement: settlement })
+        : webUIText('MilitarySidebar.SupplyNavyNotDocked');
+    case 'embarked':
+      return webUIText('MilitarySidebar.SupplyEmbarked');
+    case 'in_field':
+      return army.isNavy ? webUIText('MilitarySidebar.SupplyHowNavy') : webUIText('MilitarySidebar.SupplyInField');
+    default:
+      return army.isNavy ? webUIText('MilitarySidebar.SupplyHowNavy') : webUIText('MilitarySidebar.SupplyHowArmy');
+  }
+}
+
+export function buildSupplyTooltip(army: Army): TooltipContent {
+  const days = army.supplyDays ?? 0;
+  const status = army.supplyRefillStatus ?? '';
+  const settlement = army.supplySettlementName ?? '';
+  const missing = army.supplyMissingResources ?? '';
+  const remaining = days <= 0
+    ? webUIText('MilitarySidebar.SupplyEmptyBody')
+    : webUIText('MilitarySidebar.SupplyDaysBody', { Days: formatNumber(days) });
+  const lines: NonNullable<TooltipContent['lines']> = [
+    {
+      label: webUIText('MilitarySidebar.SupplyRemainingLabel'),
+      value: formatSupplyWindow(days),
+      valueColor: days > 30 ? 'var(--green)' : 'var(--red)',
+    },
+    {
+      label: webUIText('MilitarySidebar.SupplySourceLabel'),
+      value: settlement
+        || (army.isNavy ? webUIText('MilitarySidebar.SupplyNoPort') : webUIText('MilitarySidebar.SupplyNoSource')),
+    },
+  ];
+  if (missing) {
+    lines.push({
+      label: webUIText('MilitarySidebar.SupplyMissingLabel'),
+      value: missing,
+      valueColor: 'var(--red)',
+    });
+  }
+  return {
+    title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.621.20'),
+    body: `${remaining} ${supplyAdvice(army, status, settlement, missing)}`.trim(),
+    lines,
+  };
 }
 
 export function buildResourceRows(army: Army): MilitaryResource[] {
@@ -445,6 +468,19 @@ export function unitRowSourcePreview(row: ArmyUnitRow, maxVisible = 2): {
 
 export function isUnitRowPending(rowType: ArmyUnitRow['rowType']): boolean {
   return rowType !== 'existing';
+}
+
+export function selectedUnitsCanConsolidate(units: ArmyUnitRow[]): boolean {
+  const understrengthByClass = new Map<string, number>();
+  for (const unit of units) {
+    if (unit.rowType !== 'existing' || !unit.selectable) continue;
+    if (unit.maxStrength <= 0 || unit.strength <= 0 || unit.strength >= unit.maxStrength) continue;
+    understrengthByClass.set(unit.unitId, (understrengthByClass.get(unit.unitId) ?? 0) + 1);
+  }
+  for (const count of understrengthByClass.values()) {
+    if (count >= 2) return true;
+  }
+  return false;
 }
 
 export function isUnitRowProgressing(rowType: ArmyUnitRow['rowType']): boolean {

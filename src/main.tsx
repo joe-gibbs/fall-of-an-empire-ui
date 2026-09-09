@@ -5,9 +5,8 @@ import { installReactErrorDecoder } from './utils/reactErrorDecoder'
 import { mountRecoverableRoot } from './utils/reactRootRecovery'
 import RootRecoveryBoundary from './components/app-shell/RootRecoveryBoundary'
 
-// React is built as the development bundle so thrown errors already carry full
-// text. The decoder expands leftover minified codes and formats createRoot /
-// window errors with fiber paths for Unreal/Webkiln logs.
+// Expand production React error codes and include component stacks in
+// createRoot / window errors sent to Unreal/Webkiln logs.
 //
 // Do not install setState/useSyncExternalStore wrappers for diagnostics here:
 // wrapping useSyncExternalStore re-subscribe paths previously restarted the
@@ -409,11 +408,13 @@ async function bootstrapWorldAnchors() {
     { default: GlanceAtlasRoot },
     { EscapeStackProvider },
     { WorldAnchorGameStateProvider },
+    { WebUITextProvider },
   ] = await Promise.all([
     import('./runtime/worldAnchorHost'),
     import('./components/world-glances/GlanceAtlasRoot'),
     import('./context/EscapeStackProvider'),
     import('./context/WorldAnchorGameStateProvider'),
+    import('./localization/WebUITextProvider'),
   ]);
   const atlasRoot = document.getElementById('root')!
   mountRecoverableRoot(atlasRoot, ({ controller, remount }) => (
@@ -426,13 +427,15 @@ async function bootstrapWorldAnchors() {
           remount()
         }}
       >
-        <WorldAnchorGameStateProvider>
-          <EscapeStackProvider>
-            <WorldAnchorHost>
-              <GlanceAtlasRoot />
-            </WorldAnchorHost>
-          </EscapeStackProvider>
-        </WorldAnchorGameStateProvider>
+        <WebUITextProvider>
+          <WorldAnchorGameStateProvider>
+            <EscapeStackProvider>
+              <WorldAnchorHost>
+                <GlanceAtlasRoot />
+              </WorldAnchorHost>
+            </EscapeStackProvider>
+          </WorldAnchorGameStateProvider>
+        </WebUITextProvider>
       </RootRecoveryBoundary>
     </StrictMode>
   ));

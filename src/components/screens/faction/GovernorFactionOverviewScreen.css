@@ -1,5 +1,5 @@
 .screen--gov-faction-overview.screen {
-  width: 72rem;
+  width: 78rem;
   max-width: calc(100vw - 2.6rem);
   max-height: calc(100vh - var(--topbar-height) - var(--bottombar-height) - 1.5rem);
 }

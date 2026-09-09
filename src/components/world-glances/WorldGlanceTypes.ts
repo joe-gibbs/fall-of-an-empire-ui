@@ -89,6 +89,7 @@ export interface SettlementGlanceData {
   selected?: boolean;
   targeted?: boolean;
   besieged?: boolean;
+  siegePowerInsufficient?: boolean;
   siegeProgress: number;
   fortification: number;
   fortificationProgress: number;
@@ -125,6 +126,8 @@ export interface SettlementGlanceData {
   bishopName?: string;
   buildItem?: { label: string; icon: string; progress: number };
   warWithPlayer?: boolean;
+  peaceSelection?: boolean;
+  warScoreCost?: number;
 }
 
 export interface PortGlanceData {

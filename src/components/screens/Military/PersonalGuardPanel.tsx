@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type {
   FormationTemplateUnitEntry,
   GetPersonalGuardResponse,
@@ -18,6 +18,7 @@ import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { bridgeEvents } from '../../../bridge/core/bridgeEvents';
 import { mapPortraitLayers, mapPortraitPath } from '../../../bridge/characters/portraitMapping';
 import { TemplateUnitSelectorModal } from './TemplateManagementPanel';
+import { TUTORIAL_REVEAL_PERSONAL_GUARD, type TutorialHudRevealDetail } from '../../../utils/tutorialHudReveal';
 import './PersonalGuardPanel.css';
 
 const COMPANY_ICON = '/assets/icons/I_ArmiesQuickButton.png';
@@ -215,6 +216,18 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
   const hasDraftRoster = guard.companies.length > 0;
   // Draft, forming, and standing rosters can all add, replace, or remove companies.
   const canEditCompanies = true;
+  const foundingSatisfied = guard.hasGuard || guard.isForming;
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const tokens = (event as CustomEvent<TutorialHudRevealDetail>).detail?.tokens ?? [];
+      if (!canEstablish) return;
+      if (!tokens.some(token => token.toLowerCase() === 'confirmpersonalguardbutton')) return;
+      setEstablishOpen(true);
+    };
+    window.addEventListener(TUTORIAL_REVEAL_PERSONAL_GUARD, handler);
+    return () => window.removeEventListener(TUTORIAL_REVEAL_PERSONAL_GUARD, handler);
+  }, [canEstablish]);
 
   const replaceCompany = replaceSlot != null
     ? guard.companies.find(company => company.slotNumber === replaceSlot) ?? null
@@ -414,7 +427,11 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
   };
 
   return (
-    <div className="personal-guard-view">
+    <div
+      className="personal-guard-view"
+      data-tutorial-target={foundingSatisfied ? 'ConfirmPersonalGuardButton FormPersonalGuardButton' : undefined}
+      data-tutorial-satisfied={foundingSatisfied ? 'true' : undefined}
+    >
       <section className="panel personal-guard-header">
         <div className="personal-guard-header-main">
           <Tooltip content={{

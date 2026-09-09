@@ -1613,11 +1613,11 @@ function MissionsTab({ overview }: { overview: ProvinceModeOverview | null }) {
                       </div>
                       <p className="gfov-mission-body">{renderMissionRichText(mission.body ?? keyedText(t, mission.bodyKey))}</p>
                       <div className="gfov-mission-footer">
-                        <span>
+                        {hasOpenDeadline && <span>
                           {days > 0
                             ? t('ProvinceMode.Mission.Deadline', { Days: String(days) })
                             : t('ProvinceMode.Mission.Ongoing')}
-                        </span>
+                        </span>}
                         <span className="gfov-mission-reward">
                           {t('ProvinceMode.Mission.RewardLabel')}: {mission.reward ?? keyedText(t, mission.rewardKey)}
                         </span>
@@ -1769,6 +1769,6 @@ registerScreen({
   ),
   topbarId: 'faction',
   openedByTopbar: true,
-  bridgeNames: ['faction', 'factions', 'province', 'missions', 'governors', 'regionalgovernors', 'regiongovernors', 'empire', 'imperial', 'court', 'imperialcourt', 'appointments', 'governorfactionoverview'],
+  bridgeNames: ['faction', 'factions', 'factionoverview', 'diplomacy', 'province', 'missions', 'governors', 'regionalgovernors', 'regiongovernors', 'empire', 'imperial', 'court', 'imperialcourt', 'appointments', 'governorfactionoverview'],
   factionMode: 'subject',
 });

@@ -30,7 +30,11 @@ function mapStatus(raw: string): Faction['diplomaticStatus'] {
   return raw === 'subject' ? 'subject' : 'neutral';
 }
 
-function mapPlayerFaction(data: GetPlayerFactionResponse): PlayerFactionSummary {
+function mapPlayerFaction(data: GetPlayerFactionResponse): PlayerFactionSummary | null {
+  if (!data.id) {
+    return null;
+  }
+
   return {
     id: data.id,
     name: data.name,

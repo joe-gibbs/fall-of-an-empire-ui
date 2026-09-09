@@ -1,0 +1,190 @@
+.diplo-demo {
+  padding: 0.1rem 0 0.35rem;
+}
+
+.diplo-demo-block {
+  padding-bottom: 0.35rem;
+}
+
+.diplo-demo-heading-with-action {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.diplo-demo-heading-with-action > .section-heading-row {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.diplo-demo-history-button {
+  flex-shrink: 0;
+  height: 1.65rem;
+  padding: 0 0.5rem;
+  margin-right: 0.462rem;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.diplo-demo-history-button .btn-icon {
+  width: 0.88rem;
+  height: 0.88rem;
+}
+
+.diplo-demo-chart {
+  display: flex;
+  align-items: flex-start;
+  padding: 0.25rem 0.462rem 0.1rem;
+}
+
+.diplo-demo-chart > * + * {
+  margin-left: 0.7rem;
+}
+
+.diplo-demo-legend {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.diplo-demo-legend > * + * {
+  margin-top: 0.18rem;
+}
+
+.diplo-demo-legend-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  color: inherit;
+}
+
+.diplo-demo-legend-item > * + * {
+  margin-left: 0.28rem;
+}
+
+.diplo-demo-legend-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+}
+
+.diplo-demo-legend-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex-shrink: 0;
+}
+
+.diplo-demo-legend-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diplo-demo-legend-pct {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+.diplo-demo-subject {
+  padding: 0.25rem 0.462rem 0.45rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+}
+
+.diplo-demo-subject-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.diplo-demo-subject-header > * + * {
+  margin-left: 0.35rem;
+}
+
+.diplo-demo-subject-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-header);
+  font-size: 0.92rem;
+  color: var(--text-header);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diplo-demo-subject-pop {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.diplo-demo-subject-charts {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 0.4rem;
+}
+
+.diplo-demo-subject-charts > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.diplo-demo-subject-charts > * + * {
+  margin-left: 0.5rem;
+}
+
+.diplo-demo-subject-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.diplo-demo-subject-chart-header {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.diplo-demo-subject-chart-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.diplo-demo-subject-chart-header .diplo-demo-history-button {
+  margin-right: 0;
+}
+
+.diplo-demo-subject-chart .diplo-demo-legend {
+  width: 100%;
+  margin-top: 0.3rem;
+}
+
+.diplo-demo-empty {
+  padding: 0.6rem 0.462rem;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}

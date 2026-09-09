@@ -33,6 +33,7 @@ export interface SettlementBuildingsState {
   construction: SettlementConstruction;
   canBuild: boolean;
   cannotBuildReason?: string;
+  categoryLabels: Partial<Record<BuildingCategory, string>>;
 }
 
 export interface SettlementBuildingsBridgeState {
@@ -151,6 +152,11 @@ function mapBuiltBuilding(entry: SettlementBuiltBuildingEntry): Building {
     developedFrom: entry.developedFrom || undefined,
     canBeDevelopedInto: entry.canBeDevelopedInto,
     requiredBuildings: entry.requiredBuildings.map(mapRequirement),
+    religionId: entry.religionId || undefined,
+    religionName: entry.religionName || undefined,
+    religionIcon: entry.religionIcon
+      ? WebkilnAssetPath(entry.religionIcon)
+      : (entry.religionId ? WebkilnAssetPath(`/assets/religions/${entry.religionId}.png`) : undefined),
     replacesParent: entry.replacesParent,
     blocksConstruction: entry.blocksConstruction,
     canDemolish: entry.canDemolish,
@@ -184,6 +190,11 @@ function mapAvailableBuilding(entry: SettlementAvailableBuildingEntry): Availabl
     developedFrom: entry.developedFrom || undefined,
     canBeDevelopedInto: entry.canBeDevelopedInto,
     requiredBuildings: entry.requiredBuildings.map(mapRequirement),
+    religionId: entry.religionId || undefined,
+    religionName: entry.religionName || undefined,
+    religionIcon: entry.religionIcon
+      ? WebkilnAssetPath(entry.religionIcon)
+      : (entry.religionId ? WebkilnAssetPath(`/assets/religions/${entry.religionId}.png`) : undefined),
     replacesParent: entry.replacesParent,
     buildState: toBuildState(entry.buildState),
   };
@@ -219,6 +230,16 @@ function mapConstruction(construction: RawConstruction): SettlementConstruction 
   };
 }
 
+function mapCategoryLabels(
+  labels: GetSettlementBuildingsResponse['categoryLabels'],
+): Partial<Record<BuildingCategory, string>> {
+  const mapped: Partial<Record<BuildingCategory, string>> = {};
+  for (const entry of labels) {
+    mapped[toCategory(entry.id)] = entry.label;
+  }
+  return mapped;
+}
+
 function mapResponse(data: GetSettlementBuildingsResponse): SettlementBuildingsState {
   return {
     settlementId: data.settlementId,
@@ -229,6 +250,7 @@ function mapResponse(data: GetSettlementBuildingsResponse): SettlementBuildingsS
     construction: mapConstruction(data.construction),
     canBuild: data.canBuild,
     cannotBuildReason: data.cannotBuildReason || undefined,
+    categoryLabels: mapCategoryLabels(data.categoryLabels),
   };
 }
 

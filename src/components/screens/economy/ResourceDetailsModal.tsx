@@ -25,6 +25,7 @@ import {
 } from '../../../utils/stepModifiers';
 import { useSettingsBridge } from '../../../bridge/app/useSettingsBridge';
 import { useGameActions } from '../../../context/GameContext';
+import { useResourceDetails } from '../../../context/ResourceDetailsContext';
 import { formatActionBinding, stepModifiersHelpText } from '../../../utils/actionBindings';
 import CloseButton from '../../common/buttons/CloseButton';
 import GameButton from '../../common/buttons/GameButton';
@@ -34,6 +35,7 @@ import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import SortableHeader from '../../common/layout/tables/SortableHeader';
 import { compareSortValuesWithDirection, toggleSortState, type SortState } from '../../common/layout/tables/sortUtils';
 import Tooltip from '../../common/tooltips/Tooltip';
+import ResourceProductionChain from './ResourceProductionChain';
 import './ResourceDetailsModal.css';
 
 type HistoryRange = '12' | '24' | 'all';
@@ -300,6 +302,7 @@ export default function ResourceDetailsModal({
 }: Props) {
   const t = useWebUIText();
   const { closeScreen } = useGameActions();
+  const { openResource } = useResourceDetails();
   const { settings } = useSettingsBridge();
   const details = useEconomyResourceDetailsBridge(resource?.id ?? null);
   const buildQueue = useBuildQueueBridge(!!resource);
@@ -490,6 +493,8 @@ export default function ResourceDetailsModal({
               />
             </div>
           </section>
+
+          {details && <ResourceProductionChain details={details} onSelectResource={openResource} key={details.resourceId} />}
 
           <section className="erd-trade">
             <div className="erd-trade__buttons">

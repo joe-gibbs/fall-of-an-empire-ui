@@ -106,8 +106,11 @@ function normaliseBuildingCategory(value: string): BuildingCategory {
   }
 }
 
-function buildingCategoryLabel(category: BuildingCategory): string {
-  return webUIText(BUILDING_CATEGORY_LABEL_KEYS[category]);
+function buildingCategoryLabel(
+  category: BuildingCategory,
+  labels?: Partial<Record<BuildingCategory, string>>,
+): string {
+  return labels?.[category] || webUIText(BUILDING_CATEGORY_LABEL_KEYS[category]);
 }
 
 function toKebabCase(value: string): string {
@@ -315,17 +318,23 @@ function CultureTabs({ cultures, activeCulture, onCultureChange }: CultureTabsPr
         onClickCapture={handleClickCapture}
       >
         <div className="enc-culture-tabs" style={{ width: `${Math.max(1, stripWidthRem)}rem` }}>
-          {cultures.map(cultureOption => {
+          {cultures.map((cultureOption, index) => {
             const icon = cultureOption.icon ? WebkilnAssetPath(cultureOption.icon) : undefined;
+            const previousKind = cultures[index - 1]?.kind || 'culture';
+            const currentKind = cultureOption.kind || 'culture';
             return (
-              <button
-                key={cultureOption.id}
-                className={`enc-culture-tab${activeCulture === cultureOption.id ? ' enc-culture-tab--active' : ''}`}
-                onClick={() => onCultureChange(cultureOption.id)}
-              >
-                {icon && <img src={icon} alt="" draggable={false} />}
-                {cultureOption.label}
-              </button>
+              <Fragment key={cultureOption.id}>
+                {index > 0 && previousKind !== currentKind && (
+                  <span className="enc-culture-tab-sep" aria-hidden="true" />
+                )}
+                <button
+                  className={`enc-culture-tab${activeCulture === cultureOption.id ? ' enc-culture-tab--active' : ''}`}
+                  onClick={() => onCultureChange(cultureOption.id)}
+                >
+                  {icon && <img src={icon} alt="" draggable={false} />}
+                  {cultureOption.label}
+                </button>
+              </Fragment>
             );
           })}
         </div>
@@ -870,9 +879,30 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
     });
   };
 
-  const cultureBuildings = useMemo(() => (
-    buildings.filter(building => building.cultureId === activeCulture)
-  ), [activeCulture, buildings]);
+  const cultureBuildings = useMemo(() => {
+    const searching = searchText.length >= 2;
+    const source = searching
+      ? buildings
+      : buildings.filter(building => building.cultureId === activeCulture);
+    if (!searching) return source;
+    return source.filter(building => (
+      textMatchesSearch(building.name, lowerSearch)
+      || textMatchesSearch(building.description, lowerSearch)
+      || textMatchesSearch(building.religionName, lowerSearch)
+      || textMatchesSearch(building.chainName, lowerSearch)
+    ));
+  }, [activeCulture, buildings, lowerSearch, searchText.length]);
+
+  const categoryLabels = useMemo(() => {
+    const labels: Partial<Record<BuildingCategory, string>> = {};
+    for (const building of cultureBuildings) {
+      const category = normaliseBuildingCategory(building.category);
+      if (!labels[category] && building.categoryLabel) {
+        labels[category] = building.categoryLabel;
+      }
+    }
+    return labels;
+  }, [cultureBuildings]);
 
   const chains = useMemo(() => {
     const byId = new Map(cultureBuildings.map(building => [building.id, building]));
@@ -925,18 +955,11 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
     for (const category of BUILDING_CATEGORIES) {
       if (!activeCategories.has(category)) continue;
       const categoryChains = chains
-        .filter(chain => normaliseBuildingCategory(chain[0].category) === category)
-        .filter(chain => {
-          if (searchText.length < 2) return true;
-          return chain.some(building => (
-            textMatchesSearch(building.name, lowerSearch)
-            || textMatchesSearch(building.description, lowerSearch)
-          ));
-        });
+        .filter(chain => normaliseBuildingCategory(chain[0].category) === category);
       if (categoryChains.length > 0) result[category] = categoryChains;
     }
     return result;
-  }, [activeCategories, chains, lowerSearch, searchText.length]);
+  }, [activeCategories, chains]);
 
   return (
     <div className="enc-buildings">
@@ -962,7 +985,7 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
               style={{ color: activeCategories.has(category) ? BUILDING_CAT_COLORS[category] : undefined }}
               onClick={() => toggleCategory(category)}
             >
-              {buildingCategoryLabel(category)}
+              {buildingCategoryLabel(category, categoryLabels)}
             </button>
           ))}
         </div>
@@ -975,7 +998,7 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
         {(Object.entries(filteredByCategory) as [BuildingCategory, BuildingChain[]][]).map(([category, categoryChains]) => (
           <div key={category} className={`enc-bldg-category enc-bldg-cat--${category}`}>
             <div className="enc-bldg-cat-heading">
-              <span className="enc-bldg-cat-name">{buildingCategoryLabel(category)}</span>
+              <span className="enc-bldg-cat-name">{buildingCategoryLabel(category, categoryLabels)}</span>
               <span className="enc-bldg-cat-count">
                 {formatNumber(categoryChains.reduce((count, chain) => count + chain.length, 0))}
               </span>
@@ -988,6 +1011,33 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
                     const portrait = buildingPortrait(building);
                     const chainLevel = index + 1;
                     const categoryId = normaliseBuildingCategory(building.category);
+                    const faithIcon = building.religionId
+                      ? WebkilnAssetPath(`/assets/religions/${building.religionId}.png`)
+                      : undefined;
+                    const tooltipLines: Array<{
+                      label: string;
+                      value?: string;
+                      valueColor?: string;
+                      labelIcon?: string;
+                    }> = [
+                      { label: webUIText('Auto.Prop.ComponentsScreensEncyclopediaScreen.692.2'), value: building.categoryLabel || buildingCategoryLabel(categoryId, categoryLabels), valueColor: BUILDING_CAT_COLORS[categoryId] },
+                      { label: webUIText('Auto.Prop.ComponentsScreensEncyclopediaScreen.693.3'), value: formatNumber(chainLevel) },
+                    ];
+                    if (building.religionName) {
+                      tooltipLines.push({
+                        label: webUIText('Encyclopedia.Faith'),
+                        value: building.religionName,
+                        labelIcon: faithIcon,
+                      });
+                      tooltipLines.push({
+                        label: webUIText('Encyclopedia.FaithRequirement'),
+                      });
+                    }
+                    if (building.requiredSettlementName) {
+                      tooltipLines.push({
+                        label: webUIText('Encyclopedia.RequiredSettlement', { Name: building.requiredSettlementName }),
+                      });
+                    }
                     return (
                       <Fragment key={building.id}>
                         {index > 0 && <span className="enc-bldg-arrow" aria-hidden="true" />}
@@ -1001,10 +1051,7 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
                                   <BuildingEffects text={building.effectsHtml} />
                                 </>
                               ),
-                              lines: [
-                                { label: webUIText('Auto.Prop.ComponentsScreensEncyclopediaScreen.692.2'), value: building.categoryLabel || buildingCategoryLabel(categoryId), valueColor: BUILDING_CAT_COLORS[categoryId] },
-                                { label: webUIText('Auto.Prop.ComponentsScreensEncyclopediaScreen.693.3'), value: formatNumber(chainLevel) },
-                              ],
+                              lines: tooltipLines,
                             }}
                             position="top"
                           >

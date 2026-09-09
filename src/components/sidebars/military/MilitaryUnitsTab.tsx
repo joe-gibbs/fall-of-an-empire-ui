@@ -37,10 +37,13 @@ type MilitaryUnitsTabProps = {
   selectedUnitIdSet: Set<string>;
   showSplitControls: boolean;
   canSplitForce: boolean;
-  splitInProgress: boolean;
+  canMergeSelectedForce: boolean;
+  canConsolidateSelection: boolean;
+  compositionActionInProgress: boolean;
   maxStats: UnitStatCaps;
   handleUnitRowMouseDown: (event: ReactMouseEvent<HTMLDivElement>, unit: ArmyUnitRow) => void;
   onSplitSelected: () => void;
+  onMergeSelected: () => void;
 };
 
 export function renderUnitTypeCounts(unitTypes: ArmyUnitTypeStrength[]): React.ReactNode {
@@ -98,10 +101,13 @@ export function MilitaryUnitsTab({
   selectedUnitIdSet,
   showSplitControls,
   canSplitForce,
-  splitInProgress,
+  canMergeSelectedForce,
+  canConsolidateSelection,
+  compositionActionInProgress,
   maxStats,
   handleUnitRowMouseDown,
   onSplitSelected,
+  onMergeSelected,
 }: MilitaryUnitsTabProps) {
   const renderUnitRow = (unit: ArmyUnitRow, extraClassName = '') => {
     const stats = resolveUnitStats(unit);
@@ -181,6 +187,13 @@ export function MilitaryUnitsTab({
         Force: webUIText(isNavy ? 'Common.FleetLower' : 'Common.ArmyLower'),
       })
       : webUIText('Military.SplitSelectionInstruction');
+  const mergeSelectedDescription = !canMergeSelectedForce
+    ? webUIText('Military.MergeSelectedUnavailable')
+    : canConsolidateSelection
+      ? webUIText('Military.MergeSelectedDescription')
+      : selectedUnitCount > 0
+        ? webUIText('Military.MergeSelectedNeedSameType')
+        : webUIText('Military.MergeSelectedInstruction');
 
   return (
     <div className="mil-units-tab">
@@ -215,20 +228,36 @@ export function MilitaryUnitsTab({
           <span className="mil-unit-split-count">
             {webUIText('Military.SplitSelectionCount', { Count: formatNumber(selectedUnitCount) })}
           </span>
-          <Tooltip
-            content={{ title: webUIText('Military.SplitSelected'), body: splitDescription }}
-            position="bottom"
-            delay={150}
-          >
-            <GameButton
-              variant="burgundy"
-              icon="/assets/icons/I_DetachCommand.png"
-              disabled={!canSplitForce || !hasValidSplitSelection || splitInProgress}
-              onClick={onSplitSelected}
+          <div className="mil-unit-split-actions">
+            <Tooltip
+              content={{ title: webUIText('Military.MergeSelected'), body: mergeSelectedDescription }}
+              position="bottom"
+              delay={150}
             >
-              {webUIText('Military.SplitSelected')}
-            </GameButton>
-          </Tooltip>
+              <GameButton
+                variant="burgundy"
+                icon="/assets/icons/I_MergeUnits.png"
+                disabled={!canMergeSelectedForce || !canConsolidateSelection || compositionActionInProgress}
+                onClick={onMergeSelected}
+              >
+                {webUIText('Military.MergeSelected')}
+              </GameButton>
+            </Tooltip>
+            <Tooltip
+              content={{ title: webUIText('Military.SplitSelected'), body: splitDescription }}
+              position="bottom"
+              delay={150}
+            >
+              <GameButton
+                variant="burgundy"
+                icon="/assets/icons/I_DetachCommand.png"
+                disabled={!canSplitForce || !hasValidSplitSelection || compositionActionInProgress}
+                onClick={onSplitSelected}
+              >
+                {webUIText('Military.SplitSelected')}
+              </GameButton>
+            </Tooltip>
+          </div>
         </div>
       )}
       <div className="mil-roster" ref={unitRosterRef}>

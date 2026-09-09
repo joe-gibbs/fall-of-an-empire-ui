@@ -1,4 +1,4 @@
-import type { BattleAfterActionReportPayload, CultureInfo, ReligionInfo, PortraitLayerData, WebUIRoleTierData } from '../bridge-types.generated.ts';
+import type { BattleAfterActionReportPayload, CultureInfo, DiplomacyWarScoreEntry, ReligionInfo, PortraitLayerData, WebUIRoleTierData } from '../bridge-types.generated.ts';
 
 export type { BattleAfterActionReportPayload, CultureInfo, ReligionInfo, PortraitLayerData, WebUIRoleTierData };
 
@@ -137,6 +137,8 @@ export interface CharacterStats {
   };
   /** Event- and interaction-granted stat modifiers that decay over time. */
   temporaryModifiers?: CharacterStatModifier[];
+  /** Religion, patronage, governor policy, and other non-trait, non-temporary bonuses. */
+  sourceModifiers?: CharacterStatModifier[];
 }
 
 /** What the character is currently doing (mirrors EPersonActivity) */
@@ -301,7 +303,7 @@ export interface FactionPolicyLevel {
   isCurrent: boolean;
 }
 
-export interface FactionWarPartner {
+export interface FactionWarFaction {
   id: string;
   debugShortId?: number;
   name: string;
@@ -313,6 +315,14 @@ export interface FactionWarPartner {
   subjectSubtype?: string;
   isPlayer?: boolean;
   isRebel?: boolean;
+}
+
+export interface FactionWarPartner extends FactionWarFaction {
+  warId?: string;
+  warName?: string;
+  warScore: number;
+  warScoreBreakdown?: DiplomacyWarScoreEntry[];
+  enemyParticipants?: FactionWarFaction[];
 }
 
 export interface FactionPolicy {
@@ -377,6 +387,21 @@ export interface FactionHeir {
   name: string;
 }
 
+export interface FactionDemographicShare {
+  id: string;
+  name: string;
+  colour: string;
+  iconId: string;
+  population: number;
+}
+
+export interface FactionSubjectDemographics {
+  faction: FactionWarFaction;
+  population: number;
+  cultures: FactionDemographicShare[];
+  religions: FactionDemographicShare[];
+}
+
 export interface Faction {
   id: string;
   debugShortId?: number;
@@ -434,6 +459,12 @@ export interface Faction {
   wars?: FactionWarPartner[];
   /** Enemy war leader to use when opening peace negotiations from this faction. */
   peaceNegotiationTargetFactionId?: string;
+  /** Culture makeup of this faction's directly held population. */
+  cultures?: FactionDemographicShare[];
+  /** Religion makeup of this faction's directly held population. */
+  religions?: FactionDemographicShare[];
+  /** Culture and religion makeup of each direct subject. */
+  subjectDemographics?: FactionSubjectDemographics[];
   /** Faction-wide policies and current adjustment state. */
   policies: FactionPolicy[];
   /** Active faction-wide modifiers from policies, edicts, court positions, and similar sources. */
@@ -581,6 +612,10 @@ export interface Building {
    *  separately from DevelopedFrom. Rendered as an inline "requires" row on
    *  the card alongside tick/cross indicators of what the settlement has. */
   requiredBuildings?: BuildingRequirement[];
+  /** Faith this building belongs to. Empty for non-religious buildings. */
+  religionId?: string;
+  religionName?: string;
+  religionIcon?: string;
   /** If true, building DevelopedInto removes this one (default behaviour). */
   replacesParent?: boolean;
   /** If true, blocks any further construction while present. */
@@ -624,6 +659,10 @@ export interface AvailableBuilding {
   developedFrom?: string;
   canBeDevelopedInto?: string[];
   requiredBuildings?: BuildingRequirement[];
+  /** Faith this building belongs to. Empty for non-religious buildings. */
+  religionId?: string;
+  religionName?: string;
+  religionIcon?: string;
   /** If true, building this removes the predecessor (default behaviour). */
   replacesParent?: boolean;
   /** Result of GetEffectiveBuildButtonInfo for this settlement. */
@@ -1079,6 +1118,7 @@ export interface SiegeInfo {
   /** Days until rebel victory while this capital remains occupied. */
   capitalOccupationDaysRemaining?: number;
   totalSiegePower: number;
+  siegePowerWarning?: string;
   totalDefenderStrength: number;
   pillageGold: number;
   sackGold: number;
@@ -1292,6 +1332,10 @@ export interface Army {
   resources?: MilitaryResource[];
   attritionSources?: MilitaryAttritionSource[];
   supplyDays?: number;
+  /** How this force currently takes on stores, if at all. */
+  supplyRefillStatus?: string;
+  supplySettlementName?: string;
+  supplyMissingResources?: string;
   isForcedMarching?: boolean;
   canForcedMarch: boolean;
   canMerge: boolean;
@@ -1491,6 +1535,14 @@ export interface Notification {
 
 export type WarningSeverity = "caution" | "warning" | "critical";
 
+export interface WarningTarget {
+  label: string;
+  detail?: string;
+  linkType?: string;
+  linkId?: string;
+  icons?: string[];
+}
+
 export interface Warning {
   id: string;
   title: string;
@@ -1507,6 +1559,8 @@ export interface Warning {
   powerBlocId?: string;
   /** Display labels for each cycle target, in primary + additional payload order. */
   targetLabels: string[];
+  /** Structured hover rows with optional links and missing-good icons. */
+  targets?: WarningTarget[];
 }
 
 export interface PowerBlocGoal {

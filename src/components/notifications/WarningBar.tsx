@@ -1,12 +1,14 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { playSound } from '../../hooks/useSound';
 import Tooltip from '../common/tooltips/Tooltip';
-import type { TooltipContent } from '../common/tooltips/Tooltip';
-import type { Warning, WarningSeverity } from '../../data/types';
+import type { TooltipContent, TooltipLine } from '../common/tooltips/Tooltip';
+import EntityLink from '../common/entities/EntityLink';
+import type { Warning, WarningSeverity, WarningTarget } from '../../data/types';
 import { activateWarning } from '../../bridge/app/useNotificationsBridge';
 import { startGovernorAssignmentBridge } from '../../bridge/military-map/useBottomBarOperationsBridge';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { GOVERNOR_MISSION_ICON } from '../../utils/iconMaps';
+import { WebkilnAssetPath } from '../../utils/assets';
 import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 import { requestGamepadFocusRefresh } from '../../input/gamepadFocusEvents';
 import { useEscapeStackEntry } from '../../context/EscapeStack';
@@ -41,6 +43,9 @@ const iconKeyToAsset: Record<string, string> = {
   armyattrition: '/assets/icons/Terrain/I_Attrition.png',
   armydamaged: '/assets/icons/I_War.png',
   crisis: '/assets/icons/I_ExclamationWarning.png',
+  resourceshortage: '/assets/icons/I_ResourceConsumption.png',
+  storesrunningout: '/assets/icons/I_Warehouse.png',
+  luxuryshortage: '/assets/icons/I_Luxury.png',
 };
 
 const fallbackIcon = '/assets/icons/I_GoalNotMet.png';
@@ -65,15 +70,64 @@ function renderWarningBody(warning: Warning): React.ReactNode {
   );
 }
 
+function warningTargetIcons(icons: string[] | undefined) {
+  if (!icons || icons.length === 0) return undefined;
+  return (
+    <span className="warning-missing-icons">
+      {icons.map((icon, index) => (
+        <img
+          key={`${icon}-${index}`}
+          src={WebkilnAssetPath(icon)}
+          alt=""
+          className="warning-missing-icon"
+          draggable={false}
+        />
+      ))}
+    </span>
+  );
+}
+
+function warningTargetLabel(target: WarningTarget, fallback: string) {
+  const text = target.label || fallback;
+  if (!target.linkType || !target.linkId) return text;
+  return (
+    <EntityLink type={target.linkType} id={target.linkId} inline className="tt-entity-link">
+      {text}
+    </EntityLink>
+  );
+}
+
 function warningTooltip(warning: Warning, currentTargetIndex: number): TooltipContent {
   const labels = warning.targetLabels ?? [];
+  const targets = warning.targets ?? [];
+  const lines: TooltipLine[] = targets.length > 0
+    ? targets.map((target, index) => {
+        const icons = warningTargetIcons(target.icons);
+        const value = icons && target.detail
+          ? (
+              <span className="warning-target-value">
+                {icons}
+                <span>{target.detail}</span>
+              </span>
+            )
+          : icons ?? target.detail;
+        return {
+          label: warningTargetLabel(target, labels[index] ?? ''),
+          labelColor: target.linkType
+            ? undefined
+            : index === currentTargetIndex ? 'var(--text-bright)' : 'var(--text-muted)',
+          value,
+          valueColor: target.detail ? 'var(--red)' : undefined,
+        };
+      })
+    : labels.map((label, index) => ({
+        label,
+        labelColor: index === currentTargetIndex ? 'var(--text-bright)' : 'var(--text-muted)',
+      }));
   return {
     title: warning.title,
     body: renderWarningBody(warning),
-    lines: labels.map((label, index) => ({
-      label,
-      labelColor: index === currentTargetIndex ? 'var(--text-bright)' : 'var(--text-muted)',
-    })),
+    lines,
   };
 }
 

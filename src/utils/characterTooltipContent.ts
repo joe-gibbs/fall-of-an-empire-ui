@@ -123,6 +123,16 @@ function traitContributionLines(character: Character, stat: StatKey): TooltipLin
   );
 }
 
+function sourceModifierLines(character: Character, stat: StatKey): TooltipLine[] {
+  return (character.stats.sourceModifiers ?? [])
+    .filter(modifier => modifier.stat === stat)
+    .map(modifier => ({
+      label: modifier.label,
+      value: formatSignedNumber(modifier.value, { maximumFractionDigits: 1 }),
+      valueColor: modifierValueColor(modifier.value),
+    }));
+}
+
 export type RoleSkillKey = 'military' | 'administrative' | 'diplomatic' | 'intrigue';
 
 const ROLE_SPECIALIST_TRAIT_IDS: Record<RoleSkillKey, string[]> = {
@@ -241,7 +251,10 @@ export function buildCharacterStatTooltip(
       });
     }
 
-    const contributions = traitContributionLines(character, stat);
+    const contributions = [
+      ...traitContributionLines(character, stat),
+      ...sourceModifierLines(character, stat),
+    ];
     if (contributions.length > 0) {
       lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1199.39'), isHeader: true });
       lines.push(...contributions);

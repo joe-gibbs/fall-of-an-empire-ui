@@ -9,6 +9,7 @@ import { formatNumber, formatResourceNumber } from '../../../utils/numberFormat'
 import type { BuildingResourceCost, CultureInfo } from '../../../data/types';
 import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import ResourceLink from '../resources/ResourceLink';
+import ResourcePurchaseButton from '../resources/ResourcePurchaseButton';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 
@@ -247,6 +248,7 @@ function ResourceChip({
       content={{
         title: item.displayName || item.name,
         body: item.description || item.effects || webUIText('UnitTooltip.StrategicResource'),
+        afterLines: <ResourcePurchaseButton resourceId={item.name} />,
         lines: [
           { label: perContext, value: valueLabel, valueIcon: item.icon, valueColor: 'var(--gold-light)' },
         ],

@@ -6,6 +6,7 @@
 
 export const TUTORIAL_REVEAL_SCREENS_MENU = 'tutorial:reveal-screens-menu';
 export const TUTORIAL_REVEAL_MAP_MODE_PICKER = 'tutorial:reveal-map-mode-picker';
+export const TUTORIAL_REVEAL_PERSONAL_GUARD = 'tutorial:reveal-personal-guard';
 
 export interface TutorialHudRevealDetail {
   tokens: string[];
@@ -53,6 +54,17 @@ export function tokensNeedMapModePickerReveal(tokens: readonly string[]): boolea
   return lower.some((token) => token.startsWith('mapmode:') && token !== 'mapmodebuttongroup');
 }
 
+const PERSONAL_GUARD_REVEAL_TOKENS = new Set([
+  'militarypersonalguardtab',
+  'sidebartab:guard',
+  'formpersonalguardbutton',
+  'confirmpersonalguardbutton',
+]);
+
+export function tokensNeedPersonalGuardReveal(tokens: readonly string[]): boolean {
+  return tokens.map(normaliseToken).some((token) => PERSONAL_GUARD_REVEAL_TOKENS.has(token));
+}
+
 export function requestTutorialHudReveal(tokens: readonly string[]): void {
   if (typeof window === 'undefined') return;
   const normalised = tokens.map(normaliseToken).filter(Boolean);
@@ -66,6 +78,12 @@ export function requestTutorialHudReveal(tokens: readonly string[]): void {
 
   if (tokensNeedMapModePickerReveal(normalised)) {
     window.dispatchEvent(new CustomEvent<TutorialHudRevealDetail>(TUTORIAL_REVEAL_MAP_MODE_PICKER, {
+      detail: { tokens: normalised },
+    }));
+  }
+
+  if (tokensNeedPersonalGuardReveal(normalised)) {
+    window.dispatchEvent(new CustomEvent<TutorialHudRevealDetail>(TUTORIAL_REVEAL_PERSONAL_GUARD, {
       detail: { tokens: normalised },
     }));
   }

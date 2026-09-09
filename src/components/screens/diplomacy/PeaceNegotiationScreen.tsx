@@ -16,6 +16,8 @@ import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { renderRichText, stripRichTags } from '../../../utils/richText';
 import { registerScreen } from '../../../registry/index';
 import { UI_MOTION } from '../../../config/motion';
+import { warScoreBreakdownTooltip } from './warScoreBreakdownTooltip';
+import WarScoreProgress from '../../common/data-display/bars/WarScoreProgress';
 import './PeaceNegotiationScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -52,6 +54,7 @@ const TERM_ICONS: Record<string, string> = {
   demand_vassalization: '/assets/icons/I_Vassal.png',
   annex_faction: '/assets/icons/I_Domain.png',
   rebel_conquest: '/assets/icons/I_War.png',
+  independence: '/assets/icons/I_DependentFactions.png',
   migration_settlement: '/assets/icons/I_Resettle.png',
   replace_ruler: '/assets/icons/I_Liege.png',
   white_peace: '/assets/icons/I_Peace.png',
@@ -147,6 +150,8 @@ function termFallbackLabel(term: PeaceTermDraft): string {
       return term.direction === 'demand' ? webUIText('PeaceNegotiation.Term.AnnexFaction') : webUIText('PeaceNegotiation.Term.SurrenderFaction');
     case 'rebel_conquest':
       return term.direction === 'demand' ? webUIText('PeaceNegotiation.Term.TotalConquest') : webUIText('PeaceNegotiation.Term.TotalSurrender');
+    case 'independence':
+      return term.direction === 'demand' ? webUIText('Diplomacy.DemandIndependence') : webUIText('Diplomacy.GrantIndependence');
     case 'migration_settlement':
       return term.direction === 'demand' ? webUIText('PeaceNegotiation.Term.MigrationDemand') : webUIText('PeaceNegotiation.Term.MigrationConcession');
     case 'replace_ruler':
@@ -323,14 +328,6 @@ function renderAcceptabilityBreakdown(input: string): ReactNode {
   );
 }
 
-function fmtWarScore(value: number): string {
-  const rounded = Math.round(value * 10) / 10;
-  const formatted = fmtSigned(rounded);
-  if (value > 0) return webUIText('PeaceNegotiation.WarScoreWinning', { Score: formatted });
-  if (value < 0) return webUIText('PeaceNegotiation.WarScoreLosing', { Score: formatted });
-  return webUIText('PeaceNegotiation.WarScoreStalemate', { Score: formatted });
-}
-
 function fmtStrength(value: number | undefined): string {
   const strength = Math.round(value ?? 0);
   if (strength >= 1000) {
@@ -412,6 +409,8 @@ function optionGroupLabel(option: TermOption): string {
       return isConcession(option) ? webUIText('PeaceNegotiation.Group.Surrender') : webUIText('PeaceNegotiation.Group.Annexation');
     case 'rebel_conquest':
       return isConcession(option) ? webUIText('PeaceNegotiation.Group.TotalSurrender') : webUIText('PeaceNegotiation.Group.TotalConquest');
+    case 'independence':
+      return isConcession(option) ? webUIText('Diplomacy.GrantIndependence') : webUIText('Diplomacy.DemandIndependence');
     case 'migration_settlement':
       return isConcession(option) ? webUIText('PeaceNegotiation.Group.OfferMigration') : webUIText('PeaceNegotiation.Group.DemandMigration');
     case 'replace_ruler':
@@ -1010,38 +1009,12 @@ function PeaceNegotiationScreenContent({
   const proposalScoreClamped = clamp(proposalScore, -100, 100);
   const acceptanceScale = (Math.abs(proposalScoreClamped) / 100).toFixed(3);
   const warScore = preview?.currentWarScore ?? 0;
-  const warScoreScale = Math.min(1, Math.abs(warScore) / 100).toFixed(3);
   const canSubmit = (!sourceOfferSelector || sourceOfferHydrated) && Boolean(preview?.canSubmit);
   const screenTitle = state?.found ? (state.warName || webUIText("PeaceNegotiation.WarSettlement")) : webUIText("PeaceNegotiation.PeaceTreaty");
-  const warScoreBreakdown: TooltipContent = {
-    title: webUIText('Diplomacy.WarScoreBreakdown'),
-    body: webUIText('Diplomacy.WarScoreBreakdownBody'),
-    lines: (preview?.warScoreBreakdown ?? []).map(entry => ({
-      label: `${entry.depth > 0 ? '· ' : ''}${entry.label}${entry.eventCount > 1 ? ` (${formatNumber(entry.eventCount)})` : ''}`,
-      value: formatSignedNumber(entry.score, { maximumFractionDigits: 1 }),
-      valueColor: entry.score >= 0 ? 'var(--green)' : 'var(--red)',
-    })),
-  };
+  const warScoreBreakdown: TooltipContent = warScoreBreakdownTooltip(preview?.warScoreBreakdown);
   const titleExtra = state?.found ? (
     <Tooltip content={warScoreBreakdown} position="bottom" delay={150}>
-      <div className="pns-title-progress">
-        <div className="pns-title-progress-track pns-warscore-track">
-          <div className="pns-warscore-center" />
-          {warScore > 0 ? (
-            <div
-              className="pns-warscore-fill pns-warscore-fill--ours"
-              style={{ transform: `scaleX(${warScoreScale})` }}
-            />
-          ) : null}
-          {warScore < 0 ? (
-            <div
-              className="pns-warscore-fill pns-warscore-fill--theirs"
-              style={{ transform: `scaleX(${warScoreScale})` }}
-            />
-          ) : null}
-        </div>
-        <span className="pns-title-progress-value">{fmtWarScore(warScore)}</span>
-      </div>
+      <WarScoreProgress score={warScore} className="pns-title-progress" />
     </Tooltip>
   ) : undefined;
 

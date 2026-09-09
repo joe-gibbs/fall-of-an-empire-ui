@@ -9,6 +9,7 @@ import { bridgeCall } from '../../../bridge-types.generated.ts';
 import { toRootRem } from '../../../utils/cssUnits';
 import { useModalPresence } from '../../../hooks/useModalPresence';
 import { UI_MOTION } from '../../../config/motion';
+import SaveGameDialog from './SaveGameDialog';
 import './LoadGameModal.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -43,6 +44,58 @@ function formatSaveTimestamp(isoTimestamp: string): string {
   return `${y}-${m}-${d} ${hh}:${mm}`;
 }
 
+interface SaveGroup {
+  playthroughId: string;
+  displayName: string;
+  saves: SaveEntry[];
+  latest: SaveEntry;
+}
+
+type LoadRow =
+  | { kind: 'group'; group: SaveGroup }
+  | { kind: 'save'; group: SaveGroup; save: SaveEntry };
+
+function groupKeyFor(save: SaveEntry): string {
+  return save.playthroughId || save.slotName;
+}
+
+function groupDisplayName(save: SaveEntry): string {
+  if (save.playthroughDisplayName) return save.playthroughDisplayName;
+  if (save.playerFactionName) return save.playerFactionName;
+  return displayNameFor(save);
+}
+
+function groupSaves(saves: SaveEntry[]): SaveGroup[] {
+  const groups = new Map<string, SaveGroup>();
+  const order: string[] = [];
+  for (const save of saves) {
+    const id = groupKeyFor(save);
+    let group = groups.get(id);
+    if (!group) {
+      group = {
+        playthroughId: id,
+        displayName: groupDisplayName(save),
+        saves: [],
+        latest: save,
+      };
+      groups.set(id, group);
+      order.push(id);
+    }
+    group.saves.push(save);
+    if ((save.timestamp ?? '') > (group.latest.timestamp ?? '')) {
+      group.latest = save;
+    }
+    if (!group.displayName && groupDisplayName(save)) {
+      group.displayName = groupDisplayName(save);
+    }
+  }
+  return order.map(id => {
+    const group = groups.get(id)!;
+    group.saves.sort((a, b) => (b.timestamp ?? '').localeCompare(a.timestamp ?? ''));
+    return group;
+  });
+}
+
 interface SaveEntryProps {
   save: SaveEntry;
   index: number;
@@ -64,7 +117,7 @@ const SaveEntryRow: React.FC<SaveEntryProps> = ({ save, index, removing, loading
   return (
     <div
       ref={registerRef}
-      className={`save-entry${removing ? ' save-entry--removing' : ''}`}
+      className={`save-entry save-entry--nested${removing ? ' save-entry--removing' : ''}`}
       style={removing ? undefined : { animationDelay: `${0.05 + index * 0.04}s` }}
       onDoubleClick={removing || loading ? undefined : onLoad}
     >
@@ -96,6 +149,67 @@ const SaveEntryRow: React.FC<SaveEntryProps> = ({ save, index, removing, loading
   );
 };
 
+interface SaveGroupHeaderProps {
+  group: SaveGroup;
+  expanded: boolean;
+  removing: boolean;
+  loading: boolean;
+  onToggle: () => void;
+  onRename: () => void;
+  onDelete: () => void;
+}
+
+const SaveGroupHeader: React.FC<SaveGroupHeaderProps> = ({
+  group,
+  expanded,
+  removing,
+  loading,
+  onToggle,
+  onRename,
+  onDelete,
+}) => {
+  const save = group.latest;
+  const emblem = cleanName(save.factionEmblem);
+  const culture = cleanName(save.cultureGroup);
+  const primary = save.factionColour || '#4a1530';
+  const secondary = save.factionSecondaryColour || '#c9a84c';
+  const faction = save.playerFactionName;
+  return (
+    <div
+      className={`save-group${removing ? ' save-group--removing' : ''}${expanded ? ' save-group--expanded' : ''}`}
+      onClick={removing || loading ? undefined : onToggle}
+    >
+      <span className={`save-group__chevron${expanded ? ' save-group__chevron--open' : ''}`} aria-hidden />
+      <div className="save-entry__roundel">
+        <FactionRoundel
+          colour={primary}
+          secondaryColour={secondary}
+          emblem={emblem}
+          cultureGroup={culture}
+          name={faction}
+          size="md"
+          showRing
+        />
+      </div>
+      <div className="save-entry__info">
+        <div className="save-entry__display-name">{group.displayName}</div>
+        <div className="save-entry__dates">
+          {save.gameDateString && <span className="save-entry__game-date">{save.gameDateString}</span>}
+        </div>
+        <div className="save-entry__save-date">{formatSaveTimestamp(save.timestamp)}</div>
+      </div>
+      <div className="save-entry__actions" onClick={event => event.stopPropagation()}>
+        <GameButton variant="outline" onClick={onRename} disabled={loading}>
+          <WebUIText textKey="LoadGame.RenameGroup" />
+        </GameButton>
+        <GameButton variant="ghost" onClick={onDelete} disabled={loading}>
+          <WebUIText textKey="LoadGame.DeleteAll" />
+        </GameButton>
+      </div>
+    </div>
+  );
+};
+
 interface LoadGameModalProps {
   visible: boolean;
   onClosed: () => void;
@@ -104,12 +218,16 @@ interface LoadGameModalProps {
 
 const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBeforeLoad = false }) => {
   const [deleteTarget, setDeleteTarget] = useState<SaveEntry | null>(null);
+  const [deleteGroupTarget, setDeleteGroupTarget] = useState<SaveGroup | null>(null);
+  const [renameGroupTarget, setRenameGroupTarget] = useState<SaveGroup | null>(null);
   const [loadTarget, setLoadTarget] = useState<SaveEntry | null>(null);
   const [removingSlot, setRemovingSlot] = useState<string | null>(null);
+  const [removingGroupId, setRemovingGroupId] = useState<string | null>(null);
   const [loadingSlot, setLoadingSlot] = useState<string | null>(null);
   const [departingForLoad, setDepartingForLoad] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [userExpandedIds, setUserExpandedIds] = useState<Set<string> | null>(null);
   const removeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const loadTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -120,6 +238,9 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
     setDepartingForLoad(false);
     setLoadError(null);
     setDeleteError(null);
+    setDeleteGroupTarget(null);
+    setRenameGroupTarget(null);
+    setUserExpandedIds(null);
     onClosed();
   }, [onClosed]);
   const {
@@ -136,7 +257,13 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
     closeStrategy: 'request',
   });
 
-  const { saves, load: loadSave, remove: removeSave } = useSavesBridge(visible);
+  const {
+    saves,
+    load: loadSave,
+    remove: removeSave,
+    renamePlaythrough,
+    removePlaythrough,
+  } = useSavesBridge(visible);
 
   const handleOpenFolder = useCallback(() => {
     void bridgeCall('game.open_save_games_folder').catch((error) => {
@@ -148,6 +275,26 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
     if (!saves) return null;
     return [...saves].sort((a, b) => (b.timestamp ?? '').localeCompare(a.timestamp ?? ''));
   }, [saves]);
+
+  const groups = useMemo(() => (sortedSaves ? groupSaves(sortedSaves) : []), [sortedSaves]);
+
+  const expandedIds = useMemo(
+    () => userExpandedIds ?? (groups[0] ? new Set([groups[0].playthroughId]) : new Set<string>()),
+    [groups, userExpandedIds],
+  );
+
+  const rows = useMemo<LoadRow[]>(() => {
+    const next: LoadRow[] = [];
+    for (const group of groups) {
+      next.push({ kind: 'group', group });
+      if (expandedIds.has(group.playthroughId)) {
+        for (const save of group.saves) {
+          next.push({ kind: 'save', group, save });
+        }
+      }
+    }
+    return next;
+  }, [expandedIds, groups]);
 
   const registerRow = useCallback((slot: string) => (el: HTMLDivElement | null) => {
     if (el) rowRefs.current.set(slot, el);
@@ -189,6 +336,15 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
     if (!loadTarget) return;
     beginLoad(loadTarget.slotName);
   }, [beginLoad, loadTarget]);
+
+  const toggleGroup = useCallback((playthroughId: string) => {
+    setUserExpandedIds(prev => {
+      const next = new Set(prev ?? (groups[0] ? [groups[0].playthroughId] : []));
+      if (next.has(playthroughId)) next.delete(playthroughId);
+      else next.add(playthroughId);
+      return next;
+    });
+  }, [groups]);
 
   const confirmDelete = () => {
     if (!deleteTarget) return;
@@ -240,6 +396,32 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
     }, FADE_MS);
   };
 
+  const confirmDeleteGroup = () => {
+    if (!deleteGroupTarget) return;
+    const targetId = deleteGroupTarget.playthroughId;
+    setDeleteError(null);
+    setRemovingGroupId(targetId);
+    removeTimerRef.current = setTimeout(() => {
+      void removePlaythrough(targetId).then((result) => {
+        setRemovingGroupId(null);
+        if (!result.deleted) {
+          setDeleteError(result.failureReason);
+        }
+      });
+    }, FADE_MS);
+  };
+
+  const confirmRenameGroup = useCallback((name: string) => {
+    if (!renameGroupTarget) return;
+    const targetId = renameGroupTarget.playthroughId;
+    setRenameGroupTarget(null);
+    void renamePlaythrough(targetId, name).then((result) => {
+      if (!result.renamed) {
+        setDeleteError(result.failureReason);
+      }
+    });
+  }, [renameGroupTarget, renamePlaythrough]);
+
   if (!mounted) return null;
 
   const overlayCls = closing || departingForLoad
@@ -287,18 +469,30 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
           )}
 
           <VirtualList
-            items={sortedSaves ?? []}
-            getKey={save => save.slotName}
-            renderItem={(save, i) => (
-              <SaveEntryRow
-                save={save}
-                index={i}
-                removing={removingSlot === save.slotName}
-                loading={loadingSlot !== null}
-                registerRef={registerRow(save.slotName)}
-                onLoad={() => handleLoad(save)}
-                onDelete={() => setDeleteTarget(save)}
-              />
+            items={rows}
+            getKey={row => row.kind === 'group' ? `group:${row.group.playthroughId}` : row.save.slotName}
+            renderItem={(row, i) => (
+              row.kind === 'group' ? (
+                <SaveGroupHeader
+                  group={row.group}
+                  expanded={expandedIds.has(row.group.playthroughId)}
+                  removing={removingGroupId === row.group.playthroughId}
+                  loading={loadingSlot !== null}
+                  onToggle={() => toggleGroup(row.group.playthroughId)}
+                  onRename={() => setRenameGroupTarget(row.group)}
+                  onDelete={() => setDeleteGroupTarget(row.group)}
+                />
+              ) : (
+                <SaveEntryRow
+                  save={row.save}
+                  index={i}
+                  removing={removingSlot === row.save.slotName || removingGroupId === row.group.playthroughId}
+                  loading={loadingSlot !== null}
+                  registerRef={registerRow(row.save.slotName)}
+                  onLoad={() => handleLoad(row.save)}
+                  onDelete={() => setDeleteTarget(row.save)}
+                />
+              )
             )}
             empty={(
               <div className="load-game__empty">
@@ -311,7 +505,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
             rowHeightRem={5.1}
             virtualizeThreshold={18}
             overscan={6}
-            resetSignal={sortedSaves?.length ?? 0}
+            resetSignal={`${rows.length}:${expandedIds.size}`}
           />
         </div>
       </div>
@@ -327,6 +521,27 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
         variant="danger"
         onConfirm={confirmDelete}
         onClosed={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmDialog
+        visible={deleteGroupTarget !== null}
+        title={webUIText('LoadGame.DeleteAllTitle', { Name: deleteGroupTarget?.displayName ?? '' })}
+        message={
+          deleteGroupTarget ? webUIText('LoadGame.DeleteAllMessage', { Name: deleteGroupTarget.displayName }) : ''
+        }
+        confirmText={webUIText('LoadGame.DeleteAll')}
+        cancelText={webUIText('Auto.ExtraAttr.ComponentsScreensLoadGameModal.422.2')}
+        variant="danger"
+        onConfirm={confirmDeleteGroup}
+        onClosed={() => setDeleteGroupTarget(null)}
+      />
+
+      <SaveGameDialog
+        visible={renameGroupTarget !== null}
+        mode="renameGroup"
+        suggestedName={renameGroupTarget?.displayName ?? ''}
+        onConfirm={confirmRenameGroup}
+        onClosed={() => setRenameGroupTarget(null)}
       />
 
       <ConfirmDialog

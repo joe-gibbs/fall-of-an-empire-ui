@@ -8,7 +8,7 @@ import './SaveGameDialog.css';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 interface SaveGameDialogProps {
   visible: boolean;
-  mode: 'save' | 'rename' | 'saveAndQuit';
+  mode: 'save' | 'rename' | 'renameGroup' | 'saveAndQuit';
   suggestedName: string;
   onConfirm: (name: string) => void;
   onClosed: () => void;
@@ -44,15 +44,23 @@ const SaveGameDialog: React.FC<SaveGameDialogProps> = ({
     if (visible) setName(suggestedName);
   }
 
-  // Focus input on mount
+  // Focus input on mount. If the previous save name ends in a number, select
+  // just that number so the next save is a single keystroke.
   useEffect(() => {
     if (mounted && !closing) {
       requestAnimationFrame(() => {
-        inputRef.current?.focus();
-        inputRef.current?.select();
+        const input = inputRef.current;
+        if (!input) return;
+        input.focus();
+        const match = /(\d+)\s*$/.exec(suggestedName);
+        if (mode === 'save' && match && match.index != null) {
+          input.setSelectionRange(match.index, suggestedName.length);
+        } else {
+          input.select();
+        }
       });
     }
-  }, [mounted, closing]);
+  }, [mounted, closing, mode, suggestedName]);
 
   const handleSubmit = useCallback(() => {
     const trimmed = name.trim();
@@ -71,12 +79,17 @@ const SaveGameDialog: React.FC<SaveGameDialogProps> = ({
     ? webUIText("Auto.ComponentsScreensPauseMenu.309.7")
     : mode === 'save'
       ? webUIText("SaveGame.SaveGame")
-      : webUIText("SaveGame.RenameSave");
+      : mode === 'renameGroup'
+        ? webUIText("LoadGame.RenameGroupTitle")
+        : webUIText("SaveGame.RenameSave");
   const confirmLabel = mode === 'saveAndQuit'
     ? webUIText("Auto.ComponentsScreensPauseMenu.309.7")
     : mode === 'save'
       ? webUIText("SaveGame.Save")
       : webUIText("SaveGame.Rename");
+  const nameLabel = mode === 'renameGroup'
+    ? webUIText("SaveGame.GroupName")
+    : webUIText("Auto.ComponentsScreensSaveGameDialog.197.1");
 
   const overlayCls = closing
     ? 'save-dialog-overlay save-dialog-overlay--closing'
@@ -104,7 +117,7 @@ const SaveGameDialog: React.FC<SaveGameDialogProps> = ({
           </div>
 
           <div className="save-dialog__body">
-            <div className="save-dialog__label"><WebUIText textKey="Auto.ComponentsScreensSaveGameDialog.197.1" /></div>
+            <div className="save-dialog__label">{nameLabel}</div>
             <input
               ref={inputRef}
               className="save-dialog__input"

@@ -199,14 +199,35 @@ function renderBuildInfo(data: SettlementGlanceData) {
   return renderGoldInfo(data);
 }
 
+function renderResourceBoxes(data: SettlementGlanceData) {
+  if (data.resources.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="gset-resource-row">
+      {data.resources.map((resource, index) => (
+        <span key={`${resource.icon}:${resource.label}:${index}`} className="gset-resource-box">
+          <img src={WebkilnAssetPath(resource.icon)} alt="" />
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function renderResourceInfo(data: SettlementGlanceData, showStock: boolean) {
   const primary = data.resources[0];
   if (!primary) {
-    return renderInfoRow('/assets/icons/I_Resources.png', 'None', 'var(--text-muted)');
+    return renderInfoRow('/assets/icons/I_Resources.png', webUIText('Common.None'), 'var(--text-muted)');
   }
 
   const value = showStock ? `${primary.label} ${formatResourceNumber(primary.stock)}` : primary.label;
-  return renderInfoRow('/assets/icons/I_Resources.png', value);
+  return (
+    <>
+      {renderResourceBoxes(data)}
+      <span className="gset-info-value">{value}</span>
+    </>
+  );
 }
 
 function renderGeographicInfo(icon: string, value: string | undefined) {
@@ -259,7 +280,12 @@ function renderInfo(data: SettlementGlanceData) {
       return renderInfoRow('/assets/icons/I_Religions.png', data.religion.label, readableFactionTextColour(data.religion.colour));
     case 'landscape':
     case 'settlementType':
-      return renderInfoRow(settlementTypeIcon(data.settlementType), formatSettlementType(data.settlementType));
+      return (
+        <>
+          {renderInfoRow(settlementTypeIcon(data.settlementType), formatSettlementType(data.settlementType))}
+          {renderResourceBoxes(data)}
+        </>
+      );
     case 'economicProsperity':
     case 'economy':
       return renderBuildInfo(data);
@@ -302,7 +328,21 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
   const siegeProgress = clampUnitFraction(data.siegeProgress);
   const buildItemProgress = data.buildItem ? clampUnitFraction(data.buildItem.progress) : 0;
   const besieged = data.besieged === true;
-  const displayedSiegeProgress = useAnimatedProgress(siegeProgress, besieged, `${data.name}:siege`);
+  const displayedSiegeProgress = useAnimatedProgress(siegeProgress, !data.peaceSelection && besieged, `${data.name}:siege`);
+  if (data.peaceSelection) {
+    const cost = data.warScoreCost ?? 0;
+    const costTone = cost < 0 ? 'is-demand' : cost > 0 ? 'is-concession' : '';
+    return (
+      <div className={`glance glance--settlement glance--peace-pick${data.selected ? ' is-selected' : ''}`}>
+        {debugMode && data.debugShortId !== undefined && (
+          <div className="glance-debug-id">#{formatNumber(data.debugShortId)}</div>
+        )}
+        <span className={`gset-pick-check${data.selected ? ' is-checked' : ''}`} aria-hidden="true" />
+        <span className="gset-name">{data.name}</span>
+        <span className={`gset-pick-cost${costTone ? ` ${costTone}` : ''}`}>{formatSignedNumber(cost)}</span>
+      </div>
+    );
+  }
   const badgeShadow = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'shadow'));
   const badgeBackground = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'background'));
   const badgeMask = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'enamel-mask'));
@@ -376,6 +416,9 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
           )}
           {capitalIcon && (
             <img className="gset-status-icon gset-status-icon--capital" src={capitalIcon} alt="" />
+          )}
+          {data.siegePowerInsufficient && (
+            <span className="gset-siege-warning" aria-label={webUIText('Settlement.Siege.InsufficientPower')}>!</span>
           )}
           {besieged && (
             <img className="gset-status-icon gset-status-icon--siege" src={WebkilnAssetPath('/assets/icons/I_Siege.png')} alt="" />

@@ -11,6 +11,7 @@ import GlanceToggleBar from './GlanceToggleBar';
 import MapModeFilterPanel from './MapModeFilterPanel';
 import MapModePicker from './MapModePicker';
 import OperationBar from './OperationBar';
+import { useObserverMode } from '../../data-source/index';
 import './BottomBar.css';
 
 const ROWS: string[][][] = [
@@ -37,6 +38,7 @@ function mapModeTooltipContent(id: string, label: string, entry?: MapModeEntry):
 
 const BottomBar: React.FC = () => {
   const compact = useCompactHud();
+  const observerMode = useObserverMode();
   const { state, setMapMode } = useMapModeBridge();
   const active = state?.activeMode ?? '';
   const trayRef = useRef<HTMLDivElement>(null);
@@ -49,7 +51,7 @@ const BottomBar: React.FC = () => {
 
   return (
     <div className={`bottombar${compact ? ' bottombar--compact' : ''}`}>
-      <OperationBar />
+      {!observerMode && <OperationBar />}
       <MapModeFilterPanel />
       {active === 'resources' && <ConvoyFilterPanel />}
       {compact ? (

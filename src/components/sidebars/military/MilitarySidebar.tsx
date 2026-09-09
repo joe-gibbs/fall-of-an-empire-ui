@@ -36,6 +36,7 @@ import {
   setMilitaryParentBridge,
   showMilitarySidebarBridge,
   splitMilitaryBridge,
+  mergeMilitaryUnitsBridge,
   startMilitaryEmbarkTargetingBridge,
   startMilitaryMergeTargetingBridge,
   toggleFoederatiCallupBridge,
@@ -64,6 +65,7 @@ import {
   formatResourceStock,
   formatStrength,
   formatSupplyWindow,
+  buildSupplyTooltip,
   formatUnitTypeName,
   getMoraleColor,
   getStrengthBarColor,
@@ -78,6 +80,7 @@ import {
   resourceReservePercent,
   resourceReserveTargetDays,
   resolveUnitStats,
+  selectedUnitsCanConsolidate,
   sortResourceRowsByUrgency,
   type CommandMode,
   type CompositionSummaryRow,
@@ -88,7 +91,7 @@ import {
 } from './MilitarySidebarPresentation';
 
 import { webUIText } from '../../../localization/WebUITextContext';
-import { RANK_META, commandSupportTooltip, hasOverallCommand } from '../../screens/Military/forces';
+import { RANK_META, commandSupportTooltip } from '../../screens/Military/forces';
 interface MilitarySidebarProps {
   army: Army;
   onClose: () => void;
@@ -117,6 +120,8 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const [unitSelectionAnchorId, setUnitSelectionAnchorId] = useState<string | null>(null);
   const [unitSelectionBox, setUnitSelectionBox] = useState<UnitSelectionBox | null>(null);
   const [splitInProgress, setSplitInProgress] = useState(false);
+  const [mergeUnitsInProgress, setMergeUnitsInProgress] = useState(false);
+  const [mergeTargetingActive, setMergeTargetingActive] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState(army.name);
   const unitSelectionDragRef = useRef<UnitSelectionDragState | null>(null);
@@ -139,15 +144,15 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const selectableUnitRows = useMemo(() => visibleUnitRows.filter(row => row.selectable), [visibleUnitRows]);
   const selectableUnitIdSet = useMemo(() => new Set(selectableUnitRows.map(row => row.id)), [selectableUnitRows]);
   const selectedUnitIdSet = useMemo(() => new Set(selectedUnitIds), [selectedUnitIds]);
+  const selectedUnitRows = useMemo(
+    () => selectableUnitRows.filter(row => selectedUnitIdSet.has(row.id)),
+    [selectableUnitRows, selectedUnitIdSet],
+  );
   const derived = computeArmyStats(army.units);
   const isForcedMarching = army.isForcedMarching ?? false;
   const isReplenishing = army.isReplenishing ?? false;
   const movementSpeed = isForcedMarching ? derived.speed * 2 : derived.speed;
   const canHaveSubordinates = army.commandRank === 'Dux' || army.commandRank === 'Praefectus';
-  const overallCommandTaken = hasOverallCommand(militaryOverview?.forces ?? [], {
-    id: army.id,
-    isNavy: !!army.isNavy,
-  });
   const headerBg = army.isNavy ? '/assets/events/naval-battle.png' : '/assets/events/cavalry-charge.png';
   const isPlayerControlled = army.isPlayerControlled;
   const resourceRows = sortResourceRowsByUrgency(buildResourceRows(army));
@@ -189,6 +194,8 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   useEffect(() => {
     setConfirmingDestructive(false);
     setSplitInProgress(false);
+    setMergeUnitsInProgress(false);
+    setMergeTargetingActive(false);
     setIsRenaming(false);
     setRenameDraft(army.name);
   }, [army.id, army.name]);
@@ -338,8 +345,13 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     window.addEventListener('mouseup', handleUp);
   };
 
+  const canMergeSelectedForce = isPlayerControlled && !army.isPersonalGuard && !army.isFoederatiAuxiliary;
+  const canConsolidateSelection = canMergeSelectedForce && selectedUnitsCanConsolidate(selectedUnitRows);
+  const compositionActionInProgress = splitInProgress || mergeUnitsInProgress;
+  const forceNoun = webUIText(army.isNavy ? 'Common.FleetLower' : 'Common.ArmyLower');
+
   const handleSplitSelected = () => {
-    if (splitInProgress || selectedUnitIds.length === 0) return;
+    if (compositionActionInProgress || selectedUnitIds.length === 0) return;
 
     setSplitInProgress(true);
     splitMilitaryBridge(army.id, selectedUnitIds)
@@ -351,6 +363,19 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       })
       .catch(acknowledgeBridgeFailure)
       .finally(() => setSplitInProgress(false));
+  };
+
+  const handleMergeSelected = () => {
+    if (compositionActionInProgress || !canConsolidateSelection) return;
+
+    setMergeUnitsInProgress(true);
+    mergeMilitaryUnitsBridge(army.id, selectedUnitIds)
+      .then(() => {
+        setSelectedUnitIds([]);
+        setUnitSelectionAnchorId(null);
+      })
+      .catch(acknowledgeBridgeFailure)
+      .finally(() => setMergeUnitsInProgress(false));
   };
 
   const maxStats = army.units.reduce((acc, unit) => {
@@ -409,11 +434,9 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     ...(army.commandRank !== 'Dux' ? [{
       label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.468.2'),
       icon: '/assets/icons/I_Promote.png',
-      description: army.commandRank === 'Praefectus' && overallCommandTaken
-        ? webUIText(army.isNavy ? 'Military.Command.AlreadyHasOverallFleet' : 'Military.Command.AlreadyHasOverallArmy')
-        : (army.commandRank === 'Legatus' ? RANK_META.Praefectus.desc : RANK_META.Dux.desc),
+      description: army.commandRank === 'Legatus' ? RANK_META.Praefectus.desc : RANK_META.Dux.desc,
       tutorialTarget: 'PromoteMilitaryCommandButton',
-      disabled: !isPlayerControlled || (army.commandRank === 'Praefectus' && overallCommandTaken),
+      disabled: !isPlayerControlled,
       onClick: () => {
         promoteMilitaryCommandBridge(army.id).catch(acknowledgeBridgeFailure);
       },
@@ -465,11 +488,18 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   };
 
   const mergeAction: MilitaryAction = {
-    label: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.533.9'),
+    get label() { return webUIText(army.isNavy ? 'Military.MergeFleets' : 'Military.MergeArmies'); },
     icon: '/assets/icons/I_MergeUnits.png',
-    get description() { return webUIText("Auto.Prop.componentssidebarsMilitarySidebar.535.1", { Value1: webUIText(army.isNavy ? 'Common.FleetLower' : 'Common.ArmyLower') }); },
+    get description() {
+      return webUIText(
+        mergeTargetingActive ? 'Military.MergeForcesTargeting' : 'Military.MergeForcesDescription',
+        { Force: forceNoun },
+      );
+    },
+    isActive: mergeTargetingActive,
     disabled: !isPlayerControlled || !army.canMerge,
     onClick: () => {
+      setMergeTargetingActive(true);
       startMilitaryMergeTargetingBridge(army.id).catch(acknowledgeBridgeFailure);
     },
   };
@@ -586,7 +616,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       percent: Math.min(100, ((army.supplyDays ?? 0) / 90) * 100),
       color: (army.supplyDays ?? 0) > 30 ? 'green' : 'red',
       valueColor: (army.supplyDays ?? 0) > 30 ? 'var(--green)' : 'var(--red)',
-      tooltip: { title: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.621.20'), body: webUIText('Auto.Prop.ComponentsSidebarsMilitarySidebar.621.21') },
+      tooltip: buildSupplyTooltip(army),
     },
   ];
   const moraleReadiness = readinessCards[0];
@@ -1382,10 +1412,13 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
             selectedUnitIdSet={selectedUnitIdSet}
             showSplitControls={isPlayerControlled}
             canSplitForce={isPlayerControlled && army.canSplit}
-            splitInProgress={splitInProgress}
+            canMergeSelectedForce={canMergeSelectedForce}
+            canConsolidateSelection={canConsolidateSelection}
+            compositionActionInProgress={compositionActionInProgress}
             maxStats={maxStats}
             handleUnitRowMouseDown={handleUnitRowMouseDown}
             onSplitSelected={handleSplitSelected}
+            onMergeSelected={handleMergeSelected}
           />
         )}
       </StyledScrollArea>

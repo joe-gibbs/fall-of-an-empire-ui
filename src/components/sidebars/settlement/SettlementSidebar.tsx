@@ -38,6 +38,7 @@ import SettlementBuildingsPanel from './SettlementBuildingsPanel';
 import SettlementMilitaryPanel from './SettlementMilitaryPanel';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import ResourceLink from '../../common/resources/ResourceLink';
+import ResourcePurchaseButton from '../../common/resources/ResourcePurchaseButton';
 import { successChanceColour } from '../../../utils/colorFormatters';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { TIER_ICONS } from '../../../utils/iconMaps';
@@ -590,6 +591,7 @@ function buildResourceTooltip(r: Resource): TooltipContent {
     title: r.name,
     get body() { return r.isNatural ? webUIText("SettlementSidebar.NaturalResourceOfRegion", { Value1: r.categoryName ? r.categoryName.toLowerCase() : webUIText("SettlementSidebar.Resource") }) : r.categoryName; },
     lines,
+    afterLines: <ResourcePurchaseButton resourceId={r.id ?? r.name} />,
   };
 }
 

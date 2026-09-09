@@ -161,6 +161,16 @@ function buildLeakageSubTooltip(data: GetIncomeBreakdownResponse): TooltipConten
 function buildIncomeTooltip(data: GetIncomeBreakdownResponse): TooltipContent {
   const lines: TooltipLine[] = [];
 
+  for (const entry of data.factionGoldEntries) {
+    lines.push({
+      label: entry.name,
+      value: formatSignedNumber(entry.amount),
+      valueColor: entry.amount >= 0 ? 'var(--green)' : 'var(--red)',
+      valueIcon: goldIcon,
+      subTooltip: entry.description ? { title: entry.name, body: entry.description } : undefined,
+    });
+  }
+
   if (data.settlementIncome !== 0) {
     lines.push({
       label: webUIText('Economy.SettlementTax'),

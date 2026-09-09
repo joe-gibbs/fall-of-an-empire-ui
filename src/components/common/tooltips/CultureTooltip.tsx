@@ -13,6 +13,7 @@ interface CultureTooltipProps {
   fallbackId?: string;
   position?: 'top' | 'bottom' | 'left' | 'right';
   delay?: number;
+  wrapperClassName?: string;
   children: React.ReactNode;
 }
 
@@ -20,7 +21,7 @@ function cultureIconUrl(id?: string): string | undefined {
   return id ? cultureIconPath(id) : undefined;
 }
 
-function cultureTooltipContent({ info, fallbackName, fallbackId }: Omit<CultureTooltipProps, 'children' | 'position' | 'delay'>): TooltipContent {
+function cultureTooltipContent({ info, fallbackName, fallbackId }: Omit<CultureTooltipProps, 'children' | 'position' | 'delay' | 'wrapperClassName'>): TooltipContent {
   const id = info?.id ?? fallbackId;
   const name = info?.name ?? fallbackName ?? '';
   const iconUrl = cultureIconUrl(id);
@@ -57,12 +58,13 @@ function cultureTooltipContent({ info, fallbackName, fallbackId }: Omit<CultureT
   };
 }
 
-const CultureTooltip: React.FC<CultureTooltipProps> = ({ info, fallbackName, fallbackId, position = 'bottom', delay = 200, children }) => {
+const CultureTooltip: React.FC<CultureTooltipProps> = ({ info, fallbackName, fallbackId, position = 'bottom', delay = 200, wrapperClassName, children }) => {
   return (
     <Tooltip
       content={cultureTooltipContent({ info, fallbackName, fallbackId })}
       position={position}
       delay={delay}
+      wrapperClassName={wrapperClassName}
     >
       {children}
     </Tooltip>

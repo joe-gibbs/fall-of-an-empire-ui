@@ -342,6 +342,9 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     resources: data.resources.map(mapResource),
     attritionSources: data.attritionSources.map(mapAttritionSource),
     supplyDays: data.supplyDays,
+    supplyRefillStatus: data.supplyRefillStatus || undefined,
+    supplySettlementName: data.supplySettlementName || undefined,
+    supplyMissingResources: data.supplyMissingResources || undefined,
     isForcedMarching: data.isForcedMarching,
     canForcedMarch: data.canForcedMarch,
     canMerge: data.canMerge,
@@ -393,6 +396,9 @@ function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse):
         resources: [],
         attritionSources: [],
         supplyDays: undefined,
+        supplyRefillStatus: undefined,
+        supplySettlementName: undefined,
+        supplyMissingResources: undefined,
         isForcedMarching: false,
         canForcedMarch: false,
         canMerge: false,
@@ -411,6 +417,9 @@ function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse):
       canViewFullDetails: data.canViewFullDetails,
       resources: data.resources.map(mapResource),
       supplyDays: data.canViewFullDetails ? data.supplyDays : undefined,
+      supplyRefillStatus: data.canViewFullDetails ? data.supplyRefillStatus || undefined : undefined,
+      supplySettlementName: data.canViewFullDetails ? data.supplySettlementName || undefined : undefined,
+      supplyMissingResources: data.canViewFullDetails ? data.supplyMissingResources || undefined : undefined,
       isReplenishing: data.isReplenishing,
       replenishCost: data.replenishCost > 0 ? data.replenishCost : undefined,
       canReplenish: data.canReplenish,
@@ -654,6 +663,10 @@ export async function renameMilitaryBridge(militaryId: string, name: string): Pr
 
 export function splitMilitaryBridge(militaryId: string, unitIds: string[]): Promise<{ newMilitaryId: string; newMilitaryName: string }> {
   return bridgeCall('game.split_military', { militaryId, unitIds });
+}
+
+export function mergeMilitaryUnitsBridge(militaryId: string, unitIds: string[]): Promise<void> {
+  return bridgeCall('game.merge_military_units', { militaryId, unitIds }).then(() => undefined);
 }
 
 export function setMilitaryFormationTemplateBridge(militaryId: string, templateId: string): Promise<void> {

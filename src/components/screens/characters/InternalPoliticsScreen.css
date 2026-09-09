@@ -378,10 +378,16 @@
 .ips-governor-cell--tax,
 .ips-governor-header-cell--tax,
 .ips-governor-cell--unrest,
-.ips-governor-header-cell--unrest,
+.ips-governor-header-cell--unrest {
+  width: 6.4rem;
+  flex-shrink: 0;
+  padding-left: 0.45rem;
+  text-align: right;
+}
+
 .ips-governor-cell--military,
 .ips-governor-header-cell--military {
-  width: 6.4rem;
+  width: 8.6rem;
   flex-shrink: 0;
   padding-left: 0.45rem;
   text-align: right;
@@ -389,7 +395,7 @@
 
 .ips-governor-cell--action,
 .ips-governor-header-cell--action {
-  width: 8.6rem;
+  width: 13.4rem;
   flex-shrink: 0;
   padding-left: 0.45rem;
   text-align: right;
@@ -399,6 +405,18 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+
+.ips-governor-cell--action .btn--burgundy {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.ips-governor-header-cell--military .sortable-header-label {
+  game-ui-font-fit: shrink;
+  game-ui-font-fit-min-size: 0.55rem;
+  game-ui-font-fit-max-size: 0.72rem;
 }
 
 .ips-foederati-cell--name,

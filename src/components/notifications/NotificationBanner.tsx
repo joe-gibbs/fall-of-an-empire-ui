@@ -6,11 +6,17 @@ import type { Notification } from '../../data/types';
 import { playSound } from '../../hooks/useSound';
 import { useAnchoredDropdown } from '../../hooks/useAnchoredDropdown';
 import { WebkilnAssetPath } from '../../utils/assets';
+import {
+  battleAfterActionEnemyFaction,
+  hasBattleAfterActionEnemyRoundel,
+} from '../../utils/battleAfterActionReport';
 import { renderEventTextChunk } from '../../utils/eventTextFlow';
+import { formatSignedNumber } from '../../utils/numberFormat';
 import { renderRichText } from '../../utils/richText';
 import { UI_MOTION } from '../../config/motion';
 import CloseButton from '../common/buttons/CloseButton';
 import GameButton from '../common/buttons/GameButton';
+import FactionRoundel from '../common/entities/FactionRoundel';
 import Portrait from '../common/portraits/Portrait';
 import './NotificationBanner.css';
 
@@ -112,7 +118,32 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   const notificationTypeLabel = notification.notificationTypeLabel
     || notification.title
     || webUIText('Notifications.ThisType');
-  const iconOrPortrait = hasPortrait ? (
+  const battleReport = notification.battleAfterActionReport?.available
+    ? notification.battleAfterActionReport
+    : undefined;
+  const battleEnemy = battleReport ? battleAfterActionEnemyFaction(battleReport) : null;
+  const showBattleRoundel = Boolean(battleEnemy && hasBattleAfterActionEnemyRoundel(battleEnemy));
+  const warScoreText = battleReport
+    ? formatSignedNumber(battleReport.warScoreChange, { maximumFractionDigits: 1 })
+    : '';
+  let warScoreClass = '';
+  if (battleReport && battleReport.warScoreChange > 0) {
+    warScoreClass = ' notification-battle-warscore--gain';
+  } else if (battleReport && battleReport.warScoreChange < 0) {
+    warScoreClass = ' notification-battle-warscore--loss';
+  }
+  const iconOrPortrait = showBattleRoundel && battleEnemy ? (
+    <FactionRoundel
+      factionId={battleEnemy.factionId}
+      colour={battleEnemy.colour}
+      secondaryColour={battleEnemy.secondaryColour}
+      emblem={battleEnemy.emblem}
+      cultureGroup={battleEnemy.cultureGroup}
+      name={battleEnemy.factionName}
+      size={style === 'cinematic' ? 'sm' : 'xs'}
+      className="notification-roundel"
+    />
+  ) : hasPortrait ? (
     <Portrait
       personId={notification.personId}
       layers={notification.portraitLayers}
@@ -127,6 +158,20 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
       <img src={WebkilnAssetPath(iconPath)} alt="" />
     </div>
   );
+  const battleMeta = battleReport ? (
+    <div className="notification-battle-meta">
+      {battleEnemy?.factionName ? (
+        <span className="notification-battle-faction">{battleEnemy.factionName}</span>
+      ) : null}
+      <span
+        className={`notification-battle-warscore${warScoreClass}`}
+        aria-label={`${webUIText('BattleAfterAction.WarScore')} ${warScoreText}`}
+      >
+        <span className="notification-battle-warscore-label">{webUIText('BattleAfterAction.WarScore')}</span>
+        <span className="notification-battle-warscore-value">{warScoreText}</span>
+      </span>
+    </div>
+  ) : null;
 
   const handleClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.notification-close, .notification-decision-btn')) return;
@@ -258,7 +303,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
     return (
       <div
         ref={setTriggerRef}
-        className={`notification-banner notification-banner--${notification.type} notification-banner--style-cinematic${requiresDecision ? ' notification-banner--decision' : ''}`}
+        className={`notification-banner notification-banner--${notification.type} notification-banner--style-cinematic${requiresDecision ? ' notification-banner--decision' : ''}${battleReport ? ' notification-banner--battle' : ''}`}
         onClick={handleMouseDown}
         onContextMenu={handleContextMenu}
       >
@@ -268,6 +313,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
             {iconOrPortrait}
             <div className="notification-content">
               {title}
+              {battleMeta}
               <span className="notification-description">{descriptionContent}</span>
             </div>
             {decisionActions}
@@ -283,13 +329,14 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   return (
     <div
       ref={setTriggerRef}
-      className={`notification-banner notification-banner--${notification.type} notification-banner--style-${style}${requiresDecision ? ' notification-banner--decision' : ''}`}
+      className={`notification-banner notification-banner--${notification.type} notification-banner--style-${style}${requiresDecision ? ' notification-banner--decision' : ''}${battleReport ? ' notification-banner--battle' : ''}`}
       onClick={handleMouseDown}
       onContextMenu={handleContextMenu}
     >
       {iconOrPortrait}
       <div className="notification-content">
         {title}
+        {battleMeta}
         <span className="notification-description">{descriptionContent}</span>
       </div>
       {decisionActions}

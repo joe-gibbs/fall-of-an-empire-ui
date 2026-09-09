@@ -552,6 +552,16 @@
   margin-left: 0.25em;
 }
 
+.topbar-portrait--empty {
+  cursor: default;
+  pointer-events: none;
+}
+
+.topbar-portrait--empty:hover .topbar-portrait-surface,
+.topbar-portrait--empty:active .topbar-portrait-surface {
+  opacity: 1;
+}
+
 /* Build / victory / pin must match screen-button size (not IconButton rem). */
 .topbar-actions .icon-button {
   width: 3.215em;

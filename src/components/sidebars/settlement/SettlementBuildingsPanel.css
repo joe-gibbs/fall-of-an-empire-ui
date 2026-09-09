@@ -392,10 +392,24 @@
 .bld-queue-card-meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
 
   font-size: 0.74rem;
   color: var(--text-muted);
+}
+
+.bld-queue-card-meta-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.bld-queue-card-meta-total {
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-bottom: 0.4rem;
 }
 
 .bld-queue-card-reason {
@@ -685,6 +699,7 @@
   align-self: stretch;
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
 .bld-branch-elbow {
@@ -836,15 +851,15 @@
 
 .bld-branch-or {
   position: absolute;
-  left: 0;
+  left: 50%;
   top: 0;
-  z-index: 1;
-  transform: translate(-0.15rem, -0.72rem);
-  padding: 0.02rem 0.2rem;
+  z-index: 2;
+  transform: translateX(-50%) translateY(-0.62rem);
+  padding: 0.04rem 0.28rem;
   background-color: rgba(13, 18, 24, 0.94);
   font-family: var(--font-header);
   font-size: 0.64rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--gold-light);
   pointer-events: none;
@@ -857,7 +872,6 @@
   display: flex;
   align-items: stretch;
   position: relative;
-  overflow-anchor: auto;
   background-color: #20272d;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
@@ -1601,6 +1615,31 @@
   color: var(--red);
 }
 
+.bld-faith {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.bld-faith-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
+.bld-faith-name {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bld-faith > * + * {
+  margin-left: 0.28rem;
+}
+
 /* Locked reason text */
 
 .bld-node-reason {
@@ -1690,7 +1729,7 @@
   margin-bottom: 0.35rem;
 }
 
-.bld-queue-card-meta > * {
+.bld-queue-card-meta-main > * {
   margin-right: 0.4rem;
   margin-bottom: 0.4rem;
 }

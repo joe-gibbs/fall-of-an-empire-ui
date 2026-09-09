@@ -19,7 +19,7 @@ export function relationDisplayColour(relation: FactionRelation, atWar?: boolean
 }
 
 export function glanceBadgeBackgroundColour(relation: FactionRelation, atWar?: boolean): string {
-  if (atWar || relation === 'enemy') return 'var(--diplo-relation-war)';
+  if (atWar || relation === 'enemy') return 'var(--glance-relation-hostile)';
   if (relation === 'neutral') return 'var(--glance-relation-neutral)';
   return 'var(--glance-relation-garrisonable)';
 }

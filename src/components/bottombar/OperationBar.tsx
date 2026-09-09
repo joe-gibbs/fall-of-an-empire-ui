@@ -186,6 +186,22 @@ function buildingTooltipLines(building: EncyclopediaBuildingDTO, t: ReturnType<t
     });
   }
 
+  if (building.religionName) {
+    lines.push({
+      label: t('Encyclopedia.Faith'),
+      value: building.religionName,
+    });
+    lines.push({
+      label: t('Encyclopedia.FaithRequirement'),
+    });
+  }
+
+  if (building.requiredSettlementName) {
+    lines.push({
+      label: t('Encyclopedia.RequiredSettlement', { Name: building.requiredSettlementName }),
+    });
+  }
+
   return lines;
 }
 

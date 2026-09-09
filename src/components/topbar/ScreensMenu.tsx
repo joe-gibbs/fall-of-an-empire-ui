@@ -18,6 +18,7 @@ import FactionTooltip from '../common/tooltips/FactionTooltip';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import { requestGamepadFocusRefresh } from '../../input/gamepadFocusEvents';
 import { openWorldSearch } from '../hud/panels/openWorldSearch';
+import { isObserverActionButton, isObserverTopbarButton } from '../../utils/observerMode';
 import './ScreensMenu.css';
 
 export type ScreenMenuId = string;
@@ -31,6 +32,7 @@ interface ScreensMenuProps {
   onVictoryToggle?: () => void;
   isVictoryOpen?: boolean;
   subjectMode?: boolean;
+  observerMode?: boolean;
 }
 
 const FACTION_BUTTON_ID = 'faction';
@@ -75,6 +77,7 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
   onVictoryToggle,
   isVictoryOpen = false,
   subjectMode = false,
+  observerMode = false,
 }) => {
   const t = useWebUIText();
   const playerFaction = usePlayerFactionSummary();
@@ -133,6 +136,7 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
       b.id !== FACTION_BUTTON_ID
       && (b.id !== ACHIEVEMENTS_BUTTON_ID || steamAchievementsAvailable === false)
       && isVisibleForFactionMode(b, subjectMode)
+      && (!observerMode || isObserverTopbarButton(b.id))
     ));
 
     const screenEntries: MenuEntry[] = registrations.map((btn) => ({
@@ -148,8 +152,9 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
       },
     }));
 
-    const extras: MenuEntry[] = [
-      {
+    const extras: MenuEntry[] = [];
+    if (!observerMode) {
+      extras.push({
         id: 'build',
         label: t('Topbar.BuildQueue'),
         icon: '/assets/icons/I_BuildingsQuickButton.png',
@@ -160,10 +165,10 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
           onScreenChange?.('build');
           close();
         },
-      },
-    ];
+      });
+    }
 
-    if (!subjectMode) {
+    if (!observerMode && !subjectMode) {
       extras.push({
         id: 'victory',
         label: t('Topbar.VictoryConditions'),
@@ -179,32 +184,36 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
       });
     }
 
-    extras.push({
-      id: 'search',
-      label: t('WorldSearch.Title'),
-      icon: '/assets/icons/I_SearchQuickButton.png',
-      active: false,
-      tutorialTarget: 'WorldSearchButton',
-      onSelect: () => {
-        playSound('click');
-        close();
-        window.setTimeout(() => openWorldSearch(), 0);
-      },
-    });
+    if (!observerMode || isObserverActionButton('search')) {
+      extras.push({
+        id: 'search',
+        label: t('WorldSearch.Title'),
+        icon: '/assets/icons/I_SearchQuickButton.png',
+        active: false,
+        tutorialTarget: 'WorldSearchButton',
+        onSelect: () => {
+          playSound('click');
+          close();
+          window.setTimeout(() => openWorldSearch(), 0);
+        },
+      });
+    }
 
-    extras.push({
-      id: 'pinned',
-      label: t('Topbar.PinnedItems'),
-      icon: '/assets/icons/I_Pin_Pinned.png',
-      active: isPinnedOpen,
-      badge: pinnedCount > 0 ? pinnedCount : undefined,
-      tutorialTarget: 'PinnedItemsToggleButton',
-      onSelect: () => {
-        playSound('click');
-        close();
-        window.setTimeout(() => onPinnedToggle?.(), 0);
-      },
-    });
+    if (!observerMode || isObserverActionButton('pinned')) {
+      extras.push({
+        id: 'pinned',
+        label: t('Topbar.PinnedItems'),
+        icon: '/assets/icons/I_Pin_Pinned.png',
+        active: isPinnedOpen,
+        badge: pinnedCount > 0 ? pinnedCount : undefined,
+        tutorialTarget: 'PinnedItemsToggleButton',
+        onSelect: () => {
+          playSound('click');
+          close();
+          window.setTimeout(() => onPinnedToggle?.(), 0);
+        },
+      });
+    }
 
     // Faction overview stays first; then other screens, then utility actions.
     const factionEntry: MenuEntry = {
@@ -220,12 +229,13 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
       },
     };
 
-    return [factionEntry, ...screenEntries, ...extras];
+    return observerMode ? [...screenEntries, ...extras] : [factionEntry, ...screenEntries, ...extras];
   }, [
     activeScreen,
     close,
     isPinnedOpen,
     isVictoryOpen,
+    observerMode,
     onPinnedToggle,
     onScreenChange,
     onVictoryToggle,
@@ -236,12 +246,12 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
     t,
   ]);
 
-  const factionLabel = t('Topbar.Faction');
+  const factionLabel = observerMode ? t('Topbar.Encyclopedia') : t('Topbar.Faction');
   const menuOpen = open && !closing;
   const triggerButton = (
     <button
       type="button"
-      className={`icon-button screen-button-faction screens-menu-trigger${menuOpen ? ' icon-button--active screen-button-faction--active' : ''}${activeScreen === FACTION_BUTTON_ID ? ' screen-button-faction--active' : ''}`}
+      className={`icon-button screen-button-faction screens-menu-trigger${menuOpen ? ' icon-button--active screen-button-faction--active' : ''}${!observerMode && activeScreen === FACTION_BUTTON_ID ? ' screen-button-faction--active' : ''}`}
       data-tutorial-target="ScreenButtonGroup ScreenButton:faction"
       aria-label={factionLabel}
       aria-expanded={menuOpen}
@@ -251,7 +261,9 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
         setOpen((v) => !v);
       }}
     >
-      {playerFaction ? (
+      {observerMode ? (
+        <img src={WebkilnAssetPath('/assets/icons/I_Encyclopedia.png') ?? '/assets/icons/I_Encyclopedia.png'} alt="" className="screen-button-faction-fallback-icon" />
+      ) : playerFaction ? (
         <FactionRoundel
           factionId={playerFaction.id}
           colour={playerFaction.colour}
@@ -280,14 +292,16 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
         carries the same anchors so those dropdowns still open and position.
       */}
       <span className="pinned-toggle-btn victory-toggle-btn screens-menu-dropdown-anchor" aria-hidden="true" />
-      <FactionTooltip
-        factionId={playerFaction?.id}
-        factionName={playerFaction?.name}
-        position="bottom"
-        delay={200}
-      >
-        {triggerButton}
-      </FactionTooltip>
+      {observerMode ? triggerButton : (
+        <FactionTooltip
+          factionId={playerFaction?.id}
+          factionName={playerFaction?.name}
+          position="bottom"
+          delay={200}
+        >
+          {triggerButton}
+        </FactionTooltip>
+      )}
 
       {mounted && (
         <div

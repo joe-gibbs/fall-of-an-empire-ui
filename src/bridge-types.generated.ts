@@ -618,6 +618,16 @@ export interface ReligionInfo {
   unrestModifier: number;
 }
 
+export interface DeletePlaythroughRequest {
+  playthroughId: string;
+  deleteFromCloud: boolean;
+}
+
+export interface DeletePlaythroughResponse {
+  deleted: boolean;
+  failureReason: string;
+}
+
 export interface DeleteSaveRequest {
   slotName: string;
   deleteFromCloud: boolean;
@@ -1861,6 +1871,7 @@ export interface EconomyOverviewResourceRow {
   amount: number;
   capitalAmount: number;
   production: number;
+  missingProductionInputs: string[];
   vassalContribution: number;
   liegeContribution: number;
   treatyIncome: number;
@@ -1966,6 +1977,7 @@ export interface GetEconomyOverviewResponse {
   incomeTotal: number;
   expenseTotal: number;
   settlementIncome: number;
+  factionGoldEntries: FactionGoldEntry[];
   tradeIncome: number;
   resourceSalesIncome: number;
   vassalTributeIncome: number;
@@ -2047,6 +2059,37 @@ export interface EconomyResourcePotentialUseDetail {
   kind: string;
 }
 
+export interface EconomyResourceRecipeResource {
+  id: string;
+  name: string;
+  amount: number;
+}
+
+export interface EconomyResourceRecipeDetail {
+  buildingName: string;
+  buildingAssetKey: string;
+  inputs: EconomyResourceRecipeResource[];
+  outputs: EconomyResourceRecipeResource[];
+}
+
+export interface EconomyResourceWorkshopInputDetail {
+  id: string;
+  name: string;
+  availablePerDay: number;
+  requiredPerDay: number;
+  missingPerDay: number;
+  limiting: boolean;
+}
+
+export interface EconomyResourceWorkshopDetail {
+  settlementId: string;
+  settlementName: string;
+  buildingName: string;
+  amount: number;
+  potentialAmount: number;
+  inputs: EconomyResourceWorkshopInputDetail[];
+}
+
 export interface EconomyResourceHistoryPoint {
   dateText: string;
   stockpile: number;
@@ -2071,6 +2114,9 @@ export interface GetEconomyResourceDetailsResponse {
   externalSources: EconomyResourceFlowDetail[];
   consumers: EconomyResourceFlowDetail[];
   potentialUses: EconomyResourcePotentialUseDetail[];
+  recipes: EconomyResourceRecipeDetail[];
+  workshops: EconomyResourceWorkshopDetail[];
+  lostProduction: number;
   history: EconomyResourceHistoryPoint[];
 }
 
@@ -2086,6 +2132,7 @@ export interface EncyclopediaCultureDTO {
   id: string;
   label: string;
   icon: string;
+  kind: string;
 }
 
 export interface EncyclopediaBuildingDTO {
@@ -2095,6 +2142,10 @@ export interface EncyclopediaBuildingDTO {
   category: string;
   categoryLabel: string;
   cultureId: string;
+  religionId: string;
+  religionName: string;
+  religionIcon: string;
+  requiredSettlementName: string;
   description: string;
   effectsHtml: string;
   maxLevel: number;
@@ -2240,6 +2291,21 @@ export interface FactionPopulationGrowthSource {
   value: number;
 }
 
+export interface FactionDemographicShare {
+  id: string;
+  name: string;
+  colour: string;
+  iconId: string;
+  population: number;
+}
+
+export interface FactionSubjectDemographics {
+  faction: DiplomacyFactionReference;
+  population: number;
+  cultures: FactionDemographicShare[];
+  religions: FactionDemographicShare[];
+}
+
 export interface FactionWarEntry {
   id: string;
   debugShortId: number;
@@ -2252,6 +2318,11 @@ export interface FactionWarEntry {
   subjectSubtype: string;
   isPlayer: boolean;
   isRebel: boolean;
+  warId: string;
+  warName: string;
+  warScore: number;
+  warScoreBreakdown: DiplomacyWarScoreEntry[];
+  enemyParticipants: DiplomacyFactionReference[];
 }
 
 export interface FactionPolicyLevelEntry {
@@ -2349,6 +2420,9 @@ export interface GetFactionDataResponse {
   subjectPopulation: number;
   populationMonthlyChange: number;
   populationGrowthBreakdown: FactionPopulationGrowthSource[];
+  cultures: FactionDemographicShare[];
+  religions: FactionDemographicShare[];
+  subjectDemographics: FactionSubjectDemographics[];
   settlements: number;
   subjectSettlements: number;
   armies: number;
@@ -2396,6 +2470,23 @@ export interface GetFactionDataResponse {
   designatedHeirName: string;
   effectiveHeirId: string;
   effectiveHeirName: string;
+}
+
+export interface GetFactionDemographicHistoryRequest {
+  factionId: string;
+}
+
+export interface FactionDemographicHistoryYear {
+  year: number;
+  population: number;
+  cultures: FactionDemographicShare[];
+  religions: FactionDemographicShare[];
+}
+
+export interface GetFactionDemographicHistoryResponse {
+  factionId: string;
+  factionName: string;
+  years: FactionDemographicHistoryYear[];
 }
 
 export interface GetFactionInteractionsRequest {
@@ -2462,6 +2553,33 @@ export interface GetFactionMilitaryOverviewResponse {
   factionName: string;
   canViewFullDetails: boolean;
   overview: GetMilitaryOverviewResponse;
+}
+
+export interface GetFactionPreviousRulersRequest {
+  factionId: string;
+}
+
+export interface FactionPreviousRulerEntry {
+  id: string;
+  name: string;
+  title: string;
+  shortTitle: string;
+  startDate: string;
+  endDate: string;
+  portrait: string;
+  portraitLayers: PortraitLayerData;
+  isAlive: boolean;
+  isImprisoned: boolean;
+  isCurrent: boolean;
+  activity: string;
+  culture: string;
+  religion: string;
+}
+
+export interface GetFactionPreviousRulersResponse {
+  factionId: string;
+  factionName: string;
+  rulers: FactionPreviousRulerEntry[];
 }
 
 export interface GetFamilyTreeRequest {
@@ -2576,6 +2694,7 @@ export interface GetGameStateResponse {
   hasDemoTimeLimit: boolean;
   demoDaysRemaining: number;
   demoEndDateText: string;
+  playthroughId: string;
 }
 
 export interface GameDateChangedEvent {
@@ -2663,6 +2782,12 @@ export interface IncomeEntry {
   linkType: string;
 }
 
+export interface FactionGoldEntry {
+  name: string;
+  amount: number;
+  description: string;
+}
+
 export interface CommandUpkeepEntry {
   id: string;
   parentId: string;
@@ -2680,6 +2805,7 @@ export interface GetIncomeBreakdownResponse {
   expenseTotal: number;
   treasuryAdjustment: number;
   settlementIncome: number;
+  factionGoldEntries: FactionGoldEntry[];
   tradeIncome: number;
   resourceSalesIncome: number;
   vassalTributeIncome: number;
@@ -3092,6 +3218,7 @@ export interface PersonStatsData {
   baseLoyalty: number;
   baseConstitution: number;
   temporaryModifiers: PersonStatModifierEntry[];
+  sourceModifiers: PersonStatModifierEntry[];
 }
 
 export interface PersonTraitEffect {
@@ -3746,6 +3873,7 @@ export interface GetProvinceTooltipResponse {
   building: ProvinceTooltipBuildProgress;
   warWithPlayer: boolean;
   actionHint: string;
+  siegePowerWarning: string;
   landingTitle: string;
   landingInstruction: string;
   convoyTitle: string;
@@ -3996,6 +4124,7 @@ export interface SettingsGameplayDTO {
   tooltipDelaySeconds: number;
   notificationDurationMultiplier: number;
   reduceMotion: boolean;
+  keepConstructionFilters: boolean;
   consoleEnabled: boolean;
   saveFrequency: string;
   autosaveSlotCount: number;
@@ -4073,6 +4202,7 @@ export interface GetSettingsResponse {
   availableLlmModels: LlmModelDTO[];
   hardware: HardwareInfoDTO;
   supportedResolutions: string[];
+  supportedWindowModes: string[];
   dlssSupported: boolean;
   upscalingTechnology: string;
   activeInputDevice: string;
@@ -4100,6 +4230,11 @@ export interface SettlementBuildingBuildState {
   blockedByPopulation: boolean;
 }
 
+export interface SettlementBuildingCategoryLabel {
+  id: string;
+  label: string;
+}
+
 export interface SettlementBuiltBuildingEntry {
   id: string;
   assetKey: string;
@@ -4108,6 +4243,9 @@ export interface SettlementBuiltBuildingEntry {
   maxLevel: number;
   category: string;
   chainName: string;
+  religionId: string;
+  religionName: string;
+  religionIcon: string;
   description: string;
   effectsHtml: string;
   condition: number;
@@ -4143,6 +4281,9 @@ export interface SettlementAvailableBuildingEntry {
   maxLevel: number;
   category: string;
   chainName: string;
+  religionId: string;
+  religionName: string;
+  religionIcon: string;
   description: string;
   effectsHtml: string;
   price: number;
@@ -4191,6 +4332,7 @@ export interface GetSettlementBuildingsResponse {
   construction: SettlementConstructionData;
   canBuild: boolean;
   cannotBuildReason: string;
+  categoryLabels: SettlementBuildingCategoryLabel[];
 }
 
 export interface GetSettlementDataRequest {
@@ -4478,6 +4620,7 @@ export interface GetSettlementDataResponse {
   hasCapitalOccupationDeadline: boolean;
   capitalOccupationDaysRemaining: number;
   totalSiegePower: number;
+  siegePowerWarning: string;
   totalDefenderStrength: number;
   pillageGold: number;
   sackGold: number;
@@ -4592,6 +4735,7 @@ export interface GetSettlementSiegeDataResponse {
   hasCapitalOccupationDeadline: boolean;
   capitalOccupationDaysRemaining: number;
   totalSiegePower: number;
+  siegePowerWarning: string;
   totalDefenderStrength: number;
   pillageGold: number;
   sackGold: number;
@@ -4816,6 +4960,7 @@ export interface WorldSettlementGlance {
   badgeScale: number;
   health: number;
   besieged: boolean;
+  siegePowerInsufficient: boolean;
   siegeProgress: number;
   fortification: number;
   fortificationProgress: number;
@@ -4853,6 +4998,8 @@ export interface WorldSettlementGlance {
   hasBuildItem: boolean;
   buildItem: WorldGlanceBuildProgress;
   warWithPlayer: boolean;
+  peaceSelection: boolean;
+  warScoreCost: number;
 }
 
 export interface WorldPortGlance {
@@ -5179,6 +5326,8 @@ export interface SaveGameEntryDto {
   factionEmblem: string;
   cultureGroup: string;
   characterGender: string;
+  playthroughId: string;
+  playthroughDisplayName: string;
 }
 
 export interface ListSavesResponse {
@@ -5458,6 +5607,9 @@ export interface GetMilitaryDataResponse {
   resources: MilitaryResourceEntry[];
   attritionSources: MilitaryAttritionEntry[];
   supplyDays: number;
+  supplyRefillStatus: string;
+  supplySettlementName: string;
+  supplyMissingResources: string;
   isForcedMarching: boolean;
   canForcedMarch: boolean;
   canMerge: boolean;
@@ -5533,6 +5685,11 @@ export interface SplitMilitaryRequest {
 export interface SplitMilitaryResponse {
   newMilitaryId: string;
   newMilitaryName: string;
+}
+
+export interface MergeMilitaryUnitsRequest {
+  militaryId: string;
+  unitIds: string[];
 }
 
 export interface SetMilitaryFormationTemplateRequest {
@@ -6152,6 +6309,16 @@ export interface RenameMilitaryResponse {
   message: string;
 }
 
+export interface RenamePlaythroughRequest {
+  playthroughId: string;
+  displayName: string;
+}
+
+export interface RenamePlaythroughResponse {
+  renamed: boolean;
+  failureReason: string;
+}
+
 export interface RenameSettlementRequest {
   settlementId: string;
   name: string;
@@ -6731,6 +6898,14 @@ export interface CampaignVictoryTierDefinition {
   conditions: VictoryConditionInfo[];
 }
 
+export interface WarningTargetPayload {
+  label: string;
+  detail: string;
+  linkType: string;
+  linkId: string;
+  icons: string[];
+}
+
 export interface WarningEventsRequest {
   command: string;
   key: string;
@@ -6748,6 +6923,7 @@ export interface WarningEventPayload {
   screenTab: string;
   powerBlocId: string;
   targetLabels: string[];
+  targets: WarningTargetPayload[];
 }
 
 export interface WarningRemovedPayload {
@@ -6837,6 +7013,7 @@ export interface BridgeActions {
   'game.continue': { request: void; response: ContinueGameResponse };
   'game.create_province_from_candidate': { request: CreateProvinceFromCandidateRequest; response: void };
   'game.delete_formation_template': { request: DeleteFormationTemplateRequest; response: DeleteFormationTemplateResponse };
+  'game.delete_playthrough': { request: DeletePlaythroughRequest; response: DeletePlaythroughResponse };
   'game.delete_save': { request: DeleteSaveRequest; response: DeleteSaveResponse };
   'game.demolish_settlement_building': { request: DemolishSettlementBuildingRequest; response: void };
   'game.demote_military_command': { request: DemoteMilitaryCommandRequest; response: void };
@@ -6879,8 +7056,10 @@ export interface BridgeActions {
   'game.get_encyclopedia_entries': { request: void; response: GetEncyclopediaEntriesResponse };
   'game.get_faction_daily_data': { request: GetFactionDailyDataRequest; response: GetFactionDailyDataResponse };
   'game.get_faction_data': { request: GetFactionDataRequest; response: GetFactionDataResponse };
+  'game.get_faction_demographic_history': { request: GetFactionDemographicHistoryRequest; response: GetFactionDemographicHistoryResponse };
   'game.get_faction_interactions': { request: GetFactionInteractionsRequest; response: GetFactionInteractionsResponse };
   'game.get_faction_military_overview': { request: GetFactionMilitaryOverviewRequest; response: GetFactionMilitaryOverviewResponse };
+  'game.get_faction_previous_rulers': { request: GetFactionPreviousRulersRequest; response: GetFactionPreviousRulersResponse };
   'game.get_family_tree': { request: GetFamilyTreeRequest; response: GetFamilyTreeResponse };
   'game.get_formation_template_catalogue': { request: void; response: GetFormationTemplateCatalogueResponse };
   'game.get_formation_templates': { request: void; response: GetFormationTemplatesResponse };
@@ -6942,6 +7121,7 @@ export interface BridgeActions {
   'game.list_saves': { request: void; response: ListSavesResponse };
   'game.load_save': { request: LoadSaveRequest; response: LoadSaveResponse };
   'game.loading_screen': { request: void; response: LoadingScreenResponse };
+  'game.merge_military_units': { request: MergeMilitaryUnitsRequest; response: void };
   'game.navigate_settlement': { request: NavigateSettlementRequest; response: NavigateSettlementResponse };
   'game.notification_events': { request: NotificationEventsRequest; response: void };
   'game.open_mods_folder': { request: void; response: void };
@@ -6960,6 +7140,7 @@ export interface BridgeActions {
   'game.recruit_character_for_role': { request: RecruitCharacterForRoleRequest; response: RecruitCharacterForRoleResponse };
   'game.remove_personal_guard_company': { request: RemovePersonalGuardCompanyRequest; response: RemovePersonalGuardCompanyResponse };
   'game.rename_military': { request: RenameMilitaryRequest; response: RenameMilitaryResponse };
+  'game.rename_playthrough': { request: RenamePlaythroughRequest; response: RenamePlaythroughResponse };
   'game.rename_settlement': { request: RenameSettlementRequest; response: RenameSettlementResponse };
   'game.render_character_creator_preview': { request: RenderCharacterCreatorPreviewRequest; response: void };
   'game.reorder_settlement_building': { request: ReorderSettlementBuildingRequest; response: void };

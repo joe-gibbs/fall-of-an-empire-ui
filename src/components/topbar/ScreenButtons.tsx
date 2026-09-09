@@ -7,7 +7,8 @@ import type { TooltipContent, TooltipLine } from '../common/tooltips/Tooltip';
 import IconButton from '../common/buttons/IconButton';
 import FactionRoundel from '../common/entities/FactionRoundel';
 import FactionTooltip from '../common/tooltips/FactionTooltip';
-import { usePlayerFactionSummary } from '../../data-source/index';
+import { useObserverMode, usePlayerFactionSummary } from '../../data-source/index';
+import { isObserverTopbarButton } from '../../utils/observerMode';
 import { getAllTopbarButtons, isVisibleForFactionMode } from '../../registry/index';
 import type { TopbarButtonRegistration } from '../../registry/index';
 import { WebkilnAssetPath } from '../../utils/assets';
@@ -116,6 +117,7 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
     settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
   );
   const playerFaction = usePlayerFactionSummary();
+  const observerMode = useObserverMode();
   const [steamAchievementsAvailable, setSteamAchievementsAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -138,12 +140,17 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
   const registrations = getAllTopbarButtons();
   const subjectMode = playerFaction?.diplomaticStatus === 'subject';
   const factionButton = registrations.find(b => b.id === FACTION_BUTTON_ID);
-  const showFactionButton = Boolean(factionButton && isVisibleForFactionMode(factionButton, subjectMode));
+  const showFactionButton = Boolean(
+    !observerMode
+    && factionButton
+    && isVisibleForFactionMode(factionButton, subjectMode),
+  );
   const buttons = registrations.filter(b => (
     b.id !== FACTION_BUTTON_ID
     && (b.id !== ACHIEVEMENTS_BUTTON_ID || steamAchievementsAvailable === false)
     && (b.placement ?? 'left') === placement
     && isVisibleForFactionMode(b, subjectMode)
+    && (!observerMode || isObserverTopbarButton(b.id))
   ));
   const factionButtonLabel = factionButton ? localizeButtonLabel(factionButton, t) : t(FACTION_LABEL_KEY);
   const playerFactionId = playerFaction?.id ?? null;

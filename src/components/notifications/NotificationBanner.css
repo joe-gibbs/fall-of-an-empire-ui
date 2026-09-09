@@ -53,7 +53,8 @@
 }
 
 .notification-slot--regular .notification-icon,
-.notification-slot--regular .notification-portrait {
+.notification-slot--regular .notification-portrait,
+.notification-slot--regular .notification-roundel {
   animation: notification-banner-mark-in 0.26s cubic-bezier(0.16, 0.84, 0.22, 1) 0.08s both;
 }
 
@@ -66,7 +67,8 @@
 }
 
 .notification-slot--regular.notification-slot--exiting .notification-icon,
-.notification-slot--regular.notification-slot--exiting .notification-portrait {
+.notification-slot--regular.notification-slot--exiting .notification-portrait,
+.notification-slot--regular.notification-slot--exiting .notification-roundel {
   animation: notification-banner-mark-out 0.16s cubic-bezier(0.4, 0, 1, 1) both;
 }
 
@@ -91,6 +93,7 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
 
 .notification-icon + .notification-content,
 .notification-portrait + .notification-content,
+.notification-roundel + .notification-content,
 .notification-content + .notification-close,
 .notification-content + .notification-decision-actions {
   margin-left: 0.3rem;
@@ -369,7 +372,8 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   margin-right: 0.65rem;
 }
 
-.notification-banner.notification-banner--style-cinematic .notification-icon {
+.notification-banner.notification-banner--style-cinematic .notification-icon,
+.notification-banner.notification-banner--style-cinematic .notification-roundel {
   margin-right: 0.65rem;
 }
 
@@ -403,10 +407,68 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   filter: brightness(1.3);
 }
 
-.notification-portrait {
+.notification-portrait,
+.notification-roundel {
   flex-shrink: 0;
   position: relative;
   z-index: 1;
+}
+
+.notification-battle-meta {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  column-gap: 0.45rem;
+}
+
+.notification-battle-faction {
+  min-width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+.notification-battle-warscore {
+  display: flex;
+  align-items: baseline;
+  flex-shrink: 0;
+  margin-left: auto;
+  column-gap: 0.28rem;
+  font-size: 0.77rem;
+  line-height: 1.25;
+  color: var(--text-header);
+}
+
+.notification-battle-warscore-label {
+  color: var(--text-muted);
+}
+
+.notification-battle-warscore-value {
+  font-family: var(--font-header);
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.notification-battle-warscore--gain .notification-battle-warscore-value {
+  color: var(--gold-light);
+}
+
+.notification-battle-warscore--loss .notification-battle-warscore-value {
+  color: var(--red-light);
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-battle-faction,
+.notification-banner.notification-banner--style-cinematic .notification-battle-warscore-label {
+  color: #5c3a22;
+}
+
+.notification-banner.notification-banner--style-cinematic .notification-battle-warscore {
+  color: #3a2116;
 }
 
 /* --- Content (title + description) --- */

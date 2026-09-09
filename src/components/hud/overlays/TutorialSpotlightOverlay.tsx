@@ -111,10 +111,22 @@ function findByTutorialToken(tokens: string[]): HTMLElement | null {
   const candidates = Array.from(document.querySelectorAll('[data-tutorial-target]'));
   for (const token of tokens) {
     const expected = token.toLowerCase();
-    const found = candidates.find(element => targetTokens(element).some(candidate => candidate.toLowerCase() === expected) && isVisibleElement(element));
-    if (found instanceof HTMLElement) return found;
+    const matches = candidates.filter((element): element is HTMLElement => (
+      element instanceof HTMLElement
+      && targetTokens(element).some(candidate => candidate.toLowerCase() === expected)
+    ));
+    const visible = matches.find(isVisibleElement);
+    if (visible) return visible;
+    if (matches[0]) return matches[0];
   }
   return null;
+}
+
+function isPersonalGuardUiTarget(target: string): boolean {
+  const normalised = target.toLowerCase();
+  return normalised === 'confirmpersonalguardbutton'
+    || normalised === 'formpersonalguardbutton'
+    || normalised === 'militarypersonalguardtab';
 }
 
 function spotlightTargetTokens(spotlight: TutorialSpotlightResponse): string[] {
@@ -452,7 +464,7 @@ export default function TutorialSpotlightOverlay({
   ]);
 
   const panels = useMemo<PanelSide[]>(() => (targetRect ? ['top', 'bottom', 'left', 'right'] : ['full']), [targetRect]);
-  const needsResolvedTarget = spotlight.isBuildingTarget;
+  const needsResolvedTarget = spotlight.isBuildingTarget || isPersonalGuardUiTarget(spotlight.target);
   const hasResolvedTarget = targetRect !== null && targetEventId === eventId;
 
   if (!spotlight.isVisible) return null;
