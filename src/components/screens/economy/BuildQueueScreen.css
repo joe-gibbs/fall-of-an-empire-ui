@@ -468,23 +468,8 @@
   min-height: 1.8rem;
   margin-left: 0.7rem;
   padding: 0 0.45rem;
-  color: var(--text-muted);
-  background-color: rgba(8, 12, 17, 0.22);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.2);
   font-size: 0.68rem;
   font-weight: 700;
-  text-transform: uppercase;
-}
-
-.buildq-cancel:hover {
-  color: var(--text-bright);
-  border-color: rgba(201, 168, 76, 0.45);
-}
-
-.buildq-cancel--pending {
-  opacity: 0.55;
 }
 
 .buildq-cancel-icon {

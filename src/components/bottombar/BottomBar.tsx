@@ -11,6 +11,7 @@ import GlanceToggleBar from './GlanceToggleBar';
 import MapModeFilterPanel from './MapModeFilterPanel';
 import MapModePicker from './MapModePicker';
 import OperationBar from './OperationBar';
+import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import { useObserverMode } from '../../data-source/index';
 import './BottomBar.css';
 
@@ -52,8 +53,10 @@ const BottomBar: React.FC = () => {
   return (
     <div className={`bottombar${compact ? ' bottombar--compact' : ''}`}>
       {!observerMode && <OperationBar />}
-      <MapModeFilterPanel />
-      {active === 'resources' && <ConvoyFilterPanel />}
+      <StyledScrollArea className="bottombar-filters" viewportClassName="bottombar-filters__viewport" variant="inline">
+        <MapModeFilterPanel />
+        {active === 'resources' && <ConvoyFilterPanel />}
+      </StyledScrollArea>
       {compact ? (
         <>
           <GlanceToggleBar />

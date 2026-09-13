@@ -88,6 +88,7 @@ export default function RegionGovernorAppointmentModal({
     open,
     onClose,
     escapeId: 'modal.region-governor-appointment',
+    onConfirm: () => { if (!selectedIsCurrent && !recruiting) handleAppoint(); },
     allowFromInput: true,
     closeStrategy: 'request',
   });

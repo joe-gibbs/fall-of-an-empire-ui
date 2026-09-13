@@ -200,6 +200,7 @@ function mapPerson(data: GetPersonDataResponse): Character {
       isAlive: r.isAlive,
     })),
     luxuryNeeds: data.luxuryNeeds.map(slot => ({
+      resourceId: slot.resourceId,
       name: slot.name,
       icon: WebkilnAssetPath(slot.icon) ?? slot.icon,
       required: slot.required,

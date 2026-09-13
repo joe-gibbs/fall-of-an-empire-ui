@@ -34,6 +34,11 @@ export interface SettlementBuildingsState {
   canBuild: boolean;
   cannotBuildReason?: string;
   categoryLabels: Partial<Record<BuildingCategory, string>>;
+  canRepairAll: boolean;
+  repairAllReason: string;
+  repairAllCount: number;
+  repairAllGoldCost: number;
+  repairAllResourceCost: BuildingResourceCost[];
 }
 
 export interface SettlementBuildingsBridgeState {
@@ -166,6 +171,7 @@ function mapBuiltBuilding(entry: SettlementBuiltBuildingEntry): Building {
     downgradeTargetName: entry.downgradeTargetName || undefined,
     downgradeTargetLevel: entry.downgradeTargetLevel > 0 ? entry.downgradeTargetLevel : undefined,
     canRepair: entry.canRepair,
+    repairQueued: entry.repairQueued,
     repairReason: entry.repairReason || undefined,
     repairGoldCost: entry.repairGoldCost > 0 ? entry.repairGoldCost : undefined,
     repairResourceCost: entry.repairResourceCost.map(mapCost),
@@ -209,7 +215,7 @@ function mapQueueItem(item: RawQueueItem): ConstructionQueueItem {
     icon: buildingPortrait(item.assetKey),
     description: item.description || undefined,
     effectsText: item.effectsHtml || undefined,
-    kind: item.kind === 'upgrade' || item.kind === 'rebuild' ? item.kind : 'new',
+    kind: item.kind === 'upgrade' || item.kind === 'rebuild' || item.kind === 'repair' ? item.kind : 'new',
     toLevel: item.toLevel,
     goldCost: item.goldCost,
     resourceCost: item.resourceCost.map(mapCost),
@@ -251,6 +257,11 @@ function mapResponse(data: GetSettlementBuildingsResponse): SettlementBuildingsS
     canBuild: data.canBuild,
     cannotBuildReason: data.cannotBuildReason || undefined,
     categoryLabels: mapCategoryLabels(data.categoryLabels),
+    canRepairAll: data.canRepairAll,
+    repairAllReason: data.repairAllReason,
+    repairAllCount: data.repairAllCount,
+    repairAllGoldCost: data.repairAllGoldCost,
+    repairAllResourceCost: data.repairAllResourceCost.map(mapCost),
   };
 }
 
@@ -296,6 +307,11 @@ function mergeResponse(
   const updates = new Map(data.buildings.map(building => [building.id, building]));
   return {
     ...current,
+    canRepairAll: data.canRepairAll,
+    repairAllReason: data.repairAllReason,
+    repairAllCount: data.repairAllCount,
+    repairAllGoldCost: data.repairAllGoldCost,
+    repairAllResourceCost: data.repairAllResourceCost.map(mapCost),
     buildings: current.buildings.map(building => {
       const next = updates.get(building.id);
       if (!next) return building;
@@ -303,6 +319,7 @@ function mergeResponse(
         ...building,
         condition: next.condition,
         canRepair: next.canRepair,
+        repairQueued: next.repairQueued,
         repairReason: next.repairReason || undefined,
         repairGoldCost: next.repairGoldCost > 0 ? next.repairGoldCost : undefined,
         repairResourceCost: next.repairResourceCost.map(mapCost),
@@ -359,4 +376,8 @@ export function downgradeSettlementBuilding(settlementId: string, buildingId: st
 
 export function repairSettlementBuilding(settlementId: string, buildingId: string): Promise<void> {
   return bridgeCall('game.repair_settlement_building', { settlementId, buildingId });
+}
+
+export function repairAllSettlementBuildings(settlementId: string) {
+  return bridgeCall('game.repair_all_settlement_buildings', { settlementId });
 }

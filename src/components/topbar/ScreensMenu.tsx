@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { bridgeEvents } from '../../bridge/core/bridgeEvents';
@@ -10,6 +10,7 @@ import { playSound } from '../../hooks/useSound';
 import { WebkilnAssetPath } from '../../utils/assets';
 import {
   TUTORIAL_REVEAL_SCREENS_MENU,
+  TUTORIAL_RELEASE_HUD_REVEAL,
   type TutorialHudRevealDetail,
 } from '../../utils/tutorialHudReveal';
 import { useWebUIText, type WebUITextFormatter } from '../../localization/WebUITextContext';
@@ -82,6 +83,7 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
   const t = useWebUIText();
   const playerFaction = usePlayerFactionSummary();
   const [open, setOpen] = useState(false);
+  const tutorialRevealed = useRef(false);
   const [steamAchievementsAvailable, setSteamAchievementsAvailable] = useState<boolean | null>(null);
 
   const { mounted, closing, style, setTriggerRef, setPopupRef } = useAnchoredDropdown({
@@ -123,10 +125,19 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<TutorialHudRevealDetail>).detail;
       if (!detail?.tokens?.length) return;
+      tutorialRevealed.current = true;
       setOpen(true);
     };
+    const release = () => {
+      if (tutorialRevealed.current) setOpen(false);
+      tutorialRevealed.current = false;
+    };
     window.addEventListener(TUTORIAL_REVEAL_SCREENS_MENU, handler);
-    return () => window.removeEventListener(TUTORIAL_REVEAL_SCREENS_MENU, handler);
+    window.addEventListener(TUTORIAL_RELEASE_HUD_REVEAL, release);
+    return () => {
+      window.removeEventListener(TUTORIAL_REVEAL_SCREENS_MENU, handler);
+      window.removeEventListener(TUTORIAL_RELEASE_HUD_REVEAL, release);
+    };
   }, []);
 
   const close = useCallback(() => setOpen(false), []);

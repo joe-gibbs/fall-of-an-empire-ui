@@ -102,6 +102,7 @@ export default function PersonInteractionInitiatorModal({
   const { mounted, closing, close } = useModalPresence({
     open: interaction !== null,
     onClose,
+    onConfirm: () => { void handleConfirm(); },
     escapeId: 'modal.person-interaction-initiator',
     allowFromInput: true,
     closeStrategy: 'request',

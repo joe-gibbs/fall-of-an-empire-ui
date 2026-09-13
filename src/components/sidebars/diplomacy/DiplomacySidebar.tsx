@@ -146,13 +146,13 @@ function buildFactionInteractionTooltip(
     if (i.cooldownRemainingDays > 0) {
       const remaining = Math.round(i.cooldownRemainingDays);
       lines.push({
-        label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.96.6'), labelIcon: '/assets/icons/I_Cooling.png',
+        label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.96.6'), labelIcon: '/assets/icons/I_Cooldown.png',
         get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.97.1", { Value1: formatNumber(remaining), Value2: webUIText(remaining === 1 ? 'Common.Day' : 'Common.Days') }); },
         valueColor: 'var(--red)',
       });
     } else {
       const total = Math.round(i.cooldownDays);
-      lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.102.7'), labelIcon: '/assets/icons/I_Cooling.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.102.1", { Value1: formatNumber(total), Value2: webUIText(total === 1 ? 'Common.Day' : 'Common.Days') }); } });
+      lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.102.7'), labelIcon: '/assets/icons/I_Cooldown.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.102.1", { Value1: formatNumber(total), Value2: webUIText(total === 1 ? 'Common.Day' : 'Common.Days') }); } });
     }
   }
 
@@ -293,14 +293,6 @@ function focusKeyForFaction(faction: Faction): BuildFocusId {
   return FOCUS_OPTIONS.some(option => option.id === key) ? key as BuildFocusId : 'balanced';
 }
 
-function getStatColor(val: number): string {
-  if (val >= 16) return 'var(--green-light)';
-  if (val >= 12) return 'var(--green)';
-  if (val >= 8) return 'var(--gold-light)';
-  if (val >= 5) return 'var(--orange)';
-  return 'var(--red)';
-}
-
 function policyHeaderText(lines?: DisplayTextLine[]): string {
   return displayTextToPlain((lines ?? []).filter(line => line.kind === 'header'));
 }
@@ -374,15 +366,6 @@ function policyLevelTooltip(policy: FactionPolicy, level: FactionPolicyLevel, in
     afterLines: <InteractionEffectsTooltip lines={policyMechanicalLines(level.effectLines)} />,
   };
 }
-
-const statMeta: { key: import('../../../data/types').StatKey; label: string; icon: string; desc: string }[] = [
-  { key: 'tactics', get label() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.178.1'); }, icon: '/assets/icons/StatIcons/I_Tactics.png', get desc() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.178.7'); } },
-  { key: 'authority', get label() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.179.2'); }, icon: '/assets/icons/StatIcons/I_Authority.png', get desc() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.179.8'); } },
-  { key: 'cunning', get label() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.180.3'); }, icon: '/assets/icons/StatIcons/I_Cunning.png', get desc() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.180.9'); } },
-  { key: 'governance', get label() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.181.4'); }, icon: '/assets/icons/StatIcons/I_Governance.png', get desc() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.181.10'); } },
-  { key: 'loyalty', get label() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.182.5'); }, icon: '/assets/icons/StatIcons/I_Loyalty.png', get desc() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.182.11'); } },
-  { key: 'constitution', get label() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.183.6'); }, icon: '/assets/icons/StatIcons/I_Constitution.png', get desc() { return webUIText('Auto.TopProp.ComponentsSidebarsDiplomacySidebar.183.12'); } },
-];
 
 async function refreshAgentTarget(factionId: string, role: AgentRole): Promise<void> {
   const factionData = await bridgeCall('game.get_faction_data', { factionId, scope: 'full' });
@@ -1075,7 +1058,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                         <Tooltip content={breakTooltip} position="left" delay={200}>
                           <button
                             type="button"
-                            className="diplo-treaty-break"
+                            className="btn--outline diplo-treaty-break"
                             disabled={breakingTreatyId === treaty.id}
                             aria-label={webUIText('Diplomacy.BreakTreaty')}
                             onClick={(event) => {
@@ -1169,7 +1152,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
             )}
           </div>
 
-          {/* Characters - ruler first (with inline stats), then by category */}
+          {/* Characters - ruler first, then by category */}
           <div className="diplo-section-heading-with-action">
             <SectionHeading variant="ornate" title={webUIText('Auto.Attr.ComponentsSidebarsDiplomacySidebar.485.41')} />
             <div className="diplo-section-heading-actions">
@@ -1191,7 +1174,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
               </GameButton>
             </div>
           </div>
-          {/* Ruler row - prominent, inline with stats */}
+          {/* Ruler row - attributes available in the portrait tooltip */}
           <div className="diplo-ruler-section">
               <PersonTooltip characterId={faction.rulerId} position="right">
                   <Portrait
@@ -1211,21 +1194,6 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
               <div className="diplo-ruler-info">
                 <div className="diplo-ruler-name">{faction.rulerName}</div>
                 <div className="diplo-ruler-title">{rulerCharacter?.shortTitle || webUIText("DiplomacySidebar.Ruler")}</div>
-                {rulerCharacter && (
-                  <div className="diplo-ruler-stats">
-                    {statMeta.map(s => {
-                      const val = rulerCharacter.stats[s.key];
-                      return (
-                        <Tooltip key={s.key} content={{ title: s.label, body: s.desc }} position="bottom" delay={150}>
-                          <div className="diplo-ruler-stat">
-                            <img src={s.icon} alt="" className="diplo-ruler-stat-icon" />
-                            <span className="diplo-ruler-stat-val" style={{ color: getStatColor(val) }}>{formatNumber(val)}</span>
-                          </div>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                )}
                 {rulerCharacter && rulerCharacter.traits.length > 0 && (
                   <div className="diplo-ruler-traits">
                     {rulerCharacter.traits.map(trait => (
@@ -1269,7 +1237,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                   >
                     <button
                       type="button"
-                      className="diplo-successor-action"
+                      className="btn--outline diplo-successor-action"
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
@@ -1409,7 +1377,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                 </div>
                 <button
                   type="button"
-                  className="diplo-agent-recall"
+                  className="btn--outline diplo-agent-recall"
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -1619,7 +1587,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                 </div>
                 <button
                   type="button"
-                  className="diplo-agent-recall"
+                  className="btn--outline diplo-agent-recall"
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();

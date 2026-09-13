@@ -903,23 +903,7 @@
   width: 1.45rem;
   height: 1.45rem;
   padding: 0;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: rgba(191, 160, 96, 0.34);
-  border-right-color: rgba(191, 160, 96, 0.34);
-  border-bottom-color: rgba(191, 160, 96, 0.34);
-  border-left-color: rgba(191, 160, 96, 0.34);
-  border-radius: 0.154rem;
-  background-color: rgba(8, 12, 17, 0.72);
   cursor: pointer;
-}
-
-.enc-bldg-place-btn:hover {
-  border-top-color: rgba(224, 190, 116, 0.68);
-  border-right-color: rgba(224, 190, 116, 0.68);
-  border-bottom-color: rgba(224, 190, 116, 0.68);
-  border-left-color: rgba(224, 190, 116, 0.68);
-  background-color: rgba(52, 45, 38, 0.92);
 }
 
 .enc-bldg-place-icon {

@@ -125,6 +125,10 @@ export interface SettlementGlanceData {
   overlordName?: string;
   bishopName?: string;
   buildItem?: { label: string; icon: string; progress: number };
+  queuedConstruction?: string;
+  queuedConstructionCount?: number;
+  queuedRecruitment?: string;
+  queuedRecruitmentCount?: number;
   warWithPlayer?: boolean;
   peaceSelection?: boolean;
   warScoreCost?: number;

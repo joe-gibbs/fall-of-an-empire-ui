@@ -1082,29 +1082,13 @@
   margin-top: 0.35rem;
   padding: 0.28rem 0.62rem;
   max-width: 100%;
-  background-color: rgba(88, 22, 30, 0.72);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.36);
-  color: var(--text-header);
   cursor: var(--cursor-pointer);
   font-family: var(--font-header);
   font-size: 0.74rem;
   line-height: 1.1;
-  letter-spacing: 0;
-  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: border-color 0.15s, background-color 0.15s;
-}
-
-.fov-court-replace-btn:hover {
-  background-color: rgba(112, 28, 38, 0.86);
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: var(--gold-muted);
-  border-left-color: var(--gold-muted);
 }
 
 /* Vacant state */
@@ -1569,28 +1553,9 @@
   height: 1.9rem;
   margin-left: 0.6rem;
   padding: 0 0.65rem;
-  background-color: var(--burgundy);
-  background-image: url('/assets/baked/button-burgundy.png');
-  background-repeat: repeat;
-  background-size: 11.6364rem 5.8182rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: rgba(8, 12, 17, 0.55);
-  border-left-color: var(--gold-muted);
-  color: var(--text-header);
   font-family: var(--font-header);
   font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   cursor: pointer;
-}
-
-.fov-succession-assign:hover {
-  background-color: var(--burgundy-light);
-  background-image: url('/assets/baked/button-burgundy-hover.png');
-  color: var(--text-bright);
 }
 
 .fov-overview-heir .fov-succession-heir {

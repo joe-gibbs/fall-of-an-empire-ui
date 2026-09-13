@@ -3,6 +3,8 @@ import { playSound } from '../../hooks/useSound';
 import Tooltip from '../common/tooltips/Tooltip';
 import type { TooltipContent, TooltipLine } from '../common/tooltips/Tooltip';
 import EntityLink from '../common/entities/EntityLink';
+import ResourceLink from '../common/resources/ResourceLink';
+import ResourcePurchaseButton from '../common/resources/ResourcePurchaseButton';
 import type { Warning, WarningSeverity, WarningTarget } from '../../data/types';
 import { activateWarning } from '../../bridge/app/useNotificationsBridge';
 import { startGovernorAssignmentBridge } from '../../bridge/military-map/useBottomBarOperationsBridge';
@@ -42,6 +44,7 @@ const iconKeyToAsset: Record<string, string> = {
   governormissiondeadline: GOVERNOR_MISSION_ICON,
   armyattrition: '/assets/icons/Terrain/I_Attrition.png',
   armydamaged: '/assets/icons/I_War.png',
+  damagedbuildings: '/assets/icons/I_ModConstruction.png',
   crisis: '/assets/icons/I_ExclamationWarning.png',
   resourceshortage: '/assets/icons/I_ResourceConsumption.png',
   storesrunningout: '/assets/icons/I_Warehouse.png',
@@ -70,10 +73,23 @@ function renderWarningBody(warning: Warning): React.ReactNode {
   );
 }
 
-function warningTargetIcons(icons: string[] | undefined) {
-  if (!icons || icons.length === 0) return undefined;
+function warningTargetIcons(target: WarningTarget) {
+  const { icons = [], resources = [] } = target;
+  if (icons.length === 0 && resources.length === 0) return undefined;
   return (
     <span className="warning-missing-icons">
+      {resources.map(resource => (
+        <Tooltip
+          key={resource.id}
+          content={{ title: resource.name, afterLines: <ResourcePurchaseButton resourceId={resource.id} /> }}
+          position="right"
+          inline
+        >
+          <ResourceLink resourceId={resource.id}>
+            <img src={WebkilnAssetPath(resource.icon)} alt={resource.name} className="warning-missing-icon" draggable={false} />
+          </ResourceLink>
+        </Tooltip>
+      ))}
       {icons.map((icon, index) => (
         <img
           key={`${icon}-${index}`}
@@ -102,7 +118,7 @@ function warningTooltip(warning: Warning, currentTargetIndex: number): TooltipCo
   const targets = warning.targets ?? [];
   const lines: TooltipLine[] = targets.length > 0
     ? targets.map((target, index) => {
-        const icons = warningTargetIcons(target.icons);
+        const icons = warningTargetIcons(target);
         const value = icons && target.detail
           ? (
               <span className="warning-target-value">

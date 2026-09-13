@@ -3,6 +3,9 @@ import type { TutorialProgressState } from '../../../bridge/app/useTutorialProgr
 import { useAnimatedPresence } from '../../../hooks/useAnimatedPresence';
 import { useKeyActionResolver } from '../../../hooks/useKeyActionResolver';
 import { renderRichText } from '../../../utils/richText';
+import GameButton from '../../common/buttons/GameButton';
+import Tooltip from '../../common/tooltips/Tooltip';
+import { webUIText } from '../../../localization/WebUITextContext';
 import './TutorialProgress.css';
 
 interface TutorialProgressProps {
@@ -17,6 +20,7 @@ const IN_PROGRESS_ICON = '/assets/icons/I_GoalPartial.png';
 
 export default function TutorialProgress({ progress, placement, onLinkClick }: TutorialProgressProps) {
   const visible = Boolean(progress && progress.steps.length > 0);
+  const [collapsed, setCollapsed] = useState(false);
   const [renderProgress, setRenderProgress] = useState<TutorialProgressState | null>(progress);
   const { mounted, closing } = useAnimatedPresence(visible, { durationMs: EXIT_DURATION_MS });
   const resolveKeyAction = useKeyActionResolver();
@@ -29,6 +33,13 @@ export default function TutorialProgress({ progress, placement, onLinkClick }: T
 
   if (!mounted || !currentRenderProgress) return null;
 
+  const steps = currentRenderProgress.steps;
+  const outstandingIndex = steps.findLastIndex(step => !step.isComplete);
+  const currentIndex = outstandingIndex >= 0 ? outstandingIndex : steps.length - 1;
+  const currentStep = steps[currentIndex];
+  const displayedSteps = collapsed ? [currentStep] : steps;
+  const toggleLabel = webUIText(collapsed ? 'TutorialProgress.Expand' : 'TutorialProgress.Minimise');
+
   return (
     <div
       className={`tutorial-progress-shell tutorial-progress-shell--${placement}${closing ? ' tutorial-progress-shell--closing' : ''}`}
@@ -36,7 +47,7 @@ export default function TutorialProgress({ progress, placement, onLinkClick }: T
     >
       <div className="tutorial-progress-panel">
         <div className="tutorial-progress-list">
-          {currentRenderProgress.steps.map((step, index) => (
+          {displayedSteps.map((step, index) => (
             <div
               key={`${index}:${step.text}`}
               className={`tutorial-progress-step${step.isComplete ? ' tutorial-progress-step--complete' : ''}`}
@@ -59,6 +70,23 @@ export default function TutorialProgress({ progress, placement, onLinkClick }: T
               </span>
             </div>
           ))}
+        </div>
+        <div className="tutorial-progress-controls">
+          {currentStep.deadlineText && (
+            <Tooltip content={currentStep.deadlineTitle} position="bottom">
+              <span className="tutorial-progress-deadline">{currentStep.deadlineText}</span>
+            </Tooltip>
+          )}
+          <Tooltip content={toggleLabel} position="bottom">
+            <GameButton
+              variant="ghost"
+              className="tutorial-progress-toggle"
+              icon={collapsed ? '/assets/icons/I_Plus.png' : '/assets/icons/I_Minus.png'}
+              ariaLabel={toggleLabel}
+              ariaPressed={collapsed}
+              onClick={() => setCollapsed(value => !value)}
+            />
+          </Tooltip>
         </div>
       </div>
     </div>

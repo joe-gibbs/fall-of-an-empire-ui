@@ -123,13 +123,13 @@ function buildBlocInteractionTooltip(i: BlocInteractionView, blocId: string): To
     if (i.cooldownRemainingDays > 0) {
       const remaining = Math.round(i.cooldownRemainingDays);
       lines.push({
-        label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.68.6'), labelIcon: '/assets/icons/I_Cooling.png',
+        label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.68.6'), labelIcon: '/assets/icons/I_Cooldown.png',
         get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.69.1", { Value1: formatNumber(remaining), Value2: webUIText(remaining === 1 ? 'Common.Day' : 'Common.Days') }); },
         valueColor: 'var(--red)',
       });
     } else {
       const total = Math.round(i.cooldownDays);
-      lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.74.7'), labelIcon: '/assets/icons/I_Cooling.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.74.1", { Value1: formatNumber(total), Value2: webUIText(total === 1 ? 'Common.Day' : 'Common.Days') }); } });
+      lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.74.7'), labelIcon: '/assets/icons/I_Cooldown.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.74.1", { Value1: formatNumber(total), Value2: webUIText(total === 1 ? 'Common.Day' : 'Common.Days') }); } });
     }
   }
 
@@ -780,7 +780,7 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
             emptyLabel={<WebUIText textKey="Auto.ComponentsSidebarsPowerBlocSidebar.305.5" />}
           />
           {canShowMoreMembers ? (
-            <button type="button" className="powerbloc-view-members" onClick={() => setShowAllMembers(true)}>
+            <button type="button" className="btn--outline powerbloc-view-members" onClick={() => setShowAllMembers(true)}>
               {webUIText('PowerBlocs.ViewAllMembers')}
             </button>
           ) : null}

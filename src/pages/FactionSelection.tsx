@@ -1489,7 +1489,7 @@ function FactionSelectionDetailPanel({
       <div className="fs-detail-footer">
         <button
           type="button"
-          className={`fs-begin-btn${selected.playable || showPurchaseForSelected ? '' : ' fs-begin-btn--disabled'}`}
+          className={`btn--outline fs-begin-btn${selected.playable || showPurchaseForSelected ? '' : ' fs-begin-btn--disabled'}`}
           data-focus-left=".fs-faction-row--active"
           disabled={!selected.playable && !showPurchaseForSelected}
           onClick={() => {

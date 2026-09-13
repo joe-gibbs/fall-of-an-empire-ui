@@ -78,8 +78,6 @@ const actionButtons: readonly ActionButtonConfig[] = [
   },
 ];
 
-type Speed = 0 | 1 | 2 | 3 | 4;
-
 interface TopBarProps {
   onScreenChange?: (screen: ScreenId) => void;
   activeScreen?: ScreenId | null;
@@ -115,7 +113,6 @@ const TopBar: React.FC<TopBarProps> = ({
   const subjectMode = playerFaction?.diplomaticStatus === 'subject';
   const playerCharacterId = playerFaction?.rulerId ?? null;
 
-  const speed: Speed = isPaused ? 0 : (contextSpeed as Speed);
   const playerCharacterName = playerFaction?.rulerName ?? playerFaction?.name ?? webUIText('TopBar.YourCharacter');
 
   useLayoutEffect(() => {
@@ -143,16 +140,6 @@ const TopBar: React.FC<TopBarProps> = ({
     bridgeEvents.addEventListener('ui.gamepad_open_current_character', openCurrentCharacter);
     return () => bridgeEvents.removeEventListener('ui.gamepad_open_current_character', openCurrentCharacter);
   }, [openSidebar, playerCharacterId]);
-
-  const handleSpeedChange = (newSpeed: Speed) => {
-    if (newSpeed === 0) {
-      togglePause();
-    } else if (isPaused) {
-      contextSetSpeed(newSpeed as 1 | 2 | 4);
-    } else {
-      contextSetSpeed(newSpeed as 1 | 2 | 4);
-    }
-  };
 
   const handlePortraitClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -257,7 +244,7 @@ const TopBar: React.FC<TopBarProps> = ({
                 observerMode={observerMode}
               />
               <div className="topbar-compact-speed">
-                <SpeedControls speed={speed} onSpeedChange={handleSpeedChange} />
+                <SpeedControls speed={contextSpeed} isPaused={isPaused} onTogglePause={togglePause} onSpeedChange={contextSetSpeed} />
               </div>
               {activeInputDevice === 'gamepad' && (
                 <div className="topbar-controller-shortcuts" aria-label={webUIText('Controller.PromptBar')}>
@@ -373,7 +360,7 @@ const TopBar: React.FC<TopBarProps> = ({
                 draggable={false}
               />
               <div className="topbar-center-content">
-                <SpeedControls speed={speed} onSpeedChange={handleSpeedChange} />
+                <SpeedControls speed={contextSpeed} isPaused={isPaused} onTogglePause={togglePause} onSpeedChange={contextSetSpeed} />
                 <div className="topbar-center-divider" />
                 <DateDisplay />
               </div>

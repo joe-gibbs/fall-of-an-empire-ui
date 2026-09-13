@@ -12,6 +12,8 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import Tooltip from '../../common/tooltips/Tooltip';
+import ResourceLink from '../../common/resources/ResourceLink';
+import ResourcePurchaseButton from '../../common/resources/ResourcePurchaseButton';
 import type { TooltipLine } from '../../common/tooltips/Tooltip';
 import CultureTooltip from '../../common/tooltips/CultureTooltip';
 import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
@@ -898,7 +900,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                 const pct = slot.required > 0 ? Math.min(100, (slot.provided / slot.required) * 100) : 0;
                 const isSatisfied = slot.provided >= slot.required;
                 return (
-                  <Tooltip key={slot.name} content={{
+                  <Tooltip key={slot.resourceId} content={{
                     title: slot.name,
                     get body() { return webUIText('CharacterSidebar.LuxuryNeeds.ItemBody', { Name: slot.name }); },
                     lines: [
@@ -906,10 +908,13 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                       { label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1314.56'), get value() { return isSatisfied ? webUIText("CharacterSidebar.Satisfied") : webUIText("CharacterSidebar.Shortage"); }, valueColor: isSatisfied ? 'var(--green)' : 'var(--red)' },
                       ...(!isSatisfied ? [{ label: webUIText('CharacterSidebar.LuxuryNeeds.PenaltyLabel'), get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1315.1", { Value1: (slot.required - slot.provided) * 20 }); }, valueColor: 'var(--red)' }] : []),
                     ],
+                    afterLines: <ResourcePurchaseButton resourceId={slot.resourceId} />,
                   }} position="bottom" delay={200}>
                     <div className="char-luxury-row">
-                      <img src={slot.icon} alt="" className="char-luxury-icon" />
-                      <span className="char-luxury-name">{slot.name}</span>
+                      <ResourceLink resourceId={slot.resourceId} className="char-luxury-resource">
+                        <img src={slot.icon} alt="" className="char-luxury-icon" />
+                        <span className="char-luxury-name">{slot.name}</span>
+                      </ResourceLink>
                       <div className="char-luxury-bar">
                         <PaintedBar percent={pct} color={isSatisfied ? 'green' : 'red'} />
                       </div>

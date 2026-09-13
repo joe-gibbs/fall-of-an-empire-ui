@@ -69,12 +69,7 @@ export default function PersonInteractionGiftModal({
     if (submitting) return;
     beginClose();
   }, [beginClose, submitting]);
-  useEscapeStackEntry({
-    id: 'modal.person-interaction-gift',
-    active: interaction !== null,
-    onClose: handleClose,
-    allowFromInput: true,
-  });
+
 
   const handleOverlayMouseDown = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0 || event.target !== event.currentTarget) return;
@@ -113,6 +108,15 @@ export default function PersonInteractionGiftModal({
     }
     beginClose();
   }, [beginClose, onConfirm, playerGold, selected, submitting]);
+
+  useEscapeStackEntry({
+    id: 'modal.person-interaction-gift',
+    active: interaction !== null,
+    onClose: handleClose,
+    onConfirm: () => { void handleConfirm(); },
+    canConfirm: !!selected && selectedAffordable && !submitting && !closing,
+    allowFromInput: true,
+  });
 
   useEffect(() => () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);

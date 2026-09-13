@@ -204,8 +204,12 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
   }, [draftUnitIds]);
 
   const draftCost = useMemo(() => {
-    return draftUnitIds.reduce((sum, unitId) => sum + (unitById.get(unitId)?.price ?? 0), 0);
-  }, [draftUnitIds, unitById]);
+    const costs = new Map(guard.unitCosts.map(cost => [cost.unitId, cost]));
+    return draftUnitIds.reduce((sum, unitId, index) => {
+      const cost = costs.get(unitId)!;
+      return sum + (index === 0 ? cost.foundingGoldCost : cost.goldCost);
+    }, 0);
+  }, [draftUnitIds, guard.unitCosts]);
 
   const commanderPortrait = mapPortraitPath(guard.commanderPortrait);
   const commanderLayers = mapPortraitLayers(guard.commanderPortraitLayers);

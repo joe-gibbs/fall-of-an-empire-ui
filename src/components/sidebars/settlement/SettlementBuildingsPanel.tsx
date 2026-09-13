@@ -12,6 +12,7 @@ import type {
 } from '../../../data/types';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import GameCheckButton from '../../common/buttons/GameCheckButton';
+import GameButton from '../../common/buttons/GameButton';
 import ConfirmDialog from '../../common/forms/ConfirmDialog';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
@@ -22,6 +23,7 @@ import {
   downgradeSettlementBuilding,
   queueSettlementBuilding,
   repairSettlementBuilding,
+  repairAllSettlementBuildings,
   reorderSettlementBuilding,
   unqueueSettlementBuilding,
   useSettlementBuildingsBridgeState,
@@ -300,6 +302,7 @@ function buildQueueSummaries(queue: ConstructionQueueItem[]): Map<string, Buildi
   const summaries = new Map<string, BuildingQueueSummary>();
 
   for (const item of queue) {
+    if (item.kind === 'repair') continue;
     const existing = summaries.get(item.assetKey);
     if (existing) {
       existing.count += 1;
@@ -325,6 +328,7 @@ function buildQueueSummaries(queue: ConstructionQueueItem[]): Map<string, Buildi
 
 function queueItemsGroupTogether(left: ConstructionQueueItem, right: ConstructionQueueItem): boolean {
   if (left.assetKey !== right.assetKey) return false;
+  if (left.kind === 'repair' || right.kind === 'repair') return false;
   if (left.kind === 'rebuild' || right.kind === 'rebuild') return left.kind === right.kind;
   return true;
 }
@@ -454,7 +458,7 @@ function queuePlusOneDisabledReason(
 }
 
 function canShowQueuePlusOne(item: ConstructionQueueItem, source?: QueueBuildingSource): boolean {
-  if (!source || item.kind === 'rebuild') return false;
+  if (!source || item.kind === 'rebuild' || item.kind === 'repair') return false;
   return source.maxLevel !== 1;
 }
 
@@ -644,9 +648,9 @@ function addPredecessorLine(
   parentName?: string,
   replacesParent?: boolean,
 ) {
-  if (!parentName || replacesParent === false) return;
+  if (!parentName) return;
   lines.push({
-    label: <strong>{webUIText('SettlementBuildings.ReplacesPredecessor', { Name: parentName })}</strong>,
+    label: <strong>{webUIText(replacesParent === false ? 'SettlementBuildings.KeepsPredecessor' : 'SettlementBuildings.ReplacesPredecessor', { Name: parentName })}</strong>,
   });
 }
 
@@ -1007,7 +1011,7 @@ function BuildingManagementActions({
       {showRepair && (
         <button
           type="button"
-          className="bld-tooltip-action-btn"
+          className="btn--outline bld-tooltip-action-btn"
           disabled={repairDisabled}
           onClick={event => onAction('repair', event)}
         >
@@ -1036,7 +1040,7 @@ function BuildingManagementActions({
       )}
       <button
         type="button"
-        className="bld-tooltip-action-btn"
+        className="btn--outline bld-tooltip-action-btn"
         disabled={downgradeDisabled}
         onClick={event => onAction('downgrade', event)}
       >
@@ -1049,7 +1053,7 @@ function BuildingManagementActions({
       </button>
       <button
         type="button"
-        className="bld-tooltip-action-btn bld-tooltip-action-btn--danger"
+        className="btn--outline bld-tooltip-action-btn bld-tooltip-action-btn--danger"
         disabled={demolishDisabled}
         onClick={event => onAction('demolish', event)}
       >
@@ -1330,6 +1334,11 @@ function BuiltCard({
             </span>
           </div>
           <EffectsBlock text={b.effectsText} />
+          {parentName && (
+            <div className="bld-predecessor-explanation">
+              {webUIText(replacesParent === false ? 'SettlementBuildings.KeepsPredecessor' : 'SettlementBuildings.ReplacesPredecessor', { Name: parentName })}
+            </div>
+          )}
           {b.religionName && (
             <FaithRow name={b.religionName} icon={b.religionIcon} />
           )}
@@ -1358,6 +1367,19 @@ function BuiltCard({
                 </span>
                 <span className="bld-node-condition-val">{n(b.condition!)}%</span>
               </span>
+            )}
+            {onRepair && !ruined && b.condition !== undefined && b.condition < 100 && (
+              <Tooltip content={{ title: webUIText('SettlementBuildings.Repair'), body: b.repairReason || webUIText('SettlementBuildings.RepairBody') }}>
+                <GameButton
+                  variant="outline"
+                  className="bld-repair-button"
+                  icon="/assets/icons/I_ModConstruction.png"
+                  disabled={!!pendingAction || !b.canRepair}
+                  onClick={event => { event.stopPropagation(); void runManagementAction('repair'); }}
+                >
+                  {webUIText(b.repairQueued ? 'SettlementBuildings.RepairQueued' : 'SettlementBuildings.Repair')}
+                </GameButton>
+              </Tooltip>
             )}
           </div>
         </div>
@@ -1488,6 +1510,11 @@ function AvailCard({
             </span>
           </div>
           <EffectsBlock text={a.effectsText} />
+          {parentName && (
+            <div className="bld-predecessor-explanation">
+              {webUIText(replacesParent === false ? 'SettlementBuildings.KeepsPredecessor' : 'SettlementBuildings.ReplacesPredecessor', { Name: parentName })}
+            </div>
+          )}
           {a.religionName && (
             <FaithRow name={a.religionName} icon={a.religionIcon} />
           )}
@@ -1555,14 +1582,14 @@ function BranchElbow({
       )}
     </span>
   );
-  if (!parentName || !replacesParent) {
+  if (!parentName) {
     return <span className="bld-branch-elbow-wrap">{elbow}</span>;
   }
 
   return (
     <Tooltip
       content={{
-        title: webUIText('SettlementBuildings.ReplacesPredecessor', { Name: parentName }),
+        title: webUIText(replacesParent ? 'SettlementBuildings.ReplacesPredecessor' : 'SettlementBuildings.KeepsPredecessor', { Name: parentName }),
       }}
       position="right"
       delay={200}
@@ -1699,6 +1726,7 @@ function finalQueueIndex(
 }
 
 function queueGroupLevelText(group: QueueGroup): string | undefined {
+  if (group.lead.kind === 'repair') return webUIText('SettlementBuildings.Repair');
   if (group.lead.kind === 'rebuild') return webUIText('SettlementBuildings.Rebuild');
   if (group.lead.kind !== 'upgrade' && group.count <= 1) return undefined;
   if (group.count > 1 && group.lowestToLevel !== group.highestToLevel) {
@@ -1755,7 +1783,7 @@ function QueueItemCard({
     : undefined;
   const plusOneEnabled = showPlusOne && !!buildingSource && !queueing && !pendingRemoval
     && canQueuePlusOne(lastItem, buildingSource, panelLockReason);
-  const showPlace = !!onPlace && !!buildingSource;
+  const showPlace = group.lead.kind !== 'repair' && !!onPlace && !!buildingSource;
   const showActions = showPlace || showPlusOne || canUnqueue || pendingRemoval;
 
   return (
@@ -2206,6 +2234,14 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const { settings } = useSettingsBridge();
   const liveDataState = useSettlementBuildingsBridgeState(settlement.id);
   const liveData = liveDataState.data;
+  const [repairingAll, setRepairingAll] = React.useState(false);
+  const handleRepairAll = () => {
+    if (!liveData?.canRepairAll || repairingAll) return;
+    setRepairingAll(true);
+    repairAllSettlementBuildings(settlement.id)
+      .catch(acknowledgeBridgeFailure)
+      .finally(() => setRepairingAll(false));
+  };
   const inlineData = React.useMemo<PanelBuildingsData | null>(() => {
     if (!hasRichBuildingsData(settlement)) return null;
     return {
@@ -2397,7 +2433,10 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
     if (viewport) {
       const viewportRect = viewport.getBoundingClientRect();
       const elementRect = element.getBoundingClientRect();
-      viewport.scrollTop += elementRect.top - viewportRect.top - 12;
+      const filterHeader = element.closest('.bld-panel')!.querySelector<HTMLElement>('.bld-filter-header')!;
+      // The search, filters and categories remain over the top of this viewport.
+      const visibleTop = viewportRect.top + filterHeader.getBoundingClientRect().height;
+      viewport.scrollTop += elementRect.top - visibleTop - 12;
     }
 
     element.animate(
@@ -2594,7 +2633,9 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   }, [visibleNodes, activeTab]);
 
   React.useEffect(() => {
-    if (counts[activeTab].total > 0 && !disabledCategories.has(activeTab)) return;
+    // Filtering must not change the player's category. Only move when the
+    // category itself becomes unavailable, such as a settlement without a port.
+    if (!disabledCategories.has(activeTab)) return;
     for (const cat of CATEGORY_ORDER) {
       if (counts[cat].total > 0 && !disabledCategories.has(cat)) {
         setActiveTab(cat);
@@ -2645,70 +2686,93 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
           <div className="sidebar-placeholder"><WebUIText textKey="Auto.ComponentsSidebarsSettlementBuildingsPanel.946.8" /></div>
         ) : (
           <>
-            <div className="bld-search-row">
-              <div className="search-field bld-search-field">
-                <img src="/assets/icons/I_Search.png" alt="" className="search-field__icon" draggable={false} />
-                <input
-                  type="text"
-                  className="search-field__input bld-search-input"
-                  placeholder={webUIText('SettlementBuildings.SearchPlaceholder')}
-                  value={buildingSearch}
-                  onChange={event => {
-                    setPinnedBuildingId(null);
-                    setBuildingSearch(event.target.value);
-                  }}
-                />
+            <div className="bld-filter-header">
+              {liveData && liveData.repairAllCount > 0 && (
+                <div className="bld-repair-all">
+                  <Tooltip content={{
+                    title: webUIText('SettlementBuildings.RepairAll'),
+                    body: liveData.repairAllReason || webUIText('SettlementBuildings.RepairAllBody', { Count: liveData.repairAllCount }),
+                    lines: [
+                      { label: webUIText('Economy.Gold'), value: n(liveData.repairAllGoldCost), labelIcon: '/assets/icons/I_Coins.png' },
+                      ...liveData.repairAllResourceCost.map(cost => ({ label: cost.displayName, value: n(cost.amount), labelIcon: cost.icon })),
+                    ],
+                  }}>
+                    <GameButton
+                      variant="outline"
+                      icon="/assets/icons/I_ModConstruction.png"
+                      disabled={repairingAll || !liveData.canRepairAll}
+                      onClick={handleRepairAll}
+                    >
+                      {webUIText('SettlementBuildings.RepairAll')}
+                    </GameButton>
+                  </Tooltip>
+                </div>
+              )}
+              <div className="bld-search-row">
+                <div className="search-field bld-search-field">
+                  <img src="/assets/icons/I_Search.png" alt="" className="search-field__icon" draggable={false} />
+                  <input
+                    type="text"
+                    className="search-field__input bld-search-input"
+                    placeholder={webUIText('SettlementBuildings.SearchPlaceholder')}
+                    value={buildingSearch}
+                    onChange={event => {
+                      setPinnedBuildingId(null);
+                      setBuildingSearch(event.target.value);
+                    }}
+                  />
+                </div>
+                <div className="bld-filter-row">
+                  <GameCheckButton
+                    checked={hideMaxed}
+                    label={webUIText('SettlementBuildings.HideMaxed')}
+                    className="game-check-button--compact-label"
+                    onToggle={() => {
+                      setPinnedBuildingId(null);
+                      setHideMaxed(value => !value);
+                    }}
+                    tooltip={{
+                      title: webUIText('SettlementBuildings.HideMaxed'),
+                      body: webUIText('SettlementBuildings.HideMaxedTooltip'),
+                    }}
+                  />
+                  <GameCheckButton
+                    checked={hideLackingPopulation}
+                    label={webUIText('SettlementBuildings.HideLackingPopulation')}
+                    className="game-check-button--compact-label"
+                    onToggle={() => {
+                      setPinnedBuildingId(null);
+                      setHideLackingPopulation(value => !value);
+                    }}
+                    tooltip={{
+                      title: webUIText('SettlementBuildings.HideLackingPopulation'),
+                      body: webUIText('SettlementBuildings.HideLackingPopulationTooltip'),
+                    }}
+                  />
+                  <GameCheckButton
+                    checked={hideUnbuildable}
+                    label={webUIText('SettlementBuildings.HideUnbuildable')}
+                    className="game-check-button--compact-label"
+                    onToggle={() => {
+                      setPinnedBuildingId(null);
+                      setHideUnbuildable(value => !value);
+                    }}
+                    tooltip={{
+                      title: webUIText('SettlementBuildings.HideUnbuildable'),
+                      body: webUIText('SettlementBuildings.HideUnbuildableTooltip'),
+                    }}
+                  />
+                </div>
               </div>
-              <div className="bld-filter-row">
-                <GameCheckButton
-                  checked={hideMaxed}
-                  label={webUIText('SettlementBuildings.HideMaxed')}
-                  className="game-check-button--compact-label"
-                  onToggle={() => {
-                    setPinnedBuildingId(null);
-                    setHideMaxed(value => !value);
-                  }}
-                  tooltip={{
-                    title: webUIText('SettlementBuildings.HideMaxed'),
-                    body: webUIText('SettlementBuildings.HideMaxedTooltip'),
-                  }}
-                />
-                <GameCheckButton
-                  checked={hideLackingPopulation}
-                  label={webUIText('SettlementBuildings.HideLackingPopulation')}
-                  className="game-check-button--compact-label"
-                  onToggle={() => {
-                    setPinnedBuildingId(null);
-                    setHideLackingPopulation(value => !value);
-                  }}
-                  tooltip={{
-                    title: webUIText('SettlementBuildings.HideLackingPopulation'),
-                    body: webUIText('SettlementBuildings.HideLackingPopulationTooltip'),
-                  }}
-                />
-                <GameCheckButton
-                  checked={hideUnbuildable}
-                  label={webUIText('SettlementBuildings.HideUnbuildable')}
-                  className="game-check-button--compact-label"
-                  onToggle={() => {
-                    setPinnedBuildingId(null);
-                    setHideUnbuildable(value => !value);
-                  }}
-                  tooltip={{
-                    title: webUIText('SettlementBuildings.HideUnbuildable'),
-                    body: webUIText('SettlementBuildings.HideUnbuildableTooltip'),
-                  }}
-                />
-              </div>
-            </div>
 
-            <CategoryTabs
-              active={activeTab}
-              counts={counts}
-              disabledCategories={disabledCategories}
-              labels={data?.categoryLabels}
-              onChange={setActiveTab}
-            />
+              <CategoryTabs
+                active={activeTab}
+                counts={counts}
+                disabledCategories={disabledCategories}
+                labels={data?.categoryLabels}
+                onChange={setActiveTab}
+              />
+            </div>
 
             <div className="bld-construction-slot" ref={constructionSlotRef}>
               <ConstructionSection

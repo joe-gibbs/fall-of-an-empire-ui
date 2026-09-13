@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useId, useState } from 'react';
 import { playSound } from '../../../hooks/useSound';
 import { useAnimatedPresence } from '../../../hooks/useAnimatedPresence';
 import { useEscapeStackEntry } from '../../../context/EscapeStack';
@@ -15,6 +15,7 @@ interface ConfirmDialogProps {
   confirmText?: string;
   cancelText?: string;
   onConfirm: () => void;
+  confirmDisabled?: boolean;
   onClosed: () => void;
   variant?: 'default' | 'danger';
 }
@@ -26,9 +27,11 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   confirmText = webUIText("Common.Confirm"),
   cancelText = webUIText("Common.Cancel"),
   onConfirm,
+  confirmDisabled = false,
   onClosed,
   variant = 'default',
 }) => {
+  const dialogId = useId();
   const [pressed, setPressed] = useState<'confirm' | 'cancel' | null>(null);
   const handleClosed = useCallback(() => {
     setPressed(null);
@@ -41,7 +44,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   const animatedClose = useCallback(
     (which: 'confirm' | 'cancel') => {
-      if (closing) return;
+      if (closing || (which === 'confirm' && confirmDisabled)) return;
       setPressed(which);
       requestClose(() => {
         setPressed(null);
@@ -49,12 +52,15 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         onClosed();
       });
     },
-    [closing, onConfirm, onClosed, requestClose]
+    [closing, confirmDisabled, onConfirm, onClosed, requestClose]
   );
   useEscapeStackEntry({
-    id: 'modal.confirm-dialog',
+    id: `modal.confirm-dialog:${dialogId}`,
+    orderKey: `${dialogId}:${title}:${message}`,
     active: mounted,
     onClose: () => animatedClose('cancel'),
+    onConfirm: () => { if (variant === 'danger') playSound('error'); animatedClose('confirm'); },
+    canConfirm: visible && !closing && !confirmDisabled,
     allowFromInput: true,
   });
 
@@ -97,6 +103,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </div>
           {variant === 'danger' ? (
             <button
+              disabled={closing || confirmDisabled}
               className={`btn--danger${pressed === 'confirm' ? ' pressed' : ''}`}
               onClick={() => { playSound('error'); animatedClose('confirm'); }}
             >
@@ -104,7 +111,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             </button>
           ) : (
             <div className={pressed === 'confirm' ? 'pressed' : undefined}>
-              <GameButton variant="burgundy" onClick={() => animatedClose('confirm')}>
+              <GameButton variant="burgundy" disabled={closing || confirmDisabled} onClick={() => animatedClose('confirm')}>
                 {confirmText}
               </GameButton>
             </div>

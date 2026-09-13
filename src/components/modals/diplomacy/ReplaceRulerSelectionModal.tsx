@@ -64,6 +64,7 @@ export default function ReplaceRulerSelectionModal({
   const { mounted, closing, close } = useModalPresence({
     open,
     onClose,
+    onConfirm: () => { handleSelect(); },
     escapeId: 'modal.replace-ruler-selection',
     allowFromInput: true,
     closeStrategy: 'request',

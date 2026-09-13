@@ -561,6 +561,7 @@ export interface ConfirmMilitaryMergePrompt {
 export interface ContinueGameResponse {
   started: boolean;
   slotName: string;
+  warnings: string[];
 }
 
 export interface ConvoyGlanceFactionFilter {
@@ -1457,6 +1458,7 @@ export interface BuildQueueItemGroup {
   portrait: string;
   itemName: string;
   itemKind: string;
+  isRepair: boolean;
   itemKindLabel: string;
   count: number;
   firstQueueIndex: number;
@@ -1864,6 +1866,13 @@ export interface EconomyOverviewResourceAmount {
   amount: number;
 }
 
+export interface EconomyTradeQuote {
+  amount: number;
+  buyCost: number;
+  sellAmount: number;
+  sellIncome: number;
+}
+
 export interface EconomyOverviewResourceRow {
   id: string;
   name: string;
@@ -1885,6 +1894,7 @@ export interface EconomyOverviewResourceRow {
   marketMultiplier: number;
   buyPrice: number;
   sellPrice: number;
+  tradeQuotes: EconomyTradeQuote[];
   autoSellEnabled: boolean;
   autoSellThreshold: number;
   autoSellSliderMax: number;
@@ -2294,6 +2304,7 @@ export interface FactionPopulationGrowthSource {
 export interface FactionDemographicShare {
   id: string;
   name: string;
+  description: string;
   colour: string;
   iconId: string;
   population: number;
@@ -3308,6 +3319,7 @@ export interface PersonHistoryEntry {
 }
 
 export interface PersonLuxurySlotEntry {
+  resourceId: string;
   name: string;
   icon: string;
   required: number;
@@ -4269,6 +4281,7 @@ export interface SettlementBuiltBuildingEntry {
   downgradeTargetName: string;
   downgradeTargetLevel: number;
   canRepair: boolean;
+  repairQueued: boolean;
   repairReason: string;
   repairGoldCost: number;
   repairResourceCost: SettlementBuildingCost[];
@@ -4305,6 +4318,7 @@ export interface SettlementConstructionQueueItem {
   description: string;
   effectsHtml: string;
   kind: string;
+  isRepair: boolean;
   toLevel: number;
   goldCost: number;
   resourceCost: SettlementBuildingCost[];
@@ -4333,6 +4347,11 @@ export interface GetSettlementBuildingsResponse {
   canBuild: boolean;
   cannotBuildReason: string;
   categoryLabels: SettlementBuildingCategoryLabel[];
+  canRepairAll: boolean;
+  repairAllReason: string;
+  repairAllCount: number;
+  repairAllGoldCost: number;
+  repairAllResourceCost: SettlementBuildingCost[];
 }
 
 export interface GetSettlementDataRequest {
@@ -4857,6 +4876,8 @@ export interface GetTutorialCampaignStateResponse {
 export interface TutorialProgressStepData {
   text: string;
   isComplete: boolean;
+  deadlineText: string;
+  deadlineTitle: string;
 }
 
 export interface GetTutorialProgressResponse {
@@ -4997,6 +5018,10 @@ export interface WorldSettlementGlance {
   bishopName: string;
   hasBuildItem: boolean;
   buildItem: WorldGlanceBuildProgress;
+  queuedConstruction: string;
+  queuedConstructionCount: number;
+  queuedRecruitment: string;
+  queuedRecruitmentCount: number;
   warWithPlayer: boolean;
   peaceSelection: boolean;
   warScoreCost: number;
@@ -5344,10 +5369,12 @@ export interface LoadingScreenResponse {
 
 export interface LoadSaveRequest {
   slotName: string;
+  acknowledgeWarnings: boolean;
 }
 
 export interface LoadSaveResponse {
   started: boolean;
+  warnings: string[];
 }
 
 export interface MapModeFilterEntry {
@@ -6062,6 +6089,12 @@ export interface PersonalGuardRequirementEntry {
   description: string;
 }
 
+export interface PersonalGuardUnitCostEntry {
+  unitId: string;
+  goldCost: number;
+  foundingGoldCost: number;
+}
+
 export interface GetPersonalGuardResponse {
   eligible: boolean;
   hasGuard: boolean;
@@ -6091,6 +6124,7 @@ export interface GetPersonalGuardResponse {
   status: string;
   companies: PersonalGuardCompanyEntry[];
   eligibleUnits: FormationTemplateUnitEntry[];
+  unitCosts: PersonalGuardUnitCostEntry[];
   canEditComposition: boolean;
   formationRequirements: PersonalGuardRequirementEntry[];
   companyEquipmentRequirements: PersonalGuardRequirementEntry[];
@@ -6361,6 +6395,15 @@ export interface ReorderSettlementBuildingRequest {
   settlementId: string;
   sourceQueueIndex: number;
   targetQueueIndex: number;
+}
+
+export interface RepairAllSettlementBuildingsRequest {
+  settlementId: string;
+}
+
+export interface RepairAllSettlementBuildingsResponse {
+  queuedCount: number;
+  goldCost: number;
 }
 
 export interface RepairSettlementBuildingRequest {
@@ -6898,12 +6941,19 @@ export interface CampaignVictoryTierDefinition {
   conditions: VictoryConditionInfo[];
 }
 
+export interface WarningResourcePayload {
+  id: string;
+  name: string;
+  icon: string;
+}
+
 export interface WarningTargetPayload {
   label: string;
   detail: string;
   linkType: string;
   linkId: string;
   icons: string[];
+  resources: WarningResourcePayload[];
 }
 
 export interface WarningEventsRequest {
@@ -7144,6 +7194,7 @@ export interface BridgeActions {
   'game.rename_settlement': { request: RenameSettlementRequest; response: RenameSettlementResponse };
   'game.render_character_creator_preview': { request: RenderCharacterCreatorPreviewRequest; response: void };
   'game.reorder_settlement_building': { request: ReorderSettlementBuildingRequest; response: void };
+  'game.repair_all_settlement_buildings': { request: RepairAllSettlementBuildingsRequest; response: RepairAllSettlementBuildingsResponse };
   'game.repair_settlement_building': { request: RepairSettlementBuildingRequest; response: void };
   'game.replace_military_commander': { request: ReplaceMilitaryCommanderRequest; response: void };
   'game.replace_personal_guard_company': { request: ReplacePersonalGuardCompanyRequest; response: ReplacePersonalGuardCompanyResponse };

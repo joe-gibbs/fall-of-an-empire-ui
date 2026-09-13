@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type { BridgeActions } from '../../bridge-types.generated.ts';
-import { getCachedBridgeEvent } from './bridgeEventCache';
+import { getCachedBridgeEvent, getCachedBridgeEventRevision, nextBridgeCacheRevision } from './bridgeEventCache';
 import { acknowledgeBridgeFailure } from './runtimeEngine';
 
 type BridgeActionName = keyof BridgeActions;
@@ -13,6 +13,7 @@ interface CompletedBridgeQuery {
   value: unknown;
   storedAtMs: number;
   ttlMs: number | null;
+  revision: number;
 }
 
 const completedQueries = new Map<string, CompletedBridgeQuery>();
@@ -35,7 +36,7 @@ function nowMs(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 
-function readCompletedQuery(requestKey: string): unknown | undefined {
+function readCompletedQuery(requestKey: string): CompletedBridgeQuery | undefined {
   const completed = completedQueries.get(requestKey);
   if (!completed) {
     return undefined;
@@ -46,7 +47,7 @@ function readCompletedQuery(requestKey: string): unknown | undefined {
     return undefined;
   }
 
-  return completed.value;
+  return completed;
 }
 
 function writeCompletedQuery(requestKey: string, value: unknown, ttlMs: number | null): void {
@@ -54,6 +55,7 @@ function writeCompletedQuery(requestKey: string, value: unknown, ttlMs: number |
     value,
     storedAtMs: nowMs(),
     ttlMs,
+    revision: nextBridgeCacheRevision(),
   });
 }
 
@@ -148,26 +150,26 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
       });
     }) as never);
 
-    const cached = getCachedBridgeEvent(action);
-    if (cached !== undefined && (!matchRef.current || matchRef.current(cached as ResponseOf<A>))) {
-      const cachedResponse = cached as ResponseOf<A>;
+    const completed = shouldCacheResponse ? readCompletedQuery(requestKey) : undefined;
+    if (completed !== undefined) {
+      const completedResponse = completed.value as ResponseOf<A>;
       setData({
         requestKey,
-        value: mergePushRef.current
-          ? mergePushRef.current(null, cachedResponse)
-          : mapRef.current(cachedResponse),
+        value: mapRef.current(completedResponse),
       });
     }
 
-    const completed = shouldCacheResponse ? readCompletedQuery(requestKey) : undefined;
-    if (completed !== undefined && (!matchRef.current || matchRef.current(completed as ResponseOf<A>))) {
-      const completedResponse = completed as ResponseOf<A>;
-      setData({
+    const cached = getCachedBridgeEvent(action);
+    if (cached !== undefined
+      && getCachedBridgeEventRevision(action) > (completed?.revision ?? 0)
+      && (!matchRef.current || matchRef.current(cached as ResponseOf<A>))) {
+      const cachedResponse = cached as ResponseOf<A>;
+      setData(current => ({
         requestKey,
         value: mergePushRef.current
-          ? mergePushRef.current(null, completedResponse)
-          : mapRef.current(completedResponse),
-      });
+          ? mergePushRef.current(current?.requestKey === requestKey ? current.value : null, cachedResponse)
+          : mapRef.current(cachedResponse),
+      }));
     }
 
     // The variadic typing on bridgeCall can't be satisfied generically here;

@@ -11,6 +11,8 @@ export interface EscapeStackRecord {
   orderKey: string;
   onCloseRef: MutableRefObject<() => void>;
   allowFromInput: boolean;
+  onConfirmRef: MutableRefObject<(() => void) | undefined>;
+  canConfirmRef: MutableRefObject<boolean>;
 }
 
 export interface RegisterEscapeStackEntryArgs {
@@ -18,6 +20,8 @@ export interface RegisterEscapeStackEntryArgs {
   orderKey: string;
   onCloseRef: MutableRefObject<() => void>;
   allowFromInput?: boolean;
+  onConfirmRef: MutableRefObject<(() => void) | undefined>;
+  canConfirmRef: MutableRefObject<boolean>;
 }
 
 export interface EscapeStackContextValue {
@@ -31,6 +35,8 @@ interface EscapeStackEntryOptions {
   id: string;
   active: boolean;
   onClose: () => void;
+  onConfirm?: () => void;
+  canConfirm?: boolean;
   orderKey?: string;
   allowFromInput?: boolean;
 }
@@ -59,15 +65,21 @@ export function useEscapeStackEntry({
   id,
   active,
   onClose,
+  onConfirm,
+  canConfirm = true,
   orderKey = id,
   allowFromInput = false,
 }: EscapeStackEntryOptions) {
   const { registerEntry } = useEscapeStack();
   const onCloseRef = useRef(onClose);
+  const onConfirmRef = useRef(onConfirm);
+  const canConfirmRef = useRef(canConfirm);
 
   useLayoutEffect(() => {
     onCloseRef.current = onClose;
-  }, [onClose]);
+    onConfirmRef.current = onConfirm;
+    canConfirmRef.current = canConfirm;
+  }, [onClose, onConfirm, canConfirm]);
 
   useLayoutEffect(() => {
     if (!active) return undefined;
@@ -75,6 +87,8 @@ export function useEscapeStackEntry({
       id,
       orderKey,
       onCloseRef,
+      onConfirmRef,
+      canConfirmRef,
       allowFromInput,
     });
   }, [active, allowFromInput, id, orderKey, registerEntry]);

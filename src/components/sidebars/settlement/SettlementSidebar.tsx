@@ -165,7 +165,7 @@ function buildInteractionTooltip(i: SettlementInteractionView, settlementId: str
   }
 
   if (i.cooldownDays > 0) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.135.8'), labelIcon: '/assets/icons/I_Cooling.png', get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.135.1", { Value1: formatNumber(i.cooldownDays) }); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.135.8'), labelIcon: '/assets/icons/I_Cooldown.png', get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.135.1", { Value1: formatNumber(i.cooldownDays) }); } });
   }
 
   if (i.reasons.length > 0) {
@@ -448,7 +448,7 @@ function ShareTooltipPanel({
               <div className="settle-share-clergy-actions">
                 <button
                   type="button"
-                  className="settle-share-clergy-action-btn"
+                  className="btn--outline settle-share-clergy-action-btn"
                   onClick={(event) => {
                     if (event.button !== 0) return;
                     event.preventDefault();
@@ -461,7 +461,7 @@ function ShareTooltipPanel({
                 {bishopric.bishop && (
                   <button
                     type="button"
-                    className="settle-share-clergy-action-btn"
+                    className="btn--outline settle-share-clergy-action-btn"
                     onClick={(event) => {
                       if (event.button !== 0) return;
                       event.preventDefault();
@@ -1230,7 +1230,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                   <Tooltip content={{ title: governorActionTitle, body: governorActionBody }} position="left" delay={150}>
                     <button
                       type="button"
-                      className="settle-person-action-btn"
+                      className="btn--outline settle-person-action-btn"
                       onClick={(event) => {
                         if (event.button !== 0) return;
                         event.preventDefault();

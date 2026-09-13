@@ -1629,32 +1629,9 @@
   min-width: 8.7273rem;
   margin-left: 1.0909rem;
   padding: 0.6364rem 1rem;
-  background-color: var(--burgundy);
-  background-image: url('/assets/baked/texture-overlay-dark.png');
-  background-position: 0 0;
-  background-repeat: repeat;
-  background-size: 7.385rem 7.385rem;
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-top-color: var(--gold-dark);
-  border-right-color: var(--gold-dark);
-  border-bottom-color: var(--gold-dark);
-  border-left-color: var(--gold-dark);
-  color: var(--text-header);
   font-family: var(--font-body);
   font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   cursor: pointer;
-}
-
-.mm-mod-restart-btn:hover {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  color: var(--gold);
-  background-image: url('/assets/baked/texture-overlay-dark.png');
 }
 
 .mm-mod-version {
@@ -2691,45 +2668,6 @@
 }
 
 /* Mods use the same painted interaction surfaces as the campaign UI. */
-.mm-mod-action-btn.btn--outline {
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.0909rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
-  background-color: transparent;
-  background-image: url('/assets/baked/texture-overlay-dark.png');
-  background-position: 0 0;
-  background-repeat: repeat;
-  background-size: 7.385rem 7.385rem;
-  color: var(--gold);
-}
-
-.mm-mod-action-btn.btn--outline:hover {
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  background-color: rgba(201, 168, 76, 0.06);
-  background-image: url('/assets/baked/texture-overlay-dark.png');
-}
-
-.mm-mod-action-btn.btn--outline:active {
-  border-image-source: url('/assets/gold-frame.png');
-  background-color: rgba(201, 168, 76, 0.1);
-  background-image: url('/assets/baked/texture-overlay-dark.png');
-}
-
-.mm-mod-action-btn.btn--burgundy,
-.mm-mod-restart-btn {
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.154rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
-}
 
 .mm-mod-entry,
 .mm-mod-restart-panel,

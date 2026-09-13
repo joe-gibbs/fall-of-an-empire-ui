@@ -151,7 +151,7 @@ function CourtSlot({
               {!readOnly && (
                 <button
                   type="button"
-                  className="fov-court-replace-btn"
+                  className="btn--outline fov-court-replace-btn"
                   onClick={(event) => {
                     event.stopPropagation();
                     onOpen(position);

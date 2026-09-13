@@ -137,12 +137,7 @@ export default function FactionInteractionInputModal({
     beginClose();
   }, [beginClose, submitting]);
 
-  useEscapeStackEntry({
-    id: 'modal.faction-interaction-input',
-    active: selection !== null,
-    onClose: handleClose,
-    allowFromInput: true,
-  });
+
 
   const handleOverlayMouseDown = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0 || event.target !== event.currentTarget) return;
@@ -201,6 +196,15 @@ export default function FactionInteractionInputModal({
     }
     beginClose();
   }, [beginClose, canConfirm, candidates, factionByInput, goldByInput, onConfirm, requirements, selection, setError, setSubmitting, submitting]);
+
+  useEscapeStackEntry({
+    id: 'modal.faction-interaction-input',
+    active: selection !== null,
+    onClose: handleClose,
+    onConfirm: () => { void handleConfirm(); },
+    canConfirm: canConfirm && !submitting && !closing,
+    allowFromInput: true,
+  });
 
   useEffect(() => () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);

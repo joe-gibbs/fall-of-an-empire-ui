@@ -497,6 +497,12 @@ export function TemplateUnitSelectorModal({
     closeTimerRef.current = window.setTimeout(onClose, 160);
   };
 
+  const handleDone = () => {
+    if (closing || doneDisabled) return;
+    if (onDone) onDone();
+    else requestClose();
+  };
+
   useEffect(() => () => {
     if (closeTimerRef.current !== undefined) window.clearTimeout(closeTimerRef.current);
   }, []);
@@ -505,6 +511,8 @@ export function TemplateUnitSelectorModal({
     id: 'modal.template-unit-selector',
     active: true,
     onClose: requestClose,
+    onConfirm: isSingle ? undefined : handleDone,
+    canConfirm: !closing && !doneDisabled,
     allowFromInput: true,
   });
 
@@ -814,7 +822,7 @@ export function TemplateUnitSelectorModal({
             >
               <button
                 type="button"
-                className="chart-unit-picker-add chart-unit-picker-add--select"
+                className="btn--outline chart-unit-picker-select"
                 onClick={(event) => {
                   event.stopPropagation();
                   onAdd(unit.id, 1);
@@ -1055,10 +1063,7 @@ export function TemplateUnitSelectorModal({
               className="chart-unit-picker-done"
               tutorialTarget={doneTutorialTarget ?? (onDone ? 'FormPersonalGuardButton' : 'CloseUnitCatalogueButton')}
               disabled={doneDisabled}
-              onClick={() => {
-                if (onDone) onDone();
-                else requestClose();
-              }}
+              onClick={handleDone}
             >
               {doneLabel ?? webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.667.4')}
             </GameButton>

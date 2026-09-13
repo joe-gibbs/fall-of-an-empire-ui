@@ -1071,19 +1071,6 @@
   align-items: center;
   justify-content: center;
   padding: 0.28rem 0.44rem;
-  border-width: 0.231rem;
-  border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
-  background-color: rgba(82, 20, 28, 0.72);
-  background-image: url('/assets/baked/button-burgundy.png');
-  background-repeat: repeat;
-  background-size: 11.6364rem 5.8182rem;
-  color: var(--gold-light);
   font-family: var(--font-header);
   font-size: 0.76rem;
   text-align: center;
@@ -1098,14 +1085,7 @@
   margin-right: 0.28rem;
 }
 
-.ips-create-province-button:hover {
-  background-image: url('/assets/baked/button-burgundy-hover.png');
-}
-
 .ips-create-province-button--disabled {
-  background-color: rgba(17, 17, 18, 0.72);
-  background-image: url('/assets/baked/card-charcoal.png');
-  color: var(--text-dark);
   cursor: default;
 }
 
@@ -1187,11 +1167,6 @@
   width: 6.4rem;
   margin-left: 0.45rem;
   padding: 0.22rem 0.35rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.38);
-  background-color: rgba(82, 20, 28, 0.72);
-  color: var(--gold-light);
   font-family: var(--font-header);
   font-size: 0.72rem;
   text-align: center;
@@ -1199,20 +1174,7 @@
   cursor: var(--cursor-pointer);
 }
 
-.ips-foederati-action:hover {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-}
-
 .ips-foederati-action--disabled {
-  border-top-color: rgba(121, 103, 76, 0.18);
-  border-right-color: rgba(121, 103, 76, 0.18);
-  border-bottom-color: rgba(121, 103, 76, 0.18);
-  border-left-color: rgba(121, 103, 76, 0.18);
-  background-color: rgba(17, 17, 18, 0.72);
-  color: var(--text-dark);
   cursor: default;
 }
 

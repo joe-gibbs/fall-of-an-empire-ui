@@ -7,6 +7,7 @@
 export const TUTORIAL_REVEAL_SCREENS_MENU = 'tutorial:reveal-screens-menu';
 export const TUTORIAL_REVEAL_MAP_MODE_PICKER = 'tutorial:reveal-map-mode-picker';
 export const TUTORIAL_REVEAL_PERSONAL_GUARD = 'tutorial:reveal-personal-guard';
+export const TUTORIAL_RELEASE_HUD_REVEAL = 'tutorial:release-hud-reveal';
 
 export interface TutorialHudRevealDetail {
   tokens: string[];

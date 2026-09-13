@@ -1,9 +1,20 @@
 import type { BridgeActions } from '../../bridge-types.generated.ts';
 
 const bridgeEventCache = new Map<string, unknown>();
+const bridgeEventRevisions = new Map<string, number>();
+let cacheRevision = 0;
+
+export function nextBridgeCacheRevision(): number {
+  return ++cacheRevision;
+}
+
+export function getCachedBridgeEventRevision(eventName: string): number {
+  return bridgeEventRevisions.get(eventName) ?? 0;
+}
 
 export function cacheBridgeEvent(eventName: string, data: unknown): void {
   bridgeEventCache.set(eventName, data);
+  bridgeEventRevisions.set(eventName, nextBridgeCacheRevision());
 }
 
 export function clearGameplayBridgeEventCache(): void {
@@ -18,6 +29,7 @@ export function clearGameplayBridgeEventCache(): void {
     }
 
     bridgeEventCache.delete(key);
+    bridgeEventRevisions.delete(key);
   }
 }
 

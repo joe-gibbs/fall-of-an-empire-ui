@@ -69,6 +69,7 @@ interface WarningEventTarget {
   linkType?: string;
   linkId?: string;
   icons?: string[];
+  resources?: { id: string; name: string; icon: string }[];
 }
 
 interface WarningEvent {
@@ -172,6 +173,7 @@ function mapWarning(data: WarningEvent): Warning {
       linkType: target.linkType || undefined,
       linkId: target.linkId || undefined,
       icons: target.icons ?? [],
+      resources: target.resources,
     })),
   };
 }

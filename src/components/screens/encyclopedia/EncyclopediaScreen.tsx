@@ -1071,7 +1071,7 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
                             >
                               <button
                                 type="button"
-                                className="enc-bldg-place-btn"
+                                className="btn--outline enc-bldg-place-btn"
                                 aria-label={webUIText('BottomBar.BuildingPlacement.PlaceNamedOnMap', { Name: building.name })}
                                 onClick={(event) => {
                                   event.preventDefault();

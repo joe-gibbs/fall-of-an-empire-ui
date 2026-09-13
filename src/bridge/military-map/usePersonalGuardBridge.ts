@@ -25,7 +25,6 @@ export function usePersonalGuardBridge(): GetPersonalGuardResponse | null {
   const live = useBridgeQuery({
     action: 'game.get_personal_guard',
     payload: undefined,
-    cacheResponse: true,
     map: (response) => {
       personalGuardCache = response;
       return response;

@@ -41,6 +41,28 @@
   padding: 0.45rem 0.75rem 0.35rem;
 }
 
+.screen.screen--negotiation.screen--territory-selection {
+  height: auto;
+  max-height: 30vh;
+}
+
+.pns-territory-selection {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.pns-territory-instruction {
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.pns-territory-selection-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .screen--negotiation .screen-title-area {
   display: flex;
   align-items: center;
@@ -1593,7 +1615,6 @@
   padding: 0.22rem 0.55rem;
   font-family: var(--font-header);
   font-size: 0.8rem;
-  letter-spacing: 0.08em;
 }
 
 .pns-propose-button--disabled {

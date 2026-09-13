@@ -72,6 +72,7 @@ export default function GovernorAssignmentPickerModal({
   const { mounted, closing, close } = useModalPresence({
     open,
     onClose,
+    onConfirm: () => { chooseSelected(); },
     escapeId: 'modal.governor-assignment-picker',
     allowFromInput: true,
     closeStrategy: 'request',

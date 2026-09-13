@@ -33,6 +33,9 @@
 }
 .confirm-dialog {
   width: 32.7273rem;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
   padding: 0;
   animation-name: confirm-scale-in;
   animation-duration: 0.22s;
@@ -43,6 +46,7 @@
   animation: confirm-scale-out 220ms ease-in forwards;
 }
 .confirm-dialog-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -58,12 +62,15 @@
   letter-spacing: 0.0455rem;
 }
 .confirm-dialog-body {
+  min-height: 0;
+  overflow-y: auto;
   padding: 1.4545rem;
   font-size: 1.1818rem;
   color: var(--text);
   line-height: 1.5;
 }
 .confirm-dialog-actions {
+  flex-shrink: 0;
   display: flex;
   padding: 1.0909rem 1.4545rem 1.2727rem;
   border-top-width: 0.0909rem;
@@ -81,24 +88,9 @@
   animation: confirm-btn-press 220ms ease-out forwards;
 }
 .btn--danger {
-  background-color: var(--red);
-  background-image: linear-gradient(180deg, var(--red) 0%, var(--red-dark) 100%);
   color: var(--text-bright);
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-top-color: var(--red-light);
-  border-right-color: var(--red-light);
-  border-bottom-color: var(--red-light);
-  border-left-color: var(--red-light);
   font-family: var(--font-header);
   font-size: 1.0909rem;
-  letter-spacing: 0.0727rem;
-  text-transform: uppercase;
   padding: 0.6364rem 1.6364rem;
   cursor: pointer;
-  transition: background 0.15s;
-}
-.btn--danger:hover {
-  background-color: var(--red-light);
-  background-image: linear-gradient(180deg, var(--red-light) 0%, var(--red) 100%);
 }

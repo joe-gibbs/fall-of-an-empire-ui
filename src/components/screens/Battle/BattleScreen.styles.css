@@ -16,7 +16,7 @@
   display: none;
 }
 
-.battle-screen-content {
+.battle-screen .battle-screen-content {
   height: 100%;
   flex-grow: 1;
   flex-shrink: 1;

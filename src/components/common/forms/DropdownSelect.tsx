@@ -112,6 +112,7 @@ const DropdownSelect = memo(function DropdownSelect({
     position,
     offset,
     useRootRem,
+    matchTriggerWidth: portal,
     minSpaceBelow,
     maxPopupHeight,
     closeOnScroll,
@@ -150,6 +151,7 @@ const DropdownSelect = memo(function DropdownSelect({
       ref={setPopupRef}
       className={classNames(
         'dropdown-select__menu',
+        portal && 'dropdown-select__menu--portal',
         menuClassName,
         closing && 'dropdown-select__menu--closing',
         closing && menuClosingClassName,

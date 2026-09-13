@@ -32,6 +32,13 @@ import './ResourceWorkspace.css';
 
 const RESOURCE_CATEGORY_ORDER = ['food', 'strategic', 'rawmaterials', 'luxury'];
 const FOOD_RESOURCE_IDS = ['grain', 'fish', 'meat', 'garum'];
+type ResourceFilter = 'all' | 'shortages' | 'surplus';
+
+function matchesResourceFilter(resource: EconomyOverviewResourceRow, filter: ResourceFilter): boolean {
+  if (filter === 'all') return true;
+  const hasShortage = resource.netPerMonth < -0.0001 || resource.missingProductionInputs.length > 0;
+  return filter === 'shortages' ? hasShortage : resource.netPerMonth > 0.0001 && !hasShortage;
+}
 
 interface ResourceWorkspaceProps {
   data: GetEconomyOverviewResponse | null;
@@ -316,15 +323,15 @@ function FoodResourceGroup({
   selectedId,
   onSelect,
 }: {
-  food: EconomyOverviewResourceRow;
+  food: EconomyOverviewResourceRow | undefined;
   ingredients: EconomyOverviewResourceRow[];
   selectedId: string;
   onSelect: (id: string) => void;
 }) {
   const t = useWebUIText();
   return (
-    <div className="erw-food-group">
-      <ResourceCard resource={food} selected={food.id === selectedId} onSelect={() => onSelect(food.id)} />
+    <div className={`erw-food-group${food ? '' : ' erw-food-group--ingredients-only'}`}>
+      {food && <ResourceCard resource={food} selected={food.id === selectedId} onSelect={() => onSelect(food.id)} />}
       <div className="erw-food-group__ingredients">
         {ingredients.map(ingredient => (
           <button
@@ -355,28 +362,28 @@ function FoodResourceGroup({
 function ResourceBoard({
   resources,
   selectedId,
-  shortagesOnly,
-  onToggleShortages,
+  filter,
+  onFilterChange,
   onSelect,
 }: {
   resources: EconomyOverviewResourceRow[];
   selectedId: string;
-  shortagesOnly: boolean;
-  onToggleShortages: () => void;
+  filter: ResourceFilter;
+  onFilterChange: (filter: ResourceFilter) => void;
   onSelect: (id: string) => void;
 }) {
   const t = useWebUIText();
-  const food = resources.find(resource => resource.aggregate && resource.category.toLowerCase() === 'food');
+  const food = resources.find(resource => resource.aggregate && resource.category.toLowerCase() === 'food' && matchesResourceFilter(resource, filter));
   const foodIngredients = resources
     .filter(resource => !resource.aggregate && FOOD_RESOURCE_IDS.includes(resource.id.toLowerCase()))
-    .filter(resource => !shortagesOnly || resource.netPerMonth < -0.0001 || resource.missingProductionInputs.length > 0)
+    .filter(resource => matchesResourceFilter(resource, filter))
     .sort((left, right) => FOOD_RESOURCE_IDS.indexOf(left.id.toLowerCase()) - FOOD_RESOURCE_IDS.indexOf(right.id.toLowerCase()));
-  const showFood = !!food && (!shortagesOnly || food.netPerMonth < -0.0001 || foodIngredients.length > 0);
+  const showFood = !!food || foodIngredients.length > 0;
   const visibleResources = resources.filter(resource => (
     !resource.aggregate
     && resource.category.toLowerCase() !== 'food'
     && !FOOD_RESOURCE_IDS.includes(resource.id.toLowerCase())
-    && (!shortagesOnly || resource.netPerMonth < -0.0001 || resource.missingProductionInputs.length > 0)
+    && matchesResourceFilter(resource, filter)
   ));
   const extraCategories = [...new Set(visibleResources.map(resource => resource.category.toLowerCase()))]
     .filter(category => !RESOURCE_CATEGORY_ORDER.includes(category));
@@ -391,27 +398,29 @@ function ResourceBoard({
 
   return (
     <section className="erw-board">
+      <div className="erw-resource-filters">
+        <GameButton variant={filter === 'all' ? 'burgundy' : 'outline'} ariaPressed={filter === 'all'} onClick={() => onFilterChange('all')}>
+          {t('Common.All')}
+        </GameButton>
+        <GameButton variant={filter === 'shortages' ? 'burgundy' : 'outline'} ariaPressed={filter === 'shortages'} onClick={() => onFilterChange('shortages')}>
+          {t('Economy.Shortages')}
+        </GameButton>
+        <GameButton variant={filter === 'surplus' ? 'burgundy' : 'outline'} ariaPressed={filter === 'surplus'} onClick={() => onFilterChange('surplus')}>
+          {t('Economy.Surplus')}
+        </GameButton>
+      </div>
       <div className="erw-cover-legend">
         <strong>{t('Economy.ReserveCover')}</strong>
         <span><i className="erw-cover-key erw-cover-key--empty" />{t('Economy.CoverEmpty')}</span>
         <span><i className="erw-cover-key erw-cover-key--critical" />{t('Economy.CoverUnderThree')}</span>
         <span><i className="erw-cover-key erw-cover-key--warning" />{t('Economy.CoverThreeToTwelve')}</span>
         <span><i className="erw-cover-key erw-cover-key--healthy" />{t('Economy.CoverTwelvePlus')}</span>
-        <button
-          type="button"
-          className={`erw-shortages-toggle${shortagesOnly ? ' erw-shortages-toggle--active' : ''}`}
-          aria-pressed={shortagesOnly}
-          onClick={onToggleShortages}
-        >
-          <i aria-hidden="true" />
-          {t('Economy.ShortagesOnly')}
-        </button>
       </div>
       <div className="erw-board-scroll erw-board-scroll__body">
         {!showFood && categories.length === 0 ? (
-          <div className="erw-board-empty">{t('Economy.NoShortages')}</div>
+          <div className="erw-board-empty">{t(filter === 'shortages' ? 'Economy.NoShortages' : 'WorldSearch.NoResults')}</div>
         ) : <>
-          {showFood && food && (
+          {showFood && (
             <section className="erw-category">
               <h2>{categoryLabel('food', t)}</h2>
               <FoodResourceGroup
@@ -506,7 +515,7 @@ function niceChartStep(rawStep: number): number {
   return niceFraction * magnitude;
 }
 
-function ResourceTrendChart({ points }: { points: EconomyResourceHistoryPoint[] }) {
+function ResourceTrendChart({ points }: { points: Pick<EconomyResourceHistoryPoint, 'dateText' | 'stockpile' | 'production' | 'consumption'>[] }) {
   const t = useWebUIText();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   if (points.length === 0) return <div className="erw-chart-empty">{t('Economy.NoResourceHistory')}</div>;
@@ -515,7 +524,7 @@ function ResourceTrendChart({ points }: { points: EconomyResourceHistoryPoint[] 
   const tickCount = 4;
   const tickStep = niceChartStep(rawMaximum / tickCount);
   const maximum = Math.ceil(rawMaximum / tickStep) * tickStep;
-  const ticks = Array.from({ length: tickCount + 1 }, (_, index) => index * tickStep);
+  const ticks = Array.from({ length: Math.round(maximum / tickStep) + 1 }, (_, index) => index * tickStep);
   const series = [
     { id: 'stock', label: t('Economy.StockpileHistory'), values: points.map(point => point.stockpile) },
     { id: 'production', label: t('Economy.Production'), values: points.map(point => point.production) },
@@ -633,9 +642,10 @@ function ResourceManagement({
     setSellDraft(Math.max(0, resource.autoSellThreshold));
   }
 
-  const buyCost = Math.ceil(effectiveTradeAmount * resource.buyPrice);
-  const sellAmount = Math.min(effectiveTradeAmount, resource.capitalAmount);
-  const sellReturn = Math.floor(sellAmount * resource.sellPrice);
+  const quote = resource.tradeQuotes.find(value => value.amount === effectiveTradeAmount)!;
+  const buyCost = quote.buyCost;
+  const sellAmount = quote.sellAmount;
+  const sellReturn = quote.sellIncome;
   const canBuy = buyCost > 0 && gold >= buyCost && resource.storageAvailable >= effectiveTradeAmount;
   const canSell = sellReturn > 0;
 
@@ -871,10 +881,8 @@ function ResourceAnalysis({ resource, data, onSelectResource }: {
       stockpile: resource.amount,
       production: resource.production + resource.vassalContribution + resource.liegeContribution + resource.treatyIncome,
       consumption: totalOut,
-      net: resource.netPerMonth,
-      marketPrice: Math.ceil(data.tradeTransactionAmount * resource.buyPrice),
     }];
-  }, [data.tradeTransactionAmount, details?.history, resource, t, totalOut]);
+  }, [details?.history, resource, t, totalOut]);
 
   return (
     <section className="erw-analysis">
@@ -935,20 +943,21 @@ const ResourceWorkspace = memo(function ResourceWorkspace({ data }: ResourceWork
     [data?.resources],
   );
   const [selectedId, setSelectedId] = useState('');
-  const [shortagesOnly, setShortagesOnly] = useState(false);
+  const [filter, setFilter] = useState<ResourceFilter>('all');
   const selectedResource = resources.find(resource => resource.id === selectedId)
     ?? resources.filter(resource => resource.netPerMonth < -0.0001).sort((left, right) => left.netPerMonth - right.netPerMonth)[0]
     ?? resources[0]
     ?? null;
 
-  const toggleShortages = () => {
-    const nextValue = !shortagesOnly;
-    setShortagesOnly(nextValue);
-    if (nextValue && selectedResource && selectedResource.netPerMonth >= -0.0001) {
-      const mostUrgentShortage = resources
-        .filter(resource => resource.netPerMonth < -0.0001)
-        .sort((left, right) => left.netPerMonth - right.netPerMonth)[0];
-      if (mostUrgentShortage) setSelectedId(mostUrgentShortage.id);
+  const changeFilter = (nextFilter: ResourceFilter) => {
+    setFilter(nextFilter);
+    if (selectedResource && !matchesResourceFilter(selectedResource, nextFilter)) {
+      const firstMatch = resources
+        .filter(resource => matchesResourceFilter(resource, nextFilter))
+        .sort((left, right) => nextFilter === 'surplus'
+          ? right.netPerMonth - left.netPerMonth
+          : left.netPerMonth - right.netPerMonth)[0];
+      if (firstMatch) setSelectedId(firstMatch.id);
     }
   };
 
@@ -961,8 +970,8 @@ const ResourceWorkspace = memo(function ResourceWorkspace({ data }: ResourceWork
       <ResourceBoard
         resources={resources}
         selectedId={selectedResource.id}
-        shortagesOnly={shortagesOnly}
-        onToggleShortages={toggleShortages}
+        filter={filter}
+        onFilterChange={changeFilter}
         onSelect={setSelectedId}
       />
       <ResourceAnalysis resource={selectedResource} data={data} onSelectResource={setSelectedId} key={selectedResource.id} />

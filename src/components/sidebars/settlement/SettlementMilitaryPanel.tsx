@@ -438,7 +438,7 @@ function FormationCard({
           ) : (
             <button
               type="button"
-              className="mil-raise-btn"
+              className="btn--outline mil-raise-btn"
               onClick={(event) => {
                 event.stopPropagation();
                 onRaise(f.id);
@@ -646,7 +646,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
         </div>
       )}
       <div className="mil-formation-list">
-        <button type="button" className="mil-new-template-btn" onClick={openNewTemplate}>
+        <button type="button" className="btn--outline mil-new-template-btn" onClick={openNewTemplate}>
           <span className="mil-new-template-plus">+</span>
           <span><WebUIText textKey="Auto.ComponentsSidebarsSettlementMilitaryPanel.321.7" /></span>
         </button>

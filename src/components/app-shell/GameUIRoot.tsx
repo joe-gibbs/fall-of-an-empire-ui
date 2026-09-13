@@ -406,8 +406,7 @@ export default function GameUIRoot() {
     || agentSelect.open
     || courtierPromotion.open
     || allyCallDialog.open
-    || (provinceEmperorTakeoverOpen && !!provinceEmperorTakeover?.active)
-    || tutorialSpotlight.spotlight.isVisible,
+    || (provinceEmperorTakeoverOpen && !!provinceEmperorTakeover?.active),
   );
   const tutorialWorldGlanceTarget = tutorialSpotlight.spotlight.isVisible
     && isWorldGlanceTutorialTarget(tutorialSpotlight.spotlight.target)
@@ -423,8 +422,7 @@ export default function GameUIRoot() {
     || agentSelect.open
     || courtierPromotion.open
     || allyCallDialog.open
-    || (provinceEmperorTakeoverOpen && !!provinceEmperorTakeover?.active)
-    || (tutorialSpotlight.spotlight.isVisible && !tutorialWorldGlanceTarget),
+    || (provinceEmperorTakeoverOpen && !!provinceEmperorTakeover?.active),
   );
 
   return (
@@ -480,7 +478,7 @@ export default function GameUIRoot() {
 
         {/* Left sidebar - registry-driven (settlement / military / diplomacy / mod). */}
         <Profiler id={`sidebar:left:${leftSidebar ?? 'closed'}`} onRender={recordUIPerfReactRender}>
-          <AnimatedSlot active={!!leftSidebar} className="sidebar-left">
+          <AnimatedSlot active={!!leftSidebar} className={`sidebar-left${activeScreen === 'ledger' ? ' sidebar-left--above-screen' : ''}`}>
             {LeftSidebarComponent ? <LeftSidebarComponent sidebarId={leftSidebarId} onClose={closeLeftSidebar} /> : null}
           </AnimatedSlot>
         </Profiler>

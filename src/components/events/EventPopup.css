@@ -455,6 +455,8 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
 
 /* ---- Scrollable content ---- */
 .event-content-scroll {
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
   flex-shrink: 1;
   min-height: 0;
@@ -463,6 +465,8 @@ html.webui-runtime .modal-overlay.event-overlay--closing {
 }
 
 .event-content-scroll > .event-content-scroll__viewport {
+  flex: 1 1 auto;
+  min-height: 0;
   padding-right: 1.231rem;
 }
 

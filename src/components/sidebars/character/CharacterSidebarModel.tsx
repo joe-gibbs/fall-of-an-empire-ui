@@ -259,13 +259,13 @@ export function buildInteractionTooltip(
     if (interaction.cooldownRemainingDays > 0) {
       const remaining = Math.round(interaction.cooldownRemainingDays);
       lines.push({
-        label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.329.11'), labelIcon: '/assets/icons/I_Cooling.png',
+        label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.329.11'), labelIcon: '/assets/icons/I_Cooldown.png',
         get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.330.1", { Value1: formatNumber(remaining), Value2: webUIText(remaining === 1 ? 'Common.Day' : 'Common.Days') }); },
         valueColor: 'var(--red)',
       });
     } else {
       const total = Math.round(interaction.cooldownDays);
-      lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.335.12'), labelIcon: '/assets/icons/I_Cooling.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.335.1", { Value1: formatNumber(total), Value2: webUIText(total === 1 ? 'Common.Day' : 'Common.Days') }); } });
+      lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.335.12'), labelIcon: '/assets/icons/I_Cooldown.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.335.1", { Value1: formatNumber(total), Value2: webUIText(total === 1 ? 'Common.Day' : 'Common.Days') }); } });
     }
   }
 

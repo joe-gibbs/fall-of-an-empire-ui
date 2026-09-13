@@ -9,10 +9,12 @@ import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
 import { actionBindingFooter } from '../common/actionBindingFooter';
 import Tooltip, { type TooltipContent } from '../common/tooltips/Tooltip';
 
-type Speed = 0 | 1 | 2 | 3 | 4;
+type Speed = 1 | 2 | 3 | 4;
 
 interface SpeedControlsProps {
-  speed?: Speed;
+  speed: Speed;
+  isPaused: boolean;
+  onTogglePause: () => void;
   onSpeedChange?: (speed: Speed) => void;
 }
 
@@ -26,26 +28,23 @@ const speedIcons: Record<number, string> = {
 };
 
 const SpeedControls: React.FC<SpeedControlsProps> = ({
-  speed = 0,
+  speed,
+  isPaused,
+  onTogglePause,
   onSpeedChange,
 }) => {
   const { settings } = useSettingsBridge();
   const activeInputDevice = useActiveInputDevice(
     settings?.activeInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
   );
-  const isPaused = speed === 0;
   const pauseBinding = findActionBinding(settings?.controls, 'Pause', activeInputDevice);
   const fasterBinding = findActionBinding(settings?.controls, 'IncreaseSpeed', activeInputDevice);
   const slowerBinding = findActionBinding(settings?.controls, 'ReduceSpeed', activeInputDevice);
 
-  const handlePauseToggle = () => {
-    onSpeedChange?.(isPaused ? 1 : 0);
-  };
-
-  // Cycle through speeds: 1→2→3→4→1. If paused, unpause to 1.
+  // Resume at the selected speed; cycle only while time is running.
   const handleSpeedCycle = () => {
     if (isPaused) {
-      onSpeedChange?.(1);
+      onSpeedChange?.(speed);
       return;
     }
     const next: Speed = speed >= 4 ? 1 : ((speed + 1) as Speed);
@@ -89,7 +88,7 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
         <button
           className="speed-btn speed-btn--pause"
           data-tutorial-target="PausePlayButton"
-          onClick={() => { playSound('click'); handlePauseToggle(); }}
+          onClick={() => { playSound('click'); onTogglePause(); }}
         >
           <img
             src={WebkilnAssetPath(isPaused ? '/assets/ui-shadowed/T_Paused_Active.png' : '/assets/ui-shadowed/T_Play_Active.png')
@@ -107,7 +106,7 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
           onClick={() => { playSound('click'); handleSpeedCycle(); }}
         >
           <img
-            src={speedIcons[speed]}
+            src={speedIcons[isPaused ? 0 : speed]}
             alt={isPaused ? webUIText("TopbarSpeed.Speed") : webUIText("TopbarSpeed.SpeedMultiplier", { Speed: speed })}
             className="speed-btn-img speed-btn-img--wide"
           />

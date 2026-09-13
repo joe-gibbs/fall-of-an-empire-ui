@@ -8,6 +8,7 @@ type ModalCloseStrategy = 'notify' | 'request';
 interface UseModalPresenceOptions {
   open: boolean;
   onClose: () => void;
+  onConfirm?: () => void;
   escapeId: string;
   durationMs?: number;
   allowFromInput?: boolean;
@@ -26,6 +27,7 @@ interface UseModalPresenceResult {
 export function useModalPresence({
   open,
   onClose,
+  onConfirm,
   escapeId,
   durationMs = UI_MOTION.modalCloseMs,
   allowFromInput = false,
@@ -63,6 +65,8 @@ export function useModalPresence({
     id: escapeId,
     active: mounted,
     onClose: close,
+    onConfirm,
+    canConfirm: open && !closing,
     allowFromInput,
   });
 

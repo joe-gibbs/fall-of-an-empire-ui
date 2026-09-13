@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
-import type { SaveGameEntryDto } from '../../bridge-types.generated.ts';
+import type { LoadSaveResponse, SaveGameEntryDto } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
 export type SaveEntry = SaveGameEntryDto;
@@ -17,7 +17,7 @@ export interface RenamePlaythroughResult {
 
 export interface UseSavesBridge {
   saves: SaveEntry[] | null;
-  load: (slotName: string) => Promise<void>;
+  load: (slotName: string, acknowledgeWarnings?: boolean) => Promise<LoadSaveResponse>;
   remove: (slotName: string, deleteFromCloud?: boolean) => Promise<DeleteSaveResult>;
   renamePlaythrough: (playthroughId: string, displayName: string) => Promise<RenamePlaythroughResult>;
   removePlaythrough: (playthroughId: string, deleteFromCloud?: boolean) => Promise<DeleteSaveResult>;
@@ -51,8 +51,8 @@ export function useSavesBridge(enabled: boolean): UseSavesBridge {
     };
   }, [enabled]);
 
-  const load = useCallback(async (slotName: string) => {
-    await bridgeCall('game.load_save', { slotName });
+  const load = useCallback(async (slotName: string, acknowledgeWarnings = false) => {
+    return bridgeCall('game.load_save', { slotName, acknowledgeWarnings });
   }, []);
 
   const remove = useCallback(async (slotName: string, deleteFromCloud = false) => {

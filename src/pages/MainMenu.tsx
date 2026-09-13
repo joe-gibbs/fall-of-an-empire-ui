@@ -107,6 +107,7 @@ const MainMenu: React.FC = () => {
   const [newGameMaps, setNewGameMaps] = useState<NewGameMapEntry[]>([]);
   const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
   const [menuError, setMenuError] = useState<string | null>(null);
+  const [compatibilityWarning, setCompatibilityWarning] = useState<{ slotName: string; warnings: string[] } | null>(null);
   const [modsPanelView, setModsPanelView] = useState<ModsPanelView>('installed');
   const [workshopSearchDraft, setWorkshopSearchDraft] = useState('');
   const [factionSelectionCache, setFactionSelectionCache] = useState<Record<string, GetNewGameMapFactionSelectionResponse>>({});
@@ -310,7 +311,10 @@ const MainMenu: React.FC = () => {
   const handleContinue = async () => {
     try {
       setMenuError(null);
-      await bridgeCall('game.continue');
+      const result = await bridgeCall('game.continue');
+      if (!result.started) {
+        setCompatibilityWarning({ slotName: result.slotName, warnings: result.warnings });
+      }
     } catch (err) {
       console.error('[MainMenu] continue failed', err);
       setMenuError(err instanceof Error ? err.message : webUIText('MainMenu.LoadSaveFailed'));
@@ -687,7 +691,7 @@ const MainMenu: React.FC = () => {
           <div className="mm-mod-restart-panel">
             <span className="mm-mod-restart-copy"><WebUIText textKey="MainMenu.ModRestartRequired" /></span>
             <button
-              className="mm-mod-restart-btn"
+              className="btn--outline mm-mod-restart-btn"
               onClick={(event) => {
                 event.preventDefault();
                 void handleRestart();
@@ -1157,6 +1161,18 @@ const MainMenu: React.FC = () => {
       {view === 'encyclopedia' && renderEncyclopedia()}
       {view === 'achievements' && renderAchievements()}
       <LoadGameModal visible={showLoad} onClosed={() => setShowLoad(false)} />
+      <ConfirmDialog
+        visible={compatibilityWarning !== null}
+        title={webUIText('LoadGame.CompatibilityTitle')}
+        message={webUIText('LoadGame.CompatibilityMessage', { Warnings: compatibilityWarning?.warnings.join(' ') ?? '' })}
+        confirmText={webUIText('LoadGame.LoadAnyway')}
+        onConfirm={() => {
+          if (!compatibilityWarning) return;
+          void bridgeCall('game.load_save', { slotName: compatibilityWarning.slotName, acknowledgeWarnings: true })
+            .catch((error) => setMenuError(error instanceof Error ? error.message : webUIText('MainMenu.LoadSaveFailed')));
+        }}
+        onClosed={() => setCompatibilityWarning(null)}
+      />
       <ConfirmDialog
         visible={showFullGamePrompt}
         title={webUIText('Demo.UnlockTitle')}

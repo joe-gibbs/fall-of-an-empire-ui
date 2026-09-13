@@ -352,7 +352,7 @@ function RowActionButton({
   return (
     <button
       type="button"
-      className={`dps-row-action-btn${danger ? ' dps-row-action-btn--danger' : ''}`}
+      className={`btn--outline dps-row-action-btn${danger ? ' dps-row-action-btn--danger' : ''}`}
       disabled={disabled}
       aria-label={label}
       onClick={(event) => {

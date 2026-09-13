@@ -86,6 +86,7 @@ interface SiegeViewModel {
   sackGold: number;
   attackers: SiegeForceRow[];
   defenders: SiegeForceRow[];
+  dockedNavies: SiegeForceRow[];
 }
 
 const STATE_META: Record<SiegeStateKind, { labelKey: string; prefixKey: string; icon: string; image: string; modifier: string }> = {
@@ -239,8 +240,10 @@ function buildViewModel(settlement: Settlement): SiegeViewModel | null {
   const state: SiegeStateKind = siege.state;
   const meta = STATE_META[state];
   const attackers = siege.besiegingArmies.map(armyRow);
-  const defenders = defenderRows(settlement, siege);
-  const defenderStrength = sumStrength(defenders);
+  const defendingForces = defenderRows(settlement, siege);
+  const defenders = defendingForces.filter(row => row.kind !== 'navy');
+  const dockedNavies = defendingForces.filter(row => row.kind === 'navy');
+  const defenderStrength = siege.totalDefenderStrength;
   const attackerStrength = sumStrength(attackers);
   const attackerMorale = averageMorale(attackers);
 
@@ -292,6 +295,7 @@ function buildViewModel(settlement: Settlement): SiegeViewModel | null {
     sackGold: siege.sackGold,
     attackers,
     defenders,
+    dockedNavies,
   };
 }
 
@@ -308,7 +312,7 @@ function commandsForRole(role: PlayerRole, state: SiegeStateKind): SiegeCommandI
     return ['assault'];
   }
   if (role === 'defender') {
-    if (state === 'siege') return ['sallyOut'];
+    if (state === 'siege' || state === 'blockade') return ['sallyOut'];
     return [];
   }
   return [];
@@ -667,8 +671,16 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
             {view.defenders.length > 0 && (
               <ForceGroup
                 titleKey="Common.Defender"
-                totalStrength={sumStrength(view.defenders)}
+                totalStrength={view.defenderStrength}
                 rows={view.defenders}
+                emptyKey="Settlement.Siege.NoVisibleDefenders"
+              />
+            )}
+            {view.dockedNavies.length > 0 && (
+              <ForceGroup
+                titleKey="Auto.Prop.ComponentsWorldGlancesPortGlance.59.6"
+                totalStrength={sumStrength(view.dockedNavies)}
+                rows={view.dockedNavies}
                 emptyKey="Settlement.Siege.NoVisibleDefenders"
               />
             )}

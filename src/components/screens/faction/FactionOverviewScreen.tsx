@@ -399,7 +399,7 @@ function SuccessionStrip({
           </div>
         </div>
       </Tooltip>
-      <button type="button" className="fov-succession-assign" onClick={onAssignHeir}>
+      <button type="button" className="btn--outline fov-succession-assign" onClick={onAssignHeir}>
         {t('Common.Assign')}
       </button>
     </div>

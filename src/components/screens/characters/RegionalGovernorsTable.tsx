@@ -111,7 +111,6 @@ function GovernorRow({
   characters,
   blocs,
   playerFactionId,
-  tutorialTarget,
   onAppoint,
   onOpenCharacter,
 }: {
@@ -119,7 +118,6 @@ function GovernorRow({
   characters: Map<string, CharacterListEntry>;
   blocs: PowerBloc[];
   playerFactionId: string;
-  tutorialTarget?: string;
   onAppoint: (row: RegionalGovernor) => void;
   onOpenCharacter: (id: string) => void;
 }) {
@@ -177,7 +175,7 @@ function GovernorRow({
           variant="burgundy"
           disabled={!row.canManageGovernor || !row.settlementId}
           onClick={() => onAppoint(row)}
-          tutorialTarget={tutorialTarget}
+          tutorialTarget={`RegionGovernorAppoint:${row.regionId}`}
         >
           {actionLabel}
         </GameButton>
@@ -193,7 +191,6 @@ export default function RegionalGovernorsTable({
   playerFactionId,
   autoAssignGovernorsEnabled,
   emptyReason,
-  tutorialTarget,
   onToggleAutoAssign,
   onAppoint,
   onOpenCharacter,
@@ -204,17 +201,12 @@ export default function RegionalGovernorsTable({
   playerFactionId: string;
   autoAssignGovernorsEnabled: boolean;
   emptyReason?: string;
-  tutorialTarget?: string;
   onToggleAutoAssign: () => void;
   onAppoint: (row: RegionalGovernor) => void;
   onOpenCharacter: (id: string) => void;
 }) {
   const [sort, setSort] = useState<SortState<GovernorSortKey>>({ key: 'corruption', direction: 'desc' });
   const sortedGovernors = useMemo(() => sortGovernorRows(governors, sort), [governors, sort]);
-  const tutorialGovernor = tutorialTarget
-    ? governors.find(row => !row.governorId && row.canManageGovernor && row.settlementId)
-    : undefined;
-  const tutorialGovernorKey = tutorialGovernor?.regionId || tutorialGovernor?.regionName;
 
   return (
     <section className="ips-tab-section">
@@ -244,14 +236,12 @@ export default function RegionalGovernorsTable({
           items={sortedGovernors}
           getKey={row => row.regionId || row.regionName}
           renderItem={row => {
-            const rowKey = row.regionId || row.regionName;
             return (
               <GovernorRow
                 row={row}
                 characters={characters}
                 blocs={blocs}
                 playerFactionId={playerFactionId}
-                tutorialTarget={rowKey === tutorialGovernorKey ? tutorialTarget : undefined}
                 onAppoint={onAppoint}
                 onOpenCharacter={onOpenCharacter}
               />

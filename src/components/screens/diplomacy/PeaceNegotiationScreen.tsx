@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
+import GameButton from '../../common/buttons/GameButton';
 import Panel from '../../common/layout/shell/Panel';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import FactionRoundel from '../../common/entities/FactionRoundel';
@@ -12,6 +13,7 @@ import ReplaceRulerSelectionModal from '../../modals/diplomacy/ReplaceRulerSelec
 import { usePeaceNegotiationBridge, type PeaceNegotiationState, type PeaceTermDraft } from '../../../bridge/diplomacy/usePeaceNegotiationBridge';
 import { onBridgeEvent } from '../../../bridge-types.generated.ts';
 import { useGameActions } from '../../../context/GameContext';
+import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { renderRichText, stripRichTags } from '../../../utils/richText';
 import { registerScreen } from '../../../registry/index';
@@ -195,20 +197,14 @@ function isTerritorySelectionTerm(term: Pick<PeaceTermDraft, 'type'>): boolean {
 }
 
 function termsConflict(existing: PeaceTermDraft, incoming: PeaceTermDraft): boolean {
-  if (isConquestType(incoming.type)) {
-    if (existing.direction === incoming.direction) return true;
-    return isConquestType(existing.type) || isMigrationType(existing.type);
+  const existingWholeConquest = existing.type === 'annex_faction' || existing.type === 'rebel_conquest';
+  const incomingWholeConquest = incoming.type === 'annex_faction' || incoming.type === 'rebel_conquest';
+  if (existingWholeConquest || incomingWholeConquest) {
+    return existing.direction === incoming.direction
+      || (isConquestType(existing.type) || isMigrationType(existing.type))
+        && (isConquestType(incoming.type) || isMigrationType(incoming.type));
   }
-
-  if (isMigrationType(incoming.type)) {
-    return isMigrationType(existing.type) || isConquestType(existing.type);
-  }
-
-  if (isConquestType(existing.type) && existing.direction === incoming.direction) {
-    return true;
-  }
-
-  return false;
+  return isTerritorySelectionTerm(existing) && isTerritorySelectionTerm(incoming);
 }
 
 function optionAppliesToSelectedTarget(option: TermOption, selectedId: string | null | undefined): boolean {
@@ -570,7 +566,7 @@ function DraftTermChip({
   const isTribute = term.type === 'onetime_tribute' || term.type === 'ongoing_tribute';
   const isOngoing = term.type === 'ongoing_tribute';
   const tributeMax = isOneOffTributeTerm(term.type) ? maxGold : undefined;
-  const tributeAmount = boundedTributeAmount(term.tributeAmount ?? live?.tributeAmount ?? 0, tributeMax);
+  const tributeAmount = term.tributeAmount ?? live?.tributeAmount ?? 0;
   const tributeDurationDays = term.tributeDurationDays || live?.tributeDurationDays || durationOptionsDays[durationOptionsDays.length - 1];
   const candidates = replacementCandidates(term, live);
   const selectedCandidate = selectedReplacementCandidate(term, live);
@@ -597,7 +593,7 @@ function DraftTermChip({
           {isTribute ? (
             <div className="pns-term-controls">
               <div className="pns-term-field pns-term-field--gold">
-                <span className="pns-term-control-label"><WebUIText textKey="Auto.ComponentsScreensPeaceNegotiationScreen.412.3" /></span>
+                <span className="pns-term-control-label"><WebUIText textKey={isOngoing ? 'PeaceNegotiation.MonthlyGold' : 'Auto.ComponentsScreensPeaceNegotiationScreen.412.3'} /></span>
                 <NumberStepper
                   value={tributeAmount}
                   step={amountStep}
@@ -762,7 +758,7 @@ function TermsColumn({
   selectedTerms,
   stateTerms,
   total,
-  maxGold,
+  goldByFaction,
   amountStep,
   durationOptionsDays,
   onRemove,
@@ -775,7 +771,7 @@ function TermsColumn({
   selectedTerms: PeaceTermDraft[];
   stateTerms: TermEntry[];
   total: number;
-  maxGold?: number;
+  goldByFaction: ReadonlyMap<string, number>;
   amountStep: number;
   durationOptionsDays: number[];
   onRemove: (termId: string) => void;
@@ -806,7 +802,7 @@ function TermsColumn({
                 key={id}
                 term={term}
                 live={byId.get(id)}
-                maxGold={maxGold}
+                maxGold={goldByFaction.get(term.targetFactionId!)}
                 amountStep={amountStep}
                 durationOptionsDays={durationOptionsDays}
                 onRemove={() => onRemove(id)}
@@ -1066,6 +1062,18 @@ function PeaceNegotiationScreenContent({
   ), [applySettlementSelection]);
 
   const endSettlementSelection = bridge.endSettlementSelection;
+  const returnToTerms = useCallback(async () => {
+    const selection = await endSettlementSelection();
+    if (selection) applySettlementSelection(selection);
+  }, [applySettlementSelection, endSettlementSelection]);
+
+  useEscapeStackEntry({
+    id: 'peace.settlement-selection',
+    active: activeSettlementSelectionOptionId !== null,
+    onClose: () => void returnToTerms(),
+    allowFromInput: true,
+  });
+
   useEffect(() => () => {
     if (acceptedCloseTimerRef.current !== null) {
       window.clearTimeout(acceptedCloseTimerRef.current);
@@ -1119,7 +1127,7 @@ function PeaceNegotiationScreenContent({
   ) : null;
 
   const syncMapSelectionToTerms = (nextTerms: PeaceTermDraft[]) => {
-    if (!settlementSelectionActiveRef.current && !nextTerms.some(isTerritorySelectionTerm)) {
+    if (!settlementSelectionActiveRef.current) {
       return;
     }
 
@@ -1273,7 +1281,7 @@ function PeaceNegotiationScreenContent({
             selectedTerms={selectedConcessions}
             stateTerms={liveTerms}
             total={concessionCost}
-            maxGold={state.playerFaction.gold}
+            goldByFaction={new Map(state.ourParticipants.map(participant => [participant.faction.id, participant.faction.gold]))}
             amountStep={state.amountStep}
             durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}
@@ -1288,7 +1296,7 @@ function PeaceNegotiationScreenContent({
             selectedTerms={selectedDemands}
             stateTerms={liveTerms}
             total={demandCost}
-            maxGold={state.targetFaction.gold}
+            goldByFaction={new Map(state.theirParticipants.map(participant => [participant.faction.id, participant.faction.gold]))}
             amountStep={state.amountStep}
             durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}
@@ -1381,17 +1389,31 @@ function PeaceNegotiationScreenContent({
   return (
     <div className="pns-stage pns-stage--peace">
       <ScreenShell
-        title={screenTitle}
-        onClose={onClose}
+        title={activeSettlementSelectionOptionId ? webUIText('PeaceNegotiation.SelectTerritory') : screenTitle}
+        onClose={activeSettlementSelectionOptionId ? () => void returnToTerms() : onClose}
         advisorTopic="peaceNegotiation"
-        titleExtra={titleExtra}
-        className="screen--negotiation"
+        titleExtra={activeSettlementSelectionOptionId ? undefined : titleExtra}
+        className={`screen--negotiation${activeSettlementSelectionOptionId ? ' screen--territory-selection' : ''}`}
         contentClassName="screen-content--negotiation"
       >
-        <div className="pns-wrap">
-          {participantHeader}
-          {body}
-        </div>
+        {activeSettlementSelectionOptionId ? (
+          <div className="pns-territory-selection">
+            <p className="pns-territory-instruction"><WebUIText textKey="PeaceNegotiation.SelectTerritoryInstruction" /></p>
+            <div className="pns-territory-selection-actions">
+              <span>{webUIText('PeaceNegotiation.SelectedSettlementCount', {
+                Count: fmt(terms.filter(isTerritorySelectionTerm).reduce((count, term) => count + term.targetSettlementIds.length, 0)),
+              })}</span>
+              <GameButton variant="burgundy" onClick={() => void returnToTerms()}>
+                <WebUIText textKey="PeaceNegotiation.ReturnToTerms" />
+              </GameButton>
+            </div>
+          </div>
+        ) : (
+          <div className="pns-wrap">
+            {participantHeader}
+            {body}
+          </div>
+        )}
       </ScreenShell>
       <ReplaceRulerSelectionModal
         key={replacementPicker

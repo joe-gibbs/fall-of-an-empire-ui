@@ -367,72 +367,11 @@
    4. Buttons
    -------------------------------------------------------------------------- */
 
-/* -- Burgundy (primary CTA) -- */
-.btn--burgundy {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: 0.308rem 0.769rem;
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text);
-  background-image: url('/assets/baked/button-burgundy.png');
-  background-repeat: repeat;
-  background-size: 11.6364rem 5.8182rem;
-  background-color: var(--burgundy);
-  border: 0.154rem solid rgba(120, 50, 70, 0.5);
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.btn--burgundy::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-image: none;
-  z-index: -1;
-}
-
-.btn--burgundy:hover {
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: var(--gold-muted);
-  border-left-color: var(--gold-muted);
-  color: var(--text-bright);
-  background-image: url('/assets/baked/button-burgundy-hover.png');
-  transform: translateY(-0.0909rem);
-}
-
-.btn--burgundy:active {
-  background-image: url('/assets/baked/button-burgundy-active.png');
-  transform: translateY(0.0909rem) scale(0.97);
-  transition: transform 0s;
-}
-
-.btn--burgundy[disabled],
-.btn--outline[disabled],
-.btn--ghost[disabled] {
+.btn--ghost[disabled],
+.btn--ghost[disabled]:hover,
+.btn--ghost[disabled]:active {
   opacity: 0.45;
   cursor: default;
-  transform: none;
-}
-
-.btn--burgundy[disabled]:hover,
-.btn--outline[disabled]:hover,
-.btn--ghost[disabled]:hover,
-.btn--burgundy[disabled]:active,
-.btn--outline[disabled]:active,
-.btn--ghost[disabled]:active {
   transform: none;
 }
 
@@ -464,7 +403,9 @@
   margin-left: 0.35rem;
 }
 
-/* -- Outline -- */
+/* -- Text actions: painted red-purple metal -- */
+.btn--burgundy,
+.btn--danger,
 .btn--outline {
   display: flex;
   align-items: center;
@@ -474,36 +415,69 @@
   font-family: var(--font-body);
   font-size: 0.9rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--gold);
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-bright);
   background: transparent;
   border-width: 0.077rem;
   border-style: solid;
-  border-top-color: var(--border);
-  border-right-color: var(--border);
-  border-bottom-color: var(--border);
-  border-left-color: var(--border);
+  border-color: transparent;
+  border-image-source: url('/assets/baked/buttons/painted-metal/normal.png');
+  /* Proportional slices preserve the corners when the build resizes the PNG. */
+  border-image-slice: 12.5% 8.333333% fill;
+  border-image-width: 0.385rem;
+  border-image-outset: 0;
+  border-image-repeat: stretch;
   cursor: pointer;
   overflow: hidden;
   white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s ease-out;
+  transition: color 0.15s, transform 0.12s ease-out;
 }
 
-.btn--outline:hover {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  color: var(--gold-light);
-  background: rgba(201, 168, 76, 0.06);
+.btn--burgundy:hover:not(:disabled),
+.btn--burgundy:focus-visible:not(:disabled),
+.btn--danger:hover:not(:disabled),
+.btn--danger:focus-visible:not(:disabled),
+.btn--outline:hover:not(:disabled),
+.btn--outline:focus-visible:not(:disabled) {
+  border-image-source: url('/assets/baked/buttons/painted-metal/hover.png');
+  color: var(--text-bright);
   transform: translateY(-0.0909rem);
 }
 
-.btn--outline:active {
-  background: rgba(201, 168, 76, 0.1);
+.btn--burgundy[aria-pressed="true"]:not(:disabled),
+.btn--outline[aria-pressed="true"]:not(:disabled) {
+  border-image-source: url('/assets/baked/buttons/painted-metal/hover.png');
+}
+
+.btn--burgundy:active:not(:disabled),
+.btn--danger:active:not(:disabled),
+.btn--outline:active:not(:disabled) {
+  border-image-source: url('/assets/baked/buttons/painted-metal/pressed.png');
   transform: translateY(0.0909rem) scale(0.97);
   transition: transform 0s;
+}
+
+.btn--burgundy:disabled,
+.btn--danger:disabled,
+.btn--outline:disabled {
+  border-image-source: url('/assets/baked/buttons/painted-metal/disabled.png');
+  color: var(--text-muted);
+  opacity: 1;
+  cursor: default;
+  transform: none;
+}
+
+.btn--burgundy:disabled .btn-icon,
+.btn--danger:disabled .btn-icon,
+.btn--outline:disabled .btn-icon {
+  opacity: 0.5;
+}
+
+.btn--burgundy,
+.btn--danger {
+  padding: 0.308rem 0.769rem;
+  border-width: 0.154rem;
 }
 
 /* -- Ghost (minimal) -- */

@@ -1,5 +1,6 @@
 import React from 'react';
 import Tooltip from '../common/tooltips/Tooltip';
+import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import Portrait from '../common/portraits/Portrait';
 import GovernorAssignmentPickerModal from './GovernorAssignmentPickerModal';
 import type { TooltipContent, TooltipLine } from '../common/tooltips/Tooltip';
@@ -295,7 +296,7 @@ function GovernorAssignmentPanel({
           title={t('BottomBar.GovernorAssignment.Title')}
           detail={operation.candidates.length > 0 ? t('BottomBar.GovernorAssignment.Detail') : t('BottomBar.GovernorAssignment.Empty')}
         />
-        <div className="operation-governor-list">
+        <StyledScrollArea className="operation-governor-scroll" viewportClassName="operation-governor-list" variant="inline">
           {orderedCandidates.map(candidate => (
             <GovernorCandidate
               key={candidate.id}
@@ -303,7 +304,7 @@ function GovernorAssignmentPanel({
               selectLabel={t('BottomBar.GovernorAssignment.SelectCandidate', { Name: candidate.name })}
             />
           ))}
-        </div>
+        </StyledScrollArea>
         <div className="operation-actions">
           <OperationButton
             icon={ICONS.autoAssign}

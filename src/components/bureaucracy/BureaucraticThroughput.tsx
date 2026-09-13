@@ -427,7 +427,7 @@ export function BureaucraticRushTooltipAction({
       </div>
       <button
         type="button"
-        className="btm-rush-button"
+        className="btn--outline btm-rush-button"
         disabled={rushed || pending}
         onClick={handleMouseDown}
       >

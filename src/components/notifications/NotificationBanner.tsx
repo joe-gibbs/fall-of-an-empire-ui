@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
@@ -90,6 +90,13 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   countdownProgress,
 }) => {
   const [optionsOpen, setOptionsOpen] = useState(false);
+  useEffect(() => {
+    const closeOtherOptions = (event: Event) => {
+      if ((event as CustomEvent<string>).detail !== notification.id) setOptionsOpen(false);
+    };
+    window.addEventListener('notification-options-open', closeOtherOptions);
+    return () => window.removeEventListener('notification-options-open', closeOtherOptions);
+  }, [notification.id]);
   const lastRightMouseDownRef = useRef(0);
   const {
     mounted: optionsMounted,
@@ -182,6 +189,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
     e.preventDefault();
     e.stopPropagation();
     playSound('click');
+    window.dispatchEvent(new CustomEvent('notification-options-open', { detail: notification.id }));
     computePosition();
     setOptionsOpen(true);
   };
@@ -268,14 +276,14 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
     <div className="notification-decision-actions">
       <button
         type="button"
-        className="notification-decision-btn notification-decision-btn--accept"
+        className="btn--outline notification-decision-btn notification-decision-btn--accept"
         onClick={(e) => { e.stopPropagation(); playSound('click'); onDecision?.(true); }}
       >
         {diplomaticRequest?.acceptLabel || webUIText('Auto.ComponentsScreensPeaceNegotiationScreen.945.14')}
       </button>
       <button
         type="button"
-        className="notification-decision-btn notification-decision-btn--decline"
+        className="btn--outline notification-decision-btn notification-decision-btn--decline"
         onClick={(e) => { e.stopPropagation(); playSound('close'); onDecision?.(false); }}
       >
         {diplomaticRequest?.declineLabel || webUIText('Auto.ComponentsScreensPeaceNegotiationScreen.944.13')}

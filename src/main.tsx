@@ -43,7 +43,7 @@ import {
   nativeNotificationAnchorsFramePayload,
   nativeWorldGlancesFramePayload,
 } from './runtime/bridgePayloads'
-import { applyRuntimeViewportScale, setRuntimeClass, type RuntimeViewportState } from './runtime/runtimeViewport'
+import { bindRuntimeViewportScaleEvents, setRuntimeClass } from './runtime/runtimeViewport'
 import { setWorldAnchorRasterScale } from './runtime/worldAnchorRasterScale'
 
 const GRABBING_TARGET_SELECTOR = [
@@ -113,12 +113,6 @@ function configureWebkilnInput() {
       grab: GRAB_TARGET_SELECTOR,
       pointer: POINTER_TARGET_SELECTOR,
     },
-  });
-}
-
-function bindRuntimeViewportScaleEvents() {
-  window.addEventListener('webkiln:runtime-viewport', (event) => {
-    applyRuntimeViewportScale((event as CustomEvent<RuntimeViewportState>).detail);
   });
 }
 

@@ -53,7 +53,7 @@ function shouldClearMilitarySelectionOnClose(type: LeftSidebarType): boolean {
 /** Local pause/speed intent while a bridge call is in flight. Wins over stale bridge snapshots. */
 type SpeedControlOverride = {
   isPaused?: boolean;
-  speed?: 1 | 2 | 4;
+  speed?: 1 | 2 | 3 | 4;
 };
 
 export function GameProvider({ children }: { children: ReactNode }) {
@@ -93,7 +93,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // In-flight button presses must win over a lagging get_game_state push, or the
       // pause/play icon stays on the old state and a second click toggles the game the wrong way.
       isPaused: speedControlOverride?.isPaused ?? bridgeState?.isPaused ?? state.isPaused,
-      speed: (speedControlOverride?.speed ?? bridgeState?.speed ?? state.speed ?? 1) as 1 | 2 | 4,
+      speed: (speedControlOverride?.speed ?? bridgeState?.speed ?? state.speed ?? 1) as 1 | 2 | 3 | 4,
       date: bridgeState?.date ?? state.date,
       dateText: bridgeState?.dateText ?? state.dateText,
       season: bridgeState?.season ?? state.season,
@@ -214,14 +214,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     })();
   }, [syncSpeedControlFromGame]);
 
-  const setSpeed = useCallback((speed: 1 | 2 | 4) => {
+  const setSpeed = useCallback((speed: 1 | 2 | 3 | 4) => {
     const generation = ++speedControlGenerationRef.current;
     setSpeedControlOverride({ isPaused: false, speed });
     void (async () => {
       try {
         const response = await bridgeCall('game.set_speed', { speedLevel: speed });
         if (generation !== speedControlGenerationRef.current) return;
-        const resolvedSpeed = (response.speedLevel > 0 ? response.speedLevel : speed) as 1 | 2 | 4;
+        const resolvedSpeed = (response.speedLevel > 0 ? response.speedLevel : speed) as 1 | 2 | 3 | 4;
         setSpeedControlOverride({
           isPaused: response.isPaused,
           speed: resolvedSpeed,

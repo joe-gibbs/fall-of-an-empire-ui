@@ -320,14 +320,16 @@ const CharacterPersonCell = memo(function CharacterPersonCell({ character }: { c
         <div className="chs-name-line">
           <span className="chs-name">{character.name}</span>
         </div>
-        <div className="chs-title">{character.title || character.factionName}</div>
+        <div className="chs-title">{character.isImprisoned ? character.factionName : character.title || character.factionName}</div>
       </div>
     </>
   );
 });
 
 const CharacterRoleCell = memo(function CharacterRoleCell({ character }: { character: CharacterListEntry }) {
-  const detail = activityText(character);
+  const detail = character.isImprisoned
+    ? webUIText('Characters.HeldBy', { FactionName: character.roleDetail })
+    : activityText(character);
   return (
     <>
       <div className="chs-role-line">
@@ -345,17 +347,13 @@ const CharacterAgeCell = memo(function CharacterAgeCell({ character }: { charact
   );
 });
 
-function prisonActionTooltip(action: PersonInteractionView | undefined, fallbackTitle: string) {
-  if (!action) {
-    return { title: fallbackTitle };
-  }
-
+function prisonActionTooltip(action: PersonInteractionView) {
   const blockedReasons = action.reasons
     .filter(reason => reason.status !== 'available')
     .map(reason => ({ label: reason.reason }));
 
   return {
-    title: action.name || fallbackTitle,
+    title: action.name,
     body: action.description,
     lines: blockedReasons.length > 0 ? blockedReasons : undefined,
   };
@@ -370,8 +368,8 @@ const CharacterPrisonActions = memo(function CharacterPrisonActions({ character 
     return <span className="chs-muted">-</span>;
   }
 
-  const actionDisabled = (action: PersonInteractionView | undefined) => (
-    !action || action.availability !== 'available' || action.inProgress
+  const actionDisabled = (action: PersonInteractionView) => (
+    action.availability !== 'available' || action.inProgress
   );
 
   return (
@@ -379,8 +377,8 @@ const CharacterPrisonActions = memo(function CharacterPrisonActions({ character 
       className="chs-prison-actions"
       onClick={(event) => event.stopPropagation()}
     >
-      <Tooltip
-        content={prisonActionTooltip(execute, webUIText('Characters.ExecutePrisoner'))}
+      {execute && <Tooltip
+        content={prisonActionTooltip(execute)}
         position="left"
         delay={120}
       >
@@ -392,9 +390,9 @@ const CharacterPrisonActions = memo(function CharacterPrisonActions({ character 
           disabled={actionDisabled(execute)}
           onClick={() => void interactions.start('executecharacter')}
         />
-      </Tooltip>
-      <Tooltip
-        content={prisonActionTooltip(release, webUIText('Characters.FreePrisoner'))}
+      </Tooltip>}
+      {release && <Tooltip
+        content={prisonActionTooltip(release)}
         position="left"
         delay={120}
       >
@@ -406,7 +404,7 @@ const CharacterPrisonActions = memo(function CharacterPrisonActions({ character 
           disabled={actionDisabled(release)}
           onClick={() => void interactions.start('releasecharacter')}
         />
-      </Tooltip>
+      </Tooltip>}
     </div>
   );
 });

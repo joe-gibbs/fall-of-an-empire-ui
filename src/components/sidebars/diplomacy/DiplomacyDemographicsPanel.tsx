@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import FactionRoundel from '../../common/entities/FactionRoundel';
-import CultureLink from '../../common/culture/CultureLink';
-import ReligionLink from '../../common/religion/ReligionLink';
+import Tooltip from '../../common/tooltips/Tooltip';
 import GameButton from '../../common/buttons/GameButton';
 import GrittyPieChart from '../../screens/charts/GrittyPieChart';
 import DemographicHistoryModal from '../../modals/diplomacy/DemographicHistoryModal';
@@ -54,24 +53,21 @@ function MakeupLegend({ shares, kind }: { shares: FactionDemographicShare[]; kin
             <span className="diplo-demo-legend-pct">{formatPercent(percent)}</span>
           </>
         );
-        if (kind === 'culture' && share.id) {
-          return (
-            <CultureLink key={share.id} cultureId={share.id} className="diplo-demo-legend-item">
-              {body}
-            </CultureLink>
-          );
-        }
-        if (kind === 'religion' && share.id) {
-          return (
-            <ReligionLink key={share.id} religionId={share.id} className="diplo-demo-legend-item">
-              {body}
-            </ReligionLink>
-          );
-        }
         return (
-          <div key={share.id || share.name} className="diplo-demo-legend-item">
+          <Tooltip
+            key={share.id}
+            wrapperClassName="diplo-demo-legend-item"
+            content={{
+              title: share.name,
+              body: share.description,
+              lines: [{
+                label: webUIText('Auto.ComponentsSidebarsDiplomacySidebar.454.6'),
+                value: formatNumber(share.population),
+              }],
+            }}
+          >
             {body}
-          </div>
+          </Tooltip>
         );
       })}
     </div>

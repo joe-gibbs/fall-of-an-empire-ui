@@ -346,12 +346,12 @@ export default function ResourceDetailsModal({
         production: resource.production + resource.vassalContribution + resource.liegeContribution + resource.treatyIncome,
         consumption: resource.militaryUsage + resource.queuedUsage + resource.settlementConsumption + resource.courtConsumption + resource.liegeTribute + resource.decayLoss,
         net: resource.netPerMonth,
-        marketPrice: Math.ceil(tradeAmount * resource.buyPrice),
+        marketPrice: resource.aggregate ? 0 : resource.tradeQuotes[0].buyCost,
       }];
     }
     if (historyRange === 'all') return points;
     return points.slice(-Number(historyRange));
-  }, [details?.history, historyRange, resource, t, tradeAmount]);
+  }, [details?.history, historyRange, resource, t]);
 
   const requirements = useMemo(() => {
     if (!resource) return [];
@@ -418,10 +418,11 @@ export default function ResourceDetailsModal({
 
   if (!mounted || !resource) return null;
 
-  const marketPrice = Math.ceil(tradeAmount * resource.buyPrice);
-  const buyCost = Math.ceil(effectiveTradeAmount * resource.buyPrice);
-  const sellAmount = Math.min(effectiveTradeAmount, resource.amount);
-  const sellReturn = Math.floor(sellAmount * resource.sellPrice);
+  const marketPrice = resource.aggregate ? 0 : resource.tradeQuotes[0].buyCost;
+  const quote = resource.tradeQuotes.find(value => value.amount === effectiveTradeAmount);
+  const buyCost = resource.aggregate ? 0 : quote!.buyCost;
+  const sellAmount = resource.aggregate ? 0 : quote!.sellAmount;
+  const sellReturn = resource.aggregate ? 0 : quote!.sellIncome;
   const canBuy = buyCost > 0 && gold >= buyCost && resource.storageAvailable >= effectiveTradeAmount;
   const canSell = sellReturn > 0;
   const totalIn = resource.production + resource.vassalContribution + resource.liegeContribution + resource.treatyIncome;

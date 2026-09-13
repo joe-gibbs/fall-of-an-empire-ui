@@ -13,6 +13,7 @@ interface UseAnchoredDropdownOptions {
   anchorSelector?: string;
   offset?: number;
   useRootRem?: boolean;
+  matchTriggerWidth?: boolean;
   minSpaceBelow?: number;
   maxPopupHeight?: number;
   closeOnScroll?: boolean;
@@ -41,6 +42,7 @@ export function useAnchoredDropdown({
   anchorSelector,
   offset = 4,
   useRootRem = false,
+  matchTriggerWidth = false,
   minSpaceBelow = 160,
   maxPopupHeight = 280,
   closeOnScroll = false,
@@ -76,8 +78,10 @@ export function useAnchoredDropdown({
     if (!anchor) return;
 
     const rect = anchor.getBoundingClientRect();
+    const width = matchTriggerWidth ? cssLength(rect.width, useRootRem) : undefined;
     if (position === 'below-right') {
       setStyle({
+        width,
         top: cssLength(rect.bottom + offset, useRootRem),
         right: cssLength(window.innerWidth - rect.right, useRootRem),
       });
@@ -86,6 +90,7 @@ export function useAnchoredDropdown({
 
     if (position === 'below-left') {
       setStyle({
+        width,
         top: cssLength(rect.bottom + offset, useRootRem),
         left: cssLength(rect.left, useRootRem),
       });
@@ -101,7 +106,7 @@ export function useAnchoredDropdown({
       minWidth: cssLength(rect.width, useRootRem),
       transform: placeAbove ? 'translateY(-100%)' : undefined,
     });
-  }, [anchorElement, maxPopupHeight, minSpaceBelow, offset, position, useRootRem]);
+  }, [anchorElement, matchTriggerWidth, maxPopupHeight, minSpaceBelow, offset, position, useRootRem]);
 
   useEffect(() => {
     if (!open) return undefined;

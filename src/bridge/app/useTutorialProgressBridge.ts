@@ -4,6 +4,8 @@ import type { GetTutorialProgressResponse } from '../../bridge-types.generated.t
 export interface TutorialProgressStep {
   text: string;
   isComplete: boolean;
+  deadlineText: string;
+  deadlineTitle: string;
 }
 
 export interface TutorialProgressState {
@@ -17,6 +19,8 @@ function mapTutorialProgress(data: GetTutorialProgressResponse): TutorialProgres
     steps: data.steps.map(step => ({
       text: step.text,
       isComplete: step.isComplete,
+      deadlineText: step.deadlineText,
+      deadlineTitle: step.deadlineTitle,
     })),
   };
 }

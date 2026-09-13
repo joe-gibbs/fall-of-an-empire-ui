@@ -39,7 +39,7 @@ export interface SidebarNavigationState {
 
 export interface GameState {
   isPaused: boolean;
-  speed: 1 | 2 | 4;
+  speed: 1 | 2 | 3 | 4;
   date: { day: number; month: number; year: number };
   dateText: string;
   season: string;
@@ -117,7 +117,7 @@ export function createInitialGameState(): GameState {
 
 export interface GameActions {
   togglePause: () => void;
-  setSpeed: (s: 1 | 2 | 4) => void;
+  setSpeed: (s: 1 | 2 | 3 | 4) => void;
   openLeftSidebar: (type: LeftSidebarType, id?: string) => void;
   closeLeftSidebar: () => void;
   openRightSidebar: (type: RightSidebarType, id?: string) => void;

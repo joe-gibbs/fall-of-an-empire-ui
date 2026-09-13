@@ -466,6 +466,19 @@
 
 /* ============ Building search ============ */
 
+.bld-filter-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  flex-shrink: 0;
+  margin: 0 -0.462rem;
+  padding: 0.25rem 0.462rem 0;
+  background-image: url('/assets/baked/screen-content-charcoal.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
+  overflow-anchor: none;
+}
+
 .bld-search-row {
   display: flex;
   flex-wrap: wrap;
@@ -483,6 +496,22 @@
 
 .bld-search-input {
   width: 100%;
+}
+
+.bld-repair-all {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.bld-repair-button {
+  padding: 0.25rem 0.5rem;
+}
+
+.bld-predecessor-explanation {
+  color: var(--gold-light);
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
 }
 
 .bld-filter-row {
@@ -1320,20 +1349,6 @@
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  border-width: 0.231rem;
-  border-style: solid;
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  background-color: #20272d;
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
-  color: var(--gold-light);
   transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1), transform 0.15s ease-out;
 }
 
@@ -1342,26 +1357,10 @@
 }
 
 .bld-tooltip-action-btn:hover:not(:disabled) {
-  background-color: #242a30;
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal-hover.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
-  color: var(--text-bright);
   transform: translateY(-0.0909rem);
 }
 
 .bld-tooltip-action-btn:active:not(:disabled) {
-  background-color: #0d1218;
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal-active.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
-  color: var(--text-bright);
   transform: translateY(0.0909rem) scale(0.98);
   transition: transform 0s;
 }
@@ -1372,10 +1371,6 @@
 
 .bld-tooltip-action-btn--danger:hover:not(:disabled) {
   color: var(--text-bright);
-}
-
-.bld-tooltip-action-btn:disabled {
-  opacity: 0.45;
 }
 
 .bld-tooltip-spoils {

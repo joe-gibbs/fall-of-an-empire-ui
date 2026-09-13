@@ -2,7 +2,7 @@ export const UI_PRESENTATION = {
   // Root font size used to calibrate rem-based game UI measurements at the
   // 1920x1080 design resolution (Webkiln multiplies this by viewport/design scale).
   rootFontSizePx: 13.2,
-  // Absolute floor after viewport scaling. At Steam Deck 1280x800 the design
+  // Physical-pixel floor before the player's UI scale. At Steam Deck 1280x800 the design
   // scale is ~0.67, which would otherwise yield ~9px body text. This keeps
   // frequently read rem text near or above Valve's 12px legibility guideline
   // once default UI scale and body rem sizes are applied.

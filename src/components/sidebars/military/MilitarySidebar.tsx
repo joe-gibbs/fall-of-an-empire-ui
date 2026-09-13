@@ -348,7 +348,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const canMergeSelectedForce = isPlayerControlled && !army.isPersonalGuard && !army.isFoederatiAuxiliary;
   const canConsolidateSelection = canMergeSelectedForce && selectedUnitsCanConsolidate(selectedUnitRows);
   const compositionActionInProgress = splitInProgress || mergeUnitsInProgress;
-  const forceNoun = webUIText(army.isNavy ? 'Common.FleetLower' : 'Common.ArmyLower');
 
   const handleSplitSelected = () => {
     if (compositionActionInProgress || selectedUnitIds.length === 0) return;
@@ -492,8 +491,9 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     icon: '/assets/icons/I_MergeUnits.png',
     get description() {
       return webUIText(
-        mergeTargetingActive ? 'Military.MergeForcesTargeting' : 'Military.MergeForcesDescription',
-        { Force: forceNoun },
+        mergeTargetingActive
+          ? (army.isNavy ? 'Military.MergeFleetTargeting' : 'Military.MergeArmyTargeting')
+          : (army.isNavy ? 'Military.MergeFleetDescription' : 'Military.MergeArmyDescription'),
       );
     },
     isActive: mergeTargetingActive,
@@ -708,12 +708,12 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       <button
         type="button"
         data-tutorial-target={action.tutorialTarget}
-        className={`mil-action-chip${action.disabled ? ' is-disabled' : ''}`}
+        className={`btn--outline mil-action-chip${action.disabled ? ' is-disabled' : ''}`}
         disabled={action.disabled}
         aria-label={action.label}
         onClick={() => { if (!action.disabled && action.onClick) action.onClick(); }}
       >
-        <img src={action.icon} alt="" className="mil-action-chip-icon" />
+        <img src={action.icon} alt="" className="btn-icon mil-action-chip-icon" />
         <span className="mil-action-chip-label">{action.label}</span>
       </button>
     </Tooltip>
@@ -752,12 +752,12 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
             <Tooltip key={action.label} content={action.tooltip ?? { title: action.label, body: action.description }} position="bottom" delay={150}>
               <button
                 type="button"
-                className={`mil-action-chip${action.disabled ? ' is-disabled' : ''}`}
+                className={`btn--outline mil-action-chip${action.disabled ? ' is-disabled' : ''}`}
                 disabled={action.disabled}
                 aria-label={action.label}
                 onClick={() => { if (!action.disabled && action.onClick) action.onClick(); }}
               >
-                <img src={action.icon} alt="" className="mil-action-chip-icon" />
+                <img src={action.icon} alt="" className="btn-icon mil-action-chip-icon" />
                 <span className="mil-action-chip-label">{action.label}</span>
               </button>
             </Tooltip>
@@ -772,7 +772,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       <button
         type="button"
         data-tutorial-target={action.tutorialTarget}
-        className={`mil-command${action.isActive ? ' is-active' : ''}${action.disabled ? ' is-disabled' : ''}${action.tone === 'danger' ? ' mil-command--danger' : ''}`}
+        className={`btn--outline mil-command${action.isActive ? ' is-active' : ''}${action.disabled ? ' is-disabled' : ''}${action.tone === 'danger' ? ' mil-command--danger' : ''}`}
         aria-label={action.label}
         aria-pressed={action.isActive || undefined}
         disabled={action.disabled}
@@ -782,7 +782,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
           if (!action.disabled && action.onClick) action.onClick();
         }}
       >
-        <img src={action.icon} alt="" className="mil-command-icon" />
+        <img src={action.icon} alt="" className="btn-icon mil-command-icon" />
         <span className="mil-command-label">{action.label}</span>
         {action.stateLabel && (
           <span className="mil-command-cost">
@@ -1131,7 +1131,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                 >
                   <button
                     type="button"
-                    className={`mil-lead-commander-assign${!isPlayerControlled ? ' is-disabled' : ''}`}
+                    className={`btn--outline mil-lead-commander-assign${!isPlayerControlled ? ' is-disabled' : ''}`}
                     aria-label={army.commanderId ? webUIText("MilitarySidebar.ReplaceCommander") : webUIText("MilitarySidebar.AssignCommander")}
                     disabled={!isPlayerControlled}
                     onClick={() => { if (isPlayerControlled) setCommanderAssignmentOpen(true); }}

@@ -3,7 +3,7 @@ import type { TutorialSpotlightResponse } from '../../../bridge-types.generated.
 import { useKeyActionResolver } from '../../../hooks/useKeyActionResolver';
 import { renderEventTextChunk } from '../../../utils/eventTextFlow';
 import { renderRichText } from '../../../utils/richText';
-import { requestTutorialHudReveal } from '../../../utils/tutorialHudReveal';
+import { requestTutorialHudReveal, TUTORIAL_RELEASE_HUD_REVEAL } from '../../../utils/tutorialHudReveal';
 import CloseButton from '../../common/buttons/CloseButton';
 import './TutorialSpotlightOverlay.css';
 
@@ -101,10 +101,37 @@ function targetTokens(element: Element): string[] {
   return attr.split(/\s+/).filter(Boolean);
 }
 
-function isVisibleElement(element: Element): boolean {
+function visibleElementBounds(element: Element): SpotlightRect {
   const rect = element.getBoundingClientRect();
-  return rect.width > 1 && rect.height > 1 && rect.right > 0 && rect.bottom > 0
-    && rect.left < window.innerWidth && rect.top < window.innerHeight;
+  let left = Math.max(0, rect.left);
+  let top = Math.max(0, rect.top);
+  let right = Math.min(window.innerWidth, rect.right);
+  let bottom = Math.min(window.innerHeight, rect.bottom);
+  for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+    const style = window.getComputedStyle(ancestor);
+    const bounds = ancestor.getBoundingClientRect();
+    if (/(auto|scroll|hidden|clip)/.test(style.overflowX)) {
+      left = Math.max(left, bounds.left);
+      right = Math.min(right, bounds.right);
+    }
+    if (/(auto|scroll|hidden|clip)/.test(style.overflowY)) {
+      top = Math.max(top, bounds.top);
+      bottom = Math.min(bottom, bounds.bottom);
+    }
+  }
+  return { left, top, right, bottom, width: right - left, height: bottom - top };
+}
+
+function isVisibleElement(element: Element): boolean {
+  const rect = visibleElementBounds(element);
+  return rect.width > 1 && rect.height > 1;
+}
+
+function isFullyVisibleElement(element: Element): boolean {
+  const raw = element.getBoundingClientRect();
+  const visible = visibleElementBounds(element);
+  return visible.width > 1 && visible.height > 1
+    && visible.width >= raw.width - 1 && visible.height >= raw.height - 1;
 }
 
 function findByTutorialToken(tokens: string[]): HTMLElement | null {
@@ -122,13 +149,6 @@ function findByTutorialToken(tokens: string[]): HTMLElement | null {
   return null;
 }
 
-function isPersonalGuardUiTarget(target: string): boolean {
-  const normalised = target.toLowerCase();
-  return normalised === 'confirmpersonalguardbutton'
-    || normalised === 'formpersonalguardbutton'
-    || normalised === 'militarypersonalguardtab';
-}
-
 function spotlightTargetTokens(spotlight: TutorialSpotlightResponse): string[] {
   const requestedTarget = spotlight.target.startsWith('OrderTarget:')
     ? spotlight.target.slice('OrderTarget:'.length)
@@ -138,14 +158,6 @@ function spotlightTargetTokens(spotlight: TutorialSpotlightResponse): string[] {
   return [requestedTarget, ...aliases];
 }
 
-function isSpotlightTargetSatisfied(spotlight: TutorialSpotlightResponse): boolean {
-  if (spotlight.isBuildingTarget || spotlight.isUnitTarget) return false;
-
-  const expectedTokens = new Set(spotlightTargetTokens(spotlight).map(token => token.toLowerCase()));
-  const candidates = Array.from(document.querySelectorAll('[data-tutorial-satisfied="true"]'));
-  return candidates.some(element => targetTokens(element).some(token => expectedTokens.has(token.toLowerCase())));
-}
-
 function findByDetail(attributeName: string, detail: string): HTMLElement | null {
   const expected = normaliseIdentifier(detail);
   if (!expected) return null;
@@ -153,7 +165,7 @@ function findByDetail(attributeName: string, detail: string): HTMLElement | null
   const candidates = Array.from(document.querySelectorAll(`[${attributeName}]`));
   for (const element of candidates) {
     const value = element.getAttribute(attributeName) ?? '';
-    if (normaliseIdentifier(value) === expected && isVisibleElement(element) && element instanceof HTMLElement) {
+    if (normaliseIdentifier(value) === expected && isFullyVisibleElement(element) && element instanceof HTMLElement) {
       return element;
     }
   }
@@ -195,7 +207,7 @@ function elementUnitCount(element: HTMLElement | null): number {
 
 function rectForElement(element: HTMLElement | null): SpotlightRect | null {
   if (!element) return null;
-  const raw = element.getBoundingClientRect();
+  const raw = visibleElementBounds(element);
   if (raw.width <= 1 || raw.height <= 1) return null;
 
   const viewportWidth = window.innerWidth;
@@ -324,7 +336,6 @@ export default function TutorialSpotlightOverlay({
   onLinkClick,
 }: TutorialSpotlightOverlayProps) {
   const [targetRect, setTargetRect] = useState<SpotlightRect | null>(null);
-  const [targetEventId, setTargetEventId] = useState('');
   const [cardSize, setCardSize] = useState<CardSize>(DEFAULT_CARD_SIZE);
   const targetElementRef = useRef<HTMLElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -346,7 +357,6 @@ export default function TutorialSpotlightOverlay({
     if (!spotlight.isVisible) {
       targetElementRef.current = null;
       const frameId = window.requestAnimationFrame(() => {
-        setTargetEventId('');
         setTargetRect(null);
       });
       return () => window.cancelAnimationFrame(frameId);
@@ -354,15 +364,8 @@ export default function TutorialSpotlightOverlay({
 
     let frameId = 0;
     let revealedTarget = false;
-    let resolvedSatisfiedTarget = false;
     const tick = () => {
       const current = spotlightRef.current;
-      if (!resolvedSatisfiedTarget && !current.canGoForward && isSpotlightTargetSatisfied(current)) {
-        resolvedSatisfiedTarget = true;
-        onResolveRef.current(eventId);
-        return;
-      }
-
       // Opens compact dropdowns when needed, then resolves the visible target.
       const element = findSpotlightTarget(current);
 
@@ -377,13 +380,14 @@ export default function TutorialSpotlightOverlay({
       targetElementRef.current = element;
       const nextRect = rectForElement(element);
       setTargetRect(previous => (rectsEqual(previous, nextRect) ? previous : nextRect));
-      const nextTargetEventId = nextRect ? eventId : '';
-      setTargetEventId(previous => (previous === nextTargetEventId ? previous : nextTargetEventId));
       frameId = window.requestAnimationFrame(tick);
     };
 
     tick();
-    return () => window.cancelAnimationFrame(frameId);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.dispatchEvent(new Event(TUTORIAL_RELEASE_HUD_REVEAL));
+    };
   }, [eventId, spotlight.isVisible, spotlight.target, spotlight.isBuildingTarget, spotlight.isUnitTarget, spotlight.canGoForward]);
 
   useEffect(() => {
@@ -420,7 +424,8 @@ export default function TutorialSpotlightOverlay({
     const handler = (event: MouseEvent) => {
       if (!(event.target instanceof Node)) return;
       const current = spotlightRef.current;
-      if (current.target.startsWith('OrderTarget:') && event.button !== 2) return;
+      // Order objectives are resolved by the successful gameplay order action.
+      if (current.target.startsWith('OrderTarget:')) return;
       if (current.isBuildingTarget) return;
 
       if (current.isUnitTarget && current.targetDetail) {
@@ -451,8 +456,8 @@ export default function TutorialSpotlightOverlay({
       }, 0);
     };
 
-    document.addEventListener('mousedown', handler, true);
-    return () => document.removeEventListener('mousedown', handler, true);
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
   }, [
     eventId,
     spotlight.isVisible,
@@ -464,13 +469,10 @@ export default function TutorialSpotlightOverlay({
   ]);
 
   const panels = useMemo<PanelSide[]>(() => (targetRect ? ['top', 'bottom', 'left', 'right'] : ['full']), [targetRect]);
-  const needsResolvedTarget = spotlight.isBuildingTarget || isPersonalGuardUiTarget(spotlight.target);
-  const hasResolvedTarget = targetRect !== null && targetEventId === eventId;
 
   if (!spotlight.isVisible) return null;
-  if (needsResolvedTarget && !hasResolvedTarget) return null;
 
-  const handleNavigateMouseDown = (event: ReactMouseEvent<HTMLButtonElement>, direction: -1 | 1) => {
+  const handleNavigateClick = (event: ReactMouseEvent<HTMLButtonElement>, direction: -1 | 1) => {
     event.preventDefault();
     event.stopPropagation();
     if (direction < 0 && !spotlight.canGoBack) return;
@@ -523,7 +525,7 @@ export default function TutorialSpotlightOverlay({
             type="button"
             className={`tutorial-spotlight-nav${!spotlight.canGoBack ? ' tutorial-spotlight-nav--disabled' : ''}`}
             disabled={!spotlight.canGoBack}
-            onClick={(event) => handleNavigateMouseDown(event, -1)}
+            onClick={(event) => handleNavigateClick(event, -1)}
           >
             <img src="/assets/icons/I_NavPrevious.png" alt="" className="tutorial-spotlight-nav-icon" draggable={false} />
           </button>
@@ -531,7 +533,7 @@ export default function TutorialSpotlightOverlay({
           <button
             type="button"
             className="tutorial-spotlight-nav"
-            onClick={(event) => handleNavigateMouseDown(event, 1)}
+            onClick={(event) => handleNavigateClick(event, 1)}
           >
             <img src="/assets/icons/I_NavNext.png" alt="" className="tutorial-spotlight-nav-icon" draggable={false} />
           </button>

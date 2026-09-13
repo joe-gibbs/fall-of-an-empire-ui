@@ -855,21 +855,9 @@
   width: 13.5rem;
   height: 1.85rem;
   margin: 0.6rem auto 0;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.36);
-  background-color: rgba(7, 10, 13, 0.86);
-  color: var(--gold);
   font-family: var(--font-header);
   font-size: 0.78rem;
-  text-transform: uppercase;
   cursor: pointer;
-}
-
-.powerbloc-view-members:hover {
-  border-color: rgba(201, 168, 76, 0.64);
-  background-color: rgba(40, 29, 24, 0.82);
-  color: var(--text-bright);
 }
 
 .powerbloc-debug-panel {

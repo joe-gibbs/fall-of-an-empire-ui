@@ -103,7 +103,7 @@ function AdvisorPanel({
           <div className="advisor-card__actions">
             <button
               type="button"
-              className="advisor-card__btn advisor-card__btn--ghost"
+              className="btn--outline advisor-card__btn advisor-card__btn--ghost"
               onClick={() => { playSound('click'); onPrevious?.(); }}
               disabled={pageIndex === 0}
             >
@@ -112,7 +112,7 @@ function AdvisorPanel({
             <div className="advisor-card__actions-right">
               <button
                 type="button"
-                className="advisor-card__btn advisor-card__btn--primary"
+                className="btn--outline advisor-card__btn advisor-card__btn--primary"
                 onClick={() => { playSound(isLastPage ? 'confirm' : 'click'); (isLastPage ? onDismiss : onNext)?.(); }}
               >
                 {isLastPage ? webUIText("AdvisorPanel.Understood") : webUIText("AdvisorPanel.Next")}

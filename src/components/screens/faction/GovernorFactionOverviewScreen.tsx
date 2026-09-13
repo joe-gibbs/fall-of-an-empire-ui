@@ -1543,7 +1543,6 @@ function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => vo
         playerFactionId={playerFactionId}
         autoAssignGovernorsEnabled={autoAssignGovernorsEnabled}
         emptyReason={diplomacy?.governorEmptyReason}
-        tutorialTarget="TutorialGovernorAppointButton"
         onToggleAutoAssign={toggleAutoAssign}
         onAppoint={setEditing}
         onOpenCharacter={onOpenCharacter}

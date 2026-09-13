@@ -1698,33 +1698,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 0.1818rem solid transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.1818rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
-  background-color: #4a1530;
-  background-image: url('/assets/baked/button-burgundy.png');
-  background-repeat: repeat;
-  background-size: 23.2727rem 23.2727rem;
-  color: var(--gold-light);
   padding: 0.62rem 0.85rem;
   font-family: var(--font-header);
-  text-transform: uppercase;
   text-align: center;
   line-height: 1;
-  box-shadow: 0 0.35rem 1rem rgba(8, 12, 17, 0.45);
-}
-
-.fs-begin-btn:hover {
-  background-image: url('/assets/baked/button-burgundy-hover.png');
-  color: #fff7d0;
 }
 
 .fs-begin-btn.fs-begin-btn--disabled {
   cursor: default;
-  opacity: 0.46;
   transform: none;
 }
 

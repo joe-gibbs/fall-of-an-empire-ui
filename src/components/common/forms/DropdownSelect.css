@@ -125,6 +125,15 @@
   animation: dropdown-select-menu-in 0.12s cubic-bezier(0.2, 0, 0, 1) both;
 }
 
+.dropdown-select__menu--portal {
+  position: fixed;
+  box-sizing: border-box;
+  top: auto;
+  left: auto;
+  min-width: 0;
+  margin-top: 0;
+}
+
 .dropdown-select__menu--closing {
   animation: dropdown-select-menu-out 0.12s ease-in both;
   pointer-events: none;

@@ -136,7 +136,7 @@ function QueueRow({
   const progressWidth = Math.max(0, Math.min(100, item.progressPercent));
   const countLabel = item.count > 1 ? webUIText("BuildQueue.Multiplier", { Value1: n(item.count) }) : '';
   const statusClass = item.state ? ` buildq-status--${item.state}` : '';
-  const cancelClass = `buildq-cancel${pending ? ' buildq-cancel--pending' : ''}`;
+  const cancelClass = `btn--outline buildq-cancel${pending ? ' buildq-cancel--pending' : ''}`;
   const factionContent = item.factionId || item.factionName ? (
     <span className="buildq-faction">
       {item.factionId && (

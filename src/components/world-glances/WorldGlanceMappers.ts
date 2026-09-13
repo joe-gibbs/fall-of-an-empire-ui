@@ -99,6 +99,10 @@ export function mapSettlement(entry: GetWorldGlancesResponse['settlements'][numb
       icon: entry.buildItem.icon,
       progress: entry.buildItem.progress,
     } : undefined,
+    queuedConstruction: entry.queuedConstruction,
+    queuedConstructionCount: entry.queuedConstructionCount,
+    queuedRecruitment: entry.queuedRecruitment,
+    queuedRecruitmentCount: entry.queuedRecruitmentCount,
     warWithPlayer: entry.warWithPlayer ?? false,
   };
 }

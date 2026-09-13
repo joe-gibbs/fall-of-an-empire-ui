@@ -341,8 +341,8 @@
 }
 
 .diplo-overview-grid > .tooltip-wrapper {
-  width: 25%;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .diplo-overview-stat {
@@ -403,15 +403,21 @@
   align-items: center;
 }
 
-.diplo-view-characters-button,
-.diplo-view-military-button,
-.diplo-levy-action-button {
+.diplo-section-heading-with-action .diplo-view-characters-button,
+.diplo-section-heading-with-action .diplo-view-military-button,
+.diplo-section-heading-with-action .diplo-levy-action-button {
   flex-shrink: 0;
   height: 1.65rem;
   padding: 0 0.5rem;
   margin-right: 0.462rem;
   font-size: 0.72rem;
+  text-transform: none;
+  letter-spacing: normal;
   white-space: nowrap;
+}
+
+.diplo-section-heading-with-action .btn-content {
+  game-ui-font-fit-max-size: 0.72rem;
 }
 
 .diplo-view-characters-button .btn-icon,
@@ -447,30 +453,6 @@
   font-size: 0.85rem;
   color: var(--text-muted);
   margin-bottom: 0.1rem;
-}
-
-.diplo-ruler-stats {
-  display: flex;
-  flex-wrap: wrap;
-
-  margin-top: 0.1rem;
-}
-
-.diplo-ruler-stat {
-  display: flex;
-  align-items: center;
-
-  cursor: auto;
-}
-
-.diplo-ruler-stat-icon {
-  width: 0.95rem;
-  height: 0.95rem;
-}
-
-.diplo-ruler-stat-val {
-  font-size: 0.85rem;
-  font-weight: 600;
 }
 
 .diplo-ruler-traits {
@@ -822,15 +804,8 @@
   gap: 0.28rem;
   min-height: 1.55rem;
   padding: 0.22rem 0.48rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(176, 72, 72, 0.5);
-  background-color: rgba(44, 18, 20, 0.62);
-  color: var(--red-light);
   font-family: var(--font-header);
   font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   cursor: pointer;
 }
 
@@ -841,16 +816,7 @@
   opacity: 0.9;
 }
 
-.diplo-treaty-break:hover {
-  border-top-color: var(--red-light);
-  border-right-color: var(--red-light);
-  border-bottom-color: var(--red-light);
-  border-left-color: var(--red-light);
-  color: var(--text-bright);
-}
-
 .diplo-treaty-break:disabled {
-  opacity: 0.55;
   cursor: default;
 }
 
@@ -948,24 +914,9 @@
   flex-shrink: 0;
   align-self: center;
   padding: 0.24rem 0.45rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.5);
-  background-color: rgba(28, 19, 18, 0.55);
-  color: var(--gold);
   font-family: var(--font-header);
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   cursor: pointer;
-}
-
-.diplo-agent-recall:hover {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  color: var(--text-bright);
 }
 
 /* --- Province successor --- */
@@ -1020,28 +971,13 @@
 .diplo-successor-action {
   flex-shrink: 0;
   padding: 0.28rem 0.55rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.65);
-  background-color: rgba(74, 24, 28, 0.78);
-  color: var(--text-bright);
   font-family: var(--font-header);
   font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   cursor: pointer;
 }
 
 .diplo-successor-action-wrap {
   flex-shrink: 0;
-}
-
-.diplo-successor-action:hover {
-  background-color: rgba(103, 34, 39, 0.9);
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
 }
 
 /* Spy network progress */
@@ -1183,54 +1119,19 @@
   width: 100%;
   padding: 0.38rem 0.55rem;
   justify-content: center;
-  background-color: #151b20;
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.18) 0%, rgba(36, 42, 48, 0.18) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
-  border-top-color: rgba(201, 168, 76, 0.22);
-  border-right-color: rgba(80, 92, 104, 0.3);
-  border-bottom-color: rgba(80, 92, 104, 0.34);
-  border-left-color: rgba(80, 92, 104, 0.3);
-  color: var(--text-bright);
   font-size: 0.82rem;
   font-family: var(--font-header);
-  letter-spacing: 0;
   transform: none;
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
 
 .diplo-negotiate-section .btn--burgundy:hover {
-  background-color: #20272d;
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal-hover.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
-  border-top-color: rgba(201, 168, 76, 0.4);
-  border-right-color: rgba(201, 168, 76, 0.3);
-  border-bottom-color: rgba(201, 168, 76, 0.3);
-  border-left-color: rgba(201, 168, 76, 0.3);
   transform: none;
 }
 
 .diplo-negotiate-section .btn--burgundy:active {
-  background-color: #14191f;
-  background-image:
-    linear-gradient(180deg, rgba(26, 31, 37, 0.22) 0%, rgba(26, 31, 37, 0.22) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    url('/assets/baked/card-charcoal-active.png');
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 7.385rem 7.385rem, 17.4545rem 8.7273rem;
-  border-top-color: rgba(201, 168, 76, 0.32);
-  border-right-color: rgba(201, 168, 76, 0.24);
-  border-bottom-color: rgba(201, 168, 76, 0.24);
-  border-left-color: rgba(201, 168, 76, 0.24);
   transform: none;
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
 
 .diplo-negotiate-section .btn-icon {
@@ -1396,15 +1297,6 @@
 /* --- Ruler section --- */
 .diplo-ruler-section > * + * {
   margin-left: 0.5rem;
-}
-
-.diplo-ruler-stats > * {
-  margin-right: 0.35rem;
-  margin-bottom: 0.25rem;
-}
-
-.diplo-ruler-stat > * + * {
-  margin-left: 0.12rem;
 }
 
 .diplo-ruler-traits > * + * {

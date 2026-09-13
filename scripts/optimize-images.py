@@ -159,6 +159,8 @@ DIR_SIZES: dict[str, tuple[int, int] | None] = {
     'hud/Sidebars/Character':           (256, 256),
     # UI panel/card textures -- varied sizes, convert only
     'baked':                            None,
+    # Nine-slice button frames; CSS uses percentage slices at every output size.
+    'baked/buttons/painted-metal':       (384, 256),
     'ui':                               None,
     'ui-shadowed':                      None,
     'ui-shadowed/ArmySidebar':          None,

@@ -29,7 +29,7 @@ export default function ResourcePurchaseButton({ resourceId }: { resourceId: str
   if (!economy || !resource || resource.aggregate) return null;
 
   const amount = stepAmountFromMultiplier(multiplier, economy.tradeTransactionAmount);
-  const cost = Math.ceil(amount * resource.buyPrice);
+  const cost = resource.tradeQuotes.find(quote => quote.amount === amount)!.buyCost;
   const canBuy = cost > 0 && gold >= cost && resource.storageAvailable >= amount;
 
   return (
@@ -48,7 +48,7 @@ export default function ResourcePurchaseButton({ resourceId }: { resourceId: str
           if (purchaseInFlight.current) return;
           noteModifierKeysFromEvent(event);
           const purchaseAmount = stepAmountFromEvent(event, economy.tradeTransactionAmount);
-          const purchaseCost = Math.ceil(purchaseAmount * resource.buyPrice);
+          const purchaseCost = resource.tradeQuotes.find(quote => quote.amount === purchaseAmount)!.buyCost;
           if (purchaseCost <= 0 || gold < purchaseCost || resource.storageAvailable < purchaseAmount) return;
           purchaseInFlight.current = true;
           setPurchasing(true);

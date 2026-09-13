@@ -54,7 +54,7 @@ interface BattleScreenProps {
   onClose: () => void;
 }
 
-const MIN_BATTLE_ZOOM = 0.35;
+const MIN_BATTLE_ZOOM = 0.01;
 const MAX_BATTLE_ZOOM = 2.5;
 const BATTLE_ZOOM_STEP = 1.15;
 const AGENT_TOOLTIP_MIN_ZOOM = 1.85;
@@ -648,6 +648,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
               height: `${battlefieldHeight}px`,
             }}
             initialView={battleInitialView}
+            resetViewOnResize
             minZoom={MIN_BATTLE_ZOOM}
             maxZoom={MAX_BATTLE_ZOOM}
             zoomStep={BATTLE_ZOOM_STEP}

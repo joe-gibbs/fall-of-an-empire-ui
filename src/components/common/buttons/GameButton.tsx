@@ -11,6 +11,7 @@ interface GameButtonProps {
   disabled?: boolean;
   tutorialTarget?: string;
   ariaLabel?: string;
+  ariaPressed?: boolean;
 }
 
 const GameButton: React.FC<GameButtonProps> = ({
@@ -23,6 +24,7 @@ const GameButton: React.FC<GameButtonProps> = ({
   disabled,
   tutorialTarget,
   ariaLabel,
+  ariaPressed,
 }) => {
   const hasContent = React.Children.count(children) > 0;
 
@@ -31,6 +33,7 @@ const GameButton: React.FC<GameButtonProps> = ({
       className={`btn--${variant}${fullWidth ? ' btn--full' : ''}${className ? ` ${className}` : ''}`}
       disabled={disabled}
       aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
       data-tutorial-target={tutorialTarget}
       onClick={(event) => {
         if (disabled) return;

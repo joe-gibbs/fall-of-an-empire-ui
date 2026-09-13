@@ -52,6 +52,7 @@ function mapDemographicShare(share: BridgeFactionDemographicShare): FactionDemog
   return {
     id: share.id,
     name: share.name,
+    description: share.description,
     colour: share.colour,
     iconId: share.iconId,
     population: share.population,

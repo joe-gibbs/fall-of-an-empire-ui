@@ -118,7 +118,7 @@ const ConvoyFilterPanel: React.FC = () => {
         <div className="convoy-filter-presets">
           <button
             type="button"
-            className="convoy-filter-preset"
+            className="btn--outline convoy-filter-preset"
             onClick={(event) => {
               event.preventDefault();
               showAllFactions();
@@ -128,7 +128,7 @@ const ConvoyFilterPanel: React.FC = () => {
           </button>
           <button
             type="button"
-            className="convoy-filter-preset"
+            className="btn--outline convoy-filter-preset"
             onClick={(event) => {
               event.preventDefault();
               showNoFactions();

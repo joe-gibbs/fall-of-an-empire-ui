@@ -221,6 +221,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
   const [deleteGroupTarget, setDeleteGroupTarget] = useState<SaveGroup | null>(null);
   const [renameGroupTarget, setRenameGroupTarget] = useState<SaveGroup | null>(null);
   const [loadTarget, setLoadTarget] = useState<SaveEntry | null>(null);
+  const [compatibilityWarning, setCompatibilityWarning] = useState<{ slotName: string; warnings: string[] } | null>(null);
   const [removingSlot, setRemovingSlot] = useState<string | null>(null);
   const [removingGroupId, setRemovingGroupId] = useState<string | null>(null);
   const [loadingSlot, setLoadingSlot] = useState<string | null>(null);
@@ -234,6 +235,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
   const handleClosed = useCallback(() => {
     clearTimeout(loadTimerRef.current);
     setLoadTarget(null);
+    setCompatibilityWarning(null);
     setLoadingSlot(null);
     setDepartingForLoad(false);
     setLoadError(null);
@@ -306,15 +308,21 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
     clearTimeout(loadTimerRef.current);
   }, []);
 
-  const beginLoad = useCallback((slotName: string) => {
+  const beginLoad = useCallback((slotName: string, acknowledgeWarnings = false) => {
     setLoadError(null);
     setLoadingSlot(slotName);
     setDepartingForLoad(true);
     clearTimeout(loadTimerRef.current);
     loadTimerRef.current = setTimeout(() => {
-      void loadSave(slotName)
-        .then(() => {
-          animatedClose();
+      void loadSave(slotName, acknowledgeWarnings)
+        .then((result) => {
+          if (result.started) {
+            animatedClose();
+          } else {
+            setDepartingForLoad(false);
+            setLoadingSlot(null);
+            setCompatibilityWarning({ slotName, warnings: result.warnings });
+          }
         })
         .catch((error) => {
           setDepartingForLoad(false);
@@ -554,6 +562,16 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
         cancelText={webUIText('Common.Cancel')}
         onConfirm={confirmLoad}
         onClosed={() => setLoadTarget(null)}
+      />
+      <ConfirmDialog
+        visible={compatibilityWarning !== null}
+        title={webUIText('LoadGame.CompatibilityTitle')}
+        message={webUIText('LoadGame.CompatibilityMessage', { Warnings: compatibilityWarning?.warnings.join(' ') ?? '' })}
+        confirmText={webUIText('LoadGame.LoadAnyway')}
+        onConfirm={() => {
+          if (compatibilityWarning) beginLoad(compatibilityWarning.slotName, true);
+        }}
+        onClosed={() => setCompatibilityWarning(null)}
       />
     </>
   );

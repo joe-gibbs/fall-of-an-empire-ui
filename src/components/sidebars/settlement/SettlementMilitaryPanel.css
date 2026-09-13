@@ -175,38 +175,9 @@
   align-items: center;
 
   padding: 0.35rem 0.55rem;
-  background-color: #0d1218;
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    linear-gradient(180deg, rgba(18, 23, 29, 0.95), rgba(13, 18, 24, 0.98));
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 5.538rem 5.538rem, auto;
-  border-width: 0.1818rem;
-  border-style: solid;
-  border-top-color: rgba(255, 255, 255, 0.1);
-  border-right-color: rgba(255, 255, 255, 0.07);
-  border-bottom-color: rgba(255, 255, 255, 0.07);
-  border-left-color: rgba(255, 255, 255, 0.07);
-  color: var(--gold-light);
   font-family: var(--font-header);
   font-size: 0.82rem;
-  letter-spacing: 0.04em;
   cursor: pointer;
-}
-
-.mil-new-template-btn:hover {
-  border-top-color: rgba(255, 255, 255, 0.16);
-  border-right-color: rgba(255, 255, 255, 0.12);
-  border-bottom-color: rgba(255, 255, 255, 0.12);
-  border-left-color: rgba(255, 255, 255, 0.12);
-  background-color: #20272d;
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
-    url('/assets/baked/texture-overlay-heavy.png'),
-    linear-gradient(180deg, rgba(36, 42, 48, 0.76), rgba(18, 23, 29, 0.98));
-  background-repeat: repeat, repeat, repeat;
-  background-size: auto, 5.538rem 5.538rem, auto;
 }
 
 .mil-new-template-plus {
@@ -591,27 +562,9 @@
 .mil-raise-btn {
   width: 100%;
   padding: 0.35rem 0.6rem;
-  background-color: var(--burgundy);
-  color: var(--text-bright);
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-top-color: rgba(255, 255, 255, 0.16);
-  border-right-color: rgba(255, 255, 255, 0.12);
-  border-bottom-color: rgba(255, 255, 255, 0.12);
-  border-left-color: rgba(255, 255, 255, 0.12);
   font-family: var(--font-header);
   font-size: 0.82rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   cursor: pointer;
-}
-
-.mil-raise-btn:hover {
-  background-color: var(--burgundy-light);
-  border-top-color: rgba(255, 255, 255, 0.18);
-  border-right-color: rgba(255, 255, 255, 0.14);
-  border-bottom-color: rgba(255, 255, 255, 0.14);
-  border-left-color: rgba(255, 255, 255, 0.14);
 }
 
 .mil-formation-locked {

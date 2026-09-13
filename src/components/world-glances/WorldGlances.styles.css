@@ -5953,3 +5953,27 @@
   color: var(--green);
 }
 
+
+/* Queued jobs share the settlement's painted label; only the first queue item advances. */
+.gset-queued-job {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.6818rem;
+  line-height: 0.9rem;
+}
+
+.gset-queued-job > img {
+  width: 0.7273rem;
+  height: 0.7273rem;
+  margin-right: 0.2727rem;
+  flex-shrink: 0;
+}
+
+.gset-queued-job > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

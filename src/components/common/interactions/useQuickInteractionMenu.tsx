@@ -106,7 +106,7 @@ function tooltipFor(interaction: QuickInteraction): TooltipContent {
   if (interaction.cooldownDays > 0) {
     lines.push({
       label: webUIText('FactionOverview.Cooldown'),
-      labelIcon: '/assets/icons/I_Cooling.png',
+      labelIcon: '/assets/icons/I_Cooldown.png',
       value: webUIText('Common.DayCount', {
         Days: formatNumber(interaction.cooldownDays),
         Unit: webUIText(interaction.cooldownDays === 1 ? 'Common.Day' : 'Common.Days'),
@@ -333,7 +333,7 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
         {hasViewAction && (
           <button
             type="button"
-            className="quick-interaction-menu__button"
+            className="btn--outline quick-interaction-menu__button"
             role="menuitem"
             onClick={(event) => {
               if (event.button !== 0) return;
@@ -348,7 +348,7 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
         {hasZoomAction && (
           <button
             type="button"
-            className="quick-interaction-menu__button"
+            className="btn--outline quick-interaction-menu__button"
             role="menuitem"
             onClick={(event) => {
               if (event.button !== 0) return;
@@ -364,7 +364,7 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
           <button
             key={action.label}
             type="button"
-            className="quick-interaction-menu__button"
+            className="btn--outline quick-interaction-menu__button"
             role="menuitem"
             onClick={(event) => {
               if (event.button !== 0) return;
@@ -390,7 +390,7 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
           >
             <button
               type="button"
-              className="quick-interaction-menu__button"
+              className="btn--outline quick-interaction-menu__button"
               role="menuitem"
               onClick={(event) => {
                 if (event.button !== 0) return;

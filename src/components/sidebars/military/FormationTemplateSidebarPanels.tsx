@@ -474,7 +474,7 @@ export function Picker({
           </StyledScrollArea>
           <div className="tpl-picker-foot">
             <span>{webUIText("FormationTemplateSidebar.UnitsShown", { Value1: fmt(visibleCount) })}</span>
-            <button type="button" className="tpl-picker-done" onClick={onCancel}><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" /></button>
+            <button type="button" className="btn--outline tpl-picker-done" onClick={onCancel}><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.667.4" /></button>
           </div>
         </div>
       </div>

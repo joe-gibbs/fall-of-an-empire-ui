@@ -50,6 +50,7 @@ export interface CharacterRelationship {
 
 /** A single luxury slot requirement */
 export interface LuxurySlot {
+  resourceId: string;
   name: string;
   icon: string;
   required: number;
@@ -390,6 +391,7 @@ export interface FactionHeir {
 export interface FactionDemographicShare {
   id: string;
   name: string;
+  description: string;
   colour: string;
   iconId: string;
   population: number;
@@ -629,6 +631,7 @@ export interface Building {
   canRepair?: boolean;
   repairReason?: string;
   repairGoldCost?: number;
+  repairQueued?: boolean;
   repairResourceCost?: BuildingResourceCost[];
 }
 
@@ -683,7 +686,7 @@ export interface ConstructionQueueItem {
   /** Authored building effect rich text for the queued level. */
   effectsText?: string;
   /** 'new' = fresh build; 'upgrade' = level+1; 'rebuild' = restore a ruin at its current level. */
-  kind: 'new' | 'upgrade' | 'rebuild';
+  kind: 'new' | 'upgrade' | 'rebuild' | 'repair';
   toLevel: number;
   /** Full cost paid upfront when queued (for display). */
   goldCost: number;
@@ -1541,6 +1544,7 @@ export interface WarningTarget {
   linkType?: string;
   linkId?: string;
   icons?: string[];
+  resources?: { id: string; name: string; icon: string }[];
 }
 
 export interface Warning {

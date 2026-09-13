@@ -144,7 +144,7 @@ const MapModeFilterPanel: React.FC = () => {
           <div className="map-filter-presets">
             <button
               type="button"
-              className="map-filter-preset"
+              className="btn--outline map-filter-action"
               onClick={(event) => {
                 event.preventDefault();
                 showAll();
@@ -154,7 +154,7 @@ const MapModeFilterPanel: React.FC = () => {
             </button>
             <button
               type="button"
-              className="map-filter-preset"
+              className="btn--outline map-filter-action"
               onClick={(event) => {
                 event.preventDefault();
                 showNone();

@@ -30,7 +30,7 @@ export interface BridgeGameState {
 function mapGameState(gs: GetGameStateResponse): Partial<BridgeGameState> {
   return {
     isPaused: gs.isPaused,
-    speed: gs.speedLevel || 1,
+    speed: gs.speedLevel,
     date: { day: gs.day, month: gs.month, year: gs.year },
     dateText: gs.dateText,
     season: gs.season,

@@ -748,16 +748,10 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   width: 100%;
   min-height: 1.05rem;
   padding: 0.12rem 0.35rem;
-  background-color: rgba(28, 36, 43, 0.72);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.42);
-  color: var(--text-header);
   font-family: var(--font-header);
   font-size: 0.58rem;
   line-height: 1.1;
   text-align: center;
-  text-transform: uppercase;
   white-space: nowrap;
   cursor: pointer;
   game-ui-font-fit-mode: shrink;
@@ -765,29 +759,8 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   game-ui-font-fit-max-size: 0.58rem;
 }
 
-.notification-decision-btn:hover {
-  background-color: rgba(54, 67, 77, 0.84);
-  border-color: rgba(224, 200, 114, 0.72);
-  color: var(--text-bright);
-}
-
 .notification-decision-btn + .notification-decision-btn {
   margin-top: 0.18rem;
-}
-
-.notification-decision-btn--accept {
-  background-color: rgba(73, 86, 48, 0.74);
-  border-color: rgba(171, 190, 104, 0.55);
-}
-
-.notification-decision-btn--accept:hover {
-  background-color: rgba(88, 104, 57, 0.86);
-  border-color: rgba(199, 215, 127, 0.72);
-}
-
-.notification-decision-btn--decline:hover {
-  background-color: rgba(86, 45, 45, 0.8);
-  border-color: rgba(196, 64, 64, 0.58);
 }
 
 /* --- Right-click options popover --- */
@@ -878,6 +851,12 @@ html.webui-runtime .notification-slot--regular.notification-slot--exiting .notif
   color: var(--text-muted);
   line-height: 1.32;
   overflow-wrap: break-word;
+}
+
+.notification-options-popover__button > .btn-content {
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
 }
 
 @keyframes notification-options-in {

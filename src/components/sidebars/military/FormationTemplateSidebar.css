@@ -692,33 +692,13 @@
   width: auto;
   margin: 0.45rem 0.462rem 0.25rem;
   padding: 0.55rem 0.7rem;
-  color: var(--gold-light);
-  background-image: linear-gradient(180deg, rgba(18, 19, 22, 0.95), rgba(12, 13, 15, 0.98));
-  background-repeat: repeat;
-  background-size: auto;
-  background-color: rgba(12, 13, 15, 0.98);
-  border-width: 0.154rem;
-  border-style: solid;
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: var(--gold-muted);
-  border-left-color: var(--gold-muted);
   font-family: var(--font-header);
   font-size: 1rem;
-  letter-spacing: 0;
   cursor: pointer;
 }
 
 .tpl-add-unit > * + * {
   margin-left: 0.5rem;
-}
-
-.tpl-add-unit:hover {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  background-color: rgba(28, 24, 18, 0.95);
 }
 
 .tpl-add-unit-icon {
@@ -1123,25 +1103,8 @@
 .tpl-picker-done {
   min-width: 7rem;
   height: 2.15rem;
-  color: var(--gold-light);
-  background-image: linear-gradient(180deg, var(--burgundy-light) 0%, var(--burgundy) 100%);
-  background-repeat: repeat;
-  background-size: auto;
-  background-color: var(--burgundy);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
   font-family: var(--font-header);
-  text-transform: uppercase;
   cursor: pointer;
-}
-
-.tpl-picker-done:hover {
-  background-image: linear-gradient(180deg, #7a3058 0%, var(--burgundy-light) 100%);
-  color: var(--text-bright);
 }
 
 .tpl-force-list {
@@ -1573,75 +1536,19 @@
   padding: 0.55rem 0.8rem;
   font-family: var(--font-header);
   font-size: 0.95rem;
-  letter-spacing: 0;
-  text-transform: uppercase;
   cursor: pointer;
-}
-
-.tpl-footer-btn--primary {
-  color: var(--gold-light);
-  background-image: linear-gradient(180deg, var(--burgundy-light) 0%, var(--burgundy) 100%);
-  background-repeat: repeat;
-  background-size: auto;
-  background-color: var(--burgundy);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-}
-
-.tpl-footer-btn--primary:hover {
-  background-image: linear-gradient(180deg, #7a3058 0%, var(--burgundy-light) 100%);
-  color: var(--text-bright);
 }
 
 .tpl-footer-btn--assign {
   flex-grow: 2;
   flex-shrink: 1;
   flex-basis: auto;
-  color: var(--gold-light);
-  background-color: #2d0c1e;
-  background-image:
-    linear-gradient(180deg, rgba(86, 39, 45, 0.54), rgba(45, 12, 30, 0.88)),
-    url('/assets/baked/button-burgundy.png');
-  background-repeat: repeat, repeat;
-  background-size: auto, 11.6364rem 5.8182rem;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-}
-
-.tpl-footer-btn--assign:hover {
-  color: var(--text-bright);
-  background-color: var(--burgundy-light);
 }
 
 .tpl-footer-btn--secondary {
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: 30%;
-  color: var(--text-muted);
-  background-color: transparent;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--border-dim);
-  border-right-color: var(--border-dim);
-  border-bottom-color: var(--border-dim);
-  border-left-color: var(--border-dim);
-}
-
-.tpl-footer-btn--secondary:hover {
-  background-color: rgba(196, 64, 64, 0.1);
-  border-top-color: var(--red-dark);
-  border-right-color: var(--red-dark);
-  border-bottom-color: var(--red-dark);
-  border-left-color: var(--red-dark);
-  color: var(--red-light);
 }
 
 .tpl-footer-btn--danger {
@@ -1649,26 +1556,17 @@
   flex-shrink: 0;
   flex-basis: 32%;
   color: var(--red-light);
-  background-color: rgba(90, 24, 30, 0.28);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-top-color: var(--red-dark);
-  border-right-color: var(--red-dark);
-  border-bottom-color: var(--red-dark);
-  border-left-color: var(--red-dark);
 }
 
 .tpl-footer-btn--danger:hover {
   color: var(--text-bright);
-  background-color: rgba(120, 32, 42, 0.38);
-  border-top-color: var(--red-light);
-  border-right-color: var(--red-light);
-  border-bottom-color: var(--red-light);
-  border-left-color: var(--red-light);
 }
 
 .tpl-footer-btn[disabled],
-.tpl-footer-btn[disabled]:hover,
+.tpl-footer-btn[disabled]:hover {
+  cursor: default;
+}
+
 .tpl-step-btn[disabled],
 .tpl-step-btn[disabled]:hover,
 .tpl-battle-group-add[disabled],

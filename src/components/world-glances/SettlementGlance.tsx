@@ -187,18 +187,6 @@ function renderGoldInfo(data: SettlementGlanceData) {
   );
 }
 
-function renderBuildInfo(data: SettlementGlanceData) {
-  if (data.buildItem) {
-    return renderInfoRow(
-      data.buildItem.icon,
-      `${data.buildItem.label} ${formatPercent(data.buildItem.progress * 100)}`,
-      '#d6a83a',
-    );
-  }
-
-  return renderGoldInfo(data);
-}
-
 function renderResourceBoxes(data: SettlementGlanceData) {
   if (data.resources.length === 0) {
     return null;
@@ -288,7 +276,7 @@ function renderInfo(data: SettlementGlanceData) {
       );
     case 'economicProsperity':
     case 'economy':
-      return renderBuildInfo(data);
+      return renderGoldInfo(data);
     case 'adminRegion':
       return renderGeographicInfo('/assets/icons/I_Region.png', data.regionName);
     case 'adminLand':
@@ -455,6 +443,25 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
           <div className="gset-info">
             {renderInfo(data)}
           </div>
+
+          {data.queuedConstruction && (
+            <div className="gset-queued-job">
+              <img src={WebkilnAssetPath('/assets/icons/I_BuildingsQuickButton.png')} alt="" />
+              <span>{webUIText((data.queuedConstructionCount ?? 0) > 1 ? 'WorldGlance.QueuedJobs' : 'WorldGlance.QueuedJob', {
+                Name: data.queuedConstruction,
+                Count: formatNumber((data.queuedConstructionCount ?? 1) - 1),
+              })}</span>
+            </div>
+          )}
+          {data.queuedRecruitment && (
+            <div className="gset-queued-job">
+              <img src={WebkilnAssetPath('/assets/icons/I_ArmiesQuickButton.png')} alt="" />
+              <span>{webUIText((data.queuedRecruitmentCount ?? 0) > 1 ? 'WorldGlance.QueuedJobs' : 'WorldGlance.QueuedJob', {
+                Name: data.queuedRecruitment,
+                Count: formatNumber((data.queuedRecruitmentCount ?? 1) - 1),
+              })}</span>
+            </div>
+          )}
 
           <div
             className="gset-build-bar"

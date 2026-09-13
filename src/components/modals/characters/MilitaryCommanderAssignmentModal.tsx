@@ -74,6 +74,7 @@ export default function MilitaryCommanderAssignmentModal({
   const { mounted, closing, close } = useModalPresence({
     open,
     onClose,
+    onConfirm: () => { handleAssign(); },
     escapeId: 'modal.military-commander-assignment',
     allowFromInput: true,
     closeStrategy: 'request',

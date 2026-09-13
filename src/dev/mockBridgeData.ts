@@ -794,28 +794,28 @@ const MOCK_RAIDERS_REFERENCE: DiplomacyFactionReference = {
   isRebel: true,
 };
 
-function mockDemographicShare(id: string, name: string, colour: string, iconId: string, population: number) {
-  return { id, name, colour, iconId, population };
+function mockDemographicShare(id: string, name: string, description: string, colour: string, iconId: string, population: number) {
+  return { id, name, description, colour, iconId, population };
 }
 
 const MOCK_PLAYER_CULTURES = [
-  mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.colour, rephsianCulture.id, 980000),
-  mockDemographicShare(aurestianCulture.id, aurestianCulture.name, aurestianCulture.colour, aurestianCulture.id, 304000),
+  mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.description, rephsianCulture.colour, rephsianCulture.id, 980000),
+  mockDemographicShare(aurestianCulture.id, aurestianCulture.name, aurestianCulture.description, aurestianCulture.colour, aurestianCulture.id, 304000),
 ];
 
 const MOCK_PLAYER_RELIGIONS = [
-  mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.colour, rephsianReligion.id, 1100000),
-  mockDemographicShare(rivalReligion.id, rivalReligion.name, rivalReligion.colour, rivalReligion.id, 184000),
+  mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.description, rephsianReligion.colour, rephsianReligion.id, 1100000),
+  mockDemographicShare(rivalReligion.id, rivalReligion.name, rivalReligion.description, rivalReligion.colour, rivalReligion.id, 184000),
 ];
 
 const MOCK_SUBJECT_CULTURES = [
-  mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.colour, rephsianCulture.id, 246000),
-  mockDemographicShare(aurestianCulture.id, aurestianCulture.name, aurestianCulture.colour, aurestianCulture.id, 66000),
+  mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.description, rephsianCulture.colour, rephsianCulture.id, 246000),
+  mockDemographicShare(aurestianCulture.id, aurestianCulture.name, aurestianCulture.description, aurestianCulture.colour, aurestianCulture.id, 66000),
 ];
 
 const MOCK_SUBJECT_RELIGIONS = [
-  mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.colour, rephsianReligion.id, 268000),
-  mockDemographicShare(rivalReligion.id, rivalReligion.name, rivalReligion.colour, rivalReligion.id, 44000),
+  mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.description, rephsianReligion.colour, rephsianReligion.id, 268000),
+  mockDemographicShare(rivalReligion.id, rivalReligion.name, rivalReligion.description, rivalReligion.colour, rivalReligion.id, 44000),
 ];
 
 function mockHistoryYear(year: number, rephsianPeople: number, aurestianPeople: number, pantheonPeople: number, aurelianPeople: number) {
@@ -823,12 +823,12 @@ function mockHistoryYear(year: number, rephsianPeople: number, aurestianPeople: 
     year,
     population: rephsianPeople + aurestianPeople,
     cultures: [
-      mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.colour, rephsianCulture.id, rephsianPeople),
-      mockDemographicShare(aurestianCulture.id, aurestianCulture.name, aurestianCulture.colour, aurestianCulture.id, aurestianPeople),
+      mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.description, rephsianCulture.colour, rephsianCulture.id, rephsianPeople),
+      mockDemographicShare(aurestianCulture.id, aurestianCulture.name, aurestianCulture.description, aurestianCulture.colour, aurestianCulture.id, aurestianPeople),
     ],
     religions: [
-      mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.colour, rephsianReligion.id, pantheonPeople),
-      mockDemographicShare(rivalReligion.id, rivalReligion.name, rivalReligion.colour, rivalReligion.id, aurelianPeople),
+      mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.description, rephsianReligion.colour, rephsianReligion.id, pantheonPeople),
+      mockDemographicShare(rivalReligion.id, rivalReligion.name, rivalReligion.description, rivalReligion.colour, rivalReligion.id, aurelianPeople),
     ],
   };
 }
@@ -1249,10 +1249,10 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
       },
       population: 188000,
       cultures: [
-        mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.colour, rephsianCulture.id, 188000),
+        mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.description, rephsianCulture.colour, rephsianCulture.id, 188000),
       ],
       religions: [
-        mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.colour, rephsianReligion.id, 188000),
+        mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.description, rephsianReligion.colour, rephsianReligion.id, 188000),
       ],
     },
   ],
@@ -1497,12 +1497,12 @@ const rivalFaction: BridgeResponse<'game.get_faction_data'> = {
   directPopulation: 642000,
   subjectPopulation: 0,
   cultures: [
-    mockDemographicShare(aurestianCulture.id, aurestianCulture.name, aurestianCulture.colour, aurestianCulture.id, 488000),
-    mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.colour, rephsianCulture.id, 154000),
+    mockDemographicShare(aurestianCulture.id, aurestianCulture.name, aurestianCulture.description, aurestianCulture.colour, aurestianCulture.id, 488000),
+    mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.description, rephsianCulture.colour, rephsianCulture.id, 154000),
   ],
   religions: [
-    mockDemographicShare(rivalReligion.id, rivalReligion.name, rivalReligion.colour, rivalReligion.id, 410000),
-    mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.colour, rephsianReligion.id, 232000),
+    mockDemographicShare(rivalReligion.id, rivalReligion.name, rivalReligion.description, rivalReligion.colour, rivalReligion.id, 410000),
+    mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.description, rephsianReligion.colour, rephsianReligion.id, 232000),
   ],
   subjectDemographics: [],
   populationMonthlyChange: 420,
@@ -1684,10 +1684,10 @@ const foederatiFaction: BridgeResponse<'game.get_faction_data'> = {
   directPopulation: 188000,
   subjectPopulation: 0,
   cultures: [
-    mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.colour, rephsianCulture.id, 188000),
+    mockDemographicShare(rephsianCulture.id, rephsianCulture.name, rephsianCulture.description, rephsianCulture.colour, rephsianCulture.id, 188000),
   ],
   religions: [
-    mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.colour, rephsianReligion.id, 188000),
+    mockDemographicShare(rephsianReligion.id, rephsianReligion.name, rephsianReligion.description, rephsianReligion.colour, rephsianReligion.id, 188000),
   ],
   subjectDemographics: [],
   populationMonthlyChange: 210,
@@ -2303,11 +2303,11 @@ function personById(id: string): BridgeResponse<'game.get_person_data'> {
       rank: '',
     },
     luxuryNeeds: isRuler || isGovernor ? [
-      { name: 'Precious Metals', icon: '/assets/resources/PreciousMetals.png', required: 1, provided: 1 },
-      { name: 'Silk', icon: '/assets/resources/Silk.png', required: 1, provided: isGovernor ? 0 : 1 },
+      { resourceId: 'preciousmetals', name: 'Precious Metals', icon: '/assets/resources/PreciousMetals.png', required: 1, provided: 1 },
+      { resourceId: 'silk', name: 'Silk', icon: '/assets/resources/Silk.png', required: 1, provided: isGovernor ? 0 : 1 },
       ...(isRuler ? [
-        { name: 'Fine Clothes', icon: '/assets/resources/FineClothes.png', required: 1, provided: 1 },
-        { name: 'Wine', icon: '/assets/resources/Wine.png', required: 1, provided: 0 },
+        { resourceId: 'fineclothes', name: 'Fine Clothes', icon: '/assets/resources/FineClothes.png', required: 1, provided: 1 },
+        { resourceId: 'wine', name: 'Wine', icon: '/assets/resources/Wine.png', required: 1, provided: 0 },
       ] : []),
     ] : [],
     relationships: [
@@ -2356,6 +2356,7 @@ function settlementBuilding(assetKey: string, name: string, level: number, categ
     canRepair: condition < 100 && condition > 0,
     repairReason: '',
     repairGoldCost: Math.round(520 * ((100 - condition) / 100) * 0.5),
+    repairQueued: false,
     repairResourceCost: [
       { name: 'Stone', displayName: 'Stone', amount: 40 * ((100 - condition) / 100) * 0.5 },
       { name: 'Wood', displayName: 'Wood', amount: 25 * ((100 - condition) / 100) * 0.5 },
@@ -2858,6 +2859,11 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
     settlementId: id || MOCK_IDS.settlement,
     snapshotDay: 249409,
     conditionOnly: false,
+    canRepairAll: true,
+    repairAllReason: '',
+    repairAllCount: 3,
+    repairAllGoldCost: 193,
+    repairAllResourceCost: [{ name: 'Wood', displayName: 'Wood', amount: 22 }],
     buildings: [
       {
         ...settlementBuilding('Forum', 'Forum', 3, 'administrative'),
@@ -2918,6 +2924,7 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
       queue: [
         {
           id: 'mock-queue-aqueduct',
+          isRepair: false,
           queueIndex: 0,
           assetKey: 'Aqueduct',
           name: 'Aqueduct',
@@ -2936,6 +2943,7 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
         },
         {
           id: 'mock-queue-forum-upgrade',
+          isRepair: false,
           queueIndex: 1,
           assetKey: 'Forum',
           name: 'Forum',
@@ -3624,14 +3632,20 @@ function currentTutorialProgress(): BridgeResponse<'game.get_tutorial_progress'>
       {
         text: 'Build a Training Camp in Aurelion',
         isComplete: true,
+        deadlineText: '',
+        deadlineTitle: '',
       },
       {
         text: 'Create a formation in the Military screen',
         isComplete: false,
+        deadlineText: '',
+        deadlineTitle: '',
       },
       {
         text: `Raise an army and wait for it to finish mustering`,
         isComplete: false,
+        deadlineText: '',
+        deadlineTitle: '',
       },
     ],
   };
@@ -3934,6 +3948,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         marketMultiplier: 1,
         buyPrice: 0,
         sellPrice: 0,
+        tradeQuotes: [],
         autoSellEnabled: false,
         autoSellThreshold: 0,
         autoSellSliderMax: 0,
@@ -3990,6 +4005,12 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         marketMultiplier: 0.85,
         buyPrice: 0.17,
         sellPrice: 0.085,
+        tradeQuotes: [
+          { amount: 100, buyCost: 17, sellAmount: 100, sellIncome: 8 },
+          { amount: 500, buyCost: 85, sellAmount: 500, sellIncome: 42 },
+          { amount: 1000, buyCost: 170, sellAmount: 620, sellIncome: 52 },
+          { amount: 5000, buyCost: 850, sellAmount: 620, sellIncome: 52 },
+        ],
         autoSellEnabled: false,
         autoSellThreshold: 576,
         autoSellSliderMax: 1152,
@@ -4041,6 +4062,12 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         marketMultiplier: 1.05,
         buyPrice: 0.315,
         sellPrice: 0.1575,
+        tradeQuotes: [
+          { amount: 100, buyCost: 32, sellAmount: 100, sellIncome: 15 },
+          { amount: 500, buyCost: 158, sellAmount: 400, sellIncome: 63 },
+          { amount: 1000, buyCost: 315, sellAmount: 400, sellIncome: 63 },
+          { amount: 5000, buyCost: 1575, sellAmount: 400, sellIncome: 63 },
+        ],
         autoSellEnabled: true,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
@@ -4087,6 +4114,12 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         marketMultiplier: 1.2,
         buyPrice: 0.36,
         sellPrice: 0.18,
+        tradeQuotes: [
+          { amount: 100, buyCost: 36, sellAmount: 100, sellIncome: 18 },
+          { amount: 500, buyCost: 180, sellAmount: 300, sellIncome: 54 },
+          { amount: 1000, buyCost: 360, sellAmount: 300, sellIncome: 54 },
+          { amount: 5000, buyCost: 1800, sellAmount: 300, sellIncome: 54 },
+        ],
         autoSellEnabled: false,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
@@ -4132,6 +4165,12 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         marketMultiplier: 1.15,
         buyPrice: 0.23,
         sellPrice: 0.115,
+        tradeQuotes: [
+          { amount: 100, buyCost: 23, sellAmount: 100, sellIncome: 11 },
+          { amount: 500, buyCost: 115, sellAmount: 220, sellIncome: 25 },
+          { amount: 1000, buyCost: 230, sellAmount: 220, sellIncome: 25 },
+          { amount: 5000, buyCost: 1150, sellAmount: 220, sellIncome: 25 },
+        ],
         autoSellEnabled: false,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
@@ -4179,6 +4218,12 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         marketMultiplier: 1.45,
         buyPrice: 0.87,
         sellPrice: 0.435,
+        tradeQuotes: [
+          { amount: 100, buyCost: 87, sellAmount: 100, sellIncome: 43 },
+          { amount: 500, buyCost: 435, sellAmount: 110, sellIncome: 47 },
+          { amount: 1000, buyCost: 870, sellAmount: 110, sellIncome: 47 },
+          { amount: 5000, buyCost: 4350, sellAmount: 110, sellIncome: 47 },
+        ],
         autoSellEnabled: false,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
@@ -4225,6 +4270,12 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         marketMultiplier: 0.92,
         buyPrice: 0.184,
         sellPrice: 0.092,
+        tradeQuotes: [
+          { amount: 100, buyCost: 19, sellAmount: 40, sellIncome: 3 },
+          { amount: 500, buyCost: 92, sellAmount: 40, sellIncome: 3 },
+          { amount: 1000, buyCost: 184, sellAmount: 40, sellIncome: 3 },
+          { amount: 5000, buyCost: 920, sellAmount: 40, sellIncome: 3 },
+        ],
         autoSellEnabled: false,
         autoSellThreshold: 500,
         autoSellSliderMax: 1000,
@@ -4925,6 +4976,11 @@ function personalGuardStatus(state: MockBridgeState): BridgeResponse<'game.get_p
       }]
       : [],
     companyEquipmentRequirements: [],
+    unitCosts: eligibleUnits.map(unit => ({
+      unitId: unit.id,
+      goldCost: unit.price,
+      foundingGoldCost: unit.price * 2,
+    })),
   };
 }
 
@@ -6978,8 +7034,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           viewportHeight: window.innerHeight || 1080,
           snapshotRevision: 0,
           settlements: [
-            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, luxurySlotsRequired: 3, luxurySlotsProvided: 2, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, warWithPlayer: false, peaceSelection: false, warScoreCost: 0 },
-            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, luxurySlotsRequired: 2, luxurySlotsProvided: 1, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, warWithPlayer: false, peaceSelection: false, warScoreCost: 0 },
+            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, queuedConstruction: '', queuedConstructionCount: 0, queuedRecruitment: '', queuedRecruitmentCount: 0, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, luxurySlotsRequired: 3, luxurySlotsProvided: 2, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, warWithPlayer: false, peaceSelection: false, warScoreCost: 0 },
+            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, queuedConstruction: '', queuedConstructionCount: 0, queuedRecruitment: '', queuedRecruitmentCount: 0, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, luxurySlotsRequired: 2, luxurySlotsProvided: 1, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, warWithPlayer: false, peaceSelection: false, warScoreCost: 0 },
           ],
           ports: [
             { id: MOCK_IDS.portSettlement, screenX: 1088, screenY: 650, scale: 0.94, opacity: 1, zOrder: 10, detailLevel: 'name', selected: false, targeted: false, faction: { ...playerFactionReference(), relation: 'own' }, level: 3, blockaded: true },
@@ -7462,12 +7518,12 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         emitAppMode(emit);
         emitGameState(emit);
         emitResources(emit);
-        return { started: true, slotName: 'mock-autosave' } satisfies BridgeResponse<'game.continue'>;
+        return { started: true, slotName: 'mock-autosave', warnings: [] } satisfies BridgeResponse<'game.continue'>;
       case 'game.start_scenario_map':
       case 'game.load_save':
         state.appMode = 'ingame';
         emitAppMode(emit);
-        return action === 'game.load_save' ? ({ started: true } satisfies BridgeResponse<'game.load_save'>) : undefined;
+        return action === 'game.load_save' ? ({ started: true, warnings: [] } satisfies BridgeResponse<'game.load_save'>) : undefined;
       case 'game.return_to_main_menu':
       case 'game.quit':
       case 'game.restart':

@@ -678,7 +678,7 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
 
             <button
               type="button"
-              className="tpl-add-unit"
+              className="btn--outline tpl-add-unit"
               onClick={() => {
                 setCatalogueRequested(true);
                 setPickerOpen(true);
@@ -719,19 +719,19 @@ const FormationTemplateSidebar: React.FC<FormationTemplateSidebarProps> = ({ sid
 
       <div className="tpl-footer">
         {assignmentTarget && (
-          <button type="button" className="tpl-footer-btn tpl-footer-btn--assign" onClick={assignSelected} disabled={!canAssign}>
+          <button type="button" className="btn--outline tpl-footer-btn tpl-footer-btn--assign" onClick={assignSelected} disabled={!canAssign}>
             {assignButtonLabel}
           </button>
         )}
         {selected && !assignmentTarget && (
-          <button type="button" className="tpl-footer-btn tpl-footer-btn--danger" onClick={requestDeleteTemplate} disabled={!selected.canDelete}>
+          <button type="button" className="btn--outline tpl-footer-btn tpl-footer-btn--danger" onClick={requestDeleteTemplate} disabled={!selected.canDelete}>
             {webUIText("FormationTemplateSidebar.DeleteTemplate")}
           </button>
         )}
-        <button type="button" className="tpl-footer-btn tpl-footer-btn--secondary" onClick={revertDraft} disabled={!isDirty || !baseline}>
+        <button type="button" className="btn--outline tpl-footer-btn tpl-footer-btn--secondary" onClick={revertDraft} disabled={!isDirty || !baseline}>
           <WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.1176.9" />
         </button>
-        <button type="button" className="tpl-footer-btn tpl-footer-btn--primary" onClick={saveDraft} disabled={!canSave}>
+        <button type="button" className="btn--outline tpl-footer-btn tpl-footer-btn--primary" onClick={saveDraft} disabled={!canSave}>
           {isDirty ? webUIText("FormationTemplateSidebar.SaveChanges") : baseline ? webUIText("FormationTemplateSidebar.Saved") : webUIText("FormationTemplateSidebar.Save", { Value1: templateTypeName(draft.type) })}
         </button>
       </div>

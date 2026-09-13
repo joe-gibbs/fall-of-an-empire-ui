@@ -673,7 +673,7 @@ function ProvinceCandidateCard({ row, leaderCandidates }: { row: ProvinceCandida
           >
             <button
               type="button"
-              className={`ips-create-province-button${canCreateProvince ? '' : ' ips-create-province-button--disabled'}`}
+              className={`btn--outline ips-create-province-button${canCreateProvince ? '' : ' ips-create-province-button--disabled'}`}
               disabled={!canCreateProvince}
               onClick={(event) => {
                 event.preventDefault();
@@ -830,7 +830,7 @@ function FoederatiRow({
         >
           <button
             type="button"
-            className={`ips-foederati-action${canToggle ? '' : ' ips-foederati-action--disabled'}`}
+            className={`btn--outline ips-foederati-action${canToggle ? '' : ' ips-foederati-action--disabled'}`}
             disabled={!canToggle}
             onClick={(event) => {
               event.preventDefault();
