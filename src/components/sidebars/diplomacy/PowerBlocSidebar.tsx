@@ -111,12 +111,12 @@ function buildBlocInteractionTooltip(i: BlocInteractionView, blocId: string): To
 
   if (i.inProgress && i.remainingDays > 0) {
     const days = Math.round(i.remainingDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.40.2'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.40.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.40.2'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.40.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else if (i.durationDays > 0) {
     const days = Math.round(i.durationDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.43.3'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.43.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.43.3'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.43.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.45.4'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.45.1"); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.45.4'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.45.1"); } });
   }
 
   if (i.cooldownDays > 0) {
@@ -649,7 +649,7 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
           </div>
 
           <div className="powerbloc-summary-stats">
-            <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.191.18'), body: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.191.19'), lines: [{ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.191.20'), get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.191.1", { Happiness: bloc.happiness }); }, valueColor: getHappinessColour(bloc.happiness) }] }} position="right" delay={150}>
+            <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.191.18'), body: [webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.191.19'), bloc.treatyBreachHappinessTooltip].filter(Boolean).join('\n'), lines: [{ label: webUIText('Auto.Prop.ComponentsSidebarsPowerBlocSidebar.191.20'), get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.191.1", { Happiness: bloc.happiness }); }, valueColor: getHappinessColour(bloc.happiness) }] }} position="right" delay={150}>
               <div className="powerbloc-happiness-section">
                 <div className="powerbloc-happiness-label">
                   <span className="powerbloc-happiness-text"><WebUIText textKey="Auto.ComponentsSidebarsPowerBlocSidebar.193.2" /></span>

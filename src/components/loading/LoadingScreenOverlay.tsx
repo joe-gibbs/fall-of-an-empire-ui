@@ -1,15 +1,21 @@
 import React from 'react';
-import { useLoadingScreenBridge } from '../../bridge/app/useLoadingScreenBridge';
-import { preloadImageAsset } from '../../preload/assets';
+import type { LoadingScreenResponse } from '../../bridge-types.generated.ts';
 import { WebkilnAssetPath } from '../../utils/assets';
+import {
+  LOADING_SCREEN_FALLBACK_BACKGROUND,
+  LOADING_SCREEN_LOGO,
+  shouldShowLoadingOverlay,
+} from './loadingScreenPresentation';
 import './LoadingScreenOverlay.css';
 
-const FALLBACK_BACKGROUND = '/assets/loading-screens/general.png';
-const LOGO_SRC = '/assets/main-menu-logo.png';
 const CLOSING_ANIMATION_MS = 450;
 
-const LoadingScreenOverlay: React.FC = () => {
-  const state = useLoadingScreenBridge();
+interface LoadingScreenOverlayProps {
+  state: LoadingScreenResponse;
+  pictureReady: boolean;
+}
+
+const LoadingScreenOverlay: React.FC<LoadingScreenOverlayProps> = ({ state, pictureReady }) => {
   const [renderedState, setRenderedState] = React.useState(state);
   const [isClosing, setIsClosing] = React.useState(false);
   const renderedVisibleRef = React.useRef(renderedState.visible);
@@ -52,23 +58,25 @@ const LoadingScreenOverlay: React.FC = () => {
     return undefined;
   }, [state]);
 
-  React.useEffect(() => {
-    preloadImageAsset(renderedState.background || FALLBACK_BACKGROUND);
-    preloadImageAsset(LOGO_SRC);
-  }, [renderedState.background]);
-
-  if (!state.visible && !renderedState.visible && !isClosing) return null;
+  if (state.visible && !pictureReady) {
+    return null;
+  }
+  if (!shouldShowLoadingOverlay(state.visible, pictureReady, isClosing) && !renderedState.visible) {
+    return null;
+  }
 
   const visibleState = state.visible ? state : renderedState;
   const progress = Math.max(0, Math.min(100, visibleState.progress));
-  const backgroundSrc = WebkilnAssetPath(visibleState.background || FALLBACK_BACKGROUND);
-  const logoSrc = WebkilnAssetPath(LOGO_SRC);
+  const backgroundSrc = WebkilnAssetPath(visibleState.background || LOADING_SCREEN_FALLBACK_BACKGROUND);
+  const logoSrc = WebkilnAssetPath(LOADING_SCREEN_LOGO);
 
   return (
     <div className={`loading-screen${isClosing && !state.visible ? ' loading-screen--closing' : ''}`}>
-      <div
+      <img
         className="loading-screen__background"
-        style={{ backgroundImage: `url("${backgroundSrc}")` }}
+        src={backgroundSrc}
+        alt=""
+        draggable={false}
       />
       <div className="loading-screen__wash" />
       <div className="loading-screen__vignette" />

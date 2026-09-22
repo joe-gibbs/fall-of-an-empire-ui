@@ -1742,7 +1742,6 @@
   border-right-color: var(--gold-muted);
   border-bottom-color: var(--gold-muted);
   border-left-color: var(--gold-muted);
-  border-image-source: url('/assets/modifier-frame-positive.png');
 }
 
 .fov-policy-progress {

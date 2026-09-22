@@ -3,10 +3,11 @@ import FactionRoundel from '../../common/entities/FactionRoundel';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import Portrait from '../../common/portraits/Portrait';
 import Tooltip, { type TooltipContent } from '../../common/tooltips/Tooltip';
+import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import type { BattleFormationLive, BattleAgentFrameView } from '../../../bridge/military-map/useBattleBridge';
 import { battleFrameAgentCount, readBattleAgentFrame, startBattleActionBridge } from '../../../bridge/military-map/useBattleBridge';
 import { useGameActions } from '../../../context/GameContext';
-import type { BattleActionOption, BattleFormationUnitDetail, BattleParticipantDetail, BattleSideDetail, BattlefieldHeightPointDetail, BattlefieldObstacleDetail } from '../../../bridge-types.generated.ts';
+import type { BattleActionOption, MilitaryUnitEntry, BattleParticipantDetail, BattleSideDetail, BattlefieldHeightPointDetail, BattlefieldObstacleDetail } from '../../../bridge-types.generated.ts';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { buildHeightMapDataUrl } from './heightMapImage';
@@ -736,7 +737,7 @@ export function FormationTooltipBody({ formation }: { formation: BattleFormation
   );
 }
 
-function BattleFormationUnitCard({ unit, side }: { unit: BattleFormationUnitDetail; side: string }) {
+function BattleFormationUnitCard({ unit, side, typeIcon }: { unit: MilitaryUnitEntry; side: string; typeIcon: string }) {
   const health = unit.maxStrength > 0 ? clamp(unit.strength / unit.maxStrength * 100, 0, 100) : 0;
   const barColour = health > 50 ? 'green' : 'red';
   const healthColour = health > 50 ? 'var(--green-light)' : health > 25 ? 'var(--yellow)' : 'var(--red-light)';
@@ -745,20 +746,29 @@ function BattleFormationUnitCard({ unit, side }: { unit: BattleFormationUnitDeta
   return (
     <Tooltip
       content={{
-        title: unit.name,
-        body: unit.description || undefined,
-        lines: [
-          {
-            label: webUIText('Auto.ComponentsCommonUnitTooltip.318.4'),
-            value: `${fmt(unit.strength)} / ${fmt(unit.maxStrength)}`,
-            valueColor: healthColour,
-          },
-          { label: webUIText('Battle.UnitTooltip.Health'), value: formatPercent(health), valueColor: healthColour },
-        ],
+        afterLines: <UnitTooltip data={{
+          name: unit.name,
+          description: unit.description,
+          portrait: unit.portrait,
+          typeLabel: unit.type,
+          typeIcon,
+          tier: unit.tier,
+          culture: unit.culture,
+          strength: unit.strength,
+          maxStrength: unit.maxStrength,
+          upkeep: unit.upkeep,
+          foodConsumption: unit.foodConsumption,
+          speed: unit.speed,
+          attackSpeed: unit.attackSpeed,
+          damage: { pierce: unit.pierceDamage, crush: unit.crushDamage, slash: unit.slashDamage },
+          armour: { pierce: unit.pierceArmour, crush: unit.crushArmour, slash: unit.slashArmour },
+          immuneToWinterAttrition: unit.immuneToWinterAttrition,
+          immuneToDesertAttrition: unit.immuneToDesertAttrition,
+          canAttackWhileMoving: unit.canAttackWhileMoving,
+        }} />,
       }}
       position={side === 'attacker' ? 'right' : 'left'}
       delay={100}
-      bubbleClassName="tt-bubble--battle-formation-unit"
     >
       <div
         className={`battle-formation-unit-card${unit.strength <= 0 ? ' battle-formation-unit-card--destroyed' : ''}`}
@@ -782,15 +792,17 @@ function BattleFormationUnitCard({ unit, side }: { unit: BattleFormationUnitDeta
 export function BattleFormationUnitRail({
   formation,
   dockToCommandBar,
+  isNaval,
 }: {
   formation: BattleFormationLive;
   dockToCommandBar: boolean;
+  isNaval: boolean;
 }) {
   return (
     <div className={`battle-formation-unit-rail battle-formation-unit-rail--${formation.side}${dockToCommandBar ? ' battle-formation-unit-rail--with-command-bar' : ''}`}>
       <div className="battle-formation-unit-grid">
         {formation.units.map(unit => (
-          <BattleFormationUnitCard key={unit.id} unit={unit} side={formation.side} />
+          <BattleFormationUnitCard key={unit.id} unit={unit} side={formation.side} typeIcon={unitIcon(formation, isNaval)} />
         ))}
       </div>
     </div>

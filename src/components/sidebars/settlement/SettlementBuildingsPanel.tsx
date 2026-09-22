@@ -31,8 +31,10 @@ import {
 import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBottomBarOperationsBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import BuildingEffects from '../../common/content/BuildingEffects';
+import { appendTooltipSection } from '../../common/tooltips/tooltipSections';
 import ResourceLink from '../../common/resources/ResourceLink';
 import ResourcePurchaseButton from '../../common/resources/ResourcePurchaseButton';
+import { ResourcePurchaseDestinationContext } from '../../common/resources/resourcePurchaseDestinationContext';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import { toRootRem } from '../../../utils/cssUnits';
@@ -615,24 +617,50 @@ function addResourceCostLines(lines: TooltipLine[], resourceCost?: BuildingResou
   }
 }
 
-function addFaithLine(lines: TooltipLine[], religionName?: string, religionIcon?: string) {
+function addFaithName(lines: TooltipLine[], religionName?: string, religionIcon?: string) {
   if (!religionName) return;
   lines.push({
     label: webUIText('SettlementBuildings.Faith'),
     value: religionName,
     labelIcon: religionIcon,
   });
-  lines.push({
-    label: webUIText('SettlementBuildings.FaithRequirement'),
-  });
 }
 
-function addBuildingRequirementLines(lines: TooltipLine[], requiredBuildings?: BuildingRequirement[]) {
-  if (!requiredBuildings || requiredBuildings.length === 0) return;
+function lockReasonLine(
+  lockReason: string,
+  requirementTargets: BuildingLinkMatch[],
+  onNavigate?: (buildingId: string) => void,
+): TooltipLine {
+  return {
+    label: requirementTargets.length > 0 && onNavigate
+      ? (
+          <BuildingRequirementText
+            reason={lockReason}
+            targets={requirementTargets}
+            onNavigate={onNavigate}
+            variant="tooltip"
+          />
+        )
+      : lockReason,
+  };
+}
 
-  lines.push({ label: webUIText('Auto.ComponentsSidebarsSettlementBuildingsPanel.362.1'), isHeader: true });
-  for (const requirement of requiredBuildings) {
-    lines.push({
+function addRequirementSection(
+  lines: TooltipLine[],
+  options: {
+    religionName?: string;
+    requiredBuildings?: BuildingRequirement[];
+    lockReason?: string;
+    requirementTargets?: BuildingLinkMatch[];
+    onNavigate?: (buildingId: string) => void;
+  },
+) {
+  const section: TooltipLine[] = [];
+  if (options.religionName) {
+    section.push({ label: webUIText('SettlementBuildings.FaithRequirement') });
+  }
+  for (const requirement of options.requiredBuildings ?? []) {
+    section.push({
       label: requirement.name,
       labelIcon: requirement.icon,
       value: requirement.met
@@ -641,6 +669,10 @@ function addBuildingRequirementLines(lines: TooltipLine[], requiredBuildings?: B
       valueColor: requirement.met ? 'var(--green)' : 'var(--red)',
     });
   }
+  if (options.lockReason) {
+    section.push(lockReasonLine(options.lockReason, options.requirementTargets ?? [], options.onNavigate));
+  }
+  appendTooltipSection(lines, webUIText('Common.Requirements'), section);
 }
 
 function addPredecessorLine(
@@ -648,9 +680,9 @@ function addPredecessorLine(
   parentName?: string,
   replacesParent?: boolean,
 ) {
-  if (!parentName) return;
+  if (!parentName || replacesParent === false) return;
   lines.push({
-    label: <strong>{webUIText(replacesParent === false ? 'SettlementBuildings.KeepsPredecessor' : 'SettlementBuildings.ReplacesPredecessor', { Name: parentName })}</strong>,
+    label: <strong>{webUIText('SettlementBuildings.ReplacesPredecessor', { Name: parentName })}</strong>,
   });
 }
 
@@ -684,7 +716,7 @@ function builtTooltip(
       valueIcon: '/assets/icons/I_Coins.png',
     });
   }
-  addFaithLine(lines, b.religionName, b.religionIcon);
+  addFaithName(lines, b.religionName, b.religionIcon);
   if (b.condition !== undefined) {
     const condition = b.condition;
     const color = condition >= 80 ? 'var(--green)'
@@ -731,22 +763,14 @@ function builtTooltip(
       lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.270.7'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.266.1", { Value1: n(nextLevelBuildTime) }); } });
     }
     addResourceCostLines(lines, b.resourceCost);
-    if (lockReason) {
-      lines.push({
-        label: requirementTargets.length > 0 && onNavigate
-          ? (
-              <BuildingRequirementText
-                reason={lockReason}
-                targets={requirementTargets}
-                onNavigate={onNavigate}
-                variant="tooltip"
-              />
-            )
-          : lockReason,
-      });
-    }
   }
-  addBuildingRequirementLines(lines, b.requiredBuildings);
+  addRequirementSection(lines, {
+    religionName: b.religionName,
+    requiredBuildings: b.requiredBuildings,
+    lockReason,
+    requirementTargets,
+    onNavigate,
+  });
   addPredecessorLine(lines, parentName, replacesParent);
   return {
     title: b.name,
@@ -773,7 +797,7 @@ function availTooltip(
   const lines: TooltipLine[] = [];
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.281.8'), value: n(a.price), valueIcon: '/assets/icons/I_Coins.png' });
   lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.282.9'), get value() { return webUIText("Auto.Prop.componentssidebarsSettlementBuildingsPanel.278.1", { Value1: n(a.buildTime) }); } });
-  addFaithLine(lines, a.religionName, a.religionIcon);
+  addFaithName(lines, a.religionName, a.religionIcon);
   if (a.upkeep > 0) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.285.10'),
@@ -783,24 +807,15 @@ function availTooltip(
     });
   }
   addResourceCostLines(lines, a.resourceCost);
-  addBuildingRequirementLines(lines, a.requiredBuildings);
+  addRequirementSection(lines, {
+    religionName: a.religionName,
+    requiredBuildings: a.requiredBuildings,
+    lockReason,
+    requirementTargets,
+    onNavigate,
+  });
   addPredecessorLine(lines, parentName, replacesParent);
   lines.push(...queueTooltipLines(queueSummary));
-  if (lockReason) {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.293.11'), isHeader: true });
-    lines.push({
-      label: requirementTargets.length > 0 && onNavigate
-        ? (
-            <BuildingRequirementText
-              reason={lockReason}
-              targets={requirementTargets}
-              onNavigate={onNavigate}
-              variant="tooltip"
-            />
-          )
-        : lockReason,
-    });
-  }
   return {
     title: a.name,
     body: buildingTooltipBody(a.description, a.effectsText),
@@ -849,6 +864,7 @@ function ResourceRow({
   items: BuildingResourceCost[];
   mode?: 'required' | 'missing';
 }) {
+  const purchase = React.useContext(ResourcePurchaseDestinationContext);
   if (items.length === 0) return null;
 
   const amountTooltipKey = mode === 'missing'
@@ -863,7 +879,7 @@ function ResourceRow({
           content={{
             title: r.displayName || r.name,
             get body() { return webUIText(amountTooltipKey, { Amount: n(r.amount) }); },
-            afterLines: <ResourcePurchaseButton resourceId={r.name} />,
+            afterLines: <ResourcePurchaseButton resourceId={r.name} {...purchase} />,
           }}
           position="bottom"
           delay={150}
@@ -1334,9 +1350,9 @@ function BuiltCard({
             </span>
           </div>
           <EffectsBlock text={b.effectsText} />
-          {parentName && (
+          {parentName && replacesParent !== false && (
             <div className="bld-predecessor-explanation">
-              {webUIText(replacesParent === false ? 'SettlementBuildings.KeepsPredecessor' : 'SettlementBuildings.ReplacesPredecessor', { Name: parentName })}
+              {webUIText('SettlementBuildings.ReplacesPredecessor', { Name: parentName })}
             </div>
           )}
           {b.religionName && (
@@ -1510,9 +1526,9 @@ function AvailCard({
             </span>
           </div>
           <EffectsBlock text={a.effectsText} />
-          {parentName && (
+          {parentName && replacesParent !== false && (
             <div className="bld-predecessor-explanation">
-              {webUIText(replacesParent === false ? 'SettlementBuildings.KeepsPredecessor' : 'SettlementBuildings.ReplacesPredecessor', { Name: parentName })}
+              {webUIText('SettlementBuildings.ReplacesPredecessor', { Name: parentName })}
             </div>
           )}
           {a.religionName && (
@@ -1582,14 +1598,14 @@ function BranchElbow({
       )}
     </span>
   );
-  if (!parentName) {
+  if (!parentName || !replacesParent) {
     return <span className="bld-branch-elbow-wrap">{elbow}</span>;
   }
 
   return (
     <Tooltip
       content={{
-        title: webUIText(replacesParent ? 'SettlementBuildings.ReplacesPredecessor' : 'SettlementBuildings.KeepsPredecessor', { Name: parentName }),
+        title: webUIText('SettlementBuildings.ReplacesPredecessor', { Name: parentName }),
       }}
       position="right"
       delay={200}

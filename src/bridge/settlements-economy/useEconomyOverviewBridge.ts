@@ -1,6 +1,7 @@
 import type { GetEconomyOverviewResponse, GetEconomyResourceDetailsResponse } from '../../bridge-types.generated.ts';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
+import { refreshSettlementData } from './useSettlementBridge';
 
 let economyOverviewCache: GetEconomyOverviewResponse | null = null;
 
@@ -63,9 +64,21 @@ export function useEconomyResourceDetailsBridge(resourceId: string | null): GetE
   });
 }
 
-export function buyEconomyResourceBridge(resourceId: string, amount: number): Promise<void> {
-  return bridgeCall('game.buy_resource', { resourceId, amount }).then(() => {
+export function buyEconomyResourceBridge(
+  resourceId: string,
+  amount: number,
+  destination?: { settlementId?: string; personId?: string },
+): Promise<void> {
+  return bridgeCall('game.buy_resource', {
+    resourceId,
+    amount,
+    settlementId: destination?.settlementId ?? '',
+    personId: destination?.personId ?? '',
+  }).then((response) => {
     clearEconomyOverviewCache();
+    if (response.settlementId) {
+      return refreshSettlementData(response.settlementId);
+    }
     return undefined;
   });
 }

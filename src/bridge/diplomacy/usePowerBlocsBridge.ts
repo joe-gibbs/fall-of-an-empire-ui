@@ -134,6 +134,7 @@ function mapBloc(entry: PowerBlocOverviewEntry): PowerBloc {
     leaderName: entry.leaderName,
     memberCount: entry.memberCount,
     happiness: entry.happiness,
+    treatyBreachHappinessTooltip: entry.treatyBreachHappinessTooltip,
     strength: entry.strength,
     imperialStrength: entry.imperialStrength,
     escalationStage: entry.escalationStage,

@@ -204,7 +204,9 @@ export function UnitRow({
       </Tooltip>
       <div className="tpl-unit-name-block">
         <div className="tpl-unit-name-row">
-          <span className="tpl-unit-name">{unit.name}</span>
+          <Tooltip inline content={{ afterLines: <UnitTooltip data={unitTooltipData(unit, count)} /> }} position="left" delay={200}>
+            <span className="tpl-unit-name">{unit.name}</span>
+          </Tooltip>
           {includesCore && (
             <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.530.20'), body: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.530.21') }} position="bottom" delay={200}>
               <span className="badge badge--gold tpl-core-badge"><WebUIText textKey="Auto.ComponentsSidebarsFormationTemplateSidebar.530.1" /></span>
@@ -626,8 +628,18 @@ export function CombatTab({
                   const canIncrement = count < availableForGroup && groupRoom > 0;
                   return (
                     <div key={unit.id} className="tpl-battle-group-unit">
-                      <img src={unitPortrait(unit)} alt="" className="tpl-battle-group-unit-icon" />
-                      <span className="tpl-battle-group-unit-name">{unit.name}</span>
+                      <Tooltip content={{ afterLines: <UnitTooltip data={unitTooltipData(unit, count)} /> }} position="left" delay={200}>
+                        <img src={unitPortrait(unit)} alt="" className="tpl-battle-group-unit-icon" />
+                      </Tooltip>
+                      <Tooltip
+                        inline
+                        content={{ afterLines: <UnitTooltip data={unitTooltipData(unit, count)} /> }}
+                        position="left"
+                        delay={200}
+                        wrapperClassName="tpl-battle-group-unit-name"
+                      >
+                        <span>{unit.name}</span>
+                      </Tooltip>
                       <Tooltip
                         content={{
                           title: webUIText('Auto.Prop.ComponentsSidebarsFormationTemplateSidebar.543.22'),
@@ -673,8 +685,8 @@ export function CombatTab({
                     <Tooltip
                       key={unit.id}
                       content={{
-                        title: unit.name,
-                        body: stepModifiersBody,
+                        afterLines: <UnitTooltip data={unitTooltipData(unit, count)} />,
+                        footer: stepModifiersBody,
                       }}
                       position="left"
                       delay={200}
@@ -707,7 +719,15 @@ export function CombatTab({
         <div className="tpl-battle-unassigned">
           <span className="tpl-battle-unassigned-title"><WebUIText textKey="FormationTemplate.BattlePlan.Unassigned" /></span>
           {unassignedUnits.map(({ unit, count }) => (
-            <span key={unit.id} className="tpl-battle-unassigned-item">{`${unit.name} ${fmt(count)}`}</span>
+            <Tooltip
+              key={unit.id}
+              inline
+              content={{ afterLines: <UnitTooltip data={unitTooltipData(unit, count)} /> }}
+              position="left"
+              delay={200}
+            >
+              <span className="tpl-battle-unassigned-item">{`${unit.name} ${fmt(count)}`}</span>
+            </Tooltip>
           ))}
         </div>
       )}

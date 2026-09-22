@@ -1,3 +1,15 @@
 .resource-tooltip-purchase {
   padding: 0.308rem 0.615rem 0.615rem;
 }
+
+.resource-tooltip-purchase__cost {
+  display: inline-flex;
+  align-items: center;
+}
+
+.resource-tooltip-purchase__cost img {
+  width: 0.72rem;
+  height: 0.72rem;
+  margin-right: 0.18rem;
+  object-fit: contain;
+}

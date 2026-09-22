@@ -1,11 +1,14 @@
+import {
+  LOADING_SCREEN_BACKGROUNDS,
+  LOADING_SCREEN_LOGO,
+} from '../components/loading/loadingScreenPresentation';
 import { getAllTopbarButtons, getScreen, getSidebar } from '../registry/index';
 import { WebkilnAssetPath } from '../utils/assets';
 
 type WebUIAssetPreloadMode = 'mainmenu' | 'ingame' | null;
 
 const COMMON_ASSETS = [
-  '/assets/main-menu-logo.png',
-  '/assets/loading-screens/general.png',
+  LOADING_SCREEN_LOGO,
   '/assets/baked/texture-overlay-heavy.png',
   '/assets/baked/texture-overlay-dark.png',
   '/assets/baked/modal-charcoal.png',
@@ -177,6 +180,7 @@ const IN_GAME_ASSETS = [
 
 const retainedImages = new Map<string, HTMLImageElement>();
 const inFlightImages = new Set<string>();
+const imageReadyPromises = new Map<string, Promise<void>>();
 const queuedImages: string[] = [];
 const queuedImageSources = new Set<string>();
 const preloadedModes = new Set<WebUIAssetPreloadMode>();
@@ -188,30 +192,59 @@ function resolvedAssetPath(path: string): string {
   return WebkilnAssetPath(path) ?? path;
 }
 
+function whenResolvedImageAssetReady(src: string): Promise<void> {
+  const existing = imageReadyPromises.get(src);
+  if (existing) {
+    return existing;
+  }
+
+  const promise = new Promise<void>((resolve) => {
+    if (typeof document === 'undefined') {
+      resolve();
+      return;
+    }
+
+    let image = retainedImages.get(src);
+    if (!image) {
+      image = document.createElement('img');
+      retainedImages.set(src, image);
+      inFlightImages.add(src);
+    }
+
+    let settled = false;
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      inFlightImages.delete(src);
+      resolve();
+    };
+
+    image.addEventListener('load', finish, { once: true });
+    image.addEventListener('error', finish, { once: true });
+    if (!image.getAttribute('src')) {
+      image.src = src;
+    }
+    if (image.complete) {
+      finish();
+    }
+  });
+
+  imageReadyPromises.set(src, promise);
+  return promise;
+}
+
 function preloadResolvedImageAsset(src: string): void {
-  if (typeof document === 'undefined') {
-    return;
-  }
-
-  if (retainedImages.has(src) || inFlightImages.has(src)) {
-    return;
-  }
-
-  const image = document.createElement('img');
-  inFlightImages.add(src);
-  retainedImages.set(src, image);
-
-  const finish = () => {
-    inFlightImages.delete(src);
-  };
-
-  image.onload = finish;
-  image.onerror = finish;
-  image.src = src;
+  void whenResolvedImageAssetReady(src);
 }
 
 export function preloadImageAsset(path: string): void {
   preloadResolvedImageAsset(resolvedAssetPath(path));
+}
+
+export function whenImageAssetReady(path: string): Promise<void> {
+  return whenResolvedImageAssetReady(resolvedAssetPath(path));
 }
 
 function preloadImages(paths: readonly string[]): void {
@@ -295,6 +328,8 @@ export function preloadWebUIAssets(mode: WebUIAssetPreloadMode): void {
   }
 
   if (!preloadedModes.has(null)) {
+    preloadImages(LOADING_SCREEN_BACKGROUNDS);
+    preloadImageAsset(LOADING_SCREEN_LOGO);
     queueImagePreloads(COMMON_ASSETS);
     preloadTopbarButtonIcons();
     preloadedModes.add(null);

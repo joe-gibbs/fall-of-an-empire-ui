@@ -9,6 +9,7 @@ const PERSON_ACTIVITY_LABEL_KEYS: Record<string, string> = {
   Diplomat: 'Display.PersonActivity.Diplomat',
   Spy: 'Display.PersonActivity.Spy',
   Deceased: 'Display.PersonActivity.Deceased',
+  Imprisoned: 'Display.PersonActivity.Imprisoned',
   None: '',
 };
 
@@ -74,6 +75,7 @@ const RELATIONSHIP_LABEL_KEYS: Record<string, string> = {
 };
 
 const SETTLEMENT_TYPE_LABEL_KEYS: Record<string, string> = {
+  land: 'Settlement.Type.Land',
   village: 'Ledger.SettlementType.Village',
   town: 'Ledger.SettlementType.Town',
   city: 'Ledger.SettlementType.City',
@@ -85,6 +87,7 @@ const SETTLEMENT_TYPE_LABEL_KEYS: Record<string, string> = {
 };
 
 const SETTLEMENT_TYPE_BODY_KEYS: Record<string, string> = {
+  land: 'Settlement.Type.Land.Body',
   village: 'Settlement.Type.Village.Body',
   town: 'Settlement.Type.Town.Body',
   city: 'Settlement.Type.City.Body',

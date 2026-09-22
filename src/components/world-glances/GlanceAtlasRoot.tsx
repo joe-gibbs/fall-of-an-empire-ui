@@ -3,7 +3,7 @@ import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
 import { useUIScale } from '../../bridge/core/useUIScale';
 import { UI_PRESENTATION } from '../../config/presentation';
 import { NATIVE_BRIDGE_PROTOCOL } from '../../native-bridge-protocol.generated';
-import { mapNotificationShown, onNotificationAnchorsFrame } from '../../bridge/app/useNotificationsBridge';
+import { activateNotification, dismissNotificationOnBridge, mapNotificationShown, onNotificationAnchorsFrame } from '../../bridge/app/useNotificationsBridge';
 import {
   WORLD_GLANCE_FRAME_SECTIONS,
   makeWorldGlanceFrameEntryScratch,
@@ -56,20 +56,22 @@ const MILITARY_ATLAS_BLEED_REM = 1.5909;
 // Admitted settlement cells keep one stable footprint across flag/name/detail changes so their
 // atlas coordinates remain valid until the next paint-safe admission generation becomes active.
 const SETTLEMENT_NAMED_ATLAS_CAPACITY_WIDTH_REM = 15.1818;
-const SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM = 5.4545;
+// Room for the settlement name, map-mode line, the building under construction,
+// its progress bar, and both queued-job lines.
+const SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM = 6.7273;
 const MILITARY_ATLAS_CAPACITY_REM = 9;
 // Battle plates grow when close zoom switches them from the compact flag treatment to the
 // full strength board. Reserve the largest treatment from first admission so the compositor
 // never samples the expanded board through the compact cell's bounds.
-const BATTLE_ATLAS_CAPACITY_WIDTH_REM = 11.2;
-const BATTLE_ATLAS_CAPACITY_HEIGHT_REM = 3.75;
+const BATTLE_ATLAS_CAPACITY_WIDTH_REM = 12.2;
+const BATTLE_ATLAS_CAPACITY_HEIGHT_REM = 8.75;
 const CONVOY_ATLAS_LEFT_BLEED_REM = 0.75;
 const CONVOY_ATLAS_RIGHT_BLEED_REM = 8.75;
 const CONVOY_ATLAS_TOP_BLEED_REM = 0.75;
 const CONVOY_ATLAS_BOTTOM_BLEED_REM = 1.75;
-const CONVOY_DETAILED_SIZE_REM = 4.9091;
-const CONVOY_NAME_SIZE_REM = 4.1364;
-const CONVOY_FLAG_SIZE_REM = 4.1364;
+const CONVOY_DETAILED_SIZE_REM = 3.6818;
+const CONVOY_NAME_SIZE_REM = 3.2727;
+const CONVOY_FLAG_SIZE_REM = 3.2727;
 
 // Anchor constants mirror the DOM overlay's settlement transform offset (negated); every other
 // world kind is centre-anchored, notifications bottom-centre.
@@ -89,10 +91,10 @@ interface SettlementFrameOverlay {
 interface BattleFrameOverlay {
   attackerStrength: number;
   attackerMorale: number;
-  attackerLastLosses: number;
+  attackerCasualties: number;
   defenderStrength: number;
   defenderMorale: number;
-  defenderLastLosses: number;
+  defenderCasualties: number;
 }
 
 const SETTLEMENT_FRAME_PROGRESS_EPSILON = 0.0001;
@@ -140,10 +142,10 @@ function battleFrameOverlayChanged(
   }
   return previous.attackerStrength !== next.attackerStrength
     || Math.abs(previous.attackerMorale - next.attackerMorale) > BATTLE_FRAME_MORALE_EPSILON
-    || previous.attackerLastLosses !== next.attackerLastLosses
+    || previous.attackerCasualties !== next.attackerCasualties
     || previous.defenderStrength !== next.defenderStrength
     || Math.abs(previous.defenderMorale - next.defenderMorale) > BATTLE_FRAME_MORALE_EPSILON
-    || previous.defenderLastLosses !== next.defenderLastLosses;
+    || previous.defenderCasualties !== next.defenderCasualties;
 }
 
 // Anchor keys are the modder-facing contract with the engine compositor: an engine placement
@@ -298,8 +300,15 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
         style={style}
         {...anchorAttributes}
       >
-        <div className="settlement-notification-slot notification-slot notification-slot--regular">
-          <NotificationBanner notification={entry as Notification} onClose={() => {}} />
+        <div
+          className="settlement-notification-slot notification-slot notification-slot--regular"
+          data-webkiln-anchor-hit
+        >
+          <NotificationBanner
+            notification={entry as Notification}
+            onClose={() => dismissNotificationOnBridge(id)}
+            onView={() => activateNotification(id)}
+          />
         </div>
       </div>
     );
@@ -339,13 +348,13 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
         ...battleData.attacker,
         totalStrength: battleFrame.attackerStrength,
         morale: battleFrame.attackerMorale,
-        lastLosses: battleFrame.attackerLastLosses,
+        casualties: battleFrame.attackerCasualties,
       };
       battleData.defender = {
         ...battleData.defender,
         totalStrength: battleFrame.defenderStrength,
         morale: battleFrame.defenderMorale,
-        lastLosses: battleFrame.defenderLastLosses,
+        casualties: battleFrame.defenderCasualties,
       };
     }
     content = <BattleGlance data={battleData} />;
@@ -592,18 +601,18 @@ export default function GlanceAtlasRoot() {
             section === 'battle'
             && entry.attackerStrength !== undefined
             && entry.attackerMorale !== undefined
-            && entry.attackerLastLosses !== undefined
+            && entry.attackerCasualties !== undefined
             && entry.defenderStrength !== undefined
             && entry.defenderMorale !== undefined
-            && entry.defenderLastLosses !== undefined
+            && entry.defenderCasualties !== undefined
           ) {
             const nextBattleFrame: BattleFrameOverlay = {
               attackerStrength: entry.attackerStrength,
               attackerMorale: entry.attackerMorale,
-              attackerLastLosses: entry.attackerLastLosses,
+              attackerCasualties: entry.attackerCasualties,
               defenderStrength: entry.defenderStrength,
               defenderMorale: entry.defenderMorale,
-              defenderLastLosses: entry.defenderLastLosses,
+              defenderCasualties: entry.defenderCasualties,
             };
             const previousBattleFrame = battleFrameByKeyRef.current.get(key);
             if (battleFrameOverlayChanged(previousBattleFrame, nextBattleFrame)) {

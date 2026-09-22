@@ -432,13 +432,13 @@ export default function ResourceDetailsModal({
   const commitAutoSellThreshold = (next: number) => {
     const resolved = Math.max(0, next);
     setSellDraft(resolved);
-    setAutoSellEnabled(true);
+    if (!autoSellEnabled) return;
     setResourceAutoSellBridge(resource.id, true, resolved).catch(() => undefined);
   };
   const commitAutoBuyThreshold = (next: number) => {
     const resolved = Math.max(0, next);
     setBuyDraft(resolved);
-    setAutoBuyEnabled(true);
+    if (!autoBuyEnabled) return;
     setResourceAutoBuyBridge(resource.id, true, resolved).catch(() => undefined);
   };
 
@@ -549,33 +549,31 @@ export default function ResourceDetailsModal({
                 >
                   {t('Economy.AutoBuy')}: {autoBuyEnabled ? t('Economy.Enabled') : t('Economy.Disabled')}
                 </button>
-                {autoBuyEnabled && (
-                  <Tooltip
-                    content={{
-                      title: t('Economy.AutoBuyTarget'),
-                      body: t('Economy.AutoBuyTargetExplanation'),
-                      footer: stepModifiersBody,
-                    }}
-                    position="left"
-                    wrapperClassName="erd-threshold-tooltip"
-                  >
-                    <div className="erd-threshold">
-                      <span className="erd-threshold__label">{t('Economy.AutoBuyTargetShort')}</span>
-                      <NumberStepper
-                        value={buyDraft}
-                        min={0}
-                        step={autoSellThresholdStep}
-                        className="erd-threshold-stepper"
-                        buttonClassName="erd-threshold-step"
-                        buttonDisabledClassName="erd-threshold-step--disabled"
-                        formatValue={value => String(Math.round(value))}
-                        onChange={setBuyDraft}
-                        onCommit={commitAutoBuyThreshold}
-                      />
-                      <div className="erd-threshold__bar"><span style={{ width: `${Math.min(100, buyDraft / buyThresholdMax * 100)}%` }} /></div>
-                    </div>
-                  </Tooltip>
-                )}
+                <Tooltip
+                  content={{
+                    title: t('Economy.AutoBuyTarget'),
+                    body: t('Economy.AutoBuyTargetExplanation'),
+                    footer: stepModifiersBody,
+                  }}
+                  position="left"
+                  wrapperClassName="erd-threshold-tooltip"
+                >
+                  <div className="erd-threshold">
+                    <span className="erd-threshold__label">{t('Economy.AutoBuyTargetShort')}</span>
+                    <NumberStepper
+                      value={buyDraft}
+                      min={0}
+                      step={autoSellThresholdStep}
+                      className="erd-threshold-stepper"
+                      buttonClassName="erd-threshold-step"
+                      buttonDisabledClassName="erd-threshold-step--disabled"
+                      formatValue={value => String(Math.round(value))}
+                      onChange={setBuyDraft}
+                      onCommit={commitAutoBuyThreshold}
+                    />
+                    <div className="erd-threshold__bar"><span style={{ width: `${Math.min(100, buyDraft / buyThresholdMax * 100)}%` }} /></div>
+                  </div>
+                </Tooltip>
               </div>
               <div className="erd-automation-row">
                 <button
@@ -589,33 +587,31 @@ export default function ResourceDetailsModal({
                 >
                   {t('Economy.AutoSell')}: {autoSellEnabled ? t('Economy.Enabled') : t('Economy.Disabled')}
                 </button>
-                {autoSellEnabled && (
-                  <Tooltip
-                    content={{
-                      title: t('Economy.AutoSellReserve'),
-                      body: t('Economy.AutoSellReserveExplanation'),
-                      footer: stepModifiersBody,
-                    }}
-                    position="left"
-                    wrapperClassName="erd-threshold-tooltip"
-                  >
-                    <div className="erd-threshold">
-                      <span className="erd-threshold__label">{t('Economy.AutoSellReserveShort')}</span>
-                      <NumberStepper
-                        value={sellDraft}
-                        min={0}
-                        step={autoSellThresholdStep}
-                        className="erd-threshold-stepper"
-                        buttonClassName="erd-threshold-step"
-                        buttonDisabledClassName="erd-threshold-step--disabled"
-                        formatValue={value => String(Math.round(value))}
-                        onChange={setSellDraft}
-                        onCommit={commitAutoSellThreshold}
-                      />
-                      <div className="erd-threshold__bar"><span style={{ width: `${Math.min(100, sellDraft / sellThresholdMax * 100)}%` }} /></div>
-                    </div>
-                  </Tooltip>
-                )}
+                <Tooltip
+                  content={{
+                    title: t('Economy.AutoSellReserve'),
+                    body: t('Economy.AutoSellReserveExplanation'),
+                    footer: stepModifiersBody,
+                  }}
+                  position="left"
+                  wrapperClassName="erd-threshold-tooltip"
+                >
+                  <div className="erd-threshold">
+                    <span className="erd-threshold__label">{t('Economy.AutoSellReserveShort')}</span>
+                    <NumberStepper
+                      value={sellDraft}
+                      min={0}
+                      step={autoSellThresholdStep}
+                      className="erd-threshold-stepper"
+                      buttonClassName="erd-threshold-step"
+                      buttonDisabledClassName="erd-threshold-step--disabled"
+                      formatValue={value => String(Math.round(value))}
+                      onChange={setSellDraft}
+                      onCommit={commitAutoSellThreshold}
+                    />
+                    <div className="erd-threshold__bar"><span style={{ width: `${Math.min(100, sellDraft / sellThresholdMax * 100)}%` }} /></div>
+                  </div>
+                </Tooltip>
               </div>
             </div>
           </section>

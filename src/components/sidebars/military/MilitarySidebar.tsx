@@ -79,7 +79,6 @@ import {
   resourceIconPath,
   resourceReservePercent,
   resourceReserveTargetDays,
-  resolveUnitStats,
   selectedUnitsCanConsolidate,
   sortResourceRowsByUrgency,
   type CommandMode,
@@ -376,20 +375,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       .catch(acknowledgeBridgeFailure)
       .finally(() => setMergeUnitsInProgress(false));
   };
-
-  const maxStats = army.units.reduce((acc, unit) => {
-    const stats = resolveUnitStats(unit);
-    return {
-      pierceDmg: Math.max(acc.pierceDmg, stats.pierceDmg),
-      crushDmg: Math.max(acc.crushDmg, stats.crushDmg),
-      slashDmg: Math.max(acc.slashDmg, stats.slashDmg),
-      pierceArmour: Math.max(acc.pierceArmour, stats.pierceArmour),
-      crushArmour: Math.max(acc.crushArmour, stats.crushArmour),
-      slashArmour: Math.max(acc.slashArmour, stats.slashArmour),
-      speed: Math.max(acc.speed, stats.speed),
-      attackSpeed: Math.max(acc.attackSpeed, stats.attackSpeed),
-    };
-  }, { pierceDmg: 0, crushDmg: 0, slashDmg: 0, pierceArmour: 0, crushArmour: 0, slashArmour: 0, speed: 0, attackSpeed: 0 });
 
   const compositionSummary = Array.from(
     army.units.reduce((groups, unit) => {
@@ -1415,7 +1400,6 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
             canMergeSelectedForce={canMergeSelectedForce}
             canConsolidateSelection={canConsolidateSelection}
             compositionActionInProgress={compositionActionInProgress}
-            maxStats={maxStats}
             handleUnitRowMouseDown={handleUnitRowMouseDown}
             onSplitSelected={handleSplitSelected}
             onMergeSelected={handleMergeSelected}

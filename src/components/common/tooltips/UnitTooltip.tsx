@@ -10,6 +10,7 @@ import type { BuildingResourceCost, CultureInfo } from '../../../data/types';
 import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import ResourceLink from '../resources/ResourceLink';
 import ResourcePurchaseButton from '../resources/ResourcePurchaseButton';
+import type { ResourcePurchaseDestination } from '../resources/resourcePurchaseDestinationContext';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 
@@ -236,9 +237,11 @@ function CostChip({
 function ResourceChip({
   item,
   perContext,
+  purchase,
 }: {
   item: BuildingResourceCost;
   perContext: string;
+  purchase?: ResourcePurchaseDestination;
 }) {
   const valueLabel = formatResourceNumber(item.amount);
   return (
@@ -248,7 +251,7 @@ function ResourceChip({
       content={{
         title: item.displayName || item.name,
         body: item.description || item.effects || webUIText('UnitTooltip.StrategicResource'),
-        afterLines: <ResourcePurchaseButton resourceId={item.name} />,
+        afterLines: <ResourcePurchaseButton resourceId={item.name} {...purchase} />,
         lines: [
           { label: perContext, value: valueLabel, valueIcon: item.icon, valueColor: 'var(--gold-light)' },
         ],
@@ -363,7 +366,7 @@ function Bar({
   );
 }
 
-const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
+const UnitTooltip: React.FC<{ data: UnitTooltipData; purchase?: ResourcePurchaseDestination }> = ({ data, purchase }) => {
   const [showAllBuildabilitySettlements, setShowAllBuildabilitySettlements] = React.useState(false);
   const d = data;
   React.useEffect(() => {
@@ -484,10 +487,10 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
           title={webUIText('Auto.ComponentsCommonUnitTooltip.352.10')}
         />
         {resourceCost.map((r) => (
-          <ResourceChip key={`cost-${r.name}`} item={r} perContext={webUIText('UnitTooltip.PerRecruit')} />
+          <ResourceChip key={`cost-${r.name}`} item={r} perContext={webUIText('UnitTooltip.PerRecruit')} purchase={purchase} />
         ))}
         {monthlyConsumption.map((r) => (
-          <ResourceChip key={`mo-${r.name}`} item={r} perContext={webUIText('UnitTooltip.PerMonth')} />
+          <ResourceChip key={`mo-${r.name}`} item={r} perContext={webUIText('UnitTooltip.PerMonth')} purchase={purchase} />
         ))}
       </div>
 
@@ -640,7 +643,10 @@ const UnitTooltip: React.FC<{ data: UnitTooltipData }> = ({ data }) => {
                           : 'var(--green)',
                   },
                   ...(d.buildability.requirement
-                    ? [{ label: webUIText('UnitTooltip.RaisableRequirement'), value: d.buildability.requirement }]
+                    ? [
+                        { label: webUIText('Common.Requirements'), isHeader: true as const },
+                        { label: d.buildability.requirement },
+                      ]
                     : []),
                 ],
               }}

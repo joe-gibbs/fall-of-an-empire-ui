@@ -114,9 +114,9 @@ const TREATY_ICONS: Record<string, string> = {
   PrisonerExchange: '/assets/icons/Treaties/I_PrisonerExchange.png',
   PassageRights: '/assets/icons/Treaties/I_MilitaryAccess.png',
   MerchantRights: '/assets/icons/Treaties/I_TradeAgreement.png',
-  TradeOneOff: '/assets/icons/Treaties/I_TradeAgreement.png',
+  TradeOneOff: '/assets/icons/Treaties/I_TradeOneOff.png',
   Tribute: '/assets/icons/Treaties/I_Tribute.png',
-  TributeOneOff: '/assets/icons/Treaties/I_Tribute.png',
+  TributeOneOff: '/assets/icons/Treaties/I_TributeOneOff.png',
 };
 
 const FACTION_STAT_ICONS: Record<string, string> = {

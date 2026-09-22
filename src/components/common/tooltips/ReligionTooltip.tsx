@@ -3,6 +3,7 @@ import Tooltip, { type TooltipContent, type TooltipLine } from './Tooltip';
 import type { ReligionInfo } from '../../../data/types';
 import { formatSignedNumber } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
+import { appendTooltipSection } from './tooltipSections';
 import './IdentityTooltip.css';
 
 import { webUIText } from '../../../localization/WebUITextContext';
@@ -63,20 +64,20 @@ function religionTooltipContent({ info, fallbackName, fallbackId, extraLines = [
   const id = info?.id ?? fallbackId;
   const name = info?.name ?? fallbackName ?? '';
   const iconUrl = religionIconUrl(id);
-  const effects = info ? collectReligionEffects(info) : [];
-  const lines: TooltipLine[] = [
-    ...effects.map((e): TooltipLine => ({
+  const lines: TooltipLine[] = [];
+  if (info) {
+    appendTooltipSection(lines, webUIText('InteractionCard.Effects'), collectReligionEffects(info).map((e): TooltipLine => ({
       label: e.label,
       value: formatEffect(e),
       valueColor: effectColor(e),
-    })),
-    ...(info ? [{
+    })));
+    lines.push({
       label: webUIText('Auto.ComponentsCommonReligionTooltip.83.1'),
       value: webUIText(info.isOrganised ? 'Common.Yes' : 'Common.No'),
       valueColor: info.isOrganised ? 'var(--green)' : 'var(--text-muted)',
-    }] : []),
-    ...extraLines,
-  ];
+    });
+  }
+  lines.push(...extraLines);
 
   return {
     header: (

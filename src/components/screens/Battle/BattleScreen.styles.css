@@ -1743,13 +1743,6 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 0.12rem 0.32rem;
-  border-width: 0.154rem;
-  border-style: solid;
-  border-color: transparent;
-  border-image-source: url('/assets/modifier-frame.png');
-  border-image-slice: 3;
-  border-image-width: 0.154rem;
-  border-image-repeat: round;
   background-color: #201414;
   background-image: url('/assets/baked/card-red.png');
   background-repeat: repeat;
@@ -1815,10 +1808,6 @@
 .battle-formation-unit-grid > .tooltip-wrapper {
   display: block;
   min-width: 0;
-}
-
-.tt-bubble--battle-formation-unit {
-  max-width: 24rem;
 }
 
 .battle-formation-unit-card {

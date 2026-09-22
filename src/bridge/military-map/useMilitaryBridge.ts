@@ -333,6 +333,7 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     parentCommandDebugShortId: data.parentCommandDebugShortId || undefined,
     capacity: data.capacity > 0 ? data.capacity : undefined,
     usedCapacity: data.usedCapacity > 0 ? data.usedCapacity : data.capacity > 0 ? 0 : undefined,
+    embarkBlockReason: data.embarkBlockReason || undefined,
     embarkedArmies: data.embarkedArmies.map((army) => ({
       id: army.id || undefined,
       debugShortId: army.debugShortId || undefined,
@@ -392,6 +393,7 @@ function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse):
         embarkedNavyName: undefined,
         capacity: undefined,
         usedCapacity: undefined,
+        embarkBlockReason: undefined,
         embarkedArmies: [],
         resources: [],
         attritionSources: [],

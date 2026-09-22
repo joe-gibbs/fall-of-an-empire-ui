@@ -639,6 +639,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                       hasActivitySegments={hasActivitySegments}
                       segments={character.activitySegments}
                       fallbackActivity={headerActivityLabel}
+                      isImprisoned={isImprisoned}
                       onLinkClick={handleActivityLinkClick}
                     />
                   )}
@@ -908,7 +909,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                       { label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1314.56'), get value() { return isSatisfied ? webUIText("CharacterSidebar.Satisfied") : webUIText("CharacterSidebar.Shortage"); }, valueColor: isSatisfied ? 'var(--green)' : 'var(--red)' },
                       ...(!isSatisfied ? [{ label: webUIText('CharacterSidebar.LuxuryNeeds.PenaltyLabel'), get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1315.1", { Value1: (slot.required - slot.provided) * 20 }); }, valueColor: 'var(--red)' }] : []),
                     ],
-                    afterLines: <ResourcePurchaseButton resourceId={slot.resourceId} />,
+                    afterLines: <ResourcePurchaseButton resourceId={slot.resourceId} personId={character.id} />,
                   }} position="bottom" delay={200}>
                     <div className="char-luxury-row">
                       <ResourceLink resourceId={slot.resourceId} className="char-luxury-resource">

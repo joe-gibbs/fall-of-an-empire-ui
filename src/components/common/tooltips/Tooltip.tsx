@@ -6,6 +6,14 @@ import { renderRichText } from '../../../utils/richText';
 import { readableFactionTextColour } from '../../../utils/colorFormatters';
 import { UI_PRESENTATION } from '../../../config/presentation';
 import { dismissSharedTooltips, subscribeTooltipDismissEvent } from './tooltipEvents';
+import {
+  clamp,
+  placeTooltip as chooseTooltipPlacement,
+  unionRects,
+  type Rect,
+  type SidebarPanel,
+  type TooltipSide,
+} from './tooltipPlacement';
 import './Tooltip.css';
 
 interface TooltipLine {
@@ -38,7 +46,7 @@ interface TooltipProps {
   content: React.ReactNode | TooltipContent;
   children: React.ReactNode;
   open?: boolean;
-  position?: 'top' | 'bottom' | 'left' | 'right';
+  position?: TooltipSide;
   delay?: number;
   variant?: 'default' | 'sidebar';
   bubbleClassName?: string;
@@ -55,29 +63,9 @@ interface TooltipProps {
   anchorRef?: React.RefObject<HTMLElement | null>;
 }
 
-type TooltipSide = NonNullable<TooltipProps['position']>;
-
-interface Rect {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-  width: number;
-  height: number;
-}
-
 interface Size {
   width: number;
   height: number;
-}
-
-interface TooltipPlacement {
-  side: TooltipSide;
-  top: number;
-  left: number;
-  rect: Rect;
-  overlapArea: number;
-  clampDistance: number;
 }
 
 let nextTooltipId = 1;
@@ -92,7 +80,6 @@ const TooltipNestingContext = React.createContext<{
 const MIN_TOOLTIP_DELAY = UI_PRESENTATION.tooltip.minimumDelayMs;
 const HIDE_GRACE_MS = UI_PRESENTATION.tooltip.hideGraceMs;
 const VIEWPORT_PAD = UI_PRESENTATION.tooltip.viewportPaddingPx;
-const TOOLTIP_GAP = UI_PRESENTATION.tooltip.gapPx;
 const SUB_TOOLTIP_GAP = UI_PRESENTATION.tooltip.nestedGapPx;
 const SUB_TOOLTIP_VERTICAL_OFFSET = UI_PRESENTATION.tooltip.nestedVerticalOffsetPx;
 const PLACEMENT_STABILISE_FRAMES = UI_PRESENTATION.tooltip.placementStabiliseFrames;
@@ -139,36 +126,6 @@ function elementSize(element: HTMLElement): Size {
     width: bounds.width || offsetWidth || scrollWidth,
     height: height || scrollHeight,
   };
-}
-
-function rectFromPosition(left: number, top: number, width: number, height: number): Rect {
-  return {
-    top,
-    right: left + width,
-    bottom: top + height,
-    left,
-    width,
-    height,
-  };
-}
-
-function unionRects(a: Rect, b: Rect): Rect {
-  const left = Math.min(a.left, b.left);
-  const top = Math.min(a.top, b.top);
-  const right = Math.max(a.right, b.right);
-  const bottom = Math.max(a.bottom, b.bottom);
-  return rectFromPosition(left, top, right - left, bottom - top);
-}
-
-function intersectionArea(a: Rect, b: Rect): number {
-  const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
-  const height = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
-  return width * height;
-}
-
-function clamp(value: number, min: number, max: number): number {
-  if (max < min) return min;
-  return Math.max(min, Math.min(value, max));
 }
 
 function viewportLimit(size: number): number {
@@ -223,70 +180,14 @@ function beginTooltipMeasurement(element: HTMLElement) {
   resetViewportConstraints(element);
 }
 
-function oppositeSide(side: TooltipSide): TooltipSide {
-  if (side === 'top') return 'bottom';
-  if (side === 'bottom') return 'top';
-  if (side === 'left') return 'right';
-  return 'left';
-}
-
-function sideOrder(preferred: TooltipSide): TooltipSide[] {
-  if (preferred === 'top' || preferred === 'bottom') {
-    return [preferred, oppositeSide(preferred), 'right', 'left'];
-  }
-  return [preferred, oppositeSide(preferred), 'bottom', 'top'];
-}
-
-function buildPlacement(
-  side: TooltipSide,
-  anchor: Rect,
-  avoid: Rect,
-  ttW: number,
-  ttH: number,
-  vw: number,
-  vh: number,
-): TooltipPlacement {
-  let rawTop: number;
-  let rawLeft: number;
-
-  if (side === 'top' || side === 'bottom') {
-    rawTop = side === 'top' ? anchor.top - TOOLTIP_GAP - ttH : anchor.bottom + TOOLTIP_GAP;
-    rawLeft = anchor.left + anchor.width / 2 - ttW / 2;
-  } else {
-    rawLeft = side === 'left' ? anchor.left - TOOLTIP_GAP - ttW : anchor.right + TOOLTIP_GAP;
-    rawTop = anchor.top + anchor.height / 2 - ttH / 2;
-  }
-
-  const left = clamp(rawLeft, VIEWPORT_PAD, vw - ttW - VIEWPORT_PAD);
-  const top = clamp(rawTop, VIEWPORT_PAD, vh - ttH - VIEWPORT_PAD);
-  const rect = rectFromPosition(left, top, ttW, ttH);
-
+function findSidebarPanel(element: HTMLElement | null | undefined): SidebarPanel | null {
+  if (!element) return null;
+  const panel = element.closest('.sidebar-left, .sidebar-right');
+  if (!(panel instanceof HTMLElement)) return null;
   return {
-    side,
-    top,
-    left,
-    rect,
-    overlapArea: intersectionArea(rect, avoid),
-    clampDistance: Math.abs(left - rawLeft) + Math.abs(top - rawTop),
+    side: panel.classList.contains('sidebar-right') ? 'right' : 'left',
+    rect: rectFromBounds(panel.getBoundingClientRect()),
   };
-}
-
-function choosePlacement(
-  preferred: TooltipSide,
-  anchor: Rect,
-  avoid: Rect,
-  ttW: number,
-  ttH: number,
-  vw: number,
-  vh: number,
-): TooltipPlacement {
-  return sideOrder(preferred)
-    .map((side, preferenceIndex) => {
-      const placement = buildPlacement(side, anchor, avoid, ttW, ttH, vw, vh);
-      const score = placement.overlapArea * 10000 + preferenceIndex * 100 + placement.clampDistance;
-      return { placement, score };
-    })
-    .sort((a, b) => a.score - b.score)[0].placement;
 }
 
 function GoldRule() {
@@ -1082,7 +983,8 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
     const ttH = tooltipSize.height;
     if (ttW <= 0 || ttH <= 0) return;
 
-    const placement = choosePlacement(active.position, anchorRect, avoidRect, ttW, ttH, vw, vh);
+    const sidebar = findSidebarPanel(active.wrapperElement);
+    const placement = chooseTooltipPlacement(active.position, anchorRect, avoidRect, ttW, ttH, vw, vh, sidebar);
 
     positioner.style.top = toRootRem(placement.top);
     positioner.style.left = toRootRem(placement.left);

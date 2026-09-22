@@ -39,6 +39,8 @@ import SettlementMilitaryPanel from './SettlementMilitaryPanel';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import ResourceLink from '../../common/resources/ResourceLink';
 import ResourcePurchaseButton from '../../common/resources/ResourcePurchaseButton';
+import { ResourcePurchaseDestinationProvider } from '../../common/resources/ResourcePurchaseDestination';
+import { settlementPurchaseDestination } from '../../common/resources/resourcePurchaseDestinationContext';
 import { successChanceColour } from '../../../utils/colorFormatters';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { TIER_ICONS } from '../../../utils/iconMaps';
@@ -147,10 +149,10 @@ function buildInteractionTooltip(i: SettlementInteractionView, settlementId: str
 
   if (i.inProgress && i.remainingDays > 0) {
     const days = Math.round(i.remainingDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.107.3'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.107.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.107.3'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.107.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else {
     const days = Math.round(i.durationDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.111.5'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.111.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.111.5'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.111.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   }
 
   if (i.needsDestinationSelection || i.destinationName) {
@@ -523,7 +525,7 @@ function ShareTooltipWrap({
   );
 }
 
-function buildResourceTooltip(r: Resource): TooltipContent {
+function buildResourceTooltip(r: Resource, purchase: ReturnType<typeof settlementPurchaseDestination>): TooltipContent {
   const lines: TooltipLine[] = [];
   const prodStr = formatResourceNumber(r.production);
   const potential = r.potentialProduction ?? r.production;
@@ -591,7 +593,7 @@ function buildResourceTooltip(r: Resource): TooltipContent {
     title: r.name,
     get body() { return r.isNatural ? webUIText("SettlementSidebar.NaturalResourceOfRegion", { Value1: r.categoryName ? r.categoryName.toLowerCase() : webUIText("SettlementSidebar.Resource") }) : r.categoryName; },
     lines,
-    afterLines: <ResourcePurchaseButton resourceId={r.id ?? r.name} />,
+    afterLines: <ResourcePurchaseButton resourceId={r.id ?? r.name} {...purchase} />,
   };
 }
 
@@ -964,7 +966,10 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
     </Tooltip>
   ) : null;
 
+  const purchase = settlementPurchaseDestination(settlement);
+
   return (
+    <ResourcePurchaseDestinationProvider {...purchase}>
     <div className="sidebar sidebar--left sidebar--visible settlement-sidebar">
       <SidebarToolbar
         navButtons={[
@@ -1453,7 +1458,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                         const amountStr = formatNumber(Math.floor(r.amount));
                         const netStr = formatResourceNumber(net);
                         return (
-                          <Tooltip key={r.id ?? r.name} content={buildResourceTooltip(r)} position="left" delay={200}>
+                          <Tooltip key={r.id ?? r.name} content={buildResourceTooltip(r, purchase)} position="left" delay={200}>
                             <ResourceLink resourceId={r.id ?? r.name} className={`settle-resource-row${(r.shortage ?? 0) > 0 ? ' settle-resource-row--shortage' : ''}`}>
                               <img src={WebkilnAssetPath(r.icon || `/assets/resources/${r.id ?? r.name}.png`)} alt="" className="settle-resource-icon" />
                               <span className="settle-resource-name">{r.name}</span>
@@ -1611,7 +1616,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                   const cultureInfo = matchingCulture?.info as CultureInfo | undefined;
                   return (
                     <Tooltip key={unit.name} content={
-                      <UnitTooltip data={{
+                      <UnitTooltip purchase={purchase} data={{
                         name: unit.name,
                         count: unit.count,
                         description: unit.description,
@@ -1699,6 +1704,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
         onAppointed={refreshThisSettlement}
       />
     </div>
+    </ResourcePurchaseDestinationProvider>
   );
 };
 

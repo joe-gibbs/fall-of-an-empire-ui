@@ -51,17 +51,22 @@ export function HeaderActivity({
   hasActivitySegments,
   segments,
   fallbackActivity,
+  isImprisoned = false,
   onLinkClick,
 }: {
   playerRelation: string;
   hasActivitySegments: boolean;
   segments?: ActivitySegment[];
   fallbackActivity: string;
+  isImprisoned?: boolean;
   onLinkClick: (type: string, id: string) => void;
 }) {
   const hasActivity = hasActivitySegments || fallbackActivity.length > 0;
   return (
-    <div className="char-header-living-status">
+    <div className={`char-header-living-status${isImprisoned ? ' char-header-living-status--imprisoned' : ''}`}>
+      {isImprisoned && (
+        <img src="/assets/person-interactions/icons/ImprisonCharacter.png" alt="" className="char-header-imprisoned-icon" draggable={false} />
+      )}
       {playerRelation && (
         <span className="char-header-player-relation">
           <img src="/assets/icons/I_Family.png" alt="" className="char-header-player-relation-icon" draggable={false} />

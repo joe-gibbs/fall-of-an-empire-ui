@@ -134,12 +134,12 @@ function buildFactionInteractionTooltip(
 
   if (i.inProgress && i.remainingDays > 0) {
     const days = Math.round(i.remainingDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.68.2'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.68.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.68.2'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.68.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else if (i.durationDays > 0) {
     const days = Math.round(i.durationDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.71.3'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.71.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.71.3'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.71.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.73.4'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.73.1"); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.73.4'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.73.1"); } });
   }
 
   if (i.cooldownDays > 0) {
@@ -1029,11 +1029,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                   const breakTooltip: TooltipContent | undefined = canBreak
                     ? {
                         title: webUIText('Diplomacy.BreakTreaty'),
-                        body: treaty.breakingPenalty && treaty.breakingPenalty > 0
-                          ? webUIText('Diplomacy.BreakTreatyPenaltyBody', {
-                              Penalty: formatNumber(treaty.breakingPenalty),
-                            })
-                          : webUIText('Diplomacy.BreakTreatyBody'),
+                        body: treaty.breakingPenaltyTooltip,
                       }
                     : undefined;
                   return (
@@ -1051,7 +1047,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                           {treaty.displayName || formatTreatyType(treaty.type)}
                         </span>
                         <span className="diplo-player-treaty-detail">
-                          {partnerLabel ? `${partnerLabel} · ${detail}` : detail}
+                          {partnerLabel ? `${partnerLabel} - ${detail}` : detail}
                         </span>
                       </div>
                       {canBreak ? (

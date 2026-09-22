@@ -7,6 +7,7 @@ import { webUIText, WebUIText } from '../../localization/WebUITextContext';
 const RELATION_LABEL_KEYS: Record<string, string> = {
   own: 'ConvoyFilter.Relation.Realm',
   subject: 'WorldGlances.Relation.Subject',
+  overlord: 'Economy.Overlord',
   ally: 'Common.Ally',
   enemy: 'Common.Enemy',
   neutral: 'Common.Neutral',

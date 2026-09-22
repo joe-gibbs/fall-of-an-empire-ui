@@ -392,6 +392,11 @@ html.ui-reduce-motion hr {
   --glance-relation-garrisonable: #204878;
   --glance-relation-hostile: #8b2020;
   --glance-relation-neutral: #777b80;
+  --glance-target-fill: #e63c14;
+  --glance-target-rim: #ffb060;
+  --glance-target-glow-core: rgba(255, 210, 110, 0.95);
+  --glance-target-glow-mid: rgba(255, 72, 20, 0.82);
+  --glance-target-glow-edge: rgba(232, 40, 12, 0.34);
 
   --border: rgba(201, 168, 76, 0.25);
   --border-light: rgba(201, 168, 76, 0.4);

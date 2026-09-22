@@ -9,6 +9,8 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
+import UnitTooltip, { type UnitTooltipData } from '../../common/tooltips/UnitTooltip';
+import { unitTypeLabel } from '../../../utils/displayLabels';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { performSiegeCommandBridge } from '../../../bridge/settlements-economy/useSettlementBridge';
 import { useGameActions } from '../../../context/GameContext';
@@ -38,6 +40,7 @@ interface SiegeForceRow {
   unitCount: number;
   isLead?: boolean;
   icon?: string;
+  unitTooltip?: UnitTooltipData;
 }
 
 interface SiegeViewModel {
@@ -178,6 +181,11 @@ function defenderRows(settlement: Settlement, siege: SiegeInfo): SiegeForceRow[]
       existing.strength += unit.strength;
       existing.maxStrength += unit.maxStrength;
       existing.unitCount += 1;
+      if (existing.unitTooltip) {
+        existing.unitTooltip.strength = existing.strength;
+        existing.unitTooltip.maxStrength = existing.maxStrength;
+        existing.unitTooltip.count = existing.unitCount;
+      }
       return;
     }
 
@@ -190,6 +198,26 @@ function defenderRows(settlement: Settlement, siege: SiegeInfo): SiegeForceRow[]
       maxStrength: unit.maxStrength,
       unitCount: 1,
       icon: unit.typeIcon || '/assets/icons/Doctrines/I_Doctrine_Garrison.png',
+      unitTooltip: {
+        name: unit.name,
+        description: unit.description,
+        portrait: unit.portrait,
+        typeLabel: unitTypeLabel(unit.type),
+        typeIcon: unit.typeIcon,
+        tier: unit.tier,
+        culture: unit.culture,
+        sourceBuilding: unit.sourceBuilding,
+        strength: unit.strength,
+        maxStrength: unit.maxStrength,
+        upkeep: unit.upkeep,
+        foodConsumption: unit.foodConsumption,
+        speed: unit.speed,
+        attackSpeed: unit.attackSpeed,
+        veterancy: unit.veterancy,
+        damage: { pierce: unit.pierceDmg, crush: unit.crushDmg, slash: unit.slashDmg },
+        armour: { pierce: unit.pierceArm, crush: unit.crushArm, slash: unit.slashArm },
+        count: 1,
+      },
     });
   });
 
@@ -437,7 +465,7 @@ function ForceRow({ row }: { row: SiegeForceRow }) {
     />
   );
 
-  return (
+  const rowBody = (
     <div className={`siege-force-row${row.isLead ? ' siege-force-row--lead' : ''}`}>
       {row.commanderId ? (
         <PersonTooltip characterId={row.commanderId} position="right" delay={200}>
@@ -458,6 +486,14 @@ function ForceRow({ row }: { row: SiegeForceRow }) {
         </span>
       </div>
     </div>
+  );
+
+  if (!row.unitTooltip) return rowBody;
+
+  return (
+    <Tooltip content={{ afterLines: <UnitTooltip data={row.unitTooltip} /> }} position="right" delay={200}>
+      {rowBody}
+    </Tooltip>
   );
 }
 

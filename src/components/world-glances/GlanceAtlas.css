@@ -27,7 +27,7 @@
    expose a transparent intermediate atlas paint, so atlas content changes are deliberately
    immediate even though the hidden interactive overlay may still animate. */
 .glance-atlas-plate,
-.glance-atlas-plate *,
+.glance-atlas-plate *:not(.glance-military-alert-flash):not(.battle-loss-float),
 .glance-atlas-plate::before,
 .glance-atlas-plate::after,
 .glance-atlas-plate *::before,
@@ -102,4 +102,14 @@
 .glance-atlas-notification-plate .notification-banner {
   animation: none !important;
   transition: none !important;
+}
+
+.glance-atlas-notification-plate .notification-banner:active {
+  transform: none;
+}
+
+/* Casualty numbers float above both sides within the battle's sampled cell. */
+.glance-atlas-plate.world-glance-node--battle {
+  box-sizing: content-box;
+  padding: 2.5rem 0.5rem;
 }

@@ -1,10 +1,18 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { GameProvider } from './context/GameContext';
 import MainMenu from './pages/MainMenu';
 import LoadingScreenOverlay from './components/loading/LoadingScreenOverlay';
+import {
+  resolveLoadingContentAppMode,
+  resolvePresentedAppMode,
+  shouldNotifyLoadingAppModeRendered,
+  type LoadingContentAppMode,
+} from './components/loading/loadingScreenPresentation';
+import { useLoadingOverlayPictureReady } from './components/loading/useLoadingOverlayPictureReady';
 import { TooltipHost } from './components/common/tooltips/Tooltip';
 import { WebUITextProvider } from './localization/WebUITextProvider';
 import { useAppMode } from './bridge/app/useAppModeBridge';
+import { useLoadingScreenBridge } from './bridge/app/useLoadingScreenBridge';
 import { useUIScale } from './bridge/core/useUIScale';
 import { EscapeStackProvider } from './context/EscapeStackProvider';
 import { preloadWebUIAssets } from './preload/assets';
@@ -23,13 +31,28 @@ function App() {
   useUIScale();
   useButtonClickSound();
   const appMode = useAppMode();
-  const contentAppMode = appMode === 'loading' ? null : appMode;
+  const loadingState = useLoadingScreenBridge();
+  const overlayPictureReady = useLoadingOverlayPictureReady(loadingState);
+  const [lastContentAppMode, setLastContentAppMode] = useState<LoadingContentAppMode | null>(
+    appMode === 'mainmenu' || appMode === 'ingame' ? appMode : null,
+  );
+  if ((appMode === 'mainmenu' || appMode === 'ingame') && lastContentAppMode !== appMode) {
+    setLastContentAppMode(appMode);
+  }
+  const contentAppMode = resolveLoadingContentAppMode(
+    appMode,
+    lastContentAppMode,
+    overlayPictureReady,
+  );
+  const presentedAppMode = resolvePresentedAppMode(appMode, overlayPictureReady);
   useEffect(() => {
     preloadWebUIAssets(contentAppMode);
   }, [contentAppMode]);
 
   useEffect(() => {
-    if (!appMode) return undefined;
+    if (!shouldNotifyLoadingAppModeRendered(appMode, overlayPictureReady)) {
+      return undefined;
+    }
 
     let cancelled = false;
     let firstFrame = 0;
@@ -37,10 +60,10 @@ function App() {
     let timer = 0;
 
     const notifyRendered = () => {
-      if (cancelled) return;
+      if (cancelled || presentedAppMode == null) return;
       const engine = getRuntimeEngine();
       if (!engine) return;
-      void Promise.resolve(engine.call('UIRendered', { mode: appMode }))
+      void Promise.resolve(engine.call('UIRendered', { mode: presentedAppMode }))
         .catch(error => acknowledgeBridgeFailure(error, 'UIRendered'));
     };
 
@@ -66,7 +89,7 @@ function App() {
       if (secondFrame !== 0) window.cancelAnimationFrame(secondFrame);
       if (timer !== 0) window.clearTimeout(timer);
     };
-  }, [appMode]);
+  }, [appMode, overlayPictureReady, presentedAppMode]);
 
   let content: ReactNode = null;
   if (contentAppMode === 'mainmenu') {
@@ -95,7 +118,7 @@ function App() {
             <div className="game-cursor-surface" data-webkiln-world-input>
               {content}
               <InitialSetupModal autoOpen={contentAppMode === 'mainmenu'} />
-              <LoadingScreenOverlay />
+              <LoadingScreenOverlay state={loadingState} pictureReady={overlayPictureReady} />
               <GamepadPromptLayer appMode={contentAppMode} />
             </div>
           </GamepadFocusProvider>

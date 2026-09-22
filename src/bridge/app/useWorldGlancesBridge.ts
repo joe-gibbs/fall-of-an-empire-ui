@@ -501,10 +501,10 @@ export interface WorldGlanceFrameEntry {
   buildItemProgress?: number;
   attackerStrength?: number;
   attackerMorale?: number;
-  attackerLastLosses?: number;
+  attackerCasualties?: number;
   defenderStrength?: number;
   defenderMorale?: number;
-  defenderLastLosses?: number;
+  defenderCasualties?: number;
 }
 
 export interface ObjectWorldGlancesFrameResponse {
@@ -700,19 +700,19 @@ export function readWorldGlanceFrameEntry(
   out.buildItemProgress = frame.entryNumbers[numberOffset + 7];
   out.attackerStrength = undefined;
   out.attackerMorale = undefined;
-  out.attackerLastLosses = undefined;
+  out.attackerCasualties = undefined;
   out.defenderStrength = undefined;
   out.defenderMorale = undefined;
-  out.defenderLastLosses = undefined;
+  out.defenderCasualties = undefined;
   if (section === 'battle') {
     const battleNumberOffset = WORLD_GLANCE_FRAME_HEADER_NUMBER_COUNT
       + localIndex * WORLD_GLANCE_FRAME_BATTLE_NUMBER_STRIDE;
     out.attackerStrength = frame.frameNumbers[battleNumberOffset] ?? 0;
     out.attackerMorale = frame.frameNumbers[battleNumberOffset + 1] ?? 0;
-    out.attackerLastLosses = frame.frameNumbers[battleNumberOffset + 2] ?? 0;
+    out.attackerCasualties = frame.frameNumbers[battleNumberOffset + 2] ?? 0;
     out.defenderStrength = frame.frameNumbers[battleNumberOffset + 3] ?? 0;
     out.defenderMorale = frame.frameNumbers[battleNumberOffset + 4] ?? 0;
-    out.defenderLastLosses = frame.frameNumbers[battleNumberOffset + 5] ?? 0;
+    out.defenderCasualties = frame.frameNumbers[battleNumberOffset + 5] ?? 0;
   }
   return out;
 }

@@ -20,6 +20,7 @@ export interface ArmyGlanceData {
   strength: number;
   morale: number;
   retreating?: boolean;
+  casualties?: number;
   tier: 1 | 2 | 3 | 4 | 5;
   raiding?: boolean;
   attrition?: boolean;
@@ -43,7 +44,7 @@ export interface BattleSideData {
   participants: BattleParticipant[];
   totalStrength: number;
   morale: number;
-  lastLosses: number;
+  casualties: number;
 }
 
 export interface BattleGlanceData {
@@ -83,7 +84,7 @@ export interface SettlementGlanceData {
   occupier?: GlanceFactionStub;
   isCapital?: boolean;
   isProvincialCapital?: boolean;
-  settlementType: 'city' | 'town' | 'village' | 'metropolis' | 'fortress' | 'monastery' | 'port' | 'mining';
+  settlementType: 'land' | 'city' | 'town' | 'village' | 'metropolis' | 'fortress' | 'monastery' | 'port' | 'mining';
   badgeScale: number;
   health: number;
   selected?: boolean;

@@ -13,7 +13,7 @@ export function useWorldGlanceTooltip(kind: 'port' | 'convoy' | 'battle', id: st
   const detail = detailResult?.key === requestKey ? detailResult.response : null;
 
   const request = useCallback(() => {
-    if (detailKeyRef.current === requestKey || requestInFlightKeyRef.current === requestKey) return;
+    if (requestInFlightKeyRef.current === requestKey) return;
 
     const requestSequence = requestSequenceRef.current + 1;
     requestSequenceRef.current = requestSequence;

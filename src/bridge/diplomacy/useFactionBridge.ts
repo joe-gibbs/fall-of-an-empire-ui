@@ -93,6 +93,7 @@ function mapFaction(data: GetFactionDataResponse): Faction {
     isPerpetual: t.isPerpetual,
     canBreak: t.canBreak,
     breakingPenalty: t.breakingPenalty,
+    breakingPenaltyTooltip: t.breakingPenaltyTooltip,
     isWithPlayer: t.isWithPlayer,
   }));
 

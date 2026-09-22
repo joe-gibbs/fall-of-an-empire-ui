@@ -41,26 +41,9 @@
   padding: 0.45rem 0.75rem 0.35rem;
 }
 
-.screen.screen--negotiation.screen--territory-selection {
-  height: auto;
-  max-height: 30vh;
-}
-
-.pns-territory-selection {
-  min-height: 0;
-  overflow-y: auto;
-}
-
-.pns-territory-instruction {
-  margin: 0 0 0.75rem;
-  line-height: 1.5;
-}
-
-.pns-territory-selection-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+.pns-return-to-terms {
+  margin-bottom: 0.5rem;
+  pointer-events: auto;
 }
 
 .screen--negotiation .screen-title-area {
@@ -1197,6 +1180,11 @@
   display: flex;
   align-items: center;
   padding: 0.14rem 0.32rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.pns-resource-select-button {
   border-width: 0.077rem;
   border-style: solid;
   border-top-color: var(--border-dim);
@@ -1204,8 +1192,12 @@
   border-bottom-color: var(--border-dim);
   border-left-color: var(--border-dim);
   background-color: rgba(4, 5, 6, 0.78);
-  color: var(--text);
-  cursor: pointer;
+}
+
+.pns-resource-select-option {
+  border-width: 0;
+  border-style: none;
+  background-color: transparent;
 }
 
 .pns-resource-select-button > * + *,
@@ -1219,8 +1211,7 @@
   flex-basis: 0;
 }
 
-.pns-resource-select-button:hover,
-.pns-resource-select-option:hover {
+.pns-resource-select-button:hover {
   border-top-color: var(--border);
   border-right-color: var(--border);
   border-bottom-color: var(--border);
@@ -1228,13 +1219,22 @@
   color: var(--text-header);
 }
 
-.pns-resource-select.dropdown-select--open .pns-resource-select-button,
-.pns-resource-select-option--active {
+.pns-resource-select-option:hover {
+  color: var(--text-header);
+  background-color: rgba(201, 168, 76, 0.1);
+}
+
+.pns-resource-select.dropdown-select--open .pns-resource-select-button {
   border-top-color: var(--gold);
   border-right-color: var(--gold);
   border-bottom-color: var(--gold);
   border-left-color: var(--gold);
   color: var(--gold);
+}
+
+.pns-resource-select-option--active {
+  color: var(--gold);
+  background-color: rgba(74, 21, 48, 0.65);
 }
 
 .pns-resource-select-icon {
@@ -1309,10 +1309,6 @@
 .pns-resource-select-menu--closing {
   animation: pns-resource-menu-out 0.12s ease-in both;
   pointer-events: none;
-}
-
-.pns-resource-select-menu > * + * {
-  margin-top: 0.12rem;
 }
 
 @keyframes pns-resource-menu-in {

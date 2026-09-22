@@ -207,15 +207,6 @@ export interface BattleFormationAgentState {
   targetFormationId: string;
 }
 
-export interface BattleFormationUnitDetail {
-  id: string;
-  name: string;
-  description: string;
-  portrait: string;
-  strength: number;
-  maxStrength: number;
-}
-
 export interface BattleFormationDetail {
   id: string;
   name: string;
@@ -255,7 +246,7 @@ export interface BattleFormationDetail {
   activeActionName: string;
   isPlayerControlled: boolean;
   isCommandable: boolean;
-  units: BattleFormationUnitDetail[];
+  units: MilitaryUnitEntry[];
   waypoints: BattlePoint[];
   actions: BattleActionOption[];
 }
@@ -761,6 +752,7 @@ export interface DiplomacyTreatyEntry {
   isPerpetual: boolean;
   canBreak: boolean;
   breakingPenalty: number;
+  breakingPenaltyTooltip: string;
   isWithPlayer: boolean;
 }
 
@@ -945,6 +937,17 @@ export interface SetResourcePriorityRequest {
   targetType: string;
   targetId: string;
   priority: string;
+}
+
+export interface BuyEconomyResourceRequest {
+  resourceId: string;
+  amount: number;
+  settlementId: string;
+  personId: string;
+}
+
+export interface BuyEconomyResourceResponse {
+  settlementId: string;
 }
 
 export interface EnterCourtAppointmentContestRequest {
@@ -2287,6 +2290,7 @@ export interface FactionTreatyEntry {
   isPerpetual: boolean;
   canBreak: boolean;
   breakingPenalty: number;
+  breakingPenaltyTooltip: string;
   isWithPlayer: boolean;
 }
 
@@ -3604,6 +3608,7 @@ export interface PowerBlocOverviewEntry {
   leaderName: string;
   memberCount: number;
   happiness: number;
+  treatyBreachHappinessTooltip: string;
   strength: number;
   imperialStrength: number;
   escalationStage: number;
@@ -4155,7 +4160,10 @@ export interface SettingsGraphicsDTO {
   showFpsCounter: boolean;
   showSettlementGlances: boolean;
   showMilitaryGlances: boolean;
-  showConvoyGlances: boolean;
+  showOwnConvoyGlances: boolean;
+  showAllyConvoyGlances: boolean;
+  showSubjectConvoyGlances: boolean;
+  showOverlordConvoyGlances: boolean;
   glanceDensity: string;
 }
 
@@ -5055,6 +5063,7 @@ export interface WorldMilitaryGlance {
   strength: number;
   morale: number;
   retreating: boolean;
+  casualties: number;
   tier: number;
   raiding: boolean;
   selected: boolean;
@@ -5075,7 +5084,7 @@ export interface WorldBattleSide {
   participants: WorldBattleParticipant[];
   totalStrength: number;
   morale: number;
-  lastLosses: number;
+  casualties: number;
 }
 
 export interface WorldBattleGlance {
@@ -5121,10 +5130,10 @@ export interface WorldGlanceFrameEntry {
   buildItemProgress: number;
   attackerStrength: number;
   attackerMorale: number;
-  attackerLastLosses: number;
+  attackerCasualties: number;
   defenderStrength: number;
   defenderMorale: number;
-  defenderLastLosses: number;
+  defenderCasualties: number;
 }
 
 export interface GetWorldGlancesResponse {
@@ -5154,15 +5163,6 @@ export interface WorldGlancesFrameResponse {
   navies: WorldGlanceFrameEntry[];
   battles: WorldGlanceFrameEntry[];
   convoys: WorldGlanceFrameEntry[];
-}
-
-export interface WorldBattleStrengthSnapshot {
-  attackerStrength: number;
-  defenderStrength: number;
-  attackerMorale: number;
-  defenderMorale: number;
-  attackerLastLosses: number;
-  defenderLastLosses: number;
 }
 
 export interface WorldGlancesCatalogueDelta {
@@ -5208,6 +5208,7 @@ export interface GetWorldGlanceTooltipResponse {
   blockadingStrength: number;
   dockedNavyName: string;
   dockedNavyStrength: number;
+  embarkBlockReason: string;
   originName: string;
   destinationName: string;
   purpose: string;
@@ -5630,6 +5631,7 @@ export interface GetMilitaryDataResponse {
   receivesCommandBenefits: boolean;
   capacity: number;
   usedCapacity: number;
+  embarkBlockReason: string;
   embarkedArmies: EmbarkedArmyEntry[];
   resources: MilitaryResourceEntry[];
   attritionSources: MilitaryAttritionEntry[];
@@ -6123,6 +6125,7 @@ export interface GetPersonalGuardResponse {
   barbarianCultureCount: number;
   status: string;
   companies: PersonalGuardCompanyEntry[];
+  companyUnits: FormationTemplateUnitEntry[];
   eligibleUnits: FormationTemplateUnitEntry[];
   unitCosts: PersonalGuardUnitCostEntry[];
   canEditComposition: boolean;
@@ -7049,7 +7052,7 @@ export interface BridgeActions {
   'game.break_treaty': { request: BreakTreatyRequest; response: BreakTreatyResponse };
   'game.browse_steam_workshop': { request: BrowseSteamWorkshopRequest; response: BrowseSteamWorkshopResponse };
   'game.building_placement': { request: BuildingPlacementRequest; response: BuildingPlacementResponse };
-  'game.buy_resource': { request: TradeEconomyResourceRequest; response: void };
+  'game.buy_resource': { request: BuyEconomyResourceRequest; response: BuyEconomyResourceResponse };
   'game.cancel_bloc_interaction': { request: CancelBlocInteractionRequest; response: CancelBlocInteractionResponse };
   'game.cancel_faction_interaction': { request: CancelFactionInteractionRequest; response: CancelFactionInteractionResponse };
   'game.cancel_person_interaction': { request: CancelPersonInteractionRequest; response: CancelPersonInteractionResponse };

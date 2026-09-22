@@ -15,6 +15,7 @@ import { breakTreatyBridge, useDiplomacyOverviewBridge, type DiplomacyOverviewSt
 import type { CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
 import type { Faction, FactionTreaty } from '../../../data/types';
 import { formatTreatyType } from '../../../utils/displayLabels';
+import { treatyIconPath } from '../../../utils/iconMaps';
 import { canNegotiateDiplomacyWith } from '../../../utils/diplomacyAuthority';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { compareSortValuesWithDirection, toggleSortState, type SortDirection, type SortState, type SortValue } from '../../common/layout/tables/sortUtils';
@@ -294,21 +295,7 @@ function statusIcon(status: string): string {
 }
 
 function treatyIcon(type: string): string {
-  switch (type) {
-    case 'NonAggression': return '/assets/icons/Treaties/I_NonAggression.png';
-    case 'Trade':
-    case 'TradeOneOff':
-    case 'MerchantRights': return '/assets/icons/Treaties/I_TradeAgreement.png';
-    case 'MilitaryAlliance': return '/assets/icons/Treaties/I_MilitaryAlliance.png';
-    case 'DefensiveAlliance': return '/assets/icons/Treaties/I_DefensiveAlliance.png';
-    case 'Subject': return '/assets/icons/I_DependentFactions.png';
-    case 'Tribute':
-    case 'TributeOneOff': return '/assets/icons/Treaties/I_Tribute.png';
-    case 'PassageRights': return '/assets/icons/Treaties/I_MilitaryAccess.png';
-    case 'KnowledgeSharing': return '/assets/icons/Treaties/I_MapSharing.png';
-    case 'Peace': return '/assets/icons/I_Peace.png';
-    default: return '/assets/icons/I_Diplomacy.png';
-  }
+  return treatyIconPath(type);
 }
 
 function diplomaticStatusDisplay(row: FactionRow): string {
@@ -633,13 +620,15 @@ function Treaties({ rows }: { rows: FactionTreaty[] }) {
           <TableCell className="dps-table-col--actions">
             <div className="dps-row-actions">
               {row.canBreak && row.id ? (
-                <RowActionButton
-                  icon="/assets/icons/I_ExclamationWarning.png"
-                  label={webUIText('Diplomacy.BreakTreaty')}
-                  danger
-                  disabled={breakingId === row.id}
-                  onClick={() => handleBreak(row.id!)}
-                />
+                <Tooltip content={{ title: webUIText('Diplomacy.BreakTreaty'), body: row.breakingPenaltyTooltip }} position="left" delay={150}>
+                  <RowActionButton
+                    icon="/assets/icons/I_ExclamationWarning.png"
+                    label={webUIText('Diplomacy.BreakTreaty')}
+                    danger
+                    disabled={breakingId === row.id}
+                    onClick={() => handleBreak(row.id!)}
+                  />
+                </Tooltip>
               ) : null}
               {row.withFactionId ? <RowActions factionId={row.withFactionId} /> : <span className="dps-muted"><WebUIText textKey="Auto.ComponentsScreensDiplomacyScreen.355.3" /></span>}
             </div>

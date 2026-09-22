@@ -16,6 +16,11 @@ import CreditsRoll from './main-menu/CreditsRoll';
 import CharacterCreatorDebug from './main-menu/CharacterCreatorDebug';
 import './main-menu/MainMenu.css';
 import { bridgeCall, onBridgeEvent } from '../bridge-types.generated.ts';
+import { getCachedBridgeEvent } from '../bridge/core/bridgeEventCache';
+import {
+  LOADING_SCREEN_FALLBACK_BACKGROUND,
+} from '../components/loading/loadingScreenPresentation';
+import { whenImageAssetReady } from '../preload/assets';
 import type { GetNewGameMapFactionSelectionResponse } from '../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../bridge/core/runtimeEngine';
 import type { SaveEntry } from '../bridge/app/useSavesBridge';
@@ -81,12 +86,25 @@ function compareScenarioMaps(left: NewGameMapEntry, right: NewGameMapEntry): num
   return left.id.localeCompare(right.id);
 }
 
-function waitForLoadingScreenPaint(): Promise<void> {
+function waitForAnimationFrames(count: number): Promise<void> {
   return new Promise((resolve) => {
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => resolve());
-    });
+    const step = (remaining: number) => {
+      if (remaining <= 0) {
+        resolve();
+        return;
+      }
+      window.requestAnimationFrame(() => step(remaining - 1));
+    };
+    step(count);
   });
+}
+
+async function waitForLoadingScreenPaint(): Promise<void> {
+  const cached = getCachedBridgeEvent('game.loading_screen');
+  if (cached?.visible) {
+    await whenImageAssetReady(cached.background || LOADING_SCREEN_FALLBACK_BACKGROUND);
+  }
+  await waitForAnimationFrames(2);
 }
 
 const MainMenu: React.FC = () => {

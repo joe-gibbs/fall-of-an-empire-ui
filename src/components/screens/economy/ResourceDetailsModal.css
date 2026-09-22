@@ -353,6 +353,13 @@
   width: 5.2rem;
   height: 1.45rem;
   padding: 0 0.28rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-top-color: var(--border-dim);
+  border-right-color: var(--border-dim);
+  border-bottom-color: var(--border-dim);
+  border-left-color: var(--border-dim);
+  background-color: rgba(4, 5, 6, 0.75);
   color: var(--text-header);
   font-family: var(--font-header);
   font-size: 0.72rem;

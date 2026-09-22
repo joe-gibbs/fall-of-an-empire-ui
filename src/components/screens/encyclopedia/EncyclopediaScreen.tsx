@@ -4,10 +4,11 @@ import { useDeferredMount } from '../../../hooks/useDeferredMount';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
-import Tooltip from '../../common/tooltips/Tooltip';
+import Tooltip, { type TooltipLine } from '../../common/tooltips/Tooltip';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import type { UnitTooltipData } from '../../common/tooltips/UnitTooltip';
 import BuildingEffects from '../../common/content/BuildingEffects';
+import { appendBuildingUnlockRequirements } from '../../common/content/buildingUnlockRequirements';
 import { getGlossaryEntry } from '../../../data/glossary';
 import { useEncyclopediaBridge } from '../../../bridge/settlements-economy/useEncyclopediaBridge';
 import { startBuildingPlacementBridge } from '../../../bridge/military-map/useBottomBarOperationsBridge';
@@ -1014,30 +1015,15 @@ function BuildingsPanel({ buildings, cultures, onClose }: BuildingsPanelProps) {
                     const faithIcon = building.religionId
                       ? WebkilnAssetPath(`/assets/religions/${building.religionId}.png`)
                       : undefined;
-                    const tooltipLines: Array<{
-                      label: string;
-                      value?: string;
-                      valueColor?: string;
-                      labelIcon?: string;
-                    }> = [
+                    const tooltipLines: TooltipLine[] = [
                       { label: webUIText('Auto.Prop.ComponentsScreensEncyclopediaScreen.692.2'), value: building.categoryLabel || buildingCategoryLabel(categoryId, categoryLabels), valueColor: BUILDING_CAT_COLORS[categoryId] },
                       { label: webUIText('Auto.Prop.ComponentsScreensEncyclopediaScreen.693.3'), value: formatNumber(chainLevel) },
                     ];
-                    if (building.religionName) {
-                      tooltipLines.push({
-                        label: webUIText('Encyclopedia.Faith'),
-                        value: building.religionName,
-                        labelIcon: faithIcon,
-                      });
-                      tooltipLines.push({
-                        label: webUIText('Encyclopedia.FaithRequirement'),
-                      });
-                    }
-                    if (building.requiredSettlementName) {
-                      tooltipLines.push({
-                        label: webUIText('Encyclopedia.RequiredSettlement', { Name: building.requiredSettlementName }),
-                      });
-                    }
+                    appendBuildingUnlockRequirements(tooltipLines, {
+                      religionName: building.religionName,
+                      religionIcon: faithIcon,
+                      requiredSettlementName: building.requiredSettlementName,
+                    }, webUIText);
                     return (
                       <Fragment key={building.id}>
                         {index > 0 && <span className="enc-bldg-arrow" aria-hidden="true" />}

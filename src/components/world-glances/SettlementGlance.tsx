@@ -139,6 +139,7 @@ function corruptionColour(value: number): string {
 
 function settlementTypeIcon(t: SettlementType): string {
   switch (t) {
+    case 'land':       return '/assets/glance/settlement-types-v3/settlement-badge-land.png';
     case 'city':       return '/assets/icons/I_City_Metal.png';
     case 'town':       return '/assets/icons/I_Town_Metal.png';
     case 'village':    return '/assets/icons/I_Village_Metal.png';
@@ -153,6 +154,7 @@ function settlementTypeIcon(t: SettlementType): string {
 type SettlementBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'foreground' | 'hover-overlay';
 
 function settlementBadgeLayerPath(type: SettlementType, layer: SettlementBadgeLayer): string {
+  if (type === 'land') return '/assets/glance/settlement-types-v3/settlement-badge-land.png';
   return `/assets/glance/settlement-types-v3/layers/settlement-badge-${type}-${layer}.png`;
 }
 
@@ -223,6 +225,9 @@ function renderGeographicInfo(icon: string, value: string | undefined) {
 }
 
 function renderInfo(data: SettlementGlanceData) {
+  if (data.settlementType === 'land' && data.mode === 'gold') {
+    return renderInfoRow('/assets/icons/I_ModPopulation.png', formatNumber(data.population), undefined, true);
+  }
   const controller = controllerForSettlement(data);
 
   switch (data.mode) {
@@ -358,6 +363,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
       style={{
         '--relation-colour': relationColour,
         ...relationTextVars(controller.relation, data.warWithPlayer),
+        '--glance-badge-tint': badgeBackgroundColour,
         '--settlement-label-bg': relationBackgroundColour(controller.relation, data.warWithPlayer),
         '--settlement-badge-scale': data.badgeScale,
         '--settlement-badge-overhang': `${badgeOverhangRem}rem`,
@@ -376,16 +382,24 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
       )}
       <div className="gset-body">
         <div className="gset-emblem">
+          <span className="gset-target-glow" aria-hidden="true" />
           <span className="gset-type-core" aria-hidden="true">
+            {data.settlementType === 'land' ? (
+              <img className="gset-badge-layer gset-badge-layer--foreground" src={badgeForeground} alt="" />
+            ) : <>
             <img className="gset-badge-layer gset-badge-layer--shadow" src={badgeShadow} alt="" />
             <img className="gset-badge-layer gset-badge-layer--background" src={badgeBackground} alt="" />
             <span
               className="gset-badge-layer gset-badge-layer--tint"
-              style={{ backgroundColor: badgeBackgroundColour, maskImage: `url("${badgeMask}")` }}
+              style={{ maskImage: `url("${badgeMask}")`, WebkitMaskImage: `url("${badgeMask}")` }}
             />
             <img className="gset-badge-layer gset-badge-layer--foreground" src={badgeForeground} alt="" />
             <img className="gset-badge-layer gset-badge-layer--hover" src={badgeHoverOverlay} alt="" />
-            <img className="gset-badge-layer gset-badge-layer--target" src={badgeHoverOverlay} alt="" />
+            <span
+              className="gset-badge-layer gset-badge-layer--target-frame"
+              style={{ maskImage: `url("${badgeHoverOverlay}")`, WebkitMaskImage: `url("${badgeHoverOverlay}")` }}
+            />
+            </>}
           </span>
           {data.occupier && (
             <FactionRoundel
@@ -422,26 +436,35 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
         <div className="gset-main">
           <div className="gset-head">
             <span className="gset-name">{data.name}</span>
-            <span
-              className="gset-build-status"
-              aria-hidden="true"
-              style={{ display: data.buildItem ? undefined : 'none' }}
-            >
-              {data.buildItem && (
-                <img
-                  className="gset-build-status-icon"
-                  src={WebkilnAssetPath(data.buildItem.icon)}
-                  alt=""
-                />
-              )}
-              <span className="gset-build-status-value">
-                {data.buildItem ? formatPercent(buildItemProgress * 100) : ''}
-              </span>
-            </span>
           </div>
 
           <div className="gset-info">
             {renderInfo(data)}
+          </div>
+
+          <div
+            className="gset-build-status"
+            style={{ display: data.buildItem ? undefined : 'none' }}
+          >
+            {data.buildItem && (
+              <img
+                className="gset-build-status-icon"
+                src={WebkilnAssetPath(data.buildItem.icon)}
+                alt=""
+              />
+            )}
+            <span className="gset-build-status-label">{data.buildItem?.label ?? ''}</span>
+            <span className="gset-build-status-value">
+              {data.buildItem ? formatPercent(buildItemProgress * 100) : ''}
+            </span>
+          </div>
+
+          <div
+            className="gset-build-bar"
+            aria-hidden="true"
+            style={{ display: !besieged && data.buildItem ? undefined : 'none' }}
+          >
+            <div className="gset-build-bar-fill" style={{ width: percentWidth(buildItemProgress) }} />
           </div>
 
           {data.queuedConstruction && (
@@ -462,14 +485,6 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
               })}</span>
             </div>
           )}
-
-          <div
-            className="gset-build-bar"
-            aria-hidden="true"
-            style={{ display: !besieged && data.buildItem ? undefined : 'none' }}
-          >
-            <div className="gset-build-bar-fill" style={{ width: percentWidth(buildItemProgress) }} />
-          </div>
         </div>
       </div>
     </div>

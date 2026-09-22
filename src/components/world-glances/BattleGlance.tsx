@@ -1,9 +1,11 @@
 import type { CSSProperties } from 'react';
+import CasualtyNumbers from './CasualtyNumbers';
 import FactionRoundel from '../common/entities/FactionRoundel';
 import { roundelDiplomacyProps } from '../../utils/factionBorder';
 import Tooltip, { type TooltipContent } from '../common/tooltips/Tooltip';
 import type { BattleGlanceData, BattleSideData } from './WorldGlanceTypes';
-import { relationDisplayColour } from './WorldGlancePresentation';
+import { battleGlanceSideColours } from './battleGlanceColours';
+import { readableFactionTextColour } from './WorldGlancePresentation';
 import { clampUnitFraction } from './glanceMath';
 import { formatCompactNumber, formatNumber, formatPercent } from '../../utils/numberFormat';
 import type { GetWorldGlanceTooltipResponse } from '../../bridge-types.generated';
@@ -81,30 +83,6 @@ function BattleFactionRoundel({ side }: { side: BattleSideData }) {
   );
 }
 
-function BattleLossBurst({ side, alignment }: { side: BattleSideData; alignment: 'attacker' | 'defender' }) {
-  if (side.lastLosses <= 0) {
-    return null;
-  }
-
-  return (
-    <>
-      <span
-        key={`${alignment}-loss-${side.totalStrength}-${side.lastLosses}`}
-        className={`battle-loss-float battle-loss-float--${alignment} comparison-strength-value`}
-        aria-hidden="true"
-      >
-        <span className="battle-loss-minus">-</span>
-        <span className="battle-loss-number">{formatCompactNumber(side.lastLosses)}</span>
-      </span>
-      <span
-        key={`${alignment}-hit-${side.totalStrength}-${side.lastLosses}`}
-        className={`battle-hit-flash battle-hit-flash--${alignment}`}
-        aria-hidden="true"
-      />
-    </>
-  );
-}
-
 function BattleSideValues({
   side,
   morale,
@@ -135,8 +113,12 @@ export default function BattleGlance({ data }: BattleGlanceProps) {
   const { detail, request } = useWorldGlanceTooltip('battle', data.id);
   const attackerParticipant = data.attacker.participants[0];
   const defenderParticipant = data.defender.participants[0];
-  const attColour = relationDisplayColour(attackerParticipant?.faction.relation ?? 'neutral');
-  const defColour = relationDisplayColour(defenderParticipant?.faction.relation ?? 'neutral');
+  const { attacker: attColour, defender: defColour } = battleGlanceSideColours(
+    attackerParticipant?.faction,
+    defenderParticipant?.faction,
+  );
+  const attText = readableFactionTextColour(attColour);
+  const defText = readableFactionTextColour(defColour);
   const attackerMorale = clampUnitFraction(data.attacker.morale);
   const defenderMorale = clampUnitFraction(data.defender.morale);
   const total = data.attacker.totalStrength + data.defender.totalStrength;
@@ -144,7 +126,7 @@ export default function BattleGlance({ data }: BattleGlanceProps) {
 
   return (
     <Tooltip
-      content={detail ? battleTooltip(data, attackerMorale, defenderMorale, attColour, defColour, detail) : null}
+      content={detail ? battleTooltip(data, attackerMorale, defenderMorale, attText, defText, detail) : null}
       onShowIntent={request}
       position="top"
       delay={520}
@@ -155,8 +137,8 @@ export default function BattleGlance({ data }: BattleGlanceProps) {
         style={{
           '--attacker-colour': attColour,
           '--defender-colour': defColour,
-          '--attacker-strength-colour': attColour,
-          '--defender-strength-colour': defColour,
+          '--attacker-strength-colour': attText,
+          '--defender-strength-colour': defText,
         } as CSSProperties}
       >
         <div className="battle-token-frame" aria-hidden="true" />
@@ -164,7 +146,7 @@ export default function BattleGlance({ data }: BattleGlanceProps) {
           <div className="battle-faction battle-faction--attacker">
             <BattleFactionRoundel side={data.attacker} />
             <BattleSideValues side={data.attacker} morale={attackerMorale} colour={attColour} alignment="attacker" />
-            <BattleLossBurst side={data.attacker} alignment="attacker" />
+            <CasualtyNumbers casualties={data.attacker.casualties} alignment="attacker" />
           </div>
           <div className="battle-centre" aria-hidden="true">
             <img src="/assets/icons/I_Swords.png" alt={webUIText('Auto.Attr.ComponentsWorldGlancesBattleGlance.150.10')} className="battle-centre-swords" />
@@ -172,7 +154,7 @@ export default function BattleGlance({ data }: BattleGlanceProps) {
           <div className="battle-faction battle-faction--defender">
             <BattleFactionRoundel side={data.defender} />
             <BattleSideValues side={data.defender} morale={defenderMorale} colour={defColour} alignment="defender" />
-            <BattleLossBurst side={data.defender} alignment="defender" />
+            <CasualtyNumbers casualties={data.defender.casualties} alignment="defender" />
           </div>
         </div>
 

@@ -340,6 +340,27 @@
   overflow: hidden;
 }
 
+.char-header-imprisoned-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.char-header-living-status--imprisoned,
+.char-header-living-status--imprisoned .char-header-activity-rich {
+  color: var(--red);
+}
+
+.char-header-living-status--imprisoned .char-activity-link {
+  color: var(--red);
+  text-decoration-color: rgba(196, 74, 74, 0.45);
+}
+
+.char-header-living-status--imprisoned .char-activity-link:hover {
+  color: var(--text-bright);
+  text-decoration-color: var(--red);
+}
+
 .char-header-player-relation {
   display: flex;
   align-items: center;

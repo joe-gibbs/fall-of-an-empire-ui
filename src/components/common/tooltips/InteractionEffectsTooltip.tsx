@@ -2,6 +2,7 @@ import StructuredDisplayText, { type DisplayTextLine } from '../layout/content/S
 import { webUIText } from '../../../localization/WebUITextContext';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { conceptIconPath } from '../../../utils/iconMaps';
+import { renderRichText } from '../../../utils/richText';
 import './InteractionEffectsTooltip.css';
 
 interface InteractionEffectsTooltipProps {
@@ -22,6 +23,7 @@ function EffectRow({ line }: { line: DisplayTextLine }) {
         lines={[line]}
         className="interaction-effects-tooltip__effect-copy"
         lineClassName="interaction-effects-tooltip__outcome-line"
+        transformText={text => renderRichText(text.replace(/\r?\n/g, '<br/>'))}
       />
     </div>
   );

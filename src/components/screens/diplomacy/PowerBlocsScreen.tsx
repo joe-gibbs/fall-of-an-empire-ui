@@ -115,7 +115,7 @@ function buildBlocTooltip(bloc: PowerBloc): TooltipContent {
     }
   }
 
-  return { title: bloc.name, body: bloc.description, lines };
+  return { title: bloc.name, body: [bloc.description, bloc.treatyBreachHappinessTooltip].filter(Boolean).join("\n"), lines };
 }
 
 function buildEscalationTooltip(bloc: PowerBloc): TooltipContent {
@@ -358,10 +358,10 @@ function BlocTable({
         render: bloc => {
           const colour = getHappinessColour(bloc.happiness);
           return (
-            <>
+            <Tooltip content={buildBlocTooltip(bloc)} position="right" delay={150}>
               <span style={{ color: colour }}>{formatPercent(bloc.happiness)}</span>
               <GameBar value={bloc.happiness} max={100} colour={colour} size="sm" />
-            </>
+            </Tooltip>
           );
         },
         sortValue: bloc => bloc.happiness,

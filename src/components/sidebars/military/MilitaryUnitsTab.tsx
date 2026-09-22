@@ -2,6 +2,7 @@ import React, { type MouseEvent as ReactMouseEvent } from 'react';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Tooltip from '../../common/tooltips/Tooltip';
+import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import GameButton from '../../common/buttons/GameButton';
 import type { ArmyBattleGroup, ArmyUnitRow, ArmyUnitTypeStrength } from '../../../data/types';
 import { TIER_ICONS } from '../../../utils/iconMaps';
@@ -9,7 +10,7 @@ import { formatNumber, formatPercent } from '../../../utils/numberFormat';
 import { webUIText } from '../../../localization/WebUITextContext';
 import { battleFormationRoleIcon } from '../../../utils/battleFormationNaming';
 import {
-  buildUnitTooltip,
+  armyUnitTooltipData,
   formatStrength,
   formatUnitTypeName,
   getStrengthColor,
@@ -17,7 +18,6 @@ import {
   isUnitRowProgressing,
   resolveUnitStats,
   type CompositionSummaryRow,
-  type UnitStatCaps,
   type UnitSelectionBox,
   unitRowPortraitSrc,
   unitRowSourcePreview,
@@ -40,7 +40,6 @@ type MilitaryUnitsTabProps = {
   canMergeSelectedForce: boolean;
   canConsolidateSelection: boolean;
   compositionActionInProgress: boolean;
-  maxStats: UnitStatCaps;
   handleUnitRowMouseDown: (event: ReactMouseEvent<HTMLDivElement>, unit: ArmyUnitRow) => void;
   onSplitSelected: () => void;
   onMergeSelected: () => void;
@@ -104,7 +103,6 @@ export function MilitaryUnitsTab({
   canMergeSelectedForce,
   canConsolidateSelection,
   compositionActionInProgress,
-  maxStats,
   handleUnitRowMouseDown,
   onSplitSelected,
   onMergeSelected,
@@ -125,7 +123,7 @@ export function MilitaryUnitsTab({
     ].filter(Boolean).join(' ');
 
     return (
-      <Tooltip key={unit.id} content={buildUnitTooltip(unit, maxStats)} position="left" delay={200}>
+      <Tooltip key={unit.id} content={{ afterLines: <UnitTooltip data={armyUnitTooltipData(unit)} /> }} position="left" delay={200}>
         <div
           ref={(element) => { unitRowRefs.current[unit.id] = element; }}
           className={rowClass}

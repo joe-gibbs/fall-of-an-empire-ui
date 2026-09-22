@@ -474,6 +474,7 @@ function mockSettlementData(data: SettlementMock, variant: SettlementVariant): S
     independent: data.faction === FACTIONS.crown,
     overlordName: data.faction === FACTIONS.crown ? '' : FACTIONS.crown.name,
     bishopName: data.status === 'Capital' ? 'Bishop Caldus' : '',
+    targeted: data.status === 'Besieged' || data.status === 'Harbour',
     buildItem: data.status !== 'Besieged' ? { get label() { return data.status === 'Capital' ? webUIText("MockGlance.Forum") : webUIText("MockGlance.HarbourWorks"); }, icon: '/assets/icons/I_BuildingsQuickButton.png', progress: data.status === 'Capital' ? 0.52 : 0.34 } : undefined,
     warWithPlayer: data.faction !== FACTIONS.crown,
   };
@@ -557,7 +558,7 @@ function battleSide(side: BattleSideMock): BattleGlanceData['attacker'] {
     }],
     totalStrength: side.strength,
     morale: side.morale,
-    lastLosses: side.losses,
+    casualties: side.losses,
   };
 }
 

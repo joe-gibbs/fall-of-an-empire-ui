@@ -16,6 +16,7 @@ import { useGameState, useOptionalGameActions } from '../../context/GameContext'
 import { roundelDiplomacyProps } from '../../utils/factionBorder';
 import { isHostileGlance, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
 import GlanceRelationFrame from './GlanceRelationFrame';
+import CasualtyNumbers from './CasualtyNumbers';
 
 import { webUIText } from '../../localization/WebUITextContext';
 function moraleColour(m: number): string {
@@ -373,6 +374,7 @@ function militaryTooltip(
         interactive={interactive}
       />
     ),
+    body: detail?.embarkBlockReason || undefined,
     lines,
     footer: (
       <GameButton
@@ -409,7 +411,7 @@ function MilitaryTooltip({ data, isNavy = false, children, open, passive = false
   const resolvedDetail = tooltipDetail?.id === data.id ? tooltipDetail.data : null;
 
   const requestTooltipDetail = useCallback(() => {
-    if (tooltipDetail?.id === data.id || requestInFlightIdRef.current === data.id) return;
+    if (requestInFlightIdRef.current === data.id) return;
     requestInFlightIdRef.current = data.id;
     const requestedId = data.id;
     bridgeCall('game.get_military_data', { militaryId: requestedId, subscriptionId: '', subscribe: false })
@@ -424,7 +426,7 @@ function MilitaryTooltip({ data, isNavy = false, children, open, passive = false
           requestInFlightIdRef.current = null;
         }
       });
-  }, [data.id, tooltipDetail]);
+  }, [data.id]);
 
   const viewMilitary = useCallback(() => {
     dismissSharedTooltips();
@@ -511,6 +513,7 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
       {atWar && <span className="glance-war-glow" aria-hidden="true" />}
       <span className="glance-military-garrison-hit-target" data-webkiln-anchor-hit aria-hidden="true" />
       <span className="glance-military-alert-flash" aria-hidden="true" />
+      <CasualtyNumbers casualties={data.casualties ?? 0} alignment="military" />
       <span className="glance-garrison-selection" aria-hidden="true" />
       <span className="glance-garrison-target" aria-hidden="true" />
       <span className="glance-garrison-kind" aria-hidden="true">
@@ -540,6 +543,7 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
       {atWar && <span className="glance-war-glow" aria-hidden="true" />}
       <span className="glance-military-hit-target" data-webkiln-anchor-hit aria-hidden="true" />
       <span className="glance-military-alert-flash" aria-hidden="true" />
+      <CasualtyNumbers casualties={data.casualties ?? 0} alignment="military" />
       <div className="glance-military-rings" aria-hidden="true">
         <div className="glance-ring-sprite glance-military-ring-stack" style={militaryRingStackStyle(data.faction.relation, strengthPct, moralePct)} />
         <GlanceRelationFrame relation={data.faction.relation} />

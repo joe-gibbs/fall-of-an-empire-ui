@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { bridgeCall } from '../../bridge-types.generated.ts';
-import type { BattleAfterActionReportPayload, PortraitLayerData } from '../../bridge-types.generated.ts';
+import type { BattleAfterActionReportPayload, NotificationEventsRequest, PortraitLayerData } from '../../bridge-types.generated.ts';
 import type { Notification, Warning, WarningSeverity } from '../../data/types';
 import { webUIText } from '../../localization/WebUITextContext';
 import { WebkilnAssetPath } from '../../utils/assets';
@@ -246,6 +246,10 @@ export function useNotificationsAndWarningsBridge(handlers: BridgeHandlers) {
       handlers.onNotificationShown(mapNotificationShown(data));
     };
     const onShown = (e: Event) => publishShown((e as CustomEvent<NotificationShown>).detail);
+    const onNotificationEvent = (e: Event) => {
+      const data = (e as CustomEvent<NotificationEventsRequest>).detail;
+      if (data.command === 'dismiss') handlers.onNotificationDismissed(data.id);
+    };
     const onCleared = () => handlers.onNotificationsCleared();
     const onDiplomaticShown = (e: Event) => {
       const data = (e as CustomEvent<DiplomaticNotificationShown>).detail;
@@ -276,6 +280,7 @@ export function useNotificationsAndWarningsBridge(handlers: BridgeHandlers) {
     const onWarningsClearedFn = () => handlers.onWarningsCleared();
 
     bridgeEvents.addEventListener('game.notification_shown', onShown);
+    bridgeEvents.addEventListener('game.notification_events', onNotificationEvent);
     bridgeEvents.addEventListener('game.notifications_cleared', onCleared);
     bridgeEvents.addEventListener('game.diplomatic_notification_shown', onDiplomaticShown);
     bridgeEvents.addEventListener('game.diplomatic_notification_dismissed', onDiplomaticDismissed);
@@ -291,6 +296,7 @@ export function useNotificationsAndWarningsBridge(handlers: BridgeHandlers) {
 
     return () => {
       bridgeEvents.removeEventListener('game.notification_shown', onShown);
+      bridgeEvents.removeEventListener('game.notification_events', onNotificationEvent);
       bridgeEvents.removeEventListener('game.notifications_cleared', onCleared);
       bridgeEvents.removeEventListener('game.diplomatic_notification_shown', onDiplomaticShown);
       bridgeEvents.removeEventListener('game.diplomatic_notification_dismissed', onDiplomaticDismissed);

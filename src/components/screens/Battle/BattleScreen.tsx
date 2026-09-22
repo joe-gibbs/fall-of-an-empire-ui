@@ -676,6 +676,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
 
                 {selectedFormations.length === 1 && selectedFormations[0].units.length > 0 && (
                   <BattleFormationUnitRail
+                    isNaval={isNavalBattle}
                     formation={selectedFormations[0]}
                     dockToCommandBar={selectedCommandable.length > 0}
                   />

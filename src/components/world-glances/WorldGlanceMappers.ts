@@ -123,6 +123,7 @@ export function mapMilitary(entry: GetWorldGlancesResponse['armies'][number]): A
     id: entry.id,
     faction: mapFaction(entry.faction),
     strength: entry.strength ?? 0,
+    casualties: entry.casualties,
     morale: entry.morale ?? 0,
     retreating: entry.retreating ?? false,
     tier: clampTier(entry.tier),
@@ -158,7 +159,7 @@ export function mapBattle(entry: GetWorldGlancesResponse['battles'][number]): Ba
       })),
       totalStrength: entry.attacker.totalStrength,
       morale: entry.attacker.morale,
-      lastLosses: entry.attacker.lastLosses,
+      casualties: entry.attacker.casualties,
     },
     defender: {
       participants: arrayOrEmpty(entry.defender?.participants).map((participant) => ({
@@ -166,7 +167,7 @@ export function mapBattle(entry: GetWorldGlancesResponse['battles'][number]): Ba
       })),
       totalStrength: entry.defender.totalStrength,
       morale: entry.defender.morale,
-      lastLosses: entry.defender.lastLosses,
+      casualties: entry.defender.casualties,
     },
   };
 }

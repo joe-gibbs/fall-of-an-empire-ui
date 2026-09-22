@@ -287,6 +287,7 @@ export interface FactionTreaty {
   isPerpetual?: boolean;
   canBreak?: boolean;
   breakingPenalty?: number;
+  breakingPenaltyTooltip?: string;
   isWithPlayer?: boolean;
 }
 
@@ -1329,6 +1330,8 @@ export interface Army {
   capacity?: number;
   /** Used naval capacity (navy only) */
   usedCapacity?: number;
+  /** Why selected armies cannot board this navy, if they cannot. */
+  embarkBlockReason?: string;
   /** Embarked armies (navy only) */
   embarkedArmies?: EmbarkedArmy[];
   /** Resource stockpiles carried by the force, with monthly consumption. */
@@ -1623,6 +1626,7 @@ export interface PowerBlocModifier {
 }
 
 export interface PowerBloc {
+  treatyBreachHappinessTooltip?: string;
   id: string;
   debugShortId?: number;
   name: string;

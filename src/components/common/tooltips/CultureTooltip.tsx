@@ -2,6 +2,7 @@ import React from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from './Tooltip';
 import type { CultureInfo } from '../../../data/types';
 import { cultureIconPath } from '../../../utils/cultureIcons';
+import { appendTooltipSection } from './tooltipSections';
 import './IdentityTooltip.css';
 
 import { webUIText } from '../../../localization/WebUITextContext';
@@ -38,12 +39,12 @@ function cultureTooltipContent({ info, fallbackName, fallbackId }: Omit<CultureT
   ] : [];
 
   if (info?.group === 'rephsian') {
-    lines.push({
+    appendTooltipSection(lines, webUIText('InteractionCard.Effects'), [{
       label: webUIText('CultureTooltip.ForeignAdministrationLabel'),
       value: webUIText('CultureTooltip.RephsianForeignAdministration'),
       valueColor: 'var(--red)',
       stacked: true,
-    });
+    }]);
   }
 
   return {

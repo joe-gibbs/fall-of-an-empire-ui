@@ -247,12 +247,12 @@ export function buildInteractionTooltip(
 
   if (interaction.inProgress && interaction.remainingDays > 0) {
     const days = Math.round(interaction.remainingDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.300.7'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.300.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.300.7'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.300.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else if (interaction.durationDays > 0) {
     const days = Math.round(interaction.durationDays);
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.303.8'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.303.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.303.8'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.303.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.305.9'), labelIcon: '/assets/icons/I_Speed.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.305.1"); } });
+    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.305.9'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.305.1"); } });
   }
 
   if (interaction.cooldownDays > 0) {

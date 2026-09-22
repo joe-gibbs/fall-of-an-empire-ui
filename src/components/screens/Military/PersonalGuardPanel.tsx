@@ -17,7 +17,8 @@ import MilitaryCommanderAssignmentModal from '../../modals/characters/MilitaryCo
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { bridgeEvents } from '../../../bridge/core/bridgeEvents';
 import { mapPortraitLayers, mapPortraitPath } from '../../../bridge/characters/portraitMapping';
-import { TemplateUnitSelectorModal } from './TemplateManagementPanel';
+import { TemplateUnitSelectorModal, templateUnitPortrait, templateUnitTooltipData } from './TemplateManagementPanel';
+import UnitTooltip, { type UnitTooltipData } from '../../common/tooltips/UnitTooltip';
 import { TUTORIAL_REVEAL_PERSONAL_GUARD, type TutorialHudRevealDetail } from '../../../utils/tutorialHudReveal';
 import './PersonalGuardPanel.css';
 
@@ -46,13 +47,33 @@ function romanSlot(slot: number): string {
   return numerals[slot - 1] ?? formatNumber(slot);
 }
 
+function companyTooltipData(
+  company: PersonalGuardCompanyEntry,
+  unit: FormationTemplateUnitEntry,
+): UnitTooltipData {
+  return {
+    ...templateUnitTooltipData(unit, 1),
+    name: company.name,
+    description: company.description,
+    portrait: WebkilnAssetPath(company.portrait) || templateUnitPortrait(unit),
+    typeLabel: company.typeLabel || unit.unitTypeLabel,
+    typeIcon: unitTypeIcon(company.type),
+    culture: company.cultureName || unit.cultureName,
+    strength: company.strength,
+    maxStrength: company.maxStrength,
+    upkeep: company.upkeep,
+  };
+}
+
 function CompanyCard({
   company,
+  unit,
   slot,
   canEdit,
   onEdit,
 }: {
   company: PersonalGuardCompanyEntry | null;
+  unit?: FormationTemplateUnitEntry;
   slot: number;
   canEdit: boolean;
   onEdit?: () => void;
@@ -94,9 +115,6 @@ function CompanyCard({
   }
 
   const portrait = WebkilnAssetPath(company.portrait) || company.portrait || unitTypeIcon(company.type);
-  const kind = company.isBarbarian
-    ? webUIText('Military.PersonalGuard.BarbarianCompany')
-    : webUIText('Military.PersonalGuard.HouseholdCompany');
   const isRecruiting = Boolean(company.isRecruiting);
   const progress = Math.max(0, Math.min(1, company.progress ?? 0));
   const remainingDays = company.remainingDays ?? 0;
@@ -135,29 +153,23 @@ function CompanyCard({
     </div>
   );
 
-  const card = (
-    <Tooltip content={{
-      title: company.name,
-      body: company.description,
-      lines: [
-        { label: kind, value: company.cultureName },
-        { label: webUIText('Military.PersonalGuard.CompanyStrength'), value: `${formatNumber(company.strength)} / ${formatNumber(company.maxStrength)}` },
-        { label: webUIText('Military.PersonalGuard.CompanyUpkeep'), value: formatNumber(company.upkeep) },
-      ],
-    }}>
-      {canEdit ? (
-        <button
-          type="button"
-          className="personal-guard-company-button"
-          onClick={() => onEdit?.()}
-        >
-          {body}
-        </button>
-      ) : body}
+  const card = canEdit ? (
+    <button
+      type="button"
+      className="personal-guard-company-button"
+      onClick={() => onEdit?.()}
+    >
+      {body}
+    </button>
+  ) : body;
+
+  if (!unit) return card;
+
+  return (
+    <Tooltip content={{ afterLines: <UnitTooltip data={companyTooltipData(company, unit)} /> }}>
+      {card}
     </Tooltip>
   );
-
-  return card;
 }
 
 async function refreshGuardAndMilitary(): Promise<void> {
@@ -194,6 +206,13 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
     for (const unit of eligibleUnits) map.set(unit.id, unit);
     return map;
   }, [eligibleUnits]);
+  const companyUnitBySlot = useMemo(() => {
+    const map = new Map<number, FormationTemplateUnitEntry>();
+    guard.companies.forEach((company, index) => {
+      map.set(company.slotNumber, guard.companyUnits[index]);
+    });
+    return map;
+  }, [guard.companies, guard.companyUnits]);
 
   const draftCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -569,6 +588,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
             <CompanyCard
               key={index + 1}
               company={company}
+              unit={company ? companyUnitBySlot.get(company.slotNumber) : undefined}
               slot={index + 1}
               canEdit={canEditCompanies}
               onEdit={() => setReplaceSlot(index + 1)}

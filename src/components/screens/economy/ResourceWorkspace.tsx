@@ -702,16 +702,17 @@ function ResourceManagement({
       </div>
       <div className="erw-manage__automation">
         <div className="erw-automation-row">
-          <button type="button" className={`erw-check${autoBuyEnabled ? ' erw-check--active' : ''}`} aria-pressed={autoBuyEnabled} onClick={toggleAutoBuy}>
-            <i aria-hidden="true" />
-            {t('Economy.AutoBuyTarget')}
-          </button>
+          <Tooltip content={{ title: t('Economy.AutoBuyTarget'), body: t('Economy.AutoBuyTargetExplanation') }} position="top" delay={150}>
+            <button type="button" className={`erw-check${autoBuyEnabled ? ' erw-check--active' : ''}`} aria-pressed={autoBuyEnabled} onClick={toggleAutoBuy}>
+              <i aria-hidden="true" />
+              {t('Economy.AutoBuyTarget')}
+            </button>
+          </Tooltip>
           <NumberStepper
             value={buyDraft}
             min={0}
             max={Math.max(1, resource.autoBuySliderMax)}
             step={thresholdStep}
-            disabled={!autoBuyEnabled}
             className="erw-threshold"
             inputClassName="erw-threshold__input"
             buttonClassName="erw-threshold__button"
@@ -719,21 +720,23 @@ function ResourceManagement({
             onChange={setBuyDraft}
             onCommit={(value) => {
               setBuyDraft(value);
+              if (!autoBuyEnabled) return;
               setResourceAutoBuyBridge(resource.id, true, value).catch(() => undefined);
             }}
           />
         </div>
         <div className="erw-automation-row">
-          <button type="button" className={`erw-check${autoSellEnabled ? ' erw-check--active' : ''}`} aria-pressed={autoSellEnabled} onClick={toggleAutoSell}>
-            <i aria-hidden="true" />
-            {t('Economy.AutoSellReserve')}
-          </button>
+          <Tooltip content={{ title: t('Economy.AutoSellReserve'), body: t('Economy.AutoSellReserveExplanation') }} position="top" delay={150}>
+            <button type="button" className={`erw-check${autoSellEnabled ? ' erw-check--active' : ''}`} aria-pressed={autoSellEnabled} onClick={toggleAutoSell}>
+              <i aria-hidden="true" />
+              {t('Economy.AutoSellReserve')}
+            </button>
+          </Tooltip>
           <NumberStepper
             value={sellDraft}
             min={0}
             max={Math.max(1, resource.autoSellSliderMax)}
             step={thresholdStep}
-            disabled={!autoSellEnabled}
             className="erw-threshold"
             inputClassName="erw-threshold__input"
             buttonClassName="erw-threshold__button"
@@ -741,6 +744,7 @@ function ResourceManagement({
             onChange={setSellDraft}
             onCommit={(value) => {
               setSellDraft(value);
+              if (!autoSellEnabled) return;
               setResourceAutoSellBridge(resource.id, true, value).catch(() => undefined);
             }}
           />

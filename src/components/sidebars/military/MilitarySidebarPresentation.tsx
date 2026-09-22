@@ -1,12 +1,11 @@
-import PaintedBar from '../../common/data-display/bars/PaintedBar';
-import CultureTooltip from '../../common/tooltips/CultureTooltip';
 import type { TooltipContent } from '../../common/tooltips/Tooltip';
+import type { UnitTooltipData } from '../../common/tooltips/UnitTooltip';
 import type { Army, ArmyUnit, ArmyUnitRow, Character, CharacterStatModifier, MilitaryDoctrine, MilitaryResource, StatKey } from '../../../data/types';
-import { STAT_ICONS, TIER_ICONS } from '../../../utils/iconMaps';
-import { formatNumber, formatPercent, formatResourceNumber } from '../../../utils/numberFormat';
+import { STAT_ICONS } from '../../../utils/iconMaps';
+import { formatNumber, formatResourceNumber } from '../../../utils/numberFormat';
 import { buildCharacterStatTooltip } from '../../../utils/characterTooltipContent';
 import { WebkilnAssetPath } from '../../../utils/assets';
-import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
+import { webUIText } from '../../../localization/WebUITextContext';
 import { unitTypeLabel } from '../../../utils/displayLabels';
 
 const unitTypeIcons: Record<string, string> = {
@@ -123,16 +122,7 @@ export function resolveUnitStats(unit: ArmyUnit): UnitStats {
   };
 }
 
-export interface UnitStatCaps {
-  pierceDmg: number;
-  crushDmg: number;
-  slashDmg: number;
-  pierceArmour: number;
-  crushArmour: number;
-  slashArmour: number;
-  speed: number;
-  attackSpeed: number;
-}
+
 
 export interface MilitaryAction {
   label: string;
@@ -445,10 +435,6 @@ export function unitRowSourceLabels(row: ArmyUnitRow): string[] {
   ));
 }
 
-export function unitRowSourceSummary(row: ArmyUnitRow): string {
-  return unitRowSourceLabels(row).join(', ');
-}
-
 export function unitRowSourcePreview(row: ArmyUnitRow, maxVisible = 2): {
   labels: string[];
   remaining: number;
@@ -515,136 +501,37 @@ export function unitRowUsesTypePortrait(unit: ArmyUnit | ArmyUnitRow): boolean {
   return !unit.portrait;
 }
 
-export function buildUnitTooltip(unit: ArmyUnit | ArmyUnitRow, maxStats: UnitStatCaps): TooltipContent {
+export function armyUnitTooltipData(unit: ArmyUnit | ArmyUnitRow): UnitTooltipData {
   const stats = resolveUnitStats(unit);
-
-  const row = 'rowType' in unit ? unit : null;
-  const ratio = unit.maxStrength > 0 ? unit.strength / unit.maxStrength : 0;
-  const veterancy = Math.min(100, Math.round(ratio * 60 + 20));
-  const typeLabel = formatUnitTypeName(unit.type);
-  const typeIcon = unitTypeIconPath(unit.type);
-  const damageRows = [
-    { id: 'pierce', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.362.1'), value: stats.pierceDmg, max: maxStats.pierceDmg, icon: '/assets/icons/I_Damage_Pierce.png' },
-    { id: 'crush', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.363.2'), value: stats.crushDmg, max: maxStats.crushDmg, icon: '/assets/icons/I_Damage_Crush.png' },
-    { id: 'slash', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.364.3'), value: stats.slashDmg, max: maxStats.slashDmg, icon: '/assets/icons/I_Damage_Slash.png' },
-  ];
-  const armourRows = [
-    { id: 'pierce', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.368.4'), value: stats.pierceArmour, max: maxStats.pierceArmour, icon: '/assets/icons/I_Armour_Pierce.png' },
-    { id: 'crush', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.369.5'), value: stats.crushArmour, max: maxStats.crushArmour, icon: '/assets/icons/I_Armour_Crush.png' },
-    { id: 'slash', label: webUIText('Auto.Attr.ComponentsCommonUnitTooltip.370.6'), value: stats.slashArmour, max: maxStats.slashArmour, icon: '/assets/icons/I_Armour_Slash.png' },
-  ];
-
-  const portraitSrc = unitRowPortraitSrc(unit);
-  const usesTypePortrait = unitRowUsesTypePortrait(unit);
-  const sourceSummary = row ? unitRowSourceSummary(row) : '';
-
   return {
-    afterLines: (
-      <div className="mil-unit-tooltip">
-      <div className="mil-unit-tooltip-title-row">
-        <img src={typeIcon} alt="" className="mil-unit-tooltip-type-icon" />
-        <span className="tt-title" style={{ margin: 0 }}>{unit.name}</span>
-        {TIER_ICONS[stats.tier] && <img src={TIER_ICONS[stats.tier]} alt="" className="mil-unit-tooltip-tier-icon" />}
-      </div>
-      <div className="mil-unit-tooltip-header">
-        <img
-          src={portraitSrc}
-          alt=""
-          className={`mil-unit-tooltip-portrait${usesTypePortrait ? ' mil-unit-tooltip-portrait--type' : ''}`}
-          draggable={false}
-        />
-        <div className="mil-unit-tooltip-info">
-          <div className="mil-unit-tooltip-meta">
-            <span className="tt-body">{typeLabel}</span>
-            <CultureTooltip info={unit.cultureInfo} fallbackName={unit.culture} fallbackId={unit.cultureId}>
-              <span className="tt-body">{unit.culture}</span>
-            </CultureTooltip>
-          </div>
-          <div className="tt-body mil-unit-tooltip-description">{stats.description}</div>
-        </div>
-      </div>
-      {row && row.rowType !== 'existing' && (row.statusLabel || sourceSummary) && (
-        <div className="tt-lines mil-unit-tooltip-special">
-          <div className="tt-line tt-line--stacked">
-            {row.statusLabel ? <span className="tt-line-label">{row.statusLabel}</span> : null}
-            {sourceSummary ? <span className="tt-line-value">{sourceSummary}</span> : null}
-          </div>
-        </div>
-      )}
-      <div className="tt-lines">
-        <div className="tt-line">
-          <span className="tt-line-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.307.1" /></span>
-          <span className="tt-line-value" style={{ color: getStrengthColor(ratio) }}>{formatStrength(unit.strength, unit.maxStrength)}</span>
-        </div>
-        <div className="tt-line">
-          <span className="tt-line-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.311.2" /></span>
-          <span className="tt-line-value"><img src="/assets/icons/I_Coins.png" alt="" className="tt-line-icon" />{formatNumber(stats.upkeep)}<WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.312.3" /></span>
-        </div>
-        <div className="tt-line">
-          <span className="tt-line-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.315.4" /></span>
-          <span className="tt-line-value"><img src="/assets/icons/I_Food.png" alt="" className="tt-line-icon" />{formatNumber(stats.foodConsumption)}<WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.316.5" /></span>
-        </div>
-      </div>
-      <div className="tt-line tt-line--header"><span className="tt-line-header-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.319.6" /></span></div>
-      <div className="mil-unit-stats">
-        {damageRows.map(row => (
-          <div key={row.id} className="mil-unit-stat-row">
-            <img src={row.icon} alt="" className="mil-unit-stat-icon" draggable={false} />
-            <span className="mil-unit-stat-label">{row.label}</span>
-            <PaintedBar percent={row.max > 0 ? (row.value / row.max) * 100 : 0} color="red" className="mil-unit-stat-bar" />
-            <span className="mil-unit-stat-val">{formatNumber(row.value)}</span>
-          </div>
-        ))}
-      </div>
-      <div className="tt-line tt-line--header"><span className="tt-line-header-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.334.7" /></span></div>
-      <div className="mil-unit-stats">
-        {armourRows.map(row => (
-          <div key={row.id} className="mil-unit-stat-row">
-            <img src={row.icon} alt="" className="mil-unit-stat-icon" draggable={false} />
-            <span className="mil-unit-stat-label">{row.label}</span>
-            <PaintedBar percent={row.max > 0 ? (row.value / row.max) * 100 : 0} color="gold" className="mil-unit-stat-bar" />
-            <span className="mil-unit-stat-val">{formatNumber(row.value)}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mil-unit-stats mil-unit-stats--compact">
-        <div className="mil-unit-stat-row">
-          <img src="/assets/icons/I_Speed.png" alt="" className="mil-unit-stat-icon" />
-          <span className="mil-unit-stat-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.352.8" /></span>
-          <PaintedBar percent={maxStats.speed > 0 ? (stats.speed / maxStats.speed) * 100 : 0} color="green" className="mil-unit-stat-bar" />
-          <span className="mil-unit-stat-val">{formatNumber(stats.speed)}</span>
-        </div>
-        <div className="mil-unit-stat-row">
-          <img src="/assets/icons/I_Swords.png" alt="" className="mil-unit-stat-icon" />
-          <span className="mil-unit-stat-label"><WebUIText textKey="UnitTooltip.AttackSpeed" /></span>
-          <PaintedBar percent={maxStats.attackSpeed > 0 ? (stats.attackSpeed / maxStats.attackSpeed) * 100 : 0} color="red" className="mil-unit-stat-bar" />
-          <span className="mil-unit-stat-val">{formatNumber(stats.attackSpeed, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}</span>
-        </div>
-        <div className="mil-unit-stat-row">
-          <img src={TIER_ICONS[stats.tier] || TIER_ICONS[1]} alt="" className="mil-unit-stat-icon" />
-          <span className="mil-unit-stat-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.358.9" /></span>
-          <PaintedBar percent={veterancy} color="gold" className="mil-unit-stat-bar" />
-          <span className="mil-unit-stat-val">{formatPercent(veterancy)}</span>
-        </div>
-      </div>
-      {(stats.attritionImmunity || stats.canAttackWhileMoving) && (
-        <div className="tt-lines mil-unit-tooltip-special">
-          {stats.attritionImmunity && (
-            <div className="tt-line">
-              <span className="tt-line-label"><WebUIText textKey="Auto.ComponentsSidebarsMilitarySidebar.366.10" /></span>
-              <span className="tt-line-value" style={{ color: 'var(--green)' }}>{stats.attritionImmunity}</span>
-            </div>
-          )}
-          {stats.canAttackWhileMoving && (
-            <div className="tt-line">
-              <span className="tt-line-label"><WebUIText textKey="UnitTooltip.CanAttackWhileMovingLabel" /></span>
-              <span className="tt-line-value" style={{ color: 'var(--green)' }}><WebUIText textKey="UnitTooltip.CanAttackWhileMoving" /></span>
-            </div>
-          )}
-        </div>
-      )}
-      </div>
-    ),
+    name: unit.name,
+    description: stats.description,
+    portrait: unitRowPortraitSrc(unit),
+    typeLabel: formatUnitTypeName(unit.type),
+    typeIcon: unitTypeIconPath(unit.type),
+    tier: stats.tier,
+    culture: unit.culture || undefined,
+    cultureInfo: unit.cultureInfo,
+    strength: unit.strength,
+    maxStrength: unit.maxStrength,
+    upkeep: stats.upkeep,
+    foodConsumption: stats.foodConsumption,
+    speed: stats.speed,
+    attackSpeed: stats.attackSpeed,
+    damage: {
+      pierce: stats.pierceDmg,
+      crush: stats.crushDmg,
+      slash: stats.slashDmg,
+    },
+    armour: {
+      pierce: stats.pierceArmour,
+      crush: stats.crushArmour,
+      slash: stats.slashArmour,
+    },
+    immuneToWinterAttrition: unit.immuneToWinterAttrition,
+    immuneToDesertAttrition: unit.immuneToDesertAttrition,
+    canAttackWhileMoving: unit.canAttackWhileMoving,
+    count: unit.count,
   };
 }
 

@@ -98,7 +98,12 @@ function portTooltip(data: PortGlanceData, detail: GetWorldGlanceTooltipResponse
 
   return {
     title: detail.name,
-    get body() { return detail.blockaded ? webUIText("PortGlance.HarbourBlockadedBody", { SettlementName: detail.settlementName }) : webUIText("PortGlance.HarbourOpenBody", { SettlementName: detail.settlementName }); },
+    get body() {
+      if (detail.embarkBlockReason) return detail.embarkBlockReason;
+      return detail.blockaded
+        ? webUIText("PortGlance.HarbourBlockadedBody", { SettlementName: detail.settlementName })
+        : webUIText("PortGlance.HarbourOpenBody", { SettlementName: detail.settlementName });
+    },
     lines,
   };
 }
@@ -138,6 +143,7 @@ export default function PortGlance({ data }: PortGlanceProps) {
         style={{
           '--relation-colour': relationColour,
           ...relationTextVars(data.faction.relation),
+          '--glance-badge-tint': badgeBackgroundColour,
         } as CSSProperties}
       >
         {levelLabel && <div className="gport-level-label" aria-hidden="true">{levelLabel}</div>}
@@ -148,7 +154,7 @@ export default function PortGlance({ data }: PortGlanceProps) {
             <img className="gport-badge-layer gport-badge-layer--background" src={badgeBackground} alt="" />
             <span
               className="gport-badge-layer gport-badge-layer--tint"
-              style={{ backgroundColor: badgeBackgroundColour, maskImage: `url("${badgeMask}")` }}
+              style={{ maskImage: `url("${badgeMask}")`, WebkitMaskImage: `url("${badgeMask}")` }}
             />
             <img className="gport-badge-layer gport-badge-layer--foreground" src={badgeForeground} alt="" />
           </span>

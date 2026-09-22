@@ -1306,6 +1306,7 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
       isPerpetual: true,
       canBreak: true,
       breakingPenalty: 25,
+      breakingPenaltyTooltip: '',
       isWithPlayer: false,
     },
     {
@@ -1329,6 +1330,7 @@ const playerFaction: BridgeResponse<'game.get_faction_data'> = {
       isPerpetual: false,
       canBreak: true,
       breakingPenalty: 10,
+      breakingPenaltyTooltip: '',
       isWithPlayer: false,
     },
   ],
@@ -1783,6 +1785,7 @@ const provincePlayerFaction: BridgeResponse<'game.get_faction_data'> = {
       isPerpetual: true,
       canBreak: false,
       breakingPenalty: 0,
+      breakingPenaltyTooltip: '',
       isWithPlayer: true,
     },
   ],
@@ -3228,6 +3231,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     receivesCommandBenefits: true,
     capacity: isNavy && !isRiverwatch ? 3000 : 0,
     usedCapacity: isNavy && !isRiverwatch ? 1200 : 0,
+    embarkBlockReason: '',
     embarkedArmies: isNavy && !isRiverwatch ? [
       { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), name: 'I Field Army', strength: 1200 },
       { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), name: 'Aurelion Detachment', strength: 520 },
@@ -3914,7 +3918,7 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
     otherExpense: 0,
     treasuryAdjustment: 0,
     tradeTransactionAmount: 100,
-    autoSellThresholdStep: 500,
+    autoSellThresholdStep: 50,
     totalFood: 1285,
     foodProduction: 148,
     foodSubjectContribution: 104,
@@ -4693,6 +4697,7 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
         isPerpetual: true,
         canBreak: true,
         breakingPenalty: 25,
+      breakingPenaltyTooltip: '',
         isWithPlayer: false,
       },
       {
@@ -4714,6 +4719,7 @@ function diplomacyOverview(autoAssignGovernorsEnabled = true): BridgeResponse<'g
         isPerpetual: false,
         canBreak: true,
         breakingPenalty: 10,
+      breakingPenaltyTooltip: '',
         isWithPlayer: false,
       },
     ],
@@ -4961,6 +4967,7 @@ function personalGuardStatus(state: MockBridgeState): BridgeResponse<'game.get_p
     barbarianCultureCount: 2,
     status: isForming ? 'Forming the standing guard' : hasGuard ? 'Standing' : '',
     companies,
+    companyUnits: companies.map(company => unitById.get(company.unitId) ?? personalGuardUnitMeta(company.unitId)),
     eligibleUnits,
     canEditComposition,
     formationRequirements: canEditComposition
@@ -5035,6 +5042,7 @@ function powerBlocs(gameDay: number): BridgeResponse<'game.get_power_blocs'> {
         happiness: 46,
         strength: 62,
         imperialStrength: 42,
+        treatyBreachHappinessTooltip: '',
         escalationStage: 2,
         unhappyDays: 38,
         failedDemandCount: 1,
@@ -5089,6 +5097,7 @@ function powerBlocs(gameDay: number): BridgeResponse<'game.get_power_blocs'> {
         happiness: 63,
         strength: 54,
         imperialStrength: 38,
+        treatyBreachHappinessTooltip: '',
         escalationStage: 1,
         unhappyDays: 12,
         failedDemandCount: 0,
@@ -5129,7 +5138,7 @@ function settingsResponse(): BridgeResponse<'game.get_settings'> {
     video: { resolutionX: 1920, resolutionY: 1080, windowMode: 'Windowed', vsync: true, frameRateLimit: 120, resolutionScale: 100, dlssMode: 'Off', antiAliasing: 'High', gamma: 1, brightness: 1 },
     audio: { master: 80, music: 65, effects: 75, ui: 75, ambience: 70 },
     gameplay: { cameraPanSpeed: 1, cameraZoomSpeed: 1, cameraRotationSpeed: 1, edgeScrolling: true, invertZoom: false, pauseOnNotifications: 'Important', autoResumeOnDismiss: false, advisorFrequency: 2, llmProvider: 'Scripted', localLlmModel: '', eventFrequency: 2, includeSaveInCrashReport: false, cursorScale: 1, uiScale: 1, glanceScale: 1.2, uiScrollSpeed: 1, tooltipDelaySeconds: 0.45, notificationDurationMultiplier: 1, reduceMotion: false, keepConstructionFilters: false, consoleEnabled: true, saveFrequency: 'Monthly', autosaveSlotCount: 3, difficulty: 'Normal', mutedNotificationTypes: [] },
-    graphics: { textureQuality: 3, shadowQuality: 3, effectsQuality: 3, foliageQuality: 3, shadingQuality: 3, viewDistanceQuality: 3, showProvinceBorders: true, showFpsCounter: false, showSettlementGlances: true, showMilitaryGlances: true, showConvoyGlances: true, glanceDensity: 'Normal' },
+    graphics: { textureQuality: 3, shadowQuality: 3, effectsQuality: 3, foliageQuality: 3, shadingQuality: 3, viewDistanceQuality: 3, showProvinceBorders: true, showFpsCounter: false, showSettlementGlances: true, showMilitaryGlances: true, showOwnConvoyGlances: true, showAllyConvoyGlances: true, showSubjectConvoyGlances: true, showOverlordConvoyGlances: true, glanceDensity: 'Normal' },
     notifications: [
       { id: 'settlement', label: 'Settlement', description: 'Settlement warnings and events.', category: 'settlement', muted: false },
       { id: 'military', label: 'Military', description: 'Army and battle updates.', category: 'military', muted: false },
@@ -5453,9 +5462,37 @@ function battleFormationDetail(
   const maxStrengthRemainder = maxStrength % unitCount;
   const units = Array.from({ length: unitCount }, (_, index) => ({
     id: `${id}:unit:${index}`,
+    unitId: unitType,
+    rowType: 'existing',
     name,
+    type: unitTypeLabel,
+    count: baseUnitStrength + (index < strengthRemainder ? 1 : 0),
+    culture: '',
+    cultureId: '',
     description: '',
     portrait: '',
+    tier: 1,
+    upkeep: 5,
+    foodConsumption: 1,
+    speed: unitType === 'cavalry' ? 240 : 100,
+    attackSpeed: unitType === 'cavalry' ? 0.6 : unitType === 'siege' ? 0.25 : 0.5,
+    siegePower: unitType === 'siege' ? 10 : 0,
+    pierceDamage: unitType === 'ranged' ? 12 : 4,
+    crushDamage: unitType === 'siege' ? 20 : 2,
+    slashDamage: unitType === 'infantry' ? 12 : 4,
+    pierceArmour: 4,
+    crushArmour: 2,
+    slashArmour: 4,
+    immuneToWinterAttrition: false,
+    immuneToDesertAttrition: false,
+    canAttackWhileMoving: false,
+    existingCount: 1,
+    pendingCount: 0,
+    targetCount: 0,
+    progress: 0,
+    statusLabel: '',
+    selectable: true,
+    sources: [],
     strength: baseUnitStrength + (index < strengthRemainder ? 1 : 0),
     maxStrength: baseUnitMaxStrength + (index < maxStrengthRemainder ? 1 : 0),
   }));
@@ -6245,6 +6282,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       data.hierarchySpeedBonus = 0;
       data.capacity = 0;
       data.usedCapacity = 0;
+      data.embarkBlockReason = '';
       data.embarkedArmies = [];
       data.resources = [];
       data.attritionSources = [];
@@ -7041,12 +7079,12 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             { id: MOCK_IDS.portSettlement, screenX: 1088, screenY: 650, scale: 0.94, opacity: 1, zOrder: 10, detailLevel: 'name', selected: false, targeted: false, faction: { ...playerFactionReference(), relation: 'own' }, level: 3, blockaded: true },
           ],
           armies: [
-            { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), screenX: 900, screenY: 520, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 6800, morale: 84, retreating: false, tier: 3, raiding: false, selected: false, targeted: false, blockading: false, embarkedArmyCount: 0, attrition: false, attritionIcon: '', garrisoned: false, garrisonIndex: 0 },
-            { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), screenX: 820, screenY: 570, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1600, morale: 71, retreating: false, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, embarkedArmyCount: 0, attrition: false, attritionIcon: '', garrisoned: false, garrisonIndex: 0 },
+            { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), screenX: 900, screenY: 520, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 6800, morale: 84, retreating: false, casualties: 0, tier: 3, raiding: false, selected: false, targeted: false, blockading: false, embarkedArmyCount: 0, attrition: false, attritionIcon: '', garrisoned: false, garrisonIndex: 0 },
+            { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), screenX: 820, screenY: 570, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1600, morale: 71, retreating: false, casualties: 0, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, embarkedArmyCount: 0, attrition: false, attritionIcon: '', garrisoned: false, garrisonIndex: 0 },
           ],
           navies: [
-            { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), screenX: 1060, screenY: 610, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1800, morale: 76, retreating: false, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, embarkedArmyCount: 2, attrition: false, attritionIcon: '', garrisoned: false, garrisonIndex: 0 },
-            { id: 'mock-navy-rival', debugShortId: mockDebugShortId('mock-navy-rival'), screenX: 1200, screenY: 540, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...rivalFactionReference(), relation: 'enemy' }, strength: 1200, morale: 68, retreating: false, tier: 2, raiding: false, selected: false, targeted: false, blockading: true, embarkedArmyCount: 0, attrition: false, attritionIcon: '', garrisoned: false, garrisonIndex: 0 },
+            { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), screenX: 1060, screenY: 610, scale: 1, opacity: 1, zOrder: 12, detailLevel: 'full', faction: { ...playerFactionReference(), relation: 'own' }, strength: 1800, morale: 76, retreating: false, casualties: 0, tier: 2, raiding: false, selected: false, targeted: false, blockading: false, embarkedArmyCount: 2, attrition: false, attritionIcon: '', garrisoned: false, garrisonIndex: 0 },
+            { id: 'mock-navy-rival', debugShortId: mockDebugShortId('mock-navy-rival'), screenX: 1200, screenY: 540, scale: 0.9, opacity: 1, zOrder: 11, detailLevel: 'full', faction: { ...rivalFactionReference(), relation: 'enemy' }, strength: 1200, morale: 68, retreating: false, casualties: 0, tier: 2, raiding: false, selected: false, targeted: false, blockading: true, embarkedArmyCount: 0, attrition: false, attritionIcon: '', garrisoned: false, garrisonIndex: 0 },
           ],
           convoys: mockWorldConvoys(state),
           battles: [
@@ -7066,7 +7104,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
                 ],
                 totalStrength: 4280,
                 morale: 62,
-                lastLosses: 320,
+                casualties: 320,
               },
               defender: {
                 participants: [
@@ -7075,7 +7113,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
                 ],
                 totalStrength: 3640,
                 morale: 74,
-                lastLosses: 260,
+                casualties: 260,
               },
             },
             {
@@ -7094,7 +7132,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
                 ],
                 totalStrength: 2200,
                 morale: 61,
-                lastLosses: 80,
+                casualties: 80,
               },
               defender: {
                 participants: [
@@ -7103,7 +7141,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
                 ],
                 totalStrength: 2500,
                 morale: 72,
-                lastLosses: 40,
+                casualties: 40,
               },
             },
           ],
@@ -7139,6 +7177,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
             blockadingStrength: 1200,
             dockedNavyName: 'Classis Meridian',
             dockedNavyStrength: 1800,
+            embarkBlockReason: '',
             originName: '',
             destinationName: '',
             purpose: '',
@@ -7170,6 +7209,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           blockadingStrength: 0,
           dockedNavyName: '',
           dockedNavyStrength: 0,
+          embarkBlockReason: '',
           originName: 'Aurelion',
           destinationName: 'I Field Army',
           purpose: 'Army Resupply',

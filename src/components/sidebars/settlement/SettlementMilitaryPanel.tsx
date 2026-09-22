@@ -21,6 +21,7 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent, TooltipLine } from '../../common/tooltips/Tooltip';
 import InteractionCard from '../../common/interactions/InteractionCard';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
+import { ResourcePurchaseDestinationContext } from '../../common/resources/resourcePurchaseDestinationContext';
 import type { UnitTooltipData } from '../../common/tooltips/UnitTooltip';
 import {
   applyFormationTemplateBridge,
@@ -191,6 +192,7 @@ function TrainingQueue({
   items: UnitTrainingQueueItem[];
   unitByKey: Map<string, RecruitableUnit>;
 }) {
+  const purchase = React.useContext(ResourcePurchaseDestinationContext);
   if (items.length === 0) return null;
   const [active, ...rest] = items;
 
@@ -223,7 +225,7 @@ function TrainingQueue({
             {rest.map(item => {
               const unit = unitByKey.get(item.assetKey);
               const content: TooltipContent = unit
-                ? { afterLines: <UnitTooltip data={unitTooltipData(unit)} /> }
+                ? { afterLines: <UnitTooltip data={unitTooltipData(unit)} purchase={purchase} /> }
                 : {
                     title: item.name,
                     get body() { return item.formationName ? webUIText("SettlementMilitary.PartOf", { FormationName: item.formationName }) : webUIText("SettlementMilitary.SingleRecruit"); },
@@ -262,6 +264,7 @@ function PendingFormationProgress({
   unitByKey: Map<string, RecruitableUnit>;
   gameDay: number;
 }) {
+  const purchase = React.useContext(ResourcePurchaseDestinationContext);
   const templateUnits = formation.units.map(unit => ({
     unit,
     definition: unitByKey.get(unit.unitId)!,
@@ -329,7 +332,7 @@ function PendingFormationProgress({
           const progress = group.progressTotal / group.count;
           return (
             <div className="mil-pending-unit" key={group.key}>
-              <Tooltip content={{ afterLines: <UnitTooltip data={unitTooltipData(group.definition)} /> }} position="left" delay={150}>
+              <Tooltip content={{ afterLines: <UnitTooltip data={unitTooltipData(group.definition)} purchase={purchase} /> }} position="left" delay={150}>
                 <span className="mil-pending-unit-portrait-wrap">
                   <img src={asset(group.definition.portrait)} alt="" className="mil-pending-unit-portrait" />
                   <span className="mil-pending-unit-count">
@@ -459,6 +462,7 @@ function FormationSlotIcon({
   slot: FormationUnitSlot;
   unitByKey: Map<string, RecruitableUnit>;
 }) {
+  const purchase = React.useContext(ResourcePurchaseDestinationContext);
   const unit = unitByKey.get(slot.unitAssetKey);
   const content: TooltipContent = unit
     ? (
@@ -470,7 +474,7 @@ function FormationSlotIcon({
             <div className="mil-formation-slot-tooltip-count">
               {webUIText("SettlementMilitary.UnitInFormationCount", { Value1: n(slot.count) })}
             </div>
-            <UnitTooltip data={unitTooltipData(unit)} />
+            <UnitTooltip data={unitTooltipData(unit)} purchase={purchase} />
           </div>
         ),
       }
@@ -495,6 +499,7 @@ function FormationSlotIcon({
 // ---------------------------------------------------------------------------
 
 const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
+  const purchase = React.useContext(ResourcePurchaseDestinationContext);
   const r = settlement.recruitment;
   const templateData = useFormationTemplatesBridge();
   const { openScreen } = useGameActions();
@@ -706,7 +711,7 @@ const SettlementMilitaryPanel: React.FC<Props> = ({ settlement }) => {
                         {available.map(u => (
                           <Tooltip
                             key={u.assetKey}
-                            content={{ afterLines: <UnitTooltip data={unitTooltipData(u)} /> }}
+                            content={{ afterLines: <UnitTooltip data={unitTooltipData(u)} purchase={purchase} /> }}
                             position="left"
                             delay={150}
                           >

@@ -35,6 +35,7 @@ import type {
 } from '../../bridge/military-map/useBottomBarOperationsBridge';
 import type { EncyclopediaBuildingDTO } from '../../bridge-types.generated.ts';
 import BuildingEffects from '../common/content/BuildingEffects';
+import { appendBuildingUnlockRequirements } from '../common/content/buildingUnlockRequirements';
 
 const ICONS = {
   governor: '/assets/icons/AssignGovernor.png',
@@ -187,21 +188,10 @@ function buildingTooltipLines(building: EncyclopediaBuildingDTO, t: ReturnType<t
     });
   }
 
-  if (building.religionName) {
-    lines.push({
-      label: t('Encyclopedia.Faith'),
-      value: building.religionName,
-    });
-    lines.push({
-      label: t('Encyclopedia.FaithRequirement'),
-    });
-  }
-
-  if (building.requiredSettlementName) {
-    lines.push({
-      label: t('Encyclopedia.RequiredSettlement', { Name: building.requiredSettlementName }),
-    });
-  }
+  appendBuildingUnlockRequirements(lines, {
+    religionName: building.religionName,
+    requiredSettlementName: building.requiredSettlementName,
+  }, t);
 
   return lines;
 }

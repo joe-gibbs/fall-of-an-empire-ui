@@ -1374,11 +1374,16 @@
   flex-shrink: 1;
   flex-basis: auto;
   min-width: 0;
+  color: var(--text);
+  font-family: var(--font-header);
+}
+
+.tpl-battle-group-unit-name > span {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text);
-  font-family: var(--font-header);
 }
 
 .tpl-battle-group-add-list {

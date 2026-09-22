@@ -79,7 +79,7 @@ function tooltipFor(interaction: QuickInteraction): TooltipContent {
     const days = Math.round(interaction.durationDays);
     lines.push({
       label: webUIText('Common.Duration'),
-      labelIcon: '/assets/icons/I_Speed.png',
+      labelIcon: '/assets/icons/I_Duration.png',
       value: webUIText('Common.DayCount', {
         Days: formatNumber(days),
         Unit: webUIText(days === 1 ? 'Common.Day' : 'Common.Days'),

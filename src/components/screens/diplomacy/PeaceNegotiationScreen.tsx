@@ -1388,33 +1388,25 @@ function PeaceNegotiationScreenContent({
 
   return (
     <div className="pns-stage pns-stage--peace">
-      <ScreenShell
-        title={activeSettlementSelectionOptionId ? webUIText('PeaceNegotiation.SelectTerritory') : screenTitle}
-        onClose={activeSettlementSelectionOptionId ? () => void returnToTerms() : onClose}
-        advisorTopic="peaceNegotiation"
-        titleExtra={activeSettlementSelectionOptionId ? undefined : titleExtra}
-        className={`screen--negotiation${activeSettlementSelectionOptionId ? ' screen--territory-selection' : ''}`}
-        contentClassName="screen-content--negotiation"
-      >
-        {activeSettlementSelectionOptionId ? (
-          <div className="pns-territory-selection">
-            <p className="pns-territory-instruction"><WebUIText textKey="PeaceNegotiation.SelectTerritoryInstruction" /></p>
-            <div className="pns-territory-selection-actions">
-              <span>{webUIText('PeaceNegotiation.SelectedSettlementCount', {
-                Count: fmt(terms.filter(isTerritorySelectionTerm).reduce((count, term) => count + term.targetSettlementIds.length, 0)),
-              })}</span>
-              <GameButton variant="burgundy" onClick={() => void returnToTerms()}>
-                <WebUIText textKey="PeaceNegotiation.ReturnToTerms" />
-              </GameButton>
-            </div>
-          </div>
-        ) : (
+      {activeSettlementSelectionOptionId ? (
+        <GameButton variant="burgundy" className="pns-return-to-terms" onClick={() => void returnToTerms()}>
+          <WebUIText textKey="PeaceNegotiation.ReturnToTerms" />
+        </GameButton>
+      ) : (
+        <ScreenShell
+          title={screenTitle}
+          onClose={onClose}
+          advisorTopic="peaceNegotiation"
+          titleExtra={titleExtra}
+          className="screen--negotiation"
+          contentClassName="screen-content--negotiation"
+        >
           <div className="pns-wrap">
             {participantHeader}
             {body}
           </div>
-        )}
-      </ScreenShell>
+        </ScreenShell>
+      )}
       <ReplaceRulerSelectionModal
         key={replacementPicker
           ? `${replacementPicker.kind}:${replacementPicker.kind === 'add' ? replacementPicker.option.optionId : (replacementPicker.term.termId || termKey(replacementPicker.term))}`
