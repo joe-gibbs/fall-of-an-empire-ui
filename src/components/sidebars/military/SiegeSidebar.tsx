@@ -24,7 +24,7 @@ import './SiegeSidebar.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 
-type SiegeCommandId = 'assault' | 'sallyOut' | 'pillage' | 'sack';
+type SiegeCommandId = 'assault' | 'sallyOut' | 'pillage' | 'sack' | 'killUnbelievers' | 'restoreTown';
 type PlayerRole = 'attacker' | 'defender' | 'observer';
 
 interface SiegeForceRow {
@@ -85,8 +85,28 @@ interface SiegeViewModel {
   canSallyOut: boolean;
   canPillage: boolean;
   canSack: boolean;
+  showKillUnbelievers: boolean;
+  canKillUnbelievers: boolean;
+  killUnbelieversUnavailableReason?: string;
+  canRestoreTown: boolean;
+  restoreTownUnavailableReason?: string;
   lootGold: number;
   sackGold: number;
+  pillagePopulationKilled: number;
+  sackPopulationKilled: number;
+  killUnbelieversGold: number;
+  killUnbelieversPopulation: number;
+  restoreTownGold: number;
+  restoreTownBuildingCondition: number;
+  pillageCommanderHonourDread: number;
+  pillageRulerHonourDread: number;
+  sackCommanderHonourDread: number;
+  sackRulerHonourDread: number;
+  killUnbelieversCommanderHonourDread: number;
+  killUnbelieversRulerHonourDread: number;
+  restoreTownCommanderHonourDread: number;
+  restoreTownRulerHonourDread: number;
+  occupationCommanderIsRuler: boolean;
   attackers: SiegeForceRow[];
   defenders: SiegeForceRow[];
   dockedNavies: SiegeForceRow[];
@@ -121,6 +141,8 @@ const COMMAND_ICONS: Record<SiegeCommandId, string> = {
   sallyOut: '/assets/icons/I_War.png',
   pillage: '/assets/icons/I_RaidingTorch.png',
   sack: '/assets/icons/I_Siege.png',
+  killUnbelievers: '/assets/icons/I_KillUnbelievers.png',
+  restoreTown: '/assets/icons/I_RestoreTown.png',
 };
 
 const COMMAND_BACKGROUNDS: Record<SiegeCommandId, string> = {
@@ -128,6 +150,8 @@ const COMMAND_BACKGROUNDS: Record<SiegeCommandId, string> = {
   sallyOut: '/assets/events/sally-forth.png',
   pillage: '/assets/events/interaction-pillage.png',
   sack: '/assets/events/sacked-city.png',
+  killUnbelievers: '/assets/events/interaction-kill-unbelievers.png',
+  restoreTown: '/assets/events/interaction-restore-town.png',
 };
 
 const COMMAND_LABEL_KEYS: Record<SiegeCommandId, string> = {
@@ -135,6 +159,8 @@ const COMMAND_LABEL_KEYS: Record<SiegeCommandId, string> = {
   sallyOut: 'Settlement.Siege.SallyOut',
   pillage: 'Settlement.Siege.Pillage',
   sack: 'Settlement.Siege.Sack',
+  killUnbelievers: 'Settlement.Siege.KillUnbelievers',
+  restoreTown: 'Settlement.Siege.RestoreTown',
 };
 
 const COMMAND_BODY_KEYS: Record<SiegeCommandId, string> = {
@@ -142,6 +168,8 @@ const COMMAND_BODY_KEYS: Record<SiegeCommandId, string> = {
   sallyOut: 'Settlement.Siege.SallyOutBody',
   pillage: 'Settlement.Siege.PillageBody',
   sack: 'Settlement.Siege.SackBody',
+  killUnbelievers: 'Settlement.Siege.KillUnbelieversBody',
+  restoreTown: 'Settlement.Siege.RestoreTownBody',
 };
 
 function armyRow(army: BesiegingArmyInfo, index: number): SiegeForceRow {
@@ -319,8 +347,28 @@ function buildViewModel(settlement: Settlement): SiegeViewModel | null {
     canSallyOut: siege.canSallyOut,
     canPillage: siege.canPillage,
     canSack: siege.canSack,
+    showKillUnbelievers: siege.showKillUnbelievers,
+    canKillUnbelievers: siege.canKillUnbelievers,
+    killUnbelieversUnavailableReason: siege.killUnbelieversUnavailableReason,
+    canRestoreTown: siege.canRestoreTown,
+    restoreTownUnavailableReason: siege.restoreTownUnavailableReason,
     lootGold: siege.pillageGold,
     sackGold: siege.sackGold,
+    pillagePopulationKilled: siege.pillagePopulationKilled,
+    sackPopulationKilled: siege.sackPopulationKilled,
+    killUnbelieversGold: siege.killUnbelieversGold,
+    killUnbelieversPopulation: siege.killUnbelieversPopulation,
+    restoreTownGold: siege.restoreTownGold,
+    restoreTownBuildingCondition: siege.restoreTownBuildingCondition,
+    pillageCommanderHonourDread: siege.pillageCommanderHonourDread,
+    pillageRulerHonourDread: siege.pillageRulerHonourDread,
+    sackCommanderHonourDread: siege.sackCommanderHonourDread,
+    sackRulerHonourDread: siege.sackRulerHonourDread,
+    killUnbelieversCommanderHonourDread: siege.killUnbelieversCommanderHonourDread,
+    killUnbelieversRulerHonourDread: siege.killUnbelieversRulerHonourDread,
+    restoreTownCommanderHonourDread: siege.restoreTownCommanderHonourDread,
+    restoreTownRulerHonourDread: siege.restoreTownRulerHonourDread,
+    occupationCommanderIsRuler: siege.occupationCommanderIsRuler,
     attackers,
     defenders,
     dockedNavies,
@@ -334,13 +382,18 @@ function determinePlayerRole(view: SiegeViewModel, playerFactionId: string | nul
   return 'observer';
 }
 
-function commandsForRole(role: PlayerRole, state: SiegeStateKind): SiegeCommandId[] {
+function commandsForRole(role: PlayerRole, view: SiegeViewModel): SiegeCommandId[] {
   if (role === 'attacker') {
-    if (state === 'occupation') return ['pillage', 'sack'];
+    if (view.state === 'occupation') {
+      const commands: SiegeCommandId[] = ['pillage', 'sack'];
+      if (view.showKillUnbelievers) commands.push('killUnbelievers');
+      commands.push('restoreTown');
+      return commands;
+    }
     return ['assault'];
   }
   if (role === 'defender') {
-    if (state === 'siege' || state === 'blockade') return ['sallyOut'];
+    if (view.state === 'siege' || view.state === 'blockade') return ['sallyOut'];
     return [];
   }
   return [];
@@ -351,18 +404,106 @@ function commandDisabledReason(command: SiegeCommandId, view: SiegeViewModel): s
   if (command === 'sallyOut' && !view.canSallyOut) return webUIText('Settlement.Siege.SallyOutUnavailable');
   if (command === 'pillage' && !view.canPillage) return webUIText('Settlement.Siege.OccupationOnly');
   if (command === 'sack' && !view.canSack) return webUIText('Settlement.Siege.OccupationOnly');
+  if (command === 'killUnbelievers' && !view.canKillUnbelievers) {
+    return view.killUnbelieversUnavailableReason || webUIText('Settlement.Siege.OccupationOnly');
+  }
+  if (command === 'restoreTown' && !view.canRestoreTown) {
+    return view.restoreTownUnavailableReason || webUIText('Settlement.Siege.OccupationOnly');
+  }
   return undefined;
+}
+
+function honourDreadLines(
+  commanderDelta: number,
+  rulerDelta: number,
+  commanderIsRuler: boolean,
+): TooltipLine[] {
+  const commanderIsDread = commanderDelta < 0;
+  const lines: TooltipLine[] = [{
+    label: commanderIsRuler
+      ? webUIText(commanderIsDread ? 'Settlement.Siege.Dread' : 'Settlement.Siege.Honour')
+      : webUIText(commanderIsDread ? 'Settlement.Siege.CommanderDread' : 'Settlement.Siege.CommanderHonour'),
+    value: formatNumber(Math.abs(commanderDelta), { maximumFractionDigits: 2, minimumFractionDigits: 2 }),
+    valueIcon: commanderIsDread ? '/assets/icons/I_Dread.png' : '/assets/icons/I_Honor.png',
+  }];
+  if (!commanderIsRuler) {
+    const rulerIsDread = rulerDelta < 0;
+    lines.push({
+      label: webUIText(rulerIsDread ? 'Settlement.Siege.RulerDread' : 'Settlement.Siege.RulerHonour'),
+      value: formatNumber(Math.abs(rulerDelta), { maximumFractionDigits: 2, minimumFractionDigits: 2 }),
+      valueIcon: rulerIsDread ? '/assets/icons/I_Dread.png' : '/assets/icons/I_Honor.png',
+    });
+  }
+  return lines;
 }
 
 function commandTooltip(command: SiegeCommandId, view: SiegeViewModel): TooltipContent {
   const disabledReason = commandDisabledReason(command, view);
   const lines: TooltipLine[] = [];
-  if (command === 'pillage' || command === 'sack') {
+  if (command === 'pillage') {
     lines.push({
       label: webUIText('Settlement.Siege.GoldGained'),
-      value: formatNumber(command === 'pillage' ? view.lootGold : view.sackGold),
+      value: formatNumber(view.lootGold),
       valueIcon: '/assets/icons/I_Coins.png',
     });
+    lines.push({
+      label: webUIText('Settlement.Siege.PeopleKilled'),
+      value: formatNumber(view.pillagePopulationKilled),
+      valueIcon: '/assets/icons/I_Population.png',
+    });
+    lines.push(...honourDreadLines(
+      view.pillageCommanderHonourDread,
+      view.pillageRulerHonourDread,
+      view.occupationCommanderIsRuler,
+    ));
+  } else if (command === 'sack') {
+    lines.push({
+      label: webUIText('Settlement.Siege.GoldGained'),
+      value: formatNumber(view.sackGold),
+      valueIcon: '/assets/icons/I_Coins.png',
+    });
+    lines.push({
+      label: webUIText('Settlement.Siege.PeopleKilled'),
+      value: formatNumber(view.sackPopulationKilled),
+      valueIcon: '/assets/icons/I_Population.png',
+    });
+    lines.push(...honourDreadLines(
+      view.sackCommanderHonourDread,
+      view.sackRulerHonourDread,
+      view.occupationCommanderIsRuler,
+    ));
+  } else if (command === 'killUnbelievers') {
+    lines.push({
+      label: webUIText('Settlement.Siege.GoldGained'),
+      value: formatNumber(view.killUnbelieversGold),
+      valueIcon: '/assets/icons/I_Coins.png',
+    });
+    lines.push({
+      label: webUIText('Settlement.Siege.UnbelieversKilled'),
+      value: formatNumber(view.killUnbelieversPopulation),
+      valueIcon: '/assets/icons/I_KillUnbelievers.png',
+    });
+    lines.push(...honourDreadLines(
+      view.killUnbelieversCommanderHonourDread,
+      view.killUnbelieversRulerHonourDread,
+      view.occupationCommanderIsRuler,
+    ));
+  } else if (command === 'restoreTown') {
+    lines.push({
+      label: webUIText('Settlement.Siege.GoldSpent'),
+      value: formatNumber(view.restoreTownGold),
+      valueIcon: '/assets/icons/I_Coins.png',
+    });
+    lines.push({
+      label: webUIText('Settlement.Siege.BuildingsRepaired'),
+      value: formatSignedNumber(view.restoreTownBuildingCondition),
+      valueIcon: '/assets/icons/I_RestoreTown.png',
+    });
+    lines.push(...honourDreadLines(
+      view.restoreTownCommanderHonourDread,
+      view.restoreTownRulerHonourDread,
+      view.occupationCommanderIsRuler,
+    ));
   }
   return {
     title: webUIText(COMMAND_LABEL_KEYS[command]),
@@ -537,7 +678,7 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
 
   const stateModifier = STATE_META[view.state].modifier;
   const role = determinePlayerRole(view, playerFactionId);
-  const commands = commandsForRole(role, view.state);
+  const commands = commandsForRole(role, view);
   const isOccupied = view.state === 'occupation';
   const hasCapitalDeadline = isOccupied && view.capitalOccupationDaysRemaining !== undefined;
   const daysValue = hasCapitalDeadline
@@ -672,7 +813,7 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
         {commands.length > 0 && (
           <div className="siege-actions-section">
             <div className="siege-compact-heading"><WebUIText textKey="Settlement.Siege.Commands" /></div>
-            <div className="siege-actions">
+            <div className="siege-actions" data-tutorial-target={isOccupied ? 'SiegeOccupationCommands' : undefined}>
               {commands.map(command => {
                 const disabled = pendingCommand !== null || !!commandDisabledReason(command, view);
                 return (
@@ -684,6 +825,7 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
                         image={COMMAND_ICONS[command]}
                         bgImage={COMMAND_BACKGROUNDS[command]}
                         onClick={disabled ? undefined : () => handleCommand(command)}
+                        tutorialTarget={command === 'pillage' ? 'SiegePillageButton' : command === 'sack' ? 'SiegeSackButton' : undefined}
                       />
                     </div>
                   </Tooltip>

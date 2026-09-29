@@ -190,6 +190,10 @@ function findSidebarPanel(element: HTMLElement | null | undefined): SidebarPanel
   };
 }
 
+function isInsideScreenOverlay(element: HTMLElement | null | undefined): boolean {
+  return Boolean(element?.closest('.screen-overlay, .screen'));
+}
+
 function GoldRule() {
   return <div className="tt-gold-rule"><span /><span /></div>;
 }
@@ -984,7 +988,8 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
     if (ttW <= 0 || ttH <= 0) return;
 
     const sidebar = findSidebarPanel(active.wrapperElement);
-    const placement = chooseTooltipPlacement(active.position, anchorRect, avoidRect, ttW, ttH, vw, vh, sidebar);
+    const inScreenOverlay = !sidebar && isInsideScreenOverlay(active.wrapperElement);
+    const placement = chooseTooltipPlacement(active.position, anchorRect, avoidRect, ttW, ttH, vw, vh, sidebar, inScreenOverlay);
 
     positioner.style.top = toRootRem(placement.top);
     positioner.style.left = toRootRem(placement.left);

@@ -33,6 +33,7 @@ export interface MockLaunchRequest {
   notification?: boolean;
   regularNotification?: boolean;
   buildQueueToast?: boolean;
+  buildQueueToastCount?: number;
   actionResultNotification?: boolean;
   battleAarNotification?: boolean;
   battleAarOutcome?: MockOutcome;
@@ -402,7 +403,10 @@ interface MockBridgeState {
   formationSelectionActive: boolean;
   formationSelectionTemplateId: string;
   resettlementSelectionActive: boolean;
+  resettlementNeedsPopSelection: boolean;
   resettlementDestinationId: string;
+  resettlementSelectedCultureId: string;
+  resettlementSelectedReligionId: string;
   militaryCustomNames: Record<string, string>;
 }
 
@@ -2778,6 +2782,11 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     canSallyOut: isSiegeMock,
     canPillage: false,
     canSack: false,
+    showKillUnbelievers: false,
+    canKillUnbelievers: false,
+    killUnbelieversUnavailableReason: '',
+    canRestoreTown: false,
+    restoreTownUnavailableReason: '',
     siegeProgress: isSiegeMock ? 64 : 0,
     estimatedSiegeDays: isSiegeMock ? 16 : 0,
     totalSiegePower: isSiegeMock ? 96 : 0,
@@ -2785,6 +2794,21 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     totalDefenderStrength: isSiegeMock ? 8840 : 0,
     pillageGold: 0,
     sackGold: 0,
+    pillagePopulationKilled: 0,
+    sackPopulationKilled: 0,
+    killUnbelieversGold: 0,
+    killUnbelieversPopulation: 0,
+    restoreTownGold: 0,
+    restoreTownBuildingCondition: 40,
+    pillageCommanderHonourDread: 0,
+    pillageRulerHonourDread: 0,
+    sackCommanderHonourDread: 0,
+    sackRulerHonourDread: 0,
+    killUnbelieversCommanderHonourDread: 0,
+    killUnbelieversRulerHonourDread: 0,
+    restoreTownCommanderHonourDread: 0,
+    restoreTownRulerHonourDread: 0,
+    occupationCommanderIsRuler: true,
     siegeProgressPerDay: isSiegeMock ? 2.4 : 0,
     siegeProgressFactors: isSiegeMock ? [
       { name: 'Siege power advantage', value: 58, kind: 'power', helpsProgress: true },
@@ -2872,7 +2896,7 @@ function settlementBuildings(id: string): BridgeResponse<'game.get_settlement_bu
         ...settlementBuilding('Forum', 'Forum', 3, 'administrative'),
         nextBuildState: { state: 'greyed', reason: 'Upgrade already queued to maximum level.', blockedByPopulation: false },
       },
-      settlementBuilding('Granary', 'Granary', 2, 'economic', 42),
+      settlementBuilding('Granary', 'Granary', 2, 'economic', 0),
       settlementBuilding(id === MOCK_IDS.portSettlement ? 'Docks' : 'Barracks', id === MOCK_IDS.portSettlement ? 'Docks' : 'Barracks', 2, id === MOCK_IDS.portSettlement ? 'naval' : 'military'),
     ],
     availableBuildings: [
@@ -3232,6 +3256,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     capacity: isNavy && !isRiverwatch ? 3000 : 0,
     usedCapacity: isNavy && !isRiverwatch ? 1200 : 0,
     embarkBlockReason: '',
+    mergeBlockReason: isEmbarked ? 'Embarked armies cannot merge.' : '',
     embarkedArmies: isNavy && !isRiverwatch ? [
       { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), name: 'I Field Army', strength: 1200 },
       { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), name: 'Aurelion Detachment', strength: 520 },
@@ -5019,6 +5044,9 @@ function militaryOverview(): BridgeResponse<'game.get_military_overview'> {
 function selectedMilitaries(): BridgeResponse<'game.get_selected_militaries'> {
   return {
     militaries: militaryOverview().forces.slice(0, 3),
+    canMergeSelection: true,
+    mergeSelectionIsNavy: false,
+    mergeSelectionDisabledReason: '',
   };
 }
 
@@ -5138,11 +5166,12 @@ function settingsResponse(): BridgeResponse<'game.get_settings'> {
     video: { resolutionX: 1920, resolutionY: 1080, windowMode: 'Windowed', vsync: true, frameRateLimit: 120, resolutionScale: 100, dlssMode: 'Off', antiAliasing: 'High', gamma: 1, brightness: 1 },
     audio: { master: 80, music: 65, effects: 75, ui: 75, ambience: 70 },
     gameplay: { cameraPanSpeed: 1, cameraZoomSpeed: 1, cameraRotationSpeed: 1, edgeScrolling: true, invertZoom: false, pauseOnNotifications: 'Important', autoResumeOnDismiss: false, advisorFrequency: 2, llmProvider: 'Scripted', localLlmModel: '', eventFrequency: 2, includeSaveInCrashReport: false, cursorScale: 1, uiScale: 1, glanceScale: 1.2, uiScrollSpeed: 1, tooltipDelaySeconds: 0.45, notificationDurationMultiplier: 1, reduceMotion: false, keepConstructionFilters: false, consoleEnabled: true, saveFrequency: 'Monthly', autosaveSlotCount: 3, difficulty: 'Normal', mutedNotificationTypes: [] },
-    graphics: { textureQuality: 3, shadowQuality: 3, effectsQuality: 3, foliageQuality: 3, shadingQuality: 3, viewDistanceQuality: 3, showProvinceBorders: true, showFpsCounter: false, showSettlementGlances: true, showMilitaryGlances: true, showOwnConvoyGlances: true, showAllyConvoyGlances: true, showSubjectConvoyGlances: true, showOverlordConvoyGlances: true, glanceDensity: 'Normal' },
+    graphics: { textureQuality: 3, shadowQuality: 3, effectsQuality: 3, foliageQuality: 3, shadingQuality: 3, viewDistanceQuality: 3, showProvinceBorders: true, showFpsCounter: false, showSettlementGlances: true, showMilitaryGlances: true, showOwnConvoyGlances: true, showAllyConvoyGlances: true, showSubjectConvoyGlances: true, showOverlordConvoyGlances: true, showSettlementActionGlances: true, glanceDensity: 'Normal' },
     notifications: [
       { id: 'settlement', label: 'Settlement', description: 'Settlement warnings and events.', category: 'settlement', muted: false },
       { id: 'military', label: 'Military', description: 'Army and battle updates.', category: 'military', muted: false },
       { id: 'BuildingFinished', label: 'Buildings Finished', description: 'Notices when buildings you ordered finish construction.', category: 'settlement', muted: false },
+      { id: 'BuildingRepaired', label: 'Repairs Finished', description: 'Notices when buildings you ordered finish repairs.', category: 'settlement', muted: false },
       { id: 'UnitTrained', label: 'Units Trained', description: 'Notices when soldiers or ships you ordered finish training.', category: 'settlement', muted: false },
     ],
     controls: [
@@ -5828,7 +5857,10 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     formationSelectionActive: false,
     formationSelectionTemplateId: '',
     resettlementSelectionActive: false,
+    resettlementNeedsPopSelection: false,
     resettlementDestinationId: '',
+    resettlementSelectedCultureId: '',
+    resettlementSelectedReligionId: '',
     militaryCustomNames: {},
   };
 
@@ -6137,24 +6169,74 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     } satisfies BridgeResponse<'game.apply_formation_template'>;
   }
 
+  function mockResettlementPops() {
+    const settlement = settlementBase(MOCK_IDS.settlement);
+    const target = Math.max(1, Math.trunc(settlement.population / 20));
+    return [...settlement.pops]
+      .filter(pop => pop.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .map(pop => {
+        const name = `${pop.cultureAdjective} ${pop.religionAdherentPlural}`;
+        return {
+          cultureId: pop.cultureId,
+          religionId: pop.religionId ?? '',
+          name,
+          cultureAdjective: pop.cultureAdjective,
+          religionAdherentPlural: pop.religionAdherentPlural,
+          count: pop.count,
+          unrest: pop.unrest,
+          migrantCount: Math.min(target, pop.count),
+          selected: pop.cultureId === state.resettlementSelectedCultureId
+            && (pop.religionId ?? '') === state.resettlementSelectedReligionId,
+        };
+      });
+  }
+
   function mockResettlementSelection(): BridgeResponse<'game.resettlement_selection'> {
     const destinationSelected = state.resettlementDestinationId.length > 0;
+    const pops = mockResettlementPops();
+    const selected = pops.find(pop => pop.selected) ?? pops[0];
+    const group = selected?.name ?? 'people';
+    const migrantCount = selected?.migrantCount ?? 0;
+    const destinationName = destinationSelected ? 'Ara Salimba' : '';
+    const description = selected
+      ? (destinationSelected
+        ? `Relocate ${group} from Aurelion to Ara Salimba. Causes unrest there and angers its leader.`
+        : `Relocate ${group} to another settlement. Causes unrest there and angers its leader.`)
+      : (destinationSelected
+        ? 'Relocate people from Aurelion to Ara Salimba. Causes unrest there and angers its leader.'
+        : 'Relocate people to another settlement. Causes unrest there and angers its leader.');
+    let message = 'Select who will move.';
+    if (state.resettlementNeedsPopSelection) {
+      message = migrantCount === 1
+        ? `1 person from the ${group} will move.`
+        : `About ${migrantCount.toLocaleString('en-GB')} ${group} will move.`;
+    } else if (destinationSelected) {
+      message = migrantCount === 1
+        ? `1 person from the ${group} will migrate to ${destinationName}.`
+        : `About ${migrantCount.toLocaleString('en-GB')} ${group} will migrate to ${destinationName}.`;
+    } else if (selected) {
+      message = `Select a settlement for these ${group} to move to.`;
+    } else {
+      message = 'Select a settlement for these people to move to.';
+    }
     return {
       active: state.resettlementSelectionActive,
+      needsPopSelection: state.resettlementNeedsPopSelection,
       sourceSettlementId: MOCK_IDS.settlement,
       sourceSettlementName: 'Aurelion',
       destinationSettlementId: destinationSelected ? MOCK_IDS.portSettlement : '',
-      destinationSettlementName: destinationSelected ? 'Ara Salimba' : '',
-      migrantCount: destinationSelected ? 1200 : 0,
+      destinationSettlementName: destinationName,
+      selectedCultureId: selected?.cultureId ?? '',
+      selectedReligionId: selected?.religionId ?? '',
+      selectedPopName: selected?.name ?? '',
+      migrantCount,
       goldCost: 200,
-      canConfirm: destinationSelected,
+      canConfirm: !state.resettlementNeedsPopSelection && destinationSelected,
       interactionName: 'Relocate Population',
-      description: destinationSelected
-        ? 'Relocate people from Aurelion to Ara Salimba. Causes unrest there and angers its leader.'
-        : 'Relocate people to another settlement. Causes unrest there and angers its leader.',
-      message: destinationSelected
-        ? 'About 1,200 people will migrate to Ara Salimba.'
-        : 'Select a settlement for these people to move to.',
+      description,
+      message,
+      pops,
     } satisfies BridgeResponse<'game.resettlement_selection'>;
   }
 
@@ -6283,6 +6365,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       data.capacity = 0;
       data.usedCapacity = 0;
       data.embarkBlockReason = '';
+      data.mergeBlockReason = '';
       data.embarkedArmies = [];
       data.resources = [];
       data.attritionSources = [];
@@ -7072,8 +7155,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           viewportHeight: window.innerHeight || 1080,
           snapshotRevision: 0,
           settlements: [
-            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, queuedConstruction: '', queuedConstructionCount: 0, queuedRecruitment: '', queuedRecruitmentCount: 0, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, luxurySlotsRequired: 3, luxurySlotsProvided: 2, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, warWithPlayer: false, peaceSelection: false, warScoreCost: 0 },
-            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, queuedConstruction: '', queuedConstructionCount: 0, queuedRecruitment: '', queuedRecruitmentCount: 0, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, luxurySlotsRequired: 2, luxurySlotsProvided: 1, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, warWithPlayer: false, peaceSelection: false, warScoreCost: 0 },
+            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, queuedConstruction: '', queuedConstructionCount: 0, queuedRecruitment: '', queuedRecruitmentCount: 0, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, luxurySlotsRequired: 3, luxurySlotsProvided: 2, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, hasActiveAction: true, activeAction: { label: 'Relocate Population', colour: '#78c058', icon: '/assets/settlement-interactions/icons/RelocatePopulationInteraction.png' }, warWithPlayer: false, peaceSelection: false, warScoreCost: 0 },
+            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, queuedConstruction: '', queuedConstructionCount: 0, queuedRecruitment: '', queuedRecruitmentCount: 0, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, luxurySlotsRequired: 2, luxurySlotsProvided: 1, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, hasActiveAction: true, activeAction: { label: 'Promote Commerce', colour: '#ffd24a', icon: '/assets/settlement-interactions/icons/PromoteCommerceInteraction.png' }, warWithPlayer: false, peaceSelection: false, warScoreCost: 0 },
           ],
           ports: [
             { id: MOCK_IDS.portSettlement, screenX: 1088, screenY: 650, scale: 0.94, opacity: 1, zOrder: 10, detailLevel: 'name', selected: false, targeted: false, faction: { ...playerFactionReference(), relation: 'own' }, level: 3, blockaded: true },
@@ -7969,6 +8052,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         return { ok: true } satisfies BridgeResponse<'game.set_mod_enabled'>;
       case 'game.rebind_action_key':
         return { clearedActions: [] } satisfies BridgeResponse<'game.rebind_action_key'>;
+      case 'game.set_action_rebind_capture':
+        return undefined;
       case 'game.promote_courtier':
         return { success: true, message: 'Courtier promoted in mock mode.' } satisfies BridgeResponse<'game.promote_courtier'>;
       case 'game.appoint_agent':
@@ -8064,22 +8149,42 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.start_settlement_interaction': {
         const interactionId = payloadString(payload, 'interactionId', '');
         if (interactionId === 'relocatepopulationinteraction') {
+          const pops = [...settlementBase(MOCK_IDS.settlement).pops].sort((a, b) => b.count - a.count);
+          const largest = pops[0];
           state.resettlementSelectionActive = true;
+          state.resettlementNeedsPopSelection = true;
           state.resettlementDestinationId = '';
+          state.resettlementSelectedCultureId = largest?.cultureId ?? '';
+          state.resettlementSelectedReligionId = largest?.religionId ?? '';
           const selection = mockResettlementSelection();
           emit('game.resettlement_selection', selection);
-          return { started: false, needsDestinationSelection: true, message: selection.message } satisfies BridgeResponse<'game.start_settlement_interaction'>;
+          return { started: false, needsDestinationSelection: false, needsPopSelection: true, message: selection.message } satisfies BridgeResponse<'game.start_settlement_interaction'>;
         }
-        return { started: true, needsDestinationSelection: false, message: 'Mock settlement interaction started.' } satisfies BridgeResponse<'game.start_settlement_interaction'>;
+        return { started: true, needsDestinationSelection: false, needsPopSelection: false, message: 'Mock settlement interaction started.' } satisfies BridgeResponse<'game.start_settlement_interaction'>;
       }
       case 'game.resettlement_selection': {
         const command = payloadString(payload, 'command', 'state');
         if (command === 'cancel') {
           state.resettlementSelectionActive = false;
+          state.resettlementNeedsPopSelection = false;
           state.resettlementDestinationId = '';
-        } else if (command === 'confirm' && state.resettlementDestinationId) {
+          state.resettlementSelectedCultureId = '';
+          state.resettlementSelectedReligionId = '';
+        } else if (command === 'confirm_pop') {
+          const cultureId = payloadString(payload, 'cultureId', state.resettlementSelectedCultureId);
+          const religionId = payloadString(payload, 'religionId', state.resettlementSelectedReligionId);
+          if (cultureId && religionId) {
+            state.resettlementSelectedCultureId = cultureId;
+            state.resettlementSelectedReligionId = religionId;
+            state.resettlementNeedsPopSelection = false;
+            state.resettlementDestinationId = '';
+          }
+        } else if (command === 'confirm' && state.resettlementDestinationId && !state.resettlementNeedsPopSelection) {
           state.resettlementSelectionActive = false;
+          state.resettlementNeedsPopSelection = false;
           state.resettlementDestinationId = '';
+          state.resettlementSelectedCultureId = '';
+          state.resettlementSelectedReligionId = '';
         }
         return mockResettlementSelection();
       }
@@ -8091,7 +8196,10 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.cancel_settlement_interaction':
         if (state.resettlementSelectionActive) {
           state.resettlementSelectionActive = false;
+          state.resettlementNeedsPopSelection = false;
           state.resettlementDestinationId = '';
+          state.resettlementSelectedCultureId = '';
+          state.resettlementSelectedReligionId = '';
           emit('game.resettlement_selection', mockResettlementSelection());
         }
         return { cancelled: true };
@@ -8159,6 +8267,9 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         emit('game.get_military_overview', namedMilitaryOverview());
         emit('game.get_selected_militaries', {
           militaries: namedMilitaryOverview().forces.slice(0, 3),
+          canMergeSelection: true,
+          mergeSelectionIsNavy: false,
+          mergeSelectionDisabledReason: '',
         } satisfies BridgeResponse<'game.get_selected_militaries'>);
         return {
           renamed: true,
@@ -8175,6 +8286,11 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         emit('game.get_military_data', namedMilitaryData(payloadString(payload, 'militaryId', MOCK_IDS.military)));
         emit('game.get_military_overview', namedMilitaryOverview());
         return undefined;
+      case 'game.repair_all_settlement_buildings':
+        return {
+          queuedCount: 3,
+          goldCost: 193,
+        } satisfies BridgeResponse<'game.repair_all_settlement_buildings'>;
       case 'game.set_language':
       case 'game.set_notification_muted':
       case 'game.reset_notification_mutes':
@@ -8196,6 +8312,27 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.start_military_embark_targeting':
       case 'game.disembark_military':
         return undefined;
+      case 'game.start_military_dock_targeting':
+      case 'game.cancel_military_dock_targeting':
+        return undefined;
+      case 'game.merge_selected_militaries': {
+        const selected = selectedMilitaries().militaries;
+        const target = selected[0];
+        const sources = selected.slice(1);
+        if (target && sources.length > 0) {
+          emit('game.confirm_military_merge', {
+            open: true,
+            targetMilitaryId: target.id,
+            targetName: target.name,
+            sourceMilitaryIds: sources.map(force => force.id),
+            sourceNames: sources.map(force => force.name),
+            isNavy: target.isNavy,
+            queue: false,
+            createNewTemplate: false,
+          });
+        }
+        return undefined;
+      }
       case 'game.start_military_merge_targeting': {
         const sourceId = payloadString(payload, 'militaryId', MOCK_IDS.military);
         const forces = militaryOverview().forces;
@@ -8247,7 +8384,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.handle_world_glance_input': {
         const glanceKind = payloadString(payload, 'kind', '');
         const glanceId = payloadString(payload, 'id', '');
-        if (state.resettlementSelectionActive && (glanceKind === 'settlement' || glanceKind === 'port') && glanceId && glanceId !== MOCK_IDS.settlement) {
+        if (state.resettlementSelectionActive && !state.resettlementNeedsPopSelection && (glanceKind === 'settlement' || glanceKind === 'port') && glanceId && glanceId !== MOCK_IDS.settlement) {
           state.resettlementDestinationId = glanceId;
           emit('game.resettlement_selection', mockResettlementSelection());
         }
@@ -8400,15 +8537,16 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         hasPortrait: false,
       });
     },
-    showBuildQueueToast(emit: MockBridgeEventEmitter) {
+    showBuildQueueToast(emit: MockBridgeEventEmitter, index = 0) {
       const createdOnDay = state.gameDay;
+      const isRepair = index % 3 === 2;
       emit('game.notification_shown', {
-        id: `mock-buildq-toast-${createdOnDay}-${Date.now()}`,
-        title: 'Granary finished',
+        id: `mock-buildq-toast-${createdOnDay}-${index}`,
+        title: isRepair ? 'Walls repaired' : 'Granary finished',
         description: `In the settlement: <link type="settlement" id="${MOCK_IDS.settlement}">Aurelion</>`,
         type: 'settlement',
-        notificationTypeId: 'BuildingFinished',
-        notificationTypeLabel: 'Buildings Finished',
+        notificationTypeId: isRepair ? 'BuildingRepaired' : 'BuildingFinished',
+        notificationTypeLabel: isRepair ? 'Repairs Finished' : 'Buildings Finished',
         iconPath: '/assets/icons/I_BuildingsQuickButton.png',
         timestamp: '742-06-17',
         style: 'regular',
@@ -8680,7 +8818,12 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       if (request.sidebar) emit('ui.sidebar_event', { type: request.sidebar, id: request.sidebarId ?? defaultIdForSidebar(request.sidebar), tabIndex: request.sidebarTabIndex });
       if (request.notification) this.showNotification(emit);
       if (request.regularNotification) this.showRegularNotification(emit);
-      if (request.buildQueueToast) this.showBuildQueueToast(emit);
+      if (request.buildQueueToast) {
+        const count = Math.max(1, request.buildQueueToastCount ?? 1);
+        for (let index = 0; index < count; index += 1) {
+          this.showBuildQueueToast(emit, index);
+        }
+      }
       if (request.actionResultNotification) this.showActionResultNotification(emit);
       if (request.battleAarNotification) this.showBattleAfterActionNotification(emit, request.battleAarOutcome);
       if (request.event) this.showEvent(emit);

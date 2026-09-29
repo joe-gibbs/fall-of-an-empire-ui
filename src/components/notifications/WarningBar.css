@@ -8,7 +8,8 @@
   position: fixed;
   top: calc(var(--topbar-height) + 0.45rem);
   left: calc(var(--sidebar-width) + 0.55rem);
-  z-index: 40;
+  /* Above screens (70) so action results stay visible; below topbar chrome (100). */
+  z-index: 80;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -27,15 +28,14 @@
 
 /*
   Compact: same below-topbar inset as the tutorial panel.
-  z-index must stay below .screen-overlay (50) so warnings never cover screens
-  or block the close button. Above tutorial (48) is not required when a screen
-  is open; on the map, 45 still sits above world glances and under chrome.
+  Sit above screens so action-result and warning medallions stay visible.
+  Close buttons are top-right; this strip stays top-left.
 */
 html.hud-compact .hud-attention-strip {
   left: 0.75rem;
   top: var(--hud-below-topbar, calc(var(--topbar-height) + 0.55rem));
   max-width: calc(100vw - 1.5rem);
-  z-index: 45;
+  z-index: 80;
 }
 
 .warning-icon-strip--hidden {

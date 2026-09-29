@@ -368,6 +368,7 @@ export function TemplateUnitSelectorModal({
   title,
   doneLabel,
   doneTutorialTarget,
+  doneTooltip,
   onDone,
   doneDisabled,
   totalCost,
@@ -396,6 +397,7 @@ export function TemplateUnitSelectorModal({
   title?: string;
   doneLabel?: string;
   doneTutorialTarget?: string;
+  doneTooltip?: { title: string; body: string };
   onDone?: () => void;
   doneDisabled?: boolean;
   totalCost?: number;
@@ -890,6 +892,18 @@ export function TemplateUnitSelectorModal({
       },
     },
   ], [atUnitCap, canAddUnit, capacityFullBody, compareUnit, currentCounts, enforceAvailableManpower, isSingle, onAdd, onRemove, stepModifiersBody]);
+  const doneButton = (
+    <GameButton
+      variant="burgundy"
+      className="chart-unit-picker-done"
+      tutorialTarget={doneTutorialTarget ?? (onDone ? 'FormPersonalGuardButton' : 'CloseUnitCatalogueButton')}
+      disabled={doneDisabled}
+      onClick={handleDone}
+    >
+      {doneLabel ?? webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.667.4')}
+    </GameButton>
+  );
+
   const filterUnit = (unit: FormationTemplateUnitEntry) => {
     const unitType = unit.type || unit.category;
     const unitCulture = unit.cultureId || unit.cultureName;
@@ -1058,15 +1072,11 @@ export function TemplateUnitSelectorModal({
                 {removeLabel ?? webUIText('Military.PersonalGuard.RemoveCompany')}
               </GameButton>
             )}
-            <GameButton
-              variant="burgundy"
-              className="chart-unit-picker-done"
-              tutorialTarget={doneTutorialTarget ?? (onDone ? 'FormPersonalGuardButton' : 'CloseUnitCatalogueButton')}
-              disabled={doneDisabled}
-              onClick={handleDone}
-            >
-              {doneLabel ?? webUIText('Auto.ComponentsSidebarsFormationTemplateSidebar.667.4')}
-            </GameButton>
+            {doneTooltip ? (
+              <Tooltip content={doneTooltip} inline>
+                {doneButton}
+              </Tooltip>
+            ) : doneButton}
           </div>
         </div>
       </div>

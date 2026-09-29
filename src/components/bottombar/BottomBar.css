@@ -338,13 +338,23 @@
 }
 
 .operation-governor-card--selected {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  background-color: #0d1218;
-  background-image: url('/assets/baked/card-charcoal-active.png');
+  border-image: url('/assets/gold-frame.png') 6 / 0.385rem / 0 round;
+  background-color: #2a2316;
+  background-image: url('/assets/baked/button-gold-subtle.png');
+  background-repeat: repeat;
+  background-size: 11.6364rem 5.8182rem;
+  box-shadow: inset 0 0 0 0.077rem rgba(224, 190, 116, 0.62);
   animation: operation-governor-selected 0.18s ease-out;
+}
+
+.operation-governor-card--selected:hover {
+  background-color: #322a1c;
+  background-image: url('/assets/baked/button-gold-subtle.png');
+  transform: translateY(-0.08rem);
+}
+
+.operation-governor-card--selected .operation-governor-name {
+  color: var(--gold-light);
 }
 
 @keyframes operation-governor-selected {

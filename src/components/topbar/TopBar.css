@@ -28,6 +28,12 @@
   --topbar-layout-scale: 1;
   --topbar-endcap-width: calc(var(--topbar-authored-width) * 0.4);
   --topbar-right-rail-inset: calc(var(--topbar-authored-width) * 0.065);
+  /*
+    Space from the viewport right edge to keep clear of the hanging portrait.
+    Inner face slot is 7.7em (1.37 + 6.33) at the 13.2px chrome base; outer
+    meander is ~10.2em. Extra 0.6em keeps the screen close button off the ring.
+  */
+  --topbar-portrait-clearance: calc(10.8 * 13.2px * var(--topbar-layout-scale, 1));
 }
 
 .topbar-shell {
@@ -1073,13 +1079,15 @@ html.hud-compact {
   --topbar-compact-strip-height: 45px;
   --topbar-compact-portrait-island: 110px;
   --topbar-height: var(--topbar-compact-portrait-island);
+  /* Screens start below the island, so they do not need a right-side inset. */
+  --topbar-portrait-clearance: 0px;
   /* Left island uses full StripLeft (320x45). */
   --topbar-compact-strip-width: 320px;
   /*
-    Right metrics: room for date + gold + padding under the portrait.
+    Right metrics: room for date + gold + bureaucracy + padding under the portrait.
     T_TopNavbar_Right is 744x45 (taper left / hard right) - show a wide slice.
   */
-  --topbar-compact-metrics-width: 480px;
+  --topbar-compact-metrics-width: 600px;
   /*
     PortraitCircle is 121x121. Measured hole bbox (unflipped): L18 T17 R22 B23
     (81x81). Frame is scaleX(-1), so left/right insets swap for the face slot.
@@ -1251,8 +1259,8 @@ html.hud-compact {
 
 /*
   Metrics: T_TopNavbar_Right unflipped (taper LEFT / hard RIGHT of PNG).
-  Wide enough for date + gold; left-aligned so the organic taper is visible
-  on the open-centre side and the hard end sits under the portrait.
+  Wide enough for date + gold + bureaucracy; left-aligned so the organic taper
+  is visible on the open-centre side and the hard end sits under the portrait.
 */
 .topbar-compact-side--metrics {
   gap: 10px;
@@ -1452,6 +1460,22 @@ html.hud-compact {
   display: flex;
   align-items: center;
   height: auto;
+}
+
+.topbar--compact .btm-hud {
+  height: auto;
+}
+
+.topbar--compact .btm-hud-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  transform: none;
+}
+
+.topbar--compact .btm-hud .btm-hud-value {
+  min-width: 0;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .topbar--compact .resource-pop-value {

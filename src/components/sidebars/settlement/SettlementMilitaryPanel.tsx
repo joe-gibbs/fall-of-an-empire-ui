@@ -14,7 +14,6 @@ import type {
   FormationTemplateResourceCost,
   FormationTemplateUnitEntry,
   PendingFormationEntry,
-  PendingFormationUnitEntry,
 } from '../../../bridge-types.generated';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Tooltip from '../../common/tooltips/Tooltip';
@@ -37,6 +36,10 @@ import './SettlementMilitaryPanel.css';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 import { unitTypeLabel } from '../../../utils/displayLabels';
 import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
+import {
+  groupPendingFormationUnits,
+  projectedPendingUnitProgress,
+} from './pendingFormationProgress';
 
 interface Props {
   settlement: Settlement;
@@ -250,11 +253,6 @@ function TrainingQueue({
   );
 }
 
-function projectedPendingUnitProgress(unit: PendingFormationUnitEntry, gameDay: number): number {
-  const elapsedDays = unit.snapshotDate > 0 ? Math.max(0, gameDay - unit.snapshotDate) : 0;
-  return Math.max(0, Math.min(1, unit.progressAtSnapshot + elapsedDays * unit.dailyProgress));
-}
-
 function PendingFormationProgress({
   formation,
   unitByKey,
@@ -265,39 +263,14 @@ function PendingFormationProgress({
   gameDay: number;
 }) {
   const purchase = React.useContext(ResourcePurchaseDestinationContext);
-  const templateUnits = formation.units.map(unit => ({
-    unit,
-    definition: unitByKey.get(unit.unitId)!,
-    progress: projectedPendingUnitProgress(unit, gameDay),
-  }));
-  const queuedProgress = templateUnits.reduce((total, entry) => total + entry.progress, 0);
+  const queuedProgress = formation.units.reduce(
+    (total, unit) => total + projectedPendingUnitProgress(unit, gameDay),
+    0,
+  );
   const overallProgress = formation.totalUnits > 0
     ? Math.max(0, Math.min(1, (formation.readyUnits + queuedProgress) / formation.totalUnits))
     : 0;
-  const unitGroups = Array.from(templateUnits.reduce((groups, entry) => {
-    const key = `${entry.unit.unitId}:${entry.unit.settlementId}`;
-    const existing = groups.get(key);
-    if (existing) {
-      existing.count += 1;
-      existing.progressTotal += entry.progress;
-      if (entry.unit.dailyProgress > 0) existing.locationLabel = entry.unit.locationLabel;
-    } else {
-      groups.set(key, {
-        key,
-        definition: entry.definition,
-        locationLabel: entry.unit.locationLabel,
-        count: 1,
-        progressTotal: entry.progress,
-      });
-    }
-    return groups;
-  }, new Map<string, {
-    key: string;
-    definition: RecruitableUnit;
-    locationLabel: string;
-    count: number;
-    progressTotal: number;
-  }>()).values());
+  const unitGroups = groupPendingFormationUnits(formation.units, unitByKey, gameDay);
   const formationTemplate = formation.type === 'naval' ? 'naval' : 'land';
   const composition = unitGroups.map(group => ({
     unitAssetKey: group.definition.assetKey,
@@ -330,16 +303,21 @@ function PendingFormationProgress({
       <div className="mil-pending-units">
         {unitGroups.map(group => {
           const progress = group.progressTotal / group.count;
+          const portrait = (
+            <span className="mil-pending-unit-portrait-wrap">
+              <img src={asset(group.definition.portrait)} alt="" className="mil-pending-unit-portrait" />
+              <span className="mil-pending-unit-count">
+                <WebUIText textKey="Auto.ComponentsSidebarsSettlementMilitaryPanel.260.5" />{n(group.count)}
+              </span>
+            </span>
+          );
           return (
             <div className="mil-pending-unit" key={group.key}>
-              <Tooltip content={{ afterLines: <UnitTooltip data={unitTooltipData(group.definition)} purchase={purchase} /> }} position="left" delay={150}>
-                <span className="mil-pending-unit-portrait-wrap">
-                  <img src={asset(group.definition.portrait)} alt="" className="mil-pending-unit-portrait" />
-                  <span className="mil-pending-unit-count">
-                    <WebUIText textKey="Auto.ComponentsSidebarsSettlementMilitaryPanel.260.5" />{n(group.count)}
-                  </span>
-                </span>
-              </Tooltip>
+              {group.hasFullDefinition ? (
+                <Tooltip content={{ afterLines: <UnitTooltip data={unitTooltipData(group.definition)} purchase={purchase} /> }} position="left" delay={150}>
+                  {portrait}
+                </Tooltip>
+              ) : portrait}
               <div className="mil-pending-unit-body">
                 <div className="mil-pending-unit-line">
                   <span className="mil-pending-unit-name">{group.definition.name}</span>

@@ -31,6 +31,8 @@ const CONCEPT_ICON_OVERRIDES: Record<string, string> = {
   alms: '/assets/icons/I_Alms.png',
   raid: '/assets/icons/I_RaidingTorch.png',
   raiding: '/assets/icons/I_RaidingTorch.png',
+  corruption: '/assets/icons/I_Edict_AntiCorruptionCampaign.png',
+  fortification: '/assets/icons/I_Fortress.png',
   authority: STAT_ICONS.authority,
   tactics: STAT_ICONS.tactics,
   cunning: STAT_ICONS.cunning,

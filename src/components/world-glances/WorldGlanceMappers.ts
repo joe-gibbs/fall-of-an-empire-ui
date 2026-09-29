@@ -99,6 +99,11 @@ export function mapSettlement(entry: GetWorldGlancesResponse['settlements'][numb
       icon: entry.buildItem.icon,
       progress: entry.buildItem.progress,
     } : undefined,
+    activeAction: entry.hasActiveAction && entry.activeAction ? {
+      label: entry.activeAction.label,
+      colour: entry.activeAction.colour,
+      icon: entry.activeAction.icon,
+    } : undefined,
     queuedConstruction: entry.queuedConstruction,
     queuedConstructionCount: entry.queuedConstructionCount,
     queuedRecruitment: entry.queuedRecruitment,

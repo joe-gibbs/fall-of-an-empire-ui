@@ -52,7 +52,7 @@ import { getScreen, getScreenByBridgeName, getScreenOpenedByTopbar, getSidebar }
 import { useObserverMode, usePlayerFactionSummary } from '../../data-source/index';
 import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 import { beginUIPerfInteraction, recordUIPerfReactRender } from '../../perf/uiPerfProfiler';
-import { TUTORIAL_REVEAL_PERSONAL_GUARD, type TutorialHudRevealDetail } from '../../utils/tutorialHudReveal';
+import { personalGuardRevealScreenId, TUTORIAL_REVEAL_PERSONAL_GUARD, type TutorialHudRevealDetail } from '../../utils/tutorialHudReveal';
 import AnimatedSlot from './AnimatedSlot';
 import EventPopupSlot from './EventPopupSlot';
 export default function GameUIRoot() {
@@ -115,8 +115,9 @@ export default function GameUIRoot() {
     const handler = (event: Event) => {
       const tokens = (event as CustomEvent<TutorialHudRevealDetail>).detail?.tokens ?? [];
       if (tokens.length === 0) return;
-      if (activeScreen === 'military' && activeScreenId === 'guard') return;
-      openScreenFromBridge('military', 'guard');
+      const screenId = personalGuardRevealScreenId(tokens);
+      if (activeScreen === 'military' && (screenId === undefined || activeScreenId === screenId)) return;
+      openScreenFromBridge('military', screenId);
     };
     window.addEventListener(TUTORIAL_REVEAL_PERSONAL_GUARD, handler);
     return () => window.removeEventListener(TUTORIAL_REVEAL_PERSONAL_GUARD, handler);

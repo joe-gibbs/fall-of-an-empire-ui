@@ -65,11 +65,28 @@ function oppositeSide(side: TooltipSide): TooltipSide {
   return 'left';
 }
 
+function isHorizontalSide(side: TooltipSide): boolean {
+  return side === 'left' || side === 'right';
+}
+
 function sideOrder(preferred: TooltipSide): TooltipSide[] {
   if (preferred === 'top' || preferred === 'bottom') {
     return [preferred, oppositeSide(preferred), 'right', 'left'];
   }
   return [preferred, oppositeSide(preferred), 'bottom', 'top'];
+}
+
+/** Prefer the side of the trigger that can hold the tooltip, else the roomier side. */
+function pickHorizontalSide(trigger: Rect, ttW: number, vw: number): TooltipSide {
+  const needed = ttW + TOOLTIP_GAP;
+  const leftSpace = trigger.left - VIEWPORT_PAD;
+  const rightSpace = vw - trigger.right - VIEWPORT_PAD;
+  const leftFits = leftSpace >= needed;
+  const rightFits = rightSpace >= needed;
+  if (rightFits !== leftFits) {
+    return rightFits ? 'right' : 'left';
+  }
+  return rightSpace >= leftSpace ? 'right' : 'left';
 }
 
 function buildPlacement(
@@ -133,9 +150,13 @@ export function placeTooltip(
   vw: number,
   vh: number,
   sidebar?: SidebarPanel | null,
+  inScreenOverlay?: boolean,
 ): TooltipPlacement {
   if (!sidebar) {
-    return choosePlacement(preferred, trigger, avoid, ttW, ttH, vw, vh);
+    const screenPreferred = inScreenOverlay && !isHorizontalSide(preferred)
+      ? pickHorizontalSide(trigger, ttW, vw)
+      : preferred;
+    return choosePlacement(screenPreferred, trigger, avoid, ttW, ttH, vw, vh);
   }
 
   const panel = sidebar.rect;

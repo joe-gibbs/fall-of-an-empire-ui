@@ -132,6 +132,7 @@ function launchRequestFromQuery(params: URLSearchParams): MockLaunchRequest {
     notification: params.has('notification'),
     regularNotification: params.has('regularNotification'),
     buildQueueToast: params.has('buildQueueToast'),
+    buildQueueToastCount: parseOptionalInteger(params.get('buildQueueToast')),
     actionResultNotification: params.has('actionResult'),
     battleAarNotification: params.has('battleAarNotification') || params.has('battleAar'),
     battleAarOutcome,

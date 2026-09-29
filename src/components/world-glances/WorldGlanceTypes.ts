@@ -126,6 +126,7 @@ export interface SettlementGlanceData {
   overlordName?: string;
   bishopName?: string;
   buildItem?: { label: string; icon: string; progress: number };
+  activeAction?: { label: string; colour: string; icon?: string };
   queuedConstruction?: string;
   queuedConstructionCount?: number;
   queuedRecruitment?: string;

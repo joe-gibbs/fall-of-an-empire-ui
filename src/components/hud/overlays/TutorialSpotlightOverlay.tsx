@@ -79,9 +79,12 @@ const TARGET_ALIASES: Record<string, string[]> = {
   DiplomatPortrait: ['DiplomatPortrait'],
   SubornFoederatiButton: ['SubornFoederatiButton', 'Interaction:subornfoederatiinteraction'],
   InviteFoederatiButton: ['InviteFoederatiButton', 'Interaction:invitefoederatiinteraction'],
-  LoyalistMakePromiseButton: ['LoyalistMakePromiseButton'],
+  CallToWarButton: ['CallToWarButton', 'Interaction:calltowarinteraction'],
+  PowerBlocsButton: ['PowerBlocsButton', 'ScreenButton:powerblocs'],
+  LoyalistMakePromiseButton: ['LoyalistMakePromiseButton', 'Interaction:makepromiseinteraction'],
   TaxRateIncreaseButton: ['TaxRateIncreaseButton', 'Policy:taxrate'],
   GrandFestivalButton: ['GrandFestivalButton', 'Interaction:grandfestival'],
+  SiegeOccupationCommands: ['SiegeOccupationCommands', 'SiegePillageButton', 'SiegeSackButton'],
   TutorialProgress: ['TutorialProgress'],
   WarningsContainer: ['WarningsContainer'],
 };
@@ -339,6 +342,7 @@ export default function TutorialSpotlightOverlay({
   const [cardSize, setCardSize] = useState<CardSize>(DEFAULT_CARD_SIZE);
   const targetElementRef = useRef<HTMLElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const satisfiedResolveRef = useRef<string | null>(null);
   const eventId = spotlight.eventId;
   const pageTotal = Math.max(0, spotlight.totalPages);
   const pageText = pageTotal > 1 ? `${spotlight.currentPage + 1}/${pageTotal}` : '';
@@ -368,6 +372,19 @@ export default function TutorialSpotlightOverlay({
       const current = spotlightRef.current;
       // Opens compact dropdowns when needed, then resolves the visible target.
       const element = findSpotlightTarget(current);
+
+      if (
+        !current.canGoForward
+        && !current.isBuildingTarget
+        && !current.isUnitTarget
+        && !current.target.startsWith('OrderTarget:')
+        && current.target !== 'SiegeOccupationCommands'
+        && element?.getAttribute('data-tutorial-satisfied') === 'true'
+        && satisfiedResolveRef.current !== current.eventId
+      ) {
+        satisfiedResolveRef.current = current.eventId;
+        onResolveRef.current(current.eventId);
+      }
 
       if (!revealedTarget && !current.isBuildingTarget && !current.isUnitTarget && element) {
         element.scrollIntoView({ block: 'center', inline: 'nearest' });
@@ -426,6 +443,8 @@ export default function TutorialSpotlightOverlay({
       const current = spotlightRef.current;
       // Order objectives are resolved by the successful gameplay order action.
       if (current.target.startsWith('OrderTarget:')) return;
+      // Occupation loot commands must remain usable without advancing the lesson.
+      if (current.target === 'SiegeOccupationCommands') return;
       if (current.isBuildingTarget) return;
 
       if (current.isUnitTarget && current.targetDetail) {

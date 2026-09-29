@@ -203,6 +203,10 @@
   gap: 0.4rem;
 }
 
+.personal-guard-establish-tooltip {
+  width: 100%;
+}
+
 .personal-guard-establish .interaction-card {
   min-height: 4.2rem;
 }

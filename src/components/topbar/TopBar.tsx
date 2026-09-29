@@ -183,7 +183,7 @@ const TopBar: React.FC<TopBarProps> = ({
     >
       <span className="topbar-portrait-surface">
         <Portrait
-          key={`${saveSerial}:${playerCharacterId ?? ''}:${playerFaction?.rulerPortrait ?? ''}`}
+          key={`${saveSerial}:${playerCharacterId ?? ''}:${playerFaction?.rulerPortrait ?? ''}:${playerFaction?.rulerPortraitLayers?.frontHeadgear ?? ''}:${playerFaction?.rulerPortraitLayers?.backHeadgear ?? ''}`}
           personId={playerCharacterId ?? undefined}
           name={playerCharacterName}
           src={playerFaction?.rulerPortrait}
@@ -285,8 +285,9 @@ const TopBar: React.FC<TopBarProps> = ({
             <div className="topbar-compact-right-cluster">
               {/*
                 Metrics: T_TopNavbar_Right unflipped (taper left / hard right) and
-                wide enough for date + gold. Portrait: square PortraitCircle crop
-                (flipped horizontally to match fullsize meander orientation).
+                wide enough for date + gold + bureaucracy. Portrait: square
+                PortraitCircle crop (flipped horizontally to match fullsize
+                meander orientation).
               */}
               <div className="topbar-compact-side topbar-compact-side--metrics">
                 <img
@@ -297,6 +298,9 @@ const TopBar: React.FC<TopBarProps> = ({
                 />
                 <DateDisplay />
                 {!observerMode && <ResourceDisplay />}
+                {!observerMode && !subjectMode && (
+                  <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />
+                )}
               </div>
               <div className="topbar-compact-portrait-island" data-webkiln-hit="alpha" data-tutorial-target="LeaderPortraitSlot">
                 <img

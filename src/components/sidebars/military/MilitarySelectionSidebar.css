@@ -39,22 +39,35 @@
 .mil-selection-total-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 0.25rem;
 }
 
-.mil-selection-total-row img {
+.mil-selection-total-strength {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mil-selection-total-strength img {
   width: 1.05rem;
   height: 1.05rem;
   flex-shrink: 0;
 }
 
-.mil-selection-total-row span {
+.mil-selection-total-strength span {
   min-width: 0;
   font-size: 0.86rem;
   font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.mil-selection-total-row > .tooltip-wrapper {
+  display: flex;
+  flex-shrink: 0;
 }
 
 .mil-selection-content {
@@ -399,6 +412,7 @@
 }
 
 .mil-selection-total-row > * + *,
+.mil-selection-total-strength > * + *,
 .mil-selection-row > * + *,
 .mil-selection-drag-copy > * + * {
   margin-left: 0.42rem;

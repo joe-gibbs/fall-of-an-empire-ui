@@ -6,6 +6,7 @@ import type {
   BuildingPlacementResponse,
   GovernorAssignmentCandidate,
   GovernorAssignmentResponse,
+  ResettlementPopOption,
   ResettlementSelectionResponse,
 } from '../../bridge-types.generated.ts';
 import type { PortraitLayerData } from '../../data/types';
@@ -67,18 +68,35 @@ export interface FormationSelectionOperation {
   message: string;
 }
 
+export interface ResettlementPopOptionView {
+  cultureId: string;
+  religionId: string;
+  name: string;
+  cultureAdjective: string;
+  religionAdherentPlural: string;
+  count: number;
+  unrest: number;
+  migrantCount: number;
+  selected: boolean;
+}
+
 export interface ResettlementSelectionOperation {
   active: boolean;
+  needsPopSelection: boolean;
   sourceSettlementId: string;
   sourceSettlementName: string;
   destinationSettlementId: string;
   destinationSettlementName: string;
+  selectedCultureId: string;
+  selectedReligionId: string;
+  selectedPopName: string;
   migrantCount: number;
   goldCost: number;
   canConfirm: boolean;
   interactionName: string;
   description: string;
   message: string;
+  pops: ResettlementPopOptionView[];
 }
 
 function mapGovernorCandidate(candidate: GovernorAssignmentCandidate): GovernorAssignmentCandidateView {
@@ -137,20 +155,39 @@ function mapFormationSelection(data: ApplyFormationTemplateResponse): FormationS
   };
 }
 
+function mapResettlementPopOption(pop: ResettlementPopOption): ResettlementPopOptionView {
+  return {
+    cultureId: pop.cultureId,
+    religionId: pop.religionId,
+    name: pop.name,
+    cultureAdjective: pop.cultureAdjective,
+    religionAdherentPlural: pop.religionAdherentPlural,
+    count: pop.count,
+    unrest: pop.unrest,
+    migrantCount: pop.migrantCount,
+    selected: pop.selected,
+  };
+}
+
 function mapResettlementSelection(data: ResettlementSelectionResponse): ResettlementSelectionOperation | null {
   if (!data.active) return null;
   return {
     active: data.active,
+    needsPopSelection: data.needsPopSelection,
     sourceSettlementId: data.sourceSettlementId,
     sourceSettlementName: data.sourceSettlementName,
     destinationSettlementId: data.destinationSettlementId,
     destinationSettlementName: data.destinationSettlementName,
+    selectedCultureId: data.selectedCultureId,
+    selectedReligionId: data.selectedReligionId,
+    selectedPopName: data.selectedPopName,
     migrantCount: data.migrantCount,
     goldCost: data.goldCost,
     canConfirm: data.canConfirm,
     interactionName: data.interactionName,
     description: data.description,
     message: data.message,
+    pops: data.pops.map(mapResettlementPopOption),
   };
 }
 
@@ -199,17 +236,25 @@ export function useFormationSelectionOperation(): FormationSelectionOperation | 
 export function useResettlementSelectionOperation(): ResettlementSelectionOperation | null {
   const state = useBridgeQuery({
     action: 'game.resettlement_selection',
-    payload: { command: 'state' },
+    payload: { command: 'state', cultureId: '', religionId: '' },
     map: mapResettlementSelection,
   });
 
   return state;
 }
 
-async function callResettlementSelection(command: string): Promise<ResettlementSelectionResponse> {
-  const response = await bridgeCall('game.resettlement_selection', { command });
+async function callResettlementSelection(
+  command: string,
+  cultureId = '',
+  religionId = '',
+): Promise<ResettlementSelectionResponse> {
+  const response = await bridgeCall('game.resettlement_selection', { command, cultureId, religionId });
   dispatchBridgeResponse('game.resettlement_selection', response);
   return response;
+}
+
+export function confirmResettlementPopBridge(cultureId: string, religionId: string): Promise<ResettlementSelectionResponse> {
+  return callResettlementSelection('confirm_pop', cultureId, religionId);
 }
 
 export function confirmResettlementSelectionBridge(): Promise<ResettlementSelectionResponse> {

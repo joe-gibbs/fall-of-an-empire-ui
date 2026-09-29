@@ -134,6 +134,11 @@ function mapSettlement(entry: GetWorldGlancesResponse['settlements'][number]): S
       icon: entry.buildItem.icon,
       progress: entry.buildItem.progress,
     } : undefined,
+    activeAction: entry.hasActiveAction && entry.activeAction ? {
+      label: entry.activeAction.label,
+      colour: entry.activeAction.colour,
+      icon: entry.activeAction.icon,
+    } : undefined,
     warWithPlayer: entry.warWithPlayer ?? false,
   };
 }
@@ -616,25 +621,37 @@ function applyClassToggle(node: HTMLDivElement, className: string, current: bool
 }
 
 function applySettlementProgressFrame(node: HTMLDivElement, entry: WorldGlanceFrameEntry) {
-  const siegeFill = node.querySelector<HTMLElement>('.gset-siege-progress-fill');
-  if (siegeFill) {
-    siegeFill.style.width = formatFrameProgressWidth(entry.siegeProgress);
-  }
-
   const buildBar = node.querySelector<HTMLElement>('.gset-build-bar');
   const buildFill = node.querySelector<HTMLElement>('.gset-build-bar-fill');
   const buildStatus = node.querySelector<HTMLElement>('.gset-build-status');
   const buildStatusValue = node.querySelector<HTMLElement>('.gset-build-status-value');
-  if (!buildBar || !buildFill || !buildStatus || !buildStatusValue || typeof entry.hasBuildItem !== 'boolean') {
+  if (!buildBar || !buildFill || !buildStatus || !buildStatusValue) {
     return;
   }
 
-  const showBuildBar = entry.hasBuildItem && entry.besieged !== true;
+  const besieged = entry.besieged === true;
+  if (besieged) {
+    const progress = Math.max(0, Math.min(1, entry.siegeProgress ?? 0));
+    buildStatus.classList.add('is-siege');
+    buildFill.classList.add('is-siege');
+    buildStatus.style.display = '';
+    buildStatusValue.textContent = formatPercent(progress * 100);
+    buildBar.style.display = '';
+    buildFill.style.width = formatFrameProgressWidth(progress);
+    return;
+  }
+
+  buildStatus.classList.remove('is-siege');
+  buildFill.classList.remove('is-siege');
+  if (typeof entry.hasBuildItem !== 'boolean') {
+    return;
+  }
+
   buildStatus.style.display = entry.hasBuildItem ? '' : 'none';
   buildStatusValue.textContent = entry.hasBuildItem
     ? formatPercent(Math.max(0, Math.min(1, entry.buildItemProgress!)) * 100)
     : '';
-  buildBar.style.display = showBuildBar ? '' : 'none';
+  buildBar.style.display = entry.hasBuildItem ? '' : 'none';
   buildFill.style.width = formatFrameProgressWidth(entry.buildItemProgress!);
 }
 

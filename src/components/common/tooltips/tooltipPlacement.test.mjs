@@ -73,3 +73,75 @@ test('a right-sidebar tooltip sits to the left of the panel', () => {
   assert.ok(placement.rect.right <= RIGHT_SIDEBAR.rect.left);
   assert.equal(placement.overlapArea, 0);
 });
+
+test('a screen list-row tooltip sits to the right instead of covering the row above', () => {
+  const trigger = rectFromPosition(280, 420, 620, 96);
+  const rowAbove = rectFromPosition(280, 312, 620, 96);
+  const placement = placeTooltip(
+    'top',
+    trigger,
+    trigger,
+    290,
+    340,
+    VIEWPORT.width,
+    VIEWPORT.height,
+    null,
+    true,
+  );
+  assert.equal(placement.side, 'right');
+  assert.ok(placement.rect.left >= trigger.right);
+  const coversRowAbove = Math.max(0, Math.min(placement.rect.right, rowAbove.right) - Math.max(placement.rect.left, rowAbove.left))
+    * Math.max(0, Math.min(placement.rect.bottom, rowAbove.bottom) - Math.max(placement.rect.top, rowAbove.top));
+  assert.equal(coversRowAbove, 0);
+});
+
+test('a screen tooltip on the right-hand column sits to the left', () => {
+  const trigger = rectFromPosition(980, 360, 620, 88);
+  const placement = placeTooltip(
+    'top',
+    trigger,
+    trigger,
+    290,
+    280,
+    VIEWPORT.width,
+    VIEWPORT.height,
+    null,
+    true,
+  );
+  assert.equal(placement.side, 'left');
+  assert.ok(placement.rect.right <= trigger.left);
+});
+
+test('a screen tooltip keeps an explicit left or right preference', () => {
+  const trigger = rectFromPosition(980, 360, 620, 88);
+  const placement = placeTooltip(
+    'left',
+    trigger,
+    trigger,
+    290,
+    220,
+    VIEWPORT.width,
+    VIEWPORT.height,
+    null,
+    true,
+  );
+  assert.equal(placement.side, 'left');
+  assert.ok(placement.rect.right <= trigger.left);
+});
+
+test('a screen tooltip with preferred bottom still sits beside the row', () => {
+  const trigger = rectFromPosition(280, 180, 620, 36);
+  const placement = placeTooltip(
+    'bottom',
+    trigger,
+    trigger,
+    240,
+    120,
+    VIEWPORT.width,
+    VIEWPORT.height,
+    null,
+    true,
+  );
+  assert.equal(placement.side, 'right');
+  assert.ok(placement.rect.left >= trigger.right);
+});

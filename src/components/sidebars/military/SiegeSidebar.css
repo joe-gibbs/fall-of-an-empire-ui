@@ -470,6 +470,8 @@
 .siege-cmd--sallyOut  { --siege-cmd-rgb: 64, 110, 168; }
 .siege-cmd--pillage   { --siege-cmd-rgb: 196, 136, 58; }
 .siege-cmd--sack      { --siege-cmd-rgb: 124, 30, 30; }
+.siege-cmd--killUnbelievers { --siege-cmd-rgb: 112, 28, 48; }
+.siege-cmd--restoreTown { --siege-cmd-rgb: 72, 128, 84; }
 
 .siege-cmd .interaction-card {
   min-height: 3.55rem;

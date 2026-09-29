@@ -31,7 +31,14 @@ import type {
 
 const militaryCache = new Map<string, Army>();
 let militaryOverviewCache: MilitaryOverview | null = null;
-let selectedMilitariesCache: MilitaryForce[] | null = null;
+export interface SelectedMilitariesView {
+  forces: MilitaryForce[];
+  canMergeSelection: boolean;
+  mergeSelectionIsNavy: boolean;
+  mergeSelectionDisabledReason?: string;
+}
+
+let selectedMilitariesCache: SelectedMilitariesView | null = null;
 
 export interface MilitaryCommanderCandidateView {
   id: string;
@@ -60,7 +67,10 @@ export function clearMilitaryCache(militaryId: string | undefined): void {
   if (!militaryId) return;
   militaryCache.delete(militaryId);
   if (selectedMilitariesCache) {
-    selectedMilitariesCache = selectedMilitariesCache.filter((force) => force.id !== militaryId);
+    selectedMilitariesCache = {
+      ...selectedMilitariesCache,
+      forces: selectedMilitariesCache.forces.filter((force) => force.id !== militaryId),
+    };
   }
 }
 
@@ -334,6 +344,7 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     capacity: data.capacity > 0 ? data.capacity : undefined,
     usedCapacity: data.usedCapacity > 0 ? data.usedCapacity : data.capacity > 0 ? 0 : undefined,
     embarkBlockReason: data.embarkBlockReason || undefined,
+    mergeBlockReason: data.mergeBlockReason || undefined,
     embarkedArmies: data.embarkedArmies.map((army) => ({
       id: army.id || undefined,
       debugShortId: army.debugShortId || undefined,
@@ -394,6 +405,7 @@ function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse):
         capacity: undefined,
         usedCapacity: undefined,
         embarkBlockReason: undefined,
+        mergeBlockReason: undefined,
         embarkedArmies: [],
         resources: [],
         attritionSources: [],
@@ -566,11 +578,16 @@ export function useFactionMilitaryOverviewBridge(
   return live;
 }
 
-export function useSelectedMilitariesBridge(): MilitaryForce[] | null {
+export function useSelectedMilitariesBridge(): SelectedMilitariesView | null {
   const live = useBridgeQuery({
     action: 'game.get_selected_militaries',
     map: (data) => {
-      selectedMilitariesCache = data.militaries.map(mapForce);
+      selectedMilitariesCache = {
+        forces: data.militaries.map(mapForce),
+        canMergeSelection: data.canMergeSelection,
+        mergeSelectionIsNavy: data.mergeSelectionIsNavy,
+        mergeSelectionDisabledReason: data.mergeSelectionDisabledReason || undefined,
+      };
       return selectedMilitariesCache;
     },
   });
@@ -645,6 +662,14 @@ export function startMilitaryMergeTargetingBridge(militaryId: string): Promise<v
   return bridgeCall('game.start_military_merge_targeting', { militaryId }).then(() => undefined);
 }
 
+export function startMilitaryDockTargetingBridge(militaryId: string): Promise<void> {
+  return bridgeCall('game.start_military_dock_targeting', { militaryId }).then(() => undefined);
+}
+
+export function cancelMilitaryDockTargetingBridge(): Promise<void> {
+  return bridgeCall('game.cancel_military_dock_targeting').then(() => undefined);
+}
+
 export function replenishMilitaryBridge(militaryId: string): Promise<void> {
   return bridgeCall('game.replenish_military', { militaryId }).then(() => undefined);
 }
@@ -669,6 +694,10 @@ export function splitMilitaryBridge(militaryId: string, unitIds: string[]): Prom
 
 export function mergeMilitaryUnitsBridge(militaryId: string, unitIds: string[]): Promise<void> {
   return bridgeCall('game.merge_military_units', { militaryId, unitIds }).then(() => undefined);
+}
+
+export function mergeSelectedMilitariesBridge(): Promise<void> {
+  return bridgeCall('game.merge_selected_militaries').then(() => undefined);
 }
 
 export function setMilitaryFormationTemplateBridge(militaryId: string, templateId: string): Promise<void> {

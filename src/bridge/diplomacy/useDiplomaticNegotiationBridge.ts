@@ -8,6 +8,7 @@ import type {
   SubmitDiplomaticNegotiationResponse,
 } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
+import { bridgeEvents } from '../core/bridgeEvents';
 import { refreshFactionData } from './useFactionBridge';
 
 export type DiplomaticNegotiationState = GetDiplomaticNegotiationStateResponse;
@@ -78,6 +79,8 @@ export function useDiplomaticNegotiationBridge(
     });
     if (result.result === 'accepted') {
       await refreshFactionData(targetFactionId);
+      const interactions = await bridgeCall('game.get_faction_interactions', { targetFactionId });
+      bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_interactions', { detail: interactions }));
     }
     return result;
   }, [targetFactionId]);

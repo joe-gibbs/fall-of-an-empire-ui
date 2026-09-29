@@ -55,15 +55,30 @@ export function tokensNeedMapModePickerReveal(tokens: readonly string[]): boolea
   return lower.some((token) => token.startsWith('mapmode:') && token !== 'mapmodebuttongroup');
 }
 
-const PERSONAL_GUARD_REVEAL_TOKENS = new Set([
+const PERSONAL_GUARD_TAB_TOKENS = new Set([
   'militarypersonalguardtab',
   'sidebartab:guard',
+]);
+
+const PERSONAL_GUARD_PANEL_TOKENS = new Set([
   'formpersonalguardbutton',
   'confirmpersonalguardbutton',
 ]);
 
+const PERSONAL_GUARD_REVEAL_TOKENS = new Set([
+  ...PERSONAL_GUARD_TAB_TOKENS,
+  ...PERSONAL_GUARD_PANEL_TOKENS,
+]);
+
 export function tokensNeedPersonalGuardReveal(tokens: readonly string[]): boolean {
   return tokens.map(normaliseToken).some((token) => PERSONAL_GUARD_REVEAL_TOKENS.has(token));
+}
+
+/** Guard-panel controls live on that tab; the tab button itself is visible on Land. */
+export function personalGuardRevealScreenId(tokens: readonly string[]): 'guard' | undefined {
+  const lower = tokens.map(normaliseToken);
+  if (lower.some((token) => PERSONAL_GUARD_PANEL_TOKENS.has(token))) return 'guard';
+  return undefined;
 }
 
 export function requestTutorialHudReveal(tokens: readonly string[]): void {

@@ -19,6 +19,7 @@ import { bridgeEvents } from '../../../bridge/core/bridgeEvents';
 import { mapPortraitLayers, mapPortraitPath } from '../../../bridge/characters/portraitMapping';
 import { TemplateUnitSelectorModal, templateUnitPortrait, templateUnitTooltipData } from './TemplateManagementPanel';
 import UnitTooltip, { type UnitTooltipData } from '../../common/tooltips/UnitTooltip';
+import { useTutorialProgressBridge } from '../../../bridge/app/useTutorialProgressBridge';
 import { TUTORIAL_REVEAL_PERSONAL_GUARD, type TutorialHudRevealDetail } from '../../../utils/tutorialHudReveal';
 import './PersonalGuardPanel.css';
 
@@ -183,6 +184,7 @@ async function refreshGuardAndMilitary(): Promise<void> {
 
 export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse }) {
   const { openSidebar, openRightSidebar } = useGameActions();
+  const tutorialProgress = useTutorialProgressBridge();
   const [formBusy, setFormBusy] = useState(false);
   const [replaceBusy, setReplaceBusy] = useState(false);
   const [commanderModalOpen, setCommanderModalOpen] = useState(false);
@@ -237,6 +239,12 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
   const canAppointCommander = Boolean(guard.militaryId);
   const canEstablish = !guard.hasGuard && !guard.isForming;
   const hasDraftRoster = guard.companies.length > 0;
+  const tutorialFormTooltip = tutorialProgress
+    ? {
+      title: webUIText(hasDraftRoster ? 'Military.PersonalGuard.Reform' : 'Military.PersonalGuard.Form'),
+      body: webUIText('Military.PersonalGuard.FormTutorialGold'),
+    }
+    : undefined;
   // Draft, forming, and standing rosters can all add, replace, or remove companies.
   const canEditCompanies = true;
   const foundingSatisfied = guard.hasGuard || guard.isForming;
@@ -449,6 +457,19 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
       .finally(() => setFormBusy(false));
   };
 
+  const establishCard = (
+    <InteractionCard
+      title={webUIText(hasDraftRoster ? 'Military.PersonalGuard.Reform' : 'Military.PersonalGuard.Form')}
+      description={webUIText(hasDraftRoster
+        ? 'Military.PersonalGuard.ReformBody'
+        : 'Military.PersonalGuard.FormOpenCatalogue')}
+      image={SWORDS_ICON}
+      bgImage={ESTABLISH_BG}
+      onClick={hasDraftRoster ? handleReform : openEstablish}
+      tutorialTarget="FormPersonalGuardButton"
+    />
+  );
+
   return (
     <div
       className="personal-guard-view"
@@ -546,16 +567,11 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
 
         {canEstablish && (
           <div className="personal-guard-establish">
-            <InteractionCard
-              title={webUIText(hasDraftRoster ? 'Military.PersonalGuard.Reform' : 'Military.PersonalGuard.Form')}
-              description={webUIText(hasDraftRoster
-                ? 'Military.PersonalGuard.ReformBody'
-                : 'Military.PersonalGuard.FormOpenCatalogue')}
-              image={SWORDS_ICON}
-              bgImage={ESTABLISH_BG}
-              onClick={hasDraftRoster ? handleReform : openEstablish}
-              tutorialTarget="FormPersonalGuardButton"
-            />
+            {tutorialFormTooltip ? (
+              <Tooltip content={tutorialFormTooltip} wrapperClassName="personal-guard-establish-tooltip">
+                {establishCard}
+              </Tooltip>
+            ) : establishCard}
             {formError && (
               <span className="personal-guard-form-error" role="status">{formError}</span>
             )}
@@ -611,6 +627,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
           title={webUIText('Military.PersonalGuard.Form')}
           doneLabel={webUIText('Military.PersonalGuard.Form')}
           doneTutorialTarget="ConfirmPersonalGuardButton"
+          doneTooltip={tutorialFormTooltip}
           totalCost={draftCost}
           maxUnits={guard.companyCapacity}
           enforceAvailableManpower

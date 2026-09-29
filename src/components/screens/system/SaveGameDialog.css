@@ -82,6 +82,7 @@
   font-size: 0.95rem;
   padding: 0.7273rem 0.9091rem;
   transition: border-color 0.15s;
+  user-select: text;
 }
 .save-dialog__input:focus {
   border-top-color: rgba(224, 200, 114, 0.52);

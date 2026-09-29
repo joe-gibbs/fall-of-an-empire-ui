@@ -7,8 +7,12 @@ import { useGameActions } from '../../../context/GameContext';
 import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import { handleWorldGlanceInput } from '../../../bridge/app/useWorldGlancesBridge';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
-import { setMilitaryParentBridge } from '../../../bridge/military-map/useMilitaryBridge';
-import { useMilitaryOverview, useSelectedMilitaries } from '../../../data-source/index';
+import {
+  mergeSelectedMilitariesBridge,
+  selectMilitaryBridge,
+  setMilitaryParentBridge,
+} from '../../../bridge/military-map/useMilitaryBridge';
+import { useMilitaryOverview, useSelectedMilitariesState } from '../../../data-source/index';
 import {
   canDragMilitaryCommand,
   collectAssignableCommands,
@@ -150,6 +154,7 @@ function ForceBranch({
   dragVisual,
   openMilitary,
   onForcePointerDown,
+  onSelect,
   onDetach,
 }: {
   branch: SelectionBranch;
@@ -157,6 +162,7 @@ function ForceBranch({
   dragVisual: DragVisualState;
   openMilitary: (id: string) => void;
   onForcePointerDown: (event: ReactPointerEvent<HTMLDivElement>, force: MilitaryForce) => void;
+  onSelect: (force: MilitaryForce) => void;
   onDetach: (force: MilitaryForce) => void;
 }) {
   const { force } = branch;
@@ -202,6 +208,31 @@ function ForceBranch({
             </div>
           </div>
           <div className="mil-selection-actions">
+            <Tooltip
+              content={{
+                title: webUIText('Military.Selection.Select', { Name: force.name }),
+                body: webUIText(force.isNavy ? 'Military.Selection.SelectFleetDescription' : 'Military.Selection.SelectArmyDescription'),
+              }}
+              position="right"
+              delay={150}
+            >
+              <button
+                type="button"
+                className="mil-selection-action"
+                aria-label={webUIText('Military.Selection.SelectAria', { Name: force.name })}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onSelect(force);
+                }}
+              >
+                <img src="/assets/icons/I_SelectMilitary.png" alt="" />
+              </button>
+            </Tooltip>
             {force.parentId && (
               <Tooltip
                 content={{
@@ -271,6 +302,7 @@ function ForceBranch({
               dragVisual={dragVisual}
               openMilitary={openMilitary}
               onForcePointerDown={onForcePointerDown}
+              onSelect={onSelect}
               onDetach={onDetach}
             />
           ))}
@@ -282,9 +314,13 @@ function ForceBranch({
 
 function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClose: () => void }) {
   const { openSidebar } = useGameActions();
-  const selectedForcesResult = useSelectedMilitaries();
+  const selectedState = useSelectedMilitariesState();
   const overview = useMilitaryOverview();
-  const serverForces = useMemo(() => selectedForcesResult ?? [], [selectedForcesResult]);
+  const serverForces = useMemo(() => selectedState?.forces ?? [], [selectedState]);
+  const canMergeSelection = selectedState?.canMergeSelection ?? false;
+  const mergeSelectionIsNavy = selectedState?.mergeSelectionIsNavy ?? false;
+  const mergeSelectionDisabledReason = selectedState?.mergeSelectionDisabledReason
+    || webUIText('Military.Selection.MergeDisabled');
   const serverHierarchyKey = serverForces.map(force => `${force.id}:${force.parentId ?? ''}`).join('|');
   const [localHierarchy, setLocalHierarchy] = useState<{
     baseKey: string;
@@ -411,6 +447,15 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
     };
   }, []);
 
+  const handleSelectForce = useCallback((force: MilitaryForce) => {
+    selectMilitaryBridge(force.id).catch(error => acknowledgeBridgeFailure(error, 'game.select_military'));
+  }, []);
+
+  const handleMergeSelection = useCallback(() => {
+    if (!canMergeSelection) return;
+    mergeSelectedMilitariesBridge().catch(error => acknowledgeBridgeFailure(error, 'game.merge_selected_militaries'));
+  }, [canMergeSelection]);
+
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
       const pending = pendingDragRef.current;
@@ -505,10 +550,32 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
         <div className="mil-selection-drag-hint">{webUIText('Military.Selection.DragHint')}</div>
         <div className="mil-selection-total">
           <div className="mil-selection-total-row">
-            <img src="/assets/icons/I_Swords.png" alt="" />
-            <span style={{ color: getStrengthColor(totalRatio) }}>
-              {totalStrengthLabel}
-            </span>
+            <div className="mil-selection-total-strength">
+              <img src="/assets/icons/I_Swords.png" alt="" />
+              <span style={{ color: getStrengthColor(totalRatio) }}>
+                {totalStrengthLabel}
+              </span>
+            </div>
+            <Tooltip
+              content={canMergeSelection
+                ? { title: webUIText(mergeSelectionIsNavy ? 'Military.MergeFleets' : 'Military.MergeArmies') }
+                : {
+                    title: webUIText(mergeSelectionIsNavy ? 'Military.MergeFleets' : 'Military.MergeArmies'),
+                    body: mergeSelectionDisabledReason,
+                  }}
+              position="right"
+              delay={150}
+            >
+              <button
+                type="button"
+                className="mil-selection-action"
+                aria-label={webUIText(mergeSelectionIsNavy ? 'Military.MergeFleets' : 'Military.MergeArmies')}
+                disabled={!canMergeSelection}
+                onClick={handleMergeSelection}
+              >
+                <img src="/assets/icons/I_MergeUnits.png" alt="" />
+              </button>
+            </Tooltip>
           </div>
           <PaintedBar percent={totalRatio * 100} color={getStrengthBarColor(totalRatio)} />
         </div>
@@ -524,6 +591,7 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
               dragVisual={dragVisual}
               openMilitary={id => openSidebar('military', id)}
               onForcePointerDown={handleForcePointerDown}
+              onSelect={handleSelectForce}
               onDetach={force => applyParentChange(force.id, null)}
             />
           ))}

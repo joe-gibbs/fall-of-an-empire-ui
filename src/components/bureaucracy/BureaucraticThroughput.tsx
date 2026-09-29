@@ -511,6 +511,7 @@ export function BureaucraticThroughputHudValue({ onOpen }: { onOpen?: () => void
       <button
         type="button"
         className={`btm-hud resource-main${model.overload > 0 ? ' btm-hud--overload' : ''}`}
+        data-tutorial-target="BureaucracyHud"
         onClick={(event) => {
           event.preventDefault();
           onOpen?.();

@@ -249,15 +249,6 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
   const start = useCallback((interaction: QuickInteraction) => {
     close();
     playSound('confirm');
-    const notifyOutcome = (succeeded: boolean, message?: string) => {
-      gameActions?.addNotification({
-        title: webUIText(succeeded ? 'QuickInteraction.ActionSucceeded' : 'QuickInteraction.ActionFailed'),
-        description: message || webUIText(succeeded
-          ? 'QuickInteraction.ActionSucceededFallback'
-          : 'QuickInteraction.ActionFailedFallback'),
-        type: quickInteractionNotificationType(kind),
-      });
-    };
     const notifyRejected = (message?: string) => {
       gameActions?.addNotification({
         title: webUIText('QuickInteraction.ActionCouldNotStart'),
@@ -273,9 +264,7 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
         initiatorPersonId: '',
         giftTypeIndex: -1,
       }).then((response) => {
-        if (response.completed) {
-          notifyOutcome(response.succeeded, response.message);
-        } else if (!response.started) {
+        if (!response.completed && !response.started) {
           notifyRejected(response.message);
         }
       }).catch((error) => {
@@ -284,9 +273,7 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
       });
     } else {
       void factionBridge.start(interaction.id).then((response) => {
-        if (response?.completed) {
-          notifyOutcome(response.succeeded, response.message);
-        } else if (!response?.started) {
+        if (!response?.completed && !response?.started) {
           notifyRejected(response?.message);
         }
       });

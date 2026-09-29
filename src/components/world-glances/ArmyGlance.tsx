@@ -374,7 +374,7 @@ function militaryTooltip(
         interactive={interactive}
       />
     ),
-    body: detail?.embarkBlockReason || undefined,
+    body: detail?.embarkBlockReason || detail?.mergeBlockReason || undefined,
     lines,
     footer: (
       <GameButton

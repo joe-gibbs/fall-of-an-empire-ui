@@ -43,7 +43,7 @@ import { ResourcePurchaseDestinationProvider } from '../../common/resources/Reso
 import { settlementPurchaseDestination } from '../../common/resources/resourcePurchaseDestinationContext';
 import { successChanceColour } from '../../../utils/colorFormatters';
 import { WebkilnAssetPath } from '../../../utils/assets';
-import { TIER_ICONS } from '../../../utils/iconMaps';
+import { TIER_ICONS, conceptIconPath } from '../../../utils/iconMaps';
 import {
   formatNumber,
   formatPercent as formatPercentValue,
@@ -1154,14 +1154,14 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
               }),
               lines: corruptionBreakdownLines(settlement.corruptionBreakdown),
             }} position="bottom" delay={150}>
-              <StatCell icon="/assets/icons/I_Corruption.png" value={corruptionPercent} valueColor={corruptionColor} />
+              <StatCell icon={conceptIconPath('Corruption')} value={corruptionPercent} valueColor={corruptionColor} />
             </Tooltip>
             <Tooltip content={{
               get title() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1095.1", { Value1: formatNumber(settlement.fortificationLevel) }); },
               body: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1093.62'),
               lines: breakdownLines(settlement.fortificationBreakdown, v => formatNumber(v)),
             }} position="bottom" delay={150}>
-              <StatCell icon="/assets/icons/I_Fortification.png" value={formatNumber(settlement.fortificationLevel)} />
+              <StatCell icon={conceptIconPath('Fortification')} value={formatNumber(settlement.fortificationLevel)} />
             </Tooltip>
           </StatCellGrid>
 
@@ -1505,7 +1505,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                       cooldownRemainingDays={i.cooldownRemainingDays}
                       onClick={i.availability === 'available' && !i.inProgress ? () => {
                         void startInteraction(i.id).then(response => {
-                          if (response?.needsDestinationSelection) onClose();
+                          if (response?.needsDestinationSelection || response?.needsPopSelection) onClose();
                         });
                       } : undefined}
                       onCancel={i.inProgress ? cancelInteraction : undefined}

@@ -1115,6 +1115,11 @@ export interface SiegeInfo {
   canSallyOut: boolean;
   canPillage: boolean;
   canSack: boolean;
+  showKillUnbelievers: boolean;
+  canKillUnbelievers: boolean;
+  killUnbelieversUnavailableReason?: string;
+  canRestoreTown: boolean;
+  restoreTownUnavailableReason?: string;
   /** Siege completion 0-100. Only meaningful when state === 'siege'. */
   progress: number;
   /** Days until the siege concludes. 0 if unknown / not applicable. */
@@ -1126,6 +1131,21 @@ export interface SiegeInfo {
   totalDefenderStrength: number;
   pillageGold: number;
   sackGold: number;
+  pillagePopulationKilled: number;
+  sackPopulationKilled: number;
+  killUnbelieversGold: number;
+  killUnbelieversPopulation: number;
+  restoreTownGold: number;
+  restoreTownBuildingCondition: number;
+  pillageCommanderHonourDread: number;
+  pillageRulerHonourDread: number;
+  sackCommanderHonourDread: number;
+  sackRulerHonourDread: number;
+  killUnbelieversCommanderHonourDread: number;
+  killUnbelieversRulerHonourDread: number;
+  restoreTownCommanderHonourDread: number;
+  restoreTownRulerHonourDread: number;
+  occupationCommanderIsRuler: boolean;
   /** Current daily progress in percentage points. */
   progressPerDay: number;
   progressFactors: SiegeProgressFactor[];
@@ -1332,6 +1352,8 @@ export interface Army {
   usedCapacity?: number;
   /** Why selected armies cannot board this navy, if they cannot. */
   embarkBlockReason?: string;
+  /** Why this force cannot merge, or why the current selection cannot merge with it. */
+  mergeBlockReason?: string;
   /** Embarked armies (navy only) */
   embarkedArmies?: EmbarkedArmy[];
   /** Resource stockpiles carried by the force, with monthly consumption. */

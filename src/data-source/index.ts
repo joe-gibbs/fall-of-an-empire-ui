@@ -12,6 +12,7 @@ import {
   useMilitaryOverviewBridge,
   useSelectedMilitariesBridge,
   type FactionMilitaryOverview,
+  type SelectedMilitariesView,
 } from '../bridge/military-map/useMilitaryBridge';
 import {
   useAgentCandidatesBridge,
@@ -65,6 +66,10 @@ export function useFactionMilitaryOverview(
 }
 
 export function useSelectedMilitaries(): MilitaryOverview['forces'] | null {
+  return useSelectedMilitariesBridge()?.forces ?? null;
+}
+
+export function useSelectedMilitariesState(): SelectedMilitariesView | null {
   return useSelectedMilitariesBridge();
 }
 

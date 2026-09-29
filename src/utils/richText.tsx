@@ -272,13 +272,22 @@ export function renderRichText(input: string | null | undefined, opts: RichTextO
       top.preserveLeadingWhitespace = false;
       if (t.tag === 'concept') {
         const id = t.attrs.id ?? '';
-        top.children.push(
+        const icon = (
           <img
-            key={nextKey()}
             className="rich-concept"
             src={WebkilnAssetPath(conceptIconPath(id))}
             alt={id}
-          />,
+            draggable={false}
+          />
+        );
+        top.children.push(
+          opts.plainDefinitions ? (
+            <React.Fragment key={nextKey()}>{icon}</React.Fragment>
+          ) : (
+            <GlossaryDef key={nextKey()} termId={id}>
+              {icon}
+            </GlossaryDef>
+          ),
         );
       } else if (t.tag === 'key') {
         keepNextNodeWithPreviousWord(top.children);

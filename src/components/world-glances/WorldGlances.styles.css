@@ -3453,60 +3453,43 @@
   background-color: #d6a83a;
 }
 
-.gset-siege-progress {
-  position: absolute;
-  top: -0.5455rem;
-  left: 0.2727rem;
-  z-index: 9;
-  display: block;
-  box-sizing: border-box;
-  width: 3.7273rem;
-  height: 0.8182rem;
-  padding: 0.0909rem;
-  background-color: rgba(8, 6, 4, 0.94);
-  background-image: url('/assets/glance/glance-chip.png');
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  box-shadow: 0 0 0 0.0909rem rgba(6, 5, 4, 0.94), 0 0.1364rem 0.3182rem rgba(0, 0, 0, 0.88);
-  pointer-events: none;
+.gset-build-status.is-siege,
+.gset-build-status.is-siege .gset-build-status-value {
+  color: #ff9a4a;
 }
 
-.gset-siege-progress-track {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
-  background-color: #16110d;
-  background-image: url('/assets/glance/glance-bar-track.png');
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-top-color: #f3d48a;
-  border-right-color: #c9a84c;
-  border-bottom-color: #2a1c0c;
-  border-left-color: #c9a84c;
-  overflow: hidden;
-}
-
-.gset-siege-progress-fill {
-  display: block;
-  height: 100%;
+.gset-build-bar-fill.is-siege {
   background-color: #ff7a2e;
-  box-shadow: inset 0 0.0455rem 0 rgba(255, 224, 170, 0.55);
 }
 
-.detail-name .gset-siege-progress,
-.world-glance-node.detail-name .gset-siege-progress,
-.mock-production-glance.detail-name .gset-siege-progress,
-.detail-detailed .gset-siege-progress,
-.world-glance-node.detail-detailed .gset-siege-progress,
-.mock-production-glance.detail-detailed .gset-siege-progress {
-  left: 4.2727rem;
-  right: 0.5455rem;
-  width: auto;
+.gset-active-action {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: calc(100% - 2.1818rem);
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-header);
+  font-size: 0.7273rem;
+  line-height: 0.9091rem;
+}
+
+.gset-active-action-icon {
+  width: 0.6364rem;
+  height: 0.6364rem;
+  margin-right: 0.2727rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.gset-active-action-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-grow: 0;
+  flex-shrink: 1;
 }
 
 .gset-bar,

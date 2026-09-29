@@ -1083,6 +1083,10 @@ export interface PendingFormationUnitEntry {
   settlementId: string;
   settlementName: string;
   locationLabel: string;
+  name: string;
+  portrait: string;
+  type: string;
+  tier: number;
   progressAtSnapshot: number;
   dailyProgress: number;
   snapshotDate: number;
@@ -4098,6 +4102,9 @@ export interface GetSeasonEffectsResponse {
 
 export interface GetSelectedMilitariesResponse {
   militaries: MilitaryOverviewForce[];
+  canMergeSelection: boolean;
+  mergeSelectionIsNavy: boolean;
+  mergeSelectionDisabledReason: string;
 }
 
 export interface SettingsVideoDTO {
@@ -4164,6 +4171,7 @@ export interface SettingsGraphicsDTO {
   showAllyConvoyGlances: boolean;
   showSubjectConvoyGlances: boolean;
   showOverlordConvoyGlances: boolean;
+  showSettlementActionGlances: boolean;
   glanceDensity: string;
 }
 
@@ -4642,6 +4650,11 @@ export interface GetSettlementDataResponse {
   canSallyOut: boolean;
   canPillage: boolean;
   canSack: boolean;
+  showKillUnbelievers: boolean;
+  canKillUnbelievers: boolean;
+  killUnbelieversUnavailableReason: string;
+  canRestoreTown: boolean;
+  restoreTownUnavailableReason: string;
   siegeProgress: number;
   estimatedSiegeDays: number;
   hasCapitalOccupationDeadline: boolean;
@@ -4651,6 +4664,21 @@ export interface GetSettlementDataResponse {
   totalDefenderStrength: number;
   pillageGold: number;
   sackGold: number;
+  pillagePopulationKilled: number;
+  sackPopulationKilled: number;
+  killUnbelieversGold: number;
+  killUnbelieversPopulation: number;
+  restoreTownGold: number;
+  restoreTownBuildingCondition: number;
+  pillageCommanderHonourDread: number;
+  pillageRulerHonourDread: number;
+  sackCommanderHonourDread: number;
+  sackRulerHonourDread: number;
+  killUnbelieversCommanderHonourDread: number;
+  killUnbelieversRulerHonourDread: number;
+  restoreTownCommanderHonourDread: number;
+  restoreTownRulerHonourDread: number;
+  occupationCommanderIsRuler: boolean;
   siegeProgressPerDay: number;
   siegeProgressFactors: SettlementSiegeProgressFactor[];
   hostileFaction: string;
@@ -4757,6 +4785,11 @@ export interface GetSettlementSiegeDataResponse {
   canSallyOut: boolean;
   canPillage: boolean;
   canSack: boolean;
+  showKillUnbelievers: boolean;
+  canKillUnbelievers: boolean;
+  killUnbelieversUnavailableReason: string;
+  canRestoreTown: boolean;
+  restoreTownUnavailableReason: string;
   siegeProgress: number;
   estimatedSiegeDays: number;
   hasCapitalOccupationDeadline: boolean;
@@ -4766,6 +4799,21 @@ export interface GetSettlementSiegeDataResponse {
   totalDefenderStrength: number;
   pillageGold: number;
   sackGold: number;
+  pillagePopulationKilled: number;
+  sackPopulationKilled: number;
+  killUnbelieversGold: number;
+  killUnbelieversPopulation: number;
+  restoreTownGold: number;
+  restoreTownBuildingCondition: number;
+  pillageCommanderHonourDread: number;
+  pillageRulerHonourDread: number;
+  sackCommanderHonourDread: number;
+  sackRulerHonourDread: number;
+  killUnbelieversCommanderHonourDread: number;
+  killUnbelieversRulerHonourDread: number;
+  restoreTownCommanderHonourDread: number;
+  restoreTownRulerHonourDread: number;
+  occupationCommanderIsRuler: boolean;
   siegeProgressPerDay: number;
   siegeProgressFactors: SettlementSiegeProgressFactor[];
   hostileFaction: string;
@@ -4951,6 +4999,12 @@ export interface WorldGlanceLabelInfo {
   colour: string;
 }
 
+export interface WorldGlanceActionInfo {
+  label: string;
+  colour: string;
+  icon: string;
+}
+
 export interface WorldGlanceResource {
   icon: string;
   label: string;
@@ -5026,6 +5080,8 @@ export interface WorldSettlementGlance {
   bishopName: string;
   hasBuildItem: boolean;
   buildItem: WorldGlanceBuildProgress;
+  hasActiveAction: boolean;
+  activeAction: WorldGlanceActionInfo;
   queuedConstruction: string;
   queuedConstructionCount: number;
   queuedRecruitment: string;
@@ -5642,6 +5698,7 @@ export interface GetMilitaryDataResponse {
   isForcedMarching: boolean;
   canForcedMarch: boolean;
   canMerge: boolean;
+  mergeBlockReason: string;
   canSplit: boolean;
   isRaiding: boolean;
   isReplenishing: boolean;
@@ -6444,20 +6501,39 @@ export interface ResetSettingsRequest {
 
 export interface ResettlementSelectionRequest {
   command: string;
+  cultureId: string;
+  religionId: string;
+}
+
+export interface ResettlementPopOption {
+  cultureId: string;
+  religionId: string;
+  name: string;
+  cultureAdjective: string;
+  religionAdherentPlural: string;
+  count: number;
+  unrest: number;
+  migrantCount: number;
+  selected: boolean;
 }
 
 export interface ResettlementSelectionResponse {
   active: boolean;
+  needsPopSelection: boolean;
   sourceSettlementId: string;
   sourceSettlementName: string;
   destinationSettlementId: string;
   destinationSettlementName: string;
+  selectedCultureId: string;
+  selectedReligionId: string;
+  selectedPopName: string;
   migrantCount: number;
   goldCost: number;
   canConfirm: boolean;
   interactionName: string;
   description: string;
   message: string;
+  pops: ResettlementPopOption[];
 }
 
 export interface RespondToProvinceRecallRequest {
@@ -6521,6 +6597,10 @@ export interface SaveGameResponse {
 
 export interface SelectMilitaryRequest {
   militaryId: string;
+}
+
+export interface SetActionRebindCaptureRequest {
+  enabled: boolean;
 }
 
 export interface SetAutoAssignClergyRequest {
@@ -6774,6 +6854,7 @@ export interface StartSettlementInteractionRequest {
 export interface StartSettlementInteractionResponse {
   started: boolean;
   needsDestinationSelection: boolean;
+  needsPopSelection: boolean;
   message: string;
 }
 
@@ -7055,6 +7136,7 @@ export interface BridgeActions {
   'game.buy_resource': { request: BuyEconomyResourceRequest; response: BuyEconomyResourceResponse };
   'game.cancel_bloc_interaction': { request: CancelBlocInteractionRequest; response: CancelBlocInteractionResponse };
   'game.cancel_faction_interaction': { request: CancelFactionInteractionRequest; response: CancelFactionInteractionResponse };
+  'game.cancel_military_dock_targeting': { request: void; response: void };
   'game.cancel_person_interaction': { request: CancelPersonInteractionRequest; response: CancelPersonInteractionResponse };
   'game.cancel_religion_conversion': { request: void; response: ReligionConversionActionResponse };
   'game.cancel_settlement_interaction': { request: CancelSettlementInteractionRequest; response: CancelSettlementInteractionResponse };
@@ -7175,6 +7257,7 @@ export interface BridgeActions {
   'game.load_save': { request: LoadSaveRequest; response: LoadSaveResponse };
   'game.loading_screen': { request: void; response: LoadingScreenResponse };
   'game.merge_military_units': { request: MergeMilitaryUnitsRequest; response: void };
+  'game.merge_selected_militaries': { request: void; response: void };
   'game.navigate_settlement': { request: NavigateSettlementRequest; response: NavigateSettlementResponse };
   'game.notification_events': { request: NotificationEventsRequest; response: void };
   'game.open_mods_folder': { request: void; response: void };
@@ -7217,6 +7300,7 @@ export interface BridgeActions {
   'game.save_game': { request: SaveGameRequest; response: SaveGameResponse };
   'game.select_military': { request: SelectMilitaryRequest; response: void };
   'game.sell_resource': { request: TradeEconomyResourceRequest; response: void };
+  'game.set_action_rebind_capture': { request: SetActionRebindCaptureRequest; response: void };
   'game.set_auto_assign_clergy': { request: SetAutoAssignClergyRequest; response: void };
   'game.set_auto_assign_commands': { request: SetAutoAssignCommandsRequest; response: void };
   'game.set_auto_assign_court': { request: SetAutoAssignCourtRequest; response: void };
@@ -7256,6 +7340,7 @@ export interface BridgeActions {
   'game.start_battle_action': { request: StartBattleActionRequest; response: StartBattleActionResponse };
   'game.start_bloc_interaction': { request: StartBlocInteractionRequest; response: StartBlocInteractionResponse };
   'game.start_faction_interaction': { request: StartFactionInteractionRequest; response: StartFactionInteractionResponse };
+  'game.start_military_dock_targeting': { request: MilitaryTargetingRequest; response: void };
   'game.start_military_embark_targeting': { request: MilitaryTargetingRequest; response: void };
   'game.start_military_merge_targeting': { request: MilitaryTargetingRequest; response: void };
   'game.start_peace_settlement_selection': { request: StartPeaceSettlementSelectionRequest; response: StartPeaceSettlementSelectionResponse };

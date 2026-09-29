@@ -3,6 +3,7 @@ import Tooltip from '../common/tooltips/Tooltip';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import Portrait from '../common/portraits/Portrait';
 import GovernorAssignmentPickerModal from './GovernorAssignmentPickerModal';
+import ResettlementPopPickerModal from './ResettlementPopPickerModal';
 import type { TooltipContent, TooltipLine } from '../common/tooltips/Tooltip';
 import { playSound } from '../../hooks/useSound';
 import { formatNumber } from '../../utils/numberFormat';
@@ -17,6 +18,7 @@ import {
   cancelResettlementSelectionBridge,
   confirmFormationSelectionBridge,
   confirmBuildingPlacementBridge,
+  confirmResettlementPopBridge,
   confirmResettlementSelectionBridge,
   finishGovernorAssignmentBridge,
   selectGovernorCandidateBridge,
@@ -221,6 +223,7 @@ function GovernorCandidate({ candidate, selectLabel }: { candidate: GovernorAssi
           + (candidate.atCapacity ? ' operation-governor-card--disabled' : '')
         }
         aria-label={selectLabel}
+        aria-pressed={candidate.isSelected}
         aria-disabled={candidate.atCapacity ? 'true' : 'false'}
         onClick={(event) => {
           event.stopPropagation();
@@ -516,7 +519,21 @@ const OperationBar: React.FC = () => {
   }
 
   if (resettlementSelection) {
-    return <ResettlementSelectionPanel operation={resettlementSelection} />;
+    return (
+      <>
+        <ResettlementPopPickerModal
+          open={resettlementSelection.needsPopSelection}
+          operation={resettlementSelection}
+          onConfirm={(cultureId, religionId) => {
+            confirmResettlementPopBridge(cultureId, religionId).catch(acknowledgeBridgeFailure);
+          }}
+          onCancel={() => { cancelResettlementSelectionBridge().catch(acknowledgeBridgeFailure); }}
+        />
+        {!resettlementSelection.needsPopSelection && (
+          <ResettlementSelectionPanel operation={resettlementSelection} />
+        )}
+      </>
+    );
   }
 
   return null;

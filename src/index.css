@@ -522,5 +522,6 @@ img {
 /* Caret color in inputs */
 input, textarea {
   caret-color: var(--gold);
+  user-select: text;
 }
 

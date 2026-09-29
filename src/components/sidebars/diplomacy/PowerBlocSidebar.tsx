@@ -741,7 +741,7 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
                           outcomeKey={outcomeKey}
                           cooldownDays={i.cooldownDays}
                           cooldownRemainingDays={i.cooldownRemainingDays}
-                          tutorialTarget={`Interaction:${i.id}${i.id === 'makepromiseinteraction' && bloc.definitionKey === 'loyalistbloc' ? ' LoyalistMakePromiseButton' : ''}`}
+                          tutorialTarget={`Interaction:${i.id}${i.id === 'makepromiseinteraction' ? ' LoyalistMakePromiseButton' : ''}`}
                           onClick={i.availability === 'available' && !i.inProgress ? () => {
                             if (i.needsLoanSelection) setLoanInteraction(i);
                             else void startBlocInteraction(i.id);

@@ -44,23 +44,18 @@ const SaveGameDialog: React.FC<SaveGameDialogProps> = ({
     if (visible) setName(suggestedName);
   }
 
-  // Focus input on mount. If the previous save name ends in a number, select
-  // just that number so the next save is a single keystroke.
+  // Focus so the player can edit immediately. Leave the previous name intact.
   useEffect(() => {
     if (mounted && !closing) {
       requestAnimationFrame(() => {
         const input = inputRef.current;
         if (!input) return;
         input.focus();
-        const match = /(\d+)\s*$/.exec(suggestedName);
-        if (mode === 'save' && match && match.index != null) {
-          input.setSelectionRange(match.index, suggestedName.length);
-        } else {
-          input.select();
-        }
+        const caret = input.value.length;
+        input.setSelectionRange(caret, caret);
       });
     }
-  }, [mounted, closing, mode, suggestedName]);
+  }, [mounted, closing, suggestedName]);
 
   const handleSubmit = useCallback(() => {
     const trimmed = name.trim();

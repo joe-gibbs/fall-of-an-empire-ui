@@ -57,8 +57,8 @@ const MILITARY_ATLAS_BLEED_REM = 1.5909;
 // atlas coordinates remain valid until the next paint-safe admission generation becomes active.
 const SETTLEMENT_NAMED_ATLAS_CAPACITY_WIDTH_REM = 15.1818;
 // Room for the settlement name, map-mode line, the building under construction,
-// its progress bar, and both queued-job lines.
-const SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM = 6.7273;
+// its progress bar, the coloured action name, and both queued-job lines.
+const SETTLEMENT_NAMED_ATLAS_CAPACITY_HEIGHT_REM = 7.6273;
 const MILITARY_ATLAS_CAPACITY_REM = 9;
 // Battle plates grow when close zoom switches them from the compact flag treatment to the
 // full strength board. Reserve the largest treatment from first admission so the compositor

@@ -39,6 +39,8 @@ import {
   mergeMilitaryUnitsBridge,
   startMilitaryEmbarkTargetingBridge,
   startMilitaryMergeTargetingBridge,
+  startMilitaryDockTargetingBridge,
+  cancelMilitaryDockTargetingBridge,
   toggleFoederatiCallupBridge,
   ungarrisonMilitaryBridge,
 } from '../../../bridge/military-map/useMilitaryBridge';
@@ -121,6 +123,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   const [splitInProgress, setSplitInProgress] = useState(false);
   const [mergeUnitsInProgress, setMergeUnitsInProgress] = useState(false);
   const [mergeTargetingActive, setMergeTargetingActive] = useState(false);
+  const [dockTargetingActive, setDockTargetingActive] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState(army.name);
   const unitSelectionDragRef = useRef<UnitSelectionDragState | null>(null);
@@ -195,6 +198,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     setSplitInProgress(false);
     setMergeUnitsInProgress(false);
     setMergeTargetingActive(false);
+    setDockTargetingActive(false);
     setIsRenaming(false);
     setRenameDraft(army.name);
   }, [army.id, army.name]);
@@ -471,23 +475,60 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     },
   };
 
+  const mergeDisabledReason = !isPlayerControlled
+    ? webUIText('Military.Command.NotCommandingSource')
+    : (!army.canMerge ? (army.mergeBlockReason || webUIText('Military.Selection.MergeDisabled')) : undefined);
   const mergeAction: MilitaryAction = {
     get label() { return webUIText(army.isNavy ? 'Military.MergeFleets' : 'Military.MergeArmies'); },
     icon: '/assets/icons/I_MergeUnits.png',
     get description() {
-      return webUIText(
+      return mergeDisabledReason ?? webUIText(
         mergeTargetingActive
           ? (army.isNavy ? 'Military.MergeFleetTargeting' : 'Military.MergeArmyTargeting')
           : (army.isNavy ? 'Military.MergeFleetDescription' : 'Military.MergeArmyDescription'),
       );
     },
+    tooltip: {
+      get title() { return webUIText(army.isNavy ? 'Military.MergeFleets' : 'Military.MergeArmies'); },
+      get body() {
+        return mergeDisabledReason ?? webUIText(
+          mergeTargetingActive
+            ? (army.isNavy ? 'Military.MergeFleetTargeting' : 'Military.MergeArmyTargeting')
+            : (army.isNavy ? 'Military.MergeFleetDescription' : 'Military.MergeArmyDescription'),
+        );
+      },
+    },
     isActive: mergeTargetingActive,
-    disabled: !isPlayerControlled || !army.canMerge,
+    disabled: Boolean(mergeDisabledReason),
     onClick: () => {
+      if (dockTargetingActive) {
+        setDockTargetingActive(false);
+        cancelMilitaryDockTargetingBridge().catch(acknowledgeBridgeFailure);
+      }
       setMergeTargetingActive(true);
       startMilitaryMergeTargetingBridge(army.id).catch(acknowledgeBridgeFailure);
     },
   };
+
+  const dockAction: MilitaryAction | null = army.isNavy && !army.garrisonedAt ? {
+    get label() { return webUIText('Military.Dock'); },
+    icon: '/assets/icons/I_NaviesQuickButton.png',
+    get description() {
+      return webUIText(dockTargetingActive ? 'Military.DockTargeting' : 'Military.DockDescription');
+    },
+    isActive: dockTargetingActive,
+    disabled: !isPlayerControlled,
+    onClick: () => {
+      if (dockTargetingActive) {
+        setDockTargetingActive(false);
+        cancelMilitaryDockTargetingBridge().catch(acknowledgeBridgeFailure);
+        return;
+      }
+      setMergeTargetingActive(false);
+      setDockTargetingActive(true);
+      startMilitaryDockTargetingBridge(army.id).catch(acknowledgeBridgeFailure);
+    },
+  } : null;
 
   const replenishCost = army.replenishCost ?? 0;
   const canUseReplenish = isReplenishing || (isPlayerControlled && !!army.formationTemplate && !!army.canReplenish && replenishCost > 0);
@@ -534,6 +575,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
   };
   const headerCommandActions: MilitaryAction[] = canViewFullDetails ? [
     replenishAction,
+    ...(dockAction ? [dockAction] : []),
     ...(army.isNavy ? [] : [forcedMarchAction]),
     ...(garrisonAction ? [garrisonAction] : []),
     ...(embarkAction ? [embarkAction] : []),

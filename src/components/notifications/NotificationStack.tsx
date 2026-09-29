@@ -229,12 +229,12 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
   const anchorsEnabledRef = useRef(anchorsEnabled);
 
   const settlementNotifications = useMemo(
-    () => notifications.filter((n) => !isBuildQueueCompletionNotification(n) && shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
+    () => notifications.filter((n) => !n.isPlayerActionResult && !isBuildQueueCompletionNotification(n) && shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
     [notifications, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds],
   );
 
   const stackNotifications = useMemo(
-    () => notifications.filter((n) => !isBuildQueueCompletionNotification(n) && !shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
+    () => notifications.filter((n) => !n.isPlayerActionResult && !isBuildQueueCompletionNotification(n) && !shouldUseSettlementAnchor(n, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds)),
     [notifications, settlementAnchors, settlementExitAnchors, worldSettlementAnchors, settlementMissingAnchorIds],
   );
 
@@ -366,8 +366,10 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
     const expiredIds: string[] = [];
     for (const n of notifications) {
       if (
-        currentGameDay > 0
+        !n.isPlayerActionResult
+        && currentGameDay > 0
         && typeof n.expiresOnDay === 'number'
+        && n.expiresOnDay > 0
         && n.expiresOnDay <= currentGameDay
         && !exiting.has(n.id)
       ) {

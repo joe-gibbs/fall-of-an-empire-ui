@@ -253,7 +253,7 @@ export function useSettlementInteractionsBridge(settlementId: string | null): Se
     if (!settlementId) return;
     try {
       const response = await bridgeCall('game.start_settlement_interaction', { settlementId, interactionId });
-      if (response.needsDestinationSelection) {
+      if (response.needsDestinationSelection || response.needsPopSelection) {
         await queryResettlementSelectionBridge();
       }
       return response;

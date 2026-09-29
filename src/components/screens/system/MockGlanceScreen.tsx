@@ -476,6 +476,7 @@ function mockSettlementData(data: SettlementMock, variant: SettlementVariant): S
     bishopName: data.status === 'Capital' ? 'Bishop Caldus' : '',
     targeted: data.status === 'Besieged' || data.status === 'Harbour',
     buildItem: data.status !== 'Besieged' ? { get label() { return data.status === 'Capital' ? webUIText("MockGlance.Forum") : webUIText("MockGlance.HarbourWorks"); }, icon: '/assets/icons/I_BuildingsQuickButton.png', progress: data.status === 'Capital' ? 0.52 : 0.34 } : undefined,
+    activeAction: data.status === 'Capital' ? { label: 'Relocate Population', colour: '#78c058', icon: '/assets/settlement-interactions/icons/RelocatePopulationInteraction.png' } : undefined,
     warWithPlayer: data.faction !== FACTIONS.crown,
   };
 }

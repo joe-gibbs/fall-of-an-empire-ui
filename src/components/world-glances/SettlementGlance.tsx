@@ -4,6 +4,7 @@ import type { SettlementGlanceData } from './WorldGlanceTypes';
 import { clampUnitFraction, percentWidth } from './glanceMath';
 import { formatNumber, formatPercent, formatResourceNumber, formatSignedNumber } from '../../utils/numberFormat';
 import { useGameState } from '../../context/GameContext';
+import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { roundelDiplomacyProps } from '../../utils/factionBorder';
 import { glanceBadgeBackgroundColour, isHostileGlance, readableFactionTextColour, relationDisplayColour, relationDisplayLabel, relationTextVars } from './WorldGlancePresentation';
@@ -315,6 +316,8 @@ interface SettlementGlanceProps {
 
 export default function SettlementGlance({ data }: SettlementGlanceProps) {
   const { debugMode } = useGameState();
+  const { settings } = useSettingsBridge();
+  const showSettlementActions = settings?.graphics.showSettlementActionGlances !== false;
   const controller = data.occupier ?? data.faction;
   const relationColour = relationDisplayColour(controller.relation, data.warWithPlayer);
   const badgeBackgroundColour = glanceBadgeBackgroundColour(controller.relation, data.warWithPlayer);
@@ -372,13 +375,6 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
       {atWar && <span className="glance-war-glow" aria-hidden="true" />}
       {debugMode && data.debugShortId !== undefined && (
         <div className="glance-debug-id">#{formatNumber(data.debugShortId)}</div>
-      )}
-      {besieged && (
-        <div className="gset-siege-progress" aria-hidden="true">
-          <div className="gset-siege-progress-track">
-            <div className="gset-siege-progress-fill" style={{ width: percentWidth(displayedSiegeProgress) }} />
-          </div>
-        </div>
       )}
       <div className="gset-body">
         <div className="gset-emblem">
@@ -443,29 +439,57 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
           </div>
 
           <div
-            className="gset-build-status"
-            style={{ display: data.buildItem ? undefined : 'none' }}
+            className={`gset-build-status${besieged ? ' is-siege' : ''}`}
+            style={{ display: besieged || data.buildItem ? undefined : 'none' }}
           >
-            {data.buildItem && (
+            {besieged ? (
+              <img
+                className="gset-build-status-icon"
+                src={WebkilnAssetPath('/assets/icons/I_Siege.png')}
+                alt=""
+              />
+            ) : data.buildItem ? (
               <img
                 className="gset-build-status-icon"
                 src={WebkilnAssetPath(data.buildItem.icon)}
                 alt=""
               />
-            )}
-            <span className="gset-build-status-label">{data.buildItem?.label ?? ''}</span>
+            ) : null}
+            <span className="gset-build-status-label">
+              {besieged ? webUIText('Settlement.Siege.Title') : (data.buildItem?.label ?? '')}
+            </span>
             <span className="gset-build-status-value">
-              {data.buildItem ? formatPercent(buildItemProgress * 100) : ''}
+              {besieged
+                ? formatPercent(displayedSiegeProgress * 100)
+                : data.buildItem
+                  ? formatPercent(buildItemProgress * 100)
+                  : ''}
             </span>
           </div>
 
           <div
             className="gset-build-bar"
             aria-hidden="true"
-            style={{ display: !besieged && data.buildItem ? undefined : 'none' }}
+            style={{ display: besieged || data.buildItem ? undefined : 'none' }}
           >
-            <div className="gset-build-bar-fill" style={{ width: percentWidth(buildItemProgress) }} />
+            <div
+              className={`gset-build-bar-fill${besieged ? ' is-siege' : ''}`}
+              style={{ width: percentWidth(besieged ? displayedSiegeProgress : buildItemProgress) }}
+            />
           </div>
+
+          {showSettlementActions && data.activeAction && (
+            <div className="gset-active-action" style={{ color: data.activeAction.colour }}>
+              {data.activeAction.icon ? (
+                <img
+                  className="gset-active-action-icon"
+                  src={WebkilnAssetPath(data.activeAction.icon)}
+                  alt=""
+                />
+              ) : null}
+              <span className="gset-active-action-label">{data.activeAction.label}</span>
+            </div>
+          )}
 
           {data.queuedConstruction && (
             <div className="gset-queued-job">

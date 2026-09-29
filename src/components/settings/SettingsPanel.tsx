@@ -8,7 +8,9 @@ import DropdownSelect from '../common/forms/DropdownSelect';
 import Tooltip, { type TooltipContent } from '../common/tooltips/Tooltip';
 import { useSettingsBridge } from '../../bridge/app/useSettingsBridge';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
+import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 import { browserKeyToUnrealKey, browserMouseButtonToUnrealKey, isModifierCode } from '../../bridge/core/browserKeyToUnrealKey';
+import { interpretRebindCapture } from '../../input/rebindCapture';
 import { browserGamepadButtonToUnrealKey } from '../../bridge/core/browserGamepadToUnrealKey';
 import { KeyGlyph } from '../common/KeyGlyph';
 import { useActiveInputDevice } from '../../hooks/useActiveInputDevice';
@@ -611,13 +613,23 @@ const ControlsTab: React.FC<{
   }, [conflictNotice]);
 
   useEffect(() => {
+    void bridgeCall('game.set_action_rebind_capture', { enabled: pending !== null }).catch(() => undefined);
+    return () => {
+      void bridgeCall('game.set_action_rebind_capture', { enabled: false }).catch(() => undefined);
+    };
+  }, [pending]);
+
+  useEffect(() => {
     if (!pending) return;
 
+    let finished = false;
     const finishRebind = async (
       currentPending: PendingRebind,
       keyName: string,
       nextMods: { shift: boolean; ctrl: boolean; alt: boolean; cmd: boolean },
     ) => {
+      if (finished) return;
+      finished = true;
       setPending(null);
       const cleared = currentPending.isAxis
         ? await rebind(currentPending.index, true, keyName, { shift: false, ctrl: false, alt: false, cmd: false })
@@ -632,6 +644,7 @@ const ControlsTab: React.FC<{
       e.stopPropagation();
 
       if (e.code === 'Escape') {
+        finished = true;
         setPending(null);
         return;
       }
@@ -644,6 +657,21 @@ const ControlsTab: React.FC<{
       if (!keyName) return;
 
       await finishRebind(pending, keyName, { shift: e.shiftKey, ctrl: e.ctrlKey, alt: e.altKey, cmd: e.metaKey });
+    };
+
+    const nativeKeyHandler = (event: Event) => {
+      const result = interpretRebindCapture((event as CustomEvent<unknown>).detail);
+      if (result.type === 'cancel') {
+        finished = true;
+        setPending(null);
+        return;
+      }
+      if (result.type === 'mods') {
+        setMods({ shift: result.mods.shift, ctrl: result.mods.ctrl, alt: result.mods.alt });
+        return;
+      }
+      if (result.type !== 'bind') return;
+      void finishRebind(pending, result.keyName, result.mods);
     };
 
     const mouseHandler = async (e: MouseEvent) => {
@@ -693,6 +721,7 @@ const ControlsTab: React.FC<{
 
           // View/Back cancels, matching the Esc affordance for keyboard users.
           if (i === 8) {
+            finished = true;
             setPending(null);
             return;
           }
@@ -727,6 +756,7 @@ const ControlsTab: React.FC<{
     window.addEventListener('wheel', wheelHandler, { capture: true, passive: false });
     window.addEventListener('contextmenu', blockMouseMenu, true);
     window.addEventListener('auxclick', blockMouseMenu, true);
+    bridgeEvents.addEventListener('ui.rebind_key', nativeKeyHandler);
     return () => {
       window.cancelAnimationFrame(rafId);
       window.removeEventListener('keydown', keyHandler, true);
@@ -734,6 +764,7 @@ const ControlsTab: React.FC<{
       window.removeEventListener('wheel', wheelHandler, true);
       window.removeEventListener('contextmenu', blockMouseMenu, true);
       window.removeEventListener('auxclick', blockMouseMenu, true);
+      bridgeEvents.removeEventListener('ui.rebind_key', nativeKeyHandler);
     };
   }, [pending, rebind]);
 
@@ -794,7 +825,10 @@ const ControlsTab: React.FC<{
         className={`settings-key-badge settings-key-badge--clickable settings-key-badge--glyph${
           isActiveDeviceBinding(b) ? ' settings-key-badge--active-device' : ''
         }`}
-        onClick={() => setPending({ index: b.index, isAxis: b.isAxis, label: b.label })}
+        onClick={() => {
+          void bridgeCall('game.set_action_rebind_capture', { enabled: true }).catch(() => undefined);
+          setPending({ index: b.index, isAxis: b.isAxis, label: b.label });
+        }}
       >
         <KeyGlyph
           keyDisplay={b.keyDisplay}
@@ -1517,6 +1551,7 @@ const SettingsPanel: React.FC = () => {
             <SectionHeading title={webUIText('Settings.Glances.Title')} variant="ornate" />
             <Dropdown label={webUIText('Settings.GlanceDensity.Label')} desc={webUIText('Settings.GlanceDensity.Description')} tooltip={settingsTooltip(webUIText('Settings.GlanceDensity.Label'), 'Settings.Tooltip.GlanceDensity.Body')} value={graphics.glanceDensity} options={GLANCE_DENSITY_OPTIONS} onChange={v => setGraphics({ glanceDensity: v })} />
             <Toggle label={webUIText('Settings.ShowSettlementGlances.Label')} desc={webUIText('Settings.ShowSettlementGlances.Description')} tooltip={settingsTooltip(webUIText('Settings.ShowSettlementGlances.Label'), 'Settings.Tooltip.SettlementGlances.Body')} checked={graphics.showSettlementGlances} onChange={() => setGraphics({ showSettlementGlances: !graphics.showSettlementGlances })} />
+            <Toggle label={webUIText('Settings.ShowSettlementActionGlances.Label')} desc={webUIText('Settings.ShowSettlementActionGlances.Description')} tooltip={settingsTooltip(webUIText('Settings.ShowSettlementActionGlances.Label'), 'Settings.Tooltip.SettlementActionGlances.Body')} checked={graphics.showSettlementActionGlances} onChange={() => setGraphics({ showSettlementActionGlances: !graphics.showSettlementActionGlances })} />
             <Toggle label={webUIText('Settings.ShowMilitaryGlances.Label')} desc={webUIText('Settings.ShowMilitaryGlances.Description')} tooltip={settingsTooltip(webUIText('Settings.ShowMilitaryGlances.Label'), 'Settings.Tooltip.MilitaryGlances.Body')} checked={graphics.showMilitaryGlances} onChange={() => setGraphics({ showMilitaryGlances: !graphics.showMilitaryGlances })} />
             <Toggle label={webUIText('Settings.ShowOwnConvoyGlances.Label')} desc={webUIText('Settings.ShowOwnConvoyGlances.Description')} tooltip={settingsTooltip(webUIText('Settings.ShowOwnConvoyGlances.Label'), 'Settings.Tooltip.OwnConvoyGlances.Body')} checked={graphics.showOwnConvoyGlances} onChange={() => setGraphics({ showOwnConvoyGlances: !graphics.showOwnConvoyGlances })} />
             <Toggle label={webUIText('Settings.ShowAllyConvoyGlances.Label')} desc={webUIText('Settings.ShowAllyConvoyGlances.Description')} tooltip={settingsTooltip(webUIText('Settings.ShowAllyConvoyGlances.Label'), 'Settings.Tooltip.AllyConvoyGlances.Body')} checked={graphics.showAllyConvoyGlances} onChange={() => setGraphics({ showAllyConvoyGlances: !graphics.showAllyConvoyGlances })} />

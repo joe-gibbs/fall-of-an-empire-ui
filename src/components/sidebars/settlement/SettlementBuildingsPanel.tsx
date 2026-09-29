@@ -2714,7 +2714,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
                     ],
                   }}>
                     <GameButton
-                      variant="outline"
+                      variant="burgundy"
                       icon="/assets/icons/I_ModConstruction.png"
                       disabled={repairingAll || !liveData.canRepairAll}
                       onClick={handleRepairAll}

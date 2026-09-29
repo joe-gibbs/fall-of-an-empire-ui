@@ -557,7 +557,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
 
   const handleAcceptedCloseAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
     if (!acceptedClosing || event.target !== event.currentTarget || event.animationName !== 'treaty-negotiation-close') return;
-    openScreen('diplomacy', 'treaties');
+    onClose();
   };
 
   const acceptabilityBreakdown: TooltipContent = useMemo(() => ({

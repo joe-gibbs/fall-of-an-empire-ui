@@ -6,7 +6,12 @@ import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { useAnchoredDropdown } from '../../hooks/useAnchoredDropdown';
 import { playSound } from '../../hooks/useSound';
 import { webUIText } from '../../localization/WebUITextContext';
-import { isBuildQueueCompletionNotification } from '../../notifications/buildQueueCompletion';
+import {
+  MAX_VISIBLE_BUILD_QUEUE_TOASTS,
+  buildQueueCloseScope,
+  idsForBuildQueueClose,
+  isBuildQueueCompletionNotification,
+} from '../../notifications/buildQueueCompletion';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { toRootRem } from '../../utils/cssUnits';
 import { renderEventTextChunk } from '../../utils/eventTextFlow';
@@ -29,12 +34,11 @@ interface BuildQueueCompletionToastItemProps {
   closing: boolean;
   staggerMs: number;
   onActivate: (id: string) => void;
-  onClose: (id: string) => void;
+  onClose: (id: string, event: React.MouseEvent) => void;
   onMuteType: (typeId: string) => void;
   onLinkClick?: (type: string, id: string) => void;
 }
 
-const MAX_VISIBLE_TOASTS = 5;
 const EXIT_DURATION_MS = 220;
 const TOAST_WIDTH_PX = 296;
 
@@ -183,7 +187,7 @@ function BuildQueueCompletionToastItem({
           onClick={(event) => {
             event.stopPropagation();
             playSound('close');
-            onClose(notification.id);
+            onClose(notification.id, event);
           }}
           aria-label={webUIText('Auto.Attr.ComponentsNotificationsNotificationBanner.66.1')}
         >
@@ -206,7 +210,7 @@ export default function BuildQueueCompletionToast({
     [notifications],
   );
   const visible = useMemo(
-    () => queued.slice(0, MAX_VISIBLE_TOASTS),
+    () => queued.slice(0, MAX_VISIBLE_BUILD_QUEUE_TOASTS),
     [queued],
   );
   const [anchor, setAnchor] = useState<DOMRect | null>(null);
@@ -281,6 +285,7 @@ export default function BuildQueueCompletionToast({
     for (const notification of queued) {
       if (
         typeof notification.expiresOnDay === 'number'
+        && notification.expiresOnDay > 0
         && notification.expiresOnDay <= currentGameDay
         && !closingIds.has(notification.id)
       ) {
@@ -300,6 +305,22 @@ export default function BuildQueueCompletionToast({
     activateNotification(id);
     beginClose(id);
   }, [beginClose]);
+
+  const handleClose = useCallback((id: string, event: React.MouseEvent) => {
+    const scope = buildQueueCloseScope(event);
+    const { animateIds, dismissIds } = idsForBuildQueueClose(
+      id,
+      visible.map(notification => notification.id),
+      queued.map(notification => notification.id),
+      scope,
+    );
+    for (const queuedId of dismissIds) {
+      dismissNow(queuedId);
+    }
+    for (const visibleId of animateIds) {
+      beginClose(visibleId);
+    }
+  }, [beginClose, dismissNow, queued, visible]);
 
   const handleMuteType = useCallback((typeId: string) => {
     void bridgeCall('game.set_notification_muted', { typeId, muted: true })
@@ -335,7 +356,7 @@ export default function BuildQueueCompletionToast({
           closing={closingIds.has(notification.id)}
           staggerMs={index * UI_MOTION.notificationStackStaggerMs}
           onActivate={handleActivate}
-          onClose={beginClose}
+          onClose={handleClose}
           onMuteType={handleMuteType}
           onLinkClick={onLinkClick}
         />
