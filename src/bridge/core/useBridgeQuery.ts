@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { startTransition, use, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import type { BridgeActions } from '../../bridge-types.generated.ts';
 import { getCachedBridgeEvent, getCachedBridgeEventRevision, nextBridgeCacheRevision } from './bridgeEventCache';
@@ -9,6 +9,17 @@ type RequestOf<A extends BridgeActionName> = BridgeActions[A]['request'];
 type ResponseOf<A extends BridgeActionName> = BridgeActions[A]['response'];
 
 const inFlightQueries = new Map<string, Promise<unknown>>();
+// A suspended render has not mounted yet, so its request must survive retries.
+interface RenderingBridgeQuery {
+  promise: Promise<unknown>;
+  revision: number;
+}
+const renderingQueries = new Map<string, RenderingBridgeQuery>();
+
+/** Release abandoned render attempts when the player requests another view. */
+export function beginBridgeQueryTransition(): void {
+  renderingQueries.clear();
+}
 interface CompletedBridgeQuery {
   value: unknown;
   storedAtMs: number;
@@ -21,10 +32,14 @@ const completedQueries = new Map<string, CompletedBridgeQuery>();
 export function clearBridgeQueryCache(action?: BridgeActionName): void {
   if (!action) {
     completedQueries.clear();
+    renderingQueries.clear();
     return;
   }
 
   const prefix = `${action}:`;
+  for (const key of renderingQueries.keys()) {
+    if (key.startsWith(prefix)) renderingQueries.delete(key);
+  }
   for (const key of completedQueries.keys()) {
     if (key.startsWith(prefix)) {
       completedQueries.delete(key);
@@ -50,12 +65,12 @@ function readCompletedQuery(requestKey: string): CompletedBridgeQuery | undefine
   return completed;
 }
 
-function writeCompletedQuery(requestKey: string, value: unknown, ttlMs: number | null): void {
+function writeCompletedQuery(requestKey: string, value: unknown, ttlMs: number | null, revision = nextBridgeCacheRevision()): void {
   completedQueries.set(requestKey, {
     value,
     storedAtMs: nowMs(),
     ttlMs,
-    revision: nextBridgeCacheRevision(),
+    revision,
   });
 }
 
@@ -76,8 +91,12 @@ interface UseBridgeQueryOptions<A extends BridgeActionName, T> {
   cacheResponseMs?: number;
   /** Re-fetch while mounted for visible data that can change without a push event. */
   refreshMs?: number;
+  /** Refresh this exact request when a mutation emits its completion event. */
+  refreshOn?: readonly BridgeActionName[];
   /** Keep the last response visible while a changed payload is being resolved. */
   keepPreviousData?: boolean;
+  /** Commit this view only once its initial or changed request has resolved. */
+  suspend?: boolean;
   /**
    * Optional filter for push updates so an unrelated push (e.g. a different
    * settlement) doesn't overwrite our current data.
@@ -99,37 +118,67 @@ export interface BridgeQueryState<T> {
 export function useBridgeQueryState<A extends BridgeActionName, T>(
   options: UseBridgeQueryOptions<A, T>,
 ): BridgeQueryState<T> {
-  const { action, payload, map, matchPush, mergePush, fetch = true, keepPreviousData = false } = options;
+  const { action, payload, map, matchPush, mergePush, fetch = true, keepPreviousData = false, suspend = false } = options;
   const cacheResponse = options.cacheResponse === true;
   const cacheResponseMs = options.cacheResponseMs ?? 0;
   const refreshMs = options.refreshMs ?? 0;
   const shouldCacheResponse = cacheResponse || cacheResponseMs > 0;
   const completedTtlMs = cacheResponse ? null : cacheResponseMs;
-  const [data, setData] = useState<{ requestKey: string; value: T | null } | null>(null);
+  const [data, setData] = useState<{ requestKey: string; value: T | null; revision: number } | null>(null);
 
   // Hold map / matchPush in refs so callers don't have to memoise them.
   const mapRef = useRef(map);
   const matchRef = useRef(matchPush);
   const mergePushRef = useRef(mergePush);
-  mapRef.current = map;
-  matchRef.current = matchPush;
-  mergePushRef.current = mergePush;
+  useLayoutEffect(() => {
+    mapRef.current = map;
+    matchRef.current = matchPush;
+    mergePushRef.current = mergePush;
+  });
 
   // Serialise payload so a fresh-but-equal object doesn't refire the effect.
   const payloadKey = payload === undefined ? '__void__' : JSON.stringify(payload);
   const requestKey = `${action}:${payloadKey}`;
-  const currentValue = payload !== null && (data?.requestKey === requestKey || keepPreviousData)
-    ? data?.value ?? null
+  const refreshOnKey = JSON.stringify(options.refreshOn ?? []);
+  let resolvedData = data;
+  if (suspend && fetch && payload !== null && data?.requestKey !== requestKey) {
+    let rendering = renderingQueries.get(requestKey);
+    if (!rendering) {
+      const completed = shouldCacheResponse ? readCompletedQuery(requestKey) : undefined;
+      const record: RenderingBridgeQuery = {
+        promise: Promise.resolve(completed?.value),
+        revision: completed?.revision ?? 0,
+      };
+      if (!completed) {
+        record.promise = requestBridge(action, payload, requestKey).then(raw => {
+          record.revision = nextBridgeCacheRevision();
+          if (shouldCacheResponse && renderingQueries.get(requestKey) === record) {
+            writeCompletedQuery(requestKey, raw, completedTtlMs, record.revision);
+          }
+          return raw;
+        });
+      }
+      rendering = record;
+      renderingQueries.set(requestKey, record);
+    }
+    const raw = use(rendering.promise) as ResponseOf<A>;
+    resolvedData = { requestKey, value: map(raw), revision: rendering.revision };
+    setData(resolvedData);
+  }
+  const currentValue = payload !== null && (resolvedData?.requestKey === requestKey || keepPreviousData)
+    ? resolvedData?.value ?? null
     : null;
-  const pending = payload !== null && data?.requestKey !== requestKey;
+  const pending = payload !== null && resolvedData?.requestKey !== requestKey;
 
   useEffect(() => {
+    const commitData: typeof setData = update => startTransition(() => setData(update));
     if (payload === null) {
-      setData(null);
+      commitData(null);
       return;
     }
 
     let cancelled = false;
+    renderingQueries.delete(requestKey);
 
     // Subscribe to push events up-front so hooks that mount before the first
     // response still receive later game-side updates.
@@ -139,13 +188,17 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
       if (shouldCacheResponse) {
         writeCompletedQuery(requestKey, raw, completedTtlMs);
       }
-      setData((current) => {
+      const revision = nextBridgeCacheRevision();
+      const mapPush = mapRef.current;
+      const merge = mergePushRef.current;
+      commitData((current) => {
         const currentValue = current?.requestKey === requestKey ? current.value : null;
         return {
           requestKey,
-          value: mergePushRef.current
-            ? mergePushRef.current(currentValue, raw)
-            : mapRef.current(raw),
+          revision,
+          value: merge
+            ? merge(currentValue, raw)
+            : mapPush(raw),
         };
       });
     }) as never);
@@ -153,47 +206,38 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
     const completed = shouldCacheResponse ? readCompletedQuery(requestKey) : undefined;
     if (completed !== undefined) {
       const completedResponse = completed.value as ResponseOf<A>;
-      setData({
+      commitData({
         requestKey,
+        revision: completed.revision,
         value: mapRef.current(completedResponse),
       });
     }
 
     const cached = getCachedBridgeEvent(action);
     if (cached !== undefined
-      && getCachedBridgeEventRevision(action) > (completed?.revision ?? 0)
+      && getCachedBridgeEventRevision(action) > Math.max(completed?.revision ?? 0, resolvedData?.requestKey === requestKey ? resolvedData.revision : 0)
       && (!matchRef.current || matchRef.current(cached as ResponseOf<A>))) {
       const cachedResponse = cached as ResponseOf<A>;
-      setData(current => ({
+      const revision = getCachedBridgeEventRevision(action);
+      const mapCached = mapRef.current;
+      const mergeCached = mergePushRef.current;
+      commitData(current => ({
         requestKey,
-        value: mergePushRef.current
-          ? mergePushRef.current(current?.requestKey === requestKey ? current.value : null, cachedResponse)
-          : mapRef.current(cachedResponse),
+        revision,
+        value: mergeCached
+          ? mergeCached(current?.requestKey === requestKey ? current.value : null, cachedResponse)
+          : mapCached(cachedResponse),
       }));
     }
 
-    // The variadic typing on bridgeCall can't be satisfied generically here;
-    // cast through a less precise signature.
-    const call = bridgeCall as unknown as (a: BridgeActionName, p?: unknown) => Promise<unknown>;
     const requestFresh = () => {
-      let request = inFlightQueries.get(requestKey);
-      if (!request) {
-        request = call(action, payload === undefined ? undefined : payload)
-          .finally(() => {
-            if (inFlightQueries.get(requestKey) === request) {
-              inFlightQueries.delete(requestKey);
-            }
-          });
-        inFlightQueries.set(requestKey, request);
-      }
-
-      request
+      requestBridge(action, payload, requestKey)
         .then((raw) => {
           if (cancelled) return;
           if (shouldCacheResponse) {
             writeCompletedQuery(requestKey, raw, completedTtlMs);
           }
-          setData({ requestKey, value: mapRef.current(raw as ResponseOf<A>) });
+          commitData({ requestKey, value: mapRef.current(raw as ResponseOf<A>), revision: nextBridgeCacheRevision() });
         })
         .catch((error) => {
           if (cancelled) return;
@@ -201,9 +245,12 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
         });
     };
 
-    if (fetch && completed === undefined) {
+    if (fetch && completed === undefined && !(suspend && resolvedData?.requestKey === requestKey)) {
       requestFresh();
     }
+
+    const mutationUnsubscribers = (JSON.parse(refreshOnKey) as BridgeActionName[])
+      .map(event => onBridgeEvent(event, requestFresh));
 
     let refreshTimer: number | undefined;
     if (fetch && refreshMs > 0) {
@@ -216,14 +263,27 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
         window.clearInterval(refreshTimer);
       }
       unsub();
+      mutationUnsubscribers.forEach(unsubscribe => unsubscribe());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [action, cacheResponse, cacheResponseMs, completedTtlMs, fetch, payloadKey, refreshMs, requestKey, shouldCacheResponse]);
+  }, [action, cacheResponse, cacheResponseMs, completedTtlMs, fetch, payloadKey, refreshMs, refreshOnKey, requestKey, shouldCacheResponse, suspend]);
 
   return {
     value: currentValue,
     pending,
   };
+}
+
+function requestBridge(action: BridgeActionName, payload: unknown, requestKey: string): Promise<unknown> {
+  let request = inFlightQueries.get(requestKey);
+  if (!request) {
+    const call = bridgeCall as unknown as (a: BridgeActionName, p?: unknown) => Promise<unknown>;
+    request = call(action, payload).finally(() => {
+      if (inFlightQueries.get(requestKey) === request) inFlightQueries.delete(requestKey);
+    });
+    inFlightQueries.set(requestKey, request);
+  }
+  return request;
 }
 
 export function useBridgeQuery<A extends BridgeActionName, T>(

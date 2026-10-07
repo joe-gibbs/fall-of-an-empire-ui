@@ -67,7 +67,6 @@ function stageEffectLines(stage: ReligionConversionStageView) {
 
 function stageTooltip(stage: ReligionConversionStageView, includeActiveProgress = true) {
   const lines = [
-    { label: webUIText('Common.Status'), value: stageStateLabel(stage) },
     { label: webUIText('Common.Duration'), value: formatDuration(stage.durationDays) },
     { label: webUIText('Common.Cost'), value: webUIText('ReligionConversion.GoldCost', { Value: formatNumber(stage.goldCost) }), valueColor: 'var(--gold)' },
   ];
@@ -220,7 +219,7 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
         <StyledScrollArea className="rcm-scroll" viewportClassName="rcm-body">
           {conversion && (
             <div className="rcm-current">
-              <ReligionTooltip info={conversion.state.currentReligionInfo} position="bottom" wrapperClassName="rcm-current-religion-tooltip">
+              <ReligionTooltip info={conversion.state.currentReligionInfo} fallbackId={conversion.state.currentReligionKey} position="bottom" wrapperClassName="rcm-current-religion-tooltip">
                 <div className="rcm-current-faith">
                   <img src={conversion.state.currentReligionIconPath} alt="" className="rcm-religion-icon" draggable={false} />
                   <div>
@@ -230,7 +229,7 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
                 </div>
               </ReligionTooltip>
               <div className="rcm-current-arrow" />
-              <ReligionTooltip info={targetInfo} fallbackName={targetName} position="bottom" wrapperClassName="rcm-current-religion-tooltip" disabled={!targetName}>
+              <ReligionTooltip info={targetInfo} fallbackName={targetName} fallbackId={conversion.state.active ? conversion.state.targetReligionKey : selectedKey} position="bottom" wrapperClassName="rcm-current-religion-tooltip" disabled={!targetName}>
                 <div className="rcm-current-faith">
                   <img src={targetIcon} alt="" className="rcm-religion-icon" draggable={false} />
                   <div>
@@ -307,6 +306,7 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
                     info={option.info}
                     position="left"
                     delay={200}
+                    interactive={false}
                     extraLines={[{
                       label: webUIText('Auto.ComponentsScreensReligionScreen.179.3'),
                       value: formatPercent(option.realmShare * 100),

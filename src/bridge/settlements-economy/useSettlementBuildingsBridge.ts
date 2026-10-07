@@ -162,6 +162,7 @@ function mapBuiltBuilding(entry: SettlementBuiltBuildingEntry): Building {
     religionIcon: entry.religionIcon
       ? WebkilnAssetPath(entry.religionIcon)
       : (entry.religionId ? WebkilnAssetPath(`/assets/religions/${entry.religionId}.png`) : undefined),
+    requiredSettlementName: entry.requiredSettlementName || undefined,
     replacesParent: entry.replacesParent,
     blocksConstruction: entry.blocksConstruction,
     canDemolish: entry.canDemolish,
@@ -201,6 +202,7 @@ function mapAvailableBuilding(entry: SettlementAvailableBuildingEntry): Availabl
     religionIcon: entry.religionIcon
       ? WebkilnAssetPath(entry.religionIcon)
       : (entry.religionId ? WebkilnAssetPath(`/assets/religions/${entry.religionId}.png`) : undefined),
+    requiredSettlementName: entry.requiredSettlementName || undefined,
     replacesParent: entry.replacesParent,
     buildState: toBuildState(entry.buildState),
   };

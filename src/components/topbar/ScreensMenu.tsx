@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { bridgeEvents } from '../../bridge/core/bridgeEvents';
@@ -30,8 +31,6 @@ interface ScreensMenuProps {
   onPinnedToggle?: () => void;
   isPinnedOpen?: boolean;
   pinnedCount?: number;
-  onVictoryToggle?: () => void;
-  isVictoryOpen?: boolean;
   subjectMode?: boolean;
   observerMode?: boolean;
 }
@@ -75,8 +74,6 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
   onPinnedToggle,
   isPinnedOpen = false,
   pinnedCount = 0,
-  onVictoryToggle,
-  isVictoryOpen = false,
   subjectMode = false,
   observerMode = false,
 }) => {
@@ -143,8 +140,12 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
   const close = useCallback(() => setOpen(false), []);
 
   const entries = useMemo((): MenuEntry[] => {
+    const clansOpenedFromMilitary = activeScreen === 'military' && playerFaction?.usesWarbands === true;
     const registrations = getAllTopbarButtons().filter((b) => (
       b.id !== FACTION_BUTTON_ID
+      && (b.id !== 'military' || !playerFaction?.usesWarbands)
+      && (b.id !== 'internal-politics' || !playerFaction?.usesWarbands)
+    && (b.id !== 'powerblocs' || playerFaction?.usesWarbands || playerFaction?.usesPowerBlocs)
       && (b.id !== ACHIEVEMENTS_BUTTON_ID || steamAchievementsAvailable === false)
       && isVisibleForFactionMode(b, subjectMode)
       && (!observerMode || isObserverTopbarButton(b.id))
@@ -152,13 +153,16 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
 
     const screenEntries: MenuEntry[] = registrations.map((btn) => ({
       id: btn.id,
-      label: localizeButtonLabel(btn, t),
-      icon: resolveScreenButtonIcon(btn, playerFaction?.religionId),
-      active: activeScreen === btn.id,
+      label: btn.id === 'powerblocs' && playerFaction && playerFaction.usesWarbands
+        ? t('KinshipGroups.Title')
+        : btn.id === 'military' && playerFaction?.usesRegionalForces ? t('RegionalForces.Title') : localizeButtonLabel(btn, t),
+      icon: btn.id === 'powerblocs' && playerFaction && playerFaction.usesWarbands
+        ? '/assets/icons/I_Kinship.png' : btn.id === 'military' && playerFaction?.usesRegionalForces ? '/assets/icons/I_Region.png' : resolveScreenButtonIcon(btn, playerFaction?.religionId),
+      active: activeScreen === btn.id || (btn.id === 'powerblocs' && clansOpenedFromMilitary),
       tutorialTarget: `ScreenButton:${btn.id}`,
       onSelect: () => {
         playSound('click');
-        onScreenChange?.(btn.id);
+        onScreenChange?.(btn.id === 'powerblocs' && clansOpenedFromMilitary ? 'military' : btn.id);
         close();
       },
     }));
@@ -184,13 +188,12 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
         id: 'victory',
         label: t('Topbar.VictoryConditions'),
         icon: '/assets/icons/Victory/I_Victory_Gold.png',
-        active: isVictoryOpen || activeScreen === 'victory',
+        active: activeScreen === 'victory',
         tutorialTarget: 'VictoryConditionsButton',
         onSelect: () => {
           playSound('click');
-          // Close the menu first so the victory panel can mount against the anchor.
+          onScreenChange?.('victory');
           close();
-          window.setTimeout(() => onVictoryToggle?.(), 0);
         },
       });
     }
@@ -245,13 +248,11 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
     activeScreen,
     close,
     isPinnedOpen,
-    isVictoryOpen,
     observerMode,
     onPinnedToggle,
     onScreenChange,
-    onVictoryToggle,
     pinnedCount,
-    playerFaction?.religionId,
+    playerFaction,
     steamAchievementsAvailable,
     subjectMode,
     t,
@@ -298,11 +299,11 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
   return (
     <div className="screens-menu" ref={setTriggerRef as React.RefCallback<HTMLDivElement>}>
       {/*
-        Pinned / victory panels anchor on these classes in the full top bar.
+        The pinned panel anchors on this class in the full top bar.
         Compact mode has no separate toggle buttons, so the faction menu host
         carries the same anchors so those dropdowns still open and position.
       */}
-      <span className="pinned-toggle-btn victory-toggle-btn screens-menu-dropdown-anchor" aria-hidden="true" />
+      <span className="pinned-toggle-btn screens-menu-dropdown-anchor" aria-hidden="true" />
       {observerMode ? triggerButton : (
         <FactionTooltip
           factionId={playerFaction?.id}
@@ -314,7 +315,7 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
         </FactionTooltip>
       )}
 
-      {mounted && (
+      {mounted && createPortal(
         <div
           className={`screens-menu-panel${closing ? ' screens-menu-panel--exiting' : ''}`}
           ref={setPopupRef}
@@ -322,7 +323,7 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
           role="menu"
           data-focus-root
           data-focus-group="vertical"
-          data-focus-priority="260"
+          data-focus-priority="475"
           aria-label={factionLabel}
         >
           <StyledScrollArea className="screens-menu-scroll" viewportClassName="screens-menu-scroll-viewport" variant="inline">
@@ -344,7 +345,7 @@ const ScreensMenu: React.FC<ScreensMenuProps> = ({
               </button>
             ))}
           </StyledScrollArea>
-        </div>
+        </div>, document.body
       )}
     </div>
   );

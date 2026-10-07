@@ -239,6 +239,9 @@ export default function RegionGovernorAppointmentModal({
               />
 
               <div className="cam-detail-body">
+                {selected.governorship && <Tooltip content={{ body: selected.governorshipHelp }}>
+                  <p>{selected.governorship}</p>
+                </Tooltip>}
                 <CandidateChanceBlock
                   prefix="cam"
                   label={primaryStatLabel}

@@ -28,6 +28,7 @@ import { ActionKeyGlyph } from '../common/ActionKeyGlyph';
 import { KeyGlyph } from '../common/KeyGlyph';
 import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 import { openWorldSearch } from '../hud/panels/openWorldSearch';
+import { isProvinceSubjectMode } from '../../registry/index';
 
 interface ActionButtonConfig {
   id: 'build' | 'victory' | 'search' | 'pinned';
@@ -84,8 +85,6 @@ interface TopBarProps {
   onPinnedToggle?: () => void;
   isPinnedOpen?: boolean;
   pinnedCount?: number;
-  onVictoryToggle?: () => void;
-  isVictoryOpen?: boolean;
   onOpenBureaucracyOverview?: () => void;
 }
 
@@ -95,8 +94,6 @@ const TopBar: React.FC<TopBarProps> = ({
   onPinnedToggle,
   isPinnedOpen = false,
   pinnedCount = 0,
-  onVictoryToggle,
-  isVictoryOpen = false,
   onOpenBureaucracyOverview,
 }) => {
   const compact = useCompactHud();
@@ -110,7 +107,7 @@ const TopBar: React.FC<TopBarProps> = ({
   const openMapModesBinding = findActionBinding(settings?.controls, 'OpenMapModes', 'gamepad');
   const playerFaction = usePlayerFactionSummary();
   const observerMode = useObserverMode();
-  const subjectMode = playerFaction?.diplomaticStatus === 'subject';
+  const subjectMode = isProvinceSubjectMode(playerFaction);
   const playerCharacterId = playerFaction?.rulerId ?? null;
 
   const playerCharacterName = playerFaction?.rulerName ?? playerFaction?.name ?? webUIText('TopBar.YourCharacter');
@@ -238,8 +235,6 @@ const TopBar: React.FC<TopBarProps> = ({
                 onPinnedToggle={onPinnedToggle}
                 isPinnedOpen={isPinnedOpen}
                 pinnedCount={pinnedCount}
-                onVictoryToggle={onVictoryToggle}
-                isVictoryOpen={isVictoryOpen}
                 subjectMode={subjectMode}
                 observerMode={observerMode}
               />
@@ -389,11 +384,10 @@ const TopBar: React.FC<TopBarProps> = ({
                   return mode === 'all' || (subjectMode ? mode === 'subject' : mode === 'independent');
                 }).map((btn) => {
                   const label = webUIText(btn.labelKey);
-                  const active = activeScreen === btn.id || (btn.id === 'pinned' && isPinnedOpen) || (btn.id === 'victory' && isVictoryOpen);
-                  const className = btn.id === 'pinned' ? 'pinned-toggle-btn' : btn.id === 'victory' ? 'victory-toggle-btn' : '';
+                  const active = activeScreen === btn.id || (btn.id === 'pinned' && isPinnedOpen);
+                  const className = btn.id === 'pinned' ? 'pinned-toggle-btn' : '';
                   const handleClick = () => {
                     if (btn.id === 'pinned') onPinnedToggle?.();
-                    else if (btn.id === 'victory') onVictoryToggle?.();
                     else if (btn.id === 'search') openWorldSearch();
                     else onScreenChange?.(btn.id as ScreenId);
                   };
@@ -427,7 +421,7 @@ const TopBar: React.FC<TopBarProps> = ({
                     onOpenSubjectScreen={() => onScreenChange?.('faction')}
                     tooltipDisabled={activeScreen === 'governor-faction-overview'}
                   />
-                  {!subjectMode && <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />}
+                  {!subjectMode && playerFaction?.usesAdministration && <BureaucraticThroughputHudValue onOpen={onOpenBureaucracyOverview} />}
                   <ResourceDisplay />
                 </div>
               )}

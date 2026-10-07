@@ -82,6 +82,7 @@ function mapSettlement(entry: GetWorldGlancesResponse['settlements'][number]): S
     selected: entry.selected ?? false,
     targeted: false,
     peaceSelection: entry.peaceSelection ?? false,
+    peaceConcession: entry.peaceConcession,
     warScoreCost: entry.warScoreCost ?? 0,
     besieged: entry.besieged,
     siegePowerInsufficient: entry.siegePowerInsufficient,
@@ -109,6 +110,7 @@ function mapSettlement(entry: GetWorldGlancesResponse['settlements'][number]): S
       label: culture.label,
       colour: culture.colour,
     },
+    faithMarkers: entry.faithMarkers,
     religion: {
       label: religion.label,
       colour: religion.colour,

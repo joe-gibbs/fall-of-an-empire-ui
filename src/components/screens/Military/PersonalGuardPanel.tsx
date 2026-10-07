@@ -53,7 +53,7 @@ function companyTooltipData(
   unit: FormationTemplateUnitEntry,
 ): UnitTooltipData {
   return {
-    ...templateUnitTooltipData(unit, 1),
+    ...templateUnitTooltipData(unit, 1, false),
     name: company.name,
     description: company.description,
     portrait: WebkilnAssetPath(company.portrait) || templateUnitPortrait(unit),
@@ -66,24 +66,26 @@ function companyTooltipData(
   };
 }
 
-function CompanyCard({
+export function PersonalGuardCompanyCard({
   company,
   unit,
   slot,
   canEdit,
   onEdit,
+  emptyLabel = webUIText('Military.PersonalGuard.EmptySlot'),
 }: {
   company: PersonalGuardCompanyEntry | null;
   unit?: FormationTemplateUnitEntry;
   slot: number;
   canEdit: boolean;
   onEdit?: () => void;
+  emptyLabel?: string;
 }) {
   if (!company) {
     const emptyBody = (
       <div
         className={`card personal-guard-company personal-guard-company--empty${canEdit ? ' personal-guard-company--addable' : ''}`}
-        aria-label={webUIText('Military.PersonalGuard.EmptySlot')}
+        aria-label={emptyLabel}
       >
         <span className="personal-guard-company-number">{romanSlot(slot)}</span>
         <img src={COMPANY_ICON} alt="" draggable={false} />
@@ -102,7 +104,7 @@ function CompanyCard({
     return (
       <Tooltip content={{
         title: webUIText('Military.PersonalGuard.ChooseCompany'),
-        body: webUIText('Military.PersonalGuard.EmptySlot'),
+        body: emptyLabel,
       }}>
         <button
           type="button"
@@ -276,6 +278,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
       category: replaceCompany.type,
       battleRole: '',
       cultureId: '',
+      cultureIconId: '',
       cultureName: replaceCompany.cultureName,
       cultureColour: '',
       tier: 1,
@@ -601,7 +604,7 @@ export function PersonalGuardPanel({ guard }: { guard: GetPersonalGuardResponse 
       <section className="panel personal-guard-roster">
         <div className="personal-guard-company-grid">
           {companies.map((company, index) => (
-            <CompanyCard
+            <PersonalGuardCompanyCard
               key={index + 1}
               company={company}
               unit={company ? companyUnitBySlot.get(company.slotNumber) : undefined}

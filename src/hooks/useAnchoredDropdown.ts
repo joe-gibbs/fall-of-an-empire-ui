@@ -78,33 +78,17 @@ export function useAnchoredDropdown({
     if (!anchor) return;
 
     const rect = anchor.getBoundingClientRect();
-    const width = matchTriggerWidth ? cssLength(rect.width, useRootRem) : undefined;
-    if (position === 'below-right') {
-      setStyle({
-        width,
-        top: cssLength(rect.bottom + offset, useRootRem),
-        right: cssLength(window.innerWidth - rect.right, useRootRem),
-      });
-      return;
-    }
-
-    if (position === 'below-left') {
-      setStyle({
-        width,
-        top: cssLength(rect.bottom + offset, useRootRem),
-        left: cssLength(rect.left, useRootRem),
-      });
-      return;
-    }
-
     const spaceBelow = window.innerHeight - rect.bottom - offset * 2;
     const spaceAbove = rect.top - offset * 2;
     const placeAbove = spaceBelow < Math.min(minSpaceBelow, maxPopupHeight) && spaceAbove > spaceBelow;
     setStyle({
-      top: cssLength(placeAbove ? rect.top - offset : rect.bottom + offset, useRootRem),
-      left: cssLength(rect.left, useRootRem),
+      width: matchTriggerWidth ? cssLength(rect.width, useRootRem) : undefined,
+      top: placeAbove ? 'auto' : cssLength(rect.bottom + offset, useRootRem),
+      bottom: placeAbove ? cssLength(window.innerHeight - rect.top + offset, useRootRem) : 'auto',
+      left: position === 'below-left' ? cssLength(rect.left, useRootRem) : 'auto',
+      right: position === 'below-right' ? cssLength(window.innerWidth - rect.right, useRootRem) : 'auto',
       minWidth: cssLength(rect.width, useRootRem),
-      transform: placeAbove ? 'translateY(-100%)' : undefined,
+      maxHeight: cssLength(Math.min(maxPopupHeight, placeAbove ? spaceAbove : spaceBelow), useRootRem),
     });
   }, [anchorElement, matchTriggerWidth, maxPopupHeight, minSpaceBelow, offset, position, useRootRem]);
 

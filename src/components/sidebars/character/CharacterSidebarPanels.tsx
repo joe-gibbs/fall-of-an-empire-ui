@@ -19,6 +19,70 @@ export function sidebarTypeForActivityLink(type: string): string | null {
   }
 }
 
+export function HeaderFamilyNameLink({
+  familyName,
+  familyHeading,
+  onOpenFamily,
+}: {
+  familyName: string;
+  familyHeading?: string;
+  onOpenFamily: () => void;
+}) {
+  const label = familyHeading || familyName;
+  return (
+    <button
+      type="button"
+      className="char-header-family-link"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onOpenFamily();
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+export function HeaderRulerName({
+  shortTitle,
+  givenName,
+  factionId,
+  factionNameWithArticle,
+  onOpenFaction,
+}: {
+  shortTitle: string;
+  givenName: string;
+  factionId?: string;
+  factionNameWithArticle?: string;
+  onOpenFaction: (id: string) => void;
+}) {
+  return (
+    <span className="char-header-name">
+      <span>{shortTitle} {givenName}</span>
+      {factionId && factionNameWithArticle ? (
+        <>
+          {' '}
+          <span
+            className="char-activity-link char-activity-link--clickable"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenFaction(factionId);
+            }}
+          >
+            {webUIText('CharacterSidebar.RulerFactionSuffix', { Faction: factionNameWithArticle })}
+          </span>
+        </>
+      ) : null}
+    </span>
+  );
+}
+
+export function HeaderOffice({ title }: { title: string }) {
+  if (!title) return null;
+  return <div className="char-header-office">{title}</div>;
+}
+
 /** Render activity text with clickable links */
 function ActivityText({
   segments,
@@ -79,9 +143,9 @@ export function HeaderActivity({
           segments={segments}
           onLinkClick={onLinkClick}
         />
-      ) : (
+      ) : fallbackActivity ? (
         <span>{fallbackActivity}</span>
-      )}
+      ) : null}
     </div>
   );
 }

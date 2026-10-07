@@ -27,7 +27,8 @@ import { useFaction, usePlayerFactionId } from '../../../data-source/index';
 import { successChanceColour } from '../../../utils/colorFormatters';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
 import { renderRichText } from '../../../utils/richText';
-import { getScreenByBridgeName, registerSidebar } from '../../../registry/index';
+import { isProvinceSubjectMode, registerSidebar } from '../../../registry/index';
+import { useEntityLinkClick } from '../../../hooks/useEntityLinkClick';
 import { BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
 import BlocLoanModal from '../../modals/diplomacy/BlocLoanModal';
 import SidebarToolbar from '../shared/SidebarToolbar';
@@ -531,7 +532,7 @@ function SubjectPowerBlocActions({
 }
 
 const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) => {
-  const { openScreen, openSidebar, showAdvisor } = useGameActions();
+  const { showAdvisor } = useGameActions();
   const { debugMode, gameDay } = useGameState();
   const playerFactionId = usePlayerFactionId();
   const playerFaction = useFaction(playerFactionId);
@@ -546,26 +547,10 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
   const typeLabel = getTypeBadgeLabel(bloc.subtype || bloc.type);
   const typeColour = getTypeBadgeColour(bloc.type);
   const modifiers = currentModifiers(bloc);
-  const subjectMode = playerFaction?.diplomaticStatus === 'subject';
+  const subjectMode = isProvinceSubjectMode(playerFaction);
   const playerCharacterId = playerFaction?.rulerId ?? null;
   const isPlayerBlocLeader = subjectMode && !!playerCharacterId && bloc.leaderId === playerCharacterId;
-  const handleRichLinkClick = React.useCallback((type: string, id: string) => {
-    switch (type) {
-      case 'settlement': openSidebar('settlement', id); break;
-      case 'character': openSidebar('character', id); break;
-      case 'faction': openSidebar('diplomacy', id); break;
-      case 'army':
-      case 'military': openSidebar('military', id); break;
-      case 'screen': {
-        const separatorIndex = id.indexOf(':');
-        const screenName = separatorIndex >= 0 ? id.slice(0, separatorIndex) : id;
-        const screenId = separatorIndex >= 0 ? id.slice(separatorIndex + 1) : undefined;
-        const target = getScreenByBridgeName(screenName, subjectMode);
-        if (target) openScreen(target.id, screenId);
-        break;
-      }
-    }
-  }, [openScreen, openSidebar, subjectMode]);
+  const handleRichLinkClick = useEntityLinkClick();
 
   const { state: blocInteractionsState, start: startBlocInteraction, cancel: cancelBlocInteraction } =
     useBlocInteractionsBridge(bloc.id);

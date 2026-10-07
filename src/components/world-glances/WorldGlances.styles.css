@@ -910,6 +910,11 @@
   min-width: 16.5rem;
 }
 
+.tt-bubble--military-glance {
+  width: 20rem;
+  max-width: 20rem;
+}
+
 .military-glance-tt-identity,
 .military-glance-tt-identity-hit {
   display: flex;
@@ -951,6 +956,7 @@
 
 .military-glance-tt-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
   min-width: 0;
@@ -5888,128 +5894,6 @@
   font-size: 0.6364rem;
 }
 
-.world-glance-node .glance.glance--settlement.glance--peace-pick {
-  box-sizing: border-box;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  width: 11.4545rem;
-  min-width: 11.4545rem;
-  height: 2.2727rem;
-  min-height: 2.2727rem;
-  padding: 0.2727rem 0.5455rem 0.2727rem 0.4091rem;
-  overflow: visible;
-  background-color: transparent;
-  background-image: none;
-}
-
-.world-glance-node .glance.glance--settlement.glance--peace-pick::before {
-  content: '';
-  display: block;
-  position: absolute;
-  z-index: 0;
-  top: -0.1818rem;
-  right: -0.2727rem;
-  bottom: -0.1818rem;
-  left: -0.2727rem;
-  background-color: transparent;
-  background-image: url('/assets/glance/settlement-label-brush.png');
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  opacity: 0.96;
-  pointer-events: none;
-}
-
-.world-glance-node .glance.glance--settlement.glance--peace-pick::after {
-  display: none;
-}
-
-.world-glance-node .glance--peace-pick > * {
-  position: relative;
-  z-index: 1;
-  margin-top: 0;
-  margin-left: 0.3636rem;
-}
-
-.world-glance-node .glance--peace-pick > :first-child {
-  margin-left: 0;
-}
-
-.world-glance-node .gset-pick-check {
-  box-sizing: border-box;
-  width: 0.9545rem;
-  height: 0.9545rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  position: relative;
-  background-color: rgba(8, 12, 17, 0.55);
-  background-image: url('/assets/glance/glance-chip.png');
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  border-width: 0.0909rem;
-  border-style: solid;
-  border-color: rgba(201, 168, 76, 0.42);
-}
-
-.world-glance-node .gset-pick-check::after {
-  content: '';
-  position: absolute;
-  top: 0.0455rem;
-  left: 0.2727rem;
-  width: 0.2273rem;
-  height: 0.5rem;
-  border-right-width: 0.1364rem;
-  border-right-style: solid;
-  border-right-color: var(--gold-light);
-  border-bottom-width: 0.1364rem;
-  border-bottom-style: solid;
-  border-bottom-color: var(--gold-light);
-  opacity: 0;
-  transform: rotate(45deg);
-}
-
-.world-glance-node .gset-pick-check.is-checked,
-.world-glance-node.is-selected .gset-pick-check {
-  border-color: var(--gold);
-  background-color: rgba(201, 168, 76, 0.28);
-}
-
-.world-glance-node .gset-pick-check.is-checked::after,
-.world-glance-node.is-selected .gset-pick-check::after {
-  opacity: 1;
-}
-
-.world-glance-node .glance--peace-pick .gset-name {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-width: 0;
-  max-width: none;
-  font-size: 0.7727rem;
-  color: var(--text-header);
-}
-
-.world-glance-node .gset-pick-cost {
-  flex-grow: 0;
-  flex-shrink: 0;
-  min-width: 1.8182rem;
-  color: var(--text-muted);
-  font-family: var(--font-header);
-  font-size: 0.7273rem;
-  text-align: right;
-}
-
-.world-glance-node .gset-pick-cost.is-demand {
-  color: var(--red);
-}
-
-.world-glance-node .gset-pick-cost.is-concession {
-  color: var(--green);
-}
-
-
 /* Queued jobs share the settlement's painted label; only the first queue item advances. */
 .gset-queued-job {
   display: flex;
@@ -6033,3 +5917,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.gset-faith-markers { position: absolute; display: flex; bottom: -0.6rem; left: 0; z-index: 8; }
+.gset-faith-markers img { width: 1.4rem; height: 1.4rem; object-fit: contain; }

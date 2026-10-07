@@ -1,6 +1,16 @@
 export type MilitaryScreenTab = 'land' | 'sea' | 'templates' | 'guard';
 export type TemplateCreateType = 'land' | 'naval';
 
+export function regionalOwnerFromScreenId(screenId: string | null | undefined): string | null {
+  return screenId?.startsWith('regions:') ? screenId.slice('regions:'.length) : null;
+}
+
+export function militaryScreenMode(institutions: { usesWarbands: boolean; usesRegionalForces: boolean }): 'clans' | 'regions' | 'commands' {
+  if (institutions.usesWarbands) return 'clans';
+  if (!institutions.usesRegionalForces) return 'commands';
+  return 'regions';
+}
+
 function decodeScreenToken(value: string): string {
   try {
     return decodeURIComponent(value);

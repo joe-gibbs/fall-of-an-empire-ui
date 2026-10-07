@@ -140,11 +140,11 @@ function templateResourceCosts(unit: FormationTemplateUnitEntry, kind: 'raise' |
   }));
 }
 
-export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count: number): UnitTooltipData {
+export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count: number, showSettlementRecruitment = true): UnitTooltipData {
   const settlements = availableSettlementNames(unit);
   const buildabilitySettlements = availableSettlementEntries(unit);
   const culturePopulation = Math.max(0, unit.availableManpower ?? 0);
-  const cultureLabel = unit.cultureName
+  const cultureLabel = unit.cultureName && showSettlementRecruitment
     ? webUIText('FormationTemplate.CulturePopulation', {
       Culture: unit.cultureName,
       Population: formatNumber(culturePopulation),
@@ -158,7 +158,7 @@ export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count:
     typeIcon: templateUnitTypeIcon(unit),
     tier: unit.tier,
     culture: cultureLabel,
-    cultureIcon: unit.cultureId ? `/assets/cultures/${unit.cultureId}.png` : undefined,
+    cultureIcon: unit.cultureIconId ? `/assets/cultures/${unit.cultureIconId}.png` : undefined,
     maxStrength: unit.maxStrength,
     price: unit.price,
     buildTime: unit.buildTimeDays,
@@ -182,11 +182,11 @@ export function templateUnitTooltipData(unit: FormationTemplateUnitEntry, count:
     immuneToDesertAttrition: unit.immuneToDesertAttrition,
     canAttackWhileMoving: unit.canAttackWhileMoving,
     count,
-    buildability: {
+    buildability: showSettlementRecruitment ? {
       count: unit.availableSettlementCount || settlements.length,
       total: Math.max(unit.availableSettlements.length, unit.availableSettlementCount || settlements.length),
       settlements: buildabilitySettlements,
-    },
+    } : undefined,
   };
 }
 
@@ -300,7 +300,7 @@ function unitCanBuildInAnySettlement(unit: FormationTemplateUnitEntry): boolean 
 
 function templateUnitCultureIcon(unit: FormationTemplateUnitEntry): string {
   if (!unit.cultureId) return '';
-  return cultureIconPath(unit.cultureId);
+  return cultureIconPath(unit.cultureIconId);
 }
 
 function catalogueFilterOptions(
@@ -387,6 +387,9 @@ export function TemplateUnitSelectorModal({
   removeLabel,
   onRemoveSelected,
   removeDisabled,
+  showSettlementRecruitment = true,
+  selectionReasons,
+  recruitmentStrengths,
 }: {
   units: FormationTemplateUnitEntry[];
   currentCounts: Record<string, number>;
@@ -415,6 +418,9 @@ export function TemplateUnitSelectorModal({
   removeLabel?: string;
   onRemoveSelected?: () => void;
   removeDisabled?: boolean;
+  showSettlementRecruitment?: boolean;
+  selectionReasons?: Record<string, string>;
+  recruitmentStrengths?: Record<string, number>;
 }) {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState(CATALOGUE_ALL_FILTER);
@@ -572,14 +578,14 @@ export function TemplateUnitSelectorModal({
     unit => {
       const key = unit.cultureId || unit.cultureName;
       const pop = culturePopulationByKey.get(key);
-      if (pop === undefined || !unit.cultureName) return unit.cultureName;
+      if (!showSettlementRecruitment || pop === undefined || !unit.cultureName) return unit.cultureName;
       return webUIText('FormationTemplate.CulturePopulation', {
         Culture: unit.cultureName,
         Population: formatNumber(pop),
       });
     },
     unit => templateUnitCultureIcon(unit),
-  ), [culturePopulationByKey, units]);
+  ), [culturePopulationByKey, units, showSettlementRecruitment]);
   const unitColumns = useMemo<Array<DataTableColumn<FormationTemplateUnitEntry, UnitCatalogueColumnKey>>>(() => [
     {
       id: 'unit',
@@ -593,7 +599,7 @@ export function TemplateUnitSelectorModal({
           <Tooltip
             position="left"
             delay={200}
-            content={{ afterLines: <UnitTooltip data={templateUnitTooltipData(unit, Math.max(1, count))} /> }}
+            content={{ afterLines: <UnitTooltip data={templateUnitTooltipData(unit, Math.max(1, count), showSettlementRecruitment)} /> }}
           >
             <div
               className={`chart-unit-picker-unit${count > 0 || (isSingle && compareUnit?.id === unit.id) ? ' chart-unit-picker-unit--selected' : ''}`}
@@ -630,11 +636,12 @@ export function TemplateUnitSelectorModal({
           <Tooltip
             inline
             position="left"
+            disabled={!showSettlementRecruitment}
             content={{
               title: cultureLabel,
-              body: webUIText('FormationTemplate.CulturePopulationTooltip', {
+              body: showSettlementRecruitment ? webUIText('FormationTemplate.CulturePopulationTooltip', {
                 Population: formatNumber(pop),
-              }),
+              }) : undefined,
             }}
           >
             <span className="chart-unit-picker-culture">
@@ -648,7 +655,7 @@ export function TemplateUnitSelectorModal({
               )}
               <span className="chart-unit-picker-culture-copy">
                 <strong>{cultureLabel}</strong>
-                <span>{formatNumber(pop)}</span>
+                {showSettlementRecruitment && <span>{formatNumber(pop)}</span>}
               </span>
             </span>
           </Tooltip>
@@ -700,6 +707,7 @@ export function TemplateUnitSelectorModal({
       className: 'chart-unit-picker-cell chart-unit-picker-cell--number',
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--number',
       render: unit => {
+        if (recruitmentStrengths) return formatNumber(recruitmentStrengths[unit.id]);
         if (isSingle && compareUnit && compareUnit.id !== unit.id) {
           const delta = unit.maxStrength - compareUnit.maxStrength;
           return (
@@ -727,6 +735,7 @@ export function TemplateUnitSelectorModal({
       headerClassName: 'chart-unit-picker-cell chart-unit-picker-cell--number',
       render: unit => {
         if (isSingle && compareUnit && compareUnit.id !== unit.id) {
+          if (recruitmentStrengths) return formatNumber(unit.price);
           const delta = unit.price - compareUnit.price;
           return (
             <span className={delta > 0 ? 'chart-unit-picker-delta--down' : delta < 0 ? 'chart-unit-picker-delta--up' : undefined}>
@@ -820,11 +829,12 @@ export function TemplateUnitSelectorModal({
             <Tooltip
               inline
               position="left"
-              content={{ title: unit.name, body: webUIText('Military.PersonalGuard.SelectReplacement') }}
+              content={selectionReasons?.[unit.id] ? { title: unit.name, body: selectionReasons[unit.id] } : undefined}
             >
               <button
                 type="button"
                 className="btn--outline chart-unit-picker-select"
+                disabled={Boolean(selectionReasons?.[unit.id])}
                 onClick={(event) => {
                   event.stopPropagation();
                   onAdd(unit.id, 1);
@@ -891,7 +901,7 @@ export function TemplateUnitSelectorModal({
         );
       },
     },
-  ], [atUnitCap, canAddUnit, capacityFullBody, compareUnit, currentCounts, enforceAvailableManpower, isSingle, onAdd, onRemove, stepModifiersBody]);
+  ], [atUnitCap, canAddUnit, capacityFullBody, compareUnit, currentCounts, enforceAvailableManpower, isSingle, onAdd, onRemove, stepModifiersBody, showSettlementRecruitment, selectionReasons, recruitmentStrengths]);
   const doneButton = (
     <GameButton
       variant="burgundy"
@@ -909,7 +919,7 @@ export function TemplateUnitSelectorModal({
     const unitCulture = unit.cultureId || unit.cultureName;
     if (typeFilter !== CATALOGUE_ALL_FILTER && typeFilter !== unitType) return false;
     if (cultureFilter !== CATALOGUE_ALL_FILTER && cultureFilter !== unitCulture) return false;
-    if (showUnavailable) return true;
+    if (!showSettlementRecruitment || showUnavailable) return true;
     if (unitCanBuildInAnySettlement(unit)) return true;
     // Keep units already in the draft, and the company being replaced, visible.
     if ((currentCounts[unit.id] ?? 0) > 0) return true;
@@ -954,10 +964,11 @@ export function TemplateUnitSelectorModal({
           <div className="chart-unit-picker-body">
             <DataTable
               rows={units}
-              columns={unitColumns}
+              columns={showSettlementRecruitment ? unitColumns : unitColumns.filter(column => column.id !== 'settlements')}
               rowKey={unit => unit.id}
               onRowClick={unit => {
                 if (isSingle) {
+                  if (selectionReasons?.[unit.id]) return;
                   onAdd(unit.id, 1);
                   return;
                 }
@@ -983,7 +994,7 @@ export function TemplateUnitSelectorModal({
                     options={cultureOptions}
                     onChange={setCultureFilter}
                   />
-                  <GameCheckButton
+                  {showSettlementRecruitment && <GameCheckButton
                     checked={showUnavailable}
                     label={webUIText('FormationTemplate.ShowUnavailableUnits')}
                     className="chart-unit-picker-unavailable-toggle game-check-button--compact-label"
@@ -992,7 +1003,7 @@ export function TemplateUnitSelectorModal({
                       title: webUIText('FormationTemplate.ShowUnavailableUnits'),
                       body: webUIText('FormationTemplate.ShowUnavailableUnitsTooltip'),
                     }}
-                  />
+                  />}
                 </div>
               )}
               filterPredicate={filterUnit}
@@ -1710,6 +1721,7 @@ function TemplateEditor({
 
 export function TemplatesPanel({
   templates,
+  navalOnly = false,
   initialTemplateId,
   initialCreateType,
   assignmentTargetId,
@@ -1718,6 +1730,7 @@ export function TemplatesPanel({
   onCloseScreen,
 }: {
   templates: FormationTemplateEntry[];
+  navalOnly?: boolean;
   initialTemplateId: string | null;
   initialCreateType: TemplateCreateType | null;
   assignmentTargetId: string | null;
@@ -1745,7 +1758,7 @@ export function TemplatesPanel({
   const selectedTemplateType = !creatingTemplate
     ? templates.find(template => template.id === selectedTemplateId)?.type
     : null;
-  const createType = assignmentTemplateType
+  const createType = navalOnly ? 'naval' : assignmentTemplateType
     ?? (selectedTemplateType ? normaliseTemplateType(selectedTemplateType) : newTemplateType);
   const visibleTemplates = useMemo(() => (
     templates.filter(template => normaliseTemplateType(template.type) === createType)
@@ -1763,7 +1776,7 @@ export function TemplatesPanel({
       icon: '/assets/icons/I_NaviesQuickButton.png',
       count: templates.filter(template => normaliseTemplateType(template.type) === 'naval').length,
     },
-  ]), [templates]);
+  ].filter(tab => !navalOnly || tab.id === 'naval')), [templates, navalOnly]);
   const selectedTemplate = creatingTemplate
     ? null
     : visibleTemplates.find(template => template.id === selectedTemplateId) ?? visibleTemplates[0] ?? null;

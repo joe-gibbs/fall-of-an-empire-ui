@@ -211,15 +211,6 @@ function CourtierCard({
         />
         <div className="cpm-card-vignette" />
 
-        {selected && (
-          <>
-            <span className="cpm-card-corner cpm-card-corner--tl" />
-            <span className="cpm-card-corner cpm-card-corner--tr" />
-            <span className="cpm-card-corner cpm-card-corner--bl" />
-            <span className="cpm-card-corner cpm-card-corner--br" />
-          </>
-        )}
-
         <div className="cpm-card-content">
           <div className="cpm-card-title">{type.title}</div>
           <div className="cpm-card-stats">

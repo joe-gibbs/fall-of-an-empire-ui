@@ -41,11 +41,6 @@
   padding: 0.45rem 0.75rem 0.35rem;
 }
 
-.pns-return-to-terms {
-  margin-bottom: 0.5rem;
-  pointer-events: auto;
-}
-
 .screen--negotiation .screen-title-area {
   display: flex;
   align-items: center;
@@ -915,6 +910,18 @@
 
 .pns-term-row:hover {
   transform: translateY(-1px);
+}
+
+.pns-term-row:disabled {
+  cursor: default;
+  transform: none;
+}
+
+.pns-term-blocked-reason {
+  color: var(--red);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: pre-line;
 }
 
 .pns-term-row:active,

@@ -1,5 +1,25 @@
 /* ===== Religion Screen ===== */
 
+.screen--religion .screen-title-area {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0.65rem;
+}
+
+.rel-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.rel-title-icon {
+  width: 1.55rem;
+  height: 1.55rem;
+  display: block;
+}
+
 .rel-wrap {
   max-width: 72rem;
   margin: 0 auto;
@@ -20,273 +40,116 @@
   padding-bottom: 2.05rem;
 }
 
-.rel-selector-row {
+.rel-conversion {
   display: flex;
-  flex-wrap: wrap;
-  padding: 0.3rem 0;
-  margin-bottom: 0.6rem;
-  flex-shrink: 0;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.35rem 0.923rem 0.55rem;
 }
 
-.rel-selector-row > .tooltip-wrapper {
-  margin-right: 0.35rem;
-  margin-bottom: 0.35rem;
-}
-
-.rel-religion-button {
-  display: flex;
-  align-items: center;
-  padding: 0.3rem 0.7rem 0.3rem 0.3rem;
-  background: rgba(8, 12, 17, 0.25);
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: #3f382f;
-  color: var(--text-muted);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.rel-religion-button > * + * {
-  margin-left: 0.45rem;
-}
-
-.rel-religion-button:hover {
-  background: rgba(8, 12, 17, 0.35);
-  border-top-color: var(--border);
-  border-right-color: var(--border);
-  border-bottom-color: var(--border);
-  border-left-color: var(--border);
+.rel-conversion span {
   color: var(--text);
+  font-size: 0.9rem;
 }
 
-.rel-religion-button--active {
-  background: linear-gradient(180deg, #7c3035, #5a1f24);
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  color: var(--text-header);
-}
-
-.rel-religion-button--active:hover {
-  background: linear-gradient(180deg, #6b2548, #7c3035);
-  border-top-color: var(--gold-light);
-  border-right-color: var(--gold-light);
-  border-bottom-color: var(--gold-light);
-  border-left-color: var(--gold-light);
-}
-
-.rel-religion-icon-frame {
-  width: 1.9rem;
-  height: 1.9rem;
+.rel-identity {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(8, 12, 17, 0.4);
-  border-radius: 50%;
-  border: 0.154rem solid transparent;
+  align-items: flex-start;
   flex-shrink: 0;
-}
-
-.rel-religion-button--state .rel-religion-icon-frame {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  background: radial-gradient(circle at center, rgba(201, 168, 76, 0.25) 0%, rgba(8, 12, 17, 0.5) 70%);
-}
-
-.rel-religion-icon {
-  width: 1.4rem;
-  height: 1.4rem;
-}
-
-.rel-religion-name {
-  font-family: var(--font-header);
-  letter-spacing: 0;
-}
-
-.rel-summary {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 0.6rem 0.8rem;
-  margin-bottom: 0.7rem;
+  gap: 1rem;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0.75rem;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
     url('/assets/baked/texture-overlay-heavy.png'),
     url('/assets/baked/panel-charcoal.png');
-  background-position: 0 0;
   background-repeat: repeat, repeat, repeat;
   background-size: auto, 7.385rem 7.385rem, 93.0909rem 93.0909rem;
   background-color: #242a30;
-  border: 0.154rem solid rgba(120, 105, 65, 0.25);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-repeat: round;
 }
 
-.rel-summary-pie {
-  flex-shrink: 0;
-  margin-right: 1rem;
-}
-
-.rel-summary-main {
-  flex: 1;
-  min-width: 0;
+.rel-hall-card {
   display: flex;
   flex-direction: column;
-}
-
-.rel-summary-title-row {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.rel-summary-title-main {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-.rel-summary-title-main > * + * {
-  margin-left: 0.4rem;
-}
-
-.rel-summary-title-row > .tooltip-wrapper {
-  margin-left: 0.7rem;
+  gap: 0.28rem;
+  width: 6.1rem;
   flex-shrink: 0;
+  padding: 0.35rem 0.3rem 0.4rem;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-size: 100% 100%;
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-repeat: round;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
 
-.rel-summary-title-row > .rel-summary-religion-tooltip {
-  min-width: 0;
-  margin-left: 0;
-  flex-grow: 1;
-  flex-shrink: 1;
+.rel-hall-card img {
+  width: 3.6rem;
+  height: 3.6rem;
+  object-fit: contain;
 }
 
-.rel-summary-title {
-  font-family: var(--font-header);
-  font-size: 1.15rem;
-  color: var(--text-header);
-  letter-spacing: 0;
-  min-width: 0;
-}
-
-.rel-summary-description {
-  margin-top: 0.35rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.3;
-  max-width: 48rem;
-}
-
-.rel-summary-lower {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 0.45rem;
-}
-
-.rel-summary-lower > * {
-  margin-right: 0.65rem;
-  margin-bottom: 0.35rem;
-}
-
-.rel-summary-state-mark {
-  font-family: var(--font-header);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0;
-  color: var(--gold);
-}
-
-.rel-summary-stats {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 28rem;
-  min-width: 0;
-}
-
-.rel-summary-office {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 21rem;
-  min-width: 18rem;
-}
-
-.rel-conversion-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 0.6rem;
-  padding-top: 0.55rem;
-  border-top-width: 0.077rem;
-  border-top-style: solid;
-  border-top-color: var(--separator);
-}
-
-.rel-conversion-row > * + * {
-  margin-left: 0.75rem;
-}
-
-.rel-conversion-status {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-}
-
-.rel-conversion-label {
-  font-family: var(--font-header);
+.rel-hall-card-name {
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0;
-  color: var(--gold);
+  line-height: 1.2;
+  text-align: center;
+  color: var(--text-bright);
 }
 
-.rel-conversion-value {
-  margin-top: 0.15rem;
-  color: var(--text-muted);
-  font-size: 0.86rem;
+.rel-hall-card--unbuilt {
+  filter: grayscale(0.45) brightness(0.82);
 }
 
-.rel-conversion-progress {
-  margin-top: 0.35rem;
-  max-width: 20rem;
-}
-
-.rel-summary-stat {
+.rel-identity-copy {
   display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 0.65rem;
+}
+
+.rel-identity-description {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.rel-identity-facts {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  margin-right: 0.65rem;
+  gap: 0.55rem 1.2rem;
 }
 
-.rel-summary-stat > * + * {
-  margin-left: 0.25rem;
+.rel-identity-stat .icon-stat__icon {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
-.rel-summary-stat-value {
-  font-family: var(--font-header);
-  font-size: 1rem;
+.rel-identity-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--gold);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
 }
 
-.rel-summary-stat-label {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.rel-summary-separator {
-  width: 0.0909rem;
-  height: 0.9rem;
-  background-color: var(--border-dim);
-  margin-right: 0.65rem;
+.rel-identity-link:hover {
+  color: var(--gold-light);
 }
 
 .rel-cell-diocese,

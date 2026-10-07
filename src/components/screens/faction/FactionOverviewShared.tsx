@@ -103,12 +103,8 @@ function CourtSlot({
     title: position.name,
     body: position.description,
     lines: vacant ? [
-      { label: t('Common.Status'), value: t('FactionOverview.Vacant'), valueColor: 'var(--text-dark)' },
-      { label: t('Common.Bonus'), value: t('Common.None'), valueColor: 'var(--text-dark)' },
       ...(capacityLine ? [capacityLine] : []),
     ] : [
-      { label: t('Common.Appointee'), value: position.holder?.name },
-      { label: t('CourtAppointment.TermRemaining'), value: holderTermValue, valueColor: position.holderTermComplete ? 'var(--green)' : undefined },
       ...(position.holderEndDateText ? [{ label: t('CourtAppointment.TermEnds'), value: position.holderEndDateText }] : []),
       { label: primaryLabel, get value() { return webUIText("Auto.Prop.componentsscreensFactionOverviewScreen.1050.1", { Value1: position.holder?.statValue ?? 0 }); }, valueColor: 'var(--green)' },
       { label: t('Common.Bonus'), value: bonus, valueColor: position.bonusIsNegative ? 'var(--red)' : 'var(--green)' },
@@ -116,9 +112,6 @@ function CourtSlot({
       ...(position.subordinates.length > 0 ? [{ label: t('Common.Subordinates'), isHeader: true }] : []),
       ...position.subordinates.map(sub => ({ label: sub.name, get value() { return webUIText("Auto.Prop.componentsscreensFactionOverviewScreen.1053.1", { Value1: formatSignedNumber(sub.statContribution) }); } })),
     ],
-    footer: readOnly
-      ? undefined
-      : t(vacant ? 'FactionOverview.ClickToAppointCharacter' : 'FactionOverview.ClickToReplaceCharacter'),
   };
 
   return (
@@ -252,6 +245,7 @@ function CourtSlot({
 
 export function CourtPositionsPanel({
   enabled,
+  suspend = false,
   readOnly = false,
   showAutoAssign = !readOnly,
   titleKey = 'FactionOverview.CourtPositions',
@@ -260,6 +254,7 @@ export function CourtPositionsPanel({
   onOpenCharacter,
 }: {
   enabled: boolean;
+  suspend?: boolean;
   readOnly?: boolean;
   showAutoAssign?: boolean;
   titleKey?: string;
@@ -268,7 +263,7 @@ export function CourtPositionsPanel({
   onOpenCharacter?: (id: string) => void;
 }) {
   const t = useWebUIText();
-  const courtState = useCourtPositionsBridgeState(enabled);
+  const courtState = useCourtPositionsBridgeState(enabled, suspend);
   const court = courtState.result;
   const [position, setPosition] = useState<CourtPositionView | null>(null);
   const maxSubordinates = court?.maxSubordinates ?? 5;
@@ -320,6 +315,18 @@ export function CourtPositionsPanel({
 }
 
 function policyStep(policy: FactionPolicy) {
+  const levels = policy.levelEffects;
+  if (levels.length > 0) {
+    const currentIndex = Math.max(0, levels.findIndex(level => level.isCurrent));
+    const fillPercent = ((currentIndex + 1) / levels.length) * 100;
+    return {
+      stepCount: levels.length,
+      progressValue: currentIndex + 1,
+      displayPercent: Math.round(fillPercent),
+      fillPercent,
+    };
+  }
+
   const range = policy.maxValue - policy.minValue;
   const stepCount = Math.max(Math.round(range + 1), 1);
   if (range <= 0) return { stepCount, progressValue: 0, displayPercent: 0, fillPercent: 0 };
@@ -347,15 +354,35 @@ function directionLabel(direction: 'increase' | 'decrease', t: WebUITextFormatte
   return direction === 'increase' ? t('FactionOverview.Increase') : t('FactionOverview.Decrease');
 }
 
+function nextLockedPolicyLevel(policy: FactionPolicy): FactionPolicyLevel | undefined {
+  return policy.levelEffects.find(level => !level.isAvailable && level.level > policy.value);
+}
+
 function policyAdjustmentTooltip(policy: FactionPolicy, direction: 'increase' | 'decrease', t: WebUITextFormatter): TooltipContent {
+  const lockedNext = direction === 'increase' ? nextLockedPolicyLevel(policy) : undefined;
+  if (lockedNext) {
+    const stance = policyLevelName(policy, lockedNext);
+    return {
+      title: stance || policy.name,
+      body: lockedNext.lockReason || t('FactionOverview.Locked'),
+      lines: [{
+        label: t('FactionOverview.Level'),
+        value: t('FactionOverview.PolicyLevelValue', {
+          Level: policy.levelEffects.indexOf(lockedNext) + 1,
+          Total: policy.levelEffects.length,
+        }),
+      }],
+      afterLines: <InteractionEffectsTooltip lines={policyMechanicalEffectLines(lockedNext.effectLines)} />,
+    };
+  }
+
   const cost = direction === 'increase' ? policy.increaseCost : policy.decreaseCost;
   const duration = direction === 'increase' ? policy.increaseDuration : policy.decreaseDuration;
   const unrest = direction === 'increase' ? policy.increaseCausesUnrest : policy.decreaseCausesUnrest;
   const directedLines = direction === 'increase' ? policy.increaseEffectLines : policy.decreaseEffectLines;
   const previewLines = (directedLines?.length ?? 0) > 0 ? directedLines : policy.effectLines;
-  const throughputLine = bureaucraticTooltipLine(
-    direction === 'increase' ? policy.bureaucraticIncreaseLoad : policy.bureaucraticDecreaseLoad,
-  );
+  const bureaucraticLoad = direction === 'increase' ? policy.bureaucraticIncreaseLoad : policy.bureaucraticDecreaseLoad;
+  const throughputLine = bureaucraticLoad > 0 ? bureaucraticTooltipLine(bureaucraticLoad) : null;
   const stance = policyStanceText(previewLines);
   const effects = policyMechanicalEffectLines(previewLines);
 
@@ -363,8 +390,8 @@ function policyAdjustmentTooltip(policy: FactionPolicy, direction: 'increase' | 
     get title() { return webUIText("Auto.Prop.componentsscreensFactionOverviewScreen.192.1", { Value1: directionLabel(direction, t), Value2: policy.name }); },
     body: stance || undefined,
     lines: [
-      { label: t('Common.Cost'), value: cost > 0 ? fmtFull(cost) : t('Common.Free'), valueIcon: cost > 0 ? '/assets/icons/I_Coins.png' : undefined },
-      { label: t('Common.Duration'), value: `${duration} ${t(duration === 1 ? 'Common.Day' : 'Common.Days')}` },
+      ...(cost > 0 ? [{ label: t('Common.Cost'), value: fmtFull(cost), valueIcon: '/assets/icons/I_Coins.png' }] : []),
+      ...(duration > 0 ? [{ label: t('Common.Duration'), value: `${duration} ${t(duration === 1 ? 'Common.Day' : 'Common.Days')}` }] : []),
       ...(throughputLine ? [throughputLine] : []),
       ...(unrest ? [
         { label: t('FactionOverview.Unrest'), value: t('FactionOverview.UnrestValue'), valueColor: 'var(--red)' },
@@ -379,11 +406,22 @@ function policyLevels(policy: FactionPolicy): FactionPolicyLevel[] {
   return policy.levelEffects;
 }
 
+function policyLevelName(policy: FactionPolicy, level: FactionPolicyLevel): string {
+  return policyStanceText(level.effectLines) || level.effectDescription || policy.name;
+}
+
+function policyLevelStatus(level: FactionPolicyLevel, t: WebUITextFormatter): string | undefined {
+  if (level.isCurrent) return t('FactionOverview.CurrentLevel');
+  if (!level.isAvailable) return level.lockReason || t('FactionOverview.Locked');
+  return undefined;
+}
+
 function policyLevelTooltip(policy: FactionPolicy, level: FactionPolicyLevel, index: number, total: number, t: WebUITextFormatter): TooltipContent {
-  const stance = policyStanceText(level.effectLines);
+  const stance = policyLevelName(policy, level);
 
   return {
     title: stance || policy.name,
+    body: !level.isAvailable ? (level.lockReason || t('FactionOverview.Locked')) : undefined,
     lines: [{
       label: level.isCurrent ? t('FactionOverview.CurrentLevel') : t('FactionOverview.Level'),
       value: t('FactionOverview.PolicyLevelValue', { Level: index + 1, Total: total }),
@@ -398,16 +436,23 @@ export function PolicyEntry({
   policy,
   blockedByInteraction,
   readOnly = false,
+  featured = false,
 }: {
   factionId: string;
   policy: FactionPolicy;
   blockedByInteraction: boolean;
   readOnly?: boolean;
+  featured?: boolean;
 }) {
   const t = useWebUIText();
   const { displayPercent, fillPercent } = policyStep(policy);
   const displayPercentLabel = formatPercent(displayPercent);
   const levels = policyLevels(policy);
+  const currentLevelIndex = Math.max(0, levels.findIndex(level => level.isCurrent));
+  const showLevelLadder = featured || levels.some(level => !level.isAvailable);
+  const valueLabel = showLevelLadder && levels.length > 0
+    ? t('FactionOverview.PolicyLevelValue', { Level: currentLevelIndex + 1, Total: levels.length })
+    : displayPercentLabel;
   const canIncrease = !readOnly && policy.canIncrease && !blockedByInteraction;
   const canDecrease = !readOnly && policy.canDecrease && !blockedByInteraction;
   const activeProgress = Math.max(0, Math.min(1, policy.progress || 0));
@@ -429,7 +474,7 @@ export function PolicyEntry({
     }] : []),
     {
       label: t('FactionOverview.CurrentLevel'),
-      value: displayPercentLabel,
+      value: valueLabel,
       valueColor: 'var(--gold)',
     },
   ];
@@ -454,31 +499,25 @@ export function PolicyEntry({
   };
 
   return (
-    <div className={`fov-policy${policy.inProgress ? ' fov-policy--active' : ''}`} data-tutorial-target={`Policy:${policy.id}`}>
+    <div className={`fov-policy${policy.inProgress ? ' fov-policy--active' : ''}${featured ? ' fov-policy--featured' : ''}`} data-tutorial-target={`Policy:${policy.id}`}>
       {policy.inProgress && (
         <div className={`fov-policy-progress${policy.activeDirection === 'decrease' ? ' fov-policy-progress--decrease' : ''}`}>
           <div className="fov-policy-progress-fill" style={{ transform: `scaleX(${activeProgress.toFixed(4)})` }} />
         </div>
       )}
-      <div className="fov-policy-icon-wrap">
-        <Tooltip content={policyTooltip} delay={200} bubbleClassName="fov-tooltip-bubble" inline>
-          <img className="fov-policy-icon" src={policyIcon(policy)} alt="" draggable={false} />
-        </Tooltip>
-      </div>
+      <div className="fov-policy-icon-wrap"><img className="fov-policy-icon" src={policyIcon(policy)} alt="" draggable={false} /></div>
       <div className="fov-policy-info">
-        <Tooltip content={policyTooltip} delay={200} bubbleClassName="fov-tooltip-bubble">
-          <div className="fov-policy-copy">
-            <div className="fov-policy-title-row">
-              <div className="fov-policy-name">{policy.name}</div>
-              <span className="fov-policy-val">{displayPercentLabel}</span>
-            </div>
-            {policy.description && <div className="fov-policy-desc">{policy.description}</div>}
+        <Tooltip content={policyTooltip} delay={150} bubbleClassName="fov-tooltip-bubble">
+          <div className="fov-policy-title-row">
+            <span className="fov-policy-name">{policy.name}</span>
+            <span className="fov-policy-val">{valueLabel}</span>
           </div>
         </Tooltip>
+        <div className="fov-policy-desc">{policy.description}</div>
         <div className="fov-policy-bar-row">
           <div className="fov-policy-bar-wrap">
             <div className="fov-policy-bar-track">
-              <div className="fov-policy-bar-segment fov-policy-bar-filled" style={{ width: `${fillPercent}%` }} />
+              <div className="fov-policy-bar-segment fov-policy-bar-filled" style={{ width: '100%', transform: `scaleX(${fillPercent / 100})` }} />
             </div>
             <div className="fov-policy-bar-levels">
               {levels.map((level, i) => (
@@ -491,13 +530,33 @@ export function PolicyEntry({
                   inline
                 >
                   <span
-                    className={`fov-policy-bar-level${level.isCurrent ? ' fov-policy-bar-level--current' : ''}${i === levels.length - 1 ? ' fov-policy-bar-level--last' : ''}`}
+                    className={`fov-policy-bar-level${level.isCurrent ? ' fov-policy-bar-level--current' : ''}${!level.isAvailable ? ' fov-policy-bar-level--locked' : ''}${i === levels.length - 1 ? ' fov-policy-bar-level--last' : ''}`}
                   />
                 </Tooltip>
               ))}
             </div>
           </div>
         </div>
+        {showLevelLadder && levels.length > 0 && (
+          <div className="fov-policy-ladder">
+            {levels.map((level, i) => {
+              const status = policyLevelStatus(level, t);
+              return (
+                <Tooltip
+                  key={`${level.level}:${i}`}
+                  content={policyLevelTooltip(policy, level, i, levels.length, t)}
+                  delay={150}
+                  bubbleClassName="fov-tooltip-bubble"
+                >
+                  <div className={`fov-policy-ladder-row${level.isCurrent ? ' fov-policy-ladder-row--current' : ''}${!level.isAvailable ? ' fov-policy-ladder-row--locked' : ''}`}>
+                    <span className="fov-policy-ladder-name">{policyLevelName(policy, level)}</span>
+                    {status && <span className="fov-policy-ladder-status">{status}</span>}
+                  </div>
+                </Tooltip>
+              );
+            })}
+          </div>
+        )}
         {policy.inProgress && !readOnly && (
           <div className="fov-policy-adjustment">
             <span className="fov-policy-adjustment-label">
@@ -610,12 +669,10 @@ export function FactionModifierCard({ modifier }: { modifier: FactionModifier })
   };
 
   return (
-    <Tooltip content={tooltip} delay={150} bubbleClassName="fov-tooltip-bubble">
+    <Tooltip content={tooltip} delay={150}>
       <div className={`fov-modifier-card fov-modifier-card--${tone}`}>
         <img className="fov-modifier-card-icon" src={iconPath} alt="" draggable={false} />
-        <div className="fov-modifier-card-copy">
-          <div className="fov-modifier-card-label">{modifier.label}</div>
-        </div>
+        <span className="fov-modifier-card-label">{modifier.label}</span>
         <span className="fov-modifier-card-value">{modifierDisplayValue(modifier)}</span>
       </div>
     </Tooltip>

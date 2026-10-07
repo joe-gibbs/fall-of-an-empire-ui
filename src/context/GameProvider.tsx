@@ -1,3 +1,5 @@
+import { beginBridgeQueryTransition } from '../bridge/core/useBridgeQuery';
+import { startTransition } from 'react';
 import { useState, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { getAdvisorHintKey, type AdvisorTopicId } from '../data/advisorTopics';
 import { playSound } from '../hooks/useSound';
@@ -402,16 +404,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const openScreenFromBridge = useCallback((type: ScreenType, id?: string) => {
     preloadScreenAssets(type);
-    setState(s => {
+    beginBridgeQueryTransition();
+    startTransition(() => setState(s => {
       const nextId = id ?? null;
       if (s.activeScreen === type && s.activeScreenId === nextId) return s;
       beginUIPerfInteraction(`screen:${type ?? 'unknown'}`, id);
       playSound('open');
       return { ...s, activeScreen: type, activeScreenId: nextId };
-    });
+    }));
   }, []);
 
   const closeScreenFromBridge = useCallback(() => {
+    beginBridgeQueryTransition();
     setState(s => {
       if (!s.activeScreen) return s;
       playSound('close');

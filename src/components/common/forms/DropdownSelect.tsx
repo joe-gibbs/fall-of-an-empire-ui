@@ -109,7 +109,7 @@ const DropdownSelect = memo(function DropdownSelect({
     open,
     onClose: () => setOpen(false),
     durationMs,
-    position,
+    position: portal && position === 'inline' ? 'below-left' : position,
     offset,
     useRootRem,
     matchTriggerWidth: portal,

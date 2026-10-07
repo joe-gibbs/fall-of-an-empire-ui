@@ -136,7 +136,7 @@ export async function rushBureaucraticAction({
       actionId,
     });
     if (response.rushed && targetFactionId) {
-      const freshFaction = await bridgeCall('game.get_faction_data', { factionId: targetFactionId, scope: 'full' });
+      const freshFaction = await bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId: targetFactionId, scope: 'full' });
       dispatchFactionData(freshFaction);
     }
     return response;

@@ -17,17 +17,20 @@ import {
   usePowerBlocSubjectActionsBridge,
   usePowerBlocsBridge,
 } from '../../../bridge/diplomacy/usePowerBlocsBridge';
-import { useFaction, usePlayerFactionId } from '../../../data-source/index';
+import { useFaction, usePlayerFactionId, usePlayerFactionSummary } from '../../../data-source/index';
 import type { PowerBloc, PowerBlocDemand } from '../../../data/types';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
 import { renderRichText } from '../../../utils/richText';
-import { getScreenByBridgeName, registerScreen, registerTopbarButton } from '../../../registry/index';
+import { isProvinceSubjectMode, registerScreen, registerTopbarButton } from '../../../registry/index';
+import { useEntityLinkClick } from '../../../hooks/useEntityLinkClick';
 import './PowerBlocsScreen.css';
+import ClansScreen from './ClansScreen';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 
 interface PowerBlocsScreenProps {
   onClose: () => void;
+  screenId?: string | null;
 }
 
 type BlocTableColumnKey = 'bloc' | 'leader' | 'members' | 'happiness' | 'strength' | 'escalation' | 'demand' | 'action';
@@ -635,14 +638,21 @@ function SubjectPowerBlocsView({
   );
 }
 
-function PowerBlocsScreen({ onClose }: PowerBlocsScreenProps) {
-  const { openRightSidebar, openScreen, openSidebar } = useGameActions();
+function PowerBlocsScreen({ onClose, screenId }: PowerBlocsScreenProps) {
+  const playerFaction = usePlayerFactionSummary();
+  if (!playerFaction) return null;
+  if (playerFaction.usesWarbands) return <ClansScreen key={screenId ?? 'default'} onClose={onClose} screenId={screenId} />;
+  return playerFaction.usesPowerBlocs ? <ImperialPowerBlocsScreen onClose={onClose} /> : null;
+}
+
+function ImperialPowerBlocsScreen({ onClose }: PowerBlocsScreenProps) {
+  const { openRightSidebar } = useGameActions();
   const { gameDay, rightSidebar } = useGameState();
   const playerFactionId = usePlayerFactionId();
   const playerFaction = useFaction(playerFactionId);
   const fetchedBlocs = usePowerBlocsBridge();
   const blocs = fetchedBlocs ?? EMPTY_POWER_BLOCS;
-  const subjectMode = playerFaction?.diplomaticStatus === 'subject';
+  const subjectMode = isProvinceSubjectMode(playerFaction);
   const playerCharacterId = playerFaction?.rulerId ?? null;
   const autoOpenedRef = useRef(false);
 
@@ -671,23 +681,7 @@ function PowerBlocsScreen({ onClose }: PowerBlocsScreenProps) {
   );
 
   const handleOpen = useCallback((id: string) => openRightSidebar('powerbloc', id), [openRightSidebar]);
-  const handleRichLinkClick = useCallback((type: string, id: string) => {
-    switch (type) {
-      case 'settlement': openSidebar('settlement', id); break;
-      case 'character': openSidebar('character', id); break;
-      case 'faction': openSidebar('diplomacy', id); break;
-      case 'army':
-      case 'military': openSidebar('military', id); break;
-      case 'screen': {
-        const separatorIndex = id.indexOf(':');
-        const screenName = separatorIndex >= 0 ? id.slice(0, separatorIndex) : id;
-        const screenId = separatorIndex >= 0 ? id.slice(separatorIndex + 1) : undefined;
-        const target = getScreenByBridgeName(screenName, subjectMode);
-        if (target) openScreen(target.id, screenId);
-        break;
-      }
-    }
-  }, [openScreen, openSidebar, subjectMode]);
+  const handleRichLinkClick = useEntityLinkClick();
 
   useEffect(() => {
     if (subjectMode || autoOpenedRef.current || !strongestBlocId || rightSidebar === 'powerbloc') return;
@@ -767,7 +761,7 @@ registerTopbarButton({
 
 registerScreen({
   id: 'powerBlocs',
-  render: ({ onClose }) => <PowerBlocsScreen onClose={onClose} />,
+  render: ({ onClose, screenId }) => <PowerBlocsScreen onClose={onClose} screenId={screenId} />,
   topbarId: 'powerblocs',
   advisorTopic: 'powerBlocsScreen',
   bridgeNames: ['powerblocs'],

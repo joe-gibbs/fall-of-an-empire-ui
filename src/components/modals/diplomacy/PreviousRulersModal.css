@@ -95,13 +95,6 @@
   padding: 1rem 1.05rem 1.1rem;
 }
 
-.prev-rulers-intro {
-  margin: 0 0 0.7rem;
-  color: var(--text);
-  font-size: 0.86rem;
-  line-height: 1.4;
-}
-
 .prev-rulers-scroll {
   flex: 1;
   min-height: 0;

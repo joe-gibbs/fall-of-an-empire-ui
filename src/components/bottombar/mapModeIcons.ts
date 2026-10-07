@@ -4,6 +4,7 @@ export const MAP_MODE_ICONS: Record<string, string> = {
   overlord: '/assets/icons/I_IndependentFactions.png',
   religion: '/assets/icons/I_Religions.png',
   culture: '/assets/icons/I_Cultures.png',
+  cultureDevelopment: '/assets/icons/I_CultureDevelopment.png',
   bishopric: '/assets/icons/I_Bishop.png',
   adminRegion: '/assets/icons/I_Region.png',
   adminLand: '/assets/icons/I_Land.png',

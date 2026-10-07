@@ -1,0 +1,212 @@
+.foederati-politics-panel {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.35rem;
+  margin-bottom: 0.65rem;
+  padding: 0.6rem;
+  background: url('/assets/baked/panel-charcoal.png') center / cover;
+  border: 0.35rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 28 fill / 0.35rem;
+}
+
+.foederati-politics-main {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+
+.foederati-politics-icon {
+  width: 2rem;
+  height: 2rem;
+  opacity: 0.88;
+  flex-shrink: 0;
+  margin-right: 0.55rem;
+}
+
+.foederati-politics-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.foederati-politics-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.foederati-politics-name {
+  min-width: 0;
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  color: var(--text-header);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.foederati-politics-value {
+  flex-shrink: 0;
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  color: var(--gold);
+}
+
+.foederati-autonomy-bar {
+  position: relative;
+  width: 100%;
+  height: 0.6rem;
+  margin-top: 0.35rem;
+}
+
+.foederati-summary .foederati-autonomy-bar {
+  width: 4.4rem;
+  height: 0.45rem;
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.foederati-summary--compact .foederati-autonomy-bar {
+  width: 3.4rem;
+  height: 0.38rem;
+}
+
+.foederati-autonomy-track {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: url('/assets/bar-track.png') repeat-x;
+  background-size: auto 100%;
+  border-radius: 0.3rem;
+}
+
+.foederati-autonomy-fill {
+  width: 100%;
+  height: 100%;
+  background: url('/assets/bar-gold.png') repeat-x;
+  background-size: auto 100%;
+  transform-origin: left;
+}
+
+.foederati-autonomy-steps {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.foederati-autonomy-step {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+  border-right: 0.0909rem solid rgba(8, 12, 17, 0.5);
+}
+
+.foederati-autonomy-step--current {
+  background: rgba(229, 201, 107, 0.16);
+}
+
+.foederati-autonomy-step--last {
+  border-right-width: 0;
+}
+
+.foederati-politics-controls {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  margin-left: 0.55rem;
+}
+
+.foederati-step-btn {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background-color: transparent;
+  background-image: url('/assets/baked/button-burgundy.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: #5a5145;
+  color: var(--gold);
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.foederati-step-btn:hover:not(:disabled) {
+  background-image: url('/assets/baked/button-burgundy-hover.png');
+  border-color: var(--gold-light);
+}
+
+.foederati-step-btn--disabled,
+.foederati-step-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+.foederati-pending,
+.foederati-pending-days,
+.foederati-blocked {
+  margin: 0.35rem 0 0;
+  color: var(--text-header);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.foederati-pending-days,
+.foederati-blocked {
+  color: var(--text-muted);
+}
+
+.foederati-named-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.foederati-named-action .btn--outline {
+  width: 100%;
+}
+
+.foederati-named-action .foederati-blocked {
+  margin-top: 0.2rem;
+}
+
+.foederati-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.foederati-summary-label {
+  min-width: 0;
+  color: var(--gold);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.foederati-summary--compact {
+  gap: 0.35rem;
+}
+
+.foederati-summary--compact .foederati-summary-label {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}

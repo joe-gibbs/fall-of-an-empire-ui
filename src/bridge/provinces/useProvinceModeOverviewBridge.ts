@@ -271,9 +271,10 @@ function mapResponse(data: GetProvinceModeOverviewResponse): ProvinceModeOvervie
   };
 }
 
-export function useProvinceModeOverviewBridge(enabled: boolean): ProvinceModeOverview | null {
+export function useProvinceModeOverviewBridge(enabled: boolean, suspend = false): ProvinceModeOverview | null {
   return useBridgeQuery({
     action: 'game.get_province_mode_overview',
+    suspend,
     payload: enabled ? undefined : null,
     map: mapResponse,
   });

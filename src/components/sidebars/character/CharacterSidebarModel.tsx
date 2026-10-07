@@ -138,12 +138,6 @@ export const interactionCategoryOrder = [
   'military',
 ] as const;
 
-export const interactionRequirementStatusMeta: Record<string, { label: string; colour: string }> = {
-  available: { get label() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.211.1'); }, colour: 'var(--green)' },
-  greyed: { get label() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.212.2'); }, colour: 'var(--red)' },
-  hidden: { get label() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.213.3'); }, colour: 'var(--text-dark)' },
-};
-
 export const socialRelationshipGroups: RelationshipGroup[] = [
   { id: 'succession', get title() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.217.4'); }, types: ['Ruler', 'Heir', 'Designated Heir'], tone: 'patronage' },
   { id: 'patronage', get title() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.218.5'); }, types: ['Patron', 'Liege', 'Client'], tone: 'patronage' },
@@ -160,14 +154,6 @@ export const knownRelationshipTypes = new Set(socialRelationshipGroups.reduce<st
 export function isPatronageRelationship(type: string): boolean {
   return type === 'Patron' || type === 'Liege' || type === 'Client';
 }
-
-export const interactionDifficultyMeta: Record<string, { label: string; colour: string }> = {
-  veryEasy: { get label() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.230.9'); }, colour: 'var(--green-light)' },
-  easy: { get label() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.231.10'); }, colour: 'var(--green)' },
-  medium: { get label() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.232.11'); }, colour: 'var(--gold)' },
-  hard: { get label() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.233.12'); }, colour: 'var(--orange)' },
-  veryHard: { get label() { return webUIText('Auto.TopProp.ComponentsSidebarsCharacterSidebar.234.13'); }, colour: 'var(--red)' },
-};
 
 export const EMPTY_INTERACTIONS: PersonInteractionView[] = [];
 
@@ -199,10 +185,6 @@ export function buildInteractionTooltip(
   targetPersonName?: string,
 ): TooltipContent {
   const lines: TooltipLine[] = [];
-  const difficulty = interactionDifficultyMeta[interaction.difficulty] ?? {
-    label: interaction.difficulty,
-    colour: 'var(--text-muted)',
-  };
   const reasons = uniqueInteractionReasons(interaction);
   const initiatorRequirement = interaction.initiatorRequirementDescription.trim();
   const hasInitiatorRequirementReason = initiatorRequirement.length > 0
@@ -227,16 +209,6 @@ export function buildInteractionTooltip(
     }
   }
 
-  lines.push({
-    label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.281.4'),
-    value: interactionCategoryLabels[interaction.category] ?? interaction.category,
-  });
-  lines.push({
-    label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.285.5'),
-    value: difficulty.label,
-    valueColor: difficulty.colour,
-  });
-
   if (interaction.goldCost > 0) {
     lines.push({
       label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.292.6'),
@@ -252,7 +224,7 @@ export function buildInteractionTooltip(
     const days = Math.round(interaction.durationDays);
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.303.8'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.303.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.305.9'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.305.1"); } });
+    lines.push({ label: webUIText('Common.Duration'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.45.1"); } });
   }
 
   if (interaction.cooldownDays > 0) {
@@ -272,24 +244,16 @@ export function buildInteractionTooltip(
   if (reasons.length > 0) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.340.13'), isHeader: true });
     for (const reason of reasons) {
-      const meta = interactionRequirementStatusMeta[reason.status] ?? {
-        label: reason.status,
-        colour: 'var(--text-muted)',
-      };
       lines.push({
         label: <span className="char-interaction-requirement-text">{reason.reason}</span>,
-        labelColor: meta.colour,
-        value: meta.label,
-        valueColor: meta.colour,
+        labelColor: reason.status === 'available' ? 'var(--green)' : 'var(--red)',
       });
     }
   }
 
   let footer: string | undefined;
-  if (interaction.needsGiftSelection) {
-    footer = webUIText('CharacterSidebar.ChooseGift');
-  } else if (interaction.needsInitiatorSelection && !hasInitiatorRequirementReason) {
-    footer = initiatorRequirement || webUIText('CharacterSidebar.ChooseInitiator');
+  if (interaction.needsInitiatorSelection && !hasInitiatorRequirementReason && initiatorRequirement) {
+    footer = initiatorRequirement;
   }
 
   const body = interaction.inProgress && interaction.remainingDays > 0

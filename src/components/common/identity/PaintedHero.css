@@ -1,0 +1,29 @@
+/* Brush-edged header painting used by culture, religion and events.
+   Alpha mask punches the brush shape; transparent edges show the modal charcoal. */
+.painted-hero {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  margin: 0 0.8rem;
+}
+
+.painted-hero-img {
+  width: 100%;
+  height: 12rem;
+  display: block;
+  object-fit: cover;
+}
+
+.painted-hero-img,
+.painted-hero-mask {
+  mask-image: url('/assets/painted-hero-mask.png');
+  -webkit-mask-image: url('/assets/painted-hero-mask.png');
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+@media (max-height: 900px) {
+  .painted-hero-img { height: 6rem; }
+}

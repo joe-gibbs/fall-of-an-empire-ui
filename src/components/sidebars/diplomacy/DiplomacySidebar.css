@@ -69,20 +69,27 @@
   color: var(--text-bright);
   letter-spacing: 0.03rem;
   text-shadow: 0 0.077rem 0.3rem rgba(8, 12, 17, 0.9);
+  overflow-wrap: anywhere;
 }
 
 .diplo-header-status-row {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .diplo-header-status-icon {
   width: 1.1rem;
   height: 1.1rem;
+  flex-shrink: 0;
 }
 
 .diplo-status-badge {
   margin-left: 0.14rem;
+  min-width: 0;
+  flex-shrink: 1;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .diplo-header-capital {
@@ -168,22 +175,24 @@
 }
 
 .diplo-identity-pair {
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex-wrap: nowrap;
 }
 
 .diplo-identity-pair > .tooltip-wrapper {
-  width: 50%;
-  flex: 0 0 50%;
+  width: 100%;
+  max-width: 100%;
+  flex: none;
+  min-width: 0;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
-.diplo-identity-pair > .tooltip-wrapper:nth-child(2) {
+.diplo-identity-pair > .tooltip-wrapper:first-child {
   border-right-width: 0;
 }
 
-.diplo-identity-pair > .tooltip-wrapper:nth-child(3) {
-  width: 100%;
-  flex-basis: 100%;
+.diplo-identity-pair > .tooltip-wrapper + .tooltip-wrapper {
   border-top-width: 0.077rem;
   border-top-style: solid;
   border-top-color: var(--separator);

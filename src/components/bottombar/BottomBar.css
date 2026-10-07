@@ -56,10 +56,6 @@
   margin-left: 0.231rem;
 }
 
-.bottombar-row:last-child {
-  align-self: flex-start;
-}
-
 .bottombar-group {
   display: flex;
   align-items: center;

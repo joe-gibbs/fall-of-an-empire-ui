@@ -4,10 +4,12 @@ import { useProvinceTooltipBridge } from '../../../bridge/provinces/useProvinceT
 import { useKeyActionResolver } from '../../../hooks/useKeyActionResolver';
 import { WebkilnAssetPath } from '../../../utils/assets';
 import { toRootRem } from '../../../utils/cssUnits';
-import { formatResourceNumber } from '../../../utils/numberFormat';
+import { formatNumber, formatResourceNumber } from '../../../utils/numberFormat';
 import { renderRichText } from '../../../utils/richText';
 import ProvinceTooltipModeRenderer from '../../common/province-tooltip-modes/shared/ProvinceTooltipModeRenderer';
 import { provinceTooltipDataFromResponse } from '../../common/province-tooltip-modes/shared/types';
+import { ModeNote, ModeRow, ModeRows } from '../../common/province-tooltip-modes/shared/ModeLayout';
+import { webUIText } from '../../../localization/WebUITextContext';
 import './ProvinceTooltipOverlay.css';
 
 const TOOLTIP_OFFSET_X = 24;
@@ -279,7 +281,7 @@ function hasMapModeContent(tooltip: GetProvinceTooltipResponse): boolean {
 }
 
 function shouldShowTerrainInfo(tooltip: GetProvinceTooltipResponse): boolean {
-  if (tooltip.kind === 'siegeWarning') return false;
+  if (tooltip.kind === 'siegeWarning' || tooltip.kind === 'peaceSettlement') return false;
   if (tooltip.kind === 'convoy') {
     return false;
   }
@@ -326,6 +328,7 @@ function SettlementMapModeDetails({ tooltip }: { tooltip: GetProvinceTooltipResp
   return (
     <div className="province-tooltip-details">
       <div className="province-tooltip-title">{tooltip.settlementName}</div>
+      {tooltip.originalNameText && <div>{tooltip.originalNameText}</div>}
       {shouldShowTerrainInfo(tooltip) && <TerrainSummary tooltip={tooltip} />}
       <MapModeContent tooltip={tooltip} />
       <SettlementActionHint tooltip={tooltip} />
@@ -342,6 +345,7 @@ function SettlementDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse })
   return (
     <div className="province-tooltip-details">
       <div className="province-tooltip-title">{tooltip.settlementName}</div>
+      {tooltip.originalNameText && <div>{tooltip.originalNameText}</div>}
       <TerrainSummary tooltip={tooltip} />
       <SettlementActionHint tooltip={tooltip} />
       <SiegeWarning tooltip={tooltip} />
@@ -425,9 +429,28 @@ function TerrainDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   );
 }
 
+function PeaceSettlementDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
+  return (
+    <div className="province-tooltip-details">
+      <div className="province-tooltip-title">{tooltip.settlementName}</div>
+      <ModeNote>{webUIText(tooltip.peaceConcession ? 'PeaceNegotiation.Giving' : 'PeaceNegotiation.Taking')}</ModeNote>
+      <ModeRows>
+        {tooltip.peaceRecipientName && <ModeRow label={webUIText('PeaceNegotiation.Recipient')} value={tooltip.peaceRecipientName} />}
+        <ModeRow label={webUIText('ProvinceTooltip.PopulationLabel')} value={formatNumber(tooltip.population)} icon="/assets/icons/I_ModPopulation.png" />
+        <ModeRow label={webUIText('PeaceNegotiation.GlanceWarScore')} value={formatNumber(tooltip.peaceWarScoreCost)} />
+        <ModeRow label={webUIText('ProvinceTooltip.ResourcesLabel')} value={tooltip.resources.map(resource => resource.label).join(', ') || webUIText('ProvinceTooltip.None')} />
+      </ModeRows>
+    </div>
+  );
+}
+
 function ExpandedDetails({ tooltip }: { tooltip: GetProvinceTooltipResponse }) {
   if (!tooltip.expanded) {
     return null;
+  }
+
+  if (tooltip.kind === 'peaceSettlement') {
+    return <PeaceSettlementDetails tooltip={tooltip} />;
   }
 
   if (tooltip.kind === 'siegeWarning') {

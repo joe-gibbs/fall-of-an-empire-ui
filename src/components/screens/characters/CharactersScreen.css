@@ -448,7 +448,9 @@
   line-height: 1.2;
 }
 
-.chs-cell--identity > span {
+.chs-cell--identity > span,
+.chs-cell--identity > .culture-link,
+.chs-cell--identity > .religion-link {
   display: block;
   min-width: 0;
   white-space: nowrap;

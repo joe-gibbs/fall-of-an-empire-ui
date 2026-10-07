@@ -42,9 +42,10 @@ function mergeEconomyOverview(value: GetEconomyOverviewResponse, scope: EconomyO
   return merged;
 }
 
-export function useEconomyOverviewBridge(scope: EconomyOverviewScope = 'overview', fetch = true): GetEconomyOverviewResponse | null {
+export function useEconomyOverviewBridge(scope: EconomyOverviewScope = 'overview', fetch = true, suspend = false): GetEconomyOverviewResponse | null {
   const live = useBridgeQuery({
     action: 'game.get_economy_overview',
+    suspend,
     payload: fetch ? { scope } : null,
     cacheResponseMs: 1000,
     map: (data) => {

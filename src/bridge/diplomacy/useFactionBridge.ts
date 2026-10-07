@@ -98,6 +98,7 @@ function mapFaction(data: GetFactionDataResponse): Faction {
   }));
 
   return {
+    foederatiPolitics: data.foederatiPolitics,
     id: data.id,
     debugShortId: data.debugShortId,
     name: data.name,
@@ -105,10 +106,15 @@ function mapFaction(data: GetFactionDataResponse): Faction {
     secondaryColour: data.secondaryColour,
     rulerName: data.rulerName,
     rulerId: data.rulerId,
+    dominantCourtierId: data.dominantCourtierId || undefined,
+    dominantCourtierName: data.dominantCourtierName || undefined,
+    dominantCourtierParts: data.dominantCourtierParts,
+    splitCourt: data.splitCourt,
     rulerDebugShortId: data.rulerDebugShortId || undefined,
     rulerPortrait: data.rulerPortrait || undefined,
     rulerPortraitLayers: data.rulerPortraitLayers,
     strength: data.strength,
+    strengthBreakdown: data.strengthBreakdown,
     isRebel: data.isRebel,
     rebelTypeName: data.rebelTypeName || undefined,
     rebelGoalName: data.rebelGoalName || undefined,
@@ -123,10 +129,17 @@ function mapFaction(data: GetFactionDataResponse): Faction {
     religionId: data.religionId,
     religionInfo: data.religionInfo.id ? data.religionInfo : undefined,
     government: data.government || undefined,
+    governmentTypeName: data.governmentTypeName || undefined,
     governmentDisplayName: data.governmentDisplayName || undefined,
     governmentDescription: data.governmentDescription || undefined,
     governmentCapabilities: data.governmentCapabilities,
+    usesPowerBlocs: data.usesPowerBlocs,
+    usesAdministrativeCorruption: data.usesAdministrativeCorruption,
+    usesPatronage: data.usesPatronage,
     generatesLeaderOnSuccession: data.generatesLeaderOnSuccession,
+    canAppointHeir: data.canAppointHeir,
+    crownTaxPercent: data.crownTaxPercent,
+    realmProgress: data.realmProgress,
     capital: data.capital,
     diplomaticStatus,
     subjectSubtype: data.subjectSubtype || undefined,
@@ -143,8 +156,11 @@ function mapFaction(data: GetFactionDataResponse): Faction {
       value: source.value,
     })),
     settlements: data.settlements,
+    settlementBreakdown: data.settlementBreakdown,
     subjectSettlements: data.subjectSettlements,
     armyCount: data.armies,
+    usesWarbands: data.usesWarbands,
+    warbandStrength: data.warbandStrength,
     usesLevies: data.usesLevies,
     levyStrength: data.levyStrength,
     isFoederatiCalledUp: data.isFoederatiCalledUp,
@@ -198,6 +214,8 @@ function mapFaction(data: GetFactionDataResponse): Faction {
         effectDescription: level.effectDescription,
         effectLines: level.effectLines ?? [],
         isCurrent: level.isCurrent,
+        isAvailable: level.isAvailable,
+        lockReason: level.lockReason || undefined,
       })),
       displayFactionName: p.displayFactionName,
       isFromLiege: p.isFromLiege,
@@ -325,6 +343,8 @@ function applyFactionDailyPatch(faction: Faction | null, patch: GetFactionDailyD
     settlements: patch.settlements,
     subjectSettlements: patch.subjectSettlements,
     armyCount: patch.armies,
+    usesWarbands: patch.usesWarbands,
+    warbandStrength: patch.warbandStrength,
     usesLevies: patch.usesLevies,
     levyStrength: patch.levyStrength,
     isFoederatiCalledUp: patch.isFoederatiCalledUp,
@@ -375,12 +395,13 @@ export interface FactionBridgeState {
   pending: boolean;
 }
 
-export function useFactionBridgeState(factionId: string | null | undefined, scope: FactionBridgeScope = 'full', fetch = true): FactionBridgeState {
+export function useFactionBridgeState(factionId: string | null | undefined, scope: FactionBridgeScope = 'full', fetch = true, suspend = false): FactionBridgeState {
   const cached = factionId ? factionCache.get(factionId) ?? null : null;
   const [dailyPatch, setDailyPatch] = useState<GetFactionDailyDataResponse | null>(null);
   const liveQuery = useBridgeQueryState({
     action: 'game.get_faction_data',
-    payload: fetch && factionId ? { factionId, scope } : null,
+    suspend,
+    payload: fetch && factionId ? { factionId, scope, subscriptionId: '', subscribe: false } : null,
     cacheResponseMs: 1500,
     map: (data) => {
       const mapped = mapFaction(data);
@@ -391,11 +412,36 @@ export function useFactionBridgeState(factionId: string | null | undefined, scop
   });
 
   useEffect(() => {
+    if (!fetch || !factionId) return;
+    const subscriptionId = `faction-${crypto.randomUUID()}`;
+    let mounted = true;
+    void bridgeCall('game.get_faction_data', { factionId, scope, subscriptionId, subscribe: true })
+      .then(() => {
+        // A gameplay-readiness retry can complete after this view has closed or changed.
+        if (!mounted) {
+          return bridgeCall('game.get_faction_data', { factionId, scope, subscriptionId, subscribe: false });
+        }
+      })
+      .catch(acknowledgeBridgeFailure);
+    return () => {
+      mounted = false;
+      void bridgeCall('game.get_faction_data', { factionId, scope, subscriptionId, subscribe: false })
+        .catch(acknowledgeBridgeFailure);
+    };
+  }, [factionId, fetch, scope]);
+
+  useEffect(() => {
     if (!factionId) {
       return undefined;
     }
 
-    return onBridgeEvent('game.get_faction_daily_data', (data) => {
+    const unsubscribeFull = onBridgeEvent('game.get_faction_data', (data) => {
+      if (data.id === factionId || data.name === factionId) {
+        // A full snapshot supersedes every earlier daily update for this faction.
+        setDailyPatch(null);
+      }
+    });
+    const unsubscribeDaily = onBridgeEvent('game.get_faction_daily_data', (data) => {
       cacheFactionDailyPatch(data);
       if (data.id === factionId) {
         setDailyPatch(data);
@@ -407,6 +453,10 @@ export function useFactionBridgeState(factionId: string | null | undefined, scop
         setDailyPatch(data);
       }
     });
+    return () => {
+      unsubscribeFull();
+      unsubscribeDaily();
+    };
   }, [factionId]);
 
   const faction = useMemo(() => {
@@ -420,12 +470,12 @@ export function useFactionBridgeState(factionId: string | null | undefined, scop
   };
 }
 
-export function useFactionBridge(factionId: string | null | undefined, scope: FactionBridgeScope = 'full', fetch = true): Faction | null {
-  return useFactionBridgeState(factionId, scope, fetch).faction;
+export function useFactionBridge(factionId: string | null | undefined, scope: FactionBridgeScope = 'full', fetch = true, suspend = false): Faction | null {
+  return useFactionBridgeState(factionId, scope, fetch, suspend).faction;
 }
 
 export async function refreshFactionData(factionId: string): Promise<void> {
-  const fresh = await bridgeCall('game.get_faction_data', { factionId, scope: 'full' });
+  const fresh = await bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId, scope: 'full' });
   dispatchFactionData(fresh);
 }
 

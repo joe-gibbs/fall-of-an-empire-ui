@@ -171,6 +171,45 @@ function serveOptimisedAssetVariants(): Plugin {
  * The plugin serves /mods/<id>/* directly from the mod directory. Discovery
  * still comes through the content-pack bridge, matching the production path.
  */
+function serveSettingPackPublicAssets(): Plugin {
+  const ASSET_URL_PREFIX = '/assets/'
+  const MIME: Record<string, string> = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+  }
+
+  return {
+    name: 'serve-setting-pack-public-assets',
+    apply: 'serve',
+    configureServer(server) {
+      const packPublicDir = path.resolve(server.config.root, '../Packs/FOAESetting/WebUI/public')
+      server.middlewares.use((req, res, next) => {
+        if (!req.url) return next()
+        const url = req.url.split('?')[0]
+        if (!url.startsWith(ASSET_URL_PREFIX)) return next()
+        let rel: string
+        try {
+          rel = decodeURIComponent(url.slice(1))
+        } catch {
+          return next()
+        }
+        if (rel.includes('..')) return next()
+        const filePath = path.resolve(packPublicDir, rel)
+        const relative = path.relative(packPublicDir, filePath)
+        if (relative.startsWith('..') || path.isAbsolute(relative)) return next()
+        if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return next()
+        const ext = path.extname(filePath).toLowerCase()
+        res.setHeader('Content-Type', MIME[ext] ?? 'application/octet-stream')
+        res.setHeader('Cache-Control', 'no-store')
+        fs.createReadStream(filePath).pipe(res)
+      })
+    },
+  }
+}
+
 function serveExternalMods(): Plugin {
   const MODS_URL_PREFIX = '/mods/'
 
@@ -272,6 +311,7 @@ export default defineConfig(() => ({
     serveOptimisedAssetVariants(),
     react(),
     conciseBuildSummary(),
+    serveSettingPackPublicAssets(),
     serveExternalMods(),
   ],
   build: {

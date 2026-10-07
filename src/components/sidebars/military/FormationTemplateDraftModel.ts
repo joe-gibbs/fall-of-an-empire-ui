@@ -212,7 +212,7 @@ export function unitTooltipData(unit: FormationTemplateUnitEntry, count: number)
         Population: formatNumber(culturePopulation),
       })
       : unit.cultureName,
-    cultureIcon: unit.cultureId ? `/assets/cultures/${unit.cultureId}.png` : undefined,
+    cultureIcon: unit.cultureIconId ? `/assets/cultures/${unit.cultureIconId}.png` : undefined,
     maxStrength: unit.maxStrength,
     price: unit.price,
     buildTime: unit.buildTimeDays,

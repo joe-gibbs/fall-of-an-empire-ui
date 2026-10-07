@@ -73,8 +73,8 @@ export function useSelectedMilitariesState(): SelectedMilitariesView | null {
   return useSelectedMilitariesBridge();
 }
 
-export function useFaction(id: string | null | undefined, scope: FactionBridgeScope = 'full', fetch = true): Faction | null {
-  return useFactionBridge(id, scope, fetch);
+export function useFaction(id: string | null | undefined, scope: FactionBridgeScope = 'full', fetch = true, suspend = false): Faction | null {
+  return useFactionBridge(id, scope, fetch, suspend);
 }
 
 export function usePlayerFactionId(): string | null {
@@ -94,16 +94,16 @@ export function useAgentCandidates(role: 'diplomat' | 'spy' | null, targetFactio
   return useAgentCandidatesBridge(role, targetFactionId);
 }
 
-export function useCourtPositions(enabled: boolean): CourtPositionsResult | null {
-  return useCourtPositionsBridge(enabled);
+export function useCourtPositions(enabled: boolean, suspend = false): CourtPositionsResult | null {
+  return useCourtPositionsBridge(enabled, suspend);
 }
 
 export function useCourtCandidates(positionKey: string | null): Character[] | null {
   return useCourtCandidatesBridge(positionKey);
 }
 
-export function useCourtAppointmentContests(enabled: boolean): CourtAppointmentContestsResult | null {
-  return useCourtAppointmentContestsBridge(enabled);
+export function useCourtAppointmentContests(enabled: boolean, suspend = false): CourtAppointmentContestsResult | null {
+  return useCourtAppointmentContestsBridge(enabled, suspend);
 }
 
 export function useDioceses(religionKey: string | null): DiocesesResult | null {
@@ -118,6 +118,6 @@ export function useRegionGovernorCandidates(settlementId: string | null): Region
   return useRegionGovernorCandidatesBridge(settlementId);
 }
 
-export function useProvinceModeOverview(enabled: boolean): ProvinceModeOverview | null {
-  return useProvinceModeOverviewBridge(enabled);
+export function useProvinceModeOverview(enabled: boolean, suspend = false): ProvinceModeOverview | null {
+  return useProvinceModeOverviewBridge(enabled, suspend);
 }

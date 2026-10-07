@@ -20,6 +20,7 @@ import { canNegotiateDiplomacyWith } from '../../../utils/diplomacyAuthority';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { compareSortValuesWithDirection, toggleSortState, type SortDirection, type SortState, type SortValue } from '../../common/layout/tables/sortUtils';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
+import { warScoreBreakdownTooltip } from './warScoreBreakdownTooltip';
 import './DiplomacyScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
@@ -36,15 +37,7 @@ type TreatySortKey = 'faction' | 'type' | 'duration';
 type WarSortKey = 'name' | 'ours' | 'theirs' | 'warScore' | 'duration' | 'battles';
 
 function warScoreTooltip(row: ActiveWar) {
-  return {
-    title: webUIText('Diplomacy.WarScoreBreakdown'),
-    body: webUIText('Diplomacy.WarScoreBreakdownBody'),
-    lines: row.warScoreBreakdown.map(entry => ({
-      label: `${entry.depth > 0 ? '· ' : ''}${entry.label}${entry.eventCount > 1 ? ` (${formatNumber(entry.eventCount)})` : ''}`,
-      value: formatSignedNumber(entry.score, { maximumFractionDigits: 1 }),
-      valueColor: entry.score >= 0 ? 'var(--green)' : 'var(--red)',
-    })),
-  };
+  return warScoreBreakdownTooltip(row.warScoreBreakdown, row.warScore);
 }
 
 const TABS = [
@@ -793,10 +786,6 @@ registerTopbarButton({
   tooltip: {
     get title() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.478.23'); },
     get body() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.479.24'); },
-    lines: [
-      { get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.481.25'); } },
-      { get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.482.26'); } },
-    ],
   },
   order: 40,
   factionMode: 'independent',

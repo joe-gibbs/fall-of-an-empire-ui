@@ -1,8 +1,7 @@
-import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, type CSSProperties } from 'react';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../common/tooltips/Tooltip';
 import { dismissSharedTooltips } from '../common/tooltips/tooltipEvents';
 import FactionTooltip from '../common/tooltips/FactionTooltip';
-import PersonTooltip from '../common/tooltips/PersonTooltip';
 import EntityLink from '../common/entities/EntityLink';
 import FactionRoundel from '../common/entities/FactionRoundel';
 import GameButton from '../common/buttons/GameButton';
@@ -124,33 +123,23 @@ function GlanceFactionMark({
   );
 }
 
-function militaryKindLabel(isNavy: boolean, isPersonalGuard: boolean): string {
-  if (isNavy) return webUIText('Common.Fleet');
-  if (isPersonalGuard) return webUIText('Military.PersonalGuard');
-  return webUIText('Common.Army');
-}
-
 function MilitaryGlanceHeader({
   faction,
   title,
-  isNavy,
-  isPersonalGuard,
   interactive,
 }: {
   faction: GlanceFactionStub;
   title: string;
-  isNavy: boolean;
-  isPersonalGuard: boolean;
   interactive: boolean;
 }) {
   const openSidebar = useOptionalGameActions()?.openSidebar;
   const identity = (
     <div className="military-glance-tt-identity">
-      <GlanceFactionMark faction={faction} className="military-glance-tt-roundel" size="md" showRing />
+      <GlanceFactionMark faction={faction} className="military-glance-tt-roundel" size="xs" showRing />
       <div className="military-glance-tt-copy">
         <div className="military-glance-tt-name">{title}</div>
         <div className="military-glance-tt-meta">
-          <span>{militaryKindLabel(isNavy, isPersonalGuard)}</span>
+          <span>{faction.name}</span>
           <span className="military-glance-tt-meta-rule" aria-hidden="true" />
           <span style={{ color: relationDisplayColour(faction.relation) }}>
             {relationDisplayLabel(faction.relation)}
@@ -180,18 +169,6 @@ function MilitaryGlanceHeader({
   );
 }
 
-function GlancePersonValue({ id, name, interactive }: { id?: string; name: string; interactive: boolean }) {
-  if (!interactive || !id) {
-    return <>{name}</>;
-  }
-
-  return (
-    <PersonTooltip characterId={id} delay={150}>
-      <span className="tt-nested-link">{name}</span>
-    </PersonTooltip>
-  );
-}
-
 function GlanceEntityValue({ type, id, name, interactive }: { type: string; id?: string; name: string; interactive: boolean }) {
   if (!interactive) {
     return <>{name}</>;
@@ -204,16 +181,6 @@ function GlanceEntityValue({ type, id, name, interactive }: { type: string; id?:
   );
 }
 
-function linkedOrderValue(detail: GetMilitaryDataResponse, fallback: string, interactive: boolean): ReactNode {
-  const targetId = detail.currentOrderTargetId;
-  const targetType = detail.currentOrderTargetType;
-  if (!interactive || !targetId || !targetType) {
-    return fallback;
-  }
-
-  return <GlanceEntityValue type={targetType} id={targetId} name={fallback} interactive />;
-}
-
 function militaryTooltip(
   data: ArmyGlanceData | NavyGlanceData,
   detail: GetMilitaryDataResponse | null,
@@ -224,7 +191,6 @@ function militaryTooltip(
   onViewMilitary: () => void,
 ): TooltipContent {
   const isRaiding = detail?.isRaiding ?? Boolean(data.raiding);
-  const isPersonalGuard = Boolean(detail?.found && detail.isPersonalGuard);
   const strength = detail?.found ? detail.strength : data.strength;
   const maxStrength = detail?.found ? detail.maxStrength : 0;
   const moralePercent = detail?.found ? detail.morale : clampUnitFraction(data.morale) * 100;
@@ -233,37 +199,10 @@ function militaryTooltip(
   if (data.attrition) statuses.push(webUIText('WorldGlances.Military.Attrition'));
   if (blockading) statuses.push(webUIText('WorldGlances.Military.Blockading'));
   const embarkedArmyCount = isNavy ? (data as NavyGlanceData).embarkedArmyCount ?? 0 : 0;
-  const currentOrder = detail?.currentOrder ?? '';
   const garrisonedAt = detail?.found ? detail.garrisonedAt : '';
   const embarkedNavyName = detail?.found ? detail.embarkedNavyName : '';
-  const parentCommand = detail?.found ? detail.parentCommand : '';
 
   const lines: TooltipLine[] = [];
-
-  if (detail?.found) {
-    lines.push({
-      label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.173.3'),
-      value: (
-        <GlancePersonValue
-          id={detail.commanderId || undefined}
-          name={detail.commanderName || webUIText('Common.NoCommander')}
-          interactive={interactive}
-        />
-      ),
-    });
-  }
-
-  lines.push({
-    label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.174.4'),
-    value: (
-      <GlanceEntityValue
-        type="faction"
-        id={data.faction.id}
-        name={data.faction.name}
-        interactive={interactive}
-      />
-    ),
-  });
 
   if (garrisonedAt) {
     lines.push({
@@ -295,36 +234,12 @@ function militaryTooltip(
     });
   }
 
-  if (parentCommand) {
-    lines.push({
-      label: webUIText('WorldGlances.Military.Command'),
-      value: (
-        <GlanceEntityValue
-          type="military"
-          id={detail?.parentCommandId || undefined}
-          name={parentCommand}
-          interactive={interactive}
-        />
-      ),
-      valueIcon: '/assets/icons/I_ArmiesQuickButton.png',
-    });
-  }
-
-  if (currentOrder) {
-    lines.push({
-      label: webUIText('WorldGlances.Military.CurrentAction'),
-      value: detail?.found ? linkedOrderValue(detail, currentOrder, interactive) : currentOrder,
-      valueIcon: blockading ? '/assets/icons/I_Siege.png' : isRaiding ? '/assets/icons/I_RaidingTorch.png' : undefined,
-    });
-  }
-
   lines.push(
     {
       get label() { return isNavy ? webUIText("ArmyGlance.Ships") : webUIText("ArmyGlance.Soldiers"); },
       value: strengthValueLabel(strength, maxStrength),
       valueColor: strengthColour(clampUnitFraction(strength / STRENGTH_RING_REFERENCE)),
       valueIcon: isNavy ? NAVY_TYPE_ICON : ARMY_TYPE_ICON,
-      isHeader: true,
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.168.2'),
@@ -334,7 +249,7 @@ function militaryTooltip(
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.176.5'),
-      get value() { return webUIText("Auto.Prop.componentsworldglancesArmyGlance.178.1", { Value1: String(data.tier) }); },
+      value: formatNumber(data.tier),
       valueIcon: tierTexture(data.tier),
     },
   );
@@ -369,8 +284,6 @@ function militaryTooltip(
       <MilitaryGlanceHeader
         faction={data.faction}
         title={detail?.name || data.faction.name}
-        isNavy={isNavy}
-        isPersonalGuard={isPersonalGuard}
         interactive={interactive}
       />
     ),
@@ -444,7 +357,7 @@ function MilitaryTooltip({ data, isNavy = false, children, open, passive = false
       open={open}
       position="top"
       delay={520}
-      bubbleClassName={`tt-bubble--glance${passive ? ' tt-bubble--passive' : ''}`}
+      bubbleClassName={`tt-bubble--glance tt-bubble--military-glance${passive ? ' tt-bubble--passive' : ''}`}
       onShowIntent={requestTooltipDetail}
       wrapperStyle={wrapperStyle}
     >

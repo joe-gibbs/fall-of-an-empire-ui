@@ -1,3 +1,4 @@
+import { FoederatiPoliticsSummary } from '../faction/FoederatiPoliticsPanel';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Portrait from '../../common/portraits/Portrait';
@@ -16,9 +17,11 @@ import { bureaucraticTooltipLine } from '../../bureaucracy/BureaucraticThroughpu
 import ProvinceCreationLeaderModal from '../../modals/provinces/ProvinceCreationLeaderModal';
 import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
 import RegionalGovernorsTable from './RegionalGovernorsTable';
+import ClansScreen from '../diplomacy/ClansScreen';
+import { CLANS_GOVERNORS_SCREEN_ID } from '../diplomacy/clansScreenTokens';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { useGameActions } from '../../../context/GameContext';
-import { useMilitaryOverview, usePlayerFactionId } from '../../../data-source/index';
+import { useMilitaryOverview, usePlayerFactionId, usePlayerFactionSummary } from '../../../data-source/index';
 import { useCharacterListBridge, type CharacterListEntry } from '../../../bridge/characters/useCharactersBridge';
 import {
   adjustSubjectTaxRateBridge,
@@ -768,7 +771,7 @@ function FoederatiRow({
   const { openSidebar } = useGameActions();
   const activeText = entry.isCalledUp ? formatNumber(entry.activeStrength) : '-';
   const canToggle = entry.isCalledUp || entry.canCall;
-  const actionLabel = entry.isCalledUp ? webUIText("InternalPolitics.StandDown") : entry.canCall ? webUIText("InternalPolitics.CallUp") : webUIText("InternalPolitics.WillRefuse");
+  const actionLabel = entry.isCalledUp ? webUIText("InternalPolitics.StandDown") : entry.politics?.callupPending ? webUIText("Foederati.CallupRequested") : webUIText("InternalPolitics.CallUp");
   const rulerId = entry.rulerId || faction?.rulerId || undefined;
   const bloc = blocForPerson(rulerId, blocs);
   const character = rulerId ? characters.get(rulerId) : undefined;
@@ -792,6 +795,7 @@ function FoederatiRow({
         />
         <div className="ips-foederati-copy">
           <EntityLink type="faction" id={entry.factionId} className="ips-foederati-name ips-entity-link" fallbackClassName="ips-foederati-name">{entry.factionName}</EntityLink>
+          {entry.politics?.enabled && <FoederatiPoliticsSummary data={entry.politics} compact />}
         </div>
       </div>
       <div className="ips-foederati-cell ips-foederati-cell--ruler">
@@ -820,12 +824,15 @@ function FoederatiRow({
         <span>{formatNumber(entry.strength)}</span>
       </div>
       <div className="ips-foederati-cell ips-foederati-cell--action">
+        {entry.politics?.pendingDecision && <Tooltip content={{ title: entry.politics.pendingDecision, body: webUIText("Foederati.OpenDecision") }}>
+          <button type="button" className="btn--outline ips-foederati-action" onClick={(event) => { event.stopPropagation(); openSidebar("diplomacy", entry.factionId); }}>{webUIText("Foederati.DecisionRequired")}</button>
+        </Tooltip>}
         <Tooltip
           inline
           position="left"
           content={{
             title: actionLabel,
-            get body() { return entry.isCalledUp ? webUIText("InternalPolitics.StandDownThis") : entry.canCall ? webUIText("InternalPolitics.CallUpThis") : webUIText("InternalPolitics.ThisFoederatiForce"); },
+            get body() { return entry.isCalledUp ? webUIText("InternalPolitics.StandDownThis") : entry.politics?.callupBlockReason || webUIText("Foederati.CallupHelp"); },
           }}
         >
           <button
@@ -848,13 +855,14 @@ function FoederatiRow({
   );
 }
 
-export default function InternalPoliticsScreen({ onClose }: { onClose: () => void }) {
+function InternalPoliticsScreen({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<InternalPoliticsTab>('provinces');
   const [provinceSort, setProvinceSort] = useState<SortState<ProvinceSortKey>>({ key: 'province', direction: 'asc' });
   const [foederatiSort, setFoederatiSort] = useState<SortState<FoederatiSortKey>>({ key: 'strength', direction: 'desc' });
   const [commandSort, setCommandSort] = useState<SortState<CommandSortKey>>({ key: 'strength', direction: 'desc' });
   const [editingGovernor, setEditingGovernor] = useState<RegionalGovernor | null>(null);
   const playerFactionId = usePlayerFactionId();
+  const regionalRealm = usePlayerFactionSummary()?.usesRegionalForces === true;
   const diplomacy = useDiplomacyOverviewBridge('internal');
   const internalFactions = diplomacy?.internalFactions ?? EMPTY_INTERNAL_FACTIONS;
   const governors = diplomacy?.regionalGovernors ?? EMPTY_GOVERNORS;
@@ -866,11 +874,13 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
     () => TABS.filter(tab => (
       (tab.id !== 'candidates' || canCreateProvinces)
       && (tab.id !== 'foederati' || canUseFoederati)
+      && (tab.id !== 'governors' || !regionalRealm)
     )),
-    [canCreateProvinces, canUseFoederati],
+    [canCreateProvinces, canUseFoederati, regionalRealm],
   );
   const resolvedActiveTab = (!canCreateProvinces && activeTab === 'candidates')
     || (!canUseFoederati && activeTab === 'foederati')
+    || (regionalRealm && activeTab === 'governors')
     ? 'provinces'
     : activeTab;
   const needsMilitary = canUseFoederati || resolvedActiveTab === 'commands';
@@ -964,7 +974,7 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
               viewportClassName="ips-table-body ips-foederati-table-body ips-row-viewport"
               itemClassName="ips-row-frame"
               role="rowgroup"
-              rowHeightRem={3.45}
+              rowHeightRem={4.35}
               virtualizeThreshold={INTERNAL_LIST_VIRTUALISE_THRESHOLD}
               overscan={INTERNAL_LIST_OVERSCAN}
               resetSignal={`${foederatiSort.key}:${foederatiSort.direction}`}
@@ -1068,6 +1078,12 @@ export default function InternalPoliticsScreen({ onClose }: { onClose: () => voi
   );
 }
 
+export default function InternalPoliticsScreenEntry({ onClose }: { onClose: () => void }) {
+  const usesWarbands = usePlayerFactionSummary()?.usesWarbands === true;
+  if (usesWarbands) return <ClansScreen onClose={onClose} screenId={CLANS_GOVERNORS_SCREEN_ID} />;
+  return <InternalPoliticsScreen onClose={onClose} />;
+}
+
 registerTopbarButton({
   id: 'internal-politics',
   get label() { return webUIText('Auto.TopProp.ComponentsScreensInternalPoliticsScreen.960.18'); },
@@ -1082,7 +1098,7 @@ registerTopbarButton({
 
 registerScreen({
   id: 'internalPolitics',
-  render: ({ onClose }) => <InternalPoliticsScreen onClose={onClose} />,
+  render: ({ onClose }) => <InternalPoliticsScreenEntry onClose={onClose} />,
   topbarId: 'internal-politics',
   advisorTopic: 'internalPoliticsScreen',
   bridgeNames: ['internalpolitics', 'internal_politics', 'internalaffairs', 'internal_affairs'],

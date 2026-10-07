@@ -18,6 +18,7 @@ export interface FactionInteractionView {
   name: string;
   description: string;
   descriptionLines?: DisplayTextLine[];
+  requirementsDescription: string;
   /** Small icon rendered on the left of the card. */
   iconUrl: string | undefined;
   /** Scenic background image for the confirmation modal. */
@@ -25,6 +26,7 @@ export interface FactionInteractionView {
   showInQuickInteractionMenu: boolean;
   /** True if this is an edict (self-targeted) rather than diplomacy. */
   isEdict: boolean;
+  requiresConfirmation: boolean;
   goldCost: number;
   durationDays: number;
   cooldownDays: number;
@@ -93,10 +95,12 @@ function mapEntry(e: FactionInteractionEntry): FactionInteractionView {
     name: e.name,
     description: e.description,
     descriptionLines: e.descriptionLines ?? [],
+    requirementsDescription: e.requirementsDescription,
     iconUrl: iconUrl(e.iconId, e.isEdict),
     backgroundUrl: backgroundUrl(e.backgroundId, e.isEdict),
     showInQuickInteractionMenu: e.showInQuickInteractionMenu,
     isEdict: e.isEdict,
+    requiresConfirmation: e.requiresConfirmation,
     goldCost: e.goldCost,
     durationDays: e.durationDays,
     cooldownDays: e.cooldownDays,
@@ -138,6 +142,8 @@ export interface FactionInteractionsBridge {
     interactionId: string,
     selectedPersonId?: string,
     providedInputs?: BridgeFactionInteractionProvidedInput[],
+    rebellionKind?: string,
+    confirm?: boolean,
   ) => Promise<StartFactionInteractionResponse | null>;
   confirmSelection: () => Promise<StartFactionInteractionResponse | null>;
   cancelSelection: () => Promise<StartFactionInteractionResponse | null>;
@@ -207,6 +213,8 @@ export function useFactionInteractionsBridge(targetFactionId: string | null): Fa
       confirmSettlementSelection: false,
       cancelSettlementSelection: true,
       providedInputs: [],
+      rebellionKind: '',
+      confirm: false,
     }).catch(acknowledgeBridgeFailure);
   }, [targetFactionId]);
 
@@ -214,6 +222,8 @@ export function useFactionInteractionsBridge(targetFactionId: string | null): Fa
     interactionId: string,
     selectedPersonId = '',
     providedInputs: BridgeFactionInteractionProvidedInput[] = [],
+    rebellionKind = '',
+    confirm = false,
   ): Promise<StartFactionInteractionResponse | null> => {
     if (!targetFactionId) return null;
     try {
@@ -224,6 +234,8 @@ export function useFactionInteractionsBridge(targetFactionId: string | null): Fa
         confirmSettlementSelection: false,
         cancelSettlementSelection: false,
         providedInputs,
+        rebellionKind,
+        confirm,
       });
       return applySelectionResponse(response);
     } catch (error) {
@@ -242,6 +254,8 @@ export function useFactionInteractionsBridge(targetFactionId: string | null): Fa
         confirmSettlementSelection: true,
         cancelSettlementSelection: false,
         providedInputs: [],
+        rebellionKind: '',
+      confirm: false,
       });
       return applySelectionResponse(response);
     } catch (error) {
@@ -260,6 +274,8 @@ export function useFactionInteractionsBridge(targetFactionId: string | null): Fa
         confirmSettlementSelection: false,
         cancelSettlementSelection: true,
         providedInputs: [],
+        rebellionKind: '',
+      confirm: false,
       });
       return applySelectionResponse(response);
     } catch (error) {

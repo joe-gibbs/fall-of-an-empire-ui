@@ -3,6 +3,7 @@ import Tooltip from './Tooltip';
 import CultureTooltip from './CultureTooltip';
 import ReligionTooltip from './ReligionTooltip';
 import { cultureIconPath } from '../../../utils/cultureIcons';
+import { religionIconPath } from '../../../utils/religionIcons';
 import FactionRoundel from '../entities/FactionRoundel';
 import type { TooltipContent } from './Tooltip';
 import { useFaction } from '../../../data-source/index';
@@ -28,6 +29,7 @@ interface FactionTooltipData {
   cultureId?: string;
   cultureInfo?: CultureInfo;
   religion?: string;
+  religionId?: string;
   religionInfo?: ReligionInfo;
   capital?: string;
   statusLabel?: string;
@@ -126,6 +128,7 @@ function mapFaction(faction: Faction): Partial<FactionTooltipData> {
     cultureId: faction.cultureId,
     cultureInfo: faction.cultureInfo,
     religion: faction.religion,
+    religionId: faction.religionId,
     religionInfo: faction.religionInfo,
     capital: faction.capital,
     statusLabel: status.label,
@@ -291,7 +294,6 @@ function FactionTooltipContent({
       </div>
 
       {faction.rulerName && <div className="ftt-ruler">{webUIText("FactionTooltip.RuledBy", { RulerName: faction.rulerName })}</div>}
-      {faction.description && <div className="ftt-description">{faction.description}</div>}
 
       {hasIdentity && (
         <div className="ftt-identity">
@@ -303,7 +305,7 @@ function FactionTooltipContent({
             >
               <div className="ftt-identity-row">
                 <img
-                  src={cultureIconPath(faction.cultureId || faction.cultureInfo?.id)}
+                  src={cultureIconPath(faction.cultureInfo)}
                   alt=""
                   className="ftt-identity-icon"
                   draggable={false}
@@ -313,9 +315,18 @@ function FactionTooltipContent({
             </CultureTooltip>
           )}
           {faction.religion && (
-            <ReligionTooltip info={faction.religionInfo} fallbackName={faction.religion}>
+            <ReligionTooltip
+              info={faction.religionInfo}
+              fallbackName={faction.religion}
+              fallbackId={faction.religionId || faction.religionInfo?.id}
+            >
               <div className="ftt-identity-row">
-                <img src="/assets/icons/I_Religions.png" alt="" className="ftt-identity-icon" draggable={false} />
+                <img
+                  src={religionIconPath(faction.religionId || faction.religionInfo?.id)}
+                  alt=""
+                  className="ftt-identity-icon"
+                  draggable={false}
+                />
                 <span>{faction.religion}</span>
               </div>
             </ReligionTooltip>

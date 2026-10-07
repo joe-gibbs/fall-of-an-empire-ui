@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react';
-import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
+import { useBridgeQuery } from '../core/useBridgeQuery';
 import { mapPortraitLayers, mapPortraitPath } from './portraitMapping';
 import { WebkilnAssetPath } from '../../utils/assets';
 import type { GetCourtAppointmentContestsResponse } from '../../bridge-types.generated.ts';
-import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 
 export interface AppointmentContestCandidateView {
   id: string;
@@ -110,36 +108,15 @@ function mergeLightweightResponse(
   };
 }
 
-export function useCourtAppointmentContestsBridge(enabled: boolean): CourtAppointmentContestsResult | null {
-  const [data, setData] = useState<CourtAppointmentContestsResult | null>(null);
-
-  useEffect(() => {
-    if (!enabled) {
-      return undefined;
-    }
-
-    let cancelled = false;
-    const unsubscribe = onBridgeEvent('game.get_court_appointment_contests', (raw) => {
-      if (cancelled) return;
+export function useCourtAppointmentContestsBridge(enabled: boolean, suspend = false): CourtAppointmentContestsResult | null {
+  return useBridgeQuery({
+    action: 'game.get_court_appointment_contests',
+    payload: enabled ? undefined : null,
+    suspend,
+    map: mapResponse,
+    mergePush: (previous, raw) => {
       const incoming = mapResponse(raw);
-      setData(previous => raw.candidateDetailsIncluded ? incoming : mergeLightweightResponse(previous, incoming));
-    });
-
-    bridgeCall('game.get_court_appointment_contests')
-      .then(raw => {
-        if (cancelled) return;
-        setData(mapResponse(raw));
-      })
-      .catch(error => {
-        if (cancelled) return;
-        acknowledgeBridgeFailure(error);
-      });
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, [enabled]);
-
-  return enabled ? data : null;
+      return raw.candidateDetailsIncluded ? incoming : mergeLightweightResponse(previous, incoming);
+    },
+  });
 }

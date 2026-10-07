@@ -16,9 +16,9 @@ import { useObserverMode } from '../../data-source/index';
 import './BottomBar.css';
 
 const ROWS: string[][][] = [
-  [['overlord', 'diplomaticRelation', 'political', 'religion', 'culture', 'resources', 'militaries', 'unrest']],
-  [['loyalty', 'landscape', 'economicProsperity', 'adminRegion', 'adminLand', 'adminDomain', 'disease', 'population']],
-  [['regionGovernor', 'luxury', 'trade', 'corruption', 'stockpiles', 'garrisons', 'bishopric']],
+  [['overlord', 'diplomaticRelation', 'political', 'religion', 'culture', 'cultureDevelopment', 'resources', 'militaries']],
+  [['unrest', 'loyalty', 'landscape', 'economicProsperity', 'adminRegion', 'adminLand', 'adminDomain', 'disease']],
+  [['population', 'regionGovernor', 'luxury', 'trade', 'corruption', 'stockpiles', 'garrisons', 'bishopric']],
 ];
 
 const BASE_MODE_IDS = new Set(ROWS.reduce<string[]>((all, row) => {

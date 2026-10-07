@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import PeaceSettlementGlance from './PeaceSettlementGlance';
 import FactionRoundel from '../common/entities/FactionRoundel';
 import type { SettlementGlanceData } from './WorldGlanceTypes';
 import { clampUnitFraction, percentWidth } from './glanceMath';
@@ -271,7 +272,9 @@ function renderInfo(data: SettlementGlanceData) {
     case 'culture':
       return renderInfoRow('/assets/icons/I_Cultures.png', data.culture.label, readableFactionTextColour(data.culture.colour));
     case 'religion':
-      return renderInfoRow('/assets/icons/I_Religions.png', data.religion.label, readableFactionTextColour(data.religion.colour));
+      return <>{renderInfoRow('/assets/icons/I_Religions.png', data.religion.label, readableFactionTextColour(data.religion.colour))}
+        {data.faithMarkers?.map(marker => <span key={marker.label}>{renderInfoRow(marker.icon, marker.label, 'var(--gold)')}</span>)}
+      </>;
     case 'landscape':
     case 'settlementType':
       return (
@@ -326,18 +329,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
   const besieged = data.besieged === true;
   const displayedSiegeProgress = useAnimatedProgress(siegeProgress, !data.peaceSelection && besieged, `${data.name}:siege`);
   if (data.peaceSelection) {
-    const cost = data.warScoreCost ?? 0;
-    const costTone = cost < 0 ? 'is-demand' : cost > 0 ? 'is-concession' : '';
-    return (
-      <div className={`glance glance--settlement glance--peace-pick${data.selected ? ' is-selected' : ''}`}>
-        {debugMode && data.debugShortId !== undefined && (
-          <div className="glance-debug-id">#{formatNumber(data.debugShortId)}</div>
-        )}
-        <span className={`gset-pick-check${data.selected ? ' is-checked' : ''}`} aria-hidden="true" />
-        <span className="gset-name">{data.name}</span>
-        <span className={`gset-pick-cost${costTone ? ` ${costTone}` : ''}`}>{formatSignedNumber(cost)}</span>
-      </div>
-    );
+    return <PeaceSettlementGlance data={data} typeIcon={settlementTypeIcon(data.settlementType)} debugMode={debugMode} />;
   }
   const badgeShadow = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'shadow'));
   const badgeBackground = WebkilnAssetPath(settlementBadgeLayerPath(data.settlementType, 'background'));
@@ -415,6 +407,9 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
           {capitalIcon && (
             <img className="gset-status-icon gset-status-icon--capital" src={capitalIcon} alt="" />
           )}
+          {data.mode === 'religion' && data.faithMarkers && data.faithMarkers.length > 0 && <div className="gset-faith-markers">
+            {data.faithMarkers.map(marker => <img key={marker.label} src={WebkilnAssetPath(marker.icon)} alt={marker.label} />)}
+          </div>}
           {data.siegePowerInsufficient && (
             <span className="gset-siege-warning" aria-label={webUIText('Settlement.Siege.InsufficientPower')}>!</span>
           )}

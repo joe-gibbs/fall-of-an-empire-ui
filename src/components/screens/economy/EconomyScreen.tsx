@@ -46,6 +46,8 @@ type EconomyMetricKey =
   | 'resourceSalesIncome'
   | 'vassalTributeIncome'
   | 'treatyTributeIncome'
+  | 'foederatiSubsidyIncome'
+  | 'foederatiSubsidyPaid'
   | 'eventIncome'
   | 'lootingIncome'
   | 'otherIncome'
@@ -77,6 +79,7 @@ const INCOME_ROWS: MetricDef[] = [
   { key: 'vassalTributeIncome', labelKey: 'Economy.SubjectTribute' },
   { key: 'resourceSalesIncome', labelKey: 'Economy.ResourceSales' },
   { key: 'treatyTributeIncome', labelKey: 'Economy.Treaties' },
+  { key: 'foederatiSubsidyIncome', labelKey: 'Foederati.SubsidyReceived' },
   { key: 'eventIncome', labelKey: 'Economy.Events' },
   { key: 'lootingIncome', labelKey: 'Economy.Looting' },
   { key: 'otherIncome', labelKey: 'Economy.Other' },
@@ -90,6 +93,7 @@ const EXPENSE_ROWS: MetricDef[] = [
   { key: 'replenishmentExpense', labelKey: 'Economy.Replenishment' },
   { key: 'tributePaidToLiege', labelKey: 'Economy.ImperialTribute' },
   { key: 'treatyTributePaid', labelKey: 'Economy.TreatyPayments' },
+  { key: 'foederatiSubsidyPaid', labelKey: 'Foederati.SubsidyPaid' },
   { key: 'eventExpense', labelKey: 'Economy.Events' },
   { key: 'powerBlocExpense', labelKey: 'Economy.PowerBloc' },
   { key: 'landownerInterestExpense', labelKey: 'Economy.SenateInterest' },
@@ -441,7 +445,19 @@ function BreakdownColumn({
             <span className="econ-breakdown-label">{t('Common.None')}</span>
             <span className="econ-breakdown-value">0</span>
           </div>
-        ) : entries.map((row, index) => (
+        ) : entries.map((row, index) => row.key === 'foederatiSubsidyIncome' || row.key === 'foederatiSubsidyPaid' ? (
+          <Tooltip key={row.key} wrapperStyle={{ display: 'block' }} content={{
+            title: t(row.labelKey), body: t('Foederati.SubsidyHelp'),
+            lines: (row.key === 'foederatiSubsidyIncome' ? data?.foederatiSubsidySources : data?.foederatiSubsidyRecipients)?.map(entry => ({
+              label: <EntityLink type="faction" id={entry.id} inline>{entry.name}</EntityLink>, value: fmt(entry.amount),
+            })),
+          }}>
+            <div className="econ-breakdown-row" tabIndex={0}>
+              <span className="econ-breakdown-label">{t(row.labelKey)}</span>
+              <span className={`econ-breakdown-value ${valueTone}`}><img className="econ-gold-icon" src="/assets/icons/I_Coins.png" alt="" />{tone === 'expense' ? '-' : '+'}{fmt(row.value)}</span>
+            </div>
+          </Tooltip>
+        ) : (
           <button
             type="button"
             className={`econ-breakdown-row econ-breakdown-row--button${selectedMetric === row.key ? ' is-selected' : ''}`}
@@ -1129,7 +1145,7 @@ function ProvinceTab({ data }: { data: GetEconomyOverviewResponse | null }) {
   const taxColumns: EconomyColumn<EconomyOverviewTaxRow>[] = [
     { id: 'name', label: t('Economy.Faction'), render: row => <EntityLink type="diplomacy" id={row.factionId}>{row.factionName}</EntityLink>, sortValue: row => row.factionName },
     { id: 'kind', label: t('Economy.Source'), render: row => row.isPlayerFaction ? t('Economy.DirectRule') : row.isFoederati ? t('Economy.Foederati') : row.isVassal ? t('Economy.Subject') : t('Economy.Dependent'), sortValue: row => row.isPlayerFaction },
-    { id: 'rate', label: t('Economy.Rate'), align: 'right', render: row => row.isVassal ? <SubjectTaxRateControls factionId={row.factionId} taxRate={row.effectiveRate} disabled={row.isFoederati} /> : displayRate(row.effectiveRate), sortValue: row => ratePercent(row.effectiveRate) },
+    { id: 'rate', label: t('Economy.Rate'), align: 'right', render: row => row.canAdjustTaxRate ? <SubjectTaxRateControls factionId={row.factionId} taxRate={row.effectiveRate} /> : displayRate(row.effectiveRate), sortValue: row => ratePercent(row.effectiveRate) },
     { id: 'current', label: t('Economy.Current'), align: 'right', className: 'econ-positive', render: row => `+${fmt(row.currentTax)}${t('Economy.PerMonth')}`, sortValue: row => row.currentTax },
     { id: 'potential', label: t('Economy.Potential'), align: 'right', render: row => fmt(row.potentialTax), sortValue: row => row.potentialTax },
     { id: 'leakage', label: t('Economy.Leakage'), align: 'right', className: 'econ-negative', render: row => Math.round(row.leakage) > 0 ? `-${fmt(row.leakage)}${t('Economy.PerMonth')}` : `0${t('Economy.PerMonth')}`, sortValue: row => row.leakage },
@@ -1203,7 +1219,7 @@ function ProvinceTab({ data }: { data: GetEconomyOverviewResponse | null }) {
 const EconomyScreen = memo(function EconomyScreen({ onClose }: { onClose: () => void }) {
   const t = useWebUIText();
   const [activeTab, setActiveTab] = useState<EconomyTab>('overview');
-  const data = useEconomyOverviewBridge(activeTab);
+  const data = useEconomyOverviewBridge(activeTab, true, true);
   const court = useCourtPositions(true);
   const [courtPosition, setCourtPosition] = useState<CourtPositionView | null>(null);
   const economyOffice = useMemo(

@@ -80,6 +80,8 @@ const COMMON_ASSETS = [
   '/assets/icons/I_Peace.png',
   '/assets/icons/I_ResourceConsumption.png',
   '/assets/icons/Treaties/I_TradeAgreement.png',
+  '/assets/icons/Treaties/I_TradeOneOff.png',
+  '/assets/icons/Treaties/I_TributeOneOff.png',
   '/assets/icons/Doctrines/I_Doctrine_Garrison.png',
   '/assets/icons/Armies/I_ArmyRephsian.png',
   '/assets/traits/Corrupt.png',

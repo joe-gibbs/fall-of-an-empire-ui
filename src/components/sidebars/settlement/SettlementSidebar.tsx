@@ -30,6 +30,8 @@ import {
 import { appointBishop, type DioceseView } from '../../../bridge/settlements-economy/useDiocesesBridge';
 import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
 import BishopAppointmentModal from '../../modals/provinces/BishopAppointmentModal';
+import CultureLink from '../../common/culture/CultureLink';
+import ReligionLink from '../../common/religion/ReligionLink';
 import { BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
 import SidebarTabBar from '../shared/SidebarTabBar';
 import SidebarToolbar from '../shared/SidebarToolbar';
@@ -53,7 +55,7 @@ import {
 } from '../../../utils/numberFormat';
 import { compareSortValuesWithDirection, toggleSortState, type SortState } from '../../common/layout/tables/sortUtils';
 import { registerSidebar } from '../../../registry/index';
-import { useSettlement } from '../../../data-source/index';
+import { useFaction, usePlayerFactionId, useSettlement } from '../../../data-source/index';
 import '../shared/Sidebar.css';
 import './SettlementSidebar.css';
 
@@ -650,11 +652,25 @@ function ShareLegend({
     <div className="settle-share-legend">
       {shares.map(s => (
         <ShareTooltipWrap key={s.name} entry={s} kind={kind} bishoprics={bishoprics} settlement={settlement} onOpenBishopModal={onOpenBishopModal} onDismissBishop={onDismissBishop}>
-          <div className="settle-share-legend-item">
-            {s.icon ? <img src={s.icon} alt="" className="settle-share-legend-icon" /> : <span className="settle-share-dot" style={{ backgroundColor: s.color }} />}
-            <span className="settle-share-label">{s.name}</span>
-            <span className="settle-share-pct">{formatPercent(s.percent)}%</span>
-          </div>
+          {kind === 'culture' && s.id ? (
+            <CultureLink cultureId={s.id} className="settle-share-legend-item">
+              {s.icon ? <img src={s.icon} alt="" className="settle-share-legend-icon" /> : <span className="settle-share-dot" style={{ backgroundColor: s.color }} />}
+              <span className="settle-share-label">{s.name}</span>
+              <span className="settle-share-pct">{formatPercent(s.percent)}%</span>
+            </CultureLink>
+          ) : kind === 'religion' && s.id ? (
+            <ReligionLink religionId={s.id} className="settle-share-legend-item" showTooltip={false}>
+              {s.icon ? <img src={s.icon} alt="" className="settle-share-legend-icon" /> : <span className="settle-share-dot" style={{ backgroundColor: s.color }} />}
+              <span className="settle-share-label">{s.name}</span>
+              <span className="settle-share-pct">{formatPercent(s.percent)}%</span>
+            </ReligionLink>
+          ) : (
+            <div className="settle-share-legend-item">
+              {s.icon ? <img src={s.icon} alt="" className="settle-share-legend-icon" /> : <span className="settle-share-dot" style={{ backgroundColor: s.color }} />}
+              <span className="settle-share-label">{s.name}</span>
+              <span className="settle-share-pct">{formatPercent(s.percent)}%</span>
+            </div>
+          )}
         </ShareTooltipWrap>
       ))}
     </div>
@@ -822,6 +838,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
 }) => {
   const { showAdvisor, openSidebar } = useGameActions();
   const { debugMode } = useGameState();
+  const playerFaction = useFaction(usePlayerFactionId());
   const [showAllPops, setShowAllPops] = React.useState(false);
   const [popSort, setPopSort] = React.useState<SortState<PopSortKey>>({ key: 'population', direction: 'desc' });
   const [isRenaming, setIsRenaming] = React.useState(false);
@@ -947,6 +964,91 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
     })
     : webUIText('Settlement.AppointGovernorBody', { Region: settlement.region });
 
+  if (!settlement.hasGeneratedCity) {
+    const raiseSettlement = interactions.find(interaction => interaction.id === 'raisecityinteraction');
+    const canRaise = raiseSettlement?.availability === 'available' && !raiseSettlement.inProgress;
+
+    return (
+      <div className="sidebar sidebar--left sidebar--visible settlement-sidebar settlement-sidebar--unraised">
+        <SidebarToolbar navButtons={[]} actionButtons={[]} onClose={onClose} />
+        <div className="settle-unraised-header" style={{ backgroundImage: `url("${WebkilnAssetPath(settlement.landImage)}")` }}>
+          <FactionRoundel
+            factionId={settlement.factionId}
+            colour={settlement.factionColour}
+            secondaryColour={settlement.factionSecondaryColour}
+            emblem={settlement.factionEmblem}
+            cultureGroup={settlement.factionCultureGroup}
+            name={settlement.faction}
+            size="md"
+            diplomaticStatus={settlement.factionDiplomaticStatus}
+            subjectSubtype={settlement.factionSubjectSubtype}
+            isPlayer={settlement.factionIsPlayer}
+            isRebel={settlement.factionIsRebel}
+          />
+          <div className="settle-unraised-title-block">
+            <Tooltip inline wrapperClassName="settle-unraised-name" disabled={!settlement.originalNameText} content={{ body: settlement.originalNameText }}>{settlement.name}</Tooltip>
+            <div className="settle-unraised-faction">{settlement.faction}</div>
+          </div>
+        </div>
+        <div className="settle-unraised-content">
+          <StatCellGrid className="settle-stat-grid">
+            <Tooltip content={buildPopulationGrowthTooltip(settlement)} position="bottom" delay={150}>
+              <StatCell
+                icon="/assets/icons/I_Population.png"
+                value={formatNumber(settlement.population)}
+                delta={webUIText('SettlementSidebar.PerMonth', {
+                  Value1: formatSignedNumber(Math.round(settlement.populationGrowth)),
+                })}
+                deltaColor={settlement.populationGrowth >= 0 ? 'var(--green)' : 'var(--red)'}
+              />
+            </Tooltip>
+          </StatCellGrid>
+          {(settlement.cultures.length > 0 || settlement.religions.length > 0) && (
+            <div className="settle-unraised-people">
+              <SectionHeading variant="ornate" title={webUIText('Common.Population')} />
+              {settlement.cultures.length > 0 && (
+                <div className="settle-share-section">
+                  <ShareBar shares={settlement.cultures} kind="culture" />
+                  <ShareLegend shares={settlement.cultures} kind="culture" />
+                </div>
+              )}
+              {settlement.religions.length > 0 && (
+                <div className="settle-share-section">
+                  <ShareBar shares={settlement.religions} kind="religion" />
+                  <ShareLegend shares={settlement.religions} kind="religion" />
+                </div>
+              )}
+            </div>
+          )}
+          {settlement.fortStatus && (
+            <div className="settle-fort-status">
+              <img src="/assets/icons/I_Fortress_Metal.png" alt="" />
+              <p>{settlement.fortStatus}</p>
+              <PaintedBar percent={settlement.fortProgress} color="gold" />
+            </div>
+          )}
+          {raiseSettlement && <Tooltip content={buildInteractionTooltip(raiseSettlement, settlement.id)} position="right">
+            <InteractionCard
+              title={webUIText('SettlementSidebar.RaiseSettlement')}
+              bgImage="/assets/warpath/RaiseSettlement.png"
+              inProgress={raiseSettlement.inProgress}
+              durationDays={raiseSettlement.durationDays}
+              remainingDays={raiseSettlement.remainingDays}
+              meta={!raiseSettlement.inProgress && <div className="settle-raise-cost">
+                <span><img src="/assets/icons/I_Coins.png" alt="" />{formatNumber(raiseSettlement.goldCost)}</span>
+                <span><img src="/assets/icons/I_Speed.png" alt="" />{webUIText('Common.DayCount', {
+                  Days: formatNumber(raiseSettlement.durationDays),
+                  Unit: webUIText(raiseSettlement.durationDays === 1 ? 'Common.Day' : 'Common.Days'),
+                })}</span>
+              </div>}
+              onClick={canRaise ? () => { void startInteraction(raiseSettlement.id); } : undefined}
+            />
+          </Tooltip>}
+        </div>
+      </div>
+    );
+  }
+
   const capitalIcon = settlement.isCapital ? (
     <Tooltip
       content={{
@@ -1066,7 +1168,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                 </div>
               ) : (
                 <div className="settle-header-name">
-                  <span className="settle-header-name-text">{settlement.name}</span>
+                  <Tooltip inline wrapperClassName="settle-header-name-text" disabled={!settlement.originalNameText} content={{ body: settlement.originalNameText }}>{settlement.name}</Tooltip>
                   {capitalIcon}
                   {canRename && (
                     <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.891.49') }} position="bottom" delay={150}>
@@ -1116,6 +1218,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
             <div className="game-notice game-notice--danger game-notice--compact">
               <strong>{webUIText('Settlement.CapitalOccupationDeadline', {
                 Days: formatNumber(siege.capitalOccupationDaysRemaining),
+                Government: playerFaction?.governmentTypeName,
               })}</strong>
               <span>{webUIText('Settlement.CapitalOccupationDeadlineBody')}</span>
             </div>
@@ -1147,7 +1250,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
             }} position="bottom" delay={150}>
               <StatCell icon="/assets/icons/I_Food.png" value={formatSignedNumber(foodNetRounded)} valueColor={foodColor} />
             </Tooltip>
-            <Tooltip content={{
+            {settlement.usesAdministrativeCorruption && <Tooltip content={{
               title: webUIText('SettlementSidebar.CorruptionTitle'),
               body: webUIText('SettlementSidebar.CorruptionChangeBody', {
                 Change: `${formatSignedNumber(corruptionMonthlyChange, { maximumFractionDigits: 1 })}%`,
@@ -1155,7 +1258,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
               lines: corruptionBreakdownLines(settlement.corruptionBreakdown),
             }} position="bottom" delay={150}>
               <StatCell icon={conceptIconPath('Corruption')} value={corruptionPercent} valueColor={corruptionColor} />
-            </Tooltip>
+            </Tooltip>}
             <Tooltip content={{
               get title() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1095.1", { Value1: formatNumber(settlement.fortificationLevel) }); },
               body: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1093.62'),
@@ -1391,7 +1494,11 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                       <span className="settle-pop-col-name">
                         {p.cultureIcon && <img src={p.cultureIcon} alt="" className="settle-pop-icon" />}
                         {p.religionIcon && <img src={p.religionIcon} alt="" className="settle-pop-icon" />}
-                        <span className="settle-pop-name-text">{p.cultureAdjective} {p.religionAdherentPlural}</span>
+                        <span className="settle-pop-name-text">
+                          {p.cultureId ? <CultureLink cultureId={p.cultureId}>{p.cultureAdjective}</CultureLink> : p.cultureAdjective}
+                          {' '}
+                          {p.religionId ? <ReligionLink religionId={p.religionId}>{p.religionAdherentPlural}</ReligionLink> : p.religionAdherentPlural}
+                        </span>
                       </span>
                       <span className="settle-pop-col-count">{formatNumber(p.count)}</span>
                       <span className="settle-pop-col-unrest" style={{ color: getUnrestColor(p.unrest) }}>{formatPercentValue(p.unrest)}</span>

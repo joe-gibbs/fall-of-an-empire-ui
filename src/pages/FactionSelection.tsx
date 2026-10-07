@@ -7,6 +7,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import GameButton from '../components/common/buttons/GameButton';
+import type { NewGameStartDateDto } from '../bridge-types.generated.ts';
 import Tooltip, { type TooltipLine } from '../components/common/tooltips/Tooltip';
 import Portrait from '../components/common/portraits/Portrait';
 import { TraitIcon } from '../components/common/entities/TraitIcon';
@@ -27,6 +29,7 @@ import { useWebUIText, type WebUITextFormatter } from '../localization/WebUIText
 import {
   bridgeCall,
   type FactionSelectionTabletopRequest,
+  type FactionSelectionMapLegendEntry,
   type GetNewGameMapFactionSelectionResponse,
   type ScenarioMapFactionDto,
   type ScenarioMapLeaderDto,
@@ -42,8 +45,11 @@ import './FactionSelection.css';
 import { WebUIText } from '../localization/WebUITextContext';
 interface FactionSelectionProps {
   mapId: string;
+  startDateId: string;
+  startDates: NewGameStartDateDto[];
+  onSelectStartDate: (id: string) => void;
   initialData?: GetNewGameMapFactionSelectionResponse | null;
-  loadFactionSelection?: (mapId: string) => Promise<GetNewGameMapFactionSelectionResponse>;
+  loadFactionSelection?: (mapId: string, startDateId: string) => Promise<GetNewGameMapFactionSelectionResponse>;
   scenario?: {
     displayName: string;
   };
@@ -595,7 +601,7 @@ function FactionSelectionHeader({
         </div>
       </div>
 
-      <div className="fs-header-balance" aria-hidden="true" />
+      <div className="fs-header-balance" />
     </header>
   );
 }
@@ -645,7 +651,9 @@ function requestFactionSelectionTabletop(
   return bridgeCall('game.faction_selection_tabletop', {
     command: request.command,
     mapId: request.mapId ?? '',
+    startDateId: request.startDateId ?? '',
     baseName: request.baseName ?? '',
+    mapMode: request.mapMode ?? '',
     screenX: request.screenX ?? 0,
     screenY: request.screenY ?? 0,
     deltaX: request.deltaX ?? 0,
@@ -666,11 +674,15 @@ function zoomTabletopToCapital(baseName: string) {
 
 function useFactionSelectionTabletop(
   mapId: string,
+  startDateId: string,
   selectedBaseName: string,
   enabled: boolean,
-): void {
+  mapMode: FactionSelectionMapMode,
+): FactionSelectionMapLegendEntry[] {
+  const [legend, setLegend] = useState<FactionSelectionMapLegendEntry[]>([]);
   const showRequestRef = useRef<ReturnType<typeof requestFactionSelectionTabletop> | null>(null);
   const selectedBaseNameRef = useRef(selectedBaseName);
+  const tabletopSelectedBaseNameRef = useRef('');
 
   useEffect(() => {
     selectedBaseNameRef.current = selectedBaseName;
@@ -691,21 +703,24 @@ function useFactionSelectionTabletop(
     const showRequest = requestFactionSelectionTabletop({
       command: 'show',
       mapId,
+      startDateId,
       baseName: selectedBaseNameRef.current,
     });
     showRequestRef.current = showRequest;
+    tabletopSelectedBaseNameRef.current = selectedBaseNameRef.current;
     void showRequest
       .catch(acknowledgeBridgeFailure);
 
     return () => {
       showRequestRef.current = null;
     };
-  }, [enabled, mapId]);
+  }, [enabled, mapId, startDateId]);
 
   useEffect(() => {
-    if (!enabled || !selectedBaseName) {
+    if (!enabled || !selectedBaseName || tabletopSelectedBaseNameRef.current === selectedBaseName) {
       return;
     }
+    tabletopSelectedBaseNameRef.current = selectedBaseName;
 
     let cancelled = false;
     const showRequest = showRequestRef.current;
@@ -727,13 +742,36 @@ function useFactionSelectionTabletop(
       cancelled = true;
     };
   }, [enabled, selectedBaseName]);
+
+  useEffect(() => {
+    if (!enabled || !showRequestRef.current) return;
+    let cancelled = false;
+    void showRequestRef.current
+      .then(() => {
+        if (!cancelled) return requestFactionSelectionTabletop({ command: 'map_mode', mapMode });
+        return undefined;
+      })
+      .then((response) => {
+        if (!cancelled && response) setLegend(response.legend);
+      })
+      .catch(acknowledgeBridgeFailure);
+    return () => { cancelled = true; };
+  }, [enabled, mapId, startDateId, mapMode]);
+
+  return mapMode === 'political' ? [] : legend;
 }
 
+type FactionSelectionMapMode = 'political' | 'culture' | 'religion';
+
 interface FactionSelectionTabletopMapProps {
+  dateControl: React.ReactNode;
   selectedBaseName: string;
   hoveredFaction: ScenarioMapFactionDto | null;
   scenarioDescriptionParts: string[];
   onSelectBaseName: (baseName: string) => void;
+  mapMode: FactionSelectionMapMode;
+  onMapModeChange: (mode: FactionSelectionMapMode) => void;
+  mapLegend: FactionSelectionMapLegendEntry[];
 }
 
 function FactionSelectionTabletopMap({
@@ -741,6 +779,10 @@ function FactionSelectionTabletopMap({
   hoveredFaction,
   scenarioDescriptionParts,
   onSelectBaseName,
+  dateControl,
+  mapMode,
+  onMapModeChange,
+  mapLegend,
 }: FactionSelectionTabletopMapProps) {
   const t = useWebUIText();
   const dragRef = useRef({
@@ -887,7 +929,35 @@ function FactionSelectionTabletopMap({
   }, []);
 
   return (
-    <section className={`fs-map-panel fs-map-panel--tabletop${scenarioDescriptionParts.length > 0 ? ' fs-map-panel--has-description' : ''}`}>
+    <section className={`fs-map-panel fs-map-panel--tabletop${dateControl ? ' fs-map-panel--has-dates' : ''}${scenarioDescriptionParts.length > 0 ? ' fs-map-panel--has-description' : ''}`}>
+      {dateControl}
+      <div className="fs-map-tools">
+        <div className="fs-map-modes" data-focus-group="horizontal">
+          {(['political', 'culture', 'religion'] as const).map((mode) => (
+            <GameButton
+              key={mode}
+              variant="outline"
+              className="fs-map-mode-button"
+              ariaPressed={mode === mapMode}
+              onClick={() => onMapModeChange(mode)}
+            >
+              {t(mode === 'political' ? 'MapModeTooltip.Political.Title' : mode === 'culture' ? 'MapModeTooltip.Culture.Title' : 'MapModeTooltip.Religion.Title')}
+            </GameButton>
+          ))}
+        </div>
+        {mapLegend.length > 0 && (
+          <StyledScrollArea className="fs-map-legend" viewportClassName="fs-map-legend-viewport" variant="inline">
+            <div className="fs-map-legend-entries">
+              {mapLegend.map((entry) => (
+                <div key={entry.id} className="fs-map-legend-entry">
+                  <span className="fs-map-legend-swatch" style={{ backgroundColor: entry.colour }} aria-hidden="true" />
+                  <span>{entry.name}</span>
+                </div>
+              ))}
+            </div>
+          </StyledScrollArea>
+        )}
+      </div>
       <div
         className="fs-tabletop-input"
         onPointerDown={handlePointerDown}
@@ -930,7 +1000,6 @@ function FactionSelectionTabletopMap({
           </button>
         </div>
       </div>
-
       {scenarioDescriptionParts.length > 0 && (
         <div className="fs-campaign-description">
           <StyledScrollArea
@@ -949,6 +1018,7 @@ function FactionSelectionTabletopMap({
 }
 
 interface FactionSelectionBrowseColumnProps {
+  dateControl: React.ReactNode;
   mapId: string;
   data: GetNewGameMapFactionSelectionResponse;
   selectedBaseName: string;
@@ -958,6 +1028,9 @@ interface FactionSelectionBrowseColumnProps {
   showForeign: boolean;
   onShowForeignChange: (value: boolean) => void;
   scenarioDescriptionParts: string[];
+  mapMode: FactionSelectionMapMode;
+  onMapModeChange: (mode: FactionSelectionMapMode) => void;
+  mapLegend: FactionSelectionMapLegendEntry[];
 }
 
 const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSelectionBrowseColumnProps>(
@@ -972,6 +1045,10 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
       showForeign,
       onShowForeignChange,
       scenarioDescriptionParts,
+      dateControl,
+      mapMode,
+      onMapModeChange,
+      mapLegend,
     },
     ref,
   ) {
@@ -1102,6 +1179,10 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
         </aside>
 
         <FactionSelectionTabletopMap
+          mapMode={mapMode}
+          onMapModeChange={onMapModeChange}
+          mapLegend={mapLegend}
+          dateControl={dateControl}
           selectedBaseName={selectedBaseName}
           hoveredFaction={hovered}
           scenarioDescriptionParts={scenarioDescriptionParts}
@@ -1118,6 +1199,7 @@ interface FactionSelectionDetailPanelProps {
   factionsByBase: Map<string, ScenarioMapFactionDto>;
   wars: ScenarioMapWarDto[];
   showPurchaseForSelected: boolean;
+  canConfirm: boolean;
   onSelectBaseName: (baseName: string) => void;
   onFactionHover: (baseName: string) => void;
   onFactionHoverEnd: () => void;
@@ -1131,6 +1213,7 @@ function FactionSelectionDetailPanel({
   factionsByBase,
   wars,
   showPurchaseForSelected,
+  canConfirm,
   onSelectBaseName,
   onFactionHover,
   onFactionHoverEnd,
@@ -1283,10 +1366,10 @@ function FactionSelectionDetailPanel({
       <div className="fs-detail-body">
         {selectedLeader && (
           <div className="fs-detail-section fs-detail-section--leader">
-            {selectedLeader.dynasty && (
+            {(selectedLeader.familyHeading || selectedLeader.dynasty) && (
               <div className="fs-dynasty-row">
                 <img src="/assets/icons/I_Family.png" alt="" className="fs-dynasty-icon" />
-                <span>{t('MainMenu.House', { Dynasty: selectedLeader.dynasty })}</span>
+                <span>{selectedLeader.familyHeading || selectedLeader.dynasty}</span>
               </div>
             )}
             {renderLeaderStats(selectedLeader.stats, t)}
@@ -1489,9 +1572,9 @@ function FactionSelectionDetailPanel({
       <div className="fs-detail-footer">
         <button
           type="button"
-          className={`btn--outline fs-begin-btn${selected.playable || showPurchaseForSelected ? '' : ' fs-begin-btn--disabled'}`}
+          className={`btn--outline fs-begin-btn${canConfirm && (selected.playable || showPurchaseForSelected) ? '' : ' fs-begin-btn--disabled'}`}
           data-focus-left=".fs-faction-row--active"
-          disabled={!selected.playable && !showPurchaseForSelected}
+          disabled={!canConfirm || (!selected.playable && !showPurchaseForSelected)}
           onClick={() => {
             if (selected.playable) {
               onConfirm({ baseName: selected.baseName, displayName: selected.displayName });
@@ -1537,11 +1620,12 @@ interface FactionSelectionDataState {
 
 function useFactionSelectionData(
   mapId: string,
+  startDateId: string,
   initialData: GetNewGameMapFactionSelectionResponse | null,
   loadFactionSelection: FactionSelectionProps['loadFactionSelection'],
   t: WebUITextFormatter,
 ): FactionSelectionDataState {
-  const initialSelectionData = initialData?.mapId === mapId ? initialData : null;
+  const initialSelectionData = initialData?.mapId === mapId && initialData.startDateId === startDateId ? initialData : null;
   const [data, setData] = useState<GetNewGameMapFactionSelectionResponse | null>(initialSelectionData);
   const [selectedBaseName, setSelectedBaseName] = useState(
     initialSelectionData ? getDefaultSelectedFactionBaseName(initialSelectionData) : '',
@@ -1549,7 +1633,7 @@ function useFactionSelectionData(
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (data?.mapId === mapId) {
+    if (data?.mapId === mapId && data.startDateId === startDateId) {
       return;
     }
 
@@ -1557,8 +1641,8 @@ function useFactionSelectionData(
     const request = initialSelectionData
       ? Promise.resolve(initialSelectionData)
       : loadFactionSelection
-        ? loadFactionSelection(mapId)
-        : bridgeCall('game.get_new_game_map_faction_selection', { mapId });
+        ? loadFactionSelection(mapId, startDateId)
+        : bridgeCall('game.get_new_game_map_faction_selection', { mapId, startDateId });
 
     void request
       .then((response) => {
@@ -1581,7 +1665,7 @@ function useFactionSelectionData(
     return () => {
       cancelled = true;
     };
-  }, [data?.mapId, initialSelectionData, loadFactionSelection, mapId, t]);
+  }, [data?.mapId, data?.startDateId, initialSelectionData, loadFactionSelection, mapId, startDateId, t]);
 
   const displayData = useMemo(
     () => data ? translateFactionSelectionData(data, t) : null,
@@ -1608,6 +1692,9 @@ function useFactionSelectionData(
 
 const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
   mapId,
+  startDateId,
+  startDates,
+  onSelectStartDate,
   initialData = null,
   loadFactionSelection,
   scenario,
@@ -1627,13 +1714,16 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
     selected,
     selectedBaseName,
     setSelectedBaseName,
-  } = useFactionSelectionData(mapId, initialData, loadFactionSelection, t);
+  } = useFactionSelectionData(mapId, startDateId, initialData, loadFactionSelection, t);
   const [search, setSearch] = useState('');
   const [showForeign, setShowForeign] = useState(showPurchaseForLocked);
-  useFactionSelectionTabletop(
-    mapId,
+  const [mapMode, setMapMode] = useState<FactionSelectionMapMode>('political');
+  const mapLegend = useFactionSelectionTabletop(
+    data?.mapId ?? mapId,
+    data?.startDateId ?? startDateId,
     selectedBaseName,
     Boolean(data && displayData && selected && !loadError),
+    mapMode,
   );
 
   useEffect(() => {
@@ -1646,9 +1736,8 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
   const showPurchaseForSelected = Boolean(
     selected && showPurchaseForLocked && selected.fullGamePlayable,
   );
-  const scenarioTitle = displayData?.displayName || scenario?.displayName || '';
-  const scenarioDescription = displayData?.factionSelectionDescription ?? '';
-  const scenarioDescriptionParts = scenarioDescription
+  const scenarioTitle = scenario?.displayName || displayData?.displayName || '';
+  const scenarioDescriptionParts = (displayData?.factionSelectionDescription ?? '')
     .split(/\n\s*\n/)
     .map((part) => part.trim())
     .filter(Boolean);
@@ -1709,6 +1798,9 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
 
       <div className="fs-body">
         <FactionSelectionBrowseColumn
+          mapMode={mapMode}
+          onMapModeChange={setMapMode}
+          mapLegend={mapLegend}
           ref={mapHoverRef}
           mapId={mapId}
           data={displayData}
@@ -1719,6 +1811,24 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
           showForeign={showForeign}
           onShowForeignChange={setShowForeign}
           scenarioDescriptionParts={scenarioDescriptionParts}
+          dateControl={startDates.length > 1 ? (
+            <div className="fs-start-dates" data-focus-group="horizontal">
+              {startDates.map(date => (
+                <GameButton
+                  key={date.id}
+                  variant="outline"
+                  className="fs-start-date-button"
+                  ariaPressed={date.id === startDateId}
+                  onClick={() => onSelectStartDate(date.id)}
+                >
+                  <span className="fs-start-date-content">
+                    <span className="fs-start-date-date">{date.startingDateLabel}</span>
+                    <span className="fs-start-date-name">{date.displayName}</span>
+                  </span>
+                </GameButton>
+              ))}
+            </div>
+          ) : null}
         />
 
         <FactionSelectionDetailPanel
@@ -1727,6 +1837,7 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
           factionsByBase={factionsByBase}
           wars={displayData.wars}
           showPurchaseForSelected={showPurchaseForSelected}
+          canConfirm={data.startDateId === startDateId}
           onSelectBaseName={selectFactionBaseName}
           onFactionHover={handleFactionHover}
           onFactionHoverEnd={handleFactionHoverEnd}

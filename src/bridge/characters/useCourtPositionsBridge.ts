@@ -1,6 +1,7 @@
 import { useBridgeQuery, useBridgeQueryState } from '../core/useBridgeQuery';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
+import { usePlayerFactionSummaryBridge } from '../app/usePlayerFactionBridge';
 import { mapPortraitLayers, mapPortraitPath } from './portraitMapping';
 import type {
   GetCourtPositionsResponse,
@@ -160,18 +161,22 @@ function mapResponse(data: GetCourtPositionsResponse): CourtPositionsResult {
   };
 }
 
-export function useCourtPositionsBridge(enabled: boolean): CourtPositionsResult | null {
+export function useCourtPositionsBridge(enabled: boolean, suspend = false): CourtPositionsResult | null {
+  const playerFaction = usePlayerFactionSummaryBridge(suspend);
   return useBridgeQuery({
     action: 'game.get_court_positions',
-    payload: enabled ? undefined : null,
+    suspend,
+    payload: enabled && playerFaction?.hasImperialCourt === true ? undefined : null,
     map: mapResponse,
   });
 }
 
-export function useCourtPositionsBridgeState(enabled: boolean): CourtPositionsBridgeState {
+export function useCourtPositionsBridgeState(enabled: boolean, suspend = false): CourtPositionsBridgeState {
+  const playerFaction = usePlayerFactionSummaryBridge(suspend);
   const query = useBridgeQueryState({
     action: 'game.get_court_positions',
-    payload: enabled ? undefined : null,
+    suspend,
+    payload: enabled && playerFaction?.hasImperialCourt === true ? undefined : null,
     map: mapResponse,
   });
 

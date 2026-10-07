@@ -5,6 +5,7 @@ import type {
   GetPeaceNegotiationStateResponse,
   GetPeaceNegotiationPreviewResponse,
   StartPeaceSettlementSelectionResponse,
+  StartPeaceSettlementSelectionRequest,
   SubmitPeaceNegotiationResponse,
   PeaceNegotiationTermDraft,
 } from '../../bridge-types.generated.ts';
@@ -14,6 +15,7 @@ export type PeaceNegotiationState = GetPeaceNegotiationStateResponse;
 export type PeaceNegotiationDraftPreview = GetPeaceNegotiationPreviewResponse;
 export type PeaceNegotiationSubmitResult = SubmitPeaceNegotiationResponse;
 export type PeaceTermDraft = PeaceNegotiationTermDraft;
+export type PeaceSelectionContext = Pick<StartPeaceSettlementSelectionRequest, 'selectionType' | 'selectionDirection' | 'selectionTargetFactionId' | 'recipientFactionId'>;
 
 export interface PeaceNegotiationBridge {
   state: PeaceNegotiationState | null;
@@ -21,7 +23,7 @@ export interface PeaceNegotiationBridge {
   draftPreview: PeaceNegotiationDraftPreview | null;
   submit: (terms: PeaceTermDraft[]) => Promise<PeaceNegotiationSubmitResult | null>;
   /** Start or re-sync map settlement selection to match the given territory terms. */
-  startSettlementSelection: (terms: PeaceTermDraft[]) => Promise<StartPeaceSettlementSelectionResponse | null>;
+  startSettlementSelection: (terms: PeaceTermDraft[], context: PeaceSelectionContext) => Promise<StartPeaceSettlementSelectionResponse | null>;
   endSettlementSelection: () => Promise<StartPeaceSettlementSelectionResponse | null>;
 }
 
@@ -77,13 +79,14 @@ export function usePeaceNegotiationBridge(
     });
   }, [submitTargetFactionId]);
 
-  const startSettlementSelection = useCallback(async (currentTerms: PeaceTermDraft[]) => {
+  const startSettlementSelection = useCallback(async (currentTerms: PeaceTermDraft[], context: PeaceSelectionContext) => {
     if (!targetFactionId) return null;
     try {
       return await bridgeCall('game.start_peace_settlement_selection', {
         targetFactionId,
         terms: currentTerms,
         cancelSelection: false,
+        ...context,
       });
     } catch (error) {
       acknowledgeBridgeFailure(error, 'game.start_peace_settlement_selection');
@@ -98,6 +101,10 @@ export function usePeaceNegotiationBridge(
         targetFactionId,
         terms: [],
         cancelSelection: true,
+        selectionType: '',
+        selectionDirection: '',
+        selectionTargetFactionId: '',
+        recipientFactionId: '',
       });
     } catch (error) {
       acknowledgeBridgeFailure(error, 'game.start_peace_settlement_selection');

@@ -22,3 +22,10 @@
   letter-spacing: 0.023rem;
   line-height: 1.1;
 }
+
+.tt-identity-header > .tt-identity-group {
+  margin-left: auto;
+  padding-left: 0.615rem;
+  color: var(--text-muted);
+  text-align: right;
+}

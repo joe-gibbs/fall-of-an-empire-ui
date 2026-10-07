@@ -31,11 +31,12 @@ export default function DiplomaticStatusTooltip({ data }: { data: ProvinceToolti
         value={(data.occupier ?? data.faction).name}
         colour={(data.occupier ?? data.faction).colour}
       />
-      <ModeRow
-        label={webUIText('ProvinceTooltip.OverlordLabel')}
-        value={data.independent ? webUIText('ProvinceTooltip.Independent') : data.overlordName}
-        tone={data.independent ? 'muted' : undefined}
-      />
+      {!data.independent && (
+        <ModeRow
+          label={webUIText('ProvinceTooltip.OverlordLabel')}
+          value={data.overlordName}
+        />
+      )}
     </ModeRows>
   );
 }

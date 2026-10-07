@@ -8,6 +8,9 @@ import ZoomPanCanvas, { type ZoomPanPoint } from '../../common/layout/scrolling/
 import CourtAppointmentModal from '../../modals/characters/CourtAppointmentModal';
 import { useGameActions } from '../../../context/GameContext';
 import { useCourtPositions, useMilitaryOverview, usePlayerFactionId } from '../../../data-source/index';
+import { usePlayerFactionSummary } from '../../../data-source/index';
+import ClansScreen from '../diplomacy/ClansScreen';
+import RegionalForcesScreen from './RegionalForcesScreen';
 import {
   setMilitaryParentBridge,
   selectMilitaryBridge,
@@ -30,6 +33,7 @@ import {
   assignmentTargetFromScreenId,
   createTypeFromScreenId,
   initialMilitaryTab,
+  militaryScreenMode,
   templateIdFromScreenId,
   type MilitaryScreenTab,
 } from './screenTokens';
@@ -154,7 +158,16 @@ function EmpireStats({
   );
 }
 
-export default function MilitaryScreen({ screenId, onClose }: { screenId: string | null; onClose: () => void }) {
+export default function MilitaryScreen(props: { screenId: string | null; onClose: () => void }) {
+  const faction = usePlayerFactionSummary();
+  if (!faction) return null;
+  const mode = militaryScreenMode(faction);
+  if (mode === 'regions') return <RegionalForcesScreen key={props.screenId} screenId={props.screenId} onClose={props.onClose} />;
+  if (mode === 'clans') return <ClansScreen onClose={props.onClose} screenId={props.screenId} />;
+  return <StandingMilitaryScreen {...props} />;
+}
+
+function StandingMilitaryScreen({ screenId, onClose }: { screenId: string | null; onClose: () => void }) {
   const { openSidebar } = useGameActions();
   const overview = useMilitaryOverview();
   const court = useCourtPositions(true);
@@ -719,10 +732,6 @@ registerTopbarButton({
   tooltip: {
     get title() { return webUIText('Auto.TopProp.ComponentsScreensMilitaryMilitaryScreen.1174.5'); },
     get body() { return webUIText('Auto.TopProp.ComponentsScreensMilitaryMilitaryScreen.1175.6'); },
-    lines: [
-      { get label() { return webUIText('Auto.TopProp.ComponentsScreensMilitaryMilitaryScreen.1177.7'); } },
-      { get label() { return webUIText('Auto.TopProp.ComponentsScreensMilitaryMilitaryScreen.1178.8'); } },
-    ],
   },
   order: 10,
 });

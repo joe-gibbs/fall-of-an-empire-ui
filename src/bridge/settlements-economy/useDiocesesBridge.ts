@@ -27,7 +27,7 @@ export interface DioceseView {
   landPopulation: number;
 }
 
-export interface OrganisedReligionView {
+export interface ReligionSelectorView {
   info: ReligionInfo;
   key: string;
   name: string;
@@ -60,7 +60,7 @@ export interface DiocesesResult {
   autoAssignClergyEnabled: boolean;
   totalRealmPopulation: number;
   dioceses: DioceseView[];
-  organisedReligions: OrganisedReligionView[];
+  religions: ReligionSelectorView[];
   religionDistribution: ReligionDistributionSegment[];
 }
 
@@ -77,7 +77,7 @@ function mapResponse(data: GetDiocesesResponse): DiocesesResult {
     leadingFactionName: data.leadingFactionName,
     autoAssignClergyEnabled: data.autoAssignClergyEnabled,
     totalRealmPopulation: data.totalRealmPopulation,
-    organisedReligions: data.organisedReligions.map(r => ({
+    religions: data.religions.map(r => ({
       info: r.info,
       key: r.key,
       name: r.name,
@@ -119,6 +119,7 @@ export function useDiocesesBridge(religionKey: string | null): DiocesesResult | 
     action: 'game.get_dioceses',
     payload: religionKey === null ? null : { religionKey },
     map: mapResponse,
+    keepPreviousData: true,
   });
 }
 

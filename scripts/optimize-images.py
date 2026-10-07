@@ -66,6 +66,7 @@ FILE_SIZES: dict[str, tuple[int, int] | None] = {
     'event-border.png':             (832, 416),   # event popup overlay
     'event-mask.png':               (832, 416),   # event popup mask
     'event-painting-effect.png':    (832, 416),
+    'painted-hero-mask.png':        (1664, 832),  # culture/religion header brush mask
     # World maps
     'world-map.png':                (1024, 1024),
     'world-map-index.png':          (1024, 1024),
@@ -110,7 +111,10 @@ DIR_SIZES: dict[str, tuple[int, int] | None] = {
     'traits':                           (64, 64),
     # Culture/religion roundels: max 3rem = 78px
     'cultures':                         (96, 96),
+    # Culture group header paintings: 64rem modal x 12rem hero
+    'cultures/headers':                 (1664, 832),
     'religions':                        (96, 96),
+    'religions/headers':                (1664, 832),
     # Faction heraldry: roundel xl 5.5rem = 143px
     'factions':                         (192, 192),
     # Leader portraits: portrait xl 7.4rem = 192px
@@ -126,7 +130,7 @@ DIR_SIZES: dict[str, tuple[int, int] | None] = {
     'icons':                            (128, 128),
     'icons/Armies':                     (128, 128),
     'icons/Compliance':                 (128, 128),
-    'icons/Courtiers':                  (256, 512),
+    'icons/Courtiers':                  (512, 512),
     'icons/Cultures':                   (96, 96),
     'icons/Diplomacy':                  (128, 128),
     'icons/Flags':                      (128, 64),
@@ -327,6 +331,8 @@ def get_webp_policy(rel: Path, output_size: tuple[int, int], has_alpha: bool) ->
         return {'encoding': 'lossless'}
     if first_part == 'glance':
         return {'encoding': 'lossless'}
+    if rel.name == 'painted-hero-mask.png':
+        return {'encoding': 'lossless'}
 
     area = output_size[0] * output_size[1]
     if has_alpha and area < 128 * 128:
@@ -489,13 +495,15 @@ def load_source_tree_state() -> dict[str, list[int]]:
         return {}
     if data.get('version') != CACHE_VERSION:
         return {}
+    if data.get('pipelineHash') != hash_file(Path(__file__)):
+        return {}
     files = data.get('files')
     return files if isinstance(files, dict) else {}
 
 
 def save_source_tree_state(state: dict[str, list[int]]) -> None:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    payload = {'version': CACHE_VERSION, 'files': state}
+    payload = {'version': CACHE_VERSION, 'pipelineHash': hash_file(Path(__file__)), 'files': state}
     tmp_path = SOURCE_TREE_STATE.with_suffix('.tmp')
     tmp_path.write_text(json.dumps(payload, separators=(',', ':'), sort_keys=True), encoding='utf-8')
     tmp_path.replace(SOURCE_TREE_STATE)

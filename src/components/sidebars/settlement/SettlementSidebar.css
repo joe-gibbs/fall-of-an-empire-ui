@@ -250,6 +250,95 @@
   padding-bottom: 2.35rem;
 }
 
+.settlement-sidebar--unraised {
+  height: auto;
+  max-height: 100%;
+  bottom: auto;
+  overflow: auto;
+  background-image:
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/screen-charcoal.png');
+  background-repeat: repeat, repeat;
+  background-size: 9.846rem 9.846rem, 93.0909rem 93.0909rem;
+}
+
+.settle-unraised-header {
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  min-height: 10rem;
+  padding: 1rem 0.9rem;
+  background-image: url('/assets/baked/panel-charcoal.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  border-bottom: 0.154rem solid var(--separator);
+}
+
+.settle-unraised-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: linear-gradient(180deg, rgba(8, 12, 17, 0.08) 0%, rgba(8, 12, 17, 0.72) 100%);
+  pointer-events: none;
+}
+
+.settle-unraised-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.settle-unraised-title-block {
+  min-width: 0;
+  margin-left: 0.65rem;
+}
+
+.settle-unraised-name {
+  overflow: hidden;
+  color: var(--text-bright);
+  font-family: var(--font-header);
+  font-size: 1.4rem;
+  letter-spacing: 0.03rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settle-unraised-faction {
+  margin-top: 0.1rem;
+  color: var(--gold);
+  font-size: 0.86rem;
+}
+
+.settle-unraised-content {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 1rem;
+  gap: 0.85rem;
+}
+
+.settle-unraised-people {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.settle-unraised-content .interaction-card {
+  min-height: 8rem;
+}
+
+.settle-raise-cost { display: flex; gap: 1.5rem; color: var(--gold-light); }
+.settle-raise-cost > span { display: flex; align-items: center; gap: 0.4rem; }
+.settle-raise-cost img { width: 1.15rem; height: 1.15rem; object-fit: contain; }
+
+.settle-fort-status { margin-bottom: 1rem; text-align: center; color: var(--gold-light); }
+.settle-fort-status img { width: 3rem; height: 3rem; object-fit: contain; }
+.settle-fort-status p { margin: 0.4rem 0 0.8rem; }
+
 .settle-section-heading-with-action {
   display: flex;
   align-items: center;
@@ -1430,6 +1519,7 @@
 .settle-share-legend-item {
   display: flex;
   align-items: center;
+  color: inherit;
 }
 
 .settle-share-dot {
@@ -1681,6 +1771,11 @@
   white-space: nowrap;
   flex-grow: 1;
   flex-shrink: 1;
+}
+
+.settle-pop-name-text .culture-link,
+.settle-pop-name-text .religion-link {
+  min-width: 0;
 }
 
 .settle-pop-col-count {

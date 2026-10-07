@@ -244,7 +244,7 @@ export default function AgentSelectModal({ open, onClose, targetFactionId, role:
       // subscription updates its assigned-agent slot without waiting for
       // the next user-triggered re-open.
       try {
-        const fresh = await bridgeCall('game.get_faction_data', { factionId: activeTargetId, scope: 'full' });
+        const fresh = await bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId: activeTargetId, scope: 'full' });
         bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_data', { detail: fresh }));
         if (role === 'spy') {
           const interactions = await bridgeCall('game.get_spy_interactions', { targetFactionId: activeTargetId });

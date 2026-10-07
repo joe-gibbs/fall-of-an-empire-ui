@@ -1,4 +1,4 @@
-import type { BattleAfterActionReportPayload, CultureInfo, DiplomacyWarScoreEntry, ReligionInfo, PortraitLayerData, WebUIRoleTierData } from '../bridge-types.generated.ts';
+import type { BattleAfterActionReportPayload, CultureInfo, DiplomacyWarScoreEntry, ReligionInfo, PortraitLayerData, WebUIRoleTierData, FactionRealmProgress, FoederatiPoliticsView } from '../bridge-types.generated.ts';
 
 export type { BattleAfterActionReportPayload, CultureInfo, ReligionInfo, PortraitLayerData, WebUIRoleTierData };
 
@@ -143,7 +143,7 @@ export interface CharacterStats {
 }
 
 /** What the character is currently doing (mirrors EPersonActivity) */
-export type PersonActivity = 'RulingFaction' | 'LeadingSettlement' | 'CommandingArmy' | 'InCourt' | 'Diplomat' | 'Spy' | 'Deceased' | 'None';
+export type PersonActivity = 'RulingFaction' | 'LeadingSettlement' | 'CommandingArmy' | 'InCourt' | 'Diplomat' | 'Spy' | 'Deceased' | 'Imprisoned' | 'None';
 
 /** Role experience per specialisation (mirrors ERoleType). XP 0-1000 each. */
 export interface RoleExperience {
@@ -163,6 +163,12 @@ export interface RoleTiers {
 export interface Character {
   id: string;
   name: string;
+  originalNameText?: string;
+  familyName?: string;
+  /** Epithet-free given or regnal name for ruler chrome, e.g. "Wodanric V". */
+  headerGivenName?: string;
+  /** Culture-formatted family line, e.g. "House of Aistulf" or "Clan Turuk". */
+  familyHeading?: string;
   /** Full title as the game emits it, e.g. "Imperator of the Rephsian Empire". */
   title: string;
   /** Role-only form of the title (e.g. "Imperator"). Emitted by
@@ -206,6 +212,7 @@ export interface Character {
   /** Honour/Dread: -1.0 (Dreaded) to +1.0 (Virtuous). 0 = neutral. */
   honourDread: number;
   fame: number;
+  usesWarbands?: boolean;
   /** What the character is currently doing */
   activity: PersonActivity;
   /** Structured activity segments with optional clickable links */
@@ -303,6 +310,8 @@ export interface FactionPolicyLevel {
   effectDescription: string;
   effectLines?: DisplayTextLine[];
   isCurrent: boolean;
+  isAvailable: boolean;
+  lockReason?: string;
 }
 
 export interface FactionWarFaction {
@@ -406,6 +415,7 @@ export interface FactionSubjectDemographics {
 }
 
 export interface Faction {
+  foederatiPolitics?: FoederatiPoliticsView;
   id: string;
   debugShortId?: number;
   name: string;
@@ -414,10 +424,15 @@ export interface Faction {
   secondaryColour?: string;
   rulerName: string;
   rulerId: string;
+  dominantCourtierId?: string;
+  dominantCourtierName?: string;
+  dominantCourtierParts?: string[];
+  splitCourt?: boolean;
   rulerDebugShortId?: number;
   rulerPortrait?: string;
   rulerPortraitLayers?: PortraitLayerData;
   strength: number;
+  strengthBreakdown: { name: string; value: number }[];
   isPlayer: boolean;
   isRebel: boolean;
   rebelTypeName?: string;
@@ -442,14 +457,21 @@ export interface Faction {
   religionId?: string;
   /** Government mode id, such as Tribe, Empire, Kingdom, or Province. */
   government?: string;
+  /** Lowercase government type noun, such as tribe, kingdom, or empire. */
+  governmentTypeName?: string;
   /** Player-facing government mode name. */
   governmentDisplayName?: string;
   /** Player-facing government mode description. */
   governmentDescription?: string;
   /** Player-facing government capability summary lines. */
   governmentCapabilities?: string[];
+  usesPowerBlocs?: boolean;
+  usesAdministrativeCorruption?: boolean;
+  usesPatronage?: boolean;
   /** This government dispatches a generated replacement ruler instead of tracking an heir. */
   generatesLeaderOnSuccession?: boolean;
+  canAppointHeir?: boolean;
+  realmProgress?: FactionRealmProgress;
   /** Full culture data for tooltip (description + flags). */
   cultureInfo?: CultureInfo;
   /** Full religion data for tooltip (description + numeric effects). */
@@ -501,12 +523,17 @@ export interface Faction {
   populationGrowthBreakdown?: ModifierSource[];
   /** Number of controlled settlements */
   settlements: number;
+  settlementBreakdown: { id: string; name: string }[];
   /** Settlements owned by direct subject factions */
   subjectSettlements?: number;
   /** Number of vassal factions */
   vassalCount: number;
   /** Number of active armies */
   armyCount: number;
+  /** True when this faction raises warriors from kinship groups. */
+  usesWarbands?: boolean;
+  /** Warriors this faction can currently raise from its warbands. */
+  warbandStrength?: number;
   /** True when this faction raises temporary levies instead of standing armies. */
   usesLevies?: boolean;
   /** Current levy strength that could be called up, or active levy strength when raised. */
@@ -530,6 +557,8 @@ export interface Faction {
   };
   /** Province subjects only: true when the player can choose the successor. */
   canSetDesignatedHeir?: boolean;
+  /** Share of a duchy's taxable income paid to its crown. */
+  crownTaxPercent?: number;
   /** Manually chosen successor for a province subject, if any. */
   designatedHeir?: FactionHeir;
   /** Current effective successor for this faction, if any. */
@@ -619,6 +648,8 @@ export interface Building {
   religionId?: string;
   religionName?: string;
   religionIcon?: string;
+  /** Unique holy seat settlement, if this building can only exist there. */
+  requiredSettlementName?: string;
   /** If true, building DevelopedInto removes this one (default behaviour). */
   replacesParent?: boolean;
   /** If true, blocks any further construction while present. */
@@ -667,6 +698,8 @@ export interface AvailableBuilding {
   religionId?: string;
   religionName?: string;
   religionIcon?: string;
+  /** Unique holy seat settlement, if this building can only exist there. */
+  requiredSettlementName?: string;
   /** If true, building this removes the predecessor (default behaviour). */
   replacesParent?: boolean;
   /** Result of GetEffectiveBuildButtonInfo for this settlement. */
@@ -917,6 +950,7 @@ export interface PopGroup {
   culture: string;
   cultureAdjective: string;
   cultureIcon?: string;
+  religionId?: string;
   religion: string;
   religionAdherentPlural: string;
   religionIcon?: string;
@@ -981,6 +1015,7 @@ export interface Settlement {
   id: string;
   debugShortId?: number;
   name: string;
+  originalNameText?: string;
   faction: string;
   /** Stable faction GUID. Prefer this over the name string for lookups and sidebar navigation. */
   factionId?: string;
@@ -998,6 +1033,11 @@ export interface Settlement {
   factionIsRebel?: boolean;
   /** True if this settlement is its faction's capital. */
   isCapital?: boolean;
+  /** False until the permanent settlement has been raised. */
+  hasGeneratedCity: boolean;
+  landImage: string;
+  fortStatus: string;
+  fortProgress: number;
   /** True if the owning faction is independent (i.e. not a subject of another). */
   isFactionIndependent?: boolean;
   canRename?: boolean;
@@ -1022,6 +1062,7 @@ export interface Settlement {
   foodConsumption: number;
   /** Administrative corruption (0-1). */
   corruption: number;
+  usesAdministrativeCorruption: boolean;
   fortificationLevel: number;
   governor: Character | null;
   culture: string;
@@ -1369,6 +1410,14 @@ export interface Army {
   canMerge: boolean;
   canSplit: boolean;
   isRaiding?: boolean;
+  canRaid?: boolean;
+  canBuildFort?: boolean;
+  fortUnavailableReason?: string;
+  isWarbandHost?: boolean;
+  raidUnavailableReason?: string;
+  raidTargetSettlement?: string;
+  expectedMonthlyRaidIncome?: number;
+  monthlyUpkeep: number;
   isReplenishing?: boolean;
   replenishCost?: number;
   canReplenish?: boolean;
@@ -1408,6 +1457,7 @@ export interface MilitaryForce {
 }
 
 export interface MilitaryFoederatiEntry {
+  politics?: FoederatiPoliticsView;
   id: string;
   factionId: string;
   factionName: string;
@@ -1480,9 +1530,29 @@ export interface EventPersonNameInput {
   targetFactionId?: string;
 }
 
+export interface EventFactionNameInput {
+  label: string;
+  value: string;
+  randomButtonText: string;
+  randomOptions: string[];
+  targetFactionId: string;
+}
+
+export interface EventFactionEmblemInput {
+  label: string;
+  value: string;
+  options: string[];
+  targetFactionId: string;
+  colour: string;
+  secondaryColour: string;
+  cultureGroup: string;
+}
+
 export interface EventChoiceInputs {
   regnalName?: string;
   personName?: string;
+  factionName?: string;
+  factionEmblem?: string;
 }
 
 export interface EventSender {
@@ -1511,6 +1581,8 @@ export interface Event {
   sender?: EventSender;
   regnalNameInput?: EventRegnalNameInput;
   personNameInput?: EventPersonNameInput;
+  factionNameInput?: EventFactionNameInput;
+  factionEmblemInput?: EventFactionEmblemInput;
   options: EventOption[];
   previousEvents: EventHistoryEntry[];
 }

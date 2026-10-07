@@ -21,7 +21,7 @@ import {
   LOADING_SCREEN_FALLBACK_BACKGROUND,
 } from '../components/loading/loadingScreenPresentation';
 import { whenImageAssetReady } from '../preload/assets';
-import type { GetNewGameMapFactionSelectionResponse } from '../bridge-types.generated.ts';
+import type { GetNewGameMapFactionSelectionResponse, NewGameMapDto } from '../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../bridge/core/runtimeEngine';
 import type { SaveEntry } from '../bridge/app/useSavesBridge';
 import { useModsBridge } from '../bridge/app/useModsBridge';
@@ -34,16 +34,7 @@ import { useWebUILocale, webUIText, WebUIText } from '../localization/WebUITextC
 type MenuView = 'menu' | 'settings' | 'achievements' | 'mods' | 'encyclopedia' | 'credits' | 'newgame' | 'characterCreator';
 type ModsPanelView = 'installed' | 'workshop' | 'subscribed';
 
-interface NewGameMapEntry {
-  id: string;
-  displayName: string;
-  menuKicker: string;
-  menuDescription: string;
-  menuImageUrl: string;
-  menuOrder: number;
-  requiresFactionSelection: boolean;
-  isLocked: boolean;
-}
+type NewGameMapEntry = NewGameMapDto;
 
 const LOAD_GAME_CARD_IMAGE = '/assets/events/library-archive.png';
 const WORKSHOP_CATEGORY_LABEL_KEYS: Record<string, string> = {
@@ -123,6 +114,7 @@ const MainMenu: React.FC = () => {
   const [showModRecovery, setShowModRecovery] = useState(false);
   const pendingModRecoveryRef = useRef(false);
   const [newGameMaps, setNewGameMaps] = useState<NewGameMapEntry[]>([]);
+  const [selectedNewGameStartDateId, setSelectedNewGameStartDateId] = useState('');
   const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [compatibilityWarning, setCompatibilityWarning] = useState<{ slotName: string; warnings: string[] } | null>(null);
@@ -166,8 +158,8 @@ const MainMenu: React.FC = () => {
   const activeModsPanelView: ModsPanelView = steamWorkshopAvailable ? modsPanelView : 'installed';
   const translatedNewGameMaps = newGameMaps;
 
-  const preloadFactionSelection = useCallback((mapId: string) => {
-    const cacheKey = `${locale}:${mapId}`;
+  const preloadFactionSelection = useCallback((mapId: string, startDateId = '') => {
+    const cacheKey = `${locale}:${mapId}:${startDateId}`;
     const cached = factionSelectionCacheRef.current.get(cacheKey);
     if (cached) {
       return Promise.resolve(cached);
@@ -178,7 +170,7 @@ const MainMenu: React.FC = () => {
       return existingRequest;
     }
 
-    const request = bridgeCall('game.get_new_game_map_faction_selection', { mapId })
+    const request = bridgeCall('game.get_new_game_map_faction_selection', { mapId, startDateId })
       .then((response) => {
         factionSelectionCacheRef.current.set(cacheKey, response);
         setFactionSelectionCache((current) => ({
@@ -310,8 +302,10 @@ const MainMenu: React.FC = () => {
           maps
             .filter((map) => map.requiresFactionSelection && !map.isLocked)
             .forEach((map) => {
-              void preloadFactionSelection(map.id).catch((error) => {
+              map.startDates.filter(date => !date.isLocked).forEach(date => {
+                void preloadFactionSelection(map.id, date.id).catch((error) => {
                 console.error('[MainMenu] preloading faction selection failed', error);
+                });
               });
             });
         }
@@ -339,14 +333,14 @@ const MainMenu: React.FC = () => {
     }
   };
 
-  const handleStartScenarioMap = async (mapId: string, playerFactionBaseName = '') => {
+  const handleStartScenarioMap = async (mapId: string, playerFactionBaseName = '', startDateId = '') => {
     if (modsNeedRestart) {
       openSubView('mods');
       return;
     }
 
     try {
-      await bridgeCall('game.start_scenario_map', { mapId, playerFactionBaseName });
+      await bridgeCall('game.start_scenario_map', { mapId, playerFactionBaseName, startDateId });
     } catch (err) {
       console.error('[MainMenu] start scenario map failed', err);
     }
@@ -364,7 +358,9 @@ const MainMenu: React.FC = () => {
         await bridgeCall('game.faction_selection_tabletop', {
           command: 'prepare',
           mapId: map.id,
+          startDateId: '',
           baseName: '',
+          mapMode: '',
           screenX: 0,
           screenY: 0,
           deltaX: 0,
@@ -373,6 +369,7 @@ const MainMenu: React.FC = () => {
         });
         await waitForLoadingScreenPaint();
         setSelectedNewGameMap(map);
+        setSelectedNewGameStartDateId('');
         void preloadFactionSelection(map.id).catch((error) => {
           console.error('[MainMenu] preloading faction selection failed', error);
         });
@@ -493,7 +490,9 @@ const MainMenu: React.FC = () => {
           await bridgeCall('game.faction_selection_tabletop', {
             command: 'prepare',
             mapId: selectedNewGameMap?.id ?? '',
+            startDateId: selectedNewGameStartDateId,
             baseName: '',
+            mapMode: '',
             screenX: 0,
             screenY: 0,
             deltaX: 0,
@@ -1212,7 +1211,16 @@ const MainMenu: React.FC = () => {
       {view === 'newgame' && activeSelectedNewGameMap && (
         <FactionSelection
           mapId={activeSelectedNewGameMap.id}
-          initialData={factionSelectionCache[`${locale}:${activeSelectedNewGameMap.id}`] ?? null}
+          startDateId={selectedNewGameStartDateId}
+          startDates={activeSelectedNewGameMap.startDates}
+          onSelectStartDate={(id) => {
+            if (activeSelectedNewGameMap.startDates.find(date => date.id === id)!.isLocked) {
+              setShowFullGamePrompt(true);
+            } else {
+              setSelectedNewGameStartDateId(id);
+            }
+          }}
+          initialData={factionSelectionCache[`${locale}:${activeSelectedNewGameMap.id}:${selectedNewGameStartDateId}`] ?? null}
           loadFactionSelection={preloadFactionSelection}
           closing={closing}
           scenario={{
@@ -1221,7 +1229,7 @@ const MainMenu: React.FC = () => {
           onClose={goBack}
           showPurchaseForLocked={isDemo === true}
           onPurchaseFullGame={() => setShowFullGamePrompt(true)}
-          onConfirm={(faction) => { void handleStartScenarioMap(activeSelectedNewGameMap.id, faction.baseName); }}
+          onConfirm={(faction) => { void handleStartScenarioMap(activeSelectedNewGameMap.id, faction.baseName, selectedNewGameStartDateId); }}
         />
       )}
     </>

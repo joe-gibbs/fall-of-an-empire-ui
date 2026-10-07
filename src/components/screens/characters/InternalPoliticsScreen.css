@@ -459,7 +459,7 @@
 
 .ips-foederati-cell--action,
 .ips-foederati-header-cell--action {
-  width: 7rem;
+  width: 8.5rem;
   flex-shrink: 0;
   padding-left: 0.45rem;
   text-align: right;
@@ -607,8 +607,10 @@
 
 .ips-foederati-cell--action {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0.18rem;
 }
 
 .ips-command-cell--strength .bar-track {
@@ -1164,7 +1166,7 @@
 
 .ips-foederati-action {
   flex-shrink: 0;
-  width: 6.4rem;
+  width: 8rem;
   margin-left: 0.45rem;
   padding: 0.22rem 0.35rem;
   font-family: var(--font-header);
@@ -1203,3 +1205,5 @@
     min-width: 74rem;
   }
 }
+
+.ips-foederati-row { min-height: 4.35rem; }

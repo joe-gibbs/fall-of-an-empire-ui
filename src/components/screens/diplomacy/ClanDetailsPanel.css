@@ -1,0 +1,33 @@
+.clan-detail-panel { min-width: 0; }
+.clan-detail-title { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding-bottom: 0.7rem; background: url('/assets/gold-line.png') bottom / 100% 0.15rem no-repeat; }
+.clan-detail-title h2 { margin: 0; color: var(--gold-light); font: 1.3rem var(--font-header); }
+.clan-detail-title .icon-button { width: 2.6rem; height: 2.6rem; }
+.clan-leadership { padding: 1rem 0 0.8rem; }
+.clan-leader-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.clan-leader-row > .tooltip-wrapper:first-child { flex: 1; min-width: 0; }
+.clan-person-link { display: flex; align-items: center; gap: 0.65rem; min-width: 0; width: 100%; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: var(--cursor-pointer); }
+.clan-person-link > .portrait { flex-shrink: 0; }
+.clan-person-link:hover strong { color: var(--gold-light); }
+.clan-person-link:focus-visible { outline: 0.154rem solid var(--gold-light); outline-offset: 0.15rem; }
+.clan-person-copy { min-width: 0; }
+.clan-person-copy strong { display: block; color: var(--gold); font: 1rem var(--font-header); overflow-wrap: anywhere; }
+.clan-person-copy small { display: block; color: var(--text-muted); font-size: 0.78rem; margin-top: 0.15rem; }
+.clan-leader-link .clan-person-copy strong { font-size: 1.4rem; }
+.clan-leader-relations { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin-top: 0.7rem; }
+.clan-leader-relations .compliance-row { margin: 0; }
+.clan-leader-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
+.clan-leader-actions:empty { display: none; }
+.clan-people { margin-top: 0.5rem; }
+.clan-people > .section-heading-row { margin-bottom: 0.5rem; }
+.clan-member-list { display: flex; flex-direction: column; gap: 0.2rem; }
+.clan-member-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; padding: 0.45rem 0.55rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; border: 0.231rem solid transparent; border-image: url('/assets/gold-frame.png') 6; }
+.clan-member-row > .tooltip-wrapper { min-width: 0; }
+.clan-member-service { display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; }
+.clan-member-status { color: var(--text-muted); font-size: 0.72rem; }
+.clan-warrior-count { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem; border: 0; background: none; color: var(--gold-light); font: 1.05rem var(--font-header); white-space: nowrap; cursor: var(--cursor-pointer); text-decoration: underline; text-underline-offset: 0.2rem; }
+.clan-warrior-count:hover, .clan-warrior-count:focus-visible { color: var(--text); }
+.clan-member-fame { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--gold); font-size: 0.8rem; }
+.clan-member-fame img { width: 1.1rem; height: 1.1rem; object-fit: contain; }
+.clan-member-row--selected { background-image: url('/assets/baked/button-burgundy-active.png'); }
+.clan-member-status--feuding, .clan-member-status--refusing, .clan-warrior-count--feuding, .clan-warrior-count--refusing { color: var(--red); }
+.clan-warrior-count img { width: 1.2rem; height: 1.2rem; object-fit: contain; }

@@ -11,7 +11,7 @@ import './ConfirmDialog.css';
 interface ConfirmDialogProps {
   visible: boolean;
   title: string;
-  message: string;
+  message: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   onConfirm: () => void;
@@ -56,7 +56,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   );
   useEscapeStackEntry({
     id: `modal.confirm-dialog:${dialogId}`,
-    orderKey: `${dialogId}:${title}:${message}`,
+    orderKey: `${dialogId}:${title}`,
     active: mounted,
     onClose: () => animatedClose('cancel'),
     onConfirm: () => { if (variant === 'danger') playSound('error'); animatedClose('confirm'); },

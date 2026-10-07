@@ -6,9 +6,10 @@ import { dispatchFactionData } from './useFactionBridge';
 export type DiplomacyOverviewState = GetDiplomacyOverviewResponse;
 export type DiplomacyOverviewScope = 'full' | 'internal' | 'provinces' | 'governors' | 'candidates';
 
-export function useDiplomacyOverviewBridge(scope: DiplomacyOverviewScope = 'full', fetch = true): DiplomacyOverviewState | null {
+export function useDiplomacyOverviewBridge(scope: DiplomacyOverviewScope = 'full', fetch = true, suspend = false): DiplomacyOverviewState | null {
   return useBridgeQuery({
     action: 'game.get_diplomacy_overview',
+    suspend,
     payload: fetch ? { scope } : null,
     cacheResponseMs: 1000,
     map: data => data,
@@ -56,7 +57,7 @@ export async function breakTreatyBridge(treatyId: string, refreshFactionId?: str
   if (refreshFactionId) factionIds.add(refreshFactionId);
 
   for (const factionId of factionIds) {
-    const factionData = await bridgeCall('game.get_faction_data', { factionId, scope: 'full' });
+    const factionData = await bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId, scope: 'full' });
     dispatchFactionData(factionData);
   }
 }

@@ -9,6 +9,13 @@ export interface PlayerFactionSummary {
   colour: string;
   secondaryColour?: string;
   cultureGroup?: string;
+  usesPowerBlocs: boolean;
+  usesWarbands: boolean;
+  usesRegionalForces: boolean;
+  usesPatronage: boolean;
+  hasImperialCourt: boolean;
+  courtTitle?: string;
+  usesAdministration: boolean;
   emblem?: string;
   religionId?: string;
   diplomaticStatus: Faction['diplomaticStatus'];
@@ -41,6 +48,13 @@ function mapPlayerFaction(data: GetPlayerFactionResponse): PlayerFactionSummary 
     colour: data.colour,
     secondaryColour: data.secondaryColour || undefined,
     cultureGroup: data.cultureGroup || undefined,
+    usesPowerBlocs: data.usesPowerBlocs,
+    usesWarbands: data.usesWarbands,
+    usesRegionalForces: data.usesRegionalForces,
+    usesPatronage: data.usesPatronage,
+    hasImperialCourt: data.hasImperialCourt,
+    courtTitle: data.courtTitle || undefined,
+    usesAdministration: data.usesAdministration,
     emblem: data.emblem || undefined,
     religionId: data.religionId || undefined,
     diplomaticStatus: mapStatus(data.diplomaticStatus),
@@ -54,16 +68,18 @@ function mapPlayerFaction(data: GetPlayerFactionResponse): PlayerFactionSummary 
   };
 }
 
-export function usePlayerFactionSummaryBridge(): PlayerFactionSummary | null {
+export function usePlayerFactionSummaryBridge(suspend = false): PlayerFactionSummary | null {
   return useBridgeQuery({
     action: 'game.get_player_faction',
+    suspend,
     map: mapPlayerFaction,
   });
 }
 
-export function usePlayerFactionSummaryBridgeState(): PlayerFactionSummaryBridgeState {
+export function usePlayerFactionSummaryBridgeState(suspend = false): PlayerFactionSummaryBridgeState {
   const query = useBridgeQueryState({
     action: 'game.get_player_faction',
+    suspend,
     map: mapPlayerFaction,
   });
 

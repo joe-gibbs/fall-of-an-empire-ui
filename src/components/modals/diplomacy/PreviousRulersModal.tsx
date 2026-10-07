@@ -73,7 +73,6 @@ export default function PreviousRulersModal({ open, factionId, factionName, onCl
           <CloseButton onClick={close} />
         </header>
         <div className="prev-rulers-body">
-          <p className="prev-rulers-intro">{webUIText('DiplomacySidebar.PreviousRulersBody')}</p>
           {matchingHistory && rulers.length === 0 && (
             <div className="prev-rulers-empty"><WebUIText textKey="DiplomacySidebar.NoPreviousRulers" /></div>
           )}

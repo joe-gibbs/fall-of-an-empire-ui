@@ -395,6 +395,10 @@ export interface BuildingPlacementResponse {
   message: string;
 }
 
+export interface BuildOccupationFortRequest {
+  militaryId: string;
+}
+
 export interface BureaucraticThroughputSourceDetail {
   sourceId: string;
   label: string;
@@ -454,6 +458,11 @@ export interface CampaignOutcomeMilestoneDto {
   tone: string;
 }
 
+export interface CampaignOutcomeConditionDto {
+  label: string;
+  detail: string;
+}
+
 export interface CampaignOutcomeSummaryDto {
   cause: string;
   kicker: string;
@@ -469,6 +478,7 @@ export interface CampaignOutcomeSummaryDto {
   previousRulers: CampaignOutcomeRulerDto[];
   history: CampaignOutcomeHistoryPointDto[];
   milestones: CampaignOutcomeMilestoneDto[];
+  tierConditions: CampaignOutcomeConditionDto[];
   crestIcon: string;
   headerImage: string;
   primaryAction: string;
@@ -515,11 +525,30 @@ export interface CancelSpyInteractionResponse {
   cancelled: boolean;
 }
 
+export interface ChangePersonalWarbandRequest {
+  unitId: string;
+  companyIndex: number;
+}
+
+export interface ChangeRegionalForcesRequest {
+  operation: string;
+  ownerId: string;
+  regionId: string;
+  settlementId: string;
+  unitId: string;
+}
+
+export interface ChangeRegionalForcesResponse {
+  changed: boolean;
+}
+
 export interface ChooseEventOptionRequest {
   eventId: string;
   optionIndex: number;
   regnalName: string;
   personName: string;
+  factionName: string;
+  factionEmblem: string;
 }
 
 export interface ChooseEventOptionResponse {
@@ -580,6 +609,7 @@ export interface CourtierPromotionEventPayload {
 
 export interface CultureInfo {
   id: string;
+  iconId: string;
   name: string;
   adjective: string;
   plural: string;
@@ -588,6 +618,13 @@ export interface CultureInfo {
   group: string;
   groupDisplayName: string;
   canRecruitAsAuxiliaries: boolean;
+  development: number;
+  canRecruitArmyUnits: boolean;
+  canRecruitNavyUnits: boolean;
+  usesPatronage: boolean;
+  isHybrid: boolean;
+  parentCultures: string[];
+  raiseSettlementDevelopment: number;
 }
 
 export interface ReligionInfo {
@@ -608,6 +645,14 @@ export interface ReligionInfo {
   recruitmentSpeedModifier: number;
   settlementGrowthModifier: number;
   unrestModifier: number;
+  group: string;
+  groupDisplayName: string;
+  clergyTitle: string;
+  leaderTitle: string;
+  requiresCharity: boolean;
+  majorDeities: string[];
+  minorDeities: string[];
+  relics: string[];
 }
 
 export interface DeletePlaythroughRequest {
@@ -999,7 +1044,9 @@ export interface BridgeFactionInteractionFactionCandidate {
 export interface FactionSelectionTabletopRequest {
   command: string;
   mapId: string;
+  startDateId: string;
   baseName: string;
+  mapMode: string;
   screenX: unknown;
   screenY: unknown;
   deltaX: unknown;
@@ -1007,8 +1054,56 @@ export interface FactionSelectionTabletopRequest {
   zoomDelta: unknown;
 }
 
+export interface FactionSelectionMapLegendEntry {
+  id: string;
+  name: string;
+  colour: string;
+}
+
 export interface FactionSelectionTabletopResponse {
   baseName: string;
+  legend: FactionSelectionMapLegendEntry[];
+}
+
+export interface FoederatiPoliticalActionView {
+  id: string;
+  name: string;
+  description: string;
+  blockReason: string;
+  settlementId: string;
+  available: boolean;
+}
+
+export interface FoederatiPressureFactorView {
+  name: string;
+  value: number;
+}
+
+export interface FoederatiPoliticsView {
+  enabled: boolean;
+  autonomy: string;
+  autonomyLevel: number;
+  autonomyDescription: string;
+  monthlySubsidy: number;
+  lastSubsidyDue: number;
+  lastSubsidyPaid: number;
+  unpaidMonths: number;
+  pressure: number;
+  monthlyPetitionChance: number;
+  pressureLabel: string;
+  pressureFactors: FoederatiPressureFactorView[];
+  pendingDecision: string;
+  callupPending: boolean;
+  callupBlockReason: string;
+  decisionDeadline: number;
+  nextActionDate: number;
+  actions: FoederatiPoliticalActionView[];
+}
+
+export interface FoederatiPoliticalActionRequest {
+  factionId: string;
+  actionId: string;
+  settlementId: string;
 }
 
 export interface FormationTemplateEligibleSettlementEntry {
@@ -1036,6 +1131,7 @@ export interface FormationTemplateUnitEntry {
   category: string;
   battleRole: string;
   cultureId: string;
+  cultureIconId: string;
   cultureName: string;
   cultureColour: string;
   tier: number;
@@ -1520,6 +1616,7 @@ export interface CharacterListEntry {
   factionId: string;
   factionName: string;
   cultureId: string;
+  cultureIconId: string;
   culture: string;
   religionId: string;
   religion: string;
@@ -1554,6 +1651,51 @@ export interface GetCharacterListResponse {
 
 export interface GetCharacterRecruitmentConfigResponse {
   goldCost: number;
+}
+
+export interface GetConfederationDataRequest {
+  factionId: string;
+  active: boolean;
+}
+
+export interface ConfederationDetailRow {
+  label: string;
+  value: string;
+  status: string;
+  tooltipId: string;
+  dateStartDay: number;
+  requiredDays: number;
+}
+
+export interface ConfederationDetailSection {
+  id: string;
+  title: string;
+  rows: ConfederationDetailRow[];
+}
+
+export interface ConfederationMemberData {
+  id: string;
+  name: string;
+  government: string;
+  rulerId: string;
+  rulerName: string;
+  details: ConfederationDetailRow[];
+}
+
+export interface GetConfederationDataResponse {
+  factionId: string;
+  available: boolean;
+  cohesion: number;
+  label: string;
+  isWeak: boolean;
+  title: string;
+  isLeader: boolean;
+  leaderFactionId: string;
+  leaderName: string;
+  monthlyChange: number;
+  members: ConfederationMemberData[];
+  sections: ConfederationDetailSection[];
+  detailSections: ConfederationDetailSection[];
 }
 
 export interface GetContentPackWebUIManifestResponse {
@@ -1732,8 +1874,44 @@ export interface GetCourtPositionsResponse {
   autoAssignCourtEnabled: boolean;
   courtFactionId: string;
   courtFactionName: string;
+  courtTitle: string;
   positions: CourtPositionEntry[];
   maxSubordinates: number;
+}
+
+export interface GetCultureDevelopmentRequest {
+  cultureId: string;
+}
+
+export interface CultureDevelopmentGate {
+  id: string;
+  name: string;
+  requiredDevelopment: number;
+  explanation: string;
+  icon: string;
+  reached: boolean;
+  isNext: boolean;
+}
+
+export interface CultureDevelopmentSource {
+  id: string;
+  name: string;
+  explanation: string;
+  icon: string;
+  value: number;
+}
+
+export interface GetCultureDevelopmentResponse {
+  culture: CultureInfo;
+  development: number;
+  monthlyChange: number;
+  growthExplanation: string;
+  population: number;
+  gates: CultureDevelopmentGate[];
+  sources: CultureDevelopmentSource[];
+  isHybrid: boolean;
+  parentCultures: string[];
+  relatedCultures: CultureInfo[];
 }
 
 export interface EventEffectData {
@@ -1778,6 +1956,26 @@ export interface EventPersonNameInputData {
   targetFactionId: string;
 }
 
+export interface EventFactionNameInputData {
+  isRequired: boolean;
+  label: string;
+  value: string;
+  randomButtonText: string;
+  randomOptions: string[];
+  targetFactionId: string;
+}
+
+export interface EventFactionEmblemInputData {
+  isRequired: boolean;
+  label: string;
+  value: string;
+  options: string[];
+  targetFactionId: string;
+  colour: string;
+  secondaryColour: string;
+  cultureGroup: string;
+}
+
 export interface EventHistoryEntryData {
   id: string;
   title: string;
@@ -1797,6 +1995,8 @@ export interface GetCurrentEventResponse {
   chosenOptionIndex: number;
   regnalNameInput: EventRegnalNameInputData;
   personNameInput: EventPersonNameInputData;
+  factionNameInput: EventFactionNameInputData;
+  factionEmblemInput: EventFactionEmblemInputData;
   options: EventOptionData[];
   previousEvents: EventHistoryEntryData[];
 }
@@ -1816,7 +2016,7 @@ export interface DioceseEntry {
   landPopulation: number;
 }
 
-export interface OrganisedReligionEntry {
+export interface ReligionSelectorEntry {
   info: ReligionInfo;
   key: string;
   name: string;
@@ -1847,7 +2047,7 @@ export interface GetDiocesesResponse {
   leadingFactionName: string;
   autoAssignClergyEnabled: boolean;
   dioceses: DioceseEntry[];
-  organisedReligions: OrganisedReligionEntry[];
+  religions: ReligionSelectorEntry[];
   religionDistribution: ReligionDistributionEntry[];
   totalRealmPopulation: number;
 }
@@ -1923,6 +2123,7 @@ export interface EconomyOverviewTaxRow {
   isVassal: boolean;
   isFoederati: boolean;
   effectiveRate: number;
+  canAdjustTaxRate: boolean;
   baseRate: number;
   adjustment: number;
   currentTax: number;
@@ -1999,6 +2200,10 @@ export interface GetEconomyOverviewResponse {
   resourceSalesIncome: number;
   vassalTributeIncome: number;
   treatyTributeIncome: number;
+  foederatiSubsidyIncome: number;
+  foederatiSubsidyPaid: number;
+  foederatiSubsidySources: IncomeEntry[];
+  foederatiSubsidyRecipients: IncomeEntry[];
   eventIncome: number;
   lootingIncome: number;
   otherIncome: number;
@@ -2256,6 +2461,8 @@ export interface GetFactionDailyDataResponse {
   settlements: number;
   subjectSettlements: number;
   armies: number;
+  usesWarbands: boolean;
+  warbandStrength: number;
   usesLevies: boolean;
   levyStrength: number;
   isFoederatiCalledUp: boolean;
@@ -2271,6 +2478,8 @@ export interface GetFactionDailyDataResponse {
 export interface GetFactionDataRequest {
   factionId: string;
   scope: string;
+  subscriptionId: string;
+  subscribe: boolean;
 }
 
 export interface FactionTreatyEntry {
@@ -2302,6 +2511,16 @@ export interface FactionOpinionModifier {
   key: string;
   label: string;
   value: number;
+}
+
+export interface FactionStrengthContribution {
+  name: string;
+  value: number;
+}
+
+export interface FactionSettlementReference {
+  id: string;
+  name: string;
 }
 
 export interface FactionPopulationGrowthSource {
@@ -2350,6 +2569,8 @@ export interface FactionPolicyLevelEntry {
   effectDescription: string;
   effectLines: WebUIDisplayLine[];
   isCurrent: boolean;
+  isAvailable: boolean;
+  lockReason: string;
 }
 
 export interface FactionPolicyEntry {
@@ -2409,7 +2630,18 @@ export interface FactionModifierEntry {
   sources: FactionModifierSourceEntry[];
 }
 
+export interface FactionRealmProgress {
+  available: boolean;
+  development: number;
+  centralisation: number;
+  centralisationLimit: number;
+  raisedCities: number;
+  provinces: number;
+  kingdomCitiesRequired: number;
+}
+
 export interface GetFactionDataResponse {
+  foederatiPolitics: FoederatiPoliticsView;
   id: string;
   debugShortId: number;
   name: string;
@@ -2422,10 +2654,16 @@ export interface GetFactionDataResponse {
   religionId: string;
   religion: string;
   government: string;
+  governmentTypeName: string;
   governmentDisplayName: string;
   governmentDescription: string;
   governmentCapabilities: string[];
+  usesPowerBlocs: boolean;
+  usesAdministrativeCorruption: boolean;
+  usesPatronage: boolean;
   generatesLeaderOnSuccession: boolean;
+  canAppointHeir: boolean;
+  realmProgress: FactionRealmProgress;
   cultureInfo: CultureInfo;
   religionInfo: ReligionInfo;
   capital: string;
@@ -2434,6 +2672,10 @@ export interface GetFactionDataResponse {
   rulerDebugShortId: number;
   rulerPortrait: string;
   rulerPortraitLayers: PortraitLayerData;
+  dominantCourtierId: string;
+  dominantCourtierName: string;
+  dominantCourtierParts: string[];
+  splitCourt: boolean;
   population: number;
   directPopulation: number;
   subjectPopulation: number;
@@ -2443,8 +2685,11 @@ export interface GetFactionDataResponse {
   religions: FactionDemographicShare[];
   subjectDemographics: FactionSubjectDemographics[];
   settlements: number;
+  settlementBreakdown: FactionSettlementReference[];
   subjectSettlements: number;
   armies: number;
+  usesWarbands: boolean;
+  warbandStrength: number;
   usesLevies: boolean;
   levyStrength: number;
   isFoederatiCalledUp: boolean;
@@ -2452,6 +2697,7 @@ export interface GetFactionDataResponse {
   gold: number;
   income: number;
   strength: number;
+  strengthBreakdown: FactionStrengthContribution[];
   playerStrength: number;
   compliance: number;
   isPlayer: boolean;
@@ -2485,6 +2731,7 @@ export interface GetFactionDataResponse {
   spyNetworkGrowthPerMonth: number;
   spyCunning: number;
   canSetDesignatedHeir: boolean;
+  crownTaxPercent: number;
   designatedHeirId: string;
   designatedHeirName: string;
   effectiveHeirId: string;
@@ -2527,10 +2774,12 @@ export interface FactionInteractionEntry {
   name: string;
   description: string;
   descriptionLines: WebUIDisplayLine[];
+  requirementsDescription: string;
   iconId: string;
   backgroundId: string;
   showInQuickInteractionMenu: boolean;
   isEdict: boolean;
+  requiresConfirmation: boolean;
   goldCost: number;
   durationDays: number;
   cooldownDays: number;
@@ -2659,6 +2908,8 @@ export interface FamilyTreeGroups {
 export interface GetFamilyTreeResponse {
   scope: string;
   focusPersonId: string;
+  familyName: string;
+  usesPatronage: boolean;
   factionId: string;
   factionName: string;
   rulerId: string;
@@ -2829,6 +3080,10 @@ export interface GetIncomeBreakdownResponse {
   resourceSalesIncome: number;
   vassalTributeIncome: number;
   treatyTributeIncome: number;
+  foederatiSubsidyIncome: number;
+  foederatiSubsidyPaid: number;
+  foederatiSubsidySources: IncomeEntry[];
+  foederatiSubsidyRecipients: IncomeEntry[];
   eventIncome: number;
   lootingIncome: number;
   otherIncome: number;
@@ -2855,6 +3110,29 @@ export interface GetIncomeBreakdownResponse {
 export interface GetInitialSetupResponse {
   completed: boolean;
   forceOpen: boolean;
+}
+
+export interface GetKinshipGroupDetailRequest {
+  groupId: string;
+  personId: string;
+}
+
+export interface GetKinshipGroupDetailResponse {
+  found: boolean;
+  group: KinshipGroupEntry;
+  focusPersonId: string;
+  familyName: string;
+  canManageWarbands: boolean;
+}
+
+export interface GetKinshipGroupsRequest {
+  subscriptionId: string;
+  subscribe: boolean;
+}
+
+export interface GetKinshipGroupsResponse {
+  isTribal: boolean;
+  groups: KinshipGroupEntry[];
 }
 
 export interface LanguageEntry {
@@ -3065,6 +3343,7 @@ export interface GetModLoadStateResponse {
 
 export interface GetNewGameMapFactionGeometryRequest {
   mapId: string;
+  startDateId: string;
 }
 
 export interface ScenarioMapFactionGeometryDto {
@@ -3074,6 +3353,7 @@ export interface ScenarioMapFactionGeometryDto {
 
 export interface GetNewGameMapFactionGeometryResponse {
   mapId: string;
+  startDateId: string;
   mapWidth: number;
   mapHeight: number;
   factions: ScenarioMapFactionGeometryDto[];
@@ -3081,6 +3361,7 @@ export interface GetNewGameMapFactionGeometryResponse {
 
 export interface GetNewGameMapFactionSelectionRequest {
   mapId: string;
+  startDateId: string;
 }
 
 export interface ScenarioMapValueBreakdownDto {
@@ -3117,6 +3398,7 @@ export interface ScenarioMapLeaderDto {
   hasLeader: boolean;
   displayName: string;
   dynasty: string;
+  familyHeading: string;
   gender: string;
   born: string;
   portraitLayers: PortraitLayerData;
@@ -3142,6 +3424,7 @@ export interface ScenarioMapFactionDto {
   id: number;
   baseName: string;
   displayName: string;
+  description: string;
   realm: string;
   culture: string;
   cultureDisplayName: string;
@@ -3198,6 +3481,7 @@ export interface ScenarioMapWarDto {
 
 export interface GetNewGameMapFactionSelectionResponse {
   mapId: string;
+  startDateId: string;
   displayName: string;
   factionSelectionDescription: string;
   defaultPlayerFactionBaseName: string;
@@ -3208,6 +3492,31 @@ export interface GetNewGameMapFactionSelectionResponse {
   mapHeight: number;
   factions: ScenarioMapFactionDto[];
   wars: ScenarioMapWarDto[];
+}
+
+export interface PersonalWarbandRecruit {
+  unit: FormationTemplateUnitEntry;
+  warriors: number;
+  goldCost: number;
+  canRecruit: boolean;
+  reason: string;
+}
+
+export interface GetPersonalWarbandRequest {
+  companyIndex: number;
+}
+
+export interface GetPersonalWarbandResponse {
+  ownerId: string;
+  companyIndex: number;
+  capacity: number;
+  warriors: number;
+  gold: number;
+  canManage: boolean;
+  reason: string;
+  companies: PersonalGuardCompanyEntry[];
+  companyUnits: FormationTemplateUnitEntry[];
+  recruits: PersonalWarbandRecruit[];
 }
 
 export interface GetPersonDataRequest {
@@ -3337,6 +3646,10 @@ export interface PersonLuxurySlotEntry {
 export interface GetPersonDataResponse {
   id: string;
   name: string;
+  originalNameText: string;
+  familyName: string;
+  headerGivenName: string;
+  familyHeading: string;
   portrait: string;
   portraitLayers: PortraitLayerData;
   title: string;
@@ -3375,6 +3688,7 @@ export interface GetPersonDataResponse {
   activitySegments: PersonActivitySegmentEntry[];
   stats: PersonStatsData;
   fame: number;
+  usesWarbands: boolean;
   honourDread: number;
   traits: PersonTraitEntry[];
   isPlayerCharacter: boolean;
@@ -3547,6 +3861,13 @@ export interface GetPlayerFactionResponse {
   colour: string;
   secondaryColour: string;
   cultureGroup: string;
+  usesPowerBlocs: boolean;
+  usesWarbands: boolean;
+  usesRegionalForces: boolean;
+  usesPatronage: boolean;
+  hasImperialCourt: boolean;
+  courtTitle: string;
+  usesAdministration: boolean;
   emblem: string;
   religionId: string;
   diplomaticStatus: string;
@@ -3816,6 +4137,9 @@ export interface ProvinceTooltipBuildProgress {
 }
 
 export interface GetProvinceTooltipResponse {
+  peaceConcession: boolean;
+  peaceWarScoreCost: number;
+  peaceRecipientName: string;
   visible: boolean;
   kind: string;
   screenX: number;
@@ -3836,6 +4160,7 @@ export interface GetProvinceTooltipResponse {
   attritionIcon: string;
   settlementId: string;
   settlementName: string;
+  originalNameText: string;
   settlementType: string;
   health: number;
   besieged: boolean;
@@ -3916,6 +4241,86 @@ export interface GetProvinceTooltipResponse {
   convoyCargo: ProvinceTooltipResourceAmount[];
 }
 
+export interface RegionalForceSettlement {
+  id: string;
+  name: string;
+  capacity: number;
+  population: number;
+  committed: number;
+  levyRate: number;
+  soldiersPerPerson: number;
+  buildingBonus: number;
+}
+
+export interface RegionalForceEntry {
+  id: string;
+  regionId: string;
+  ownerId: string;
+  name: string;
+  ownerName: string;
+  colour: string;
+  secondaryColour: string;
+  emblem: string;
+  crownLand: boolean;
+  canAppointGovernor: boolean;
+  hereditary: boolean;
+  governorId: string;
+  governorName: string;
+  opinion: number;
+  opinionBreakdown: FactionOpinionModifier[];
+  minimumServiceOpinion: number;
+  settlements: RegionalForceSettlement[];
+  capacity: number;
+  available: number;
+  deployed: number;
+  recruiting: number;
+  canMuster: boolean;
+  musterReason: string;
+  canDismiss: boolean;
+  dismissReason: string;
+  canGrant: boolean;
+  grantReason: string;
+  canSummon: boolean;
+  summonReason: string;
+  canRecall: boolean;
+  recallReason: string;
+  summoned: boolean;
+}
+
+export interface RegionalForceNumbers {
+  id: string;
+  capacity: number;
+  available: number;
+  deployed: number;
+  recruiting: number;
+}
+
+export interface GetRegionalForcesResponse {
+  enabled: boolean;
+  isNumericUpdate: boolean;
+  duchies: number;
+  maximumDuchies: number;
+  grantCost: number;
+  autoAssignGovernorsEnabled: boolean;
+  regions: RegionalForceEntry[];
+  numbers: RegionalForceNumbers[];
+}
+
+export interface GetRegionalRecruitmentRequest {
+  settlementId: string;
+}
+
+export interface RegionalRecruitmentOption {
+  unit: FormationTemplateUnitEntry;
+  canRecruit: boolean;
+  reason: string;
+}
+
+export interface GetRegionalRecruitmentResponse {
+  settlementId: string;
+  options: RegionalRecruitmentOption[];
+}
+
 export interface GetRegionGovernorCandidatesRequest {
   settlementId: string;
 }
@@ -3937,10 +4342,35 @@ export interface RegionGovernorCandidate {
   currentRegionCount: number;
   maxRegionCount: number;
   isCurrentGovernor: boolean;
+  governorship: string;
+  governorshipHelp: string;
 }
 
 export interface GetRegionGovernorCandidatesResponse {
   candidates: RegionGovernorCandidate[];
+}
+
+export interface GetReligionDetailsRequest {
+  religionId: string;
+}
+
+export interface ReligionDeityView {
+  key: string;
+  name: string;
+  description: string;
+  parentKey: string;
+  foregroundPath: string;
+  isMajor: boolean;
+  bonus: PaganEffectView[];
+  penalty: PaganEffectView[];
+}
+
+export interface GetReligionDetailsResponse {
+  religion: ReligionInfo;
+  population: number;
+  relatedReligions: ReligionInfo[];
+  gods: ReligionDeityView[];
+  relics: PaganRelicView[];
 }
 
 export interface GetResourceFlowHoverResponse {
@@ -4274,6 +4704,7 @@ export interface SettlementBuiltBuildingEntry {
   religionId: string;
   religionName: string;
   religionIcon: string;
+  requiredSettlementName: string;
   description: string;
   effectsHtml: string;
   condition: number;
@@ -4313,6 +4744,7 @@ export interface SettlementAvailableBuildingEntry {
   religionId: string;
   religionName: string;
   religionIcon: string;
+  requiredSettlementName: string;
   description: string;
   effectsHtml: string;
   price: number;
@@ -4395,6 +4827,7 @@ export interface SettlementReligionEntry {
 
 export interface SettlementPopEntry {
   cultureId: string;
+  cultureIconId: string;
   culture: string;
   cultureAdjective: string;
   religionId: string;
@@ -4576,6 +5009,7 @@ export interface SettlementResourceEntry {
 export interface GetSettlementDataResponse {
   id: string;
   name: string;
+  originalNameText: string;
   debugShortId: number;
   faction: string;
   factionColour: string;
@@ -4589,6 +5023,10 @@ export interface GetSettlementDataResponse {
   factionId: string;
   factionDebugShortId: number;
   isCapital: boolean;
+  hasGeneratedCity: boolean;
+  landImage: string;
+  fortStatus: string;
+  fortProgress: number;
   isFactionIndependent: boolean;
   type: string;
   hasPort: boolean;
@@ -4600,6 +5038,7 @@ export interface GetSettlementDataResponse {
   foodProduction: number;
   foodConsumption: number;
   corruption: number;
+  usesAdministrativeCorruption: boolean;
   fortificationLevel: number;
   unrest: number;
   unrestLabel: string;
@@ -4612,6 +5051,9 @@ export interface GetSettlementDataResponse {
   cultureId: string;
   culture: string;
   culturePercent: number;
+  hybridCultureContactMonths: number;
+  hybridCultureId: string;
+  hybridCultureShare: number;
   religionId: string;
   religion: string;
   religionPercent: number;
@@ -4880,6 +5322,10 @@ export interface GetSpyInteractionsResponse {
   lastInteractionOutcomeText: string;
 }
 
+export interface GetSuccessionForecastResponse {
+  forecast: KinshipSuccessionForecast;
+}
+
 export interface TutorialCampaignStateObjectiveData {
   description: string;
   condition: string;
@@ -4944,6 +5390,7 @@ export interface GetTutorialProgressResponse {
 
 export interface VictoryConditionDomainEntry {
   name: string;
+  provinceIndices: number[];
   controlledSettlements: number;
   totalSettlements: number;
   isMet: boolean;
@@ -4970,11 +5417,74 @@ export interface VictoryConditionTierEntry {
   conditions: VictoryConditionProgressEntry[];
 }
 
+export interface VictoryMapSettlementEntry {
+  key: string;
+  name: string;
+  provinceIndex: number;
+  isControlled: boolean;
+}
+
 export interface GetVictoryConditionsResponse {
   enabled: boolean;
   completedConditions: number;
   totalConditions: number;
   tiers: VictoryConditionTierEntry[];
+  settlements: VictoryMapSettlementEntry[];
+}
+
+export interface ScenarioOverviewProvince {
+  provinceIndex: number;
+  fillPath: string;
+  regionId: string;
+  landId: string;
+  domainId: string;
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+export interface ScenarioOverviewBorderSegment {
+  provinceIndex: number;
+  adjacentProvinceIndex: number;
+  path: string;
+}
+
+export interface ScenarioOverviewMap {
+  mapId: string;
+  imageUrl: string;
+  width: number;
+  height: number;
+  provinces: ScenarioOverviewProvince[];
+  borderSegments: ScenarioOverviewBorderSegment[];
+}
+
+export interface GetWarbandsRequest {
+  musterSiteId: string;
+}
+
+export interface WarbandMusterSiteEntry {
+  id: string;
+  name: string;
+  isCapital: boolean;
+}
+
+export interface GetWarbandsResponse {
+  usesWarbands: boolean;
+  hostId: string;
+  hostName: string;
+  navyHostId: string;
+  navyHostName: string;
+  musteredStrength: number;
+  availableStrength: number;
+  canCallUp: boolean;
+  callUpReason: string;
+  monthlyUpkeep: number;
+  selectedMusterSiteId: string;
+  musterSites: WarbandMusterSiteEntry[];
+  canDismiss: boolean;
+  dismissReason: string;
+  groups: KinshipGroupEntry[];
 }
 
 export interface GetWarningsResponse {
@@ -4997,6 +5507,11 @@ export interface WorldGlanceFaction {
 export interface WorldGlanceLabelInfo {
   label: string;
   colour: string;
+}
+
+export interface WorldGlanceFaithMarker {
+  icon: string;
+  label: string;
 }
 
 export interface WorldGlanceActionInfo {
@@ -5062,6 +5577,7 @@ export interface WorldSettlementGlance {
   resources: WorldGlanceResource[];
   culture: WorldGlanceLabelInfo;
   religion: WorldGlanceLabelInfo;
+  faithMarkers: WorldGlanceFaithMarker[];
   governorName: string;
   governorDebugShortId: number;
   complianceTargetLabel: string;
@@ -5088,6 +5604,7 @@ export interface WorldSettlementGlance {
   queuedRecruitmentCount: number;
   warWithPlayer: boolean;
   peaceSelection: boolean;
+  peaceConcession: boolean;
   warScoreCost: number;
 }
 
@@ -5237,6 +5754,13 @@ export interface WorldGlancesCatalogueDelta {
   removedConvoyIds: string[];
 }
 
+export interface WorldGlanceCatalogueCandidates {
+  settlements: unknown[];
+  armies: unknown[];
+  navies: unknown[];
+  battles: unknown[];
+}
+
 export interface GetWorldGlanceTooltipRequest {
   kind: string;
   id: string;
@@ -5357,6 +5881,107 @@ export interface CreateProvinceFromCandidateRequest {
   playAsProvince: boolean;
 }
 
+export interface WarbandUnitPreview {
+  id: string;
+  name: string;
+  portrait: string;
+  count: number;
+  strength: number;
+  typeId: string;
+  type: string;
+  description: string;
+  tier: number;
+  maxStrength: number;
+  upkeep: number;
+  foodConsumption: number;
+  speed: number;
+  attackSpeed: number;
+  siegePower: number;
+  pierceDamage: number;
+  crushDamage: number;
+  slashDamage: number;
+  pierceArmour: number;
+  crushArmour: number;
+  slashArmour: number;
+  immuneToWinterAttrition: boolean;
+  immuneToDesertAttrition: boolean;
+  canAttackWhileMoving: boolean;
+  culture: string;
+}
+
+export interface KinshipGroupMember {
+  id: string;
+  name: string;
+  familyName: string;
+  role: string;
+  age: number;
+  warbandSize: number;
+  fame: number;
+  isHead: boolean;
+  canHoldWarband: boolean;
+  musterStatus: string;
+  musterReason: string;
+  musterState: string;
+  warbandCapacity: number;
+  capacityBase: number;
+  capacityFame: number;
+  monthlyLandFame: number;
+  units: WarbandUnitPreview[];
+}
+
+export interface KinshipFeudHead {
+  hasLocalHead: boolean;
+}
+
+export interface KinshipFeudEntry {
+  id: string;
+  firstClanId: string;
+  firstClanName: string;
+  secondClanId: string;
+  secondClanName: string;
+  cause: string;
+  bloodPrice: number;
+  canPay: boolean;
+  payReason: string;
+  reconciliationFameCost: number;
+  canReconcile: boolean;
+  reconcileReason: string;
+  firstHead: KinshipFeudHead;
+  secondHead: KinshipFeudHead;
+}
+
+export interface KinshipGroupEntry {
+  id: string;
+  name: string;
+  headId: string;
+  headName: string;
+  governorship: string;
+  governorshipHelp: string;
+  memberCount: number;
+  strength: number;
+  warriors: number;
+  compliance: number;
+  availableStrength: number;
+  musteredStrength: number;
+  refusedStrength: number;
+  feudWithheldStrength: number;
+  feudOpponentId: string;
+  feudOpponentName: string;
+  feuds: KinshipFeudEntry[];
+  musterStatus: string;
+  musterReason: string;
+  specialisation: string;
+  specialisationLabel: string;
+  specialisationImage: string;
+  canMuster: boolean;
+  callUpReason: string;
+  monthlyUpkeep: number;
+  successionRank: number;
+  successionScore: number;
+  members: KinshipGroupMember[];
+  units: WarbandUnitPreview[];
+}
+
 export interface ModEntryDto {
   id: string;
   name: string;
@@ -5379,9 +6004,18 @@ export interface ListModsResponse {
   workshopCategories: string[];
 }
 
+export interface NewGameStartDateDto {
+  id: string;
+  displayName: string;
+  startingDateLabel: string;
+  isLocked: boolean;
+}
+
 export interface NewGameMapDto {
   id: string;
   displayName: string;
+  startingDateLabel: string;
+  startDates: NewGameStartDateDto[];
   menuKicker: string;
   menuDescription: string;
   menuImageUrl: string;
@@ -5487,6 +6121,7 @@ export interface MilitaryOverviewForce {
 }
 
 export interface FoederatiOverviewEntry {
+  politics: FoederatiPoliticsView;
   id: string;
   factionId: string;
   factionName: string;
@@ -5701,6 +6336,14 @@ export interface GetMilitaryDataResponse {
   mergeBlockReason: string;
   canSplit: boolean;
   isRaiding: boolean;
+  canRaid: boolean;
+  canBuildFort: boolean;
+  fortUnavailableReason: string;
+  isWarbandHost: boolean;
+  raidUnavailableReason: string;
+  raidTargetSettlement: string;
+  expectedMonthlyRaidIncome: number;
+  monthlyUpkeep: number;
   isReplenishing: boolean;
   replenishCost: number;
   canReplenish: boolean;
@@ -5751,6 +6394,11 @@ export interface SetMilitaryForcedMarchRequest {
   enabled: boolean;
 }
 
+export interface SetMilitaryRaidingRequest {
+  militaryId: string;
+  enabled: boolean;
+}
+
 export interface MilitaryTargetingRequest {
   militaryId: string;
 }
@@ -5796,6 +6444,16 @@ export interface DuplicateMilitaryFormationTemplateResponse {
 export interface ToggleFoederatiCallupRequest {
   factionId: string;
   calledUp: boolean;
+}
+
+export interface MusterWarbandsRequest {
+  dismiss: boolean;
+  groupId: string;
+  musterSiteId: string;
+}
+
+export interface MusterWarbandsResponse {
+  changed: boolean;
 }
 
 export interface NavigateSettlementRequest {
@@ -5933,6 +6591,125 @@ export interface OpenExternalUrlRequest {
   url: string;
 }
 
+export interface PaganEffectView {
+  label: string;
+  amount: number;
+  isPercent: boolean;
+}
+
+export interface PaganRelicView {
+  key: string;
+  name: string;
+  description: string;
+  iconPath: string;
+  godName: string;
+  religionId: string;
+  religionName: string;
+  settlementId: string;
+  settlementName: string;
+  ownerId: string;
+  ownerName: string;
+}
+
+export interface PaganRiteView {
+  name: string;
+  description: string;
+  requirements: string;
+  result: string;
+  goldCost: number;
+  populationCost: number;
+  raidCaptives: number;
+  durationDays: number;
+  cooldownDays: number;
+  cooldownEndDay: number;
+  effectDurationDays: number;
+  oathDays: number;
+  needsCharacter: boolean;
+  sacrificesCharacter: boolean;
+  needsSettlement: boolean;
+  needsRaidingHost: boolean;
+  festivalDue: boolean;
+  effects: PaganEffectView[];
+}
+
+export interface PaganGodView {
+  key: string;
+  name: string;
+  description: string;
+  parentKey: string;
+  foregroundPath: string;
+  backgroundPath: string;
+  isMajor: boolean;
+  dedicated: boolean;
+  canDedicate: boolean;
+  dedicationReason: string;
+  bonus: PaganEffectView[];
+  penalty: PaganEffectView[];
+  rite: PaganRiteView;
+}
+
+export interface PaganFollowerPlace {
+  settlementId: string;
+  name: string;
+  followers: number;
+}
+
+export interface PaganTimedEffectView {
+  godKey: string;
+  effect: PaganEffectView;
+  endDay: number;
+}
+
+export interface GetPaganWorshipRequest {
+  religionId: string;
+  subscriptionId: string;
+  subscribe: boolean;
+}
+
+export interface GetPaganWorshipResponse {
+  subscriptionId: string;
+  religionId: string;
+  canManage: boolean;
+  dedicated: boolean;
+  capitalId: string;
+  capitalName: string;
+  capitalOwnerId: string;
+  capitalOwnerName: string;
+  hallState: string;
+  currentDay: number;
+  nextFestivalDay: number;
+  activeGodKey: string;
+  riteStartDay: number;
+  riteEndDay: number;
+  activeRiteTarget: string;
+  paidGold: number;
+  paidPopulation: number;
+  gods: PaganGodView[];
+  timedEffects: PaganTimedEffectView[];
+  relics: PaganRelicView[];
+  followerPlaces: PaganFollowerPlace[];
+}
+
+export interface PaganWorshipActionRequest {
+  action: string;
+  godKey: string;
+  dedicated: boolean;
+  settlementId: string;
+  characterId: string;
+  militaryId: string;
+}
+
+export interface GetHeldRelicsRequest {
+  factionId: string;
+  subscriptionId: string;
+  subscribe: boolean;
+}
+
+export interface GetHeldRelicsResponse {
+  factionId: string;
+  relics: PaganRelicView[];
+}
+
 export interface PeaceNegotiationReplacementCandidate {
   id: string;
   name: string;
@@ -5946,6 +6723,7 @@ export interface PeaceNegotiationReplacementCandidate {
 }
 
 export interface PeaceNegotiationTermDraft {
+  recipientFactionId: string;
   termId: string;
   type: string;
   direction: string;
@@ -5963,6 +6741,7 @@ export interface PeaceNegotiationTermDraft {
 export interface PeaceNegotiationFaction {
   id: string;
   name: string;
+  governmentTypeName: string;
   colour: string;
   secondaryColour: string;
   cultureGroup: string;
@@ -5981,6 +6760,8 @@ export interface PeaceNegotiationParticipant {
 }
 
 export interface PeaceNegotiationTermEntry {
+  recipientFactionId: string;
+  recipientFactionName: string;
   termId: string;
   type: string;
   direction: string;
@@ -6002,6 +6783,8 @@ export interface PeaceNegotiationTermEntry {
 }
 
 export interface PeaceNegotiationTermOption {
+  recipientFactionId: string;
+  blockedReason: string;
   optionId: string;
   type: string;
   direction: string;
@@ -6049,6 +6832,7 @@ export interface GetPeaceNegotiationPreviewResponse {
   found: boolean;
   targetFactionId: string;
   terms: PeaceNegotiationTermEntry[];
+  availableTerms: PeaceNegotiationTermOption[];
   preview: PeaceNegotiationPreview;
   emptyReason: string;
 }
@@ -6091,12 +6875,24 @@ export interface StartPeaceSettlementSelectionRequest {
   targetFactionId: string;
   terms: PeaceNegotiationTermDraft[];
   cancelSelection: boolean;
+  selectionType: string;
+  selectionDirection: string;
+  selectionTargetFactionId: string;
+  recipientFactionId: string;
+}
+
+export interface PeaceSettlementRecipient {
+  id: string;
+  name: string;
+  canMigrate: boolean;
 }
 
 export interface StartPeaceSettlementSelectionResponse {
   targetFactionId: string;
   selectionActive: boolean;
   terms: PeaceNegotiationTermDraft[];
+  ourRecipients: PeaceSettlementRecipient[];
+  theirRecipients: PeaceSettlementRecipient[];
 }
 
 export interface PerformSiegeCommandRequest {
@@ -6192,6 +6988,7 @@ export interface GetPersonalGuardResponse {
 
 export interface PickNewGameMapFactionRequest {
   mapId: string;
+  startDateId: string;
   x: unknown;
   y: unknown;
 }
@@ -6230,6 +7027,12 @@ export interface PromoteCourtierRequest {
 export interface PromoteCourtierResponse {
   success: boolean;
   message: string;
+}
+
+export interface PromptSettlementNameEvent {
+  open: boolean;
+  settlementId: string;
+  suggestedName: string;
 }
 
 export interface ProvinceEmperorTakeoverRequest {
@@ -6416,6 +7219,7 @@ export interface RenamePlaythroughResponse {
 export interface RenameSettlementRequest {
   settlementId: string;
   name: string;
+  setCityName: boolean;
 }
 
 export interface RenameSettlementResponse {
@@ -6534,6 +7338,15 @@ export interface ResettlementSelectionResponse {
   description: string;
   message: string;
   pops: ResettlementPopOption[];
+}
+
+export interface ResolveClanFeudRequest {
+  feudId: string;
+  payBloodPrice: boolean;
+}
+
+export interface ResolveClanFeudResponse {
+  changed: boolean;
 }
 
 export interface RespondToProvinceRecallRequest {
@@ -6763,12 +7576,14 @@ export interface StartBlocInteractionResponse {
 }
 
 export interface StartFactionInteractionRequest {
+  confirm: boolean;
   targetFactionId: string;
   interactionId: string;
   selectedPersonId: string;
   confirmSettlementSelection: boolean;
   cancelSettlementSelection: boolean;
   providedInputs: BridgeFactionInteractionProvidedInput[];
+  rebellionKind: string;
 }
 
 export interface FactionInteractionPersonCandidate {
@@ -6785,6 +7600,8 @@ export interface FactionInteractionPersonCandidate {
 }
 
 export interface StartFactionInteractionResponse {
+  confirmationRequired: boolean;
+  confirmationMessage: string;
   targetFactionId: string;
   interactionId: string;
   started: boolean;
@@ -6794,6 +7611,7 @@ export interface StartFactionInteractionResponse {
   selectionActive: boolean;
   personSelectionRequired: boolean;
   inputSelectionRequired: boolean;
+  rebellionChoiceRequired: boolean;
   selectedSettlementCount: number;
   playerGold: number;
   hasSuccessChance: boolean;
@@ -6843,6 +7661,7 @@ export interface StartReligionConversionRequest {
 
 export interface StartScenarioMapRequest {
   mapId: string;
+  startDateId: string;
   playerFactionBaseName: string;
 }
 
@@ -6950,6 +7769,25 @@ export interface TogglePinResponse {
   pinned: boolean;
 }
 
+export interface KinshipSuccessionClaimant {
+  id: string;
+  name: string;
+  clanName: string;
+  isRulingFamily: boolean;
+  score: number;
+  warriors: number;
+  fame: number;
+  tactics: number;
+  authority: number;
+  kinSupport: number;
+}
+
+export interface KinshipSuccessionForecast {
+  enabled: boolean;
+  familyLeads: boolean;
+  claimants: KinshipSuccessionClaimant[];
+}
+
 export interface TutorialSpotlightRequest {
   command: string;
   eventId: string;
@@ -6996,7 +7834,15 @@ export interface UploadModToWorkshopResponse {
   url: string;
 }
 
+export interface VictoryTerritoryTargets {
+  domainIds: string[];
+  landIds: string[];
+  regionIds: string[];
+  settlementKeys: string[];
+}
+
 export interface VictoryConditionDomainProgressInfo {
+  settlementKeys: string[];
   name: string;
   controlledSettlements: number;
   totalSettlements: number;
@@ -7132,6 +7978,7 @@ export interface BridgeActions {
   'game.appoint_to_court_position': { request: AppointToCourtPositionRequest; response: AppointToCourtPositionResponse };
   'game.break_treaty': { request: BreakTreatyRequest; response: BreakTreatyResponse };
   'game.browse_steam_workshop': { request: BrowseSteamWorkshopRequest; response: BrowseSteamWorkshopResponse };
+  'game.build_occupation_fort': { request: BuildOccupationFortRequest; response: void };
   'game.building_placement': { request: BuildingPlacementRequest; response: BuildingPlacementResponse };
   'game.buy_resource': { request: BuyEconomyResourceRequest; response: BuyEconomyResourceResponse };
   'game.cancel_bloc_interaction': { request: CancelBlocInteractionRequest; response: CancelBlocInteractionResponse };
@@ -7141,6 +7988,8 @@ export interface BridgeActions {
   'game.cancel_religion_conversion': { request: void; response: ReligionConversionActionResponse };
   'game.cancel_settlement_interaction': { request: CancelSettlementInteractionRequest; response: CancelSettlementInteractionResponse };
   'game.cancel_spy_interaction': { request: CancelSpyInteractionRequest; response: CancelSpyInteractionResponse };
+  'game.change_personal_warband': { request: ChangePersonalWarbandRequest; response: void };
+  'game.change_regional_forces': { request: ChangeRegionalForcesRequest; response: ChangeRegionalForcesResponse };
   'game.choose_event_option': { request: ChooseEventOptionRequest; response: ChooseEventOptionResponse };
   'game.clear_military_selection': { request: void; response: void };
   'game.complete_initial_setup': { request: void; response: CompleteInitialSetupResponse };
@@ -7161,6 +8010,7 @@ export interface BridgeActions {
   'game.duplicate_military_formation_template': { request: DuplicateMilitaryFormationTemplateRequest; response: DuplicateMilitaryFormationTemplateResponse };
   'game.enter_court_appointment_contest': { request: EnterCourtAppointmentContestRequest; response: EnterCourtAppointmentContestResponse };
   'game.faction_selection_tabletop': { request: FactionSelectionTabletopRequest; response: FactionSelectionTabletopResponse };
+  'game.foederati_political_action': { request: FoederatiPoliticalActionRequest; response: void };
   'game.form_personal_guard': { request: FormPersonalGuardRequest; response: FormPersonalGuardResponse };
   'game.form_personal_power_bloc': { request: void; response: FormPersonalPowerBlocResponse };
   'game.generate_formation_template_name': { request: GenerateFormationTemplateNameRequest; response: GenerateFormationTemplateNameResponse };
@@ -7175,12 +8025,14 @@ export interface BridgeActions {
   'game.get_bureaucratic_throughput': { request: void; response: GetBureaucraticThroughputResponse };
   'game.get_character_list': { request: GetCharacterListRequest; response: GetCharacterListResponse };
   'game.get_character_recruitment_config': { request: void; response: GetCharacterRecruitmentConfigResponse };
+  'game.get_confederation_data': { request: GetConfederationDataRequest; response: GetConfederationDataResponse };
   'game.get_content_pack_webui_manifest': { request: void; response: GetContentPackWebUIManifestResponse };
   'game.get_convoy_glance_filters': { request: void; response: GetConvoyGlanceFiltersResponse };
   'game.get_court_appointment_contests': { request: void; response: GetCourtAppointmentContestsResponse };
   'game.get_court_candidates': { request: GetCourtCandidatesRequest; response: GetCourtCandidatesResponse };
   'game.get_court_positions': { request: void; response: GetCourtPositionsResponse };
   'game.get_courtier_types': { request: GetCourtierTypesRequest; response: GetCourtierTypesResponse };
+  'game.get_culture_development': { request: GetCultureDevelopmentRequest; response: GetCultureDevelopmentResponse };
   'game.get_current_event': { request: void; response: GetCurrentEventResponse };
   'game.get_dioceses': { request: GetDiocesesRequest; response: GetDiocesesResponse };
   'game.get_diplomacy_overview': { request: GetDiplomacyOverviewRequest; response: GetDiplomacyOverviewResponse };
@@ -7202,8 +8054,11 @@ export interface BridgeActions {
   'game.get_game_version': { request: void; response: GetGameVersionResponse };
   'game.get_geographic_summary': { request: GetGeographicSummaryRequest; response: GetGeographicSummaryResponse };
   'game.get_heir_candidates': { request: GetHeirCandidatesRequest; response: GetHeirCandidatesResponse };
+  'game.get_held_relics': { request: GetHeldRelicsRequest; response: GetHeldRelicsResponse };
   'game.get_income_breakdown': { request: void; response: GetIncomeBreakdownResponse };
   'game.get_initial_setup': { request: void; response: GetInitialSetupResponse };
+  'game.get_kinship_group_detail': { request: GetKinshipGroupDetailRequest; response: GetKinshipGroupDetailResponse };
+  'game.get_kinship_groups': { request: GetKinshipGroupsRequest; response: GetKinshipGroupsResponse };
   'game.get_languages': { request: void; response: GetLanguagesResponse };
   'game.get_ledger_overview': { request: GetLedgerOverviewRequest; response: GetLedgerOverviewResponse };
   'game.get_map_mode_filters': { request: void; response: GetMapModeFiltersResponse };
@@ -7214,6 +8069,7 @@ export interface BridgeActions {
   'game.get_mod_load_state': { request: void; response: GetModLoadStateResponse };
   'game.get_new_game_map_faction_geometry': { request: GetNewGameMapFactionGeometryRequest; response: GetNewGameMapFactionGeometryResponse };
   'game.get_new_game_map_faction_selection': { request: GetNewGameMapFactionSelectionRequest; response: GetNewGameMapFactionSelectionResponse };
+  'game.get_pagan_worship': { request: GetPaganWorshipRequest; response: GetPaganWorshipResponse };
   'game.get_peace_negotiation_preview': { request: GetPeaceNegotiationPreviewRequest; response: GetPeaceNegotiationPreviewResponse };
   'game.get_peace_negotiation_state': { request: GetPeaceNegotiationStateRequest; response: GetPeaceNegotiationStateResponse };
   'game.get_person_data': { request: GetPersonDataRequest; response: GetPersonDataResponse };
@@ -7221,6 +8077,7 @@ export interface BridgeActions {
   'game.get_person_interactions': { request: GetPersonInteractionsRequest; response: GetPersonInteractionsResponse };
   'game.get_person_quick_interactions': { request: GetPersonQuickInteractionsRequest; response: GetPersonInteractionsResponse };
   'game.get_personal_guard': { request: void; response: GetPersonalGuardResponse };
+  'game.get_personal_warband': { request: GetPersonalWarbandRequest; response: GetPersonalWarbandResponse };
   'game.get_pinned_items': { request: void; response: GetPinnedItemsResponse };
   'game.get_player_faction': { request: void; response: GetPlayerFactionResponse };
   'game.get_portrait_mode': { request: void; response: GetPortraitModeResponse };
@@ -7229,7 +8086,10 @@ export interface BridgeActions {
   'game.get_province_mode_overview': { request: void; response: GetProvinceModeOverviewResponse };
   'game.get_province_tooltip': { request: void; response: GetProvinceTooltipResponse };
   'game.get_region_governor_candidates': { request: GetRegionGovernorCandidatesRequest; response: GetRegionGovernorCandidatesResponse };
+  'game.get_regional_forces': { request: void; response: GetRegionalForcesResponse };
+  'game.get_regional_recruitment': { request: GetRegionalRecruitmentRequest; response: GetRegionalRecruitmentResponse };
   'game.get_religion_conversion': { request: void; response: GetReligionConversionResponse };
+  'game.get_religion_details': { request: GetReligionDetailsRequest; response: GetReligionDetailsResponse };
   'game.get_resource_flow_hover': { request: void; response: GetResourceFlowHoverResponse };
   'game.get_resources': { request: void; response: GetResourcesResponse };
   'game.get_season_effects': { request: void; response: GetSeasonEffectsResponse };
@@ -7240,9 +8100,12 @@ export interface BridgeActions {
   'game.get_settlement_interactions': { request: GetSettlementInteractionsRequest; response: GetSettlementInteractionsResponse };
   'game.get_settlement_siege_data': { request: GetSettlementSiegeDataRequest; response: GetSettlementSiegeDataResponse };
   'game.get_spy_interactions': { request: GetSpyInteractionsRequest; response: GetSpyInteractionsResponse };
+  'game.get_succession_forecast': { request: void; response: GetSuccessionForecastResponse };
   'game.get_tutorial_campaign_state': { request: void; response: GetTutorialCampaignStateResponse };
   'game.get_tutorial_progress': { request: void; response: GetTutorialProgressResponse };
   'game.get_victory_conditions': { request: void; response: GetVictoryConditionsResponse };
+  'game.get_victory_map': { request: void; response: ScenarioOverviewMap };
+  'game.get_warbands': { request: GetWarbandsRequest; response: GetWarbandsResponse };
   'game.get_warnings': { request: void; response: GetWarningsResponse };
   'game.get_world_glance_tooltip': { request: GetWorldGlanceTooltipRequest; response: GetWorldGlanceTooltipResponse };
   'game.get_world_glance_visibility': { request: void; response: GetWorldGlanceVisibilityResponse };
@@ -7258,16 +8121,19 @@ export interface BridgeActions {
   'game.loading_screen': { request: void; response: LoadingScreenResponse };
   'game.merge_military_units': { request: MergeMilitaryUnitsRequest; response: void };
   'game.merge_selected_militaries': { request: void; response: void };
+  'game.muster_warbands': { request: MusterWarbandsRequest; response: MusterWarbandsResponse };
   'game.navigate_settlement': { request: NavigateSettlementRequest; response: NavigateSettlementResponse };
   'game.notification_events': { request: NotificationEventsRequest; response: void };
   'game.open_mods_folder': { request: void; response: void };
   'game.open_save_games_folder': { request: void; response: void };
+  'game.pagan_worship_action': { request: PaganWorshipActionRequest; response: void };
   'game.perform_siege_command': { request: PerformSiegeCommandRequest; response: PerformSiegeCommandResponse };
   'game.pick_new_game_map_faction': { request: PickNewGameMapFactionRequest; response: PickNewGameMapFactionResponse };
   'game.portrait_invalidated': { request: void; response: PortraitInvalidatedEventPayload };
   'game.portrait_ready': { request: void; response: PortraitReadyEventPayload };
   'game.promote_courtier': { request: PromoteCourtierRequest; response: PromoteCourtierResponse };
   'game.promote_military_command': { request: PromoteMilitaryCommandRequest; response: void };
+  'game.prompt_settlement_name': { request: void; response: PromptSettlementNameEvent };
   'game.province_emperor_takeover': { request: ProvinceEmperorTakeoverRequest; response: ProvinceEmperorTakeoverResponse };
   'game.queue_settlement_building': { request: QueueSettlementBuildingRequest; response: void };
   'game.quit': { request: void; response: void };
@@ -7290,6 +8156,7 @@ export interface BridgeActions {
   'game.reset_notification_mutes': { request: void; response: void };
   'game.reset_settings': { request: ResetSettingsRequest; response: GetSettingsResponse };
   'game.resettlement_selection': { request: ResettlementSelectionRequest; response: ResettlementSelectionResponse };
+  'game.resolve_clan_feud': { request: ResolveClanFeudRequest; response: ResolveClanFeudResponse };
   'game.respond_to_province_recall': { request: RespondToProvinceRecallRequest; response: RespondToProvinceRecallResponse };
   'game.restart': { request: void; response: void };
   'game.return_to_main_menu': { request: void; response: void };
@@ -7321,6 +8188,7 @@ export interface BridgeActions {
   'game.set_military_forced_march': { request: SetMilitaryForcedMarchRequest; response: void };
   'game.set_military_formation_template': { request: SetMilitaryFormationTemplateRequest; response: void };
   'game.set_military_parent': { request: SetMilitaryParentRequest; response: void };
+  'game.set_military_raiding': { request: SetMilitaryRaidingRequest; response: void };
   'game.set_mod_enabled': { request: SetModEnabledRequest; response: SetModEnabledResponse };
   'game.set_notification_muted': { request: SetNotificationMutedRequest; response: void };
   'game.set_pause_menu_open': { request: SetPauseMenuOpenRequest; response: void };

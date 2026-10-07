@@ -1,0 +1,174 @@
+.rebellion-choice-modal {
+  width: 44rem;
+  height: auto;
+  max-height: 86vh;
+}
+
+.rebellion-choice-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rebellion-choice-leader {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 5.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/panel-dark.png');
+  background-position: 0 0;
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 93.0909rem 93.0909rem;
+  border-bottom-width: 0.0909rem;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(201, 168, 76, 0.12);
+}
+
+.rebellion-choice-leader > * + * {
+  margin-left: 0.75rem;
+}
+
+.rebellion-choice-leader__name {
+  min-width: 0;
+  font-family: var(--font-header);
+  font-size: 1.15rem;
+  color: var(--text-header);
+  letter-spacing: 0.023rem;
+}
+
+.rebellion-choice-list {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  padding: 0.85rem 1rem 1rem;
+}
+
+.rebellion-choice-list > * + * {
+  margin-left: 0.75rem;
+}
+
+.rebellion-choice-list > .tooltip-wrapper { flex: 1; min-width: 0; }
+.rebellion-choice-tooltip { max-width: 26rem; }
+
+.rebellion-choice-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 10rem;
+  padding: 0;
+  overflow: hidden;
+  font-family: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  background-color: #20272d;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  border-width: 0.231rem;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1), transform 0.15s ease-out;
+}
+
+.rebellion-choice-card:hover {
+  background-color: #242a30;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-hover.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+  transform: translateY(-0.0909rem);
+}
+
+.rebellion-choice-card:hover .rebellion-choice-card__bg {
+  opacity: 0.4;
+}
+
+.rebellion-choice-card:active {
+  transform: translateY(0.0909rem) scale(0.98);
+  transition: transform 0s;
+  background-color: #0d1218;
+  background-image:
+    linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
+    url('/assets/baked/texture-overlay-heavy.png'),
+    url('/assets/baked/card-charcoal-active.png');
+  background-repeat: repeat, repeat, repeat;
+  background-size: auto, 5.538rem 5.538rem, 17.4545rem 8.7273rem;
+}
+
+.rebellion-choice-card__bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.28;
+  z-index: 0;
+  transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.rebellion-choice-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.rebellion-choice-card__icon {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.rebellion-choice-card__copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.rebellion-choice-card__title {
+  font-family: var(--font-header);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-header);
+  letter-spacing: 0.023rem;
+}
+
+.rebellion-choice-card__body {
+  margin-top: 0.45rem;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+@media (max-width: 600px) {
+  .rebellion-choice-list { flex-direction: column; gap: 0.75rem; }
+  .rebellion-choice-list > * + * { margin-left: 0; }
+  .rebellion-choice-body { overflow-y: auto; }
+}

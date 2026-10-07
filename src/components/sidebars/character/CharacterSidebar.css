@@ -202,19 +202,7 @@
   overflow: hidden;
 }
 
-.char-header-title-prefix {
-  flex-shrink: 0;
-  font-family: var(--font-header);
-  font-size: 0.95rem;
-  line-height: 1;
-  font-weight: 600;
-  color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 0.08rem;
-  margin-right: 0.4rem;
-}
-
-.char-header-ruler-suffix {
+.char-header-office {
   display: block;
   max-width: 100%;
   min-width: 0;
@@ -223,12 +211,9 @@
   font-family: var(--font-header);
   font-size: 0.95rem;
   font-weight: 600;
-  line-height: 1.05;
-  game-ui-font-fit-mode: shrink;
-  game-ui-font-fit-min-size: 0.72rem;
-  game-ui-font-fit-max-size: 0.95rem;
+  line-height: 1.15;
   white-space: normal;
-  margin-top: 0.04rem;
+  margin-top: 0.08rem;
 }
 
 .char-header-name {
@@ -247,6 +232,39 @@
   game-ui-font-fit-max-size: 1.25rem;
 }
 
+.char-header-name .char-activity-link {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+.char-header-family-link {
+  display: block;
+  max-width: 100%;
+  margin: 0.08rem 0 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0.04rem;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: rgba(201, 168, 76, 0.45);
+  text-underline-offset: 0.18rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.char-header-family-link:hover {
+  color: var(--gold);
+  text-decoration-color: var(--gold);
+}
+
 .char-header-age {
   display: block;
   max-width: 100%;
@@ -261,14 +279,19 @@
   cursor: auto;
 }
 
-.char-header-main-name > .tooltip-wrapper-inline {
+.char-header-name-tooltip {
+  flex: 1;
+  min-width: 0;
+}
+
+.char-header-age-tooltip {
   flex-shrink: 0;
   max-width: 4rem;
   min-width: 0;
   margin-left: auto;
 }
 
-.char-header-main-name > .tooltip-wrapper-inline .char-header-age {
+.char-header-age-tooltip .char-header-age {
   margin-left: 0;
 }
 
@@ -630,6 +653,8 @@
 /* --- Culture / Religion - side by side --- */
 .char-identity-pair {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   border-bottom-width: 0.077rem;
   border-bottom-style: solid;
   border-bottom-color: var(--separator);
@@ -638,11 +663,16 @@
 .char-identity-pair > .tooltip-wrapper {
   flex: 1;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .char-identity-row {
   display: flex;
   align-items: center;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
 
   padding: 0.25rem 0.462rem;
   cursor: auto;
@@ -668,6 +698,7 @@
 .char-identity-label {
   font-size: 0.85rem;
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .char-identity-value {
@@ -676,6 +707,7 @@
   margin-left: auto;
   font-weight: 600;
   min-width: 0;
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

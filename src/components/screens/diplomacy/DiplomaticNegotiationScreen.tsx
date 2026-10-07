@@ -3,7 +3,7 @@ import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Panel from '../../common/layout/shell/Panel';
 import FactionRoundel from '../../common/entities/FactionRoundel';
 import FactionTooltip from '../../common/tooltips/FactionTooltip';
-import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
+import Tooltip, { type TooltipContent } from '../../common/tooltips/Tooltip';
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import NumberStepper from '../../common/forms/NumberStepper';
 import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
@@ -374,12 +374,9 @@ function ProposalChip({
 
 function AvailableTreatyRow({ option, onAdd }: { option: TreatyOption; onAdd: () => void }) {
   const side = isMutual(option) ? 'mutual' : option.side === 'request' ? 'demand' : 'concession';
-  const lines: TooltipLine[] = [
-    ...(option.defaultResourceLabel ? [{ label: webUIText('TreatyNegotiation.Tooltip.Resource'), value: option.defaultResourceLabel }] : []),
-  ];
 
   return (
-    <Tooltip content={{ title: option.label, body: option.description, lines }} position="bottom" delay={200}>
+    <Tooltip content={{ title: option.label, body: option.description }} position="bottom" delay={200}>
       <button
         type="button"
         className={`pns-term-row pns-term-row--${side}`}

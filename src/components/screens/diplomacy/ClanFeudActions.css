@@ -1,0 +1,38 @@
+.clan-feuds {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.clan-feud {
+  padding: 0.6rem;
+  background-image: url('/assets/baked/card-charcoal.png');
+  border: 0.231rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6;
+}
+
+.clan-feud-enemy {
+  color: var(--red);
+  text-align: left;
+}
+
+.clan-feud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.clan-feud-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.4rem;
+}
+
+.clan-feud-cost img {
+  width: 1.2rem;
+  height: 1.2rem;
+  object-fit: contain;
+}

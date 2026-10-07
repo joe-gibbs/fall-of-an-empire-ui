@@ -7,6 +7,7 @@ import './InteractionEffectsTooltip.css';
 
 interface InteractionEffectsTooltipProps {
   lines?: DisplayTextLine[];
+  compact?: boolean;
 }
 
 function EffectRow({ line }: { line: DisplayTextLine }) {
@@ -29,7 +30,7 @@ function EffectRow({ line }: { line: DisplayTextLine }) {
   );
 }
 
-export default function InteractionEffectsTooltip({ lines = [] }: InteractionEffectsTooltipProps) {
+export default function InteractionEffectsTooltip({ lines = [], compact = false }: InteractionEffectsTooltipProps) {
   if (lines.length === 0) return null;
 
   const successLines = lines.filter(line => line.kind === 'outcome-success');
@@ -42,6 +43,21 @@ export default function InteractionEffectsTooltip({ lines = [] }: InteractionEff
 
   if (successLines.length + failureLines.length + effectLines.length + otherLines.length === 0) {
     return null;
+  }
+
+  if (compact && failureLines.length === 0) {
+    return (
+      <div className="interaction-effects-tooltip">
+        <div className="interaction-effects-tooltip__title">{webUIText('InteractionCard.Effects')}</div>
+        <ul className="interaction-effects-tooltip__list">
+          {[...successLines, ...effectLines, ...otherLines].map((line, index) => (
+            <li key={index}>
+              <StructuredDisplayText lines={[line]} lineClassName="interaction-effects-tooltip__outcome-line" />
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
   }
 
   const outcomeGroup = (kind: 'success' | 'failure', outcomeLines: DisplayTextLine[]) => {

@@ -30,6 +30,8 @@ import {
   replenishMilitaryBridge,
   selectMilitaryBridge,
   setMilitaryForcedMarchBridge,
+  setMilitaryRaidingBridge,
+  buildOccupationFortBridge,
   setMilitaryAutoSquashRebelsBridge,
   setMilitaryDelegationBridge,
   setMilitaryDoctrineBridge,
@@ -475,6 +477,28 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     },
   };
 
+  const isRaiding = army.isRaiding ?? false;
+  const raidDisabledReason = isRaiding ? undefined : army.raidUnavailableReason;
+  const raidAction: MilitaryAction = {
+    get label() { return isRaiding ? webUIText('MilitarySidebar.EndRaid') : webUIText('MilitarySidebar.Raid'); },
+    icon: '/assets/icons/I_RaidingTorch.png',
+    get description() { return webUIText(isRaiding ? 'MilitarySidebar.EndRaidBody' : 'MilitarySidebar.RaidBody'); },
+    tooltip: {
+      get title() { return isRaiding ? webUIText('MilitarySidebar.EndRaid') : webUIText('MilitarySidebar.Raid'); },
+      get body() { return raidDisabledReason ?? webUIText(isRaiding ? 'MilitarySidebar.EndRaidBody' : 'MilitarySidebar.RaidBody'); },
+      lines: army.raidTargetSettlement ? [
+        { label: webUIText('MilitarySidebar.RaidTarget'), value: army.raidTargetSettlement },
+        { label: webUIText('MilitarySidebar.ExpectedRaidIncome'), value: formatNumber(army.expectedMonthlyRaidIncome ?? 0), valueIcon: '/assets/icons/I_Coins.png', valueColor: 'var(--gold)' },
+        { label: webUIText('MilitarySidebar.MonthlyUpkeep'), value: formatNumber(army.monthlyUpkeep), valueIcon: '/assets/icons/I_Coins.png' },
+      ] : undefined,
+    },
+    isActive: isRaiding,
+    disabled: Boolean(raidDisabledReason),
+    onClick: () => {
+      setMilitaryRaidingBridge(army.id, !isRaiding).catch(acknowledgeBridgeFailure);
+    },
+  };
+
   const mergeDisabledReason = !isPlayerControlled
     ? webUIText('Military.Command.NotCommandingSource')
     : (!army.canMerge ? (army.mergeBlockReason || webUIText('Military.Selection.MergeDisabled')) : undefined);
@@ -562,9 +586,9 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     disbandMilitaryBridge(army.id).catch(acknowledgeBridgeFailure);
   };
   const destructiveAction: MilitaryAction = {
-    get label() { return isStandDown ? webUIText("MilitarySidebar.StandDown") : webUIText("MilitarySidebar.Disband"); },
+    get label() { return army.isWarbandHost ? webUIText('Warbands.Dismiss') : isStandDown ? webUIText("MilitarySidebar.StandDown") : webUIText("MilitarySidebar.Disband"); },
     icon: isStandDown ? '/assets/icons/I_Retreat.png' : '/assets/icons/I_DisbandUnits.png',
-    get description() { return isStandDown ? webUIText("MilitarySidebar.ReleaseAuxiliaryBody") : webUIText("MilitarySidebar.DisbandThisForce"); },
+    get description() { return army.isWarbandHost ? webUIText('Warbands.MusteredBody') : isStandDown ? webUIText("MilitarySidebar.ReleaseAuxiliaryBody") : webUIText("MilitarySidebar.DisbandThisForce"); },
     tone: 'danger',
     disabled: !isPlayerControlled,
     onClick: () => {
@@ -574,16 +598,24 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     },
   };
   const headerCommandActions: MilitaryAction[] = canViewFullDetails ? [
-    replenishAction,
+    ...(army.isWarbandHost ? [] : [replenishAction]),
+    ...(!army.isNavy ? [{
+      label: webUIText('MilitarySidebar.BuildFort'),
+      icon: '/assets/icons/I_Fortress_Metal.png',
+      description: army.fortUnavailableReason || webUIText('MilitarySidebar.BuildFortBody'),
+      disabled: !isPlayerControlled || !army.canBuildFort,
+      onClick: () => { buildOccupationFortBridge(army.id).catch(acknowledgeBridgeFailure); },
+    }] : []),
     ...(dockAction ? [dockAction] : []),
     ...(army.isNavy ? [] : [forcedMarchAction]),
+    ...(army.canRaid && !army.isNavy ? [raidAction] : []),
     ...(garrisonAction ? [garrisonAction] : []),
     ...(embarkAction ? [embarkAction] : []),
-    mergeAction,
+    ...(army.isWarbandHost ? [] : [mergeAction]),
     destructiveAction,
   ] : [];
 
-  const formationActions: MilitaryAction[] = army.isPersonalGuard ? [] : [
+  const formationActions: MilitaryAction[] = army.isPersonalGuard || army.isWarbandHost ? [] : [
     {
       get label() { return webUIText("Common.Assign"); },
       icon: '/assets/icons/I_NewTemplate.png',
@@ -691,7 +723,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       id: 'upkeep',
       label: webUIText('Auto.ComponentsSidebarsMilitarySidebar.311.2'),
       icon: '/assets/icons/I_Coins.png',
-      value: formatNumber(derived.upkeep),
+      value: formatNumber(army.monthlyUpkeep),
       tooltip: { title: webUIText('Auto.ComponentsSidebarsMilitarySidebar.311.2') },
     },
   ];
@@ -746,7 +778,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
     </Tooltip>
   );
 
-  const renderFormationPanel = () => (
+  const renderFormationPanel = () => army.isWarbandHost ? null : (
     <div className="mil-formation-panel mil-formation-panel--embedded">
       <div className="mil-formation-main">
         <img src="/assets/icons/I_Template.png" alt="" />
@@ -1144,8 +1176,8 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
                   onClick={() => { if (army.commanderId) openSidebar('character', army.commanderId); }}
                 >
                   <span className="mil-lead-commander-name">{army.commanderName || webUIText('Common.NoCommander')}</span>
-                  {(army.commanderTitle || army.commandRank) && (
-                    <span className="mil-lead-commander-rank">{army.commanderTitle || army.commandRank}</span>
+                  {army.commanderTitle && (
+                    <span className="mil-lead-commander-rank">{army.commanderTitle}</span>
                   )}
                 </button>
                 <Tooltip
@@ -1437,7 +1469,7 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
             unitRosterRef={unitRosterRef}
             unitRowRefs={unitRowRefs}
             selectedUnitIdSet={selectedUnitIdSet}
-            showSplitControls={isPlayerControlled}
+            showSplitControls={isPlayerControlled && !army.isWarbandHost}
             canSplitForce={isPlayerControlled && army.canSplit}
             canMergeSelectedForce={canMergeSelectedForce}
             canConsolidateSelection={canConsolidateSelection}
@@ -1460,13 +1492,13 @@ const MilitarySidebar: React.FC<MilitarySidebarProps> = ({ army, onClose }) => {
       <ConfirmDialog
         visible={confirmingDestructive}
         title={webUIText(
-          isStandDown ? 'MilitarySidebar.StandDownConfirmTitle' : 'MilitarySidebar.DisbandConfirmTitle',
+          army.isWarbandHost ? 'Warbands.Dismiss' : isStandDown ? 'MilitarySidebar.StandDownConfirmTitle' : 'MilitarySidebar.DisbandConfirmTitle',
           { Name: army.name },
         )}
-        message={isStandDown
+        message={army.isWarbandHost ? webUIText('Warbands.MusteredBody') : isStandDown
           ? webUIText('MilitarySidebar.ReleaseAuxiliaryBody')
           : webUIText('MilitarySidebar.DisbandThisForce')}
-        confirmText={isStandDown
+        confirmText={army.isWarbandHost ? webUIText('Warbands.Dismiss') : isStandDown
           ? webUIText('MilitarySidebar.StandDown')
           : webUIText('MilitarySidebar.Disband')}
         variant="danger"

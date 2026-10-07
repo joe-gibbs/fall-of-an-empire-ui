@@ -49,6 +49,7 @@ export function useLedgerOverviewBridge(
   const cacheKey = `${activeTab}:${rowOffset}:${rowLimit}:${sortKey}:${sortDirection}:${filterKey}`;
   const live = useBridgeQuery({
     action: 'game.get_ledger_overview',
+    suspend: true,
     payload: {
       activeTab,
       rowOffset,

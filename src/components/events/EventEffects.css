@@ -84,6 +84,7 @@
   min-width: 0;
   color: #d8d2c2;
   overflow-wrap: break-word;
+  white-space: pre-line;
 }
 
 .event-effect.ee--pos .event-effect-desc {

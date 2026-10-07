@@ -6,6 +6,8 @@ import Portrait from '../../common/portraits/Portrait';
 import GameBar from '../../common/data-display/bars/GameBar';
 import GameButton from '../../common/buttons/GameButton';
 import FactionRoundel from '../../common/entities/FactionRoundel';
+import CultureLink from '../../common/culture/CultureLink';
+import ReligionLink from '../../common/religion/ReligionLink';
 import InteractionCard from '../../common/interactions/InteractionCard';
 import InfoRow from '../../common/data-display/stats/InfoRow';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
@@ -21,7 +23,7 @@ import {
 } from '../../../bridge/diplomacy/useDiplomacyOverviewBridge';
 import { useGameActions } from '../../../context/GameContext';
 import { GOVERNOR_MISSION_ICON } from '../../../utils/iconMaps';
-import { sidebarTypeForEntity } from '../../common/entities/entityLinkUtils';
+import { useEntityLinkClick } from '../../../hooks/useEntityLinkClick';
 import { renderRichText } from '../../../utils/richText';
 import type { PortraitLayerData } from '../../../data/types';
 import type { AppointmentContestView } from '../../../bridge/characters/useCourtAppointmentContestsBridge';
@@ -30,6 +32,7 @@ import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovern
 import HeirAssignmentModal from '../../modals/characters/HeirAssignmentModal';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
 import { cultureIconPath } from '../../../utils/cultureIcons';
+import { religionIconPath } from '../../../utils/religionIcons';
 import { registerScreen } from '../../../registry/index';
 import { useWebUIText } from '../../../localization/WebUITextContext';
 import { CourtPositionsPanel, FactionModifierCard, PolicyEntry } from './FactionOverviewShared';
@@ -221,7 +224,6 @@ function standingTrendWhyLines(
 }
 
 function standingMeterTooltip(
-  standingScore: number,
   standingTrend: number,
   standingTrendColour: string,
   standingTrendParts: ProvinceModeScorePart[],
@@ -233,11 +235,6 @@ function standingMeterTooltip(
     body: t('ProvinceMode.StandingTooltip'),
     lines: [
       {
-        label: t('ImperialStanding.Standing'),
-        value: t('ImperialStanding.ScoreOutOf100', { Score: formatNumber(standingScore) }),
-        valueColor: 'var(--gold-light)',
-      },
-      {
         label: t('ImperialStanding.Trend'),
         value: t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(standingTrend) }),
         valueColor: standingTrendColour,
@@ -248,36 +245,20 @@ function standingMeterTooltip(
 }
 
 function threatMeterTooltip(
-  threatScore: number,
-  threatColourValue: string,
   t: ReturnType<typeof useWebUIText>,
 ): TooltipContent {
   return {
     title: t('ProvinceMode.ThreatTitle'),
     body: t('ProvinceMode.ThreatTooltip'),
-    lines: [
-      {
-        label: t('ProvinceMode.ThreatTitle'),
-        value: t('ImperialStanding.ScoreOutOf100', { Score: formatNumber(threatScore) }),
-        valueColor: threatColourValue,
-      },
-    ],
   };
 }
 
 function reviewMeterTooltip(
-  reviewDays: number,
   t: ReturnType<typeof useWebUIText>,
 ): TooltipContent {
   return {
     title: t('ProvinceMode.NextReviewLabel'),
     body: t('ProvinceMode.NextReviewTooltip'),
-    lines: [
-      {
-        label: t('ImperialStanding.NextReview'),
-        value: t('ImperialStanding.NextReviewDays', { Days: formatNumber(reviewDays) }),
-      },
-    ],
   };
 }
 
@@ -705,7 +686,7 @@ function EmpireStatCell({
 
 function EmpireTab({ overview, onOpenCharacter }: { overview: ProvinceModeOverview | null; onOpenCharacter: (id: string) => void }) {
   const t = useWebUIText();
-  const imperialFaction = useFaction(overview?.imperialFaction.id);
+  const imperialFaction = useFaction(overview?.imperialFaction.id, 'full', true, true);
   const summary = overview?.imperialFaction;
   const treasury = summary?.gold ?? 0;
   const income = summary?.income ?? 0;
@@ -751,19 +732,28 @@ function EmpireTab({ overview, onOpenCharacter }: { overview: ProvinceModeOvervi
                 <div className="gfov-empire-ruler-name">{emperorName}</div>
                 <div className="gfov-empire-faction-name">{summary?.name ?? ''}</div>
                 <div className="gfov-empire-identity-items">
-                  <span className="gfov-empire-identity-item">
+                  <CultureLink className="gfov-empire-identity-item" cultureId={imperialFaction?.cultureId ?? ''} info={imperialFaction?.cultureInfo}>
                     <img
                       className="gfov-empire-identity-icon"
-                      src={cultureIconPath(imperialFaction?.cultureId || imperialFaction?.cultureInfo?.id)}
+                      src={cultureIconPath(imperialFaction?.cultureInfo)}
                       alt=""
                       draggable={false}
                     />
                     {summary?.culture ?? ''}
-                  </span>
-                  <span className="gfov-empire-identity-item">
-                    <img className="gfov-empire-identity-icon" src="/assets/icons/I_Religions.png" alt="" draggable={false} />
+                  </CultureLink>
+                  <ReligionLink
+                    className="gfov-empire-identity-item"
+                    religionId={imperialFaction?.religionId || imperialFaction?.religionInfo?.id || ''}
+                    info={imperialFaction?.religionInfo}
+                  >
+                    <img
+                      className="gfov-empire-identity-icon"
+                      src={religionIconPath(imperialFaction?.religionId || imperialFaction?.religionInfo?.id)}
+                      alt=""
+                      draggable={false}
+                    />
                     {summary?.religion ?? ''}
-                  </span>
+                  </ReligionLink>
                 </div>
               </div>
             </div>
@@ -1042,8 +1032,8 @@ function AppointmentSummaryCell({
 
 function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceModeOverview | null; onOpenCharacter: (id: string) => void }) {
   const t = useWebUIText();
-  const court = useCourtPositions(true);
-  const contests = useCourtAppointmentContests(true);
+  const court = useCourtPositions(true, true);
+  const contests = useCourtAppointmentContests(true, true);
   const contestRoles = contests?.contests.map(contest => appointmentRoleFromContest(contest, t)) ?? [];
   const contestPositionKeys = new Set(contestRoles.map(role => role.positionKey));
   const upcomingRoles = (court?.positions ?? [])
@@ -1374,7 +1364,7 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
         </div>
         <div className="gfov-header-meters">
           <Tooltip
-            content={standingMeterTooltip(standingScore, standingTrend, standingTrendColour, standingTrendParts, standingTrendReason, t)}
+            content={standingMeterTooltip(standingTrend, standingTrendColour, standingTrendParts, standingTrendReason, t)}
             position="bottom"
             delay={150}
             wrapperClassName="gfov-meter-tooltip"
@@ -1398,7 +1388,7 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
             </div>
           </Tooltip>
           <Tooltip
-            content={threatMeterTooltip(threatScore, threatColourValue, t)}
+            content={threatMeterTooltip(t)}
             position="bottom"
             delay={150}
             wrapperClassName="gfov-meter-tooltip"
@@ -1416,7 +1406,7 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
             </div>
           </Tooltip>
           <Tooltip
-            content={reviewMeterTooltip(reviewDays, t)}
+            content={reviewMeterTooltip(t)}
             position="bottom"
             delay={150}
             wrapperClassName="gfov-meter-tooltip"
@@ -1517,7 +1507,7 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
 }
 
 function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => void }) {
-  const diplomacy = useDiplomacyOverviewBridge('governors');
+  const diplomacy = useDiplomacyOverviewBridge('governors', true, true);
   const [editing, setEditing] = useState<RegionalGovernor | null>(null);
   const governors = diplomacy?.regionalGovernors ?? [];
   const autoAssignGovernorsEnabled = diplomacy?.autoAssignGovernorsEnabled ?? false;
@@ -1565,15 +1555,11 @@ function GovernorsTab({ onOpenCharacter }: { onOpenCharacter: (id: string) => vo
 
 function MissionsTab({ overview }: { overview: ProvinceModeOverview | null }) {
   const t = useWebUIText();
-  const { openSidebar } = useGameActions();
   const missions: MissionRow[] = overview?.missions ?? [];
   const handleMissionCommand = useCallback((missionId: string, command: string) => {
     void runGovernorMissionAction(missionId, command).catch(acknowledgeBridgeFailure);
   }, []);
-  const handleRichLinkClick = useCallback((type: string, id: string) => {
-    const sidebarType = sidebarTypeForEntity(type);
-    if (sidebarType) openSidebar(sidebarType, id);
-  }, [openSidebar]);
+  const handleRichLinkClick = useEntityLinkClick();
   const renderMissionRichText = useCallback((text: string) => renderRichText(text, {
     onLinkClick: handleRichLinkClick,
     keepLinksWithPreviousWord: true,
@@ -1712,6 +1698,7 @@ function CourtTab({ overview, onOpenCharacter }: { overview: ProvinceModeOvervie
     <div className="gfov-court-tab">
       <CourtOfficeActionsPanel actions={actions} />
       <CourtPositionsPanel
+        suspend
         enabled
         readOnly
         titleKey="ProvinceMode.CourtTitle"
@@ -1725,7 +1712,7 @@ function CourtTab({ overview, onOpenCharacter }: { overview: ProvinceModeOvervie
 
 export default function GovernorFactionOverviewScreen({ screenId, onClose }: { screenId: string | null; onClose: () => void }) {
   const t = useWebUIText();
-  const overview = useProvinceModeOverview(true);
+  const overview = useProvinceModeOverview(true, true);
   const [activeTab, setActiveTab] = useState<TabId>(() => governorOverviewTabFromScreenId(screenId));
   const { openSidebar } = useGameActions();
   const openCharacter = useCallback((id: string) => {

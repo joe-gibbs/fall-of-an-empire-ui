@@ -1,14 +1,16 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import type { Event, EventChoiceInputs, EventPersonNameInput, EventRegnalNameInput } from '../../data/types';
+import type { Event, EventChoiceInputs, EventFactionEmblemInput, EventFactionNameInput, EventPersonNameInput, EventRegnalNameInput } from '../../data/types';
 import { playSound } from '../../hooks/useSound';
 import { useDraggableOffset } from '../../hooks/useDraggableOffset';
 import { renderEventTextChunk } from '../../utils/eventTextFlow';
 import { renderRichText } from '../../utils/richText';
 import Portrait from '../common/portraits/Portrait';
+import FactionRoundel from '../common/entities/FactionRoundel';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import PersonTooltip from '../common/tooltips/PersonTooltip';
 import Tooltip from '../common/tooltips/Tooltip';
 import { EventEffectList } from './EventEffects';
+import '../common/identity/PaintedHero.css';
 import './EventPopup.css';
 
 import { webUIText, WebUIText } from '../../localization/WebUITextContext';
@@ -24,7 +26,7 @@ const NAME_DIE_ICON = '/assets/icons/I_RegnalDie.png';
 const OPTION_SELECT_FLASH_MS = 100;
 const EVENT_POPUP_EXIT_MS = 400;
 
-type EventNameInput = EventRegnalNameInput | EventPersonNameInput;
+type EventNameInput = EventRegnalNameInput | EventPersonNameInput | EventFactionNameInput;
 
 function normaliseEventName(value: string): string {
   return value.trim();
@@ -81,6 +83,64 @@ function getRegnalNumberText(input: EventRegnalNameInput | undefined, value: str
   return toRomanNumeral((previous?.count || 0) + 1);
 }
 
+function EventEmblemPicker({
+  input,
+  value,
+  disabled,
+  onChange,
+}: {
+  input: EventFactionEmblemInput;
+  value: string;
+  disabled: boolean;
+  onChange: (emblem: string) => void;
+}) {
+  const selectedRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [value]);
+
+  return (
+    <div className="event-emblem-input">
+      <span className="event-name-input-label-text">{input.label}</span>
+      <StyledScrollArea className="event-emblem-scroll" viewportClassName="event-emblem-scroll__viewport" variant="inline">
+        <div className="event-emblem-grid" role="listbox" aria-label={input.label}>
+          {input.options.map((emblem) => {
+            const selected = emblem === value;
+            return (
+              <button
+                key={emblem}
+                ref={selected ? selectedRef : undefined}
+                type="button"
+                className={`event-emblem-choice${selected ? ' event-emblem-choice--selected' : ''}`}
+                role="option"
+                aria-selected={selected}
+                disabled={disabled}
+                onClick={() => {
+                  if (disabled) return;
+                  playSound('click');
+                  onChange(emblem);
+                }}
+              >
+                <FactionRoundel
+                  colour={input.colour}
+                  secondaryColour={input.secondaryColour}
+                  emblem={emblem}
+                  cultureGroup={input.cultureGroup}
+                  resolveFaction={false}
+                  name={input.label}
+                  size="md"
+                  showRing
+                />
+              </button>
+            );
+          })}
+        </div>
+      </StyledScrollArea>
+    </div>
+  );
+}
+
 function splitEventParagraphs(body: string): string[] {
   const paragraphs: string[] = [];
   let current: string[] = [];
@@ -115,6 +175,8 @@ const EventPopup: React.FC<EventPopupProps> = ({
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [regnalName, setRegnalName] = useState(event.regnalNameInput?.value || '');
   const [personName, setPersonName] = useState(event.personNameInput?.value || '');
+  const [factionName, setFactionName] = useState(event.factionNameInput?.value || '');
+  const [factionEmblem, setFactionEmblem] = useState(event.factionEmblemInput?.value || '');
   const [chainIndex, setChainIndex] = useState(event.previousEvents.length);
   const {
     offsetStyle,
@@ -128,11 +190,14 @@ const EventPopup: React.FC<EventPopupProps> = ({
       'styled-scroll-area',
       'event-options',
       'event-option',
+      'event-emblem-scroll',
+      'event-emblem-choice',
       'tooltip-wrapper',
     ],
   });
   const regnalNameCycleIndexRef = useRef(0);
   const personNameCycleIndexRef = useRef(0);
+  const factionNameCycleIndexRef = useRef(0);
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previousVisibleRef = useRef(false);
@@ -225,6 +290,24 @@ const EventPopup: React.FC<EventPopupProps> = ({
     playSound('confirm');
   }, [closing, event.personNameInput, personName]);
 
+  const handleRandomFactionName = useCallback((mouseEvent: React.MouseEvent<HTMLButtonElement>) => {
+    if (mouseEvent.button !== 0) return;
+    mouseEvent.preventDefault();
+    mouseEvent.stopPropagation();
+    const options = getNameOptions(event.factionNameInput);
+    if (options.length === 0 || closing) return;
+
+    let nextIndex = factionNameCycleIndexRef.current % options.length;
+    const currentName = normaliseEventName(factionName);
+    if (options.length > 1 && options[nextIndex] === currentName) {
+      nextIndex = (nextIndex + 1) % options.length;
+    }
+
+    factionNameCycleIndexRef.current = (nextIndex + 1) % options.length;
+    setFactionName(options[nextIndex]);
+    playSound('confirm');
+  }, [closing, event.factionNameInput, factionName]);
+
   const handleOptionMouseDown = useCallback((mouseEvent: React.MouseEvent<HTMLButtonElement>, index: number) => {
     if (mouseEvent.button !== 0) return;
     mouseEvent.preventDefault();
@@ -232,8 +315,10 @@ const EventPopup: React.FC<EventPopupProps> = ({
     if (selectedIndex !== null || closing) return;
     const submittedRegnalName = regnalName.trim();
     const submittedPersonName = personName.trim();
+    const submittedFactionName = factionName.trim();
     if (event.regnalNameInput && submittedRegnalName.length === 0) return;
     if (event.personNameInput && submittedPersonName.length === 0) return;
+    if (event.factionNameInput && submittedFactionName.length === 0) return;
     playSound('confirm');
     setSelectedIndex(index);
     // Flash the selected option, then play close animation, then fire callback
@@ -244,10 +329,12 @@ const EventPopup: React.FC<EventPopupProps> = ({
         onOptionSelect(index, {
           regnalName: event.regnalNameInput ? submittedRegnalName : undefined,
           personName: event.personNameInput ? submittedPersonName : undefined,
+          factionName: event.factionNameInput ? submittedFactionName : undefined,
+          factionEmblem: event.factionEmblemInput ? factionEmblem : undefined,
         });
       });
     }, OPTION_SELECT_FLASH_MS);
-  }, [selectedIndex, closing, regnalName, personName, event.regnalNameInput, event.personNameInput, onOptionSelect, requestClose]);
+  }, [selectedIndex, closing, regnalName, personName, factionName, factionEmblem, event.regnalNameInput, event.personNameInput, event.factionNameInput, event.factionEmblemInput, onOptionSelect, requestClose]);
 
   const renderBodyParagraph = useCallback((text: string, paragraphIndex: number) => {
     return renderRichText(text, {
@@ -321,12 +408,12 @@ const EventPopup: React.FC<EventPopupProps> = ({
             )}
           </div>
 
-          {/* Hero image with vignette + title scrim (matches char-header) */}
-          <div className="event-hero">
+          {/* Keep the title outside the artwork mask so brush edges cannot cut through the text. */}
+          <div className="painted-hero event-hero">
             {displayedEvent.image ? (
-              <img src={displayedEvent.image} alt={displayedEvent.title} className="event-hero-img" draggable={false} />
+              <img src={displayedEvent.image} alt={displayedEvent.title} className="event-hero-img painted-hero-mask" draggable={false} />
             ) : (
-              <div className="event-hero-placeholder">
+              <div className="event-hero-placeholder painted-hero-mask">
                 <span className="event-hero-placeholder-text"><WebUIText textKey="Auto.ComponentsEventsEventPopup.292.1" /></span>
               </div>
             )}
@@ -425,6 +512,43 @@ const EventPopup: React.FC<EventPopupProps> = ({
               </div>
             )}
 
+            {isCurrentEvent && event.factionNameInput && (
+              <div className="event-name-input">
+                <label className="event-name-input-label">
+                  <span className="event-name-input-label-text">{event.factionNameInput.label}</span>
+                  <div className="event-name-input-row">
+                    <input
+                      type="text"
+                      className="event-name-input-field"
+                      value={factionName}
+                      maxLength={64}
+                      onChange={(inputEvent) => setFactionName(inputEvent.currentTarget.value)}
+                    />
+                  </div>
+                </label>
+                <Tooltip content={event.factionNameInput.randomButtonText} position="top" inline>
+                  <button
+                    type="button"
+                    className="event-name-input-random"
+                    onClick={handleRandomFactionName}
+                    disabled={event.factionNameInput.randomOptions.length === 0}
+                    aria-label={event.factionNameInput.randomButtonText}
+                  >
+                    <img src={NAME_DIE_ICON} alt="" className="event-name-input-random-icon" draggable={false} />
+                  </button>
+                </Tooltip>
+              </div>
+            )}
+
+            {isCurrentEvent && event.factionEmblemInput && (
+              <EventEmblemPicker
+                input={event.factionEmblemInput}
+                value={factionEmblem}
+                disabled={closing}
+                onChange={setFactionEmblem}
+              />
+            )}
+
             {isCurrentEvent ? (
             <div className="event-options">
               <div className="event-options-heading">
@@ -438,7 +562,8 @@ const EventPopup: React.FC<EventPopupProps> = ({
                 if (option.isLocked) classes.push('event-option--locked');
                 const isEventNameMissing = Boolean(
                   (event.regnalNameInput && regnalName.trim().length === 0)
-                  || (event.personNameInput && personName.trim().length === 0),
+                  || (event.personNameInput && personName.trim().length === 0)
+                  || (event.factionNameInput && factionName.trim().length === 0),
                 );
 
                 const tooltipContent = (

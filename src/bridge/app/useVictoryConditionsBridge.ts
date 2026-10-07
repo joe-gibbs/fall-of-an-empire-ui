@@ -1,4 +1,4 @@
-import { useBridgeQuery } from '../core/useBridgeQuery';
+import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
 import type { GetVictoryConditionsResponse } from '../../bridge-types.generated.ts';
 import { WebkilnAssetPath } from '../../utils/assets';
 
@@ -6,6 +6,7 @@ let victoryConditionsCache: GetVictoryConditionsResponse | null = null;
 
 export function clearVictoryConditionsCache(): void {
   victoryConditionsCache = null;
+  clearBridgeQueryCache('game.get_victory_map');
 }
 
 function mapResponse(data: GetVictoryConditionsResponse): GetVictoryConditionsResponse {

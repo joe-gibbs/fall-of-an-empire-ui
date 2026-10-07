@@ -1,3 +1,5 @@
+import { HeldPaganRelics } from '../../screens/economy/PaganReligionPanel';
+import FoederatiPoliticsPanel from '../../screens/faction/FoederatiPoliticsPanel';
 import React, { useState, useMemo } from 'react';
 import Portrait from '../../common/portraits/Portrait';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
@@ -13,13 +15,15 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import Tooltip from '../../common/tooltips/Tooltip';
 import type { TooltipContent } from '../../common/tooltips/Tooltip';
+import ConfirmDialog from '../../common/forms/ConfirmDialog';
 import HeirAssignmentModal from '../../modals/characters/HeirAssignmentModal';
 import FactionInteractionPersonSelectionModal from '../../modals/diplomacy/FactionInteractionPersonSelectionModal';
 import FactionInteractionInputModal from '../../modals/diplomacy/FactionInteractionInputModal';
+import RebellionChoiceModal, { type RebellionKind } from '../../modals/diplomacy/RebellionChoiceModal';
 import PreviousRulersModal from '../../modals/diplomacy/PreviousRulersModal';
-import CultureTooltip from '../../common/tooltips/CultureTooltip';
+import CultureLink from '../../common/culture/CultureLink';
 import GovernmentTooltip from '../../common/tooltips/GovernmentTooltip';
-import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
+import ReligionLink from '../../common/religion/ReligionLink';
 import { useGameActions, useGameState } from '../../../context/GameContext';
 import { usePinnedItemsBridge, zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import { breakTreatyBridge, setProvinceBuildFocusBridge } from '../../../bridge/diplomacy/useDiplomacyOverviewBridge';
@@ -29,16 +33,19 @@ import { toggleFoederatiCallupBridge } from '../../../bridge/military-map/useMil
 import { BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
 import glossary from '../../../data/glossary';
 import type { DisplayTextLine, Faction, FactionPolicy, FactionPolicyLevel, FactionTreaty, FactionWarFaction, FactionWarPartner } from '../../../data/types';
-import { STAT_ICONS } from '../../../utils/iconMaps';
+import { STAT_ICONS, treatyIconPath } from '../../../utils/iconMaps';
 import { formatTreatyType } from '../../../utils/displayLabels';
 import { canNegotiateDiplomacyWith } from '../../../utils/diplomacyAuthority';
 import { getComplianceState } from '../../../utils/colorFormatters';
 import { buildComplianceTooltip } from '../../../utils/characterTooltipContent';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
-import { WebkilnAssetPath } from '../../../utils/assets';
+import { diplomacyMilitaryOverview } from './diplomacyMilitaryOverview';
 import { cultureIconPath } from '../../../utils/cultureIcons';
+import { religionIconPath } from '../../../utils/religionIcons';
 import { displayTextToPlain } from '../../../utils/displayText';
-import { usePerson, useFaction, usePlayerFactionId } from '../../../data-source/index';
+import { renderRichText } from '../../../utils/richText';
+import { WebkilnAssetPath } from '../../../utils/assets';
+import { usePerson, useFaction, usePlayerFactionId, usePlayerFactionSummary } from '../../../data-source/index';
 import { bridgeCall } from '../../../bridge-types.generated.ts';
 import type {
   BridgeFactionInteractionProvidedInput,
@@ -96,7 +103,8 @@ type FactionLikeInteraction =
   Pick<FactionInteractionView,
     'id' | 'name' | 'description' | 'goldCost' | 'durationDays' | 'remainingDays'
     | 'inProgress' | 'cooldownDays' | 'cooldownRemainingDays'
-    | 'successChancePercent' | 'successFactors' | 'effectLines' | 'reasons'>;
+    | 'successChancePercent' | 'successFactors' | 'effectLines' | 'reasons'>
+  & Partial<Pick<FactionInteractionView, 'requirementsDescription'>>;
 
 function primaryInteractionReason(i: FactionLikeInteraction): string {
   for (const reason of i.reasons) {
@@ -128,6 +136,16 @@ function buildFactionInteractionTooltip(
     }
   }
 
+  if (i.requirementsDescription) {
+    lines.push({
+      label: webUIText('TreatyNegotiation.Acceptance'),
+      subTooltip: {
+        title: webUIText('TreatyNegotiation.Acceptance'),
+        body: i.requirementsDescription,
+      },
+    });
+  }
+
   if (i.goldCost > 0) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.63.1'), value: formatNumber(i.goldCost), valueIcon: '/assets/icons/I_Coins.png' });
   }
@@ -139,7 +157,7 @@ function buildFactionInteractionTooltip(
     const days = Math.round(i.durationDays);
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.71.3'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.71.1", { Value1: formatNumber(days), Value2: webUIText(days === 1 ? 'Common.Day' : 'Common.Days') }); } });
   } else {
-    lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.73.4'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsDiplomacySidebar.73.1"); } });
+    lines.push({ label: webUIText('Common.Duration'), labelIcon: '/assets/icons/I_Duration.png', get value() { return webUIText("Auto.Prop.componentssidebarsPowerBlocSidebar.45.1"); } });
   }
 
   if (i.cooldownDays > 0) {
@@ -166,7 +184,7 @@ function buildFactionInteractionTooltip(
   const body = rush && i.inProgress && i.remainingDays > 0
     ? (
       <>
-        <span>{i.description}</span>
+        <span>{renderRichText(i.description)}</span>
         <BureaucraticRushTooltipAction
           actionId={`${rush.actionKind}:${i.id}`}
           targetFactionId={rush.targetFactionId}
@@ -185,13 +203,13 @@ function buildFactionInteractionTooltip(
   };
 }
 
-function getStatusBadgeText(faction: Faction): string {
+function getStatusBadgeText(faction: Faction): string | null {
   switch (faction.diplomaticStatus) {
     case 'war': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.118.9');
     case 'ally': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.119.10');
     case 'rival': return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.120.11');
     case 'subject': return faction.subjectType || webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.121.12');
-    default: return webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.122.13');
+    default: return null;
   }
 }
 
@@ -230,22 +248,6 @@ function warEnemyFactions(war: FactionWarPartner): FactionWarFaction[] {
   const extras = (war.enemyParticipants ?? []).filter(partner => partner.id !== war.id);
   return [war, ...extras];
 }
-
-/** Keyed on the bridge's ETreatyType enum names. */
-const treatyIcons: Record<string, string> = {
-  NonAggression: '/assets/icons/Treaties/I_NonAggression.png',
-  Trade: '/assets/icons/Treaties/I_TradeAgreement.png',
-  TradeOneOff: '/assets/icons/Treaties/I_TradeAgreement.png',
-  MilitaryAlliance: '/assets/icons/Treaties/I_MilitaryAlliance.png',
-  DefensiveAlliance: '/assets/icons/Treaties/I_DefensiveAlliance.png',
-  Subject: '/assets/icons/Treaties/I_Vassalage.png',
-  Tribute: '/assets/icons/Treaties/I_Tribute.png',
-  TributeOneOff: '/assets/icons/Treaties/I_Tribute.png',
-  PassageRights: '/assets/icons/Treaties/I_MilitaryAccess.png',
-  MerchantRights: '/assets/icons/Treaties/I_TradeAgreement.png',
-  KnowledgeSharing: '/assets/icons/Treaties/I_MapSharing.png',
-  Peace: '/assets/icons/I_Peace.png',
-};
 
 const ALLIANCE_TREATY_TYPES = new Set(['MilitaryAlliance', 'DefensiveAlliance']);
 
@@ -358,6 +360,7 @@ function policyLevelTooltip(policy: FactionPolicy, level: FactionPolicyLevel, in
   const stance = policyHeaderText(level.effectLines);
   return {
     title: stance || policy.name,
+    body: !level.isAvailable ? (level.lockReason || webUIText('FactionOverview.Locked')) : undefined,
     lines: [{
       label: level.isCurrent ? webUIText('FactionOverview.CurrentLevel') : webUIText('FactionOverview.Level'),
       value: policyLevelValueLabel(policy, index),
@@ -368,7 +371,7 @@ function policyLevelTooltip(policy: FactionPolicy, level: FactionPolicyLevel, in
 }
 
 async function refreshAgentTarget(factionId: string, role: AgentRole): Promise<void> {
-  const factionData = await bridgeCall('game.get_faction_data', { factionId, scope: 'full' });
+  const factionData = await bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId, scope: 'full' });
   dispatchFactionData(factionData);
 
   if (role === 'spy') {
@@ -388,14 +391,17 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
   const { openSidebar, openScreen, showAdvisor, openAgentSelect, navigateSidebarHistory } = useGameActions();
   const { debugMode, sidebarNavigation } = useGameState();
   const playerFactionId = usePlayerFactionId();
+  const playerInstitutions = usePlayerFactionSummary();
   const playerFaction = useFaction(playerFactionId);
   const { isPinned: checkPinned, togglePin } = usePinnedItemsBridge();
   const isPinned = checkPinned('faction', faction.id);
+  const [interactionConfirmation, setInteractionConfirmation] = useState<{ response: StartFactionInteractionResponse; selectedPersonId?: string; rebellionKind?: RebellionKind } | null>(null);
   const [heirModalOpen, setHeirModalOpen] = useState(false);
   const [personSelection, setPersonSelection] = useState<StartFactionInteractionResponse | null>(null);
   const [breakingTreatyId, setBreakingTreatyId] = useState<string | null>(null);
   const [factionInputSelection, setFactionInputSelection] = useState<StartFactionInteractionResponse | null>(null);
   const [spyInputSelection, setSpyInputSelection] = useState<StartSpyInteractionResponse | null>(null);
+  const [rebellionChoice, setRebellionChoice] = useState<{ id: string; name: string } | null>(null);
   const [previousRulersOpen, setPreviousRulersOpen] = useState(false);
   const diplomacyNavigation = sidebarNavigation.diplomacy;
   const canNavigateBack = (diplomacyNavigation?.back.length ?? 0) > 0;
@@ -406,20 +412,18 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
       SubjectType: faction.subjectType || webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.121.12'),
       Faction: faction.overlordName,
     })
-    : webUIText('ProvinceTooltip.Independent');
+    : null;
   const isProvinceSubject = faction.subjectSubtype === 'province';
   const isPlayerFoederati = !faction.isPlayer && faction.diplomaticStatus === 'subject' && faction.subjectSubtype === 'foederati';
   const canToggleFoederatiCallup = Boolean(faction.isFoederatiCalledUp || faction.canCallFoederati);
   const foederatiCallupLabel = faction.isFoederatiCalledUp
     ? webUIText('InternalPolitics.StandDown')
-    : faction.canCallFoederati
-      ? webUIText('InternalPolitics.CallUp')
-      : webUIText('InternalPolitics.WillRefuse');
+    : faction.foederatiPolitics?.callupPending
+      ? webUIText('Foederati.CallupRequested')
+      : webUIText('InternalPolitics.CallUp');
   const foederatiCallupBody = faction.isFoederatiCalledUp
     ? webUIText('InternalPolitics.StandDownThis')
-    : faction.canCallFoederati
-      ? webUIText('InternalPolitics.CallUpThis')
-      : webUIText('InternalPolitics.ThisFoederatiForce');
+    : faction.foederatiPolitics?.callupBlockReason || webUIText('Foederati.CallupHelp');
   const hasBuildFocus = isProvinceSubject && Boolean(faction.buildFocus);
   const focusKey = focusKeyForFaction(faction);
   const canSetBuildFocus = hasBuildFocus && Boolean(faction.canSetBuildFocus);
@@ -435,19 +439,27 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
   const totalStrength = faction.strength + playerStrength;
   const theirPct = totalStrength > 0 ? (faction.strength / totalStrength) * 100 : 50;
   const ourPct = 100 - theirPct;
-  const militaryOverviewStat = faction.usesLevies
+  const militaryOverview = diplomacyMilitaryOverview(faction);
+  const militaryOverviewStat = militaryOverview.kind === 'warbands'
     ? {
-      title: webUIText('DiplomacySidebar.PossibleLevyStrength'),
-      body: webUIText('DiplomacySidebar.PossibleLevyStrengthTooltip'),
-      value: faction.levyStrength ?? 0,
-      label: webUIText('DiplomacySidebar.Levies'),
+      title: webUIText('DiplomacySidebar.PossibleWarbandStrength'),
+      body: webUIText('DiplomacySidebar.PossibleWarbandStrengthTooltip'),
+      value: militaryOverview.value,
+      label: webUIText('DiplomacySidebar.Warbands'),
     }
-    : {
-      title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.465.37'),
-      body: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.465.38'),
-      value: faction.armyCount,
-      label: webUIText('Auto.ComponentsSidebarsDiplomacySidebar.468.8'),
-    };
+    : militaryOverview.kind === 'levies'
+      ? {
+        title: webUIText('DiplomacySidebar.PossibleLevyStrength'),
+        body: webUIText('DiplomacySidebar.PossibleLevyStrengthTooltip'),
+        value: militaryOverview.value,
+        label: webUIText('DiplomacySidebar.Levies'),
+      }
+      : {
+        title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.465.37'),
+        body: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.465.38'),
+        value: militaryOverview.value,
+        label: webUIText('Auto.ComponentsSidebarsDiplomacySidebar.468.8'),
+      };
 
   const rulerCharacter = usePerson(faction.rulerId);
 
@@ -481,8 +493,8 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
   const showDiplomaticActionArea = !faction.isPlayer && liveDiplomaticInteractions.length > 0;
   const showSpyActionArea = !faction.isPlayer && liveSpyInteractions.length > 0;
 
-  const cultureIcon = cultureIconPath(faction.cultureId || faction.cultureInfo?.id);
-  const religionIcon = WebkilnAssetPath(faction.religionId ? `/assets/religions/${faction.religionId}.png` : '/assets/icons/I_Religions.png');
+  const cultureIcon = cultureIconPath(faction.cultureInfo);
+  const religionIcon = religionIconPath(faction.religionId || faction.religionInfo?.id);
 
   // Opinion is ~-100 to +100 (unbounded in extreme cases). The bar pivots at 0.
   const opinionColor = getOpinionColor(faction.opinion);
@@ -530,27 +542,45 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
   const setBuildFocus = React.useCallback((focus: BuildFocusId) => {
     if (!canSetBuildFocus || focus === focusKey) return;
     void setProvinceBuildFocusBridge(faction.id, focus)
-      .then(() => bridgeCall('game.get_faction_data', { factionId: faction.id, scope: 'full' }))
+      .then(() => bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId: faction.id, scope: 'full' }))
       .then(dispatchFactionData)
       .catch(acknowledgeBridgeFailure);
   }, [canSetBuildFocus, faction.id, focusKey]);
 
-  const startInteraction = React.useCallback((interactionId: string, selectedPersonId?: string) => {
-    void startFactionInteraction(interactionId, selectedPersonId).then((response) => {
+  const startInteraction = React.useCallback((interactionId: string, selectedPersonId?: string, rebellionKind?: RebellionKind, confirm = false) => {
+    if (interactionId === 'declarerebellioninteraction' && !rebellionKind) {
+      const interaction = factionInteractionsState?.interactions.find(entry => entry.id === interactionId);
+      setRebellionChoice({ id: interactionId, name: interaction?.name ?? '' });
+      return;
+    }
+
+    void startFactionInteraction(interactionId, selectedPersonId, undefined, rebellionKind, confirm).then((response) => {
+      if (response?.confirmationRequired) {
+        setInteractionConfirmation({ response, selectedPersonId, rebellionKind });
+        return;
+      }
+      if (response?.rebellionChoiceRequired) {
+        const interaction = factionInteractionsState?.interactions.find(entry => entry.id === interactionId);
+        setRebellionChoice({ id: interactionId, name: interaction?.name || response.interactionName });
+        return;
+      }
       if (response?.personSelectionRequired) {
         setPersonSelection(response);
         setFactionInputSelection(null);
         setSpyInputSelection(null);
+        setRebellionChoice(null);
       } else if (response?.inputSelectionRequired) {
         setFactionInputSelection(response);
         setPersonSelection(null);
         setSpyInputSelection(null);
+        setRebellionChoice(null);
       } else {
         setPersonSelection(null);
         setFactionInputSelection(null);
+        setRebellionChoice(null);
       }
     });
-  }, [startFactionInteraction]);
+  }, [factionInteractionsState?.interactions, startFactionInteraction]);
 
   const confirmFactionInputs = React.useCallback(async (
     interactionId: string,
@@ -706,8 +736,10 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
               name: faction.name,
               rulerName: faction.rulerName,
               culture: faction.culture,
+              cultureId: faction.cultureId,
               cultureInfo: faction.cultureInfo,
               religion: faction.religion,
+              religionId: faction.religionId,
               religionInfo: faction.religionInfo,
               capital: faction.capital,
               opinion: faction.opinion,
@@ -758,9 +790,16 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
           </FactionTooltip>
           <div className="diplo-header-info">
             <span className="diplo-header-name">{faction.name}</span>
-            {!faction.isPlayer && <div className="diplo-header-status-row">
-              <img src={statusIconForFaction(faction)} alt="" className="diplo-header-status-icon" />
-              <DiplomacyStatusBadge text={statusText} status={faction.diplomaticStatus} />
+            {!faction.isPlayer && (statusText || faction.isRebel) && <div className="diplo-header-status-row">
+              {statusText && (
+                <>
+                  <img src={statusIconForFaction(faction)} alt="" className="diplo-header-status-icon" />
+                  <DiplomacyStatusBadge
+                    text={statusText}
+                    status={faction.diplomaticStatus}
+                  />
+                </>
+              )}
               {faction.isRebel && (
                 <DiplomacyStatusBadge
                   text={webUIText('Auto.ExtraAttr.ComponentsSidebarsDiplomacySidebar.317.1')}
@@ -768,16 +807,16 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                 />
               )}
             </div>}
-            {(faction.isPlayer || faction.diplomaticStatus !== 'subject') && (
+            {realmStatusText && (faction.isPlayer || faction.diplomaticStatus !== 'subject') && (
               <div className="diplo-header-status-row">
                 <img
-                  src={faction.overlordName ? statusIcons.subject : statusIcons.neutral}
+                  src={statusIcons.subject}
                   alt=""
                   className="diplo-header-status-icon"
                 />
                 <DiplomacyStatusBadge
                   text={realmStatusText}
-                  status={faction.overlordName ? 'subject' : 'neutral'}
+                  status="subject"
                 />
               </div>
             )}
@@ -787,7 +826,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
             </div>
           </div>
         </div>
-        {!isProvinceSubject && (
+        {!faction.isPlayer && !isProvinceSubject && (
           <Tooltip content={glossary.Strength || { title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.326.19'), body: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.326.20') }} position="bottom" delay={200}>
             <div className="diplo-header-strength">
               <div className="diplo-header-strength-labels">
@@ -864,22 +903,24 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
             </div>
           )}
 
+          <HeldPaganRelics factionId={faction.id} />
+
           {/* Culture / Religion / Government */}
           <div className="char-identity-pair diplo-identity-pair">
-            <CultureTooltip info={faction.cultureInfo} fallbackName={faction.culture} fallbackId={faction.cultureId}>
+            <CultureLink info={faction.cultureInfo} cultureId={faction.cultureId || faction.cultureInfo?.id || ''}>
               <div className="char-identity-row">
                 <img src={cultureIcon} alt="" className="char-identity-icon" />
                 <span className="char-identity-label"><WebUIText textKey="Auto.ComponentsSidebarsDiplomacySidebar.370.2" /></span>
                 <span className="char-identity-value">{faction.culture}</span>
               </div>
-            </CultureTooltip>
-            <ReligionTooltip info={faction.religionInfo} fallbackName={faction.religion} fallbackId={faction.religionId}>
+            </CultureLink>
+            <ReligionLink info={faction.religionInfo} religionId={faction.religionId || faction.religionInfo?.id || ''}>
               <div className="char-identity-row">
                 <img src={religionIcon} alt="" className="char-identity-icon" />
                 <span className="char-identity-label"><WebUIText textKey="Auto.ComponentsSidebarsDiplomacySidebar.377.3" /></span>
                 <span className="char-identity-value">{faction.religion}</span>
               </div>
-            </ReligionTooltip>
+            </ReligionLink>
             <GovernmentTooltip
               government={faction.government}
               displayName={faction.governmentDisplayName}
@@ -924,7 +965,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
             </>
           )}
 
-          {/* Opinion bar (hidden for subjects — compliance replaces it) */}
+          {/* Opinion bar (hidden for subjects â€” compliance replaces it) */}
           {showOpinion && (
             <Tooltip content={{
               title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.397.26'),
@@ -1038,7 +1079,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                       className="diplo-player-treaty-row"
                     >
                       <img
-                        src={treatyIcons[treaty.type] || '/assets/icons/I_Diplomacy.png'}
+                        src={treatyIconPath(treaty.type)}
                         alt=""
                         className="diplo-relation-type-icon"
                       />
@@ -1091,6 +1132,11 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
             >
               {webUIText('FactionMilitary.ViewMilitary')}
             </GameButton>
+            {playerInstitutions?.usesRegionalForces && (faction.isPlayer || (faction.diplomaticStatus === 'subject' && faction.subjectSubtype === 'hereditary_vassal')) && (
+              <Tooltip content={webUIText('RegionalForces.Description')}>
+                <GameButton variant="outline" onClick={() => openScreen('military', `regions:${faction.id}`)}>{webUIText('RegionalForces.Title')}</GameButton>
+              </Tooltip>
+            )}
             {isPlayerFoederati && (
               <Tooltip
                 inline
@@ -1116,6 +1162,14 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
             )}
           </div>
           <div className="diplo-overview-grid">
+            {faction.subjectSubtype === 'hereditary_vassal' && faction.crownTaxPercent !== undefined && <Tooltip
+              content={{ title: webUIText('RegionalForces.CrownTax'), body: webUIText('RegionalForces.CrownTaxHelp', { Percent: formatNumber(faction.crownTaxPercent) }) }}>
+              <div className="diplo-overview-stat">
+                <img src="/assets/icons/I_Coins.png" alt="" className="diplo-overview-stat-icon" />
+                <span className="diplo-overview-stat-val">{formatNumber(faction.crownTaxPercent)}%</span>
+                <span className="diplo-overview-stat-label"><WebUIText textKey="RegionalForces.CrownTax" /></span>
+              </div>
+            </Tooltip>}
             <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.451.33'), body: webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.451.34') }} position="bottom" delay={200}>
               <div className="diplo-overview-stat">
                 <img src="/assets/icons/I_Population.png" alt="" className="diplo-overview-stat-icon" />
@@ -1292,7 +1346,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                   </div>
                 </div>
                 <Tooltip
-                  content={warScoreBreakdownTooltip(war.warScoreBreakdown)}
+                  content={warScoreBreakdownTooltip(war.warScoreBreakdown, war.warScore)}
                   position="bottom"
                   delay={150}
                   wrapperClassName="diplo-war-score-tooltip"
@@ -1305,7 +1359,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
             ))}
             {treatyRelations.map(({ type, partners }) => (
               <div key={type} className="diplo-relation-row">
-                <img src={treatyIcons[type] || "/assets/icons/I_Diplomacy.png"} alt="" className="diplo-relation-type-icon" />
+                <img src={treatyIconPath(type)} alt="" className="diplo-relation-type-icon" />
                 <span className="diplo-relation-type-label">{formatTreatyType(type)}</span>
                 <div className="diplo-relation-factions">
                   {partners.map(p => (
@@ -1711,7 +1765,9 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
 
         </>}
         {activeTab === 'policies' && (
-          faction.policies.length > 0 ? (
+          <>
+          <FoederatiPoliticsPanel factionId={faction.id} factionName={faction.name} data={faction.foederatiPolitics} />
+          {faction.policies.length > 0 ? (
             <div className="diplo-policies">
               {faction.policies.map(policy => {
                 const stance = policyStanceText(policy);
@@ -1754,7 +1810,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                               wrapperClassName="diplo-policy-pip-wrap"
                             >
                               <span
-                                className={`diplo-policy-pip${level.isCurrent ? ' diplo-policy-pip--current' : ''}${index === levels.length - 1 ? ' diplo-policy-pip--last' : ''}`}
+                                className={`diplo-policy-pip${level.isCurrent ? ' diplo-policy-pip--current' : ''}${!level.isAvailable ? ' diplo-policy-pip--locked' : ''}${index === levels.length - 1 ? ' diplo-policy-pip--last' : ''}`}
                               />
                             </Tooltip>
                           ))}
@@ -1765,9 +1821,10 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                 );
               })}
             </div>
-          ) : (
+          ) : !faction.foederatiPolitics?.enabled ? (
             <div className="diplo-relations-empty"><WebUIText textKey="DiplomacySidebar.NoPolicies" /></div>
-          )
+          ) : null}
+          </>
         )}
         {activeTab === 'demographics' && (
           <DiplomacyDemographicsPanel faction={faction} />
@@ -1782,6 +1839,17 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
       onClose={() => setPreviousRulersOpen(false)}
       onOpenCharacter={(id) => openSidebar('character', id)}
     />
+    <ConfirmDialog
+      visible={interactionConfirmation?.response.targetFactionId === faction.id}
+      title={interactionConfirmation?.response.interactionName ?? ''}
+      message={interactionConfirmation?.response.confirmationMessage ?? ''}
+      variant="danger"
+      onConfirm={() => {
+        if (interactionConfirmation?.response.targetFactionId !== faction.id) return;
+        startInteraction(interactionConfirmation.response.interactionId, interactionConfirmation.selectedPersonId, interactionConfirmation.rebellionKind, true);
+      }}
+      onClosed={() => setInteractionConfirmation(null)}
+    />
     <HeirAssignmentModal
       open={heirModalOpen}
       factionId={faction.id}
@@ -1789,6 +1857,24 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
       currentDesignatedHeirId={faction.designatedHeir?.id}
       onClose={() => setHeirModalOpen(false)}
       onOpenCharacter={(id) => openSidebar('character', id)}
+    />
+    <RebellionChoiceModal
+      open={Boolean(rebellionChoice)}
+      interactionName={rebellionChoice?.name ?? ''}
+      targetFaction={{
+        id: faction.id,
+        name: faction.name,
+        colour: faction.colour,
+        secondaryColour: faction.secondaryColour,
+        cultureGroup: faction.cultureGroup,
+        emblem: faction.emblem,
+      }}
+      onClose={() => setRebellionChoice(null)}
+      onChoose={(kind) => {
+        const interactionId = rebellionChoice?.id ?? 'declarerebellioninteraction';
+        setRebellionChoice(null);
+        startInteraction(interactionId, undefined, kind);
+      }}
     />
     <FactionInteractionPersonSelectionModal
       open={Boolean(personSelection)}

@@ -1,0 +1,20 @@
+.family-identity { position: relative; height: 12rem; flex-shrink: 0; overflow: hidden; background: url('/assets/baked/screen-charcoal.png') center / cover; }
+.family-identity > .portrait { width: 100%; height: 100% !important; }
+.family-identity .portrait-img, .family-identity .portrait-layer-stack { width: 10rem; height: 10rem; top: 0.2rem; right: 0.8rem; bottom: auto; }
+.family-identity-caption { position: absolute; inset: auto 0 0; display: flex; align-items: center; gap: 0.7rem; padding: 0.85rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; }
+.family-identity-caption h1 { margin: 0 0 0.25rem; color: var(--gold-light); font: 1.35rem var(--font-header); }
+.family-person-link { border: 0; padding: 0; color: var(--gold); background: none; cursor: var(--cursor-pointer); font: inherit; text-align: left; }
+.family-person-link:hover { color: var(--gold-light); }
+.family-person-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.family-person-row { display: flex; align-items: center; gap: 0.65rem; width: 100%; padding: 0.65rem; color: var(--text); text-align: left; font: inherit; cursor: var(--cursor-pointer); background: url('/assets/baked/card-charcoal.png') center / 100% 100%; border: 0.231rem solid transparent; border-image: url('/assets/gold-frame.png') 6; }
+.family-person-row:hover { background-image: url('/assets/baked/card-charcoal-hover.png'); }
+.family-person-copy { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.family-person-copy strong { color: var(--gold-light); font-family: var(--font-header); }
+.family-person-copy small { color: var(--text-muted); }
+.family-sidebar .interaction-card { margin-top: 0.65rem; }
+.family-sidebar .sidebar-content > .styled-scroll-area__viewport, .kinship-sidebar .sidebar-content > .styled-scroll-area__viewport { padding-left: 0.6rem; }
+
+@media (max-height: 700px) {
+  .family-identity { height: 8rem; }
+  .family-identity .portrait-img, .family-identity .portrait-layer-stack { width: 7rem; height: 7rem; }
+}

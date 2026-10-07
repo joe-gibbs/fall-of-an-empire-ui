@@ -109,6 +109,7 @@ export interface SettlementGlanceData {
   resources: Array<{ icon: string; label: string; stock: number }>;
   culture: { label: string; colour: string };
   religion: { label: string; colour: string };
+  faithMarkers?: { icon: string; label: string }[];
   governorName?: string;
   governorDebugShortId?: number;
   complianceTargetLabel?: string;
@@ -133,6 +134,7 @@ export interface SettlementGlanceData {
   queuedRecruitmentCount?: number;
   warWithPlayer?: boolean;
   peaceSelection?: boolean;
+  peaceConcession?: boolean;
   warScoreCost?: number;
 }
 

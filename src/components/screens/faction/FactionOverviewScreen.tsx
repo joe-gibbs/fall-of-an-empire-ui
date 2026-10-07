@@ -1,3 +1,11 @@
+import FoederatiPoliticsPanel from './FoederatiPoliticsPanel';
+import { startTransition } from 'react';
+import FactionEdictEntry from './FactionEdictEntry';
+import TribalSuccessionPanel from './TribalSuccessionPanel';
+import ConfederationPanel from './ConfederationPanel';
+import { useConfederationData } from './confederationData';
+import EntityLink from '../../common/entities/EntityLink';
+import { buildIncomeTooltip } from '../../topbar/IncomeBreakdownDetails';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
@@ -5,17 +13,14 @@ import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import Portrait from '../../common/portraits/Portrait';
 import FactionRoundel from '../../common/entities/FactionRoundel';
 import FactionTooltip from '../../common/tooltips/FactionTooltip';
-import CultureTooltip from '../../common/tooltips/CultureTooltip';
+import CultureLink from '../../common/culture/CultureLink';
 import GovernmentTooltip from '../../common/tooltips/GovernmentTooltip';
-import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
+import ReligionLink from '../../common/religion/ReligionLink';
 import { cultureIconPath } from '../../../utils/cultureIcons';
+import { religionIconPath } from '../../../utils/religionIcons';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
-import InteractionEffectsTooltip from '../../common/tooltips/InteractionEffectsTooltip';
-import InteractionCard from '../../common/interactions/InteractionCard';
 import Badge from '../../common/data-display/stats/Badge';
 import HeirAssignmentModal from '../../modals/characters/HeirAssignmentModal';
-import { BureaucraticInlineValue, BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThroughput';
-import { bureaucraticTooltipLine } from '../../bureaucracy/BureaucraticThroughputModel';
 import { useGameActions } from '../../../context/GameContext';
 import { usePlayerFactionSummaryBridgeState } from '../../../bridge/app/usePlayerFactionBridge';
 import {
@@ -24,22 +29,23 @@ import {
   type FactionInteractionView,
 } from '../../../bridge/diplomacy/useFactionInteractionsBridge';
 import { useFactionBridgeState } from '../../../bridge/diplomacy/useFactionBridge';
+import { useCultureDevelopmentBridge } from '../../../bridge/culture/useCultureDevelopmentBridge';
+import { cultureDevelopmentTooltipFooter, cultureDevelopmentTooltipLines } from '../../common/culture/cultureDevelopmentTooltip';
 import { useFamilyTreeBridgeState, type FamilyTreeData, type FamilyTreePerson } from '../../../bridge/characters/useCharactersBridge';
 import { useBridgeQuery } from '../../../bridge/core/useBridgeQuery';
 import type { GetIncomeBreakdownResponse } from '../../../bridge-types.generated.ts';
 import type { Faction } from '../../../data/types';
 import { formatPersonActivity } from '../../../utils/displayLabels';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
-import { displayTextToPlain } from '../../../utils/displayText';
 import { webUIText, useWebUIText, type WebUITextFormatter } from '../../../localization/WebUITextContext';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import { CourtPositionsPanel, FactionModifierCard, PolicyEntry } from './FactionOverviewShared';
 import './FactionOverviewScreen.css';
 
-function factionOverviewTabs(t: WebUITextFormatter) {
+function factionOverviewTabs(t: WebUITextFormatter, hasCourt: boolean, courtTitle?: string) {
   return [
     { id: 'overview', label: t('FactionOverview.TabOverview') },
-    { id: 'court', label: t('FactionOverview.TabCourt') },
+    ...(hasCourt ? [{ id: 'court', label: courtTitle || t('FactionOverview.TabCourt') }] : []),
     { id: 'rulers', label: t('FactionOverview.TabRulers') },
   ];
 }
@@ -70,89 +76,22 @@ function getIncomeTotals(income: GetIncomeBreakdownResponse | null, faction: Fac
   return { incomeTotal, expenseTotal, net };
 }
 
-function firstPlainLine(lines: FactionInteractionView['descriptionLines'], fallback: string | null | undefined): string {
-  const structured = displayTextToPlain(lines);
-  const source = structured || fallback || '';
-  return source
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .find(Boolean) ?? '';
-}
-
-function edictTooltip(edict: FactionInteractionView, factionId: string, t: WebUITextFormatter): TooltipContent {
-  const edictBureaucraticLoad = edict.bureaucraticLoad;
-  const throughputLine = bureaucraticTooltipLine(edictBureaucraticLoad);
-  const description = firstPlainLine(edict.descriptionLines, edict.description);
-  const lines: TooltipLine[] = [
-    { label: t('Common.Cost'), value: edict.goldCost > 0 ? fmtFull(edict.goldCost) : t('Common.Free'), valueIcon: edict.goldCost > 0 ? '/assets/icons/I_Coins.png' : undefined },
-    { label: t('Common.Duration'), value: `${edict.durationDays} ${t(edict.durationDays === 1 ? 'Common.Day' : 'Common.Days')}` },
-    ...(throughputLine ? [throughputLine] : []),
-  ];
-
-  if (edict.cooldownDays > 0) {
-    lines.push({ label: t('FactionOverview.Cooldown'), value: `${edict.cooldownDays} ${t(edict.cooldownDays === 1 ? 'Common.Day' : 'Common.Days')}` });
-  }
-  if (edict.reasons.length > 0) {
-    lines.push({ label: t('FactionOverview.Unavailable'), isHeader: true });
-    for (const reason of edict.reasons) {
-      lines.push({ label: reason.reason });
-    }
-  }
-
-  const body = edict.inProgress && edict.remainingDays > 0
-    ? (
-      <>
-        <span>{description}</span>
-        <BureaucraticRushTooltipAction
-          actionId={`edict:${edict.id}`}
-          targetFactionId={factionId}
-          daysSaved={edict.bureaucraticRushDaysSaved}
-          overloadLoad={edict.bureaucraticRushLoad}
-        />
-      </>
-    )
-    : description;
-
-  return {
-    title: edict.name,
-    body,
-    lines,
-    afterLines: <InteractionEffectsTooltip lines={edict.effectLines} />,
-  };
-}
-
-function StatCell({
-  icon,
-  label,
-  value,
-  delta,
-  deltaTone,
-  tooltip,
-  className = '',
-  tone,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-  delta?: string;
+function StatCell({ icon, label, value, delta, deltaTone, tooltip, tone }: {
+  icon: string; label: string; value: string; delta?: string;
   deltaTone?: 'positive' | 'negative' | 'muted';
-  tooltip: TooltipContent;
-  className?: string;
-  tone?: 'gold' | 'positive' | 'negative';
+  tooltip?: TooltipContent; tone?: 'gold' | 'positive' | 'negative';
 }) {
-  const valueClass = `fov-stat-val${tone ? ` fov-stat-val--${tone}` : ''}${delta ? ' fov-stat-val--has-delta' : ''}`;
-  const deltaClass = deltaTone ? `fov-stat-delta fov-stat-delta--${deltaTone}` : 'fov-stat-delta';
   return (
     <Tooltip content={tooltip} delay={200}>
-      <div className={`fov-stat${className ? ` ${className}` : ''}`}>
+      <div className="fov-stat" tabIndex={0}>
         <img className="fov-stat-icon" src={icon} alt="" draggable={false} />
-        <div className="fov-stat-copy">
+        <span className="fov-stat-copy">
           <span className="fov-stat-label">{label}</span>
-          <span className={valueClass}>
+          <span className={`fov-stat-val${tone ? ` fov-stat-val--${tone}` : ''}`}>
             <span className="fov-stat-main">{value}</span>
-            {delta ? <span className={deltaClass}>{delta}</span> : null}
+            {delta && <span className={`fov-stat-delta fov-stat-delta--${deltaTone}`}>{delta}</span>}
           </span>
-        </div>
+        </span>
       </div>
     </Tooltip>
   );
@@ -178,38 +117,28 @@ function buildPopulationTooltip(faction: Faction, t: WebUITextFormatter): Toolti
   const directPopulation = faction.directPopulation ?? faction.population;
   const subjectPopulation = faction.subjectPopulation ?? 0;
   const subjectSettlements = faction.subjectSettlements ?? 0;
-  const lines: TooltipLine[] = [
-    {
-      label: t('FactionOverview.PopulationDirect'),
-      value: fmtFull(directPopulation),
-    },
-  ];
+  const lines: TooltipLine[] = [];
 
   if (subjectPopulation > 0 || subjectSettlements > 0 || (faction.vassalCount ?? 0) > 0) {
+    lines.push({
+      label: t('FactionOverview.PopulationDirect'),
+      value: fmtFull(directPopulation),
+    });
     lines.push({
       label: t('FactionOverview.PopulationSubjects'),
       value: fmtFull(subjectPopulation),
     });
-    if (subjectSettlements > 0) {
-      lines.push({
-        label: t('FactionOverview.SubjectSettlements'),
-        value: fmtFull(subjectSettlements),
-      });
-    }
   }
 
   const growthLines = populationGrowthLines(faction.populationGrowthBreakdown);
   if (growthLines.length > 0) {
-    lines.push({ label: t('FactionOverview.PopulationMonthlyChange'), isHeader: true });
+    lines.push({ label: t('FactionOverview.PopulationMonthlyChange'), value: fmtSigned(monthlyChange), isHeader: true });
     lines.push(...growthLines);
   }
 
   return {
     title: t('Common.Population'),
-    body: t('FactionOverview.PopulationTooltipBody', {
-      Total: fmtFull(faction.population),
-      Change: fmtSigned(monthlyChange),
-    }),
+    body: t('FactionOverview.PopulationTooltipBody'),
     lines,
   };
 }
@@ -230,8 +159,10 @@ function FactionHeader({
           name: faction.name,
           rulerName: faction.rulerName,
           culture: faction.culture,
+          cultureId: faction.cultureId,
           cultureInfo: faction.cultureInfo,
           religion: faction.religion,
+          religionId: faction.religionId,
           religionInfo: faction.religionInfo,
           capital: faction.capital,
           population: faction.population,
@@ -261,7 +192,7 @@ function FactionHeader({
           src={faction.rulerPortrait}
           layers={faction.rulerPortraitLayers}
           name={faction.rulerName}
-          size="xl"
+          size={faction.realmProgress?.available ? 'lg' : 'xl'}
           onClick={() => faction.rulerId && onOpenCharacter(faction.rulerId)}
         />
         <div className="fov-faction-info">
@@ -274,24 +205,36 @@ function FactionHeader({
               {faction.rulerName || t('FactionOverview.NoRuler')}
             </button>
           </div>
+          {faction.dominantCourtierName ? (
+            <div className="fov-court-power">
+              <button
+                type="button"
+                className="fov-current-ruler-name"
+                onClick={() => faction.dominantCourtierId && onOpenCharacter(faction.dominantCourtierId)}
+              >
+                {t('FactionOverview.PowerBehindTheThrone')}: {faction.dominantCourtierName}
+              </button>
+              {faction.dominantCourtierParts && faction.dominantCourtierParts.length > 0 ? (
+                <div className="fov-identity-row">{faction.dominantCourtierParts.join(', ')}</div>
+              ) : null}
+            </div>
+          ) : faction.splitCourt ? (
+            <div className="fov-court-power">{t('FactionOverview.ControlDivided')}</div>
+          ) : null}
           <div className="fov-identity-row">
-            <CultureTooltip info={faction.cultureInfo} fallbackName={faction.culture} fallbackId={faction.cultureId}>
-              <span className="fov-identity-item">
+              <CultureLink info={faction.cultureInfo} cultureId={faction.cultureId || faction.cultureInfo?.id || ''} className="fov-identity-item">
                 <img
                   className="fov-identity-icon"
-                  src={cultureIconPath(faction.cultureId || faction.cultureInfo?.id)}
+                  src={cultureIconPath(faction.cultureInfo)}
                   alt=""
                   draggable={false}
                 />
                 {faction.culture || t('FactionOverview.NoCulture')}
-              </span>
-            </CultureTooltip>
-            <ReligionTooltip info={faction.religionInfo} fallbackName={faction.religion} fallbackId={faction.religionId}>
-              <span className="fov-identity-item">
-                <img className="fov-identity-icon" src="/assets/icons/I_Religions.png" alt="" draggable={false} />
-                {faction.religion || t('FactionOverview.NoReligion')}
-              </span>
-            </ReligionTooltip>
+              </CultureLink>
+            <ReligionLink info={faction.religionInfo} religionId={faction.religionId || faction.religionInfo?.id || ''} className="fov-identity-item">
+              <img className="fov-identity-icon" src={religionIconPath(faction.religionId || faction.religionInfo?.id)} alt="" draggable={false} />
+              {faction.religion || t('FactionOverview.NoReligion')}
+            </ReligionLink>
             <GovernmentTooltip
               government={faction.government}
               displayName={faction.governmentDisplayName}
@@ -310,27 +253,38 @@ function FactionHeader({
   );
 }
 
-function StatsBar({ faction }: { faction: Faction }) {
+function StatsBar({ faction, totals, income }: {
+  faction: Faction; totals: ReturnType<typeof getIncomeTotals>; income: GetIncomeBreakdownResponse | null;
+}) {
   const t = useWebUIText();
   const monthlyChange = faction.populationMonthlyChange ?? 0;
-  const populationDelta = monthlyChange === 0
-    ? undefined
-    : t('FactionOverview.PopulationDelta', { Change: fmtSigned(monthlyChange) });
-  const populationDeltaTone = monthlyChange > 0 ? 'positive' : monthlyChange < 0 ? 'negative' : 'muted';
-
+  const incomeDetails: TooltipContent = income ? buildIncomeTooltip(income) : {
+    lines: [
+      { label: t('FactionOverview.Income'), value: fmtSigned(totals.incomeTotal) },
+      { label: t('FactionOverview.Expenses'), value: fmtSigned(-totals.expenseTotal) },
+    ],
+  };
+  const stats: { id: string; icon: string; label: string; value: string; tooltip?: TooltipContent; tone?: 'gold' | 'positive' | 'negative'; delta?: string; deltaTone?: 'positive' | 'negative' | 'muted' }[] = [
+    { id: 'treasury', icon: '/assets/icons/I_Coins.png', label: t('Common.Treasury'), value: fmtFull(faction.gold), tone: 'gold', tooltip: incomeDetails },
+    { id: 'net', icon: '/assets/icons/I_Coins.png', label: t('FactionOverview.Net'), value: fmtSigned(totals.net), tone: totals.net >= 0 ? 'positive' : 'negative', tooltip: incomeDetails },
+    { id: 'settlements', icon: '/assets/icons/I_Domain.png', label: t('Economy.Settlements'), value: fmtFull(faction.settlements), tooltip: {
+      body: t('FactionOverview.SettlementsTooltip'),
+      lines: faction.settlementBreakdown.map(entry => ({ label: <EntityLink type="settlement" id={entry.id}>{entry.name}</EntityLink> })),
+    } },
+    { id: 'population', icon: '/assets/icons/I_Population.png', label: t('Common.Population'), value: fmtNum(faction.population),
+      delta: monthlyChange === 0 ? undefined : t('FactionOverview.PopulationDelta', { Change: fmtSigned(monthlyChange) }),
+      deltaTone: monthlyChange > 0 ? 'positive' : monthlyChange < 0 ? 'negative' : 'muted', tooltip: buildPopulationTooltip(faction, t) },
+    { id: 'army', icon: '/assets/icons/I_ArmiesQuickButton.png', label: t('FactionOverview.ArmyStrength'), value: fmtNum(faction.strength), tooltip: {
+      body: t('FactionOverview.ArmyStrengthTooltip'),
+      lines: faction.strengthBreakdown.map(entry => ({ label: entry.name, value: formatNumber(entry.value) })),
+    } },
+    { id: 'capital', icon: '/assets/icons/I_Capital.png', label: t('FactionOverview.Capital'), value: faction.capital || t('Common.None') },
+  ];
   return (
-    <div className="fov-stats-bar">
-      <StatCell icon="/assets/icons/I_Domain.png" label={t('Economy.Settlements')} value={fmtFull(faction.settlements)} tooltip={{ title: t('Economy.Settlements'), body: t('FactionOverview.SettlementsTooltip') }} />
-      <StatCell
-        icon="/assets/icons/I_Population.png"
-        label={t('Common.Population')}
-        value={fmtNum(faction.population)}
-        delta={populationDelta}
-        deltaTone={populationDeltaTone}
-        tooltip={buildPopulationTooltip(faction, t)}
-      />
-      <StatCell icon="/assets/icons/I_ArmiesQuickButton.png" label={t('FactionOverview.ArmyStrength')} value={fmtNum(faction.strength)} tooltip={{ title: t('FactionOverview.ArmyStrength'), body: t('FactionOverview.ArmyStrengthTooltip') }} />
-      <StatCell icon="/assets/icons/I_Capital.png" label={t('FactionOverview.Capital')} value={faction.capital || t('Common.None')} tooltip={{ title: t('FactionOverview.Capital'), body: faction.capital || t('Common.None') }} />
+    <div className="fov-stats-section">
+      <div className="fov-stats-bar">
+        {stats.map(stat => <StatCell key={stat.id} {...stat} />)}
+      </div>
     </div>
   );
 }
@@ -339,10 +293,12 @@ function SuccessionStrip({
   familyTree,
   onOpenCharacter,
   onAssignHeir,
+  compact = false,
 }: {
   familyTree: FamilyTreeData | null;
   onOpenCharacter: (id: string) => void;
-  onAssignHeir: () => void;
+  onAssignHeir?: () => void;
+  compact?: boolean;
 }) {
   const t = useWebUIText();
   const people = useMemo(() => {
@@ -360,14 +316,8 @@ function SuccessionStrip({
   const line = (familyTree?.groups.succession ?? []).map(id => people.get(id)).filter(Boolean) as FamilyTreePerson[];
 
   const tooltip: TooltipContent = {
-    title: successor?.name ?? t('FactionOverview.NoSuccessor'),
-    body: successor?.isDesignatedHeir ? t('FactionOverview.DesignatedHeirBody') : t('FactionOverview.LikelySuccessorBody'),
+    title: t(line.length > 0 ? 'FactionOverview.LineOfSuccession' : 'FactionOverview.NoSuccessor'),
     lines: [
-      ...(successor ? [
-        { label: t('Common.Relation'), value: successor.relationToRuler || t('Common.Court') },
-        { label: t('Common.Age'), value: formatNumber(successor.age) },
-      ] : []),
-      ...(line.length > 0 ? [{ label: t('FactionOverview.LineOfSuccession'), isHeader: true }] : []),
       ...line.slice(0, 5).map((person, i) => ({ label: `#${i + 1} ${person.relationToRuler || person.shortTitle}`, value: person.name })),
     ],
   };
@@ -385,7 +335,7 @@ function SuccessionStrip({
             personId={successor?.id}
             src={successor?.portrait}
             name={successor?.name ?? t('FactionOverview.NoSuccessor')}
-            size="lg"
+            size={compact ? 'md' : 'lg'}
             activity={successor?.activity}
             isRuler={successor?.isRuler}
             isHeir={successor?.isHeir}
@@ -399,9 +349,37 @@ function SuccessionStrip({
           </div>
         </div>
       </Tooltip>
-      <button type="button" className="btn--outline fov-succession-assign" onClick={onAssignHeir}>
+      {onAssignHeir && <button type="button" className="btn--outline fov-succession-assign" onClick={onAssignHeir}>
         {t('Common.Assign')}
-      </button>
+      </button>}
+    </div>
+  );
+}
+
+function RealmProgress({ faction }: { faction: Faction }) {
+  const progress = faction.realmProgress;
+  const details = useCultureDevelopmentBridge(progress?.available ? faction.cultureId || null : null);
+  if (!progress?.available) return null;
+  const nextUnlock = details?.gates.find(gate => gate.isNext);
+  const developmentTooltip: TooltipContent = {
+    title: webUIText('CultureDevelopment.Development'),
+    titleAccessory: <CultureLink cultureId={faction.cultureId || ''} showTooltip={false}>{faction.culture}</CultureLink>,
+    body: webUIText('CultureDevelopment.Description'),
+    lines: details ? cultureDevelopmentTooltipLines(details, webUIText, nextUnlock) : undefined,
+    footer: details ? cultureDevelopmentTooltipFooter(webUIText, nextUnlock) : undefined,
+  };
+  return (
+    <div className="fov-realm-progress">
+      <Tooltip content={developmentTooltip} bubbleClassName="fov-development-tooltip" delay={150}>
+        <div className="fov-realm-metric" tabIndex={0}><img src={cultureIconPath(faction.cultureInfo)} alt="" /><span>{webUIText('CultureDevelopment.Development')}</span><strong>{formatNumber(progress.development, { maximumFractionDigits: 1 })}</strong></div>
+      </Tooltip>
+      <Tooltip content={{
+          title: webUIText('Realm.SettledLand'),
+          body: progress.kingdomCitiesRequired > 0 ? webUIText('Realm.KingdomCities', { Count: formatNumber(progress.kingdomCitiesRequired) }) : undefined,
+          lines: [{ label: webUIText('Realm.SettledLand'), value: formatNumber(progress.raisedCities) }, { label: webUIText('Economy.Settlements'), value: formatNumber(progress.provinces) }],
+        }} delay={150}>
+        <div className="fov-realm-metric" tabIndex={0}><img src="/assets/icons/I_Town_Metal.png" alt="" /><span>{webUIText('Realm.SettledLand')}</span><strong>{formatNumber(progress.raisedCities)} / {formatNumber(progress.provinces)}</strong></div>
+      </Tooltip>
     </div>
   );
 }
@@ -409,6 +387,7 @@ function SuccessionStrip({
 function OverviewTab({
   faction,
   totals,
+  income,
   familyTree,
   edictsPending,
   edicts,
@@ -421,6 +400,7 @@ function OverviewTab({
 }: {
   faction: Faction;
   totals: ReturnType<typeof getIncomeTotals>;
+  income: GetIncomeBreakdownResponse | null;
   familyTree: FamilyTreeData | null;
   edictsPending: boolean;
   edicts: FactionInteractionView[];
@@ -432,65 +412,58 @@ function OverviewTab({
   onAssignHeir: () => void;
 }) {
   const t = useWebUIText();
+  const confederation = useConfederationData(faction.id);
+  const succession = useBridgeQuery({ action: 'game.get_succession_forecast', map: data => data.forecast });
+  const centralisation = faction.policies.find(policy => policy.id === 'centralisation');
+  const policies = faction.policies.filter(policy => policy.id !== 'centralisation');
 
   return (
-    <div className="fov-wrap">
+    <div className={`fov-wrap${faction.realmProgress?.available ? ' fov-wrap--warbands' : ''}`}>
       <div className="fov-overview-summary">
         <div className="fov-overview-identity-row">
           <div className="fov-overview-primary">
             <FactionHeader faction={faction} onOpenCharacter={onOpenCharacter} />
           </div>
-          {!faction.generatesLeaderOnSuccession && (
+          {!faction.generatesLeaderOnSuccession && !succession?.enabled && (
             <div className="fov-overview-heir">
-              <SuccessionStrip familyTree={familyTree} onOpenCharacter={onOpenCharacter} onAssignHeir={onAssignHeir} />
+              <SuccessionStrip familyTree={familyTree} onOpenCharacter={onOpenCharacter} onAssignHeir={faction.canAppointHeir ? onAssignHeir : undefined} compact={faction.realmProgress?.available} />
             </div>
           )}
         </div>
 
-        <div className="fov-overview-metrics-row">
-          <div className="fov-finance-summary fov-metric-panel">
-            <div className="fov-finance-top-row">
-              <div className="fov-finance-primary">
-                <span className="fov-detail-label">{t('Common.Treasury')}</span>
-                <span className="fov-finance-treasury-value">{fmtFull(faction.gold)}</span>
-              </div>
-              <div className="fov-finance-primary">
-                <span className="fov-detail-label">{t('FactionOverview.Net')}</span>
-                <span className={`fov-finance-net-value ${totals.net >= 0 ? 'info-value--positive' : 'info-value--negative'}`}>{fmtSigned(totals.net)}</span>
-              </div>
-            </div>
-            <div className="fov-finance-breakdown">
-              <div className="info-row"><span className="info-label">{t('FactionOverview.Income')}</span><span className="info-value info-value--positive">+{fmtFull(totals.incomeTotal)}</span></div>
-              <div className="info-row"><span className="info-label">{t('FactionOverview.Expenses')}</span><span className="info-value info-value--negative">-{fmtFull(totals.expenseTotal)}</span></div>
-            </div>
-          </div>
-          <StatsBar faction={faction} />
-        </div>
+        <StatsBar faction={faction} totals={totals} income={income} />
       </div>
-
-      <SectionHeading variant="ornate" title={t('FactionOverview.Modifiers')} />
-      <div className="fov-modifier-grid">
-        {faction.modifiers.length === 0 ? (
-          <div className="fov-empty-state">{t('FactionOverview.NoActiveModifiers')}</div>
-        ) : faction.modifiers.map(modifier => (
-          <FactionModifierCard key={modifier.key} modifier={modifier} />
-        ))}
-      </div>
-
+      {succession?.enabled && <TribalSuccessionPanel data={succession} />}
+      <ConfederationPanel data={confederation} />
+      <RealmProgress faction={faction} />
       <div className="fov-policies-layout" data-tutorial-target="FactionPolicies PoliciesTabButton">
         <div className="fov-policies-col">
           <SectionHeading variant="ornate" title={t('FactionOverview.Policies')} />
           <div className="fov-policies-list">
-            {faction.policies.length === 0 ? (
-              <div className="fov-empty-state">{t('FactionOverview.NoPolicies')}</div>
-            ) : faction.policies.map(policy => (
-              <PolicyEntry
-                key={policy.id}
-                factionId={faction.id}
-                policy={policy}
-                blockedByInteraction={interactionsActive && !policy.inProgress}
-              />
-            ))}
+            <FoederatiPoliticsPanel factionId={faction.id} factionName={faction.name} data={faction.foederatiPolitics} />
+            {!centralisation && policies.length === 0 ? (
+              faction.foederatiPolitics?.enabled ? null : <div className="fov-empty-state">{t('FactionOverview.NoPolicies')}</div>
+            ) : (
+              <>
+                {centralisation && (
+                  <PolicyEntry
+                    key={centralisation.id}
+                    factionId={faction.id}
+                    policy={centralisation}
+                    blockedByInteraction={interactionsActive && !centralisation.inProgress}
+                    featured
+                  />
+                )}
+                {policies.map(policy => (
+                  <PolicyEntry
+                    key={policy.id}
+                    factionId={faction.id}
+                    policy={policy}
+                    blockedByInteraction={interactionsActive && !policy.inProgress}
+                  />
+                ))}
+              </>
+            )}
           </div>
         </div>
         <div className="fov-policies-col">
@@ -498,41 +471,19 @@ function OverviewTab({
           <div className="fov-edicts-list">
             {edictsPending ? null : edicts.length === 0 ? (
               <div className="fov-empty-state">{t('FactionOverview.NoEdicts')}</div>
-            ) : edicts.map(edict => {
-              const canStart = edict.availability === 'available' && !edict.inProgress && edict.cooldownRemainingDays <= 0;
-              const matchesOutcome = interactionsState?.lastCompletedInteractionId === edict.id;
-              const outcome: 'success' | 'failure' | undefined = matchesOutcome
-                ? interactionsState!.lastInteractionSucceeded ? 'success' : 'failure'
-                : undefined;
-              const outcomeKey = matchesOutcome
-                ? `${interactionsState!.lastInteractionCompletedDate}:${edict.id}`
-                : undefined;
-              return (
-                <Tooltip key={edict.id} content={edictTooltip(edict, faction.id, t)} position="left" delay={150} bubbleClassName="fov-tooltip-bubble">
-                    <InteractionCard
-                    title={edict.name}
-                    description={firstPlainLine(edict.descriptionLines, edict.description)}
-                    image={edict.iconUrl}
-                    bgImage={edict.backgroundUrl}
-                    cooldown={edict.goldCost > 0 ? t('FactionOverview.GoldCost', { Amount: fmtFull(edict.goldCost) }) : undefined}
-                    durationDays={edict.durationDays}
-                    inProgress={edict.inProgress}
-                    remainingDays={edict.remainingDays}
-                    cooldownDays={edict.cooldownDays}
-                    cooldownRemainingDays={edict.cooldownRemainingDays}
-                    outcome={outcome}
-                    outcomeText={matchesOutcome ? interactionsState!.lastInteractionOutcomeText : undefined}
-                    outcomeKey={outcomeKey}
-                    tutorialTarget={`Interaction:${edict.id}${edict.id === 'grandfestival' ? ' GrandFestivalButton' : ''}`}
-                    meta={<BureaucraticInlineValue value={edict.bureaucraticLoad} compact />}
-                    onClick={canStart ? () => onStartEdict(edict.id) : undefined}
-                    onCancel={edict.inProgress ? onCancelEdict : undefined}
-                  />
-                </Tooltip>
-              );
-            })}
+            ) : edicts.map(edict => (
+              <FactionEdictEntry key={edict.id} confederation={confederation} edict={edict} factionId={faction.id} interactionsState={interactionsState} onStart={onStartEdict} onCancel={onCancelEdict} />
+            ))}
           </div>
         </div>
+      </div>
+      <SectionHeading variant="ornate" title={t('FactionOverview.Modifiers')} />
+      <div className="fov-modifier-grid">
+        {faction.modifiers.length === 0 ? (
+          <div className="fov-empty-state">{t('FactionOverview.NoActiveModifiers')}</div>
+        ) : faction.modifiers.map(modifier => (
+          <FactionModifierCard key={modifier.key} modifier={modifier} />
+        ))}
       </div>
     </div>
   );
@@ -655,15 +606,17 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
   const t = useWebUIText();
   const [activeTab, setActiveTab] = useState(() => factionOverviewTabFromScreenId(screenId));
   useEffect(() => {
-    setActiveTab(factionOverviewTabFromScreenId(screenId));
+    startTransition(() => setActiveTab(factionOverviewTabFromScreenId(screenId)));
   }, [screenId]);
   const [heirModalOpen, setHeirModalOpen] = useState(false);
-  const playerFaction = usePlayerFactionSummaryBridgeState();
+  const playerFaction = usePlayerFactionSummaryBridgeState(true);
   const playerFactionId = playerFaction.summary?.id ?? null;
-  const factionState = useFactionBridgeState(playerFactionId, 'overview');
+  const hasCourt = playerFaction.summary?.hasImperialCourt === true;
+  const selectedTab = activeTab === 'court' && !hasCourt ? 'overview' : activeTab;
+  const factionState = useFactionBridgeState(playerFactionId, 'overview', true, true);
   const faction = factionState.faction;
   const income = useIncomeBreakdown();
-  const familyTreeState = useFamilyTreeBridgeState(undefined, activeTab === 'rulers' ? 'history' : 'succession');
+  const familyTreeState = useFamilyTreeBridgeState(undefined, activeTab === 'rulers' ? 'history' : 'succession', true, true);
   const familyTree = familyTreeState.familyTree;
   const interactions = useFactionInteractionsBridge(playerFactionId);
   const { openSidebar } = useGameActions();
@@ -691,12 +644,13 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
   }, [interactions]);
 
   const content = faction ? (() => {
-    switch (activeTab) {
+    switch (selectedTab) {
       case 'overview':
         return (
           <OverviewTab
             faction={faction}
             totals={totals}
+            income={income}
             familyTree={familyTree}
             edictsPending={interactions.pending}
             edicts={edicts}
@@ -709,7 +663,7 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
           />
         );
       case 'court':
-        return <CourtPositionsPanel enabled={activeTab === 'court'} onOpenCharacter={openCharacter} />;
+        return <CourtPositionsPanel suspend enabled={activeTab === 'court'} onOpenCharacter={openCharacter} />;
       case 'rulers':
         return <RulersTab familyTree={familyTree} pending={familyTreeState.pending} onOpenCharacter={openCharacter} />;
       default:
@@ -727,7 +681,7 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
         title={t('FactionOverview.ScreenTitle')}
         onClose={onClose}
         advisorTopic="factionOverviewScreen"
-        tabs={<SidebarTabBar tabs={factionOverviewTabs(t)} activeTab={activeTab} onTabChange={setActiveTab} />}
+        tabs={<SidebarTabBar tabs={factionOverviewTabs(t, hasCourt, playerFaction.summary?.courtTitle)} activeTab={selectedTab} onTabChange={setActiveTab} />}
         styledScrollContent
       >
         {content}

@@ -15,7 +15,7 @@ import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { performSiegeCommandBridge } from '../../../bridge/settlements-economy/useSettlementBridge';
 import { useGameActions } from '../../../context/GameContext';
 import type { BesiegingArmyInfo, Settlement, SiegeInfo, SiegeProgressFactor, SiegeStateKind } from '../../../data/types';
-import { usePlayerFactionId, useSettlement } from '../../../data-source/index';
+import { useFaction, usePlayerFactionId, useSettlement } from '../../../data-source/index';
 import { registerSidebar } from '../../../registry/index';
 import { formatNumber, formatPercent, formatSignedNumber } from '../../../utils/numberFormat';
 import SidebarToolbar from '../shared/SidebarToolbar';
@@ -667,6 +667,7 @@ function ForceGroup({
 function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose: () => void }) {
   const { openSidebar } = useGameActions();
   const playerFactionId = usePlayerFactionId();
+  const playerFaction = useFaction(playerFactionId);
   const [pendingCommand, setPendingCommand] = React.useState<SiegeCommandId | null>(null);
 
   React.useEffect(() => {
@@ -799,6 +800,7 @@ function SiegeSidebar({ settlement, onClose }: { settlement: Settlement; onClose
           <div className="game-notice game-notice--danger game-notice--compact">
             {webUIText('Settlement.Siege.CapitalDeadlineBody', {
               Days: formatNumber(view.capitalOccupationDaysRemaining ?? 0),
+              Government: playerFaction?.governmentTypeName,
             })}
           </div>
         )}

@@ -56,13 +56,17 @@ async function refreshEventNameViews(input: EventRegnalNameInput | EventPersonNa
 
   if (input.targetFactionId) {
     tasks.push(
-      bridgeCall('game.get_faction_data', { factionId: input.targetFactionId, scope: 'full' })
+      bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId: input.targetFactionId, scope: 'full' })
         .then(dispatchFactionData),
     );
   }
 
   tasks.push(refreshCharacterListAction(input.targetFactionId || ''));
-  tasks.push(refreshVoidAction('game.get_court_positions'));
+  tasks.push(bridgeCall('game.get_player_faction').then(playerFaction => {
+    if (playerFaction.hasImperialCourt) {
+      return refreshVoidAction('game.get_court_positions');
+    }
+  }));
   tasks.push(refreshDiplomacyOverviewAction());
   tasks.push(refreshEconomyOverviewAction());
   tasks.push(refreshFamilyTreeAction(input.targetPersonId || ''));
@@ -101,6 +105,26 @@ function mapEvent(data: GetCurrentEventResponse): GameEvent | null {
           randomOptions: data.personNameInput.randomOptions || [],
           targetPersonId: data.personNameInput.targetPersonId || undefined,
           targetFactionId: data.personNameInput.targetFactionId || undefined,
+        }
+      : undefined,
+    factionNameInput: data.factionNameInput.isRequired
+      ? {
+          label: data.factionNameInput.label,
+          value: data.factionNameInput.value,
+          randomButtonText: data.factionNameInput.randomButtonText,
+          randomOptions: data.factionNameInput.randomOptions,
+          targetFactionId: data.factionNameInput.targetFactionId,
+        }
+      : undefined,
+    factionEmblemInput: data.factionEmblemInput.isRequired
+      ? {
+          label: data.factionEmblemInput.label,
+          value: data.factionEmblemInput.value,
+          options: data.factionEmblemInput.options || [],
+          targetFactionId: data.factionEmblemInput.targetFactionId,
+          colour: data.factionEmblemInput.colour,
+          secondaryColour: data.factionEmblemInput.secondaryColour,
+          cultureGroup: data.factionEmblemInput.cultureGroup,
         }
       : undefined,
     options: data.options.map(o => ({
@@ -156,6 +180,8 @@ export function useEventBridge(): {
       optionIndex,
       regnalName: inputs?.regnalName || '',
       personName: inputs?.personName || '',
+      factionName: inputs?.factionName || '',
+      factionEmblem: inputs?.factionEmblem || '',
     })
       .then((response) => {
         if (!response.success) {
@@ -168,6 +194,16 @@ export function useEventBridge(): {
         }
         if (event.personNameInput) {
           void refreshEventNameViews(event.personNameInput).catch(acknowledgeBridgeFailure);
+        }
+        if (event.factionNameInput || event.factionEmblemInput) {
+          const factionId = event.factionNameInput?.targetFactionId || event.factionEmblemInput?.targetFactionId || '';
+          void Promise.all([
+            bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId, scope: 'full' })
+              .then(dispatchFactionData),
+            bridgeCall('game.get_player_faction').then(data => dispatchBridgeEvent('game.get_player_faction', data)),
+            refreshDiplomacyOverviewAction(),
+            refreshVoidAction('game.get_pinned_items'),
+          ]).catch(acknowledgeBridgeFailure);
         }
       })
       .catch(error => {

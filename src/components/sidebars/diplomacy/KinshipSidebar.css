@@ -1,0 +1,5 @@
+.kinship-sidebar .sidebar-content > .styled-scroll-area__viewport { padding: 0.8rem 1.1rem 1rem 0.75rem; }
+.kinship-sidebar .clan-detail-title { flex-wrap: wrap; }
+.kinship-sidebar .clan-member-row { grid-template-columns: minmax(0, 1fr) auto; }
+.kinship-sidebar .clan-detail-title h2 { font-size: 1.3rem; }
+.kinship-sidebar .clan-leader-link .clan-person-copy strong { font-size: 1.15rem; }

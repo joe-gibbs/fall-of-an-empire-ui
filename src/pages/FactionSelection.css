@@ -153,6 +153,83 @@
   flex-shrink: 0;
 }
 
+/* Dated starts float above the campaign map, between the dossiers. */
+.fs-start-dates {
+  position: absolute;
+  top: 0.85rem;
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  width: min(44rem, calc(100% - 46rem));
+  transform: translateX(-50%);
+}
+
+.fs-start-dates > * + * {
+  margin-left: 0.65rem;
+}
+
+.fs-start-date-button.btn--outline {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 5.6rem;
+  padding: 0.85rem 1rem;
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.231rem;
+  border-image-outset: 0;
+  border-image-repeat: round;
+  background-color: transparent;
+  background-image: url('/assets/baked/main-menu-button.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  color: var(--text);
+  white-space: normal;
+  box-shadow: 0 0.45rem 1rem rgba(4, 6, 9, 0.5);
+}
+
+.fs-start-date-button.btn--outline:hover:not(:disabled),
+.fs-start-date-button.btn--outline:focus-visible:not(:disabled),
+.fs-start-date-button.btn--outline[aria-pressed="true"]:not(:disabled),
+.fs-start-date-button.btn--outline:active:not(:disabled) {
+  border-image-source: url('/assets/gold-frame.png');
+  background-image: url('/assets/baked/main-menu-button-hover.png');
+}
+
+.fs-start-date-button .btn-content {
+  white-space: normal;
+  overflow: visible;
+}
+
+.fs-start-date-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: center;
+}
+
+.fs-start-date-date {
+  font-family: var(--font-header);
+  font-size: 1.45rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-bright);
+}
+
+.fs-start-date-name {
+  margin-top: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--text-muted);
+}
+
+.fs-start-date-button[aria-pressed="true"] .fs-start-date-date,
+.fs-start-date-button[aria-pressed="true"] .fs-start-date-name {
+  color: var(--gold-light);
+}
+
 .fs-back-btn,
 .fs-begin-btn,
 .fs-faction-row,
@@ -790,6 +867,76 @@
   background-image: none;
 }
 
+.fs-map-tools {
+  position: absolute;
+  top: 0.85rem;
+  left: 50%;
+  z-index: 4;
+  width: min(32rem, calc(100% - 46rem));
+  transform: translateX(-50%);
+}
+
+.fs-map-panel--has-dates .fs-map-tools {
+  top: 7.2rem;
+}
+
+.fs-map-modes {
+  display: flex;
+}
+
+.fs-map-modes > * + * {
+  margin-left: 0.4rem;
+}
+
+.fs-map-mode-button.btn--outline {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.55rem 0.6rem;
+  border: 0.231rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6 round;
+  background: url('/assets/baked/main-menu-button.png') center / 100% 100% no-repeat;
+}
+
+.fs-map-mode-button.btn--outline:hover:not(:disabled),
+.fs-map-mode-button.btn--outline:focus-visible:not(:disabled),
+.fs-map-mode-button.btn--outline[aria-pressed="true"] {
+  background-image: url('/assets/baked/main-menu-button-hover.png');
+  color: var(--gold-light);
+}
+
+.fs-map-legend {
+  max-height: 8rem;
+  margin-top: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border: 0.231rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6 round;
+  background: url('/assets/baked/main-menu-button.png') center / 100% 100% no-repeat;
+}
+
+.fs-map-legend-viewport {
+  max-height: 6.5rem;
+}
+
+.fs-map-legend-entries {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.fs-map-legend-entry {
+  display: flex;
+  align-items: center;
+  margin: 0.15rem 0.8rem 0.15rem 0;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.fs-map-legend-swatch {
+  flex-shrink: 0;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-right: 0.4rem;
+}
+
 .fs-tabletop-input {
   position: relative;
   flex: 1 1 auto;
@@ -854,12 +1001,12 @@
   align-items: center;
 }
 
-.fs-map-panel--has-description .fs-zoom-controls {
-  bottom: 14.2rem;
-}
-
 .fs-zoom-controls > * + * {
   margin-top: 0.28rem;
+}
+
+.fs-map-panel--has-description .fs-zoom-controls {
+  bottom: 14.2rem;
 }
 
 .fs-zoom-btn {
@@ -901,7 +1048,12 @@
   opacity: 1;
 }
 
-/* Campaign briefing — floating parchment over the map */
+@keyframes fs-selector-briefing-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(0.55rem); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0rem); }
+}
+
+/* Campaign briefing over the map */
 .fs-campaign-description {
   position: absolute;
   left: 50%;
@@ -918,11 +1070,7 @@
   box-sizing: border-box;
   pointer-events: none;
   filter: drop-shadow(0 0.35rem 0.7rem rgba(4, 6, 9, 0.42));
-  animation-name: fs-selector-body-in;
-  animation-duration: 0.24s;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-delay: 0.1s;
-  animation-fill-mode: both;
+  animation: fs-selector-briefing-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
 .fs-campaign-description-scroll {
@@ -937,13 +1085,9 @@
   border-image-outset: 0;
   border-image-repeat: round;
   box-sizing: border-box;
-  background-color: rgba(12, 16, 21, 0.9);
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.35) 0%, rgba(13, 18, 24, 0.72) 100%),
-    url('/assets/baked/texture-overlay-heavy.png');
-  background-position: 0 0;
-  background-repeat: repeat, repeat;
-  background-size: auto, 7.385rem 7.385rem;
+  background-image: url('/assets/baked/panel-dark.png');
+  background-repeat: repeat;
+  background-size: 93.0909rem 93.0909rem;
   box-shadow: 0 0.4rem 1rem rgba(4, 6, 9, 0.4);
   pointer-events: auto;
   color: var(--text);
@@ -1754,6 +1898,16 @@
    -------------------------------------------------------------------------- */
 
 @media (max-width: 116.3636rem) {
+  .fs-map-tools {
+    width: min(32rem, calc(100% - 42rem));
+  }
+  .fs-start-dates {
+    width: min(40rem, calc(100% - 42rem));
+  }
+
+  .fs-campaign-description {
+    width: min(38rem, calc(100% - 42rem));
+  }
   .fs-list-panel {
     width: 17.5rem;
   }
@@ -1764,10 +1918,6 @@
 
   .fs-zoom-controls {
     right: calc(22.5rem + 1.6rem);
-  }
-
-  .fs-campaign-description {
-    width: min(38rem, calc(100% - 42rem));
   }
 
   .fs-header-balance,
@@ -1822,6 +1972,16 @@
     border-image-repeat: round;
   }
 
+  .fs-map-panel--has-dates {
+    flex: 0 0 28rem;
+    min-height: 28rem;
+  }
+
+  .fs-map-panel--has-dates .fs-zoom-controls {
+    top: 7.5rem;
+    bottom: auto;
+  }
+
   .fs-detail-panel {
     flex: 0 0 auto;
     max-height: none;
@@ -1837,10 +1997,8 @@
   }
 
   .fs-campaign-description {
-    position: absolute;
     width: calc(100% - 1.4rem);
     max-width: none;
-    left: 50%;
   }
 
   .fs-identity-grid {
@@ -1855,7 +2013,41 @@
     display: none;
   }
 
+  .fs-start-dates {
+    width: calc(100% - 1.4rem);
+  }
+
+  .fs-map-tools {
+    width: calc(100% - 4.7rem);
+    left: 0.7rem;
+    transform: none;
+  }
+
   .fs-title {
     font-size: 1.35rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .fs-header {
+    flex-wrap: wrap;
+    padding: 0.65rem;
+  }
+
+  .fs-back-btn {
+    width: 8.5rem;
+    font-size: 0.65rem;
+  }
+
+  .fs-title-block {
+    padding: 0 0.6rem;
+  }
+
+  .fs-start-date-button.btn--outline {
+    padding: 0.7rem 0.65rem;
+  }
+
+  .fs-start-date-date {
+    font-size: 1.2rem;
   }
 }

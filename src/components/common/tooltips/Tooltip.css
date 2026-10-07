@@ -160,6 +160,7 @@
 }
 
 .tt-simple {
+  white-space: pre-line;
   padding: 0.231rem 0.462rem;
   line-height: 1.25;
 }
@@ -383,7 +384,7 @@
   align-items: center;
   flex-grow: 1;
   flex-shrink: 1;
-  flex-basis: 0;
+  flex-basis: auto;
   min-width: 0;
   overflow-wrap: break-word;
   white-space: normal;
@@ -477,7 +478,7 @@
   display: flex;
   align-items: center;
   flex-grow: 0;
-  flex-shrink: 0;
+  flex-shrink: 1;
 }
 
 .tt-line-value > * + * {
@@ -496,6 +497,7 @@
 }
 
 .tt-footer {
+  white-space: pre-line;
   font-size: 0.95rem;
   color: var(--text-dark);
   padding: 0.154rem 0.615rem 0.308rem;

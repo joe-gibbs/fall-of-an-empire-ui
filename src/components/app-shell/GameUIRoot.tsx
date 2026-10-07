@@ -1,3 +1,5 @@
+import { PortraitReadinessContext } from '../common/portraits/portraitReadiness';
+import { Suspense } from 'react';
 import { Profiler, useEffect, useRef, useState, useCallback } from 'react';
 import { useGame } from '../../context/GameContext';
 import TopBar from '../topbar/TopBar';
@@ -7,7 +9,6 @@ import TutorialProgress from '../hud/tutorial/TutorialProgress';
 import TutorialSpotlightOverlay from '../hud/overlays/TutorialSpotlightOverlay';
 import PinnedItemsBar from '../hud/panels/PinnedItemsBar';
 import WorldSearchBar from '../hud/panels/WorldSearchBar';
-import VictoryConditionsDropdown from '../hud/panels/VictoryConditionsDropdown';
 import WorldGlanceOverlay from '../hud/overlays/WorldGlanceOverlay';
 import { isWorldGlanceTutorialTarget } from '../hud/overlays/worldGlanceTutorialTarget';
 import ProvinceTooltipOverlay from '../hud/overlays/ProvinceTooltipOverlay';
@@ -23,10 +24,10 @@ import LoadGameModal from '../screens/system/LoadGameModal';
 import AgentSelectModal from '../modals/characters/AgentSelectModal';
 import CourtierPromotionModal from '../modals/characters/CourtierPromotionModal';
 import AllyCallDialogModal from '../modals/diplomacy/AllyCallDialogModal';
+import PromptSettlementNameModal from '../modals/settlements/PromptSettlementNameModal';
 import ConfirmDialog from '../common/forms/ConfirmDialog';
 import ProvinceEmperorTakeoverModal from '../modals/provinces/ProvinceEmperorTakeoverModal';
 import WarningBar from '../notifications/WarningBar';
-import ActionResultsBar from '../notifications/ActionResultsBar';
 import NotificationStack from '../notifications/NotificationStack';
 import type { AdvisorTopicId } from '../../data/advisorTopics';
 import { ensureLoaded as preloadSounds } from '../../hooks/useSound';
@@ -37,6 +38,7 @@ import { useTutorialSpotlightBridge } from '../../bridge/app/useTutorialSpotligh
 import { usePinnedItemsBridge } from '../../bridge/app/usePinnedItemsBridge';
 import { useCourtierPromotionBridge } from '../../bridge/characters/useCourtierPromotionBridge';
 import { useAllyCallDialogBridge } from '../../bridge/diplomacy/useAllyCallDialogBridge';
+import { usePromptSettlementNameBridge } from '../../bridge/settlements-economy/usePromptSettlementNameBridge';
 import { useMilitaryMergeConfirmBridge } from '../../bridge/military-map/useMilitaryMergeConfirmBridge';
 import { useFactionBorderHighlightBridge } from '../../bridge/diplomacy/useFactionBorderHighlightBridge';
 import {
@@ -48,7 +50,8 @@ import { isEscapeTextEntryTarget, useEscapeStack, useEscapeStackEntry } from '..
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { GAMEPLAY_CONTEXT_RESET_EVENT } from '../../bridge/core/gameplayCacheReset';
-import { getScreen, getScreenByBridgeName, getScreenOpenedByTopbar, getSidebar } from '../../registry/index';
+import { getScreen, getScreenOpenedByTopbar, getSidebar, isProvinceSubjectMode } from '../../registry/index';
+import { useEntityLinkClick } from '../../hooks/useEntityLinkClick';
 import { useObserverMode, usePlayerFactionSummary } from '../../data-source/index';
 import { bridgeEvents } from '../../bridge/core/bridgeEvents';
 import { beginUIPerfInteraction, recordUIPerfReactRender } from '../../perf/uiPerfProfiler';
@@ -71,7 +74,7 @@ export default function GameUIRoot() {
   } = useGame();
   const playerFaction = usePlayerFactionSummary();
   const observerMode = useObserverMode();
-  const subjectMode = playerFaction?.diplomaticStatus === 'subject';
+  const subjectMode = isProvinceSubjectMode(playerFaction);
 
   // Bridge-received navigation uses local-only handlers to avoid echoing the
   // game event back through the bridge.
@@ -95,12 +98,14 @@ export default function GameUIRoot() {
       return;
     }
     if (!playerFactionId) return;
-    if (subjectMode && (activeScreen === 'faction-overview' || activeScreen === 'factionOverview')) {
+    if (playerFaction?.usesWarbands && (activeScreen === 'internalPolitics' || activeScreen === 'internal-politics')) {
+      openScreen('powerBlocs', 'governors');
+    } else if (subjectMode && (activeScreen === 'faction-overview' || activeScreen === 'factionOverview')) {
       openScreen('governor-faction-overview', activeScreenId ?? undefined);
     } else if (!subjectMode && activeScreen === 'governor-faction-overview') {
       openScreen('factionOverview', activeScreenId ?? undefined);
     }
-  }, [activeScreen, activeScreenId, closeScreen, dismissAdvisor, observerMode, openScreen, playerFactionId, subjectMode]);
+  }, [activeScreen, activeScreenId, closeScreen, dismissAdvisor, observerMode, openScreen, playerFaction?.usesWarbands, playerFactionId, subjectMode]);
 
   // Current LLM/tutorial event pushed from the game (null when nothing is active).
   const { event: bridgeEvent, chooseOption: bridgeChooseOption } = useEventBridge();
@@ -126,24 +131,9 @@ export default function GameUIRoot() {
   // Live pinned-items list from the game (settlements, characters, militaries, factions).
   const { items: pinnedItems, togglePin } = usePinnedItemsBridge();
 
-  // Event body <link> tags (emitted by the game's LinkUtils) map to sidebars.
-  const handleEventLinkClick = useCallback((type: string, id: string) => {
-    switch (type) {
-      case 'settlement': openSidebar('settlement', id); break;
-      case 'character':  openSidebar('character', id); break;
-      case 'faction':    openSidebar('diplomacy', id); break;
-      case 'army':
-      case 'military':   openSidebar('military', id); break;
-      case 'screen': {
-        const separatorIndex = id.indexOf(':');
-        const screenName = separatorIndex >= 0 ? id.slice(0, separatorIndex) : id;
-        const screenId = separatorIndex >= 0 ? id.slice(separatorIndex + 1) : undefined;
-        const target = getScreenByBridgeName(screenName, subjectMode);
-        if (target) openScreen(target.id, screenId);
-        break;
-      }
-    }
-  }, [openScreen, openSidebar, subjectMode]);
+  // Event body <link> tags (emitted by the game's LinkUtils) map to sidebars,
+  // screens, and identity details such as culture and religion.
+  const handleEventLinkClick = useEntityLinkClick();
 
   // Pre-load all UI sound effects on first user interaction
   useEffect(() => {
@@ -169,16 +159,18 @@ export default function GameUIRoot() {
     state: allyCallDialog,
     respond: respondToAllyCall,
   } = useAllyCallDialogBridge();
+  const {
+    state: settlementNamePrompt,
+    close: closeSettlementNamePrompt,
+    confirm: confirmSettlementNamePrompt,
+  } = usePromptSettlementNameBridge();
   const militaryMergeConfirm = useMilitaryMergeConfirmBridge();
   const provinceEmperorTakeover = useProvinceEmperorTakeoverBridge(true);
   const [showPinned, setShowPinned] = useState(false);
-  const [showVictoryConditions, setShowVictoryConditions] = useState(false);
   const [provinceEmperorTakeoverDismissed, setProvinceEmperorTakeoverDismissed] = useState(false);
 
   const closePinned = useCallback(() => setShowPinned(false), []);
-  const closeVictoryConditions = useCallback(() => setShowVictoryConditions(false), []);
   const closeProvinceEmperorTakeover = useCallback(() => setProvinceEmperorTakeoverDismissed(true), []);
-  const victoryConditionsOpen = showVictoryConditions && !observerMode;
 
   useEffect(() => {
     const handleReset = () => {
@@ -189,7 +181,6 @@ export default function GameUIRoot() {
       setVictorySummary(undefined);
       setGameOverSummary(undefined);
       setShowPinned(false);
-      setShowVictoryConditions(false);
       setProvinceEmperorTakeoverDismissed(false);
     };
 
@@ -224,11 +215,6 @@ export default function GameUIRoot() {
     id: 'ui.pinned-items',
     active: showPinned,
     onClose: closePinned,
-  });
-  useEscapeStackEntry({
-    id: 'ui.victory-conditions',
-    active: victoryConditionsOpen,
-    onClose: closeVictoryConditions,
   });
   const handleEscape = useCallback((fromInput = false) => {
     if (handleEscapeStack({ fromInput })) return true;
@@ -348,13 +334,6 @@ export default function GameUIRoot() {
   const togglePinned = useCallback(() => setShowPinned(v => {
     const next = !v;
     if (next) beginUIPerfInteraction('dropdown:pinned-items');
-    if (next) setShowVictoryConditions(false);
-    return next;
-  }), []);
-  const toggleVictoryConditions = useCallback(() => setShowVictoryConditions(v => {
-    const next = !v;
-    if (next) beginUIPerfInteraction('dropdown:victory-conditions');
-    if (next) setShowPinned(false);
     return next;
   }), []);
 
@@ -407,13 +386,13 @@ export default function GameUIRoot() {
     || agentSelect.open
     || courtierPromotion.open
     || allyCallDialog.open
+    || settlementNamePrompt.open
     || (provinceEmperorTakeoverOpen && !!provinceEmperorTakeover?.active),
   );
   const tutorialWorldGlanceTarget = tutorialSpotlight.spotlight.isVisible
     && isWorldGlanceTutorialTarget(tutorialSpotlight.spotlight.target)
     ? tutorialSpotlight.spotlight.target
     : '';
-  const actionResultNotifications = notifications.filter(notification => notification.isPlayerActionResult);
   const mapGlancesObscured = Boolean(
     showPause
     || showVictory
@@ -423,6 +402,7 @@ export default function GameUIRoot() {
     || agentSelect.open
     || courtierPromotion.open
     || allyCallDialog.open
+    || settlementNamePrompt.open
     || (provinceEmperorTakeoverOpen && !!provinceEmperorTakeover?.active),
   );
 
@@ -436,8 +416,6 @@ export default function GameUIRoot() {
         onPinnedToggle={togglePinned}
         isPinnedOpen={showPinned}
         pinnedCount={pinnedItems.length}
-        onVictoryToggle={toggleVictoryConditions}
-        isVictoryOpen={victoryConditionsOpen}
       />
       {!observerMode && (
         <BuildQueueCompletionToast
@@ -449,12 +427,9 @@ export default function GameUIRoot() {
       )}
 
       <div className="game-main" data-webkiln-world-input>
-        {!observerMode && (warnings.length > 0 || actionResultNotifications.length > 0) && (
+        {!observerMode && warnings.length > 0 && (
           <div className="hud-attention-strip">
-            <ActionResultsBar notifications={actionResultNotifications} />
-            {warnings.length > 0 && (
-              <WarningBar warnings={warnings} onDismiss={dismissWarning} />
-            )}
+            <WarningBar warnings={warnings} onDismiss={dismissWarning} />
           </div>
         )}
 
@@ -494,7 +469,12 @@ export default function GameUIRoot() {
         {/* Screen overlay - registry-driven. */}
         <Profiler id={`screen:${activeScreen ?? 'closed'}`} onRender={recordUIPerfReactRender}>
           <AnimatedSlot active={!!activeScreen} className={screenOverlayClass} passesWorldInput>
-            {activeScreenReg ? activeScreenReg.render({ screenId: activeScreenId, onClose: closeScreen }) : null}
+            <Suspense fallback={null}>
+              {/* Tree navigation commits its whole portrait graph. Scrolling lists prepare portraits locally. */}
+              <PortraitReadinessContext.Provider value={activeScreen === 'familyTree'}>
+                {activeScreenReg ? activeScreenReg.render({ screenId: activeScreenId, onClose: closeScreen }) : null}
+              </PortraitReadinessContext.Provider>
+            </Suspense>
           </AnimatedSlot>
         </Profiler>
       </div>
@@ -531,12 +511,6 @@ export default function GameUIRoot() {
       <Profiler id="overlay:world-search" onRender={recordUIPerfReactRender}>
         <WorldSearchBar />
       </Profiler>
-      {!observerMode && (
-        <VictoryConditionsDropdown
-          isOpen={victoryConditionsOpen}
-          onClose={() => setShowVictoryConditions(false)}
-        />
-      )}
       {!observerMode && (
         <AdvisorPanel
           hint={advisorHint}
@@ -594,7 +568,7 @@ export default function GameUIRoot() {
       />
       {!observerMode && (
         <AgentSelectModal
-          key={`${agentSelect.targetFactionId ?? ''}:${agentSelect.role ?? ''}`}
+          key={`agent-select:${agentSelect.targetFactionId ?? ''}:${agentSelect.role ?? ''}`}
           open={agentSelect.open}
           targetFactionId={agentSelect.targetFactionId}
           role={agentSelect.role}
@@ -619,6 +593,15 @@ export default function GameUIRoot() {
         />
       )}
       {!observerMode && (
+        <PromptSettlementNameModal
+          key={`settlement-name:${settlementNamePrompt.settlementId}:${settlementNamePrompt.suggestedName}`}
+          open={settlementNamePrompt.open}
+          suggestedName={settlementNamePrompt.suggestedName}
+          onConfirm={confirmSettlementNamePrompt}
+          onClose={closeSettlementNamePrompt}
+        />
+      )}
+      {!observerMode && (
         <ConfirmDialog
           visible={militaryMergeConfirm.visible}
           title={militaryMergeConfirm.title}
@@ -638,4 +621,3 @@ export default function GameUIRoot() {
     </div>
   );
 }
-

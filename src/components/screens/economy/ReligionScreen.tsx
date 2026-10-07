@@ -1,28 +1,54 @@
+import PaganReligionPanel from './PaganReligionPanel';
 import { useCallback, useMemo, useState, type MouseEvent, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Portrait from '../../common/portraits/Portrait';
 import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
 import GameCheckButton from '../../common/buttons/GameCheckButton';
+import IconStat from '../../common/data-display/stats/IconStat';
 import GameButton from '../../common/buttons/GameButton';
 import GameBar from '../../common/data-display/bars/GameBar';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
-import CourtOfficeSummary from '../../common/entities/CourtOfficeSummary';
-import BishopAppointmentModal from '../../modals/provinces/BishopAppointmentModal';
-import CourtAppointmentModal from '../../modals/characters/CourtAppointmentModal';
-import ReligionConversionModal from '../../modals/provinces/ReligionConversionModal';
 import GrittyPieChart from '../charts/GrittyPieChart';
-import { useCourtPositions, useDioceses } from '../../../data-source/index';
+import Tooltip from '../../common/tooltips/Tooltip';
+import BuildingEffects from '../../common/content/BuildingEffects';
+import BishopAppointmentModal from '../../modals/provinces/BishopAppointmentModal';
+import ReligionConversionModal from '../../modals/provinces/ReligionConversionModal';
+import { useDioceses } from '../../../data-source/index';
 import { setAutoAssignClergy, type DioceseView, type DiocesesResult } from '../../../bridge/settlements-economy/useDiocesesBridge';
-import type { CourtPositionView } from '../../../bridge/characters/useCourtPositionsBridge';
+import { usePaganWorship } from '../../../bridge/religion/usePaganWorshipBridge';
+import { useSettlementBuildingsBridge } from '../../../bridge/settlements-economy/useSettlementBuildingsBridge';
+import type { AvailableBuilding, Building } from '../../../data/types';
 import { useReligionConversionBridge } from '../../../bridge/provinces/useReligionConversionBridge';
 import { useGameActions } from '../../../context/GameContext';
 import { formatNumber, formatPercent } from '../../../utils/numberFormat';
+import { WebkilnAssetPath } from '../../../utils/assets';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
 import './ReligionScreen.css';
 
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
 const RELIGION_FALLBACK_ICON = '/assets/icons/I_Religions.png';
+
+function selectedFollowerCount(dioceses: DiocesesResult): number {
+  const selected = dioceses.religionDistribution.find(segment => segment.key === dioceses.religionKey);
+  return Math.round(dioceses.totalRealmPopulation * (selected?.share ?? 0));
+}
+
+function isFaithHall(entry: { religionId?: string; requiredSettlementName?: string }, religionKey: string) {
+  return entry.religionId === religionKey && Boolean(entry.requiredSettlementName);
+}
+
+function findFaithHall(religionKey: string, buildings: Building[], available: AvailableBuilding[]) {
+  const built = buildings.find(entry => isFaithHall(entry, religionKey))
+    ?? buildings.find(entry => entry.religionId === religionKey);
+  if (built) {
+    return { name: built.name, icon: built.icon, description: built.description, effectsText: built.effectsText, built: true, condition: built.condition };
+  }
+  const slot = available.find(entry => isFaithHall(entry, religionKey))
+    ?? available.find(entry => entry.religionId === religionKey);
+  if (!slot) return null;
+  return { name: slot.name, icon: slot.icon, description: slot.description, effectsText: slot.effectsText, built: false, condition: undefined };
+}
 
 type ReligionRow = {
   land: ReactNode;
@@ -38,61 +64,26 @@ type ReligionRow = {
   assignment: DioceseView;
 };
 
-function fmtNum(value: number | undefined): string {
-  return formatNumber(value);
-}
-
-function fmtFull(value: number | undefined): string {
-  return formatNumber(value);
-}
-
-function religionSegments(dioceses: DiocesesResult | null) {
-  if (!dioceses) return [];
-
-  const segments = dioceses.religionDistribution.map(segment => ({
-    label: segment.name,
-    value: segment.share,
-    colour: segment.colour || 'var(--gold)',
-    tooltipLines: [{
-      label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.38.1'),
-      value: fmtNum(Math.round(dioceses.totalRealmPopulation * segment.share)),
-      valueColor: segment.colour || 'var(--gold)',
-    }],
-  }));
-
-  const representedShare = dioceses.religionDistribution.reduce((sum, segment) => sum + segment.share, 0);
-  const otherShare = Math.max(0, 1 - representedShare);
-  if (otherShare > 0.005) {
-    segments.push({
-      label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.48.2'),
-      value: otherShare,
-      colour: 'var(--text-dark)',
-      tooltipLines: [{
-        label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.52.3'),
-        value: fmtNum(Math.round(dioceses.totalRealmPopulation * otherShare)),
-        valueColor: 'var(--text-muted)',
-      }],
-    });
-  }
-
-  return segments;
-}
-
-function selectedFollowerCount(dioceses: DiocesesResult | null): number {
-  if (!dioceses) return 0;
-  const selected = dioceses.religionDistribution.find(segment => segment.key === dioceses.religionKey);
-  return Math.round(dioceses.totalRealmPopulation * (selected?.share ?? 0));
-}
-
 export default function ReligionScreen({ onClose }: { onClose: () => void }) {
-  const [selectedReligion, setSelectedReligion] = useState('');
   const [assignment, setAssignment] = useState<DioceseView | null>(null);
-  const [courtPosition, setCourtPosition] = useState<CourtPositionView | null>(null);
   const [conversionOpen, setConversionOpen] = useState(false);
-  const dioceses = useDioceses(selectedReligion);
-  const court = useCourtPositions(true);
+  const dioceses = useDioceses('');
+  const isOrganised = dioceses?.religionInfo?.isOrganised === true;
+  const isPagan = dioceses?.religionInfo?.group === 'pagan';
+  const pagan = usePaganWorship(isPagan ? (dioceses?.religionKey || '') : null);
+  const capitalBuildings = useSettlementBuildingsBridge(isPagan ? (pagan?.capitalId || null) : null);
+  const faithHall = useMemo(() => {
+    if (!isPagan || !dioceses || !capitalBuildings) return null;
+    return findFaithHall(dioceses.religionKey, capitalBuildings.buildings, capitalBuildings.availableBuildings);
+  }, [isPagan, dioceses, capitalBuildings]);
   const conversion = useReligionConversionBridge();
   const { openRightSidebar } = useGameActions();
+  const canConvert = Boolean(dioceses?.canManage && conversion && (conversion.state.active || conversion.options.length > 0));
+  const pieSegments = useMemo(() => (dioceses?.religionDistribution ?? []).map(segment => ({
+    label: segment.name,
+    value: Math.round((dioceses?.totalRealmPopulation ?? 0) * segment.share),
+    colour: segment.colour,
+  })), [dioceses]);
 
   const handleClergyClick = useCallback((event: MouseEvent<HTMLButtonElement>, personId: string | null) => {
     event.stopPropagation();
@@ -160,8 +151,8 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
     ) : (
       <span className="rel-vacant-text"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.95.1" /></span>
     ),
-    authority: diocese.bishopName ? <span className="rel-authority-value">{fmtFull(diocese.authority)}</span> : '-',
-    followers: <span className="rel-followers-value">{fmtNum(diocese.followers)}</span>,
+    authority: diocese.bishopName ? <span className="rel-authority-value">{formatNumber(diocese.authority)}</span> : '-',
+    followers: <span className="rel-followers-value">{formatNumber(diocese.followers)}</span>,
     distribution: (
       <div className="rel-bar-cell">
         <div className="rel-bar-track">
@@ -178,131 +169,114 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
     assignment: diocese,
   })), [dioceses, handleClergyClick]);
 
-  const activeReligionKey = dioceses?.religionKey ?? selectedReligion;
-  const religionOffice = useMemo(
-    () => court?.positions.find(position => position.key === 'masterofreligion') ?? null,
-    [court],
-  );
-
   return (
     <ScreenShell
-      title={webUIText('Auto.Attr.ComponentsScreensReligionScreen.124.9')}
+      title={dioceses?.religionName || webUIText('Auto.Attr.ComponentsScreensReligionScreen.124.9')}
       onClose={onClose}
       advisorTopic="religionScreen"
       className="screen--religion"
       contentClassName="rel-screen-content"
+      titleExtra={(
+        <div className="rel-title-actions">
+          <ReligionTooltip
+            info={dioceses?.religionInfo}
+            fallbackName={dioceses?.religionName}
+            fallbackId={dioceses?.religionKey}
+            interactive={false}
+          >
+            <img src={dioceses?.iconPath || RELIGION_FALLBACK_ICON} alt="" className="rel-title-icon" draggable={false} />
+          </ReligionTooltip>
+          {isOrganised && dioceses?.canManage && (
+            <GameCheckButton
+              checked={dioceses.autoAssignClergyEnabled}
+              label={webUIText('Auto.Attr.ComponentsScreensReligionScreen.167.13')}
+              onToggle={() => { void setAutoAssignClergy(!dioceses.autoAssignClergyEnabled, dioceses.religionKey); }}
+              tooltip={{ title: webUIText('Auto.Prop.ComponentsScreensReligionScreen.169.14'), body: webUIText('Auto.Prop.ComponentsScreensReligionScreen.169.15') }}
+            />
+          )}
+          {canConvert && (
+            <GameButton variant="outline" onClick={() => setConversionOpen(true)}>
+              {conversion?.state.active ? webUIText('ReligionConversion.ManageConversion') : webUIText('ReligionConversion.ConvertReligion')}
+            </GameButton>
+          )}
+        </div>
+      )}
+      headerExtra={conversion?.state.active ? (
+        <div className="rel-conversion">
+          <span>{webUIText('ReligionConversion.ConvertingTo', { ReligionName: conversion.state.targetReligionName })}</span>
+          <GameBar value={conversion.state.currentStageProgress * 100} max={100} colour="var(--gold)" size="sm" label={conversion.state.currentStageName} />
+        </div>
+      ) : undefined}
     >
       <div className="rel-wrap">
-        <div className="rel-selector-row">
-          {(dioceses?.organisedReligions ?? []).map(religion => (
-            <ReligionTooltip
-              key={religion.key}
-              info={religion.info}
-              delay={200}
-              extraLines={[
-                { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.134.10'), value: religion.clergyTitle },
-                { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.135.11'), get value() { return religion.leadingFactionName || webUIText("Common.None"); } },
-                { label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.136.12'), get value() { return religion.canManage ? webUIText("ReligionScreen.Manageable") : webUIText("ReligionScreen.ForeignLed"); }, valueColor: religion.canManage ? 'var(--green)' : 'var(--text-muted)' },
-              ]}
-            >
-              <button
-                type="button"
-                className={`rel-religion-button${religion.key === activeReligionKey ? ' rel-religion-button--active' : ''}${religion.isPlayerReligion ? ' rel-religion-button--state' : ''}`}
-                onClick={() => setSelectedReligion(religion.key)}
+        {dioceses && (
+          <div className="rel-identity">
+            <GrittyPieChart segments={pieSegments} size={118} />
+            {faithHall && pagan && (
+              <Tooltip
+                content={{
+                  title: faithHall.name,
+                  body: (
+                    <>
+                      {faithHall.description && <div>{faithHall.description}</div>}
+                      <BuildingEffects text={faithHall.effectsText} />
+                    </>
+                  ),
+                  lines: [
+                    { label: webUIText('Pagan.FaithCapital'), value: pagan.capitalName },
+                    ...(faithHall.built && faithHall.condition !== undefined
+                      ? [{ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementBuildingsPanel.261.4'), value: `${formatNumber(faithHall.condition)}%` }]
+                      : []),
+                  ],
+                  footer: webUIText('Pagan.CapitalHelp'),
+                }}
               >
-                <span className="rel-religion-icon-frame">
-                  <img src={religion.iconPath || RELIGION_FALLBACK_ICON} alt="" className="rel-religion-icon" draggable={false} />
-                </span>
-                <span className="rel-religion-name">{religion.name}</span>
-              </button>
-            </ReligionTooltip>
-          ))}
-        </div>
-
-        <div className="rel-summary">
-          <div className="rel-summary-pie">
-            <GrittyPieChart segments={religionSegments(dioceses)} size={124} />
-          </div>
-          <div className="rel-summary-main">
-            <div className="rel-summary-title-row">
-              <ReligionTooltip
-                info={dioceses?.religionInfo}
-                fallbackName={dioceses?.religionName}
-                fallbackId={dioceses?.religionKey}
-                wrapperClassName="rel-summary-religion-tooltip"
-              >
-                <div className="rel-summary-title-main">
-                  <img src={dioceses?.iconPath || RELIGION_FALLBACK_ICON} alt="" className="rel-cell-icon" draggable={false} />
-                  <span className="rel-summary-title">{dioceses?.religionName || webUIText("ReligionScreen.NoOrganisedReligion")}</span>
-                  {dioceses?.canManage && <span className="rel-summary-state-mark"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.161.2" /></span>}
-                </div>
-              </ReligionTooltip>
-              {dioceses?.canManage && (
-                <GameCheckButton
-                  checked={dioceses.autoAssignClergyEnabled}
-                  label={webUIText('Auto.Attr.ComponentsScreensReligionScreen.167.13')}
-                  onToggle={() => { void setAutoAssignClergy(!dioceses.autoAssignClergyEnabled, activeReligionKey); }}
-                  tooltip={{ title: webUIText('Auto.Prop.ComponentsScreensReligionScreen.169.14'), body: webUIText('Auto.Prop.ComponentsScreensReligionScreen.169.15') }}
-                />
-              )}
-            </div>
-            {dioceses?.description && (
-              <div className="rel-summary-description">{dioceses.description}</div>
+                <button
+                  type="button"
+                  className={`rel-hall-card${faithHall.built ? '' : ' rel-hall-card--unbuilt'}`}
+                  onClick={() => openRightSidebar('settlement', pagan.capitalId)}
+                >
+                  {faithHall.icon && <img src={faithHall.icon} alt="" draggable={false} />}
+                  <span className="rel-hall-card-name">{faithHall.name}</span>
+                </button>
+              </Tooltip>
             )}
-            <div className="rel-summary-lower">
-              <div className="rel-summary-stats">
-                <div className="rel-summary-stat">
-                  <span className="rel-summary-stat-value">{fmtNum(selectedFollowerCount(dioceses))}</span>
-                  <span className="rel-summary-stat-label"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.179.3" /></span>
-                </div>
-                <div className="rel-summary-separator" />
-                <div className="rel-summary-stat">
-                  <span className="rel-summary-stat-value">{fmtFull(dioceses?.dioceses.length)}</span>
-                  <span className="rel-summary-stat-label"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.184.4" /></span>
-                </div>
-                <div className="rel-summary-separator" />
-                <div className="rel-summary-stat">
-                  <span className="rel-summary-stat-value">{dioceses?.leadingFactionName || webUIText("Common.None")}</span>
-                  <span className="rel-summary-stat-label"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.189.5" /></span>
-                </div>
-              </div>
-              {religionOffice && (
-                <div className="rel-summary-office">
-                  <CourtOfficeSummary
-                    position={religionOffice}
-                    onOpen={dioceses?.canManage ? setCourtPosition : undefined}
-                    onOpenCharacter={(id) => openRightSidebar('character', id)}
-                    readOnly={!dioceses?.canManage}
+            <div className="rel-identity-copy">
+              {dioceses.description && <p className="rel-identity-description">{dioceses.description}</p>}
+              <div className="rel-identity-facts">
+                <IconStat
+                  className="rel-identity-stat"
+                  icon={WebkilnAssetPath('/assets/icons/I_Population.png')}
+                  value={formatNumber(selectedFollowerCount(dioceses))}
+                  tooltip={{ title: webUIText('Auto.ComponentsScreensReligionScreen.179.3'), body: webUIText('ReligionScreen.FollowersHelp') }}
+                />
+                {isOrganised && (
+                  <IconStat
+                    className="rel-identity-stat"
+                    icon={WebkilnAssetPath('/assets/icons/I_City.png')}
+                    value={formatNumber(dioceses.dioceses.length)}
+                    tooltip={{ title: webUIText('Auto.ComponentsScreensReligionScreen.184.4') }}
                   />
-                </div>
-              )}
-            </div>
-            <div className="rel-conversion-row">
-              <div className="rel-conversion-status">
-                <span className="rel-conversion-label">
-                  {conversion?.state.active ? webUIText('ReligionConversion.ActiveConversion') : webUIText('ReligionConversion.NoConversion')}
-                </span>
-                <span className="rel-conversion-value">
-                  {conversion?.state.active
-                    ? webUIText('ReligionConversion.ConvertingTo', { ReligionName: conversion.state.targetReligionName })
-                    : webUIText('ReligionConversion.NoConversionBody')}
-                </span>
-                {conversion?.state.active && (
-                  <div className="rel-conversion-progress">
-                    <GameBar value={conversion.state.currentStageProgress * 100} max={100} colour="var(--gold)" size="sm" label={conversion.state.currentStageName} />
-                  </div>
+                )}
+                {pagan && (
+                  <IconStat
+                    className="rel-identity-stat"
+                    icon={WebkilnAssetPath('/assets/icons/I_Capital.png')}
+                    value={(
+                      <button className="rel-identity-link" type="button" onClick={() => openRightSidebar('settlement', pagan.capitalId)}>
+                        {pagan.capitalName}
+                      </button>
+                    )}
+                    tooltip={{ title: webUIText('Pagan.FaithCapital'), body: webUIText('Pagan.CapitalHelp') }}
+                  />
                 )}
               </div>
-              {dioceses?.canManage && (
-                <GameButton variant="outline" onClick={() => setConversionOpen(true)}>
-                  {conversion?.state.active ? webUIText('ReligionConversion.ManageConversion') : webUIText('ReligionConversion.ConvertReligion')}
-                </GameButton>
-              )}
             </div>
           </div>
-        </div>
+        )}
+        {isPagan && pagan && <PaganReligionPanel data={pagan} />}
 
-        {rows.length === 0 ? (
+        {isOrganised && (rows.length === 0 ? (
           <div className="rel-empty-state"><WebUIText textKey="Auto.ComponentsScreensReligionScreen.205.6" /></div>
         ) : (
           <DataTable
@@ -332,26 +306,21 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
               setAssignment(row.assignment);
             }}
           />
-        )}
+        ))}
 
         <BishopAppointmentModal
           open={!!assignment}
           assignment={assignment}
-          religionKey={dioceses?.religionKey ?? selectedReligion}
+          religionKey={dioceses?.religionKey ?? ''}
           religionName={dioceses?.religionName ?? ''}
           religionIcon={dioceses?.iconPath ?? RELIGION_FALLBACK_ICON}
           onClose={() => setAssignment(null)}
-        />
-        <CourtAppointmentModal
-          open={!!courtPosition && !!dioceses?.canManage}
-          position={courtPosition}
-          onClose={() => setCourtPosition(null)}
         />
         <ReligionConversionModal
           open={conversionOpen && !!dioceses?.canManage}
           conversion={conversion}
           onClose={() => setConversionOpen(false)}
-          onChanged={() => setSelectedReligion('')}
+          onChanged={() => undefined}
         />
       </div>
     </ScreenShell>

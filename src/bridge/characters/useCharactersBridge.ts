@@ -31,6 +31,7 @@ export interface CharacterListEntry {
   factionId: string;
   factionName: string;
   cultureId: string;
+  cultureIconId: string;
   culture: string;
   religionId: string;
   religion: string;
@@ -110,6 +111,8 @@ export interface FamilyTreeGroups {
 export interface FamilyTreeData {
   scope: FamilyTreeScope;
   focusPersonId: string;
+  familyName: string;
+  usesPatronage: boolean;
   factionId: string;
   factionName: string;
   rulerId: string;
@@ -161,6 +164,7 @@ type CharacterListCompactEntry = [
   number,
   CharacterListCompactStats,
   string[],
+  string,
 ];
 
 type CharacterListRawTrait = CharacterListTrait | CharacterListCompactTrait;
@@ -216,6 +220,7 @@ function mapCharacterListEntry(
       factionId: value[9] ?? '',
       factionName: value[10] ?? '',
       cultureId: value[11] ?? '',
+      cultureIconId: value[27],
       culture: value[12] ?? '',
       religionId: value[13] ?? '',
       religion: value[14] ?? '',
@@ -303,11 +308,12 @@ export function useCharacterListBridge(factionId: string | null | undefined, fet
   return null;
 }
 
-export function useFamilyTreeBridge(personId?: string | null, scope: FamilyTreeScope = 'lineage', fetch = true): FamilyTreeData | null {
+export function useFamilyTreeBridge(personId?: string | null, scope: FamilyTreeScope = 'lineage', fetch = true, suspend = false): FamilyTreeData | null {
   const requestedPersonId = personId ?? DEFAULT_FAMILY_TREE_KEY;
   const requestedKey = familyTreeCacheKey(requestedPersonId, scope);
   const live = useBridgeQuery({
     action: 'game.get_family_tree',
+    suspend,
     payload: fetch ? { personId: requestedPersonId, scope } : null,
     cacheResponseMs: 1500,
     map: data => cacheFamilyTree(data, requestedPersonId, scope),
@@ -329,12 +335,13 @@ export interface FamilyTreeBridgeState {
   pending: boolean;
 }
 
-export function useFamilyTreeBridgeState(personId?: string | null, scope: FamilyTreeScope = 'lineage', fetch = true): FamilyTreeBridgeState {
+export function useFamilyTreeBridgeState(personId?: string | null, scope: FamilyTreeScope = 'lineage', fetch = true, suspend = false): FamilyTreeBridgeState {
   const requestedPersonId = personId ?? DEFAULT_FAMILY_TREE_KEY;
   const requestedKey = familyTreeCacheKey(requestedPersonId, scope);
   const cached = familyTreeCache.get(requestedKey) ?? null;
   const query = useBridgeQueryState({
     action: 'game.get_family_tree',
+    suspend,
     payload: fetch ? { personId: requestedPersonId, scope } : null,
     cacheResponseMs: 1500,
     map: data => cacheFamilyTree(data, requestedPersonId, scope),

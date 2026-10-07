@@ -3,6 +3,7 @@ import Tooltip, { NestedTooltip, type TooltipContent } from './Tooltip';
 import CultureTooltip from './CultureTooltip';
 import ReligionTooltip from './ReligionTooltip';
 import { cultureIconPath } from '../../../utils/cultureIcons';
+import { religionIconPath } from '../../../utils/religionIcons';
 import { TraitIcon } from '../entities/TraitIcon';
 import type { Character } from '../../../data/types';
 import { useGameActions, useGameState } from '../../../context/GameContext';
@@ -285,20 +286,21 @@ function PersonTooltipContent({ character: c, initialAltHeld }: { character: Cha
           <span className="ptt-strip-name">{c.name}</span>
           <span className="ptt-strip-age">{formatNumber(c.age)}{!isAlive ? webUIText("PersonTooltip.Deceased") : ''}</span>
         </div>
+        {c.originalNameText && <div className="ptt-strip-relation">{c.originalNameText}</div>}
         {titleParts?.relation && (
           <div className="ptt-strip-relation">{titleParts.relation}</div>
         )}
         <div className="ptt-strip-meta">
           <CultureTooltip info={c.cultureInfo} fallbackName={c.culture} fallbackId={c.cultureInfo?.id}>
             <span className="ptt-meta-chip">
-              <img src={cultureIconPath(c.cultureInfo?.id)} alt="" className="ptt-meta-icon" draggable={false} />
+              <img src={cultureIconPath(c.cultureInfo)} alt="" className="ptt-meta-icon" draggable={false} />
               <span>{c.culture}</span>
             </span>
           </CultureTooltip>
           <span className="ptt-dot" />
-          <ReligionTooltip info={c.religionInfo} fallbackName={c.religion}>
+          <ReligionTooltip info={c.religionInfo} fallbackName={c.religion} fallbackId={c.religionInfo?.id}>
             <span className="ptt-meta-chip">
-              <img src="/assets/icons/I_Religions.png" alt="" className="ptt-meta-icon" draggable={false} />
+              <img src={religionIconPath(c.religionInfo?.id)} alt="" className="ptt-meta-icon" draggable={false} />
               <span>{c.religion}</span>
             </span>
           </ReligionTooltip>

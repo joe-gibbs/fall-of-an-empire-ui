@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
-import GameButton from '../../common/buttons/GameButton';
 import Panel from '../../common/layout/shell/Panel';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import FactionRoundel from '../../common/entities/FactionRoundel';
 import FactionTooltip from '../../common/tooltips/FactionTooltip';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
 import Portrait from '../../common/portraits/Portrait';
-import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
+import Tooltip, { type TooltipContent } from '../../common/tooltips/Tooltip';
 import NumberStepper from '../../common/forms/NumberStepper';
+import PeaceTerritoryPicker from './PeaceTerritoryPicker';
+import type { PeaceSelectionContext } from '../../../bridge/diplomacy/usePeaceNegotiationBridge';
+import type { StartPeaceSettlementSelectionResponse } from '../../../bridge-types.generated';
 import ReplaceRulerSelectionModal from '../../modals/diplomacy/ReplaceRulerSelectionModal';
 import { usePeaceNegotiationBridge, type PeaceNegotiationState, type PeaceTermDraft } from '../../../bridge/diplomacy/usePeaceNegotiationBridge';
 import { onBridgeEvent } from '../../../bridge-types.generated.ts';
@@ -54,25 +56,31 @@ const TERM_ICONS: Record<string, string> = {
   impose_peace: '/assets/icons/I_Peace.png',
   release_vassal: '/assets/icons/I_DependentFactions.png',
   demand_vassalization: '/assets/icons/I_Vassal.png',
+  confederation_membership: '/assets/icons/I_Diplomacy.png',
+  dissolve_confederation: '/assets/edicts/icons/LeaveConfederation.png',
   annex_faction: '/assets/icons/I_Domain.png',
   rebel_conquest: '/assets/icons/I_War.png',
   independence: '/assets/icons/I_DependentFactions.png',
+  submission: '/assets/icons/I_DependentFactions.png',
+  revoke_duchy: '/assets/icons/I_Domain.png',
   migration_settlement: '/assets/icons/I_Resettle.png',
   replace_ruler: '/assets/icons/I_Liege.png',
   white_peace: '/assets/icons/I_Peace.png',
   tribute: '/assets/icons/I_OfferTribute.png',
 };
 
-const roleIconMeta: Record<Exclude<ParticipantRoleKind, null>, { icon: string; title: string; body: string }> = {
+const roleIconMeta: Record<Exclude<ParticipantRoleKind, null>, { icon: string; title: string; body: (governmentTypeName?: string) => string }> = {
   leader: {
     icon: '/assets/icons/I_Liege.png',
     get title() { return webUIText('Auto.TopProp.ComponentsScreensPeaceNegotiationScreen.53.1'); },
-    get body() { return webUIText('Auto.TopProp.ComponentsScreensPeaceNegotiationScreen.54.2'); },
+    body: () => webUIText('Auto.TopProp.ComponentsScreensPeaceNegotiationScreen.54.2'),
   },
   subject: {
     icon: '/assets/icons/I_DependentFactions.png',
     get title() { return webUIText('Auto.TopProp.ComponentsScreensPeaceNegotiationScreen.58.3'); },
-    get body() { return webUIText('Auto.TopProp.ComponentsScreensPeaceNegotiationScreen.59.4'); },
+    body: (governmentTypeName) => webUIText('Auto.TopProp.ComponentsScreensPeaceNegotiationScreen.59.4', {
+      Government: governmentTypeName,
+    }),
   },
 };
 
@@ -98,6 +106,7 @@ function termIcon(type: string): string {
 
 function draftFromOption(option: TermOption): PeaceTermDraft {
   return {
+    recipientFactionId: option.recipientFactionId,
     termId: option.optionId,
     type: option.type,
     direction: option.direction,
@@ -115,6 +124,7 @@ function draftFromOption(option: TermOption): PeaceTermDraft {
 
 function draftFromEntry(entry: TermEntry): PeaceTermDraft {
   return {
+    recipientFactionId: entry.recipientFactionId,
     termId: entry.termId,
     type: entry.type,
     direction: entry.direction,
@@ -154,6 +164,10 @@ function termFallbackLabel(term: PeaceTermDraft): string {
       return term.direction === 'demand' ? webUIText('PeaceNegotiation.Term.TotalConquest') : webUIText('PeaceNegotiation.Term.TotalSurrender');
     case 'independence':
       return term.direction === 'demand' ? webUIText('Diplomacy.DemandIndependence') : webUIText('Diplomacy.GrantIndependence');
+    case 'submission':
+      return term.direction === 'demand' ? webUIText('Diplomacy.DemandSubmission') : webUIText('Diplomacy.OfferSubmission');
+    case 'revoke_duchy':
+      return term.direction === 'demand' ? webUIText('Diplomacy.RevokeDuchy') : webUIText('Diplomacy.SurrenderDuchy');
     case 'migration_settlement':
       return term.direction === 'demand' ? webUIText('PeaceNegotiation.Term.MigrationDemand') : webUIText('PeaceNegotiation.Term.MigrationConcession');
     case 'replace_ruler':
@@ -197,6 +211,10 @@ function isTerritorySelectionTerm(term: Pick<PeaceTermDraft, 'type'>): boolean {
 }
 
 function termsConflict(existing: PeaceTermDraft, incoming: PeaceTermDraft): boolean {
+  if (isMigrationType(existing.type) && isMigrationType(incoming.type)) {
+    return existing.recipientFactionId === incoming.recipientFactionId
+      || (existing.targetSettlementIds ?? []).some(id => incoming.targetSettlementIds?.includes(id));
+  }
   const existingWholeConquest = existing.type === 'annex_faction' || existing.type === 'rebel_conquest';
   const incomingWholeConquest = incoming.type === 'annex_faction' || incoming.type === 'rebel_conquest';
   if (existingWholeConquest || incomingWholeConquest) {
@@ -205,6 +223,18 @@ function termsConflict(existing: PeaceTermDraft, incoming: PeaceTermDraft): bool
         && (isConquestType(incoming.type) || isMigrationType(incoming.type));
   }
   return isTerritorySelectionTerm(existing) && isTerritorySelectionTerm(incoming);
+}
+
+function assignTerritoryRecipient(terms: PeaceTermDraft[], termId: string, recipientId: string): PeaceTermDraft[] {
+  const selected = terms.find(term => (term.termId || termKey(term)) === termId);
+  if (!selected) return terms;
+  return terms.map(term => {
+    if (term === selected) return { ...term, recipientFactionId: recipientId };
+    if (isMigrationType(selected.type) && isMigrationType(term.type) && term.recipientFactionId === recipientId) {
+      return { ...term, recipientFactionId: selected.recipientFactionId };
+    }
+    return term;
+  });
 }
 
 function optionAppliesToSelectedTarget(option: TermOption, selectedId: string | null | undefined): boolean {
@@ -219,6 +249,7 @@ function termFingerprint(term: PeaceTermDraft): string {
     term.direction || '',
     term.targetFactionId || '',
     term.vassalFactionId || '',
+    term.recipientFactionId || '',
     settlements,
     String(term.tributeAmount || 0),
     String(term.tributeDurationDays || 0),
@@ -364,7 +395,7 @@ function settlementDetail(entry?: TermEntry, option?: TermOption, draft?: PeaceT
 }
 
 function termDetail(entry: TermEntry | undefined, draft: PeaceTermDraft): string {
-  return settlementDetail(entry, undefined, draft) || entry?.description || selectedTargetLabel(entry);
+  return settlementDetail(entry, undefined, draft) || selectedTargetLabel(entry);
 }
 
 function replacementCandidates(term: PeaceTermDraft, live?: TermEntry): ReplacementCandidate[] {
@@ -431,6 +462,7 @@ function ParticipantRow({
   showStrength,
   isChild = false,
   tooltipSide = 'right',
+  leaderGovernmentTypeName,
   onSelect,
 }: {
   participant: Participant;
@@ -440,6 +472,7 @@ function ParticipantRow({
   showStrength?: boolean;
   isChild?: boolean;
   tooltipSide?: 'right' | 'left';
+  leaderGovernmentTypeName?: string;
   onSelect?: () => void;
 }) {
   const faction = participant.faction;
@@ -465,7 +498,7 @@ function ParticipantRow({
       </FactionTooltip>
       <span className="pns-participant-name">{faction.name}</span>
       {roleMeta ? (
-        <Tooltip content={{ title: roleMeta.title, body: roleMeta.body }} position="bottom" delay={200}>
+        <Tooltip content={{ title: roleMeta.title, body: roleMeta.body(leaderGovernmentTypeName) }} position="bottom" delay={200}>
           <img src={roleMeta.icon} alt="" className="pns-participant-role-icon" />
         </Tooltip>
       ) : null}
@@ -577,9 +610,7 @@ function DraftTermChip({
         title: label,
         body: live?.description,
         lines: [
-          { label: webUIText('Auto.Prop.ComponentsScreensPeaceNegotiationScreen.398.5'), value: formatTermCost(live?.warScoreCost, term.direction) },
-          ...(selectedTargetLabel(live) ? [{ label: webUIText('Auto.Prop.ComponentsScreensPeaceNegotiationScreen.399.6'), value: selectedTargetLabel(live) }] : []),
-          ...(settlementDetail(live, undefined, term) ? [{ label: webUIText('PeaceNegotiation.Tooltip.Settlements'), value: settlementDetail(live, undefined, term) }] : []),
+          { label: webUIText('PeaceNegotiation.GlanceWarScore'), value: formatTermCost(live?.warScoreCost, term.direction) },
         ],
       }}
       position="bottom"
@@ -590,6 +621,11 @@ function DraftTermChip({
         <div className="pns-draft-copy">
           <span className="pns-draft-chip-name">{label}</span>
           {detail ? <span className="pns-term-sub">{detail}</span> : null}
+          {isTerritorySelectionTerm(term) && live?.recipientFactionName ? (
+            <span className={`pns-transfer-recipient pns-transfer-recipient--${direction}`}>
+              <WebUIText textKey="PeaceNegotiation.Recipient" />: {live.recipientFactionName}
+            </span>
+          ) : null}
           {isTribute ? (
             <div className="pns-term-controls">
               <div className="pns-term-field pns-term-field--gold">
@@ -679,27 +715,24 @@ function AvailableTermRow({
   const tutorialTarget = option.type === 'rebel_conquest' && option.direction === 'demand'
     ? `PeaceTerm:${option.type} TotalConquestButton`
     : `PeaceTerm:${option.type}`;
-  const lines: TooltipLine[] = [
-    ...(settlements ? [{ label: webUIText('PeaceNegotiation.Tooltip.Settlements'), value: settlements }] : []),
-  ];
 
   return (
     <Tooltip
       content={{
         title: option.label,
         body: option.description,
-        lines,
       }}
       position="bottom"
       delay={200}
     >
-      <button type="button" className={`pns-term-row pns-term-row--${direction}${active ? ' pns-term-row--selection-active' : ''}`} data-tutorial-target={tutorialTarget} onClick={onAdd}>
+      <button type="button" className={`pns-term-row pns-term-row--${direction}${active ? ' pns-term-row--selection-active' : ''}`} data-tutorial-target={tutorialTarget} disabled={Boolean(option.blockedReason)} onClick={onAdd}>
         <img src={termIcon(option.type)} alt="" className="pns-term-icon" />
         <span className="pns-term-copy">
           <span className="pns-term-name">{option.label}</span>
           {settlements ? <span className="pns-term-sub">{settlements}</span> : null}
+          {option.blockedReason ? <span className="pns-term-blocked-reason">{option.blockedReason}</span> : null}
         </span>
-        <span className="pns-term-action">+</span>
+        {!option.blockedReason && <span className="pns-term-action">+</span>}
       </button>
     </Tooltip>
   );
@@ -900,6 +933,7 @@ function ParticipantsHeaderGroup({
   tooltipSide: 'left' | 'right';
   onSelect: (id: string) => void;
 }) {
+  const leaderGovernmentTypeName = participants.find(entry => entry.isLeader)?.faction.governmentTypeName;
   return (
     <div className="pns-header-faction-group">
       <div className="pns-header-faction-title">
@@ -919,6 +953,7 @@ function ParticipantsHeaderGroup({
               showStrength
               isChild={!participant.isLeader}
               tooltipSide={tooltipSide}
+              leaderGovernmentTypeName={leaderGovernmentTypeName}
               onSelect={() => {
                 if (selectable) onSelect(faction.id);
               }}
@@ -963,6 +998,8 @@ function PeaceNegotiationScreenContent({
   const [selectedDemandTargetId, setSelectedDemandTargetId] = useState<string | null>(null);
   const [selectedConcessionGiverId, setSelectedConcessionGiverId] = useState<string | null>(null);
   const [activeSettlementSelectionOptionId, setActiveSettlementSelectionOptionId] = useState<string | null>(null);
+  const [settlementPicker, setSettlementPicker] = useState<PeaceSelectionContext | null>(null);
+  const [selectionData, setSelectionData] = useState<StartPeaceSettlementSelectionResponse | null>(null);
   const [replacementPicker, setReplacementPicker] = useState<ReplacementPicker | null>(null);
   const [initialSourceTerms, setInitialSourceTerms] = useState<PeaceTermDraft[] | null>(null);
   const acceptedCloseTimerRef = useRef<number | null>(null);
@@ -989,11 +1026,11 @@ function PeaceNegotiationScreenContent({
   const activeDemandTargetId = selectedDemandTargetId ?? theirLeadId;
   const selectedIds = useMemo(() => new Set(terms.map(term => term.termId || termKey(term))), [terms]);
   const availableTerms = useMemo(() => (
-    (state?.availableTerms ?? []).map(option => ({
+    (draftPreview?.availableTerms ?? state?.availableTerms ?? []).map(option => ({
       ...option,
       isSelected: option.isSelected || selectedIds.has(option.optionId),
     }))
-  ), [selectedIds, state?.availableTerms]);
+  ), [draftPreview?.availableTerms, selectedIds, state?.availableTerms]);
   const selectedDemands = terms.filter(term => !isConcession(term));
   const selectedConcessions = terms.filter(isConcession);
   const demandOptions = availableTerms.filter(option => !isConcession(option) && !option.isSelected && optionAppliesToSelectedTarget(option, activeDemandTargetId));
@@ -1007,7 +1044,10 @@ function PeaceNegotiationScreenContent({
   const warScore = preview?.currentWarScore ?? 0;
   const canSubmit = (!sourceOfferSelector || sourceOfferHydrated) && Boolean(preview?.canSubmit);
   const screenTitle = state?.found ? (state.warName || webUIText("PeaceNegotiation.WarSettlement")) : webUIText("PeaceNegotiation.PeaceTreaty");
-  const warScoreBreakdown: TooltipContent = warScoreBreakdownTooltip(preview?.warScoreBreakdown);
+  const warScoreBreakdown: TooltipContent = warScoreBreakdownTooltip(
+    preview?.warScoreBreakdown,
+    preview?.currentWarScore,
+  );
   const titleExtra = state?.found ? (
     <Tooltip content={warScoreBreakdown} position="bottom" delay={150}>
       <WarScoreProgress score={warScore} className="pns-title-progress" />
@@ -1027,11 +1067,7 @@ function PeaceNegotiationScreenContent({
     return () => window.clearTimeout(hydrationTimer);
   }, [sourceOfferHydrated, sourceOfferSelector, state]);
 
-  const applySettlementSelection = useCallback((selection: {
-    selectionActive: boolean;
-    targetFactionId: string;
-    terms: PeaceTermDraft[];
-  }) => {
+  const applySettlementSelection = useCallback((selection: StartPeaceSettlementSelectionResponse) => {
     const selectionTargetFactionId = state?.targetFactionId || targetFactionId;
     if (!selectionTargetFactionId) return;
 
@@ -1045,6 +1081,7 @@ function PeaceNegotiationScreenContent({
       return;
     }
 
+    setSelectionData(selection);
     setOutcome(null);
     setAcceptedMessage(null);
     const selectedTerritoryTerms = selection.terms ?? [];
@@ -1131,7 +1168,8 @@ function PeaceNegotiationScreenContent({
       return;
     }
 
-    void bridge.startSettlementSelection(nextTerms).then(selection => {
+    if (!settlementPicker) return;
+    void bridge.startSettlementSelection(nextTerms, settlementPicker).then(selection => {
       if (!selection) return;
       settlementSelectionActiveRef.current = selection.selectionActive;
       if (!selection.selectionActive) {
@@ -1147,9 +1185,11 @@ function PeaceNegotiationScreenContent({
     setOutcome(null);
     setAcceptedMessage(null);
     const draft = draftFromOption(option);
-    if (draft.type === 'annex_territory' && (draft.targetSettlementIds?.length ?? 0) === 0) {
+    if (isTerritorySelectionTerm(draft) && (draft.targetSettlementIds?.length ?? 0) === 0) {
+      const context: PeaceSelectionContext = { selectionType: draft.type, selectionDirection: draft.direction, selectionTargetFactionId: draft.targetFactionId, recipientFactionId: draft.recipientFactionId };
+      setSettlementPicker(context);
       setActiveSettlementSelectionOptionId(option.optionId);
-      void bridge.startSettlementSelection(terms).then(selection => {
+      void bridge.startSettlementSelection(terms, context).then(selection => {
         if (!selection?.selectionActive) setActiveSettlementSelectionOptionId(null);
         if (selection) applySettlementSelection(selection);
       });
@@ -1389,9 +1429,26 @@ function PeaceNegotiationScreenContent({
   return (
     <div className="pns-stage pns-stage--peace">
       {activeSettlementSelectionOptionId ? (
-        <GameButton variant="burgundy" className="pns-return-to-terms" onClick={() => void returnToTerms()}>
-          <WebUIText textKey="PeaceNegotiation.ReturnToTerms" />
-        </GameButton>
+        settlementPicker && selectionData ? <PeaceTerritoryPicker
+          context={settlementPicker}
+          selection={selectionData}
+          terms={terms.filter(isTerritorySelectionTerm)}
+          termKey={term => term.termId || termKey(term)}
+          onRecipientChange={(recipientFactionId) => {
+            const context = { ...settlementPicker, recipientFactionId };
+            setSettlementPicker(context);
+            void bridge.startSettlementSelection(terms, context).then(selection => {
+              if (selection) applySettlementSelection(selection);
+            });
+          }}
+          onAssign={(termId, recipientId) => {
+            const next = assignTerritoryRecipient(terms, termId, recipientId);
+            setTerms(next);
+            syncMapSelectionToTerms(next);
+          }}
+          onRemove={removeTerm}
+          onDone={() => void returnToTerms()}
+        /> : null
       ) : (
         <ScreenShell
           title={screenTitle}

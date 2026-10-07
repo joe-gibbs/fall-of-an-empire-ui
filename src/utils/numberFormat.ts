@@ -76,3 +76,16 @@ export function formatCompactNumber(value: number | undefined | null): string {
 export function formatPercent(value: number | undefined | null, maximumFractionDigits = 0): string {
   return `${formatNumber(value, { maximumFractionDigits })}%`;
 }
+
+export function formatOrdinal(value: number | undefined | null): string {
+  const rank = Math.round(Number(value ?? 0));
+  if (!Number.isFinite(rank) || rank <= 0) return '';
+  const remainder = rank % 100;
+  if (remainder >= 11 && remainder <= 13) return `${rank}th`;
+  switch (rank % 10) {
+    case 1: return `${rank}st`;
+    case 2: return `${rank}nd`;
+    case 3: return `${rank}rd`;
+    default: return `${rank}th`;
+  }
+}

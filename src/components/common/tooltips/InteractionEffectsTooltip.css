@@ -15,6 +15,18 @@
   letter-spacing: 0.08rem;
 }
 
+.interaction-effects-tooltip__list {
+  margin: 0.462rem 0 0;
+  padding-left: 1rem;
+  list-style-type: square;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.interaction-effects-tooltip__list > li + li {
+  margin-top: 0.385rem;
+}
+
 .interaction-effects-tooltip__outcomes {
   display: flex;
   flex-direction: column;

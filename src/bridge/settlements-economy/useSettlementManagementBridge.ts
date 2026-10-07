@@ -12,6 +12,8 @@ export interface RegionGovernorCandidateView extends Character {
   currentRegionCount: number;
   maxRegionCount: number;
   isCurrentGovernor: boolean;
+  governorship: string;
+  governorshipHelp: string;
 }
 
 function dispatchBridgeResponse(action: string, detail: unknown): void {
@@ -64,6 +66,8 @@ function mapGovernorCandidate(c: RegionGovernorCandidate): RegionGovernorCandida
     currentRegionCount: c.currentRegionCount,
     maxRegionCount: c.maxRegionCount,
     isCurrentGovernor: c.isCurrentGovernor,
+    governorship: c.governorship,
+    governorshipHelp: c.governorshipHelp,
   };
 }
 
@@ -75,9 +79,9 @@ export function useRegionGovernorCandidatesBridge(settlementId: string | null): 
   });
 }
 
-export async function renameSettlementBridge(settlementId: string, name: string): Promise<boolean> {
+export async function renameSettlementBridge(settlementId: string, name: string, setCityName = false): Promise<boolean> {
   try {
-    const response = await bridgeCall('game.rename_settlement', { settlementId, name });
+    const response = await bridgeCall('game.rename_settlement', { settlementId, name, setCityName });
     await refreshSettlementBridge(settlementId);
     return response.renamed;
   } catch (error) {

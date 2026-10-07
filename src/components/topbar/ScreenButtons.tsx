@@ -9,7 +9,7 @@ import FactionRoundel from '../common/entities/FactionRoundel';
 import FactionTooltip from '../common/tooltips/FactionTooltip';
 import { useObserverMode, usePlayerFactionSummary } from '../../data-source/index';
 import { isObserverTopbarButton } from '../../utils/observerMode';
-import { getAllTopbarButtons, isVisibleForFactionMode } from '../../registry/index';
+import { getAllTopbarButtons, isProvinceSubjectMode, isVisibleForFactionMode } from '../../registry/index';
 import type { TopbarButtonRegistration } from '../../registry/index';
 import { WebkilnAssetPath } from '../../utils/assets';
 import { useWebUIText, type WebUITextFormatter } from '../../localization/WebUITextContext';
@@ -138,7 +138,7 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
   }, []);
 
   const registrations = getAllTopbarButtons();
-  const subjectMode = playerFaction?.diplomaticStatus === 'subject';
+  const subjectMode = isProvinceSubjectMode(playerFaction);
   const factionButton = registrations.find(b => b.id === FACTION_BUTTON_ID);
   const showFactionButton = Boolean(
     !observerMode
@@ -147,6 +147,9 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
   );
   const buttons = registrations.filter(b => (
     b.id !== FACTION_BUTTON_ID
+    && (b.id !== 'military' || !playerFaction?.usesWarbands)
+    && (b.id !== 'internal-politics' || !playerFaction?.usesWarbands)
+    && (b.id !== 'powerblocs' || playerFaction?.usesWarbands || playerFaction?.usesPowerBlocs)
     && (b.id !== ACHIEVEMENTS_BUTTON_ID || steamAchievementsAvailable === false)
     && (b.placement ?? 'left') === placement
     && isVisibleForFactionMode(b, subjectMode)
@@ -155,6 +158,7 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
   const factionButtonLabel = factionButton ? localizeButtonLabel(factionButton, t) : t(FACTION_LABEL_KEY);
   const playerFactionId = playerFaction?.id ?? null;
   const playerReligionId = playerFaction?.religionId;
+  const clansOpenedFromMilitary = activeScreen === 'military' && playerFaction?.usesWarbands === true;
   const factionButtonNode = (
     <button
       type="button"
@@ -200,7 +204,12 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
           {factionButtonNode}
         </FactionTooltip>
       )}
-      {buttons.map((btn) => {
+      {buttons.map((registration) => {
+        const btn = registration.id === 'powerblocs' && playerFaction && playerFaction.usesWarbands
+          ? { ...registration, icon: '/assets/icons/I_Kinship.png', label: t('KinshipGroups.Title'), labelKey: undefined, tooltip: { title: t('KinshipGroups.Title'), body: t('KinshipGroups.Description') } }
+          : registration.id === 'military' && playerFaction?.usesRegionalForces
+            ? { ...registration, icon: '/assets/icons/I_Region.png', label: t('RegionalForces.Title'), labelKey: undefined, tooltip: { title: t('RegionalForces.Title'), body: t('RegionalForces.Description') } }
+            : registration;
         const actionName = TOPBAR_SCREEN_ACTIONS[btn.id];
         const shortcut = actionName
           ? actionBindingFooter(findActionBinding(settings?.controls, actionName, activeInputDevice))
@@ -210,9 +219,9 @@ const ScreenButtons: React.FC<ScreenButtonsProps> = ({
             <IconButton
               icon={resolveScreenButtonIcon(btn, playerReligionId)}
               label={localizeButtonLabel(btn, t)}
-              active={activeScreen === btn.id}
+              active={activeScreen === btn.id || (btn.id === 'powerblocs' && clansOpenedFromMilitary)}
               tutorialTarget={screenButtonTarget(btn.id)}
-              onClick={() => onScreenChange?.(btn.id)}
+              onClick={() => onScreenChange?.(btn.id === 'powerblocs' && clansOpenedFromMilitary ? 'military' : btn.id)}
             />
           </Tooltip>
         );

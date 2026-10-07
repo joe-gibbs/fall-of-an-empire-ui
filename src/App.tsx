@@ -19,6 +19,8 @@ import { preloadWebUIAssets } from './preload/assets';
 import { acknowledgeBridgeFailure, getRuntimeEngine } from './bridge/core/runtimeEngine';
 import GameUIRoot from './components/app-shell/GameUIRoot';
 import ResourceDetailsProvider from './context/ResourceDetailsProvider';
+import CultureDetailsProvider from './context/CultureDetailsProvider';
+import ReligionDetailsProvider from './context/ReligionDetailsProvider';
 import InitialSetupModal from './components/initial-setup/InitialSetupModal';
 import { useButtonClickSound } from './hooks/useSound';
 import InputModeProvider from './input/InputModeProvider';
@@ -103,8 +105,12 @@ function App() {
     content = (
       <GameProvider>
         <ResourceDetailsProvider>
-          <GameUIRoot />
-          <TooltipHost />
+          <CultureDetailsProvider>
+            <ReligionDetailsProvider>
+              <GameUIRoot />
+              <TooltipHost />
+            </ReligionDetailsProvider>
+          </CultureDetailsProvider>
         </ResourceDetailsProvider>
       </GameProvider>
     );

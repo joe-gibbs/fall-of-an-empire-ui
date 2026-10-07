@@ -1,6 +1,6 @@
 /**
  * Custom ESLint rule: flag string literals referencing packaged public files
- * that don't resolve to a real file under `WebUI/public/`.
+ * that do not resolve to a source file in WebUI/public or a declared content pack.
  *
  * Rationale: silent missing-asset regressions are how we ended up with broken
  * image glyphs in the UI. The linter scans every string literal in source
@@ -12,7 +12,7 @@
  *   - Every `'...'` / `"..."` string literal and every no-interpolation
  *     template literal is scanned for `/assets/<path>.<ext>` and
  *     `/mods/<path>.<ext>` occurrences.
- *   - Each hit is resolved against `WebUI/public/` and flagged if absent.
+ *   - Each hit is resolved against WebUI/public and declared pack WebUI/public roots.
  *
  * Limits:
  *   - String literals with interpolation (`` `/assets/${id}.png` ``) are not
@@ -31,6 +31,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_DIR = path.resolve(__dirname, '..', '..');
 const PUBLIC_DIR = path.resolve(__dirname, '..', 'public');
+// Pack asset aliases share /assets/... with the base UI at runtime. Resolve the
+// same aliases against authored PNGs rather than requiring generated WebP files.
+function contentPackPublicDirectories() {
+  const directories = [];
+  for (const root of [path.join(PROJECT_DIR, 'Packs'), path.join(PROJECT_DIR, 'Saved', 'Mods')]) {
+    if (!fs.existsSync(root)) continue;
+    for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const packRoot = path.join(root, entry.name);
+      const descriptorPath = path.join(packRoot, 'mod.json');
+      if (!fs.existsSync(descriptorPath)) continue;
+      const descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8').replace(/^\uFEFF/, ''));
+      if (typeof descriptor.id !== 'string' || !descriptor.id) continue;
+      const publicDirectory = path.join(packRoot, 'WebUI', 'public');
+      if (fs.existsSync(path.join(publicDirectory, 'assets'))) directories.push(publicDirectory);
+    }
+  }
+  return directories;
+}
+const CONTENT_PACK_PUBLIC_DIRS = contentPackPublicDirectories();
 const PERSON_INTERACTIONS_DIR = path.join(PROJECT_DIR, 'Script', 'Characters', 'Interactions');
 const PERSON_INTERACTION_BRIDGE_FILE = path.normalize(path.join('src', 'bridge', 'usePersonInteractionsBridge.ts'));
 
@@ -97,11 +117,11 @@ const rule = {
     type: 'problem',
     docs: {
       description:
-        'Disallow references to /assets/... paths that do not exist under WebUI/public.',
+        'Require asset references to exist in the base UI or a declared content pack source directory.',
     },
     messages: {
       missing:
-        'Public file `{{path}}` does not exist under WebUI/public. Either add the source asset or fix the path.',
+        'Public file `{{path}}` does not exist in WebUI/public or a declared content pack source directory. Either add the source asset or fix the path.',
       missingPersonInteractionBackground:
         'Generated person interaction background `{{path}}` is missing for interaction key `{{key}}`.',
     },
@@ -120,7 +140,8 @@ const rule = {
         const assetPath = match[0];
         const cleaned = assetPath.split('?')[0].split('#')[0];
         const absPath = path.join(PUBLIC_DIR, cleaned);
-        if (!fileExists(absPath)) {
+        const inContentPack = cleaned.startsWith('/assets/') && CONTENT_PACK_PUBLIC_DIRS.some(directory => fileExists(path.join(directory, cleaned)));
+        if (!fileExists(absPath) && !inContentPack) {
           context.report({ node, messageId: 'missing', data: { path: cleaned } });
         }
       }

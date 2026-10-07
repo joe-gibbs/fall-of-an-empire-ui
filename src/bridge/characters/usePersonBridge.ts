@@ -44,6 +44,10 @@ function mapPerson(data: GetPersonDataResponse): Character {
   return {
     id: data.id,
     name: data.name,
+    originalNameText: data.originalNameText,
+    familyName: data.familyName || undefined,
+    headerGivenName: data.headerGivenName || undefined,
+    familyHeading: data.familyHeading || undefined,
     title: data.title,
     shortTitle: data.shortTitle,
     age: data.age,
@@ -109,6 +113,7 @@ function mapPerson(data: GetPersonDataResponse): Character {
     })),
     honourDread: data.honourDread,
     fame: Math.round(data.fame),
+    usesWarbands: data.usesWarbands,
     activity: data.activity as PersonActivity,
     activitySegments: data.activitySegments.map(segment => ({
       text: segment.text,

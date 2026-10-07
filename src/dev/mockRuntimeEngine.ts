@@ -37,6 +37,7 @@ declare global {
       showRecallEvent: () => void;
       showGovernorSelection: () => void;
       showCourtierPromotion: () => void;
+      showSettlementNamePrompt: () => void;
       showAllyCallDialog: () => void;
       showVictory: () => void;
       showDefeat: (cause?: MockDefeatCause) => void;
@@ -378,6 +379,7 @@ function installLauncher(runtime: ReturnType<typeof createMockBridgeRuntime>, em
     createButton('Recall', () => runtime.showRecallEvent(emitBridgeEvent)),
     createButton('Governor', () => runtime.showGovernorSelection(emitBridgeEvent)),
     createButton('Courtier', () => runtime.showCourtierPromotion(emitBridgeEvent)),
+    createButton('Name Settlement', () => runtime.showSettlementNamePrompt(emitBridgeEvent)),
     createButton('Ally Call', () => runtime.showAllyCallDialog(emitBridgeEvent)),
   ]));
 
@@ -488,6 +490,7 @@ export function installMockruntimeEngine(): void {
     showRecallEvent: () => runtime.showRecallEvent(emitBridgeEvent),
     showGovernorSelection: () => runtime.showGovernorSelection(emitBridgeEvent),
     showCourtierPromotion: () => runtime.showCourtierPromotion(emitBridgeEvent),
+    showSettlementNamePrompt: () => runtime.showSettlementNamePrompt(emitBridgeEvent),
     showAllyCallDialog: () => runtime.showAllyCallDialog(emitBridgeEvent),
     showVictory: () => runtime.showVictory(emitBridgeEvent),
     showDefeat: (cause) => runtime.showDefeat(emitBridgeEvent, cause),

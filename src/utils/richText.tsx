@@ -1,5 +1,6 @@
 import React from 'react';
 import GlossaryDef from '../components/common/tooltips/GlossaryDef';
+import OriginalNameTooltip from '../components/common/tooltips/OriginalNameTooltip';
 import { KeyGlyph } from '../components/common/KeyGlyph';
 import type { KeyActionGlyphProps } from './actionBindings';
 import { WebkilnAssetPath } from './assets';
@@ -133,7 +134,7 @@ function wrapFrame(frame: Frame, opts: RichTextOptions, key: string): React.Reac
       const type = frame.attrs.type ?? '';
       const id = frame.attrs.id ?? '';
       const prefix = opts.linkClassPrefix ?? 'rich-link';
-      return (
+      const link = (
         <span
           key={key}
           className={`${prefix} ${prefix}--${type}${opts.onLinkClick ? ` ${prefix}--clickable` : ''}`}
@@ -143,6 +144,9 @@ function wrapFrame(frame: Frame, opts: RichTextOptions, key: string): React.Reac
           {frame.children}
         </span>
       );
+      return type === 'character' && id
+        ? <OriginalNameTooltip key={key} characterId={id}>{link}</OriginalNameTooltip>
+        : link;
     }
     case 'bold':
       return <strong key={key}>{frame.children}</strong>;

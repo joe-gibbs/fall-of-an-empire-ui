@@ -1,4 +1,5 @@
-import React from 'react';
+import { beginBridgeQueryTransition } from '../../../bridge/core/useBridgeQuery';
+import React, { startTransition } from 'react';
 import { playSound } from '../../../hooks/useSound';
 import { formatNumber } from '../../../utils/numberFormat';
 import { WebkilnAssetPath } from '../../../utils/assets';
@@ -35,7 +36,7 @@ const SidebarTabBar: React.FC<SidebarTabBarProps> = ({ tabs, activeTab, onTabCha
           data-tutorial-satisfied={tab.id === activeTab ? 'true' : undefined}
           role="tab"
           aria-selected={tab.id === activeTab}
-          onClick={() => { playSound('tab'); handleChange(tab.id); }}
+          onClick={() => { playSound('tab'); beginBridgeQueryTransition(); startTransition(() => handleChange(tab.id)); }}
         >
           {tab.icon && <img src={WebkilnAssetPath(tab.icon)} alt="" className="sidebar-tab-icon" draggable={false} />}
           <span className="sidebar-tab-label">{tab.label}</span>

@@ -864,7 +864,7 @@ function TreeViewport<TNode extends PositionedPerson>({
   );
 }
 
-function FamilyTreeViewport({
+export function FamilyTreeViewport({
   data,
   selectedId,
   onSelect,
@@ -1025,7 +1025,7 @@ function familyTreeFocusName(data: FamilyTreeData | null, fallbackPersonName?: s
 export default function FamilyTreeScreen({ screenId, onClose }: { screenId: string | null; onClose: () => void }) {
   const target = useMemo(() => parseFamilyTreeScreenId(screenId), [screenId]);
   const [activeMode, setActiveMode] = useState<FamilyTreeMode>(target.mode);
-  const data = useFamilyTreeBridge(target.personId, activeMode === 'patronage' ? 'patronage' : 'lineage');
+  const data = useFamilyTreeBridge(target.personId, activeMode === 'patronage' ? 'patronage' : 'lineage', true, true);
   const lineageData = useMemo(() => filterLineageData(data), [data]);
   const { openSidebar, openScreen } = useGameActions();
   const [selectedId, setSelectedId] = useState<string | null>(target.personId);
@@ -1042,7 +1042,7 @@ export default function FamilyTreeScreen({ screenId, onClose }: { screenId: stri
 
   const tabs = [
     { id: 'tree', label: webUIText('Auto.Prop.ComponentsScreensFamilyTreeScreen.895.1') },
-    { id: 'patronage', label: webUIText('Auto.Prop.ComponentsScreensFamilyTreeScreen.896.2') },
+    ...(data?.usesPatronage ? [{ id: 'patronage', label: webUIText('Auto.Prop.ComponentsScreensFamilyTreeScreen.896.2') }] : []),
   ];
   const focusName = familyTreeFocusName(data);
   const screenTitle = focusName
@@ -1057,7 +1057,7 @@ export default function FamilyTreeScreen({ screenId, onClose }: { screenId: stri
       tabs={<SidebarTabBar tabs={tabs} activeTab={activeMode} onTabChange={(id) => setActiveMode(id as FamilyTreeMode)} />}
       contentClassName="fts-content"
     >
-      {activeMode === 'patronage'
+      {activeMode === 'patronage' && data?.usesPatronage
         ? <PatronageTreeViewport data={data} selectedId={selectedId} onSelect={openCharacter} onDoubleSelect={switchToCharacterFamilyTree} />
         : <FamilyTreeViewport data={lineageData} selectedId={selectedId} onSelect={openCharacter} onDoubleSelect={switchToCharacterFamilyTree} />}
     </ScreenShell>

@@ -8,6 +8,7 @@ import {
 import { formatNumber, formatSignedNumber } from '../../utils/numberFormat';
 import { webUIText } from '../../localization/WebUITextContext';
 import './BureaucraticThroughput.css';
+import { usePlayerFactionSummary } from '../../data-source';
 
 type Tone = 'good' | 'bad' | 'neutral';
 type InlineKind = 'load' | 'capacity';
@@ -321,6 +322,7 @@ export function BureaucraticInlineValue({
   compact?: boolean;
 }) {
   const resolvedTone = tone ?? inlineTone(value, kind);
+  if (value === 0) return null;
   return (
     <span className={`btm-inline btm-inline--${resolvedTone}${compact ? ' btm-inline--compact' : ''}`}>
       <img className="btm-inline-icon" src="/assets/power-blocs/BureaucracyBloc.png" alt="" draggable={false} />
@@ -346,6 +348,7 @@ export function BureaucraticRushTooltipAction({
   useRushStoreVersion();
   const throughput = useBureaucraticThroughputBridge();
   const [pending, setPending] = useState(false);
+  const player = usePlayerFactionSummary();
 
   const rushStoreKey = `${targetId ?? ''}:${targetFactionId ?? ''}:${actionId}`;
   const rushed = rushedActionIds.has(rushStoreKey);
@@ -378,6 +381,7 @@ export function BureaucraticRushTooltipAction({
     });
   };
 
+  if (!player?.usesAdministration) return null;
   return (
     <div className={`btm-rush${rushed ? ' btm-rush--applied' : ''}`}>
       <div className="btm-rush-copy">

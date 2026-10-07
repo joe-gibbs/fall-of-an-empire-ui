@@ -3,7 +3,7 @@
   flex-shrink: 0;
 }
 
-/* Invisible host so pinned/victory anchored dropdowns can position in compact HUD. */
+/* Invisible host so the pinned dropdown can position in compact HUD. */
 .screens-menu-dropdown-anchor {
   position: absolute;
   top: 0;

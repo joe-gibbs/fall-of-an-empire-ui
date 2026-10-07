@@ -138,7 +138,10 @@
   width: 100%;
   height: 20.4rem;
   overflow: hidden;
-  border: 0.077rem solid rgba(201, 168, 76, 0.2);
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-repeat: round;
   background-color: #0d1218;
   background-image:
     linear-gradient(180deg, rgba(36, 42, 48, 0.2) 0%, rgba(36, 42, 48, 0.2) 100%),
@@ -149,18 +152,27 @@
   padding: 0;
   transition: border-color 0.15s, transform 0.15s;
 }
+.cpm-card:not(.cpm-card--selected) {
+  filter: saturate(0.78) brightness(0.68);
+}
 .cpm-card:hover {
-  border-top-color: var(--gold-muted);
-  border-right-color: var(--gold-muted);
-  border-bottom-color: var(--gold-muted);
-  border-left-color: var(--gold-muted);
   transform: translateY(-0.15rem);
 }
+.cpm-card:not(.cpm-card--selected):hover {
+  filter: saturate(0.92) brightness(0.88);
+}
 .cpm-card--selected {
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
+  filter: none;
+  box-shadow: 0 0 0.7rem rgba(201, 168, 76, 0.42);
+}
+.cpm-card--selected::after {
+  content: '';
+  position: absolute;
+  inset: 0.32rem;
+  border: 0.077rem solid var(--gold);
+  box-shadow: inset 0 0 1.35rem 0.18rem rgba(201, 168, 76, 0.55);
+  pointer-events: none;
+  z-index: 4;
 }
 .cpm-card--selected:hover { transform: translateY(-0.15rem); }
 
@@ -182,6 +194,8 @@
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
+.cpm-card:hover .cpm-card-fg { transform: translateX(-50%) scale(1.02); }
+.cpm-card--selected .cpm-card-fg { transform: translateX(-50%) scale(1.015); }
 .cpm-card-vignette {
   position: absolute; top: 0; right: 0; bottom: 0; left: 0;
   background:
@@ -197,29 +211,6 @@
       rgba(8, 12, 17, 0.35) 100%);
   pointer-events: none;
 }
-
-/* Corner brackets on selection - stands in for the gold selection indicator
-   image the AngelScript widget swaps in. */
-.cpm-card-corner {
-  position: absolute;
-  width: 0.9rem; height: 0.9rem;
-  border-width: 0.138rem;
-  border-style: solid;
-  border-top-color: var(--gold);
-  border-right-color: var(--gold);
-  border-bottom-color: var(--gold);
-  border-left-color: var(--gold);
-  pointer-events: none;
-  animation: cpm-corner-in 0.18s ease-out both;
-}
-@keyframes cpm-corner-in {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
-}
-.cpm-card-corner--tl { top: 0.3rem; left: 0.3rem; border-right: 0; border-bottom: 0; }
-.cpm-card-corner--tr { top: 0.3rem; right: 0.3rem; border-left: 0; border-bottom: 0; }
-.cpm-card-corner--bl { bottom: 0.3rem; left: 0.3rem; border-right: 0; border-top: 0; }
-.cpm-card-corner--br { bottom: 0.3rem; right: 0.3rem; border-left: 0; border-top: 0; }
 
 .cpm-card-content {
   position: absolute; left: 0; right: 0; bottom: 0;

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import FactionRoundel from '../../common/entities/FactionRoundel';
+import CultureLink from '../../common/culture/CultureLink';
+import ReligionLink from '../../common/religion/ReligionLink';
 import Tooltip from '../../common/tooltips/Tooltip';
 import GameButton from '../../common/buttons/GameButton';
 import GrittyPieChart from '../../screens/charts/GrittyPieChart';
@@ -66,7 +68,11 @@ function MakeupLegend({ shares, kind }: { shares: FactionDemographicShare[]; kin
               }],
             }}
           >
-            {body}
+            {kind === 'culture' && share.id ? (
+              <CultureLink cultureId={share.id} className="diplo-demo-legend-item" showTooltip={false}>{body}</CultureLink>
+            ) : kind === 'religion' && share.id ? (
+              <ReligionLink religionId={share.id} className="diplo-demo-legend-item" showTooltip={false}>{body}</ReligionLink>
+            ) : body}
           </Tooltip>
         );
       })}

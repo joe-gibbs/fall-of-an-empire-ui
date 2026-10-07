@@ -35,11 +35,11 @@ export async function setDesignatedHeir(personId: string, factionId?: string): P
 
         const factionDataId = targetFactionId || familyTree.factionId;
         if (factionDataId) {
-          const faction = await bridgeCall('game.get_faction_data', { factionId: factionDataId, scope: 'full' });
+          const faction = await bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId: factionDataId, scope: 'full' });
           bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_data', { detail: faction }));
         }
       } else if (targetFactionId) {
-        const faction = await bridgeCall('game.get_faction_data', { factionId: targetFactionId, scope: 'full' });
+        const faction = await bridgeCall('game.get_faction_data', { subscriptionId: '', subscribe: false, factionId: targetFactionId, scope: 'full' });
         bridgeEvents.dispatchEvent(new CustomEvent('game.get_faction_data', { detail: faction }));
       }
 

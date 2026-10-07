@@ -1,0 +1,7 @@
+.clan-warband-panel { margin-top: 1rem; }
+.clan-warband-capacity { display: flex; justify-content: space-between; gap: 0.7rem; padding: 0.5rem 0; color: var(--text-muted); font-size: 0.85rem; }
+.clan-warband-capacity strong { color: var(--gold-light); font-family: var(--font-header); }
+.clan-warband-units { display: flex; flex-direction: column; gap: 0.3rem; }
+.clan-warband-companies > .tooltip-wrapper { min-width: 0; }
+.clan-warband-empty, .clan-warband-requirement { margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.8rem; }
+.clan-warband-companies { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 0.3rem; }

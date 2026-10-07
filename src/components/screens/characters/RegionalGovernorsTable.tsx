@@ -111,6 +111,7 @@ function GovernorRow({
   characters,
   blocs,
   playerFactionId,
+  showBlocs,
   onAppoint,
   onOpenCharacter,
 }: {
@@ -118,12 +119,13 @@ function GovernorRow({
   characters: Map<string, CharacterListEntry>;
   blocs: PowerBloc[];
   playerFactionId: string;
+  showBlocs: boolean;
   onAppoint: (row: RegionalGovernor) => void;
   onOpenCharacter: (id: string) => void;
 }) {
   const character = characters.get(row.governorId);
   const corruptionTone = row.corruptionPercent >= 25 ? 'var(--red-light)' : row.corruptionPercent >= 12 ? 'var(--yellow)' : 'var(--green)';
-  const bloc = blocForPerson(row.governorId, blocs);
+  const bloc = showBlocs ? blocForPerson(row.governorId, blocs) : undefined;
   const ownerName = row.ownerFactionId && row.ownerFactionId !== playerFactionId ? row.ownerFactionName : '';
   const actionLabel = webUIText(row.governorId ? 'FactionOverview.ReplaceAppointment' : 'Settlement.AppointGovernor');
 
@@ -145,7 +147,9 @@ function GovernorRow({
           <EntityLink type="character" id={row.governorId} className="ips-governor-name ips-entity-link" fallbackClassName="ips-governor-name">
             {row.governorName || webUIText('InternalPolitics.NoGovernor')}
           </EntityLink>
-          {row.governorId ? <GovernorBlocLine bloc={bloc} /> : <span className="ips-governor-bloc"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.584.7" /></span>}
+          {showBlocs && (row.governorId
+            ? <GovernorBlocLine bloc={bloc} />
+            : <span className="ips-governor-bloc"><WebUIText textKey="Auto.ComponentsScreensInternalPoliticsScreen.584.7" /></span>)}
         </div>
       </div>
       <div className="ips-governor-cell ips-governor-cell--settlements">
@@ -191,6 +195,7 @@ export default function RegionalGovernorsTable({
   playerFactionId,
   autoAssignGovernorsEnabled,
   emptyReason,
+  showBlocs = true,
   onToggleAutoAssign,
   onAppoint,
   onOpenCharacter,
@@ -201,12 +206,16 @@ export default function RegionalGovernorsTable({
   playerFactionId: string;
   autoAssignGovernorsEnabled: boolean;
   emptyReason?: string;
+  showBlocs?: boolean;
   onToggleAutoAssign: () => void;
   onAppoint: (row: RegionalGovernor) => void;
   onOpenCharacter: (id: string) => void;
 }) {
   const [sort, setSort] = useState<SortState<GovernorSortKey>>({ key: 'corruption', direction: 'desc' });
   const sortedGovernors = useMemo(() => sortGovernorRows(governors, sort), [governors, sort]);
+  const governorColumnLabel = webUIText(showBlocs
+    ? 'Auto.Attr.ComponentsScreensInternalPoliticsScreen.832.12'
+    : 'InternalPolitics.Governor');
 
   return (
     <section className="ips-tab-section">
@@ -224,7 +233,7 @@ export default function RegionalGovernorsTable({
       <div className="ips-table ips-governor-table" role="table">
         <div className="ips-governor-header" role="row">
           <SortableHeader id="region" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.831.11')} className="ips-governor-header-cell ips-governor-header-cell--region" sort={sort} onSort={(key) => setSort(value => toggleSortState(value, key, 'desc'))} />
-          <SortableHeader id="governor" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.832.12')} className="ips-governor-header-cell ips-governor-header-cell--governor" sort={sort} onSort={(key) => setSort(value => toggleSortState(value, key, 'desc'))} />
+          <SortableHeader id="governor" label={governorColumnLabel} className="ips-governor-header-cell ips-governor-header-cell--governor" sort={sort} onSort={(key) => setSort(value => toggleSortState(value, key, 'desc'))} />
           <SortableHeader id="settlements" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.833.13')} className="ips-governor-header-cell ips-governor-header-cell--settlements" sort={sort} onSort={(key) => setSort(value => toggleSortState(value, key, 'desc'))} />
           <SortableHeader id="corruption" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.834.14')} className="ips-governor-header-cell ips-governor-header-cell--corruption" sort={sort} onSort={(key) => setSort(value => toggleSortState(value, key, 'desc'))} />
           <SortableHeader id="tax" label={webUIText('Auto.Attr.ComponentsScreensInternalPoliticsScreen.835.15')} className="ips-governor-header-cell ips-governor-header-cell--tax" sort={sort} onSort={(key) => setSort(value => toggleSortState(value, key, 'desc'))} />
@@ -242,6 +251,7 @@ export default function RegionalGovernorsTable({
                 characters={characters}
                 blocs={blocs}
                 playerFactionId={playerFactionId}
+                showBlocs={showBlocs}
                 onAppoint={onAppoint}
                 onOpenCharacter={onOpenCharacter}
               />

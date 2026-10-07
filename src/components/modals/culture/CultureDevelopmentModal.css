@@ -1,0 +1,80 @@
+.culture-development-overlay { position: fixed; inset: 0; z-index: 550; display: flex; align-items: center; justify-content: center; background: rgba(5, 9, 13, 0.72); animation: modal-overlay-in 0.2s var(--ease-snap) both; }
+.culture-development-overlay--closing { pointer-events: none; animation: modal-overlay-out 0.18s ease-in both; }
+.culture-development-modal { display: flex; flex-direction: column; width: 64rem; max-width: 90vw; height: 60rem; max-height: 88vh; color: var(--text); background: url('/assets/baked/modal-charcoal.png') center / cover; border: 0.231rem solid transparent; border-image: url('/assets/gold-frame.png') 6; }
+.culture-development-modal--closing { animation: modal-panel-out 0.18s ease-in both; }
+.culture-development-header { display: flex; flex-shrink: 0; align-items: center; gap: 0.75rem; padding: 0.8rem 1rem; }
+.culture-development-header > img { width: 3rem; height: 3rem; object-fit: contain; }
+.culture-development-header > div { flex: 1; }
+.culture-development-header h1 { margin: 0 0 0.25rem; color: var(--gold-light); font: 1.55rem var(--font-header); }
+.culture-development-header span { color: var(--text-muted); font-size: 0.85rem; }
+
+.culture-development-scroll { flex: 1; min-height: 0; }
+.culture-development-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 0.65rem; padding: 0.8rem; }
+.culture-development-body section { padding: 0.85rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; }
+.culture-development-body h2 { margin: 0 0 0.75rem; color: var(--gold-light); font: 1.05rem var(--font-header); }
+.culture-development-body p { line-height: 1.5; font-size: 0.9rem; margin: 0 0 0.8rem; }
+.culture-development-population { margin: 0 0 0.8rem; }
+.culture-development-population .icon-stat__icon { width: 1.4rem; height: 1.4rem; margin-right: 0.35rem; }
+.culture-development-population .icon-stat__value { color: var(--gold-light); font-size: 1.15rem; }
+.culture-development-trend { color: var(--text-muted); }
+.culture-development-trend--rising { color: var(--green); }
+.culture-development-trend--falling { color: var(--red); }
+.culture-development-sources { margin: 0 0 0.35rem; }
+.culture-development-sources > div { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.55rem 0.6rem; margin-top: 0.35rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; font-size: 0.85rem; }
+.culture-development-sources dt { display: flex; align-items: center; gap: 0.45rem; }
+.culture-development-sources dt > div { display: flex; align-items: center; gap: 0.45rem; }
+.culture-development-sources dt img { width: 1.25rem; height: 1.25rem; object-fit: contain; }
+.culture-development-sources dd { margin: 0; color: var(--text-muted); }
+.culture-development-source-gain { color: var(--green); }
+.culture-development-score h2 { display: flex; align-items: baseline; gap: 0.75rem; }
+.culture-development-score > p { color: var(--text-muted); }
+.culture-development-unlocks { position: relative; margin: 0 0 0.8rem; }
+.culture-development-unlocks-bar {
+  position: absolute;
+  top: 0.686rem;
+  right: 0;
+  left: 0;
+  height: 0.7273rem;
+  pointer-events: none;
+}
+.culture-development-unlocks-nodes { position: relative; display: flex; align-items: flex-start; }
+.culture-development-unlock-slot { flex: 1 1 0; min-width: 0; align-items: center; }
+.culture-development-unlock { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.culture-development-unlock-icon {
+  width: 2.1rem;
+  height: 2.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  background-image: url('/assets/baked/icon-button.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+}
+.culture-development-unlock-icon img { width: 1.4rem; height: 1.4rem; object-fit: contain; }
+.culture-development-unlock-value { color: var(--text-muted); font-size: 0.75rem; }
+.culture-development-unlock--reached .culture-development-unlock-value { color: var(--green); }
+.culture-development-unlock--next .culture-development-unlock-icon {
+  background-image: url('/assets/baked/icon-button-gold.png');
+}
+.culture-development-unlock--next .culture-development-unlock-value { color: var(--gold-light); }
+.culture-development-unlock--locked { opacity: 0.42; }
+.culture-facts { margin: 0; }
+.culture-facts > div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; padding: 0.6rem; margin-top: 0.35rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; font-size: 0.85rem; }
+.culture-facts dt { flex-shrink: 0; }
+.culture-facts dd { margin: 0; min-width: 0; color: var(--gold-light); text-align: right; }
+.culture-facts-stacked { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+.culture-facts-stacked dd { text-align: left; overflow-wrap: break-word; }
+.culture-development-related { grid-column: 1 / -1; }
+.culture-development-related > div { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.culture-development-related .culture-link { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; }
+.culture-development-related img { width: 2rem; height: 2rem; object-fit: contain; }
+
+@media (max-height: 900px) {
+  .culture-development-modal { max-height: 94vh; }
+}
+
+@media (max-width: 1100px) {
+  .culture-development-body { grid-template-columns: minmax(0, 1fr); }
+}

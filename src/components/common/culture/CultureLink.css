@@ -1,0 +1,24 @@
+.culture-link {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.culture-link:hover {
+  color: var(--gold-light);
+}
+.char-identity-pair .culture-link {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.culture-link:focus-visible { outline: 1px solid var(--gold); outline-offset: 2px; }

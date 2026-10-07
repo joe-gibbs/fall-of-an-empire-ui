@@ -1,3 +1,5 @@
+import { beginBridgeQueryTransition } from '../../../bridge/core/useBridgeQuery';
+import { startTransition, useDeferredValue } from 'react';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
@@ -8,7 +10,7 @@ import GameButton from '../../common/buttons/GameButton';
 import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
 import Tooltip from '../../common/tooltips/Tooltip';
 import BattleAfterActionModal, { type BattleAfterActionNotification } from '../../notifications/BattleAfterActionModal';
-import { sidebarTypeForEntity } from '../../common/entities/entityLinkUtils';
+import { useEntityLinkClick } from '../../../hooks/useEntityLinkClick';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
 import { compareSortValues, normaliseSortText, type SortDirection, type SortState } from '../../common/layout/tables/sortUtils';
 import { useLedgerOverviewBridge } from '../../../bridge/settlements-economy/useLedgerOverviewBridge';
@@ -392,11 +394,12 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   const rowLimit = isPagedTab ? LEDGER_PAGE_SIZE : 0;
   const activeSort = sortByTab[activeTab] ?? DEFAULT_LEDGER_SORTS[activeTab];
   const [search, setSearch] = useState('');
+  const querySearch = useDeferredValue(search);
   const [filters, setFilters] = useState<LedgerFilters>(DEFAULT_FILTERS);
   const [virtualRowHeight, setVirtualRowHeight] = useState(60);
   const [summaryCounts, setSummaryCounts] = useState<LedgerSummaryCounts | null>(null);
   const bridgeFilters = useMemo(() => ({
-    searchText: isPagedTab ? search : '',
+    searchText: isPagedTab ? querySearch : '',
     settlementFactionFilter: activeTab === 'settlements' ? filters.settlementFaction : ALL_FILTER,
     settlementTypeFilter: activeTab === 'settlements' ? filters.settlementType : ALL_FILTER,
     settlementRegionFilter: activeTab === 'settlements' ? filters.settlementRegion : ALL_FILTER,
@@ -410,7 +413,7 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
     filters.settlementRegion,
     filters.settlementType,
     isPagedTab,
-    search,
+    querySearch,
   ]);
   const data = useLedgerOverviewBridge(activeTab, rowOffset, rowLimit, isPagedTab ? activeSort : undefined, bridgeFilters);
 
@@ -446,36 +449,40 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   }, [data]);
 
   const setFilter = (key: LedgerFilterKey, value: string) => {
-    if (
-      key === 'settlementFaction'
-      || key === 'settlementType'
-      || key === 'settlementRegion'
-      || key === 'buildingCategory'
-      || key === 'buildingFaction'
-    ) {
-      setRowOffset(0);
-    }
-    setFilters(current => ({ ...current, [key]: value }));
+    beginBridgeQueryTransition();
+    startTransition(() => {
+      if (
+        key === 'settlementFaction'
+        || key === 'settlementType'
+        || key === 'settlementRegion'
+        || key === 'buildingCategory'
+        || key === 'buildingFaction'
+      ) {
+        setRowOffset(0);
+      }
+      setFilters(current => ({ ...current, [key]: value }));
+    });
   };
 
   const setLedgerSearch = (value: string) => {
+    beginBridgeQueryTransition();
     if (isPagedTab) {
-      setRowOffset(0);
+      startTransition(() => setRowOffset(0));
     }
     setSearch(value);
   };
 
   const setLedgerSort = useCallback((sort: LedgerSortState) => {
-    if (isPagedTab) {
-      setRowOffset(0);
-    }
-    setSortByTab(current => ({ ...current, [activeTab]: sort }));
+    beginBridgeQueryTransition();
+    startTransition(() => {
+      if (isPagedTab) {
+        setRowOffset(0);
+      }
+      setSortByTab(current => ({ ...current, [activeTab]: sort }));
+    });
   }, [activeTab, isPagedTab]);
 
-  const handleRichLinkClick = useCallback((type: string, id: string) => {
-    const sidebarType = sidebarTypeForEntity(type);
-    if (sidebarType) openSidebar(sidebarType, id);
-  }, [openSidebar]);
+  const handleRichLinkClick = useEntityLinkClick();
 
   const renderLedgerRichText = useCallback((text: string) => renderRichText(text, {
     onLinkClick: handleRichLinkClick,
@@ -524,8 +531,14 @@ export default function LedgerScreen({ onClose }: { onClose: () => void }) {
   const pageEnd = Math.min(rowOffset + activePageRowCount, activeRowCount);
   const canPageBack = isPagedTab && rowOffset > 0;
   const canPageForward = isPagedTab && rowOffset + rowLimit < activeRowCount;
-  const pageRowsBack = () => setRowOffset(Math.max(0, rowOffset - LEDGER_PAGE_SIZE));
-  const pageRowsForward = () => setRowOffset(rowOffset + LEDGER_PAGE_SIZE);
+  const pageRowsBack = () => {
+    beginBridgeQueryTransition();
+    startTransition(() => setRowOffset(Math.max(0, rowOffset - LEDGER_PAGE_SIZE)));
+  };
+  const pageRowsForward = () => {
+    beginBridgeQueryTransition();
+    startTransition(() => setRowOffset(rowOffset + LEDGER_PAGE_SIZE));
+  };
 
   const pageControls = isPagedTab ? (
     <div className="ledger-page-controls">

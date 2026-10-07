@@ -25,6 +25,7 @@ export const STAT_ICONS: Record<string, string> = {
 const CONCEPT_ICON_OVERRIDES: Record<string, string> = {
   gold: '/assets/icons/I_Coins.png',
   military: '/assets/icons/I_Swords.png',
+  settlement: '/assets/icons/I_City.png',
   warehouse: '/assets/icons/I_Warehouse.png',
   stockpile: '/assets/icons/I_Warehouse.png',
   charity: '/assets/icons/I_Alms.png',

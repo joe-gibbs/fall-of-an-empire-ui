@@ -1,0 +1,87 @@
+.peace-territory-picker {
+  width: 24rem;
+  background-image: url('/assets/baked/screen-charcoal.png');
+  background-size: cover;
+  margin-left: auto;
+  margin-bottom: 1rem;
+  pointer-events: auto;
+}
+
+.peace-territory-picker > .panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.peace-transfer--demand,
+.pns-transfer-recipient--demand {
+  color: #65b9f1;
+}
+
+.peace-transfer--concession,
+.pns-transfer-recipient--concession {
+  color: #ed9871;
+}
+
+.peace-transfer-list {
+  max-height: 42vh;
+}
+
+.peace-transfer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  margin-bottom: 0.4rem;
+  background-image: url('/assets/baked/screen-charcoal.png');
+  background-size: 100% 100%;
+  border: 0.154rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-width: 0.154rem;
+  border-image-repeat: round;
+}
+
+.peace-transfer-land {
+  font-weight: 600;
+}
+
+.pns-transfer-recipient {
+  font-size: 0.85rem;
+}
+
+.peace-transfer-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.peace-transfer-heading,
+.peace-transfer-recipient {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.peace-transfer-heading {
+  flex-wrap: wrap;
+}
+
+.peace-transfer-direction {
+  font-size: 0.75rem;
+}
+
+.peace-transfer-recipient {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.peace-transfer-remove {
+  flex-shrink: 0;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.peace-transfer-done {
+  align-self: flex-end;
+}

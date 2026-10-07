@@ -1,29 +1,28 @@
 import React from 'react';
-import Portrait, { type PortraitHandle } from '../../common/portraits/Portrait';
-import { portraitLightFromMouseEvent } from '../../common/portraits/portraitLighting';
-import PersonTooltip from '../../common/tooltips/PersonTooltip';
-import FactionRoundel from '../../common/entities/FactionRoundel';
-import FactionTooltip from '../../common/tooltips/FactionTooltip';
+import CharacterSidebarHeader from './CharacterSidebarHeader';
 import GameButton from '../../common/buttons/GameButton';
 import InfoRow from '../../common/data-display/stats/InfoRow';
+import ComplianceRow from '../../common/data-display/stats/ComplianceRow';
 import InteractionCard from '../../common/interactions/InteractionCard';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import { textMatchesSearch } from '../../common/layout/tables/sortUtils';
 import Tooltip from '../../common/tooltips/Tooltip';
+import { warbandFameLines } from '../../common/tooltips/warbandFameTooltip';
 import ResourceLink from '../../common/resources/ResourceLink';
 import ResourcePurchaseButton from '../../common/resources/ResourcePurchaseButton';
 import type { TooltipLine } from '../../common/tooltips/Tooltip';
-import CultureTooltip from '../../common/tooltips/CultureTooltip';
-import ReligionTooltip from '../../common/tooltips/ReligionTooltip';
+import CultureLink from '../../common/culture/CultureLink';
+import ReligionLink from '../../common/religion/ReligionLink';
 import { cultureIconPath } from '../../../utils/cultureIcons';
+import { religionIconPath } from '../../../utils/religionIcons';
 import { TraitIcon } from '../../common/entities/TraitIcon';
 import PersonInteractionInitiatorModal from '../../modals/people/PersonInteractionInitiatorModal';
 import PersonInteractionGiftModal from '../../modals/people/PersonInteractionGiftModal';
 import type { Character, CharacterRelationship, StatKey } from '../../../data/types';
 import { STAT_ICONS } from '../../../utils/iconMaps';
-import { buildCharacterStatTooltip, buildComplianceTooltip, buildRoleSkillTooltip } from '../../../utils/characterTooltipContent';
+import { buildCharacterStatTooltip, buildRoleSkillTooltip } from '../../../utils/characterTooltipContent';
 import { useGameActions, useGameState } from '../../../context/GameContext';
 import { bridgeCall, type StartPersonInteractionResponse } from '../../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
@@ -46,28 +45,21 @@ import { FamilyGraphView } from './FamilyGraphPanel';
 import {
   CharacterDutyRow,
   CharacterHistoryList,
-  HeaderActivity,
   RelationshipOverviewCard,
-  sidebarTypeForActivityLink,
 } from './CharacterSidebarPanels';
 import {
   EMPTY_INTERACTIONS,
   RoleStars,
-  buildHeaderAgeTooltip,
   buildInteractionTooltip,
   compareInteractions,
-  getHeaderAgeValue,
   getHonourDreadColor,
   getHonourDreadLabel,
-  getOpinionIcon,
   getTemporaryStatModifierTotal,
   getTemporaryStatModifiers,
   interactionCategoryLabels,
   interactionCategoryOrder,
   isPatronageRelationship,
   knownRelationshipTypes,
-  lowerRelationDisplay,
-  modifierTooltipLines,
   modifierValueColor,
   roleIcons,
   socialRelationshipGroups,
@@ -78,13 +70,11 @@ import SidebarToolbar from '../shared/SidebarToolbar';
 import { StatCellGrid, StatCell } from '../shared/StatCellGrid';
 import {
   getStatColor,
-  getComplianceState,
-  getOpinionColor,
 } from '../../../utils/colorFormatters';
 import { formatPersonActivity } from '../../../utils/displayLabels';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { useFaction, usePerson, usePlayerFactionId } from '../../../data-source/index';
-import { registerSidebar } from '../../../registry/index';
+import { isProvinceSubjectMode, registerSidebar } from '../../../registry/index';
 import '../shared/Sidebar.css';
 import './CharacterSidebar.css';
 
@@ -184,41 +174,10 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
       .catch(acknowledgeBridgeFailure);
   }, [activeTab, character.id, gameDay]);
 
-  // Derive spouse from relationships
-  const spouseRel = character.relationships.find(r => r.type === 'Husband' || r.type === 'Wife' || r.type === 'Spouse' || r.type === 'Consort');
-  const spouseId = spouseRel?.characterId || null;
-  const spouse = usePerson(spouseId);
   const isAlive = character.isAlive !== false;
-  const isImprisoned = character.isImprisoned === true;
   const showCompliance = isAlive
     && character.isPlayerCharacter !== true
     && character.isSubordinateOfPlayer === true;
-  const complianceState = showCompliance ? getComplianceState(character.compliance) : null;
-  const showOpinionOfPlayer = isAlive
-    && character.isPlayerCharacter !== true
-    && character.opinionTowardPlayer !== undefined;
-  const opinionOfPlayer = character.opinionTowardPlayer ?? 0;
-  const opinionColor = getOpinionColor(opinionOfPlayer);
-  const opinionIcon = getOpinionIcon(opinionOfPlayer);
-  const opinionTooltipLines: TooltipLine[] = [
-    {
-      label: webUIText('Auto.ComponentsSidebarsDiplomacySidebar.409.4'),
-      value: formatSignedNumber(opinionOfPlayer),
-      valueColor: opinionColor,
-    },
-  ];
-  const opinionBreakdownLines = modifierTooltipLines(character.opinionBreakdown);
-  if (opinionBreakdownLines.length > 0) {
-    opinionTooltipLines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1199.39'), isHeader: true });
-    opinionTooltipLines.push(...opinionBreakdownLines);
-  }
-  const complianceTooltip = complianceState
-    ? buildComplianceTooltip(character.compliance, character, {
-      title: webUIText('Auto.Prop.componentssidebarsCharacterSidebar.1125.1', { Label: complianceState.label }),
-      body: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1126.32'),
-      footer: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1131.35'),
-    })
-    : null;
 
   // Luxury needs (hide for dead characters)
   const luxuryNeeds = isAlive ? (character.luxuryNeeds || []) : [];
@@ -488,40 +447,12 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
   }, [giftModalInteraction, startInteraction]);
 
   const sideClass = isRight ? 'sidebar--right' : 'sidebar--left';
-
-  const factionName = character.faction;
-  const activityLabel = formatPersonActivity(character.activity);
-  const headerActivityLabel = activityLabel;
-  const hasActivitySegments = (character.activitySegments?.length ?? 0) > 0;
-  const rulerFactionSuffix = character.isRuler && character.rulerFactionName
-    ? webUIText('CharacterSidebar.RulerFactionSuffix', { Faction: character.rulerFactionName })
-    : '';
-  const playerRelationLabel = isAlive && character.isFamilyOfPlayer && character.relationToPlayer
-    ? webUIText('CharacterSidebar.PlayerRelation', { Relation: lowerRelationDisplay(character.relationToPlayer) })
-    : '';
-  const courtScreen = playerFaction?.diplomaticStatus === 'subject'
+  const courtScreen = isProvinceSubjectMode(playerFaction)
     ? 'governor-faction-overview'
     : 'factionOverview';
-  const deathStatusText = !isAlive
-    ? [character.lifespan, character.deathCause].filter(Boolean).join(' - ')
-    : '';
-  const hasHeaderActivity = !isAlive || playerRelationLabel.length > 0 || hasActivitySegments || headerActivityLabel.length > 0;
-  const headerAgeValue = getHeaderAgeValue(character);
-  const headerAgeTooltip = buildHeaderAgeTooltip(character, isAlive);
-  const handleActivityLinkClick = React.useCallback((type: string, id: string) => {
-    const sidebarType = sidebarTypeForActivityLink(type);
-    if (!sidebarType || !id) return;
-    openSidebar(sidebarType, id);
-  }, [openSidebar]);
-  const headerBackdropPortraitRef = React.useRef<PortraitHandle | null>(null);
-  const headerForegroundPortraitRef = React.useRef<PortraitHandle | null>(null);
-  const headerSpousePortraitRef = React.useRef<PortraitHandle | null>(null);
-  const handleHeaderMouseMove = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    const light = portraitLightFromMouseEvent(event);
-    headerBackdropPortraitRef.current?.relight(light);
-    headerForegroundPortraitRef.current?.relight(light);
-    headerSpousePortraitRef.current?.relight(light);
-  }, []);
+  const openFamilySidebar = React.useCallback(() => {
+    openSidebar(character.usesWarbands ? 'kinship' : 'family', `person:${character.id}`);
+  }, [character.id, character.usesWarbands, openSidebar]);
 
   return (
     <div className={`sidebar ${sideClass} sidebar--visible character-sidebar`}>
@@ -544,8 +475,8 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         ]}
         actionButtons={[
           { icon: isPinned ? '/assets/icons/I_Pin_Pinned.png' : '/assets/icons/I_Pin_Unpinned.png', get tooltip() { return isPinned ? webUIText("CharacterSidebar.UnpinCharacter") : webUIText("CharacterSidebar.PinCharacter"); }, get tooltipBody() { return isPinned ? webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1029.1') : webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1029.2'); }, onClick: () => togglePin('character', character.id), isActive: isPinned },
-          { icon: '/assets/icons/I_Family.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1042.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1030.3'); }, onClick: () => openScreen('familyTree', `tree:${character.id}`) },
-          { icon: '/assets/icons/I_Diplomacy.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1043.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1031.4'); }, onClick: () => openScreen('familyTree', `patronage:${character.id}`) },
+          { icon: '/assets/icons/I_Family.png', tooltip: webUIText('FamilySidebar.ViewFamily'), onClick: openFamilySidebar },
+          ...(character.cultureInfo?.usesPatronage ? [{ icon: '/assets/icons/I_Diplomacy.png', tooltip: webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1043.1"), onClick: () => openScreen('familyTree', `patronage:${character.id}`) }] : []),
           { icon: '/assets/icons/I_ZoomTo.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1044.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1032.5'); }, onClick: () => zoomToBridge('character', character.id) },
           { icon: '/assets/ui/I_HelpIcon.png', get tooltip() { return webUIText("Auto.Prop.componentssidebarsCharacterSidebar.1045.1"); }, get tooltipBody() { return webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1033.6'); }, onClick: () => showAdvisor('characterSidebar', { force: true }) },
         ]}
@@ -553,114 +484,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         closePosition={isRight ? 'start' : 'end'}
       />
 
-      {/* Full-width header with portrait scene */}
-      <div className={`char-header${!isAlive ? ' char-header--dead' : ''}`} onMouseMove={handleHeaderMouseMove}>
-        <div className={`char-header-portrait${spouseRel ? ' char-header-portrait--with-spouse' : ''}`}>
-          <Portrait ref={headerBackdropPortraitRef} personId={character.id} className="char-header-selected-backdrop" name={character.name} src={character.portrait} layers={character.portraitLayers} isAlive={isAlive} isImprisoned={isImprisoned} size="hero" shape="rect" showBorder={false} />
-          {spouseRel && (
-            <div className="char-header-spouse-wrap">
-              <PersonTooltip character={spouse ?? undefined} characterId={spouse ? undefined : spouseId} position="left" delay={200}>
-                <div className="char-header-spouse">
-                  <Portrait
-                    ref={headerSpousePortraitRef}
-                    personId={spouse?.id ?? spouseId ?? undefined}
-                    name={spouse?.name ?? spouseRel.characterName}
-                    src={spouse?.portrait ?? spouseRel.portrait}
-                    layers={spouse?.portraitLayers}
-                    isAlive={spouse?.isAlive ?? spouseRel.isAlive}
-                    isImprisoned={spouse?.isImprisoned}
-                    size="hero"
-                    shape="rect"
-                    showBorder={false}
-                    showBadge={false}
-                  />
-                </div>
-              </PersonTooltip>
-            </div>
-          )}
-          <Portrait ref={headerForegroundPortraitRef} personId={character.id} className="char-header-selected-foreground" name={character.name} src={character.portrait} layers={character.portraitLayers} isAlive={isAlive} isImprisoned={isImprisoned} size="hero" shape="rect" showBorder={false} />
-        </div>
-        {/* Dead icon overlay */}
-        {!isAlive && (
-          <Tooltip content={{
-            title: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1059.31'),
-            get body() { return character.deathCause && character.deathDate ? webUIText("CharacterSidebar.DiedOfCauseOnDate", { DeathCause: character.deathCause, DeathDate: character.deathDate }) : character.deathCause ? webUIText("CharacterSidebar.DiedOf", { DeathCause: character.deathCause }) : webUIText("CharacterSidebar.ThisCharacterIs"); },
-          }} position="bottom" delay={200}>
-            <div className="char-header-dead-overlay">
-              <img src="/assets/icons/I_Dread.png" alt="" className="char-header-dead-icon" />
-            </div>
-          </Tooltip>
-        )}
-        {character.factionId && (
-          <div className="char-header-roundel">
-            <FactionTooltip factionId={character.factionId} factionName={factionName} position="right" delay={200}>
-              <FactionRoundel
-                factionId={character.factionId}
-                colour={character.factionColour}
-                secondaryColour={character.factionSecondaryColour}
-                emblem={character.factionEmblem}
-                cultureGroup={character.factionCultureGroup}
-                name={factionName}
-                size="lg"
-                showRing
-                resolveFaction={false}
-                diplomaticStatus={character.factionDiplomaticStatus}
-                subjectSubtype={character.factionSubjectSubtype}
-                isPlayer={character.factionIsPlayer}
-                isRebel={character.factionIsRebel}
-                onClick={() => openSidebar('diplomacy', character.factionId!)}
-              />
-            </FactionTooltip>
-          </div>
-        )}
-        <div className="char-header-scrim">
-          <div className="char-header-name-row">
-            <div className="char-header-main-name">
-              {character.shortTitle && <span className="char-header-title-prefix">{character.shortTitle}</span>}
-              <span className="char-header-name">{character.name}</span>
-              <Tooltip content={headerAgeTooltip} position="bottom" delay={200} inline>
-                <span className="char-header-age">{headerAgeValue}</span>
-              </Tooltip>
-            </div>
-            {rulerFactionSuffix && <span className="char-header-ruler-suffix">{rulerFactionSuffix}</span>}
-          </div>
-          {(hasHeaderActivity || showOpinionOfPlayer) && (
-            <div className="char-header-info-row">
-              {hasHeaderActivity && (
-                <div className="char-header-faction">
-                  {!isAlive ? (
-                    <div className="char-header-lifespan">
-                      <img src="/assets/icons/I_Skull.png" alt="" className="char-header-lifespan-icon" draggable={false} />
-                      {deathStatusText && <span>{deathStatusText}</span>}
-                    </div>
-                  ) : (
-                    <HeaderActivity
-                      playerRelation={playerRelationLabel}
-                      hasActivitySegments={hasActivitySegments}
-                      segments={character.activitySegments}
-                      fallbackActivity={headerActivityLabel}
-                      isImprisoned={isImprisoned}
-                      onLinkClick={handleActivityLinkClick}
-                    />
-                  )}
-                </div>
-              )}
-              {showOpinionOfPlayer && (
-                <div className="char-header-standing-badges">
-                  <Tooltip content={{
-                    title: webUIText('Auto.Prop.ComponentsCommonPersonTooltip.221.3'),
-                    lines: opinionTooltipLines,
-                  }} position="bottom" delay={200}>
-                    <div className="char-header-opinion-badge" style={{ color: opinionColor }}>
-                      <img src={opinionIcon} alt="" className="char-header-opinion-badge-icon" />
-                    </div>
-                  </Tooltip>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+      <CharacterSidebarHeader character={character} />
 
       <SidebarTabBar
         tabs={[
@@ -676,30 +500,24 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         {activeTab === 'general' && <>
         {/* Culture / Religion - side by side */}
         <div className="char-identity-pair">
-          <CultureTooltip info={character.cultureInfo} fallbackName={character.culture} fallbackId={character.cultureInfo?.id}>
+          <CultureLink info={character.cultureInfo} cultureId={character.cultureInfo?.id || ''}>
             <div className="char-identity-row">
-              <img src={cultureIconPath(character.cultureInfo?.id)} alt="" className="char-identity-icon" />
+              <img src={cultureIconPath(character.cultureInfo)} alt="" className="char-identity-icon" />
               <span className="char-identity-label"><WebUIText textKey="Auto.ComponentsSidebarsCharacterSidebar.1155.1" /></span>
               <span className="char-identity-value">{character.culture}</span>
             </div>
-          </CultureTooltip>
-          <ReligionTooltip info={character.religionInfo} fallbackName={character.religion}>
+          </CultureLink>
+          <ReligionLink info={character.religionInfo} religionId={character.religionInfo?.id || ''}>
             <div className="char-identity-row">
-              <img src="/assets/icons/I_Religions.png" alt="" className="char-identity-icon" />
+              <img src={religionIconPath(character.religionInfo?.id)} alt="" className="char-identity-icon" />
               <span className="char-identity-label"><WebUIText textKey="Auto.ComponentsSidebarsCharacterSidebar.1162.2" /></span>
               <span className="char-identity-value">{character.religion}</span>
             </div>
-          </ReligionTooltip>
+          </ReligionLink>
         </div>
 
-        {complianceState && complianceTooltip && (
-          <Tooltip content={complianceTooltip} position="bottom" delay={200}>
-            <div className="char-compliance-row">
-              <img src={complianceState.icon} alt="" className="char-compliance-icon" />
-              <span className="char-compliance-label"><WebUIText textKey="InternalPolitics.Compliance" /></span>
-              <span className="char-compliance-val" style={{ color: complianceState.color }}>{complianceState.label}</span>
-            </div>
-          </Tooltip>
+        {showCompliance && (
+          <ComplianceRow value={character.compliance} character={character} />
         )}
 
         {/* Traits */}
@@ -741,7 +559,11 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
           })}
         </StatCellGrid>
         {/* Fame - separated */}
-        <Tooltip content={{ title: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1217.40'), body: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1217.41') }} position="bottom" delay={150}>
+        <Tooltip content={{
+          title: webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1217.40'),
+          body: character.usesWarbands ? undefined : webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1217.41'),
+          lines: character.usesWarbands ? warbandFameLines() : undefined,
+        }} position="bottom" delay={150}>
           <div className="char-fame-row">
             <img src="/assets/icons/I_Fame.png" alt="" className="char-fame-icon" />
             <span className="char-fame-label"><WebUIText textKey="Auto.ComponentsSidebarsCharacterSidebar.1219.3" /></span>
@@ -1000,24 +822,18 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                 />
               </div>
             </div>
-            <div className="char-family-action-row">
-              <GameButton
-                variant="outline"
-                icon="/assets/icons/I_Family.png"
-                className="char-family-action-button"
-                onClick={() => openScreen('familyTree', `tree:${character.id}`)}
-              >
-                <WebUIText textKey="CharacterSidebar.ViewFamilyTree" />
-              </GameButton>
-              <GameButton
-                variant="outline"
-                icon="/assets/icons/I_Diplomacy.png"
-                className="char-family-action-button"
-                onClick={() => openScreen('familyTree', `patronage:${character.id}`)}
-              >
-                <WebUIText textKey="Auto.Prop.componentssidebarsCharacterSidebar.1043.1" />
-              </GameButton>
-            </div>
+            {character.cultureInfo?.usesPatronage && (
+              <div className="char-family-action-row">
+                <GameButton
+                  variant="outline"
+                  icon="/assets/icons/I_Diplomacy.png"
+                  className="char-family-action-button"
+                  onClick={() => openScreen('familyTree', `patronage:${character.id}`)}
+                >
+                  <WebUIText textKey="Auto.Prop.componentssidebarsCharacterSidebar.1043.1" />
+                </GameButton>
+              </div>
+            )}
             {visibleFamilyGraph.rows.length > 0 || socialRelationshipSections.length > 0 ? (
               <>
                 <FamilyGraphView graph={visibleFamilyGraph} onOpen={(id) => openSidebar('character', id)} />

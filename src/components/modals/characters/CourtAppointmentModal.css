@@ -479,6 +479,8 @@
 
 .cam-footer {
   display: flex; padding: 0.6rem 0.7rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   border-top-width: 0.077rem;
   border-top-style: solid;
   border-top-color: var(--separator);
@@ -490,8 +492,8 @@
   background-size: auto, 7.385rem 7.385rem;
   flex-shrink: 0;
 }
-.cam-footer > * + * { margin-left: 0.5rem; }
-.cam-footer > * { flex: 1; }
+.cam-footer > * { flex: 1 0 auto; max-width: 100%; }
+.cam-footer .btn-content { white-space: normal; }
 
 .cam-empty {
   padding: 2rem;

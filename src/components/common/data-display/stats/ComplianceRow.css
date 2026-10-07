@@ -1,0 +1,46 @@
+.compliance-row {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.462rem;
+  border-bottom-width: 0.077rem;
+  border-bottom-style: solid;
+  border-bottom-color: var(--separator);
+  cursor: auto;
+}
+
+.compliance-row > * + * {
+  margin-left: 0.35rem;
+}
+
+.compliance-row-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  flex-shrink: 0;
+}
+
+.compliance-row-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.compliance-row-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.compliance-row > .compliance-row-val {
+  margin-left: auto;
+}
+
+.compliance-row--compact {
+  padding: 0;
+  border-bottom-width: 0;
+}
+
+.compliance-row--compact > .compliance-row-val {
+  margin-left: 0.35rem;
+}

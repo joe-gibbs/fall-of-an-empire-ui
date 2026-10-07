@@ -1,0 +1,29 @@
+.confederation-panel {
+  padding: 0.65rem;
+  background: url('/assets/baked/panel-charcoal.png') center / cover;
+  border: 0.231rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6 / 0.231rem / 0 round;
+}
+.confederation-columns { display: flex; align-items: flex-start; gap: 1.4rem; }
+.confederation-column { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.confederation-heading { margin: 0; color: var(--text-header); font-family: var(--font-header); font-size: 1rem; font-weight: 500; }
+.confederation-summary-row { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 0.35rem 0; color: var(--text-muted); font-size: 0.85rem; }
+.confederation-summary-row strong { color: var(--gold); font-variant-numeric: tabular-nums; }
+.confederation-summary-row .info-value--negative { color: var(--red); }
+.confederation-summary-row .info-value--positive { color: var(--green); }
+.confederation-cohesion-track { height: 0.5rem; margin: 0.2rem 0 0.45rem; background: url('/assets/bar-track.png') center / 100% 100%; overflow: hidden; }
+.confederation-cohesion-fill { width: 100%; height: 100%; background: url('/assets/bar-gold.png') center / 100% 100%; transform-origin: left center; }
+.confederation-cohesion-fill--weak { opacity: 0.5; }
+.confederation-member { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; padding: 0.45rem 0.55rem; background: url('/assets/baked/card-charcoal.png') center / cover; font-size: 0.85rem; color: var(--text-muted); }
+.confederation-member-names { min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+.confederation-link { padding: 0; border: 0; background: none; color: var(--gold); font: inherit; text-align: left; cursor: pointer; }
+.confederation-link:hover, .confederation-link:focus-visible { color: var(--text-header); text-decoration: underline; }
+.confederation-member-ruler { color: var(--text-muted); font-size: 0.8rem; }
+.confederation-leader { display: flex; gap: 0.65rem; padding-bottom: 0.65rem; color: var(--text-muted); }
+.confederation-navigation { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.45rem; }
+.confederation-navigation > .tooltip-wrapper { flex: 1; }
+.confederation-navigation .btn--outline { flex: 1; }
+@media (max-width: 60rem) {
+  .confederation-columns { flex-direction: column; }
+  .confederation-column { width: 100%; }
+}

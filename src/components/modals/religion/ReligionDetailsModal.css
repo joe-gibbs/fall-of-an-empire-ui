@@ -1,0 +1,91 @@
+.religion-details-overlay { position: fixed; inset: 0; z-index: 550; display: flex; align-items: center; justify-content: center; background: rgba(5, 9, 13, 0.72); animation: modal-overlay-in 0.2s var(--ease-snap) both; }
+.religion-details-overlay--closing { pointer-events: none; animation: modal-overlay-out 0.18s ease-in both; }
+.religion-details-modal { display: flex; flex-direction: column; width: 64rem; max-width: 90vw; height: 60rem; max-height: 88vh; color: var(--text); background: url('/assets/baked/modal-charcoal.png') center / cover; border: 0.231rem solid transparent; border-image: url('/assets/gold-frame.png') 6; }
+.religion-details-modal--closing { animation: modal-panel-out 0.18s ease-in both; }
+.religion-details-header { display: flex; flex-shrink: 0; align-items: center; gap: 0.75rem; padding: 0.8rem 1rem; }
+.religion-details-header > img { width: 3rem; height: 3rem; object-fit: contain; }
+.religion-details-header > div { flex: 1; }
+.religion-details-header h1 { margin: 0 0 0.25rem; color: var(--gold-light); font: 1.55rem var(--font-header); }
+.religion-details-header span { color: var(--text-muted); font-size: 0.85rem; }
+.religion-details-scroll { flex: 1; min-height: 0; }
+.religion-details-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 0.65rem; padding: 0.8rem; }
+.religion-details-body section { padding: 0.85rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; }
+.religion-details-body h2 { margin: 0 0 0.75rem; color: var(--gold-light); font: 1.05rem var(--font-header); }
+.religion-details-body p { line-height: 1.5; font-size: 0.9rem; margin: 0 0 0.8rem; }
+.religion-details-population { margin: 0 0 0.8rem; }
+.religion-details-population .icon-stat__icon { width: 1.4rem; height: 1.4rem; margin-right: 0.35rem; }
+.religion-details-population .icon-stat__value { color: var(--gold-light); font-size: 1.15rem; }
+.religion-facts { margin: 0; }
+.religion-facts > div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; padding: 0.6rem; margin-top: 0.35rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; font-size: 0.85rem; }
+.religion-facts dt { flex-shrink: 0; }
+.religion-facts dd { margin: 0; min-width: 0; color: var(--gold-light); text-align: right; }
+.religion-facts-stacked { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+.religion-facts-stacked dd { text-align: left; overflow-wrap: break-word; }
+.religion-details-pantheon,
+.religion-details-relics,
+.religion-details-related { grid-column: 1 / -1; }
+.religion-details-god-tree {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.2rem, 1fr));
+  gap: 0.7rem 0.85rem;
+}
+.religion-details-god-branch { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.religion-details-god {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0.35rem 0.3rem 0.45rem;
+  background: url('/assets/baked/card-charcoal.png') center / 100% 100%;
+  border: 0.154rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6;
+}
+.religion-details-god img {
+  height: 8.4rem;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+.religion-details-god span {
+  margin-top: 0.3rem;
+  font-family: var(--font-header);
+  font-size: 0.82rem;
+  color: var(--text-header);
+  text-align: center;
+  line-height: 1.15;
+}
+.religion-details-god--lesser img { height: 5.4rem; }
+.religion-details-god--lesser span { font-size: 0.72rem; }
+.religion-details-lessers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.45rem;
+}
+.religion-details-relic-list { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+.religion-details-relic {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 14rem;
+  padding: 0.5rem 0.6rem;
+  background: url('/assets/baked/card-charcoal.png') center / 100% 100%;
+  border: 0.154rem solid transparent;
+  border-image: url('/assets/gold-frame.png') 6;
+}
+.religion-details-relic img { width: 2.4rem; height: 2.4rem; object-fit: contain; flex-shrink: 0; }
+.religion-details-relic div { display: flex; flex-direction: column; gap: 0.12rem; min-width: 0; }
+.religion-details-relic strong { font-family: var(--font-header); font-weight: normal; color: var(--text-header); }
+.religion-details-relic span { color: var(--text-muted); font-size: 0.8rem; }
+.religion-details-related > div { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.religion-details-related .religion-link { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; }
+.religion-details-related img { width: 2rem; height: 2rem; object-fit: contain; }
+
+@media (max-height: 900px) {
+  .religion-details-modal { max-height: 94vh; }
+}
+
+@media (max-width: 1100px) {
+  .religion-details-body { grid-template-columns: minmax(0, 1fr); }
+}

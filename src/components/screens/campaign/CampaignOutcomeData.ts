@@ -29,6 +29,11 @@ export interface CampaignOutcomeMilestone {
   tone?: 'good' | 'bad' | 'neutral';
 }
 
+export interface CampaignOutcomeCondition {
+  label: string;
+  detail: string;
+}
+
 export interface CampaignOutcomeSummary {
   cause?: GameOverCause;
   kicker?: string;
@@ -44,6 +49,7 @@ export interface CampaignOutcomeSummary {
   previousRulers?: CampaignOutcomeRuler[];
   history?: CampaignOutcomeHistoryPoint[];
   milestones?: CampaignOutcomeMilestone[];
+  tierConditions?: CampaignOutcomeCondition[];
   crestIcon?: string;
   headerImage?: string;
   primaryAction?: string;
@@ -65,6 +71,7 @@ export interface ResolvedCampaignOutcomeSummary {
   previousRulers: CampaignOutcomeRuler[];
   history: CampaignOutcomeHistoryPoint[];
   milestones: CampaignOutcomeMilestone[];
+  tierConditions: CampaignOutcomeCondition[];
   crestIcon: string;
   headerImage: string;
   primaryAction: string;
@@ -149,6 +156,7 @@ const DEFAULT_VICTORY: ResolvedCampaignOutcomeSummary = {
   previousRulers: DEFAULT_PREVIOUS_RULERS,
   history: DEFAULT_HISTORY,
   milestones: [],
+  tierConditions: [],
   crestIcon: '/assets/icons/Victory/I_Victory_Gold.png',
   headerImage: '/assets/events/triumphal-return.png',
   get primaryAction() { return webUIText('Auto.TopProp.ComponentsScreensCampaignOutcomeData.154.27'); },
@@ -226,6 +234,7 @@ export function createDefaultGameOverSummary(cause: GameOverCause): CampaignOutc
     previousRulers: DEFAULT_PREVIOUS_RULERS,
     history: DEFAULT_DEFEAT_HISTORY,
     milestones: [],
+    tierConditions: [],
     get primaryAction() { return webUIText('Auto.TopProp.ComponentsScreensCampaignOutcomeData.212.33'); },
     get secondaryAction() { return webUIText('Auto.TopProp.ComponentsScreensCampaignOutcomeData.213.34'); },
     headerImage: cause === 'rebellion'
@@ -245,7 +254,8 @@ export function resolveCampaignOutcomeSummary(kind: CampaignOutcomeKind, summary
     ...summary,
     currentRuler: summary.currentRuler ?? fallback.currentRuler,
     previousRulers: summary.previousRulers ?? fallback.previousRulers,
-    history: summary.history && summary.history.length > 0 ? summary.history : fallback.history,
+    history: summary.history ?? [],
     milestones: summary.milestones ?? fallback.milestones,
+    tierConditions: summary.tierConditions ?? fallback.tierConditions,
   };
 }

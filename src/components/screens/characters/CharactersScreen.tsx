@@ -2,6 +2,8 @@ import { createContext, memo, useCallback, useContext, useMemo, useState, type R
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Portrait from '../../common/portraits/Portrait';
 import PersonTooltip from '../../common/tooltips/PersonTooltip';
+import CultureLink from '../../common/culture/CultureLink';
+import ReligionLink from '../../common/religion/ReligionLink';
 import Tooltip from '../../common/tooltips/Tooltip';
 import GameButton from '../../common/buttons/GameButton';
 import DataTable, { type DataTableColumn } from '../../common/layout/tables/DataTable';
@@ -138,8 +140,8 @@ function uniqueFilterOptions(
   return [{ value: ALL_FILTER, label: allLabel }, ...options];
 }
 
-function cultureIcon(character: CharacterListEntry, value: string): string {
-  const id = character.cultureId || value;
+function cultureIcon(character: CharacterListEntry): string {
+  const id = character.cultureIconId;
   return id ? WebkilnAssetPath(`/assets/cultures/${id}.png`) : '';
 }
 
@@ -511,8 +513,8 @@ const CharactersScreen = memo(function CharactersScreen({ screenId, onClose }: C
       label: t('Auto.Prop.ComponentsScreensCharactersScreen.246.6'),
       render: character => (
         <>
-          <span>{character.culture || '-'}</span>
-          <span className="chs-muted">{character.religion || '-'}</span>
+          <CultureLink cultureId={character.cultureId}>{character.culture || '-'}</CultureLink>
+          <ReligionLink religionId={character.religionId} className="chs-muted">{character.religion || '-'}</ReligionLink>
         </>
       ),
       sortValue: character => characterSortValue(character, 'identity'),

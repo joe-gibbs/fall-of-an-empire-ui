@@ -8,6 +8,7 @@ import { webUIText } from '../../localization/WebUITextContext';
 import { playSound } from '../../hooks/useSound';
 import { formatNumber, formatSignedNumber } from '../../utils/numberFormat';
 import type { ProvinceModeOverview, ProvinceModeScoreRow } from '../../bridge/provinces/useProvinceModeOverviewBridge';
+import { isProvinceSubjectMode } from '../../registry/index';
 
 interface ImperialStandingIndicatorProps {
   playerFaction: PlayerFactionSummary | null;
@@ -222,10 +223,9 @@ function buildTooltip(playerFaction: PlayerFactionSummary, overview: ProvinceMod
 }
 
 const ImperialStandingIndicator: React.FC<ImperialStandingIndicatorProps> = ({ playerFaction, onOpenSubjectScreen, tooltipDisabled = false }) => {
-  const overview = useProvinceModeOverview(Boolean(playerFaction && playerFaction.diplomaticStatus === 'subject'));
+  const overview = useProvinceModeOverview(isProvinceSubjectMode(playerFaction));
 
-  if (!playerFaction) return null;
-  if (playerFaction.diplomaticStatus !== 'subject') return null;
+  if (!playerFaction || !isProvinceSubjectMode(playerFaction)) return null;
   if (!overview?.active) return null;
 
   const score = overview.standingScore;

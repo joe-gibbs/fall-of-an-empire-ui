@@ -119,6 +119,7 @@ function mapForce(data: MilitaryOverviewForce): MilitaryForce {
 
 function mapFoederati(data: FoederatiOverviewEntry): MilitaryFoederatiEntry {
   return {
+    politics: data.politics,
     id: data.id,
     factionId: data.factionId,
     factionName: data.factionName,
@@ -362,6 +363,14 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     canMerge: data.canMerge,
     canSplit: data.canSplit,
     isRaiding: data.isRaiding,
+    canRaid: data.canRaid,
+    canBuildFort: data.canBuildFort,
+    fortUnavailableReason: data.fortUnavailableReason,
+    isWarbandHost: data.isWarbandHost,
+    raidUnavailableReason: data.raidUnavailableReason || undefined,
+    raidTargetSettlement: data.raidTargetSettlement || undefined,
+    expectedMonthlyRaidIncome: data.raidTargetSettlement ? data.expectedMonthlyRaidIncome : undefined,
+    monthlyUpkeep: data.monthlyUpkeep,
     isReplenishing: data.isReplenishing,
     replenishCost: data.replenishCost > 0 ? data.replenishCost : undefined,
     canReplenish: data.canReplenish,
@@ -418,6 +427,8 @@ function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse):
         canMerge: false,
         canSplit: false,
         isRaiding: false,
+        canRaid: false,
+        raidUnavailableReason: undefined,
         isReplenishing: false,
         replenishCost: undefined,
         canReplenish: false,
@@ -644,6 +655,14 @@ export function ungarrisonMilitaryBridge(militaryId: string): Promise<void> {
 
 export function setMilitaryForcedMarchBridge(militaryId: string, enabled: boolean): Promise<void> {
   return bridgeCall('game.set_military_forced_march', { militaryId, enabled }).then(() => undefined);
+}
+
+export function setMilitaryRaidingBridge(militaryId: string, enabled: boolean): Promise<void> {
+  return bridgeCall('game.set_military_raiding', { militaryId, enabled }).then(() => undefined);
+}
+
+export function buildOccupationFortBridge(militaryId: string): Promise<void> {
+  return bridgeCall('game.build_occupation_fort', { militaryId }).then(() => undefined);
 }
 
 export function startMilitaryEmbarkTargetingBridge(militaryId: string): Promise<void> {

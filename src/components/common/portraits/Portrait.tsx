@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useContext, useDeferredValue, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { playSound } from '../../../hooks/useSound';
 import { zoomToCharacterCapital } from '../../../bridge/app/usePinnedItemsBridge';
 import { usePerson } from '../../../data-source/index';
@@ -11,6 +11,8 @@ import {
   type PortraitExpression,
 } from '../../../bridge/characters/useGeneratedPortrait';
 import { DEFAULT_PORTRAIT_LIGHT, portraitLightFromMouseEvent, type PortraitLight } from './portraitLighting';
+import { readPortraitImages } from './portraitImages';
+import { PortraitReadinessContext } from './portraitReadiness';
 import './Portrait.css';
 
 type PortraitSize = 'sm' | 'row' | 'md' | 'lg' | 'xl' | 'hero';
@@ -95,13 +97,29 @@ function clampChannel(value: number): number {
   return value;
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = document.createElement('img');
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`Could not load portrait asset ${src}`));
-    image.src = src;
-  });
+interface PortraitSceneProps {
+  sources: string[];
+  children: React.ReactNode;
+}
+
+function PreparedPortraitScene({ sources, children }: PortraitSceneProps) {
+  const images = readPortraitImages(sources);
+  const imageOwners = useRef<(HTMLImageElement | null)[]>([]);
+  useLayoutEffect(() => {
+    // The DOM layers use separate img elements. Keep these decoded owners alive
+    // too, so a mounted scene cannot become unready after garbage collection.
+    imageOwners.current = images;
+    return () => { imageOwners.current = []; };
+  }, [images]);
+  return children;
+}
+
+function PortraitScene(props: PortraitSceneProps) {
+  const participatesInScreenReadiness = useContext(PortraitReadinessContext);
+  const preparedProps = useDeferredValue(props);
+  return participatesInScreenReadiness
+    ? <PreparedPortraitScene {...preparedProps} />
+    : <Suspense fallback={null}><PreparedPortraitScene {...preparedProps} /></Suspense>;
 }
 
 const NormalLitPortraitLayer = React.forwardRef<NormalLitPortraitLayerHandle, NormalLitPortraitLayerProps>(({
@@ -158,64 +176,46 @@ const NormalLitPortraitLayer = React.forwardRef<NormalLitPortraitLayerHandle, No
     },
   }), [renderLitPortrait]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadPortraitPixels() {
-      try {
-        const [diffuseImage, normalImage] = await Promise.all([
-          loadImage(src),
-          loadImage(normalSrc),
-        ]);
-        if (cancelled) return;
-
-        const width = diffuseImage.naturalWidth || diffuseImage.width;
-        const height = diffuseImage.naturalHeight || diffuseImage.height;
-        const canvas = canvasRef.current;
-        const context = canvas?.getContext('2d', { willReadFrequently: true });
-        if (!canvas || !context || width <= 0 || height <= 0) {
-          onError();
-          return;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        context.clearRect(0, 0, width, height);
-        context.drawImage(diffuseImage, 0, 0, width, height);
-        const diffuse = context.getImageData(0, 0, width, height);
-
-        const normalCanvas = document.createElement('canvas');
-        normalCanvas.width = width;
-        normalCanvas.height = height;
-        const normalContext = normalCanvas.getContext('2d', { willReadFrequently: true });
-        if (!normalContext) {
-          onError();
-          return;
-        }
-
-        normalContext.drawImage(normalImage, 0, 0, width, height);
-        const normals = normalContext.getImageData(0, 0, width, height).data;
-        cachedPixelsRef.current = {
-          width,
-          height,
-          diffuse: new Uint8ClampedArray(diffuse.data),
-          normals: new Uint8ClampedArray(normals),
-        };
-        renderLitPortrait(DEFAULT_PORTRAIT_LIGHT);
-      } catch {
-        if (!cancelled) {
-          onError();
-        }
-      }
+  const [diffuseImage, normalImage] = readPortraitImages([src, normalSrc]);
+  useLayoutEffect(() => {
+    if (!diffuseImage || !normalImage) {
+      onError();
+      return;
+    }
+    const width = diffuseImage.naturalWidth || diffuseImage.width;
+    const height = diffuseImage.naturalHeight || diffuseImage.height;
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext('2d', { willReadFrequently: true });
+    if (!canvas || !context || width <= 0 || height <= 0) {
+      onError();
+      return;
     }
 
-    loadPortraitPixels();
-
+    canvas.width = width;
+    canvas.height = height;
+    context.drawImage(diffuseImage, 0, 0, width, height);
+    const diffuse = context.getImageData(0, 0, width, height);
+    const normalCanvas = document.createElement('canvas');
+    normalCanvas.width = width;
+    normalCanvas.height = height;
+    const normalContext = normalCanvas.getContext('2d', { willReadFrequently: true });
+    if (!normalContext) {
+      onError();
+      return;
+    }
+    normalContext.drawImage(normalImage, 0, 0, width, height);
+    cachedPixelsRef.current = {
+      width,
+      height,
+      diffuse: diffuse.data,
+      normals: normalContext.getImageData(0, 0, width, height).data,
+    };
+    // Populate the face before the browser can paint its surrounding layers.
+    renderLitPortrait(DEFAULT_PORTRAIT_LIGHT);
     return () => {
-      cancelled = true;
       cachedPixelsRef.current = null;
     };
-  }, [normalSrc, onError, renderLitPortrait, src]);
+  }, [diffuseImage, normalImage, onError, renderLitPortrait]);
 
   return (
     <canvas
@@ -462,93 +462,100 @@ const Portrait = React.forwardRef<PortraitHandle, PortraitProps>(({
         onContextMenu={handleContextMenu}
       >
         <div className="portrait-clip">
-          {showLayeredScene ? (
-            <>
-              {bgUrl && (
+          <PortraitScene sources={[
+            bgUrl, hasFace ? faceSrc : undefined, activeNormalMap,
+            !use3DPortraits ? layerBackHeadgear : undefined,
+            !use3DPortraits ? layerFrontHeadgear : undefined,
+            !use3DPortraits ? layerFaceMask : undefined,
+          ].filter((source): source is string => Boolean(source))}>
+            {showLayeredScene ? (
+              <>
+                {bgUrl && (
+                  <img
+                    className="portrait-layer portrait-layer--background"
+                    src={bgUrl}
+                    alt=""
+                    draggable={false}
+                  />
+                )}
+                {hasLayeredFace && (
+                  <div className="portrait-layer-stack">
+                    {!use3DPortraits && layerBackHeadgear && (
+                      <img
+                        className="portrait-layer portrait-layer--headgear-back"
+                        src={layerBackHeadgear}
+                        alt=""
+                        draggable={false}
+                      />
+                    )}
+                    {activeNormalMap ? (
+                      <NormalLitPortraitLayer
+                        ref={normalLayerRef}
+                        className="portrait-layer portrait-layer--face"
+                        src={faceSrc}
+                        normalSrc={activeNormalMap}
+                        alt={resolvedName}
+                        style={faceMaskStyle}
+                        onError={handleFaceError}
+                      />
+                    ) : (
+                      <img
+                        className="portrait-layer portrait-layer--face"
+                        src={faceSrc}
+                        alt={resolvedName}
+                        style={faceMaskStyle}
+                        onError={handleFaceError}
+                        draggable={false}
+                      />
+                    )}
+                    {!use3DPortraits && layerFrontHeadgear && (
+                      <img
+                        className="portrait-layer portrait-layer--headgear-front"
+                        src={layerFrontHeadgear}
+                        alt=""
+                        draggable={false}
+                      />
+                    )}
+                  </div>
+                )}
+              </>
+            ) : hasFace ? (
+              <>
+                {isRect && (
+                  <img
+                    className="portrait-bg"
+                    src={bgUrl}
+                    alt=""
+                    draggable={false}
+                  />
+                )}
                 <img
-                  className="portrait-layer portrait-layer--background"
-                  src={bgUrl}
-                  alt=""
+                  className="portrait-img"
+                  src={faceSrc}
+                  alt={resolvedName}
+                  onError={handleFaceError}
                   draggable={false}
                 />
-              )}
-              {hasLayeredFace && (
-                <div className="portrait-layer-stack">
-                  {!use3DPortraits && layerBackHeadgear && (
-                    <img
-                      className="portrait-layer portrait-layer--headgear-back"
-                      src={layerBackHeadgear}
-                      alt=""
-                      draggable={false}
-                    />
-                  )}
-                  {activeNormalMap ? (
-                    <NormalLitPortraitLayer
-                      ref={normalLayerRef}
-                      className="portrait-layer portrait-layer--face"
-                      src={faceSrc}
-                      normalSrc={activeNormalMap}
-                      alt={resolvedName}
-                      style={faceMaskStyle}
-                      onError={handleFaceError}
-                    />
-                  ) : (
-                    <img
-                      className="portrait-layer portrait-layer--face"
-                      src={faceSrc}
-                      alt={resolvedName}
-                      style={faceMaskStyle}
-                      onError={handleFaceError}
-                      draggable={false}
-                    />
-                  )}
-                  {!use3DPortraits && layerFrontHeadgear && (
-                    <img
-                      className="portrait-layer portrait-layer--headgear-front"
-                      src={layerFrontHeadgear}
-                      alt=""
-                      draggable={false}
-                    />
-                  )}
-                </div>
-              )}
-            </>
-          ) : hasFace ? (
-            <>
-              {isRect && (
+              </>
+            ) : (
+              <div className="portrait-placeholder">
                 <img
-                  className="portrait-bg"
-                  src={bgUrl}
+                  src="/assets/icons/I_PersonSilhouette.png"
                   alt=""
+                  className="portrait-placeholder-icon"
                   draggable={false}
                 />
-              )}
+              </div>
+            )}
+            {resolvedIsImprisoned && (
               <img
-                className="portrait-img"
-                src={faceSrc}
-                alt={resolvedName}
-                onError={handleFaceError}
-                draggable={false}
-              />
-            </>
-          ) : (
-            <div className="portrait-placeholder">
-              <img
-                src="/assets/icons/I_PersonSilhouette.png"
+                className={imprisonedOverlayClass}
+                src="/assets/hud/Components/CharacterPortrait/T_JailBars.png"
                 alt=""
-                className="portrait-placeholder-icon"
                 draggable={false}
               />
-            </div>
-          )}
-          {resolvedIsImprisoned && (
-            <img
-              className={imprisonedOverlayClass}
-              src="/assets/hud/Components/CharacterPortrait/T_JailBars.png"
-              alt=""
-              draggable={false}
-            />
-          )}
+            )}
+          </PortraitScene>
         </div>
         {shouldShowBadge && resolvedBadge && (
           <span className={`portrait-badge portrait-badge--${resolvedBadge}`}>

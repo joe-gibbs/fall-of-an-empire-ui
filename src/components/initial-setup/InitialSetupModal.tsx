@@ -147,7 +147,7 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
       setVisible(false);
 
       if (playTutorial) {
-        await bridgeCall('game.start_scenario_map', { mapId: 'Tutorial', playerFactionBaseName: '' });
+      await bridgeCall('game.start_scenario_map', { mapId: 'Tutorial', playerFactionBaseName: '', startDateId: '' });
       }
     } catch (error) {
       acknowledgeBridgeFailure(error);

@@ -13,6 +13,7 @@ export type {
 } from './worldGlances';
 
 export {
+  isProvinceSubjectMode,
   isVisibleForFactionMode,
 } from './factionMode';
 
