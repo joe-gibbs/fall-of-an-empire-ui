@@ -77,7 +77,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
     return findFaithHall(dioceses.religionKey, capitalBuildings.buildings, capitalBuildings.availableBuildings);
   }, [isPagan, dioceses, capitalBuildings]);
   const conversion = useReligionConversionBridge();
-  const { openRightSidebar } = useGameActions();
+  const { openRightSidebar, openSidebar } = useGameActions();
   const canConvert = Boolean(dioceses?.canManage && conversion && (conversion.state.active || conversion.options.length > 0));
   const pieSegments = useMemo(() => (dioceses?.religionDistribution ?? []).map(segment => ({
     label: segment.name,
@@ -234,7 +234,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
                 <button
                   type="button"
                   className={`rel-hall-card${faithHall.built ? '' : ' rel-hall-card--unbuilt'}`}
-                  onClick={() => openRightSidebar('settlement', pagan.capitalId)}
+                  onClick={() => openSidebar('settlement', pagan.capitalId)}
                 >
                   {faithHall.icon && <img src={faithHall.icon} alt="" draggable={false} />}
                   <span className="rel-hall-card-name">{faithHall.name}</span>
@@ -263,7 +263,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
                     className="rel-identity-stat"
                     icon={WebkilnAssetPath('/assets/icons/I_Capital.png')}
                     value={(
-                      <button className="rel-identity-link" type="button" onClick={() => openRightSidebar('settlement', pagan.capitalId)}>
+                      <button className="rel-identity-link" type="button" onClick={() => openSidebar('settlement', pagan.capitalId)}>
                         {pagan.capitalName}
                       </button>
                     )}

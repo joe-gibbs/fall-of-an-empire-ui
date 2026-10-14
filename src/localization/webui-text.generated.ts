@@ -853,7 +853,7 @@ export const WEBUI_TEXT_SOURCE = {
   "Settings.Events.Scripted.Title": "Scripted Events",
   "Settings.Events.Scripted.Description": "Hand-crafted event chains that respond to your choices and the current situation.",
   "Settings.Events.Card.NotInstalled": "Not installed",
-  "Settings.Events.Model.DownloadHint": "Select to open the DLC page for this model.",
+  "Settings.Events.Model.DownloadHint": "Select to open the download page for this model.",
   "Settings.Events.Model.NotInstalledHint": "This model is not installed.",
   "InitialSetup.Title": "Welcome to Fall of an Empire",
   "InitialSetup.Intro": "Events respond to what happens in your campaign and present choices involving your characters, factions, settlements and armies. Scripted Events follow hand-written story chains. Local models create new events as you play. Larger models produce better writing, but take longer.",

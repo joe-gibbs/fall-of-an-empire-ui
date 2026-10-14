@@ -1285,16 +1285,26 @@ const SharedTooltip: React.FC<TooltipProps> = ({
     buildActiveTooltipRef.current = buildActiveTooltip;
   }, [buildActiveTooltip]);
 
+  const canClaimTooltip = useCallback(() => {
+    if (controlled) return true;
+    const wrapper = wrapperRef.current;
+    // A queue card and the action under the pointer can both be hovered.
+    // Only the innermost trigger owns the shared popup while its data changes.
+    if (hoveredRef.current && lastPointerNode instanceof Element
+      && lastPointerNode.closest('.tooltip-wrapper, .tooltip-wrapper-inline') === wrapper) return true;
+    return focusedRef.current && document.activeElement?.closest('.tooltip-wrapper, .tooltip-wrapper-inline') === wrapper;
+  }, [controlled]);
+
   const scheduleShow = useCallback((delayMs: number) => {
     if (showRef.current) clearTimeout(showRef.current);
     showRef.current = setTimeout(() => {
       showRef.current = null;
       const wrapper = wrapperRef.current;
-      if (!disabledRef.current && (hoveredRef.current || focusedRef.current) && wrapper) {
+      if (!disabledRef.current && (hoveredRef.current || focusedRef.current) && wrapper && canClaimTooltip()) {
         showSharedTooltip(buildActiveTooltipRef.current(wrapper));
       }
     }, delayMs);
-  }, []);
+  }, [canClaimTooltip]);
 
   const beginShow = useCallback((source: 'hover' | 'focus') => {
     const alreadyActive = hoveredRef.current || focusedRef.current;
@@ -1305,7 +1315,7 @@ const SharedTooltip: React.FC<TooltipProps> = ({
     if (source === 'hover') hoveredRef.current = true;
     else focusedRef.current = true;
     cancelSharedTooltipHide(tooltipIdRef.current);
-    if (disabledRef.current) return;
+    if (disabledRef.current || !canClaimTooltip()) return;
     // Controlled `open` re-renders must not re-fire showIntent or re-schedule
     // the open delay once this tooltip is already active or pending.
     if (alreadyActive && activeTooltip?.id === tooltipIdRef.current) {
@@ -1324,7 +1334,7 @@ const SharedTooltip: React.FC<TooltipProps> = ({
       return;
     }
     scheduleShow(alreadyActive ? 0 : effectiveDelay);
-  }, [effectiveDelay, scheduleShow]);
+  }, [canClaimTooltip, effectiveDelay, scheduleShow]);
 
   const show = useCallback(() => {
     pointerDismissedRef.current = false;
@@ -1386,11 +1396,11 @@ const SharedTooltip: React.FC<TooltipProps> = ({
       return;
     }
 
-    if ((hoveredRef.current || focusedRef.current) && activeTooltip?.id !== tooltipIdRef.current && !showRef.current) {
+    if ((hoveredRef.current || focusedRef.current) && canClaimTooltip() && activeTooltip?.id !== tooltipIdRef.current && !showRef.current) {
       const elapsed = Date.now() - hoverStartedAtRef.current;
       scheduleShow(skipOpenDelay ? 0 : Math.max(0, effectiveDelay - elapsed));
     }
-  }, [disabled, effectiveDelay, scheduleShow]);
+  }, [canClaimTooltip, disabled, effectiveDelay, scheduleShow]);
 
   useEffect(() => {
     // Keep the open portal in sync when content changes. Native glance tooltips
@@ -1415,11 +1425,11 @@ const SharedTooltip: React.FC<TooltipProps> = ({
       return;
     }
 
-    if (hoveredRef.current || focusedRef.current) {
+    if ((hoveredRef.current || focusedRef.current) && canClaimTooltip()) {
       const elapsed = Date.now() - hoverStartedAtRef.current;
       scheduleShow(skipOpenDelay ? 0 : Math.max(0, effectiveDelay - elapsed));
     }
-  }, [buildActiveTooltip, effectiveDelay, scheduleShow]);
+  }, [buildActiveTooltip, canClaimTooltip, effectiveDelay, scheduleShow]);
 
   useEffect(() => {
     const tooltipId = tooltipIdRef.current;
@@ -1439,6 +1449,7 @@ const SharedTooltip: React.FC<TooltipProps> = ({
           className={`tooltip-wrapper-inline${wrapperClassName ? ` ${wrapperClassName}` : ''}`}
           style={wrapperStyle}
           onMouseEnter={show}
+          onMouseOver={show}
           onMouseLeave={hide}
           onFocusCapture={showFromFocus}
           onBlurCapture={hideFromFocus}
@@ -1453,6 +1464,7 @@ const SharedTooltip: React.FC<TooltipProps> = ({
           className={`tooltip-wrapper${wrapperClassName ? ` ${wrapperClassName}` : ''}`}
           style={wrapperStyle}
           onMouseEnter={show}
+          onMouseOver={show}
           onMouseLeave={hide}
           onFocusCapture={showFromFocus}
           onBlurCapture={hideFromFocus}

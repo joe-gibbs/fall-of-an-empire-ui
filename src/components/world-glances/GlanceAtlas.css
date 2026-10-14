@@ -57,8 +57,19 @@
    marker. Include that overflow in the sampled atlas cell while keeping its anchor centred. */
 .glance-atlas-plate.world-glance-node--army,
 .glance-atlas-plate.world-glance-node--navy {
-  box-sizing: content-box;
-  padding: var(--military-atlas-bleed, 0);
+  box-sizing: border-box;
+  width: var(--military-atlas-capacity);
+  height: var(--military-atlas-capacity);
+  padding: 0;
+}
+
+/* Centre each zoom treatment inside the reserved cell so its fixed anchor stays on the army. */
+.glance-atlas-plate.world-glance-node--army:not(.is-garrisoned) > .world-glance-tip,
+.glance-atlas-plate.world-glance-node--navy:not(.is-garrisoned) > .world-glance-tip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* Garrison rows are translated beneath their settlement anchor. Give them an explicit sampled

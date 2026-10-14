@@ -131,7 +131,7 @@ function relicIdentityHeader(relic: PaganRelicView) {
 }
 
 export function PaganRelicList({ relics, showOwner = true, showReligion = false }: { relics: PaganRelicView[]; showOwner?: boolean; showReligion?: boolean }) {
-  const { openRightSidebar } = useGameActions();
+  const { openSidebar } = useGameActions();
   return (
     <div className="pagan-relics">
       {relics.map(relic => (
@@ -141,7 +141,7 @@ export function PaganRelicList({ relics, showOwner = true, showReligion = false 
             <div className="pagan-relic-copy">
               <strong>{relic.name}</strong>
               {showReligion && relic.religionName && <span>{relic.religionName}</span>}
-              <button className="pagan-text-link" onClick={() => openRightSidebar('settlement', relic.settlementId)}>{relic.settlementName}</button>
+              <button className="pagan-text-link" onClick={() => openSidebar('settlement', relic.settlementId)}>{relic.settlementName}</button>
               {showOwner && <span>{relic.ownerName || t('Common.None')}</span>}
             </div>
           </div>

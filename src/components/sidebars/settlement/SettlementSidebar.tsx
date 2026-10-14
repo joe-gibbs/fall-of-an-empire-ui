@@ -7,6 +7,7 @@ import InfoRow from '../../common/data-display/stats/InfoRow';
 import InteractionCard from '../../common/interactions/InteractionCard';
 import InteractionEffectsTooltip from '../../common/tooltips/InteractionEffectsTooltip';
 import PaintedBar from '../../common/data-display/bars/PaintedBar';
+import GameButton from '../../common/buttons/GameButton';
 import SectionHeading from '../../common/data-display/stats/SectionHeading';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import Tooltip from '../../common/tooltips/Tooltip';
@@ -36,6 +37,7 @@ import { BureaucraticRushTooltipAction } from '../../bureaucracy/BureaucraticThr
 import SidebarTabBar from '../shared/SidebarTabBar';
 import SidebarToolbar from '../shared/SidebarToolbar';
 import { StatCellGrid, StatCell } from '../shared/StatCellGrid';
+import { MAP_MODE_ICONS } from '../../bottombar/mapModeIcons';
 import SettlementBuildingsPanel from './SettlementBuildingsPanel';
 import SettlementMilitaryPanel from './SettlementMilitaryPanel';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
@@ -1028,22 +1030,30 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
             </div>
           )}
           {raiseSettlement && <Tooltip content={buildInteractionTooltip(raiseSettlement, settlement.id)} position="right">
-            <InteractionCard
-              title={webUIText('SettlementSidebar.RaiseSettlement')}
-              bgImage="/assets/warpath/RaiseSettlement.png"
-              inProgress={raiseSettlement.inProgress}
-              durationDays={raiseSettlement.durationDays}
-              remainingDays={raiseSettlement.remainingDays}
-              meta={!raiseSettlement.inProgress && <div className="settle-raise-cost">
-                <span><img src="/assets/icons/I_Coins.png" alt="" />{formatNumber(raiseSettlement.goldCost)}</span>
+            <GameButton
+              variant="burgundy"
+              fullWidth
+              icon="/assets/icons/I_ModConstruction.png"
+              className="settle-raise-button"
+              disabled={!canRaise}
+              onClick={() => { void startInteraction(raiseSettlement.id); }}
+            >
+              <span>{webUIText('SettlementSidebar.RaiseSettlement')}</span>
+              <span className="settle-raise-cost">
+                {!raiseSettlement.inProgress && <span><img src="/assets/icons/I_Coins.png" alt="" />{formatNumber(raiseSettlement.goldCost)}</span>}
                 <span><img src="/assets/icons/I_Speed.png" alt="" />{webUIText('Common.DayCount', {
-                  Days: formatNumber(raiseSettlement.durationDays),
-                  Unit: webUIText(raiseSettlement.durationDays === 1 ? 'Common.Day' : 'Common.Days'),
+                  Days: formatNumber(raiseSettlement.inProgress ? raiseSettlement.remainingDays : raiseSettlement.durationDays),
+                  Unit: webUIText((raiseSettlement.inProgress ? raiseSettlement.remainingDays : raiseSettlement.durationDays) === 1 ? 'Common.Day' : 'Common.Days'),
                 })}</span>
-              </div>}
-              onClick={canRaise ? () => { void startInteraction(raiseSettlement.id); } : undefined}
-            />
+              </span>
+            </GameButton>
           </Tooltip>}
+          {raiseSettlement?.inProgress && (
+            <PaintedBar percent={100 * (1 - raiseSettlement.remainingDays / raiseSettlement.durationDays)} color="gold" />
+          )}
+          {raiseSettlement && !canRaise && !raiseSettlement.inProgress && (
+            <p className="settle-raise-blocked-reason">{raiseSettlement.reasons.map(reason => reason.reason).join(' ')}</p>
+          )}
         </div>
       </div>
     );
@@ -1257,7 +1267,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
               }),
               lines: corruptionBreakdownLines(settlement.corruptionBreakdown),
             }} position="bottom" delay={150}>
-              <StatCell icon={conceptIconPath('Corruption')} value={corruptionPercent} valueColor={corruptionColor} />
+              <StatCell icon={WebkilnAssetPath(MAP_MODE_ICONS.corruption)} value={corruptionPercent} valueColor={corruptionColor} />
             </Tooltip>}
             <Tooltip content={{
               get title() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1095.1", { Value1: formatNumber(settlement.fortificationLevel) }); },

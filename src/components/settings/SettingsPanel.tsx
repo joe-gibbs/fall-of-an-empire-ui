@@ -996,8 +996,7 @@ export const EventModelSelection: React.FC<{
   };
 
   const openModelDownload = (model: LlmModelDTO) => {
-    if (model.filename !== 'Large.gguf') return;
-    void bridgeCall('ui.open_external_link', { linkId: 'large_model' }).catch(acknowledgeBridgeFailure);
+    void bridgeCall('ui.open_external_url', { url: model.downloadUrl }).catch(acknowledgeBridgeFailure);
   };
 
   const selectModel = (model: LlmModelDTO) => {

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { GetLedgerOverviewResponse } from '../../bridge-types.generated.ts';
 import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
 import type { SortState } from '../../components/common/layout/tables/sortUtils';
@@ -89,5 +90,6 @@ export function useLedgerOverviewBridge(
   });
 
   const cached = live ?? ledgerOverviewCache.get(cacheKey) ?? null;
-  return cached && latestCounts ? { ...cached, ...latestCounts } : cached;
+  const counts = latestCounts;
+  return useMemo(() => cached && counts ? { ...cached, ...counts } : cached, [cached, counts]);
 }

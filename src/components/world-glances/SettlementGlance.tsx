@@ -371,7 +371,7 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
       <div className="gset-body">
         <div className="gset-emblem">
           <span className="gset-target-glow" aria-hidden="true" />
-          <span className="gset-type-core" aria-hidden="true">
+          <span className="gset-type-core" aria-hidden="true" data-webkiln-anchor-hit>
             {data.settlementType === 'land' ? (
               <img className="gset-badge-layer gset-badge-layer--foreground" src={badgeForeground} alt="" />
             ) : <>

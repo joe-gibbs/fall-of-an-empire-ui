@@ -360,12 +360,17 @@ function policyLevelTooltip(policy: FactionPolicy, level: FactionPolicyLevel, in
   const stance = policyHeaderText(level.effectLines);
   return {
     title: stance || policy.name,
-    body: !level.isAvailable ? (level.lockReason || webUIText('FactionOverview.Locked')) : undefined,
-    lines: [{
-      label: level.isCurrent ? webUIText('FactionOverview.CurrentLevel') : webUIText('FactionOverview.Level'),
-      value: policyLevelValueLabel(policy, index),
-      valueColor: level.isCurrent ? 'var(--gold)' : undefined,
-    }],
+    lines: [
+      {
+        label: level.isCurrent ? webUIText('FactionOverview.CurrentLevel') : webUIText('FactionOverview.Level'),
+        value: policyLevelValueLabel(policy, index),
+        valueColor: level.isCurrent ? 'var(--gold)' : undefined,
+      },
+      ...(!level.isAvailable ? [
+        { label: webUIText('Common.Requirements'), isHeader: true },
+        { label: level.lockReason || webUIText('FactionOverview.Locked'), labelColor: 'var(--red)' },
+      ] : []),
+    ],
     afterLines: <InteractionEffectsTooltip lines={policyMechanicalLines(level.effectLines)} />,
   };
 }

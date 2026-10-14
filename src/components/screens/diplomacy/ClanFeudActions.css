@@ -36,3 +36,8 @@
   height: 1.2rem;
   object-fit: contain;
 }
+
+.clan-feud-blocked-reason {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+}

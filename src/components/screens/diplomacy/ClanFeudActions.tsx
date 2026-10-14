@@ -55,6 +55,9 @@ export default function ClanFeudActions({ group, onSelectClan }: {
             </GameButton>
           </Tooltip>
         </div>
+        {!feud.canReconcile && feud.reconcileReason && (
+          <p className="clan-feud-blocked-reason">{feud.reconcileReason}</p>
+        )}
       </article>;
     })}
   </div>;

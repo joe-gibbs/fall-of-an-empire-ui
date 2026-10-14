@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import type { GetWorldGlancesResponse } from '../../bridge-types.generated.ts';
 import { useUIScale } from '../../bridge/core/useUIScale';
 import { UI_PRESENTATION } from '../../config/presentation';
@@ -276,7 +276,7 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
     '--convoy-atlas-top-bleed': `${CONVOY_ATLAS_TOP_BLEED_REM}rem`,
     '--convoy-atlas-bottom-bleed': `${CONVOY_ATLAS_BOTTOM_BLEED_REM}rem`,
   } as CSSProperties;
-  const setNode = (node: HTMLDivElement | null) => plateRef(anchorKey, node);
+  const setNode = useCallback((node: HTMLDivElement | null) => plateRef(anchorKey, node), [plateRef, anchorKey]);
   const interactiveProps = section === 'notification' ? {} : {
     onPointerEnter: () => handleWorldGlanceHover(section, id, true),
     onPointerLeave: () => handleWorldGlanceHover(section, id, false),
@@ -407,13 +407,14 @@ export default function GlanceAtlasRoot() {
   const [runtimeRootFontPx, setRuntimeRootFontPx] = useState(() => currentRuntimeRootFontPx());
   const remPx = runtimeRootFontPx * (uiScale ?? 1);
 
-  const plateRef = (key: string, node: HTMLDivElement | null) => {
+  // Keep this prop stable so updating one plate does not invalidate every memoised plate.
+  const plateRef = useCallback((key: string, node: HTMLDivElement | null) => {
     if (node) {
       plateNodesRef.current.set(key, node);
     } else {
       plateNodesRef.current.delete(key);
     }
-  };
+  }, []);
 
   // Fold new catalogue entries into the persistent cache (see comment above).
   // Drop ids that left the catalogue so un-garrisoned / destroyed entities cannot keep a
@@ -646,9 +647,15 @@ export default function GlanceAtlasRoot() {
       }
 
       const previousVisibleKeys = visibleAtlasKeysRef.current;
-      const visibilityChanged = previousVisibleKeys.size !== nextVisibleKeys.size
-        || Array.from(nextVisibleKeys).some(key => !previousVisibleKeys.has(key))
-        || Array.from(previousVisibleKeys).some(key => !nextVisibleKeys.has(key));
+      let visibilityChanged = previousVisibleKeys.size !== nextVisibleKeys.size;
+      if (!visibilityChanged) {
+        for (const key of nextVisibleKeys) {
+          if (!previousVisibleKeys.has(key)) {
+            visibilityChanged = true;
+            break;
+          }
+        }
+      }
       if (visibilityChanged) {
         visibleAtlasKeysRef.current = nextVisibleKeys;
         pendingVisibility = nextVisibleKeys;

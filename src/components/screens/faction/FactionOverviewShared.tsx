@@ -355,7 +355,7 @@ function directionLabel(direction: 'increase' | 'decrease', t: WebUITextFormatte
 }
 
 function nextLockedPolicyLevel(policy: FactionPolicy): FactionPolicyLevel | undefined {
-  return policy.levelEffects.find(level => !level.isAvailable && level.level > policy.value);
+  return policy.levelEffects.find(level => !level.isAvailable && level.value === policy.value + 1);
 }
 
 function policyAdjustmentTooltip(policy: FactionPolicy, direction: 'increase' | 'decrease', t: WebUITextFormatter): TooltipContent {
@@ -364,14 +364,17 @@ function policyAdjustmentTooltip(policy: FactionPolicy, direction: 'increase' | 
     const stance = policyLevelName(policy, lockedNext);
     return {
       title: stance || policy.name,
-      body: lockedNext.lockReason || t('FactionOverview.Locked'),
-      lines: [{
-        label: t('FactionOverview.Level'),
-        value: t('FactionOverview.PolicyLevelValue', {
-          Level: policy.levelEffects.indexOf(lockedNext) + 1,
-          Total: policy.levelEffects.length,
-        }),
-      }],
+      lines: [
+        {
+          label: t('FactionOverview.Level'),
+          value: t('FactionOverview.PolicyLevelValue', {
+            Level: policy.levelEffects.indexOf(lockedNext) + 1,
+            Total: policy.levelEffects.length,
+          }),
+        },
+        { label: t('Common.Requirements'), isHeader: true },
+        { label: lockedNext.lockReason || t('FactionOverview.Locked'), labelColor: 'var(--red)' },
+      ],
       afterLines: <InteractionEffectsTooltip lines={policyMechanicalEffectLines(lockedNext.effectLines)} />,
     };
   }
@@ -421,12 +424,17 @@ function policyLevelTooltip(policy: FactionPolicy, level: FactionPolicyLevel, in
 
   return {
     title: stance || policy.name,
-    body: !level.isAvailable ? (level.lockReason || t('FactionOverview.Locked')) : undefined,
-    lines: [{
-      label: level.isCurrent ? t('FactionOverview.CurrentLevel') : t('FactionOverview.Level'),
-      value: t('FactionOverview.PolicyLevelValue', { Level: index + 1, Total: total }),
-      valueColor: level.isCurrent ? 'var(--gold)' : undefined,
-    }],
+    lines: [
+      {
+        label: level.isCurrent ? t('FactionOverview.CurrentLevel') : t('FactionOverview.Level'),
+        value: t('FactionOverview.PolicyLevelValue', { Level: index + 1, Total: total }),
+        valueColor: level.isCurrent ? 'var(--gold)' : undefined,
+      },
+      ...(!level.isAvailable ? [
+        { label: t('Common.Requirements'), isHeader: true },
+        { label: level.lockReason || t('FactionOverview.Locked'), labelColor: 'var(--red)' },
+      ] : []),
+    ],
     afterLines: <InteractionEffectsTooltip lines={policyMechanicalEffectLines(level.effectLines)} />,
   };
 }

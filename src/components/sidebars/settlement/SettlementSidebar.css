@@ -334,6 +334,8 @@
 .settle-raise-cost { display: flex; gap: 1.5rem; color: var(--gold-light); }
 .settle-raise-cost > span { display: flex; align-items: center; gap: 0.4rem; }
 .settle-raise-cost img { width: 1.15rem; height: 1.15rem; object-fit: contain; }
+.settle-raise-button .btn-content { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+.settle-raise-blocked-reason { margin: 0.4rem 0 0; color: var(--text-muted); }
 
 .settle-fort-status { margin-bottom: 1rem; text-align: center; color: var(--gold-light); }
 .settle-fort-status img { width: 3rem; height: 3rem; object-fit: contain; }

@@ -339,11 +339,9 @@ export default function GameUIRoot() {
 
   const activeScreenButtonId: string | null = activeScreenReg?.topbarId ?? null;
 
-  // Events take precedence; then the active screen's topic, then the visible
-  // sidebar's topic. null leaves the advisor dismissed.
+  // Keep the current hint while an event is open, then resume its normal placement.
   let autoAdvisorTopic: AdvisorTopicId | null = null;
-  if (presentedEvent) autoAdvisorTopic = 'eventPopup';
-  else if (activeScreenReg?.advisorTopic) autoAdvisorTopic = activeScreenReg.advisorTopic;
+  if (activeScreenReg?.advisorTopic) autoAdvisorTopic = activeScreenReg.advisorTopic;
   else if (rightSidebarReg) autoAdvisorTopic = rightSidebarReg.advisorTopic ?? null;
   else if (leftSidebarReg) autoAdvisorTopic = leftSidebarReg.advisorTopic ?? null;
 
@@ -351,6 +349,7 @@ export default function GameUIRoot() {
   // push fresh hint events and re-render the whole HUD every time.
   const lastAdvisorTopicRef = useRef<AdvisorTopicId | null | undefined>(undefined);
   useEffect(() => {
+    if (presentedEvent) return;
     if (observerMode || showPause || showVictory || showGameOver || showOutcomeLoad) {
       lastAdvisorTopicRef.current = undefined;
       return;
@@ -359,9 +358,9 @@ export default function GameUIRoot() {
     lastAdvisorTopicRef.current = autoAdvisorTopic;
     if (autoAdvisorTopic) showAdvisor(autoAdvisorTopic);
     else dismissAdvisor();
-  }, [observerMode, showPause, showVictory, showGameOver, showOutcomeLoad, autoAdvisorTopic, showAdvisor, dismissAdvisor]);
+  }, [presentedEvent, observerMode, showPause, showVictory, showGameOver, showOutcomeLoad, autoAdvisorTopic, showAdvisor, dismissAdvisor]);
 
-  const advisorPlacement = presentedEvent || activeScreen
+  const advisorPlacement = activeScreen
     ? 'center'
     : leftSidebar
       ? 'shifted'
@@ -511,7 +510,7 @@ export default function GameUIRoot() {
       <Profiler id="overlay:world-search" onRender={recordUIPerfReactRender}>
         <WorldSearchBar />
       </Profiler>
-      {!observerMode && (
+      {!observerMode && !presentedEvent && (
         <AdvisorPanel
           hint={advisorHint}
           step={advisorStep}
