@@ -213,7 +213,7 @@
 }
 
 .dps-table-col--faction {
-  flex-grow: 1.65;
+  flex-grow: 1.45;
   flex-shrink: 1;
   flex-basis: 0;
 }
@@ -232,6 +232,12 @@
 
 .dps-table-col--short {
   flex-grow: 0.78;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.dps-table-col--settlements {
+  flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
 }
@@ -392,6 +398,10 @@
 .dps-row-action-btn[disabled],
 .dps-row-action-btn[disabled]:hover {
   cursor: var(--cursor-default);
+}
+
+.dps-row-action-btn[disabled] .dps-row-action-label {
+  color: var(--text-muted);
 }
 
 .dps-row-action-btn--danger {

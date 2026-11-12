@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Panel from '../../common/layout/shell/Panel';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
@@ -11,6 +11,7 @@ import NumberStepper from '../../common/forms/NumberStepper';
 import PeaceTerritoryPicker from './PeaceTerritoryPicker';
 import type { PeaceSelectionContext } from '../../../bridge/diplomacy/usePeaceNegotiationBridge';
 import type { StartPeaceSettlementSelectionResponse } from '../../../bridge-types.generated';
+import { magnitudeStep } from '../../../utils/stepModifiers';
 import ReplaceRulerSelectionModal from '../../modals/diplomacy/ReplaceRulerSelectionModal';
 import { usePeaceNegotiationBridge, type PeaceNegotiationState, type PeaceTermDraft } from '../../../bridge/diplomacy/usePeaceNegotiationBridge';
 import { onBridgeEvent } from '../../../bridge-types.generated.ts';
@@ -46,6 +47,29 @@ type ParticipantRoleKind = 'leader' | 'subject' | null;
 type ReplacementPicker =
   | { kind: 'add'; option: TermOption }
   | { kind: 'change'; term: PeaceTermDraft; live?: TermEntry };
+type NegotiationPicker =
+  | { kind: 'none' }
+  | { kind: 'map'; optionId: string; context: PeaceSelectionContext }
+  | { kind: 'replacement'; target: ReplacementPicker };
+type SubmissionPhase =
+  | { phase: 'idle'; outcome: string | null }
+  | { phase: 'submitting' }
+  | { phase: 'accepted'; message: string };
+
+const NO_PICKER: NegotiationPicker = { kind: 'none' };
+const IDLE_SUBMISSION: SubmissionPhase = { phase: 'idle', outcome: null };
+
+function clearSubmissionOutcome(current: SubmissionPhase): SubmissionPhase {
+  return current.phase === 'idle' && current.outcome !== null ? IDLE_SUBMISSION : current;
+}
+
+function closeMapPicker(current: NegotiationPicker): NegotiationPicker {
+  return current.kind === 'map' ? NO_PICKER : current;
+}
+
+function closeReplacement(current: NegotiationPicker): NegotiationPicker {
+  return current.kind === 'replacement' ? NO_PICKER : current;
+}
 
 const TRIBUTE_DURATION_YEAR_LABELS = ['1', '2', '5', '10'] as const;
 
@@ -632,7 +656,7 @@ function DraftTermChip({
                 <span className="pns-term-control-label"><WebUIText textKey={isOngoing ? 'PeaceNegotiation.MonthlyGold' : 'Auto.ComponentsScreensPeaceNegotiationScreen.412.3'} /></span>
                 <NumberStepper
                   value={tributeAmount}
-                  step={amountStep}
+                  step={magnitudeStep(tributeAmount, tributeMax, amountStep)}
                   min={0}
                   max={tributeMax}
                   className="pns-amount-control"
@@ -993,16 +1017,18 @@ function PeaceNegotiationScreenContent({
   const [terms, setTerms] = useState<PeaceTermDraft[]>([]);
   const [sourceOfferHydrated, setSourceOfferHydrated] = useState(false);
   const [submitState, setSubmitState] = useState<PeaceNegotiationState | null>(null);
-  const [outcome, setOutcome] = useState<string | null>(null);
-  const [acceptedMessage, setAcceptedMessage] = useState<string | null>(null);
+  const [submission, setSubmission] = useState<SubmissionPhase>(IDLE_SUBMISSION);
+  const outcome = submission.phase === 'idle' ? submission.outcome : null;
+  const acceptedMessage = submission.phase === 'accepted' ? submission.message : null;
   const [selectedDemandTargetId, setSelectedDemandTargetId] = useState<string | null>(null);
   const [selectedConcessionGiverId, setSelectedConcessionGiverId] = useState<string | null>(null);
-  const [activeSettlementSelectionOptionId, setActiveSettlementSelectionOptionId] = useState<string | null>(null);
-  const [settlementPicker, setSettlementPicker] = useState<PeaceSelectionContext | null>(null);
+  const [picker, setPicker] = useState<NegotiationPicker>(NO_PICKER);
+  const activeSettlementSelectionOptionId = picker.kind === 'map' ? picker.optionId : null;
+  const settlementPicker = picker.kind === 'map' ? picker.context : undefined;
+  const replacementPicker = picker.kind === 'replacement' ? picker.target : null;
+  const pickerRequest = useRef(0);
   const [selectionData, setSelectionData] = useState<StartPeaceSettlementSelectionResponse | null>(null);
-  const [replacementPicker, setReplacementPicker] = useState<ReplacementPicker | null>(null);
   const [initialSourceTerms, setInitialSourceTerms] = useState<PeaceTermDraft[] | null>(null);
-  const acceptedCloseTimerRef = useRef<number | null>(null);
   const settlementSelectionActiveRef = useRef(false);
   const bridgeTargetFactionId = sourceOfferSelector && !sourceOfferHydrated ? sourceOfferSelector : targetFactionId;
   const sourceOfferUnmodified = Boolean(
@@ -1042,7 +1068,7 @@ function PeaceNegotiationScreenContent({
   const proposalScoreClamped = clamp(proposalScore, -100, 100);
   const acceptanceScale = (Math.abs(proposalScoreClamped) / 100).toFixed(3);
   const warScore = preview?.currentWarScore ?? 0;
-  const canSubmit = (!sourceOfferSelector || sourceOfferHydrated) && Boolean(preview?.canSubmit);
+  const canSubmit = submission.phase === 'idle' && (!sourceOfferSelector || sourceOfferHydrated) && Boolean(preview?.canSubmit);
   const screenTitle = state?.found ? (state.warName || webUIText("PeaceNegotiation.WarSettlement")) : webUIText("PeaceNegotiation.PeaceTreaty");
   const warScoreBreakdown: TooltipContent = warScoreBreakdownTooltip(
     preview?.warScoreBreakdown,
@@ -1071,19 +1097,18 @@ function PeaceNegotiationScreenContent({
     const selectionTargetFactionId = state?.targetFactionId || targetFactionId;
     if (!selectionTargetFactionId) return;
 
-    settlementSelectionActiveRef.current = selection.selectionActive
-      && selection.targetFactionId === selectionTargetFactionId;
+    if (selection.selectionActive && selection.targetFactionId !== selectionTargetFactionId) return;
+    settlementSelectionActiveRef.current = selection.selectionActive;
 
     if (!selection.selectionActive || selection.targetFactionId !== selectionTargetFactionId) {
       if (!selection.selectionActive) {
-        setActiveSettlementSelectionOptionId(null);
+        setPicker(closeMapPicker);
       }
       return;
     }
 
     setSelectionData(selection);
-    setOutcome(null);
-    setAcceptedMessage(null);
+    setSubmission(clearSubmissionOutcome);
     const selectedTerritoryTerms = selection.terms ?? [];
     setTerms(current => {
       const withoutTerritorySelections = current.filter(term => !isTerritorySelectionTerm(term));
@@ -1100,8 +1125,9 @@ function PeaceNegotiationScreenContent({
 
   const endSettlementSelection = bridge.endSettlementSelection;
   const returnToTerms = useCallback(async () => {
+    const request = ++pickerRequest.current;
     const selection = await endSettlementSelection();
-    if (selection) applySettlementSelection(selection);
+    if (request === pickerRequest.current && selection) applySettlementSelection(selection);
   }, [applySettlementSelection, endSettlementSelection]);
 
   useEscapeStackEntry({
@@ -1111,10 +1137,15 @@ function PeaceNegotiationScreenContent({
     allowFromInput: true,
   });
 
+  const closeAfterAcceptance = useEffectEvent(() => onClose());
+  useEffect(() => {
+    if (submission.phase !== 'accepted') return;
+    const acceptedCloseTimer = window.setTimeout(closeAfterAcceptance, UI_MOTION.acceptedNegotiationCloseMs);
+    return () => window.clearTimeout(acceptedCloseTimer);
+  }, [submission.phase]);
+
   useEffect(() => () => {
-    if (acceptedCloseTimerRef.current !== null) {
-      window.clearTimeout(acceptedCloseTimerRef.current);
-    }
+    ++pickerRequest.current;
     if (settlementSelectionActiveRef.current) {
       settlementSelectionActiveRef.current = false;
       void endSettlementSelection();
@@ -1169,11 +1200,13 @@ function PeaceNegotiationScreenContent({
     }
 
     if (!settlementPicker) return;
+    const request = ++pickerRequest.current;
     void bridge.startSettlementSelection(nextTerms, settlementPicker).then(selection => {
+      if (request !== pickerRequest.current) return;
       if (!selection) return;
       settlementSelectionActiveRef.current = selection.selectionActive;
       if (!selection.selectionActive) {
-        setActiveSettlementSelectionOptionId(null);
+        setPicker(closeMapPicker);
       }
       // Do not run applySettlementSelection here: the list already owns nextTerms.
       // Re-applying map→list would fight a remove/reset that intentionally dropped terms.
@@ -1182,36 +1215,38 @@ function PeaceNegotiationScreenContent({
 
   const addTerm = (option: TermOption) => {
     if (option.isSelected || selectedIds.has(option.optionId)) return;
-    setOutcome(null);
-    setAcceptedMessage(null);
+    setSubmission(clearSubmissionOutcome);
     const draft = draftFromOption(option);
     if (isTerritorySelectionTerm(draft) && (draft.targetSettlementIds?.length ?? 0) === 0) {
       const context: PeaceSelectionContext = { selectionType: draft.type, selectionDirection: draft.direction, selectionTargetFactionId: draft.targetFactionId, recipientFactionId: draft.recipientFactionId };
-      setSettlementPicker(context);
-      setActiveSettlementSelectionOptionId(option.optionId);
+      setPicker({ kind: 'map', optionId: option.optionId, context });
+      const request = ++pickerRequest.current;
       void bridge.startSettlementSelection(terms, context).then(selection => {
-        if (!selection?.selectionActive) setActiveSettlementSelectionOptionId(null);
+        if (request !== pickerRequest.current) return;
+        if (!selection?.selectionActive) setPicker(closeMapPicker);
         if (selection) applySettlementSelection(selection);
       });
       return;
     }
     if (draft.type === 'replace_ruler' && (option.replacementCandidates?.length ?? 0) > 0) {
-      setActiveSettlementSelectionOptionId(null);
-      setReplacementPicker({ kind: 'add', option });
+      setPicker({ kind: 'replacement', target: { kind: 'add', option } });
       return;
     }
-    setActiveSettlementSelectionOptionId(null);
+    setPicker(NO_PICKER);
     setTerms(current => [...current.filter(term => !termsConflict(term, draft)), draft]);
   };
 
   const closeReplacementPicker = () => {
-    setReplacementPicker(null);
+    setPicker(closeReplacement);
+  };
+
+  const openReplacementPicker = (term: PeaceTermDraft, live?: TermEntry) => {
+    setPicker({ kind: 'replacement', target: { kind: 'change', term, live } });
   };
 
   const confirmReplacementRuler = (personId: string) => {
     if (!replacementPicker) return;
-    setOutcome(null);
-    setAcceptedMessage(null);
+    setSubmission(clearSubmissionOutcome);
     if (replacementPicker.kind === 'add') {
       const draft = draftFromOption(replacementPicker.option);
       draft.replacementRulerId = personId;
@@ -1226,8 +1261,7 @@ function PeaceNegotiationScreenContent({
   };
 
   const removeTerm = (termId: string) => {
-    setOutcome(null);
-    setAcceptedMessage(null);
+    setSubmission(clearSubmissionOutcome);
     setTerms(current => {
       const removed = current.find(term => (term.termId || termKey(term)) === termId);
       const next = current.filter(term => (term.termId || termKey(term)) !== termId);
@@ -1239,24 +1273,21 @@ function PeaceNegotiationScreenContent({
   };
 
   const updateTerm = (termId: string, patch: Partial<PeaceTermDraft>) => {
-    setOutcome(null);
-    setAcceptedMessage(null);
+    setSubmission(clearSubmissionOutcome);
     setTerms(current => current.map(term => (
       (term.termId || termKey(term)) === termId ? { ...term, ...patch } : term
     )));
   };
 
   const handleReset = () => {
-    setOutcome(null);
-    setAcceptedMessage(null);
+    setSubmission(clearSubmissionOutcome);
     setSubmitState(null);
     const nextTerms = sourceOfferSelector && initialSourceTerms ? initialSourceTerms : [];
     const hadTerritory = terms.some(isTerritorySelectionTerm) || nextTerms.some(isTerritorySelectionTerm);
     setTerms(nextTerms);
     setSelectedDemandTargetId(null);
     setSelectedConcessionGiverId(null);
-    setActiveSettlementSelectionOptionId(null);
-    setReplacementPicker(null);
+    setPicker(NO_PICKER);
     if (hadTerritory || settlementSelectionActiveRef.current) {
       syncMapSelectionToTerms(nextTerms);
     }
@@ -1264,23 +1295,27 @@ function PeaceNegotiationScreenContent({
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
-    const result = await bridge.submit(terms);
-    if (!result) return;
+    setSubmission({ phase: 'submitting' });
+    let result: Awaited<ReturnType<typeof bridge.submit>>;
+    try {
+      result = await bridge.submit(terms);
+    } catch (error) {
+      setSubmission(IDLE_SUBMISSION);
+      throw error;
+    }
+    if (!result) {
+      setSubmission(IDLE_SUBMISSION);
+      return;
+    }
 
-    setOutcome(result.message || null);
     if (result.state?.found) setSubmitState(result.state);
 
     if (result.result === 'accepted') {
-      setAcceptedMessage(result.message || webUIText('PeaceNegotiation.Accepted'));
-      if (acceptedCloseTimerRef.current !== null) {
-        window.clearTimeout(acceptedCloseTimerRef.current);
-      }
-      acceptedCloseTimerRef.current = window.setTimeout(
-        onClose,
-        UI_MOTION.acceptedNegotiationCloseMs
-      );
+      setSubmission({ phase: 'accepted', message: result.message || webUIText('PeaceNegotiation.Accepted') });
       return;
     }
+
+    setSubmission({ phase: 'idle', outcome: result.message || null });
 
     if (result.result === 'counter_offer' && result.state?.terms) {
       setTerms(result.state.terms.map(draftFromEntry));
@@ -1326,7 +1361,7 @@ function PeaceNegotiationScreenContent({
             durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}
             onChange={updateTerm}
-            onOpenReplacementPicker={(term, live) => setReplacementPicker({ kind: 'change', term, live })}
+            onOpenReplacementPicker={openReplacementPicker}
           />
 
           <TermsColumn
@@ -1341,7 +1376,7 @@ function PeaceNegotiationScreenContent({
             durationOptionsDays={state.durationOptionsDays}
             onRemove={removeTerm}
             onChange={updateTerm}
-            onOpenReplacementPicker={(term, live) => setReplacementPicker({ kind: 'change', term, live })}
+            onOpenReplacementPicker={openReplacementPicker}
           />
         </div>
 
@@ -1436,8 +1471,10 @@ function PeaceNegotiationScreenContent({
           termKey={term => term.termId || termKey(term)}
           onRecipientChange={(recipientFactionId) => {
             const context = { ...settlementPicker, recipientFactionId };
-            setSettlementPicker(context);
+            setPicker(current => current.kind === 'map' ? { ...current, context } : current);
+            const request = ++pickerRequest.current;
             void bridge.startSettlementSelection(terms, context).then(selection => {
+              if (request !== pickerRequest.current) return;
               if (selection) applySettlementSelection(selection);
             });
           }}

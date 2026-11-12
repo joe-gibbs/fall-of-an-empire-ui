@@ -54,7 +54,7 @@ import type {
 } from '../../../bridge-types.generated.ts';
 import { registerSidebar } from '../../../registry/index';
 import { bridgeEvents } from '../../../bridge/core/bridgeEvents';
-import { consumePendingSidebarTab } from '../../../bridge/core/useBridgeSidebarEvents';
+import { useSidebarTabRequest } from '../../../bridge/core/useBridgeSidebarEvents';
 import { warScoreBreakdownTooltip } from '../../screens/diplomacy/warScoreBreakdownTooltip';
 import { useFactionInteractionsBridge } from '../../../bridge/diplomacy/useFactionInteractionsBridge';
 import type { FactionInteractionView } from '../../../bridge/diplomacy/useFactionInteractionsBridge';
@@ -389,6 +389,29 @@ async function refreshAgentTarget(factionId: string, role: AgentRole): Promise<v
 }
 
 /* ------------------------------------------------------------------ */
+/*  Dialog state                                                       */
+/* ------------------------------------------------------------------ */
+
+/** The one dialog the sidebar has open, tied to the faction it was opened for. */
+type DiplomacyDialog =
+  | { kind: 'none' }
+  | { kind: 'confirmInteraction'; factionId: string; response: StartFactionInteractionResponse; selectedPersonId?: string; rebellionKind?: RebellionKind }
+  | { kind: 'heirAssignment'; factionId: string }
+  | { kind: 'previousRulers'; factionId: string }
+  | { kind: 'rebellionChoice'; factionId: string; interactionId: string; interactionName: string }
+  | { kind: 'personSelection'; factionId: string; selection: StartFactionInteractionResponse }
+  | { kind: 'factionInput'; factionId: string; selection: StartFactionInteractionResponse }
+  | { kind: 'spyInput'; factionId: string; selection: StartSpyInteractionResponse };
+
+const NO_DIALOG: DiplomacyDialog = { kind: 'none' };
+
+type DialogOfKind<K extends DiplomacyDialog['kind']> = Extract<DiplomacyDialog, { kind: K }>;
+
+function dialogOfKind<K extends DiplomacyDialog['kind']>(dialog: DiplomacyDialog, kind: K): DialogOfKind<K> | null {
+  return dialog.kind === kind ? dialog as DialogOfKind<K> : null;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -400,23 +423,28 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
   const playerFaction = useFaction(playerFactionId);
   const { isPinned: checkPinned, togglePin } = usePinnedItemsBridge();
   const isPinned = checkPinned('faction', faction.id);
-  const [interactionConfirmation, setInteractionConfirmation] = useState<{ response: StartFactionInteractionResponse; selectedPersonId?: string; rebellionKind?: RebellionKind } | null>(null);
-  const [heirModalOpen, setHeirModalOpen] = useState(false);
-  const [personSelection, setPersonSelection] = useState<StartFactionInteractionResponse | null>(null);
+  const [storedDialog, setDialog] = useState<DiplomacyDialog>(NO_DIALOG);
   const [breakingTreatyId, setBreakingTreatyId] = useState<string | null>(null);
-  const [factionInputSelection, setFactionInputSelection] = useState<StartFactionInteractionResponse | null>(null);
-  const [spyInputSelection, setSpyInputSelection] = useState<StartSpyInteractionResponse | null>(null);
-  const [rebellionChoice, setRebellionChoice] = useState<{ id: string; name: string } | null>(null);
-  const [previousRulersOpen, setPreviousRulersOpen] = useState(false);
+  const dialog = storedDialog.kind !== 'none' && storedDialog.factionId === faction.id ? storedDialog : NO_DIALOG;
+  // A close is bound to the dialog that requested it, so the end of one
+  // dialog's exit animation cannot dismiss the dialog that replaced it.
+  const closeDialog = React.useCallback((target: DiplomacyDialog | null) => {
+    if (!target) return;
+    setDialog(current => (current === target ? NO_DIALOG : current));
+  }, []);
+  const confirmDialog = dialogOfKind(dialog, 'confirmInteraction');
+  const heirDialog = dialogOfKind(dialog, 'heirAssignment');
+  const previousRulersDialog = dialogOfKind(dialog, 'previousRulers');
+  const rebellionChoiceDialog = dialogOfKind(dialog, 'rebellionChoice');
+  const personSelectionDialog = dialogOfKind(dialog, 'personSelection');
+  const factionInputDialog = dialogOfKind(dialog, 'factionInput');
+  const spyInputDialog = dialogOfKind(dialog, 'spyInput');
   const diplomacyNavigation = sidebarNavigation.diplomacy;
   const canNavigateBack = (diplomacyNavigation?.back.length ?? 0) > 0;
   const canNavigateForward = (diplomacyNavigation?.forward.length ?? 0) > 0;
   const statusText = getStatusBadgeText(faction);
   const realmStatusText = faction.overlordName
-    ? webUIText('DiplomacySidebar.SubjectRealm', {
-      SubjectType: faction.subjectType || webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.121.12'),
-      Faction: faction.overlordName,
-    })
+    ? faction.subjectType || webUIText('Auto.Prop.ComponentsSidebarsDiplomacySidebar.121.12')
     : null;
   const isProvinceSubject = faction.subjectSubtype === 'province';
   const isPlayerFoederati = !faction.isPlayer && faction.diplomaticStatus === 'subject' && faction.subjectSubtype === 'foederati';
@@ -555,37 +583,23 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
   const startInteraction = React.useCallback((interactionId: string, selectedPersonId?: string, rebellionKind?: RebellionKind, confirm = false) => {
     if (interactionId === 'declarerebellioninteraction' && !rebellionKind) {
       const interaction = factionInteractionsState?.interactions.find(entry => entry.id === interactionId);
-      setRebellionChoice({ id: interactionId, name: interaction?.name ?? '' });
+      setDialog({ kind: 'rebellionChoice', factionId: faction.id, interactionId, interactionName: interaction?.name ?? '' });
       return;
     }
 
     void startFactionInteraction(interactionId, selectedPersonId, undefined, rebellionKind, confirm).then((response) => {
       if (response?.confirmationRequired) {
-        setInteractionConfirmation({ response, selectedPersonId, rebellionKind });
-        return;
-      }
-      if (response?.rebellionChoiceRequired) {
+        setDialog({ kind: 'confirmInteraction', factionId: response.targetFactionId, response, selectedPersonId, rebellionKind });
+      } else if (response?.rebellionChoiceRequired) {
         const interaction = factionInteractionsState?.interactions.find(entry => entry.id === interactionId);
-        setRebellionChoice({ id: interactionId, name: interaction?.name || response.interactionName });
-        return;
-      }
-      if (response?.personSelectionRequired) {
-        setPersonSelection(response);
-        setFactionInputSelection(null);
-        setSpyInputSelection(null);
-        setRebellionChoice(null);
+        setDialog({ kind: 'rebellionChoice', factionId: faction.id, interactionId, interactionName: interaction?.name || response.interactionName });
+      } else if (response?.personSelectionRequired) {
+        setDialog({ kind: 'personSelection', factionId: faction.id, selection: response });
       } else if (response?.inputSelectionRequired) {
-        setFactionInputSelection(response);
-        setPersonSelection(null);
-        setSpyInputSelection(null);
-        setRebellionChoice(null);
-      } else {
-        setPersonSelection(null);
-        setFactionInputSelection(null);
-        setRebellionChoice(null);
+        setDialog({ kind: 'factionInput', factionId: faction.id, selection: response });
       }
     });
-  }, [factionInteractionsState?.interactions, startFactionInteraction]);
+  }, [faction.id, factionInteractionsState?.interactions, startFactionInteraction]);
 
   const confirmFactionInputs = React.useCallback(async (
     interactionId: string,
@@ -593,29 +607,23 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
   ) => {
     const response = await startFactionInteraction(interactionId, '', inputs);
     if (response?.inputSelectionRequired) {
-      setFactionInputSelection(response);
+      setDialog({ kind: 'factionInput', factionId: faction.id, selection: response });
       return response.message || null;
     }
     if (response?.personSelectionRequired) {
-      setPersonSelection(response);
-      setFactionInputSelection(null);
+      setDialog({ kind: 'personSelection', factionId: faction.id, selection: response });
       return null;
     }
-    setFactionInputSelection(null);
     return response?.started || response?.selectionStarted ? null : response?.message ?? null;
-  }, [startFactionInteraction]);
+  }, [faction.id, startFactionInteraction]);
 
   const startSpy = React.useCallback((interactionId: string) => {
     void startSpyInteraction(interactionId).then((response) => {
       if (response?.inputSelectionRequired) {
-        setSpyInputSelection(response);
-        setFactionInputSelection(null);
-        setPersonSelection(null);
-      } else {
-        setSpyInputSelection(null);
+        setDialog({ kind: 'spyInput', factionId: faction.id, selection: response });
       }
     });
-  }, [startSpyInteraction]);
+  }, [faction.id, startSpyInteraction]);
 
   const confirmSpyInputs = React.useCallback(async (
     interactionId: string,
@@ -623,19 +631,17 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
   ) => {
     const response = await startSpyInteraction(interactionId, inputs);
     if (response?.inputSelectionRequired) {
-      setSpyInputSelection(response);
+      setDialog({ kind: 'spyInput', factionId: faction.id, selection: response });
       return response.message || null;
     }
-    setSpyInputSelection(null);
     return response?.started ? null : response?.message ?? null;
-  }, [startSpyInteraction]);
+  }, [faction.id, startSpyInteraction]);
 
   const closeSidebar = React.useCallback(() => {
     if (factionInteractionSelection) {
       void cancelFactionInteractionSelection();
     }
-    setFactionInputSelection(null);
-    setSpyInputSelection(null);
+    setDialog(NO_DIALOG);
     onClose();
   }, [cancelFactionInteractionSelection, factionInteractionSelection, onClose]);
 
@@ -730,7 +736,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
 
       {/* Faction header with event image + colour-tinted scrim */}
       <div className="diplo-header">
-        <img src="/assets/events/diplomatic-envoy.png" alt="" className="diplo-header-bg" />
+        <img src={WebkilnAssetPath("/assets/events/diplomatic-envoy.png")} alt="" className="diplo-header-bg" />
         <div className="diplo-header-scrim" style={{ '--faction-tint': faction.colour } as React.CSSProperties} />
         <div className="diplo-header-content">
           <FactionTooltip
@@ -1215,7 +1221,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                 variant="outline"
                 icon="/assets/icons/I_Ledger.png"
                 className="diplo-view-characters-button"
-                onClick={() => setPreviousRulersOpen(true)}
+                onClick={() => setDialog({ kind: 'previousRulers', factionId: faction.id })}
               >
                 <WebUIText textKey="DiplomacySidebar.PreviousRulers" />
               </GameButton>
@@ -1296,7 +1302,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        setHeirModalOpen(true);
+                        setDialog({ kind: 'heirAssignment', factionId: faction.id });
                       }}
                     >
                       {webUIText('Common.Assign')}
@@ -1838,34 +1844,37 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
       </StyledScrollArea>
     </div>
     <PreviousRulersModal
-      open={previousRulersOpen}
+      open={previousRulersDialog !== null}
       factionId={faction.id}
       factionName={faction.name}
-      onClose={() => setPreviousRulersOpen(false)}
+      onClose={() => closeDialog(previousRulersDialog)}
       onOpenCharacter={(id) => openSidebar('character', id)}
     />
     <ConfirmDialog
-      visible={interactionConfirmation?.response.targetFactionId === faction.id}
-      title={interactionConfirmation?.response.interactionName ?? ''}
-      message={interactionConfirmation?.response.confirmationMessage ?? ''}
+      visible={confirmDialog !== null}
+      title={confirmDialog?.response.interactionName ?? ''}
+      message={confirmDialog && <>
+        {renderRichText(confirmDialog.response.confirmationMessage)}
+        <InteractionEffectsTooltip lines={confirmDialog.response.confirmationEffectLines} compact />
+      </>}
       variant="danger"
       onConfirm={() => {
-        if (interactionConfirmation?.response.targetFactionId !== faction.id) return;
-        startInteraction(interactionConfirmation.response.interactionId, interactionConfirmation.selectedPersonId, interactionConfirmation.rebellionKind, true);
+        if (!confirmDialog) return;
+        startInteraction(confirmDialog.response.interactionId, confirmDialog.selectedPersonId, confirmDialog.rebellionKind, true);
       }}
-      onClosed={() => setInteractionConfirmation(null)}
+      onClosed={() => closeDialog(confirmDialog)}
     />
     <HeirAssignmentModal
-      open={heirModalOpen}
+      open={heirDialog !== null}
       factionId={faction.id}
       currentHeirId={faction.effectiveHeir?.id}
       currentDesignatedHeirId={faction.designatedHeir?.id}
-      onClose={() => setHeirModalOpen(false)}
+      onClose={() => closeDialog(heirDialog)}
       onOpenCharacter={(id) => openSidebar('character', id)}
     />
     <RebellionChoiceModal
-      open={Boolean(rebellionChoice)}
-      interactionName={rebellionChoice?.name ?? ''}
+      open={rebellionChoiceDialog !== null}
+      interactionName={rebellionChoiceDialog?.interactionName ?? ''}
       targetFaction={{
         id: faction.id,
         name: faction.name,
@@ -1874,22 +1883,22 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
         cultureGroup: faction.cultureGroup,
         emblem: faction.emblem,
       }}
-      onClose={() => setRebellionChoice(null)}
+      onClose={() => closeDialog(rebellionChoiceDialog)}
       onChoose={(kind) => {
-        const interactionId = rebellionChoice?.id ?? 'declarerebellioninteraction';
-        setRebellionChoice(null);
-        startInteraction(interactionId, undefined, kind);
+        if (!rebellionChoiceDialog) return;
+        closeDialog(rebellionChoiceDialog);
+        startInteraction(rebellionChoiceDialog.interactionId, undefined, kind);
       }}
     />
     <FactionInteractionPersonSelectionModal
-      open={Boolean(personSelection)}
-      selection={personSelection}
-      onClose={() => setPersonSelection(null)}
+      open={personSelectionDialog !== null}
+      selection={personSelectionDialog?.selection ?? null}
+      onClose={() => closeDialog(personSelectionDialog)}
       onSelect={(interactionId, personId) => startInteraction(interactionId, personId)}
       onOpenCharacter={(id) => openSidebar('character', id)}
     />
     <FactionInteractionInputModal
-      selection={factionInputSelection}
+      selection={factionInputDialog?.selection ?? null}
       targetFaction={{
         id: faction.id,
         name: faction.name,
@@ -1898,11 +1907,11 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
         cultureGroup: faction.cultureGroup,
         emblem: faction.emblem,
       }}
-      onClose={() => setFactionInputSelection(null)}
+      onClose={() => closeDialog(factionInputDialog)}
       onConfirm={confirmFactionInputs}
     />
     <FactionInteractionInputModal
-      selection={spyInputSelection}
+      selection={spyInputDialog?.selection ?? null}
       targetFaction={{
         id: faction.id,
         name: faction.name,
@@ -1911,7 +1920,7 @@ const DiplomacySidebar: React.FC<DiplomacySidebarProps> = ({ faction, onClose, a
         cultureGroup: faction.cultureGroup,
         emblem: faction.emblem,
       }}
-      onClose={() => setSpyInputSelection(null)}
+      onClose={() => closeDialog(spyInputDialog)}
       onConfirm={confirmSpyInputs}
     />
     </>
@@ -1924,22 +1933,10 @@ function DiplomacySidebarSlot({ sidebarId, onClose }: { sidebarId: string | null
   const faction = useFaction(sidebarId);
   const [activeTab, setActiveTab] = React.useState<DiplomacySidebarTab>('info');
 
-  React.useEffect(() => {
-    if (!sidebarId) return;
-
-    const pendingTab = diplomacyTabFromIndex(consumePendingSidebarTab('diplomacy', sidebarId));
-    if (pendingTab) setActiveTab(pendingTab);
-
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent).detail as { type?: string; id?: string; tabIndex?: number } | undefined;
-      if (!detail || detail.type !== 'diplomacy' || detail.id !== sidebarId) return;
-      const tab = diplomacyTabFromIndex(detail.tabIndex);
-      if (tab) setActiveTab(tab);
-    };
-
-    bridgeEvents.addEventListener('ui.sidebar_tab_event', handler);
-    return () => bridgeEvents.removeEventListener('ui.sidebar_tab_event', handler);
-  }, [sidebarId]);
+  useSidebarTabRequest('diplomacy', sidebarId, tabIndex => {
+    const tab = diplomacyTabFromIndex(tabIndex);
+    if (tab) setActiveTab(tab);
+  });
 
   if (!faction) return null;
   return (

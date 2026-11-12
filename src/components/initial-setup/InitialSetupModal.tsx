@@ -52,22 +52,37 @@ function recommendModel(
   });
 }
 
-const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
-  const [settings, setSettings] = useState<GetSettingsResponse | null>(null);
-  const [workingGameplay, setWorkingGameplay] = useState<SettingsGameplayDTO | null>(null);
-  const [completed, setCompleted] = useState<boolean | null>(null);
-  const [visible, setVisible] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [saveError, setSaveError] = useState(false);
+// The dialog opens only once the settings it edits have arrived.
+interface SetupSession {
+  completed: boolean;
+  settings: GetSettingsResponse;
+  workingGameplay: SettingsGameplayDTO;
+  saving: boolean;
+  saveError: boolean;
+}
 
-  const refreshSettings = useCallback(async () => {
-    const response = await bridgeCall('game.get_settings');
-    setSettings(response);
-    setWorkingGameplay({
-      ...response.gameplay,
-      mutedNotificationTypes: [...response.gameplay.mutedNotificationTypes],
-    });
-  }, []);
+type SetupState =
+  | { phase: 'closed'; last: SetupSession | null }
+  | { phase: 'open'; session: SetupSession };
+
+function openSession(completed: boolean, settings: GetSettingsResponse): SetupState {
+  return {
+    phase: 'open',
+    session: {
+      completed,
+      settings,
+      workingGameplay: {
+        ...settings.gameplay,
+        mutedNotificationTypes: [...settings.gameplay.mutedNotificationTypes],
+      },
+      saving: false,
+      saveError: false,
+    },
+  };
+}
+
+const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
+  const [state, setState] = useState<SetupState>({ phase: 'closed', last: null });
 
   useEffect(() => {
     let cancelled = false;
@@ -76,13 +91,7 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
       bridgeCall('game.get_settings'),
     ]).then(([setup, settingsResponse]) => {
       if (cancelled) return;
-      setCompleted(setup.completed);
-      setSettings(settingsResponse);
-      setWorkingGameplay({
-        ...settingsResponse.gameplay,
-        mutedNotificationTypes: [...settingsResponse.gameplay.mutedNotificationTypes],
-      });
-      if (autoOpen && !setup.completed) setVisible(true);
+      if (autoOpen && !setup.completed) setState(openSession(setup.completed, settingsResponse));
     }).catch(acknowledgeBridgeFailure);
 
     return () => {
@@ -92,20 +101,20 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
 
   useEffect(() => onBridgeEvent('game.get_initial_setup', (event) => {
     if (!event.forceOpen && event.completed) return;
-    setCompleted(event.completed);
-    setSaveError(false);
-    setVisible(true);
-    void refreshSettings().catch(acknowledgeBridgeFailure);
-  }), [refreshSettings]);
+    void bridgeCall('game.get_settings')
+      .then(settingsResponse => setState(openSession(event.completed, settingsResponse)))
+      .catch(acknowledgeBridgeFailure);
+  }), []);
 
-  const presence = useAnimatedPresence(visible, { durationMs: UI_MOTION.panelCloseMs });
-  const canClose = completed === true && !busy;
+  const session = state.phase === 'open' ? state.session : state.last;
+  const presence = useAnimatedPresence(state.phase === 'open', { durationMs: UI_MOTION.panelCloseMs });
+  const busy = session?.saving ?? false;
+  const canClose = state.phase === 'open' && state.session.completed && !state.session.saving;
   const close = useCallback(() => {
-    if (!canClose) return;
-    if (settings) applyGameplayCssVariables(settings.gameplay);
-    setVisible(false);
-    setSaveError(false);
-  }, [canClose, settings]);
+    if (state.phase !== 'open' || !canClose) return;
+    applyGameplayCssVariables(state.session.settings.gameplay);
+    setState({ phase: 'closed', last: state.session });
+  }, [canClose, state]);
 
   useEscapeStackEntry({
     id: 'modal.initial-setup',
@@ -115,7 +124,9 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
   });
 
   const setGameplay = (patch: Partial<SettingsGameplayDTO>) => {
-    setWorkingGameplay(current => current ? { ...current, ...patch } : current);
+    setState(current => (current.phase === 'open'
+      ? { phase: 'open', session: { ...current.session, workingGameplay: { ...current.session.workingGameplay, ...patch } } }
+      : current));
   };
 
   const setUIScale = (value: number) => {
@@ -125,9 +136,10 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
   };
 
   const save = async (playTutorial: boolean) => {
-    if (!settings || !workingGameplay || busy) return;
-    setBusy(true);
-    setSaveError(false);
+    if (state.phase !== 'open' || state.session.saving) return;
+    const { settings, workingGameplay } = state.session;
+    const savingSession: SetupSession = { ...state.session, saving: true, saveError: false };
+    setState({ phase: 'open', session: savingSession });
 
     const request: ApplySettingsRequest = {
       video: { ...settings.video },
@@ -143,22 +155,26 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
       await bridgeCall('game.apply_settings', request);
       applyGameplayCssVariables(workingGameplay);
       await bridgeCall('game.complete_initial_setup');
-      setCompleted(true);
-      setVisible(false);
+      const completedSession: SetupSession = { ...savingSession, completed: true, saving: false };
+      setState({ phase: 'closed', last: completedSession });
 
       if (playTutorial) {
-      await bridgeCall('game.start_scenario_map', { mapId: 'Tutorial', playerFactionBaseName: '', startDateId: '' });
+        try {
+          await bridgeCall('game.start_scenario_map', { mapId: 'Tutorial', playerFactionBaseName: '', startDateId: '' });
+        } catch (error) {
+          acknowledgeBridgeFailure(error);
+          setState({ phase: 'open', session: { ...completedSession, saveError: true } });
+        }
       }
     } catch (error) {
       acknowledgeBridgeFailure(error);
-      setVisible(true);
-      setSaveError(true);
-    } finally {
-      setBusy(false);
+      setState({ phase: 'open', session: { ...savingSession, saving: false, saveError: true } });
     }
   };
 
-  if (!presence.mounted || !settings || !workingGameplay) return null;
+  if (!presence.mounted || !session) return null;
+
+  const { settings, workingGameplay, saveError } = session;
 
   const recommendedModelFilename = recommendModel(settings.availableLlmModels, settings.hardware);
 
@@ -181,6 +197,7 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
 
         <div className="initial-setup__body">
           <section className="initial-setup__models">
+            <h2 className="initial-setup__section-title"><WebUIText textKey="Auto.Attr.ComponentsSettingsSettingsPanel.479.4" /></h2>
             <EventModelSelection
               llmProvider={workingGameplay.llmProvider}
               localLlmModel={workingGameplay.localLlmModel}
@@ -189,6 +206,7 @@ const InitialSetupModal: React.FC<InitialSetupModalProps> = ({ autoOpen }) => {
               hardware={settings.hardware}
               setGameplay={setGameplay}
               showEventFrequency={false}
+              showHeading={false}
               recommendedModelFilename={recommendedModelFilename}
             />
           </section>

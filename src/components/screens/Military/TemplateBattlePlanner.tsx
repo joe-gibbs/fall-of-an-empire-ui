@@ -49,11 +49,8 @@ function RoleAddButton({
         type="button"
         className={`chart-template-battle-add chart-template-battle-add--labelled chart-template-battle-add--${role}`}
         data-tutorial-target={tutorialTarget}
-        // Tutorial spotlights resolve on mousedown and may cover the control before click.
-        // Open the catalogue in the same phase so the unit picker is up for the next step.
-        onMouseDown={(event) => {
-          if (event.button !== 0 || !editable) return;
-          event.preventDefault();
+        onClick={() => {
+          if (!editable) return;
           onAdd(role);
         }}
         disabled={!editable}
@@ -247,9 +244,8 @@ export function TemplateBattlePlanner({
               <button
                 type="button"
                 className="chart-template-battle-pick-unit"
-                onMouseDown={(event) => {
-                  if (event.button !== 0 || !editable || groupCount >= maximumBattleGroupUnits) return;
-                  event.preventDefault();
+                onClick={() => {
+                  if (!editable || groupCount >= maximumBattleGroupUnits) return;
                   onOpenUnitCatalogue(group.id);
                 }}
                 disabled={!editable || groupCount >= maximumBattleGroupUnits}

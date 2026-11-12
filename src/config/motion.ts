@@ -19,4 +19,6 @@ export const UI_MOTION = {
   settlementNotificationStaggerMs: 50,
   // Delay that leaves an accepted negotiation visible before it closes.
   acceptedNegotiationCloseMs: 1150,
+  // Close animation for an accepted treaty negotiation (treaty-negotiation-close).
+  treatyNegotiationCloseMs: 240,
 } as const;

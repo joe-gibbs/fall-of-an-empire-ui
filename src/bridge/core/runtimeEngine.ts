@@ -1,5 +1,6 @@
 import { recordUIPerfBridgeCall } from '../../perf/uiPerfProfiler';
 import { webUIText } from '../../localization/WebUITextContext';
+import { nextBridgeCacheRevision } from './bridgeEventCache';
 
 export interface runtimeEngine {
   call: (name: string, ...args: unknown[]) => unknown | Promise<unknown>;
@@ -80,9 +81,44 @@ function isTransientGameplayReadinessError(error: unknown): boolean {
   return message === 'No game state' || message === 'No player faction';
 }
 
+// Requests rejected because gameplay is not ready yet are re-sent when the game
+// signals readiness: entering gameplay, the player faction being published, or the
+// game state being published. The generation catches a signal that lands between
+// the request leaving and its rejection arriving.
+let gameplayReadinessGeneration = 0;
+let gameplayReadinessWaiters: (() => void)[] = [];
 
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => window.setTimeout(resolve, ms));
+function isGameplayReadinessSignal(eventName: string, data: unknown): boolean {
+  if (eventName === 'game.get_player_faction' || eventName === 'game.get_game_state') return true;
+  return eventName === 'game.get_app_mode' && (data as { mode?: unknown } | null)?.mode === 'ingame';
+}
+
+/** Called for every bridge event so readiness-blocked requests can be re-sent. */
+export function noteGameplayReadinessEvent(eventName: string, data: unknown): void {
+  if (!isGameplayReadinessSignal(eventName, data)) return;
+  gameplayReadinessGeneration += 1;
+  const waiters = gameplayReadinessWaiters;
+  gameplayReadinessWaiters = [];
+  waiters.forEach(resolve => resolve());
+}
+
+function waitForGameplayReadiness(sentGeneration: number): Promise<void> {
+  if (gameplayReadinessGeneration !== sentGeneration) return Promise.resolve();
+  return new Promise(resolve => gameplayReadinessWaiters.push(resolve));
+}
+
+// Each response object remembers the revision taken when its request was sent, so a
+// response re-published to subscribers is ordered by send time and newer pushes win.
+const bridgeResponseRevisions = new WeakMap<object, number>();
+
+export function bridgeResponseRevision(response: unknown): number | undefined {
+  const responseObject = bridgeErrorObject(response);
+  return responseObject === null ? undefined : bridgeResponseRevisions.get(responseObject);
+}
+
+export interface RevisionedBridgeResult {
+  value: unknown;
+  sentRevision: number;
 }
 
 function bridgeErrorObject(error: unknown): object | null {
@@ -200,7 +236,12 @@ function bridgePayloadSummary(payload: unknown): string {
 }
 
 
-export async function callRuntimeBridge(request: Record<string, unknown>, transientRetry = 0): Promise<unknown> {
+export async function callRuntimeBridge(request: Record<string, unknown>): Promise<unknown> {
+  return (await callRuntimeBridgeRevisioned(request)).value;
+}
+
+/** Calls the bridge and reports the revision taken when the answered request was sent. */
+export async function callRuntimeBridgeRevisioned(request: Record<string, unknown>): Promise<RevisionedBridgeResult> {
   const startedAtMs = Date.now();
   const action = bridgeActionName(request);
   const payloadSummary = bridgePayloadSummary(request.payload);
@@ -210,20 +251,26 @@ export async function callRuntimeBridge(request: Record<string, unknown>, transi
     perfRecorded = true;
     recordUIPerfBridgeCall(action, startedAtMs, Date.now(), payloadSummary ? `${detail} ${payloadSummary}` : detail);
   };
-  try {
-    const engine = await waitForruntimeEngine();
-    const result = await engine.callBridge(request);
-    recordBridgePerf('ok');
-    return result;
-  } catch (error) {
-    if (isTransientGameplayReadinessError(error) && transientRetry < 120) {
-      recordBridgePerf('retry gameplay readiness');
-      await delay(250);
-      return callRuntimeBridge(request, transientRetry + 1);
-    }
+  for (;;) {
+    const sentGeneration = gameplayReadinessGeneration;
+    try {
+      const engine = await waitForruntimeEngine();
+      const sentRevision = nextBridgeCacheRevision();
+      const value = await engine.callBridge(request);
+      recordBridgePerf('ok');
+      const valueObject = bridgeErrorObject(value);
+      if (valueObject !== null) bridgeResponseRevisions.set(valueObject, sentRevision);
+      return { value, sentRevision };
+    } catch (error) {
+      if (isTransientGameplayReadinessError(error)) {
+        recordBridgePerf('retry gameplay readiness');
+        await waitForGameplayReadiness(sentGeneration);
+        continue;
+      }
 
-    recordBridgePerf('failed');
-    reportBridgeFailure(request, error);
-    throw error;
+      recordBridgePerf('failed');
+      reportBridgeFailure(request, error);
+      throw error;
+    }
   }
 }

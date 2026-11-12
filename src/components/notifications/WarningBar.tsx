@@ -42,6 +42,7 @@ const iconKeyToAsset: Record<string, string> = {
   capitaloccupied: '/assets/icons/I_RaidingTorch.png',
   powerblocdemand: '/assets/icons/I_Compliance.png',
   governormissiondeadline: GOVERNOR_MISSION_ICON,
+  provincerecall: '/assets/icons/RecallStatus/I_RecallStatus_Warning.png',
   armyattrition: '/assets/icons/Terrain/I_Attrition.png',
   armydamaged: '/assets/icons/I_War.png',
   damagedbuildings: '/assets/icons/I_ModConstruction.png',
@@ -147,11 +148,61 @@ function warningTooltip(warning: Warning, currentTargetIndex: number): TooltipCo
   };
 }
 
+// Matches warning-icon-out in WarningBar.css, with headroom so the animation finishes first.
+const WARNING_EXIT_FALLBACK_MS = 400;
+
 const WarningBar: React.FC<WarningBarProps> = ({ warnings, onDismiss, hidden }) => {
+  // Ids the player has dismissed whose exit animation is still running.
   const [exiting, setExiting] = useState<Set<string>>(new Set());
   const [cycleIndexByWarning, setCycleIndexByWarning] = useState<Record<string, number>>({});
   const [controllerOpen, setControllerOpen] = useState(false);
   const stripRef = useRef<HTMLDivElement>(null);
+  const exitTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  // Per-warning UI state ends when the game removes the warning, so a warning of the
+  // same type raised later starts fresh rather than mid-exit.
+  const [previousWarnings, setPreviousWarnings] = useState(warnings);
+  if (warnings !== previousWarnings) {
+    setPreviousWarnings(warnings);
+    const liveIds = new Set(warnings.map(w => w.id));
+    if (![...exiting].every(id => liveIds.has(id))) {
+      setExiting(new Set([...exiting].filter(id => liveIds.has(id))));
+    }
+    if (!Object.keys(cycleIndexByWarning).every(id => liveIds.has(id))) {
+      setCycleIndexByWarning(Object.fromEntries(Object.entries(cycleIndexByWarning).filter(([id]) => liveIds.has(id))));
+    }
+  }
+
+  useEffect(() => {
+    const liveIds = new Set(warnings.map(w => w.id));
+    for (const [id, timer] of exitTimersRef.current) {
+      if (!liveIds.has(id)) {
+        clearTimeout(timer);
+        exitTimersRef.current.delete(id);
+      }
+    }
+  }, [warnings]);
+
+  useEffect(() => {
+    const timers = exitTimersRef.current;
+    return () => {
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
+    };
+  }, []);
+
+  const finishDismiss = useCallback((id: string) => {
+    const timer = exitTimersRef.current.get(id);
+    if (timer === undefined) return;
+    clearTimeout(timer);
+    exitTimersRef.current.delete(id);
+    setExiting(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    onDismiss(id);
+  }, [onDismiss]);
 
   const closeControllerWarnings = useCallback(() => {
     const focused = document.activeElement;
@@ -195,20 +246,15 @@ const WarningBar: React.FC<WarningBarProps> = ({ warnings, onDismiss, hidden }) 
 
   const handleDismiss = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (exitTimersRef.current.has(id)) return;
     playSound('close');
     setExiting(prev => new Set(prev).add(id));
-  }, []);
+    exitTimersRef.current.set(id, setTimeout(() => finishDismiss(id), WARNING_EXIT_FALLBACK_MS));
+  }, [finishDismiss]);
 
   const handleAnimationEnd = useCallback((id: string, e: React.AnimationEvent) => {
-    if (e.animationName === 'warning-icon-out') {
-      setExiting(prev => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      onDismiss(id);
-    }
-  }, [onDismiss]);
+    if (e.animationName === 'warning-icon-out') finishDismiss(id);
+  }, [finishDismiss]);
 
   if (warnings.length === 0) return null;
 

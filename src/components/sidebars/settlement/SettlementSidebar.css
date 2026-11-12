@@ -32,6 +32,7 @@
   left: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .settle-header-name-row {
@@ -251,9 +252,8 @@
 }
 
 .settlement-sidebar--unraised {
-  height: auto;
-  max-height: 100%;
-  bottom: auto;
+  display: flex;
+  flex-direction: column;
   overflow: auto;
   background-image:
     url('/assets/baked/texture-overlay-heavy.png'),
@@ -266,7 +266,7 @@
   display: flex;
   align-items: flex-end;
   position: relative;
-  min-height: 10rem;
+  min-height: 15rem;
   padding: 1rem 0.9rem;
   background-image: url('/assets/baked/panel-charcoal.png');
   background-repeat: no-repeat;
@@ -335,8 +335,6 @@
 .settle-raise-cost > span { display: flex; align-items: center; gap: 0.4rem; }
 .settle-raise-cost img { width: 1.15rem; height: 1.15rem; object-fit: contain; }
 .settle-raise-button .btn-content { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
-.settle-raise-blocked-reason { margin: 0.4rem 0 0; color: var(--text-muted); }
-
 .settle-fort-status { margin-bottom: 1rem; text-align: center; color: var(--gold-light); }
 .settle-fort-status img { width: 3rem; height: 3rem; object-fit: contain; }
 .settle-fort-status p { margin: 0.4rem 0 0.8rem; }
@@ -569,6 +567,76 @@
   padding: 0.1rem 0.462rem 0.15rem;
   display: flex;
   flex-direction: column;
+}
+
+/* --- Governor focus --- */
+.settle-focus-list {
+  padding: 0.1rem 0.462rem 0.15rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.settle-focus-list > * + * {
+  margin-top: 0.2rem;
+}
+
+.settle-focus-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.settle-focus-row {
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.45rem;
+  border-width: 0.077rem;
+  border-style: solid;
+  border-color: rgba(154, 139, 111, 0.22);
+  background-image: url('/assets/chart-noise.png'), url('/assets/baked/panel-charcoal.png');
+  background-size: 5.8182rem 5.8182rem, 93.0909rem 93.0909rem;
+  background-color: rgba(8, 12, 17, 0.3);
+}
+
+.settle-focus-icon {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+}
+
+.settle-focus-copy {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  margin-left: 0.45rem;
+}
+
+.settle-focus-name {
+  color: var(--text-bright);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.settle-focus-effect {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.settle-focus-status {
+  color: var(--gold);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.settle-focus-button {
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-left: 0.45rem;
 }
 
 /* --- Garrison --- */

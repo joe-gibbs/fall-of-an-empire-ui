@@ -552,7 +552,7 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
     }
   }, [activeBattleId, selectedCommandable]);
 
-  const surrenderBattle = useCallback(async () => {
+  const retreatFromBattle = useCallback(async () => {
     if (!activeBattleId || retreatablePlayerParticipants.length === 0) {
       return;
     }
@@ -571,14 +571,14 @@ export default function BattleScreen({ battleId, onClose }: BattleScreenProps) {
         </div>
         <div className="battle-title-actions">
           {retreatablePlayerParticipants.length > 0 && (
-            <Tooltip content={{ title: webUIText('Battle.SurrenderTitle'), body: webUIText('Battle.SurrenderBody') }} position="bottom">
+            <Tooltip content={{ title: webUIText('Battle.RetreatTitle'), body: webUIText('Battle.RetreatBody') }} position="bottom">
               <GameButton
                 variant="burgundy"
                 icon="/assets/icons/I_Retreat.png"
-                className="battle-surrender"
-                onClick={() => void surrenderBattle()}
+                className="battle-retreat"
+                onClick={() => void retreatFromBattle()}
               >
-                <WebUIText textKey="Battle.Surrender" />
+                <WebUIText textKey="Battle.Retreat" />
               </GameButton>
             </Tooltip>
           )}

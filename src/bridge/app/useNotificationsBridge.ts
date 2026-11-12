@@ -313,9 +313,56 @@ export function useNotificationsAndWarningsBridge(handlers: BridgeHandlers) {
     bridgeCall('game.notification_events', { command: 'bind', id: '' }).catch(acknowledgeBridgeFailure);
     bridgeCall('game.diplomatic_notification_events', { command: 'bind', id: '', accepted: false }).catch(acknowledgeBridgeFailure);
     bridgeCall('game.warning_events', { command: 'bind', key: '', targetIndex: 0 }).catch(acknowledgeBridgeFailure);
+
+    // Warning pushes that arrive while the snapshot is in flight are newer than it.
+    // Replay them over the snapshot so it cannot undo them.
+    const pushesDuringFetch: (() => void)[] = [];
+    let fetching = true;
+    const recordAdded = (e: Event) => {
+      const data = (e as CustomEvent<WarningEvent>).detail;
+      if (data) pushesDuringFetch.push(() => handlers.onWarningAdded(mapWarning(data)));
+    };
+    const recordUpdated = (e: Event) => {
+      const data = (e as CustomEvent<WarningEvent>).detail;
+      if (data) pushesDuringFetch.push(() => handlers.onWarningUpdated(mapWarning(data)));
+    };
+    const recordRemoved = (e: Event) => {
+      const data = (e as CustomEvent<WarningRemoved>).detail;
+      if (data) pushesDuringFetch.push(() => handlers.onWarningRemoved(data.id));
+    };
+    const recordCleared = () => {
+      pushesDuringFetch.push(() => handlers.onWarningsCleared());
+    };
+    const stopRecording = () => {
+      if (!fetching) return;
+      fetching = false;
+      bridgeEvents.removeEventListener('game.warning_added', recordAdded);
+      bridgeEvents.removeEventListener('game.warning_updated', recordUpdated);
+      bridgeEvents.removeEventListener('game.warning_removed', recordRemoved);
+      bridgeEvents.removeEventListener('game.warnings_cleared', recordCleared);
+    };
+    bridgeEvents.addEventListener('game.warning_added', recordAdded);
+    bridgeEvents.addEventListener('game.warning_updated', recordUpdated);
+    bridgeEvents.addEventListener('game.warning_removed', recordRemoved);
+    bridgeEvents.addEventListener('game.warnings_cleared', recordCleared);
+
+    let cancelled = false;
     bridgeCall('game.get_warnings')
-      .then(res => handlers.onInitialWarnings(res.warnings.map(mapWarning)))
-      .catch(acknowledgeBridgeFailure);
+      .then(res => {
+        if (cancelled) return;
+        stopRecording();
+        handlers.onInitialWarnings(res.warnings.map(mapWarning));
+        pushesDuringFetch.forEach(replay => replay());
+      })
+      .catch(error => {
+        stopRecording();
+        acknowledgeBridgeFailure(error);
+      });
+
+    return () => {
+      cancelled = true;
+      stopRecording();
+    };
   }, [handlers]);
 }
 

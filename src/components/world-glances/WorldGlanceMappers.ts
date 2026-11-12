@@ -106,10 +106,7 @@ export function mapSettlement(entry: GetWorldGlancesResponse['settlements'][numb
       colour: entry.activeAction.colour,
       icon: entry.activeAction.icon,
     } : undefined,
-    queuedConstruction: entry.queuedConstruction,
-    queuedConstructionCount: entry.queuedConstructionCount,
-    queuedRecruitment: entry.queuedRecruitment,
-    queuedRecruitmentCount: entry.queuedRecruitmentCount,
+    queuedJobCount: entry.queuedJobCount,
     warWithPlayer: entry.warWithPlayer ?? false,
   };
 }

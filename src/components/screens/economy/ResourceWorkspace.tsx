@@ -278,6 +278,19 @@ function overviewFlowTooltip(
   };
 }
 
+function priceLabel(resource: EconomyOverviewResourceRow, t: WebUITextFormatter): string {
+  const vsNormal = resource.priceVsNormalPercent;
+  const base = vsNormal > 0
+    ? t('Economy.PriceAboveNormal', { Percent: formatNumber(vsNormal) })
+    : vsNormal < 0
+      ? t('Economy.PriceBelowNormal', { Percent: formatNumber(-vsNormal) })
+      : t('Economy.PriceNormal');
+  const change = resource.priceChangeThisMonthPercent;
+  if (change > 0) return t('Economy.PriceWithRise', { Price: base, Percent: formatNumber(change) });
+  if (change < 0) return t('Economy.PriceWithFall', { Price: base, Percent: formatNumber(-change) });
+  return base;
+}
+
 function ResourceCard({
   resource,
   selected,
@@ -307,6 +320,9 @@ function ResourceCard({
         </b>
       </span>
       <span className="erw-resource-card__coverage">{coverageLabel(resource, t)}</span>
+      <span className={`erw-resource-card__price${resource.priceVsNormalPercent > 0 ? ' erw-negative' : resource.priceVsNormalPercent < 0 ? ' erw-positive' : ''}`}>
+        {priceLabel(resource, t)}
+      </span>
       {resource.missingProductionInputs.length > 0 && (
         <span className="erw-resource-card__shortage">{t('Economy.ShortOfInputs', { Inputs: resource.missingProductionInputs.join(', ') })}</span>
       )}
@@ -666,25 +682,14 @@ function ResourceManagement({
         {t('Economy.Manage')}
         <small>{t('Economy.CapitalStoredAmount', { Amount: fmt(resource.capitalAmount) })}</small>
       </h3>
+      <ul className="erw-manage__price-reasons">
+        {resource.priceReasons.map(reason => <li key={reason}>{reason}</li>)}
+      </ul>
       <div
         className="erw-manage__trade"
         onPointerEnter={noteModifierKeysFromEvent}
         onPointerMove={noteModifierKeysFromEvent}
       >
-        <Tooltip content={{ title: t('Economy.Sell'), body: t('Economy.SellTradeTooltip') }} position="top" delay={150} wrapperClassName="erw-manage__trade-tooltip">
-          <GameButton
-            variant="burgundy"
-            className="erw-manage__trade-button"
-            disabled={!canSell}
-            onClick={(event) => {
-              noteModifierKeysFromEvent(event);
-              sellEconomyResourceBridge(resource.id, stepAmountFromEvent(event, tradeAmount)).catch(() => undefined);
-            }}
-          >
-            <strong>{t('Economy.SellAmount', { Amount: fmt(sellAmount) })}</strong>
-            <small><img src="/assets/icons/I_Coins.png" alt="" />{t('Economy.ReturnsGold', { Amount: fmt(sellReturn) })}</small>
-          </GameButton>
-        </Tooltip>
         <Tooltip content={{ title: t('Economy.Buy'), body: t('Economy.BuyTradeTooltip') }} position="top" delay={150} wrapperClassName="erw-manage__trade-tooltip">
           <GameButton
             variant="burgundy"
@@ -697,6 +702,20 @@ function ResourceManagement({
           >
             <strong>{t('Economy.BuyAmount', { Amount: fmt(effectiveTradeAmount) })}</strong>
             <small><img src="/assets/icons/I_Coins.png" alt="" />{t('Economy.CostsGold', { Amount: fmt(buyCost) })}</small>
+          </GameButton>
+        </Tooltip>
+        <Tooltip content={{ title: t('Economy.Sell'), body: t('Economy.SellTradeTooltip') }} position="top" delay={150} wrapperClassName="erw-manage__trade-tooltip">
+          <GameButton
+            variant="burgundy"
+            className="erw-manage__trade-button"
+            disabled={!canSell}
+            onClick={(event) => {
+              noteModifierKeysFromEvent(event);
+              sellEconomyResourceBridge(resource.id, stepAmountFromEvent(event, tradeAmount)).catch(() => undefined);
+            }}
+          >
+            <strong>{t('Economy.SellAmount', { Amount: fmt(sellAmount) })}</strong>
+            <small><img src="/assets/icons/I_Coins.png" alt="" />{t('Economy.ReturnsGold', { Amount: fmt(sellReturn) })}</small>
           </GameButton>
         </Tooltip>
       </div>

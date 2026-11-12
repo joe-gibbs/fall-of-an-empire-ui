@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { renderRichText } from '../../../utils/richText';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { bridgeCall } from '../../../bridge-types.generated.ts';
+import type { StartFactionInteractionResponse } from '../../../bridge-types.generated.ts';
 import { useFactionInteractionsBridge, type FactionInteractionView } from '../../../bridge/diplomacy/useFactionInteractionsBridge';
 import {
   mapPersonInteractionEntry,
@@ -9,6 +11,7 @@ import {
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import { useOptionalGameActions } from '../../../context/GameContext';
+import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import type { Notification } from '../../../data/types';
 import { playSound } from '../../../hooks/useSound';
 import { successChanceColour } from '../../../utils/colorFormatters';
@@ -18,6 +21,7 @@ import type { TooltipContent, TooltipLine } from '../tooltips/Tooltip';
 import Tooltip from '../tooltips/Tooltip';
 import InteractionEffectsTooltip from '../tooltips/InteractionEffectsTooltip';
 import { dismissSharedTooltips } from '../tooltips/tooltipEvents';
+import ConfirmDialog from '../forms/ConfirmDialog';
 import './QuickInteractionMenu.css';
 
 type QuickMenuKind = 'person' | 'faction' | 'military';
@@ -27,6 +31,15 @@ interface MenuPoint {
   x: number;
   y: number;
 }
+
+/**
+ * The menu's single lifecycle. The last target is kept while closed so
+ * reopening on the same target shows its interactions straight away.
+ */
+type QuickMenuState =
+  | { phase: 'closed'; targetId: string | null }
+  | { phase: 'open'; targetId: string; point: MenuPoint }
+  | { phase: 'confirming'; targetId: string; response: StartFactionInteractionResponse };
 
 interface UseQuickInteractionMenuOptions {
   kind: QuickMenuKind;
@@ -177,9 +190,12 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
   militaryType = 'army',
   actions = [],
 }: UseQuickInteractionMenuOptions): QuickInteractionMenuResult<T> {
-  const [requestedTargetId, setRequestedTargetId] = useState<string | null>(null);
+  const [menu, setMenu] = useState<QuickMenuState>({ phase: 'closed', targetId: null });
   const [requestKey, setRequestKey] = useState(0);
-  const [point, setPoint] = useState<MenuPoint | null>(null);
+  const escapeId = `menu.quick-interaction:${useId()}`;
+  const requestedTargetId = menu.targetId;
+  const point = menu.phase === 'open' ? menu.point : null;
+  const confirmation = menu.phase === 'confirming' ? menu.response : null;
   const menuRef = useRef<HTMLDivElement>(null);
   const personQuickInteractions = usePersonQuickInteractions(kind === 'person' ? requestedTargetId : null, requestKey);
   const factionBridge = useFactionInteractionsBridge(kind === 'faction' ? requestedTargetId : null);
@@ -206,8 +222,14 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
   const style = useMenuPosition(point, itemCount);
 
   const close = useCallback(() => {
-    setPoint(null);
+    setMenu(current => (current.phase === 'open' ? { phase: 'closed', targetId: current.targetId } : current));
   }, []);
+
+  useEscapeStackEntry({
+    id: escapeId,
+    active: menu.phase === 'open',
+    onClose: close,
+  });
 
   const onContextMenu = useCallback((event: React.MouseEvent<T>) => {
     if (!canUseTargetId(targetId)) return;
@@ -215,9 +237,8 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
     event.stopPropagation();
     playSound('click');
     dismissSharedTooltips();
-    setRequestedTargetId(targetId);
     setRequestKey(key => key + 1);
-    setPoint({ x: event.clientX, y: event.clientY });
+    setMenu({ phase: 'open', targetId, point: { x: event.clientX, y: event.clientY } });
   }, [targetId]);
 
   useEffect(() => {
@@ -230,23 +251,19 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
       }
       close();
     };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
 
     window.addEventListener('pointerdown', handlePointerDown);
-    window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('resize', close);
     window.addEventListener('scroll', close, true);
     return () => {
       window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', close);
       window.removeEventListener('scroll', close, true);
     };
   }, [close, point]);
 
   const start = useCallback((interaction: QuickInteraction) => {
+    const startedTargetId = requestedTargetId;
     close();
     playSound('confirm');
     const notifyRejected = (message?: string) => {
@@ -259,7 +276,7 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
 
     if (kind === 'person') {
       void bridgeCall('game.start_person_interaction', {
-        personId: requestedTargetId ?? '',
+        personId: startedTargetId ?? '',
         interactionId: interaction.id,
         initiatorPersonId: '',
         giftTypeIndex: -1,
@@ -273,12 +290,32 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
       });
     } else {
       void factionBridge.start(interaction.id).then((response) => {
+        if (response?.confirmationRequired) {
+          // The confirmation belongs to this target; a menu opened since then supersedes it.
+          setMenu(current => (current.phase === 'closed' && current.targetId === startedTargetId && startedTargetId
+            ? { phase: 'confirming', targetId: startedTargetId, response }
+            : current));
+          return;
+        }
         if (!response?.completed && !response?.started) {
           notifyRejected(response?.message);
         }
       });
     }
   }, [close, factionBridge, gameActions, kind, requestedTargetId]);
+
+  const confirmStart = useCallback(() => {
+    if (!confirmation) return;
+    void factionBridge.start(confirmation.interactionId, '', [], '', true).then((response) => {
+      if (!response?.completed && !response?.started && !response?.allyChoiceRequired) {
+        gameActions?.addNotification({
+          title: webUIText('QuickInteraction.ActionCouldNotStart'),
+          description: response?.message || webUIText('QuickInteraction.ActionCouldNotStartFallback'),
+          type: quickInteractionNotificationType(kind),
+        });
+      }
+    });
+  }, [confirmation, factionBridge, gameActions, kind]);
 
   const viewTarget = useCallback(() => {
     const targetIdForView = requestedTargetId ?? undefined;
@@ -397,6 +434,24 @@ export function useQuickInteractionMenu<T extends HTMLElement>({
 
   return {
     onContextMenu: canUseTargetId(targetId) ? onContextMenu : undefined,
-    node,
+    node: (
+      <>
+        {node}
+        {confirmation && typeof document !== 'undefined' && createPortal(
+          <ConfirmDialog
+            visible
+            title={confirmation.interactionName}
+            message={<>
+              {renderRichText(confirmation.confirmationMessage)}
+              <InteractionEffectsTooltip lines={confirmation.confirmationEffectLines} compact />
+            </>}
+            variant="danger"
+            onConfirm={confirmStart}
+            onClosed={() => setMenu(current => (current.phase === 'confirming' ? { phase: 'closed', targetId: current.targetId } : current))}
+          />,
+          document.body,
+        )}
+      </>
+    ),
   };
 }

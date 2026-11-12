@@ -1,7 +1,7 @@
 import type { PortraitLayerData } from '../../../data/types';
 
 import { webUIText } from '../../../localization/WebUITextContext';
-export type GameOverCause = 'extinction' | 'conquest' | 'subjugation' | 'rebellion' | 'governorship' | 'failed_rebellion' | 'demo_expired';
+export type GameOverCause = 'extinction' | 'conquest' | 'subjugation' | 'rebellion' | 'governorship' | 'failed_rebellion' | 'succession' | 'demo_expired';
 export type CampaignOutcomeKind = 'victory' | 'defeat';
 
 export interface CampaignOutcomeRuler {
@@ -200,6 +200,12 @@ const DEFEAT_TEXT: Record<GameOverCause, Pick<ResolvedCampaignOutcomeSummary, 't
     get description() { return webUIText('GameOver.GovernorshipLostDescription'); },
     crestIcon: '/assets/icons/AssignGovernor.png',
   },
+  succession: {
+    get title() { return webUIText('GameOver.SuccessionLostHeader'); },
+    get subtitle() { return webUIText('GameOver.SuccessionLostSubtitle'); },
+    get description() { return webUIText('GameOver.SuccessionLostDescription'); },
+    crestIcon: '/assets/icons/I_Dread.png',
+  },
   demo_expired: {
     get title() { return webUIText('GameOver.DemoExpiredHeader'); },
     get subtitle() { return webUIText('GameOver.DemoExpiredSubtitle'); },
@@ -227,6 +233,7 @@ export function createDefaultGameOverSummary(cause: GameOverCause): CampaignOutc
         if (cause === 'rebellion') return webUIText('Auto.TopProp.ComponentsScreensCampaignOutcomeData.204.31');
         if (cause === 'failed_rebellion') return webUIText('CampaignOutcome.FailedRebellionFate');
         if (cause === 'governorship') return webUIText('CampaignOutcome.GovernorshipLostFate');
+        if (cause === 'succession') return webUIText('CampaignOutcome.SuccessionLostFate');
         return webUIText('Auto.TopProp.ComponentsScreensCampaignOutcomeData.204.32');
       },
       isImprisoned: cause === 'rebellion' || cause === 'failed_rebellion',

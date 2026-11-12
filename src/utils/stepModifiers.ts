@@ -35,6 +35,17 @@ export function stepAmountFromMultiplier(multiplier: number, baseStep = 1): numb
   return baseStep * multiplier;
 }
 
+/**
+ * Base step for an amount that can span several orders of magnitude, such as gold:
+ * one tenth of the larger of the current amount and its cap, rounded down to a power
+ * of ten, and never below minStep.
+ */
+export function magnitudeStep(amount: number, cap: number | undefined, minStep: number): number {
+  const scale = Math.max(Math.abs(amount), cap ?? 0);
+  if (scale <= 0) return minStep;
+  return Math.max(minStep, 10 ** Math.floor(Math.log10(scale)) / 10);
+}
+
 /** Label for a +/- button: "+" / "-" at 1, otherwise "+5" / "-10". */
 export function stepButtonLabel(direction: 1 | -1, amount: number): string {
   if (amount <= 1) return direction > 0 ? '+' : '-';

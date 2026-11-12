@@ -109,11 +109,17 @@
 
 .screen-overlay--battle {
   top: var(--topbar-height);
-  right: 0;
+  /* The battle panel docks to the bottom edge between any open left sidebar
+     and the map-mode tray, whose inset includes an open right sidebar. */
+  right: var(--bottombar-inset-right, 0px);
   left: 0;
   align-items: flex-end;
   background-color: transparent;
   pointer-events: none;
+}
+
+.game-main--left-sidebar-open .screen-overlay--battle {
+  left: var(--sidebar-width);
 }
 
 .screen-overlay--battle > * {

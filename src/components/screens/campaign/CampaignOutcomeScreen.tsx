@@ -78,8 +78,8 @@ function CampaignLedger({ history }: { history: CampaignOutcomeHistoryPoint[] })
         {hasEarlierPeak && (
           <tr>
             <th scope="row">{webUIText('Auto.Attr.ComponentsScreensCampaignOutcomeScreen.85.2')}</th>
-            <td>{peakSettlements.settlements > current.settlements ? <>{formatNumber(peakSettlements.settlements)}<small>{peakSettlements.label}</small></> : webUIText('CampaignOutcome.SameAsCurrent')}</td>
-            <td>{peakPopulation.population > current.population ? <>{formatPopulation(peakPopulation.population)}<small>{peakPopulation.label}</small></> : webUIText('CampaignOutcome.SameAsCurrent')}</td>
+            <td>{formatNumber(peakSettlements.settlements)}<small>{peakSettlements.label}</small></td>
+            <td>{formatPopulation(peakPopulation.population)}<small>{peakPopulation.label}</small></td>
           </tr>
         )}
         {history.length > 1 && (
@@ -192,35 +192,39 @@ export default function CampaignOutcomeScreen({
   const displayedPreviousRulers = useMemo(() => [...resolved.previousRulers].reverse(), [resolved.previousRulers]);
   const headerImage = WebkilnAssetPath(resolved.headerImage) ?? resolved.headerImage;
   const crestIcon = WebkilnAssetPath(resolved.crestIcon) ?? resolved.crestIcon;
-  const [closing, setClosing] = useState(false);
-  const closeTimerRef = useRef<number | null>(null);
+  // A close request belongs to the outcome it was made on; a new outcome starts open.
+  const [closeRequest, setCloseRequest] = useState<{ kind: CampaignOutcomeKind; afterClose?: () => void } | null>(null);
+  const activeCloseRequest = closeRequest?.kind === kind ? closeRequest : null;
+  const closing = activeCloseRequest !== null;
+  const onCloseRef = useRef(onClose);
 
-  useEffect(() => () => {
-    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
-  }, []);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
-  const requestClose = useCallback((afterClose?: () => void) => {
-    if (closing) return;
-    setClosing(true);
-    closeTimerRef.current = window.setTimeout(() => {
-      closeTimerRef.current = null;
-      onClose();
-      afterClose?.();
+  useEffect(() => {
+    if (!activeCloseRequest) return undefined;
+    const timer = window.setTimeout(() => {
+      onCloseRef.current();
+      activeCloseRequest.afterClose?.();
     }, UI_MOTION.campaignOutcomeCloseMs);
-  }, [closing, onClose]);
+    return () => window.clearTimeout(timer);
+  }, [activeCloseRequest]);
 
   const handlePrimaryAction = useCallback(() => {
+    if (closing) return;
     if (kind === 'victory') {
-      requestClose(onContinuePlaying);
+      setCloseRequest({ kind, afterClose: onContinuePlaying });
       return;
     }
 
     onLoadSave?.();
-  }, [kind, onContinuePlaying, onLoadSave, requestClose]);
+  }, [closing, kind, onContinuePlaying, onLoadSave]);
 
   const handleSecondaryAction = useCallback(() => {
+    if (closing) return;
     onMainMenu?.();
-  }, [onMainMenu]);
+  }, [closing, onMainMenu]);
 
   useEscapeStackEntry({
     id: `screen.campaign-outcome.${kind}`,

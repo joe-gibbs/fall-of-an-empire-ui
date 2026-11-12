@@ -17,6 +17,7 @@ export const advisorHintKeys = {
   battleView: 'BattleHint',
   charactersScreen: 'CharactersHint',
   powerBlocsScreen: 'PowerBlocsHint',
+  clansScreen: 'ClansHint',
   ledgerScreen: 'LedgerHint',
   militaryScreen: 'MilitaryOverviewHint',
 } as const;

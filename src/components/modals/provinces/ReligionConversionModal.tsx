@@ -339,7 +339,7 @@ export default function ReligionConversionModal({ open, conversion, onClose, onC
                 <WebUIText textKey="Auto.ComponentsModalsReligionConversionModal.100.5" />
               </GameButton>
             )}
-            {conversion.state.active && (
+            {conversion.state.canCancel && (
               <button type="button" className="btn--outline rcm-cancel-button" onClick={handleCancel} disabled={submitting}>
                 <WebUIText textKey="ReligionConversion.CancelConversion" />
               </button>

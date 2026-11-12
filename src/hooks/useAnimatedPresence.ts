@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-type PresencePhase = 'entered' | 'closing' | 'closed';
-type ClosePath = 'request' | 'external';
+type PresencePhase = 'entered' | 'closingByRequest' | 'closingExternally' | 'closed';
 
 interface PresenceState {
   observedVisible: boolean;
   phase: PresencePhase;
   closeRequestId: number;
-  closePath?: ClosePath;
+  afterClose?: () => void;
 }
 
 interface AnimatedPresenceOptions {
@@ -32,7 +31,6 @@ export function useAnimatedPresence(
   }));
   const requestCloseTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const externalCloseTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const requestAfterCloseRef = useRef<(() => void) | undefined>(undefined);
   const onClosedRef = useRef(onClosed);
 
   useEffect(() => {
@@ -46,20 +44,18 @@ export function useAnimatedPresence(
           observedVisible: true,
           phase: 'entered',
           closeRequestId: state.closeRequestId,
-          closePath: undefined,
         }
       : {
           observedVisible: false,
-          phase: state.phase === 'closed' ? 'closed' : 'closing',
+          phase: state.phase === 'closed' ? 'closed' : 'closingExternally',
           closeRequestId: state.phase === 'closed' ? state.closeRequestId : state.closeRequestId + 1,
-          closePath: state.phase === 'closed' ? undefined : 'external',
         };
     setState(current);
   }
 
   const phase = current.phase;
   const closeRequestId = current.closeRequestId;
-  const closePath = current.closePath;
+  const requestAfterClose = current.afterClose;
 
   useEffect(() => {
     if (visible) {
@@ -70,26 +66,22 @@ export function useAnimatedPresence(
 
     clearTimeout(requestCloseTimerRef.current);
     requestCloseTimerRef.current = undefined;
-    requestAfterCloseRef.current = undefined;
   }, [visible]);
 
   useEffect(() => {
-    if (phase !== 'closing' || closePath !== 'request') return;
+    if (phase !== 'closingByRequest') return;
 
     clearTimeout(requestCloseTimerRef.current);
     requestCloseTimerRef.current = setTimeout(() => {
       requestCloseTimerRef.current = undefined;
-      const afterClose = requestAfterCloseRef.current ?? onClosedRef.current;
-      requestAfterCloseRef.current = undefined;
+      const afterClose = requestAfterClose ?? onClosedRef.current;
       setState((nextState) => (
-        nextState.phase === 'closing'
-          && nextState.closePath === 'request'
+        nextState.phase === 'closingByRequest'
           && nextState.closeRequestId === closeRequestId
           ? {
-              observedVisible: false,
+              observedVisible: nextState.observedVisible,
               phase: 'closed',
               closeRequestId: nextState.closeRequestId,
-              closePath: undefined,
             }
           : nextState
       ));
@@ -100,23 +92,21 @@ export function useAnimatedPresence(
       clearTimeout(requestCloseTimerRef.current);
       requestCloseTimerRef.current = undefined;
     };
-  }, [phase, closePath, closeRequestId, durationMs]);
+  }, [phase, closeRequestId, durationMs, requestAfterClose]);
 
   useEffect(() => {
-    if (phase !== 'closing' || closePath !== 'external') return;
+    if (phase !== 'closingExternally') return;
 
     clearTimeout(externalCloseTimerRef.current);
     externalCloseTimerRef.current = setTimeout(() => {
       externalCloseTimerRef.current = undefined;
       setState((nextState) => (
-        nextState.phase === 'closing'
-          && nextState.closePath === 'external'
+        nextState.phase === 'closingExternally'
           && nextState.closeRequestId === closeRequestId
           ? {
               observedVisible: false,
               phase: 'closed',
               closeRequestId: nextState.closeRequestId,
-              closePath: undefined,
             }
           : nextState
       ));
@@ -127,7 +117,7 @@ export function useAnimatedPresence(
       clearTimeout(externalCloseTimerRef.current);
       externalCloseTimerRef.current = undefined;
     };
-  }, [phase, closePath, closeRequestId, durationMs]);
+  }, [phase, closeRequestId, durationMs]);
 
   useEffect(() => () => {
     clearTimeout(requestCloseTimerRef.current);
@@ -135,21 +125,20 @@ export function useAnimatedPresence(
   }, []);
 
   const requestClose = useCallback((afterClose?: () => void) => {
-    requestAfterCloseRef.current = afterClose;
     setState((nextState) => {
       if (nextState.phase !== 'entered') return nextState;
       return {
         observedVisible: nextState.observedVisible,
-        phase: 'closing',
+        phase: 'closingByRequest',
+        afterClose,
         closeRequestId: nextState.closeRequestId + 1,
-        closePath: 'request',
       };
     });
   }, []);
 
   return {
     mounted: phase !== 'closed',
-    closing: phase === 'closing',
+    closing: phase === 'closingByRequest' || phase === 'closingExternally',
     requestClose,
   };
 }

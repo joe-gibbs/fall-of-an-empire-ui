@@ -9,7 +9,7 @@
 .regional-section-heading h2 { margin: 0; }
 .regional-crown { margin-bottom: 1.2rem; }
 .regional-estate, .regional-empty, .regional-table tbody tr {
-  background: url('/assets/baked/card-charcoal.png') center / 100% 100%;
+  background: url('/assets/baked/card-charcoal.png') 0 0 / 17.4545rem 8.7273rem;
   border: 0.231rem solid transparent;
   border-image-source: url('/assets/gold-frame.png');
   border-image-slice: 6;

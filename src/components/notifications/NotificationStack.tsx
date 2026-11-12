@@ -365,8 +365,10 @@ const NotificationStack: React.FC<NotificationStackProps> = ({
   useEffect(() => {
     const expiredIds: string[] = [];
     for (const n of notifications) {
+      // The game expires diplomatic requests itself and holds a peace offer while its negotiation is open.
       if (
         !n.isPlayerActionResult
+        && !n.diplomaticRequest
         && currentGameDay > 0
         && typeof n.expiresOnDay === 'number'
         && n.expiresOnDay > 0

@@ -31,6 +31,12 @@ export type ScreenType = string | null;
 export type SidebarType = string | null;
 export type SidebarNavigationDirection = -1 | 1;
 
+/** An open sidebar or screen. A closed pane is null, so a closed pane cannot keep an id. */
+export interface OpenPane {
+  type: string;
+  id: string | null;
+}
+
 export interface SidebarNavigationState {
   currentId: string | null;
   back: string[];
@@ -59,12 +65,9 @@ export interface GameState {
   population: number;
   populationDelta: number;
 
-  leftSidebar: LeftSidebarType;
-  leftSidebarId: string | null;
-  rightSidebar: RightSidebarType;
-  rightSidebarId: string | null;
-  activeScreen: ScreenType;
-  activeScreenId: string | null;
+  leftSidebar: OpenPane | null;
+  rightSidebar: OpenPane | null;
+  activeScreen: OpenPane | null;
   sidebarNavigation: Record<string, SidebarNavigationState>;
 
   advisorHint: AdvisorHint | null;
@@ -100,11 +103,8 @@ export function createInitialGameState(): GameState {
     population: 0,
     populationDelta: 0,
     leftSidebar: null,
-    leftSidebarId: null,
     rightSidebar: null,
-    rightSidebarId: null,
     activeScreen: null,
-    activeScreenId: null,
     sidebarNavigation: {},
     advisorHint: null,
     advisorStep: 0,

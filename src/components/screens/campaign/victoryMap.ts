@@ -37,49 +37,59 @@ export function victoryMapProvinces(victory: GetVictoryConditionsResponse, map: 
 
 export interface VictoryMapBounds { minX: number; minY: number; maxX: number; maxY: number }
 
-const geographyBorders = new WeakMap<ScenarioOverviewMap, { regions: string; lands: string; domains: string }>();
+/** Border segment indices for each layer the victory map strokes. */
+export interface VictoryMapBorders {
+  regions: number[];
+  lands: number[];
+  domains: number[];
+  held: number[];
+  goals: number[][];
+}
+
+const geographyBorders = new WeakMap<ScenarioOverviewMap, Pick<VictoryMapBorders, 'regions' | 'lands' | 'domains'>>();
 
 function victoryGeographyBorders(map: ScenarioOverviewMap) {
   const cached = geographyBorders.get(map);
   if (cached) return cached;
   const geography = new Map(map.provinces.map(province => [province.provinceIndex, province]));
-  const paths = { regions: [] as string[], lands: [] as string[], domains: [] as string[] };
-  for (const segment of map.borderSegments) {
+  const borders = { regions: [] as number[], lands: [] as number[], domains: [] as number[] };
+  map.borderSegments.forEach((segment, index) => {
     const a = geography.get(segment.provinceIndex);
     const b = geography.get(segment.adjacentProvinceIndex);
-    if (a?.regionId !== b?.regionId) paths.regions.push(segment.path);
-    if (a?.landId !== b?.landId) paths.lands.push(segment.path);
-    if (a?.domainId !== b?.domainId) paths.domains.push(segment.path);
-  }
-  const borders = { regions: paths.regions.join(''), lands: paths.lands.join(''), domains: paths.domains.join('') };
+    if (a?.regionId !== b?.regionId) borders.regions.push(index);
+    if (a?.landId !== b?.landId) borders.lands.push(index);
+    if (a?.domainId !== b?.domainId) borders.domains.push(index);
+  });
   geographyBorders.set(map, borders);
   return borders;
 }
 
-export function victoryMapBorders(map: ScenarioOverviewMap, provinces: readonly VictoryMapProvince[], tierCount: number) {
+export function victoryMapBorders(map: ScenarioOverviewMap, provinces: readonly VictoryMapProvince[], tierCount: number): VictoryMapBorders {
   const visible = new Map(provinces.map(province => [province.provinceIndex, province]));
-  const held: string[] = [];
-  const goals = Array.from({ length: tierCount }, () => [] as string[]);
-  for (const segment of map.borderSegments) {
+  const held: number[] = [];
+  const goals = Array.from({ length: tierCount }, () => [] as number[]);
+  map.borderSegments.forEach((segment, index) => {
     const left = visible.get(segment.provinceIndex);
     const right = visible.get(segment.adjacentProvinceIndex);
-    if (!left && !right) continue;
-    if (Boolean(left?.isControlled) !== Boolean(right?.isControlled)) held.push(segment.path);
+    if (!left && !right) return;
+    if (Boolean(left?.isControlled) !== Boolean(right?.isControlled)) held.push(index);
     for (let tier = 0; tier < tierCount; tier++) {
       if (Boolean(left?.tierIndices.includes(tier)) !== Boolean(right?.tierIndices.includes(tier))) {
-        goals[tier].push(segment.path);
+        goals[tier].push(index);
       }
     }
-  }
-  return { ...victoryGeographyBorders(map), held: held.join(''), goals: goals.map(paths => paths.join('')) };
+  });
+  return { ...victoryGeographyBorders(map), held, goals };
 }
 
 export function victoryMapBounds(provinces: readonly VictoryMapBounds[]): VictoryMapBounds | null {
   if (provinces.length === 0) return null;
-  return {
-    minX: Math.min(...provinces.map(province => province.minX)),
-    minY: Math.min(...provinces.map(province => province.minY)),
-    maxX: Math.max(...provinces.map(province => province.maxX)),
-    maxY: Math.max(...provinces.map(province => province.maxY)),
-  };
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const province of provinces) {
+    minX = Math.min(minX, province.minX);
+    minY = Math.min(minY, province.minY);
+    maxX = Math.max(maxX, province.maxX);
+    maxY = Math.max(maxY, province.maxY);
+  }
+  return { minX, minY, maxX, maxY };
 }

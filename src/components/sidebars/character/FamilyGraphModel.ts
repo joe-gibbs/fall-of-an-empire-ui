@@ -182,7 +182,14 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
       const directLabel = (id: string, fallback: string): string => genderedFamilyLabel(people.get(id), fallback);
       const parentIds = sortPeopleByAge(parentsByChild.get(character.id) ?? [], people);
       const grandparentIds = sortPeopleByAge(parentIds.flatMap(id => parentsByChild.get(id) ?? []), people);
-      const spouseIds = sortPeopleByAge(spousesById.get(character.id) ?? [], people);
+      // Living spouses first; a spouse who died before a remarriage is labelled "late".
+      const spouseIds = sortPeopleByAge(spousesById.get(character.id) ?? [], people)
+        .sort((a, b) => Number(people.get(b)?.isAlive !== false) - Number(people.get(a)?.isAlive !== false));
+      const spouseLabel = (id: string): string => {
+        const spouse = people.get(id);
+        if (spouse?.isAlive !== false) return directLabel(id, 'Spouse');
+        return webUIText(spouse.gender === 'Female' ? 'Character.Relation.LateWife' : 'Character.Relation.LateHusband');
+      };
       const childIds = sortPeopleByAge(childrenByParent.get(character.id) ?? [], people);
 
       pushRow('grandparents', webUIText('CharacterSidebar.Grandparents'), grandparentIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Grandparent'))));
@@ -194,7 +201,7 @@ export function buildFamilyGraph(character: Character, familyTree: FamilyTreeDat
           : webUIText("CharacterSidebar.Selected");
       pushRow('household', householdTitle, [
         familyEntryFromPerson(person, person.shortTitle || person.title || webUIText('CharacterSidebar.Selected'), true),
-        ...spouseIds.map(id => familyEntryFromPerson(people.get(id)!, directLabel(id, 'Spouse'))),
+        ...spouseIds.map(id => familyEntryFromPerson(people.get(id)!, spouseLabel(id))),
       ]);
       pushRow('children', webUIText('CharacterSidebar.Children'), childIds.map(id => {
         const entry = familyEntryFromPerson(people.get(id)!, directLabel(id, 'Child'));

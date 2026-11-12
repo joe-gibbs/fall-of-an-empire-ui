@@ -14,24 +14,23 @@ export function matchesConfirmationBinding(binding: ActionBindingLike | null, ev
 
 /** A key held before a dialog opens must never confirm that new dialog on release. */
 export function createConfirmationPress<T>() {
-  let held = false;
-  let target: T | null = null;
+  type PressState = { phase: 'released' | 'ignored' } | { phase: 'armed'; target: T };
+  let state: PressState = { phase: 'released' };
   return {
     press(current: T | null, enabled: boolean, fromInput: boolean, repeat: boolean): boolean {
-      if (held || repeat) return target !== null;
-      held = true;
-      target = enabled && !fromInput ? current : null;
-      return target !== null;
+      if (state.phase !== 'released' || repeat) return state.phase === 'armed';
+      state = enabled && !fromInput && current !== null
+        ? { phase: 'armed', target: current }
+        : { phase: 'ignored' };
+      return state.phase === 'armed';
     },
     release(current: T | null, enabled: boolean, fromInput: boolean): T | null {
-      const confirmed = target !== null && target === current && enabled && !fromInput ? target : null;
-      held = false;
-      target = null;
+      const confirmed = state.phase === 'armed' && state.target === current && enabled && !fromInput ? current : null;
+      state = { phase: 'released' };
       return confirmed;
     },
     cancel() {
-      held = false;
-      target = null;
+      state = { phase: 'released' };
     },
   };
 }

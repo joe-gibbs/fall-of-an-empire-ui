@@ -41,7 +41,15 @@ export default function RegionalForcesScreen({ onClose, screenId }: { onClose: (
   const [error, setError] = useState('');
   const [grant, setGrant] = useState<RegionalForceEntry | null>(null);
   const crownRegions = data?.regions.filter(region => region.crownLand) ?? [];
-  const subjects = data?.regions.filter(region => !region.crownLand) ?? [];
+  // One row per subject ruler; their regions' troops are combined.
+  const subjects = (data?.regions ?? []).reduce<RegionalForceEntry[]>((rows, region) => {
+    if (region.crownLand) return rows;
+    const index = rows.findIndex(row => row.ownerId === region.ownerId);
+    if (index < 0) return [...rows, region];
+    const row = rows[index];
+    rows[index] = { ...row, available: row.available + region.available, deployed: row.deployed + region.deployed };
+    return rows;
+  }, []);
   const requestedOwner = regionalOwnerFromScreenId(screenId);
   const actionRegion = data?.regions.find(region => region.id === actionRegionId);
   const recruitmentSettlement = (region: RegionalForceEntry) => region.settlements.find(entry => entry.id === settlementIds[region.id]) ?? region.settlements[0];
@@ -141,12 +149,12 @@ export default function RegionalForcesScreen({ onClose, screenId }: { onClose: (
             <th scope="col"><Tooltip content={t('RegionalForces.DeployedHelp')}>{t('RegionalForces.Deployed')}</Tooltip></th>
             <th scope="col">{t('RegionalForces.Actions')}</th>
           </tr></thead>
-          <tbody>{subjects.map(region => <tr key={region.id} className={region.ownerId === requestedOwner ? 'regional-table-selected' : ''}>
+          <tbody>{subjects.map(region => <tr key={region.ownerId} className={region.ownerId === requestedOwner ? 'regional-table-selected' : ''}>
             <td><div className="regional-identity">{leader(region)}
               <FactionRoundel factionId={region.ownerId} colour={region.colour} secondaryColour={region.secondaryColour} emblem={region.emblem}
                 name={region.ownerName} resolveFaction={false} diplomaticStatus="subject" subjectSubtype={region.hereditary ? 'hereditary_vassal' : 'province'} size="md" />
               <button type="button" className="regional-region-link" onClick={() => openSidebar('diplomacy', region.ownerId)}>
-                <strong>{region.name}</strong><span>{region.governorName || t('RegionalForces.NoGovernor')}</span>
+                <strong>{region.ownerName}</strong><span>{region.governorName || t('RegionalForces.NoGovernor')}</span>
               </button>
             </div></td>
             <td><Tooltip content={{ title: t('RegionalForces.Opinion'),

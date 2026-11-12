@@ -18,13 +18,15 @@ interface StatCellProps {
   valueColor?: string;
   delta?: React.ReactNode;
   deltaColor?: string;
+  label?: string;
 }
 
-const StatCell: React.FC<StatCellProps> = ({ icon, value, valueColor, delta, deltaColor }) => (
+const StatCell: React.FC<StatCellProps> = ({ icon, value, valueColor, delta, deltaColor, label }) => (
   <div className="stat-cell">
     <img src={icon} alt="" className="stat-cell-icon" />
     <span className="stat-cell-val" style={valueColor ? { color: valueColor } : undefined}>{value}</span>
     {delta !== undefined && <span className="stat-cell-delta" style={deltaColor ? { color: deltaColor } : undefined}>{delta}</span>}
+    {label && <span className="stat-cell-label">{label}</span>}
   </div>
 );
 

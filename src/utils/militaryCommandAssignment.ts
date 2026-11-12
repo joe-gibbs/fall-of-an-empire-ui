@@ -6,6 +6,7 @@ export interface CommandAssignmentForce {
   name: string;
   parentId: string | null;
   rank: string;
+  hasCommand: boolean;
   isNavy: boolean;
   isPersonalGuard?: boolean;
   isPlayerControlled: boolean;
@@ -34,7 +35,7 @@ export function commandRankTier(rank: string | undefined): number {
 }
 
 export function canDragMilitaryCommand(force: CommandAssignmentForce): boolean {
-  return force.isPlayerControlled && !force.isPersonalGuard && commandRankTier(force.rank) < 3;
+  return force.isPlayerControlled && force.hasCommand && !force.isPersonalGuard && commandRankTier(force.rank) < 3;
 }
 
 export function findCommandAssignmentTarget(
@@ -94,7 +95,7 @@ export function validateCommandAssignment(
 
   const sourceTier = commandRankTier(source.rank);
   const targetTier = commandRankTier(target.rank);
-  if (sourceTier <= 0 || targetTier <= 0) {
+  if (!source.hasCommand || !target.hasCommand || sourceTier <= 0 || targetTier <= 0) {
     return { ok: false, reason: webUIText('Military.Command.UnknownTarget') };
   }
   if (sourceTier >= targetTier) {

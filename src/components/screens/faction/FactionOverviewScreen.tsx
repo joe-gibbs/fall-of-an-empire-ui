@@ -196,6 +196,7 @@ function FactionHeader({
           onClick={() => faction.rulerId && onOpenCharacter(faction.rulerId)}
         />
         <div className="fov-faction-info">
+          <h2 className="fov-faction-name">{faction.name}</h2>
           <div className="fov-ruler-row">
             <button
               type="button"
@@ -371,7 +372,7 @@ function RealmProgress({ faction }: { faction: Faction }) {
   return (
     <div className="fov-realm-progress">
       <Tooltip content={developmentTooltip} bubbleClassName="fov-development-tooltip" delay={150}>
-        <div className="fov-realm-metric" tabIndex={0}><img src={cultureIconPath(faction.cultureInfo)} alt="" /><span>{webUIText('CultureDevelopment.Development')}</span><strong>{formatNumber(progress.development, { maximumFractionDigits: 1 })}</strong></div>
+        <div className="fov-realm-metric" tabIndex={0} data-tutorial-target="CultureDevelopment"><img src={cultureIconPath(faction.cultureInfo)} alt="" /><span>{webUIText('CultureDevelopment.Development')}</span><strong>{formatNumber(progress.development, { maximumFractionDigits: 1 })}</strong></div>
       </Tooltip>
       <Tooltip content={{
           title: webUIText('Realm.SettledLand'),
@@ -683,6 +684,7 @@ export default function FactionOverviewScreen({ screenId, onClose }: { screenId:
         advisorTopic="factionOverviewScreen"
         tabs={<SidebarTabBar tabs={factionOverviewTabs(t, hasCourt, playerFaction.summary?.courtTitle)} activeTab={selectedTab} onTabChange={setActiveTab} />}
         styledScrollContent
+        fitContent
       >
         {content}
       </ScreenShell>

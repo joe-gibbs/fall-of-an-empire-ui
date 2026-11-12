@@ -2,6 +2,10 @@
 .clan-detail-title { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding-bottom: 0.7rem; background: url('/assets/gold-line.png') bottom / 100% 0.15rem no-repeat; }
 .clan-detail-title h2 { margin: 0; color: var(--gold-light); font: 1.3rem var(--font-header); }
 .clan-detail-title .icon-button { width: 2.6rem; height: 2.6rem; }
+.clan-detail-title-actions { display: flex; align-items: center; gap: 0.6rem; }
+.clan-detail-panel--wide .clan-detail-body { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: start; gap: 1.6rem; }
+.clan-detail-panel--wide .clan-warband-panel { margin-top: 1rem; }
+.clan-detail-panel--wide .clan-leader-link .clan-person-copy strong { font-size: 1.6rem; }
 .clan-leadership { padding: 1rem 0 0.8rem; }
 .clan-leader-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .clan-leader-row > .tooltip-wrapper:first-child { flex: 1; min-width: 0; }
@@ -20,7 +24,7 @@
 .clan-people { margin-top: 0.5rem; }
 .clan-people > .section-heading-row { margin-bottom: 0.5rem; }
 .clan-member-list { display: flex; flex-direction: column; gap: 0.2rem; }
-.clan-member-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; padding: 0.45rem 0.55rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; border: 0.231rem solid transparent; border-image: url('/assets/gold-frame.png') 6; }
+.clan-member-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; padding: 0.45rem 0.55rem; background: url('/assets/baked/card-charcoal.png') 0 0 / 17.4545rem 8.7273rem; border: 0.231rem solid transparent; border-image: url('/assets/gold-frame.png') 6; }
 .clan-member-row > .tooltip-wrapper { min-width: 0; }
 .clan-member-service { display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; }
 .clan-member-status { color: var(--text-muted); font-size: 0.72rem; }

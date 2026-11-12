@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useBridgeQuery } from '../core/useBridgeQuery';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import type {
@@ -140,6 +140,15 @@ export function useBlocInteractionsBridge(blocId: string | null): BlocInteractio
     matchPush: (data) => data.blocId === blocId,
   });
   const state = queriedState?.blocId === blocId ? queriedState : null;
+
+  // Daily countdown pushes go only to lists the game knows are open.
+  useEffect(() => {
+    if (!blocId) return undefined;
+    bridgeCall('game.watch_interaction_list', { kind: 'bloc', id: blocId, watching: true }).catch(acknowledgeBridgeFailure);
+    return () => {
+      bridgeCall('game.watch_interaction_list', { kind: 'bloc', id: blocId, watching: false }).catch(acknowledgeBridgeFailure);
+    };
+  }, [blocId]);
 
   const start = useCallback(async (interactionId: string, loanOptionIndex = -1): Promise<string | null> => {
     if (!blocId) return null;

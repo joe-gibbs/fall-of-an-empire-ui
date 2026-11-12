@@ -160,6 +160,27 @@
   padding: 0.462rem 1.231rem 1.8rem 0.923rem;
 }
 
+/* Content-sized screens grow with their content and scroll only once they reach the full height. */
+.screen.screen--fit-content {
+  height: auto;
+  max-height: 100vh;
+  align-self: flex-start;
+}
+
+.screen--fit-content > .screen-content {
+  flex: 0 1 auto;
+}
+
+.screen--fit-content > .screen-content.styled-scroll-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.screen--fit-content > .screen-content.styled-scroll-area > .styled-scroll-area__viewport {
+  flex: 0 1 auto;
+  max-height: none;
+}
+
 /* Keep ARIA table wrappers stretched rather than sized to their contents. */
 [role="table"],
 [role="rowgroup"] {
@@ -394,7 +415,9 @@
   flex-basis: auto;
   min-width: 0;
   overflow: hidden;
-  white-space: nowrap;
+  /* Labels wrap inside the button when a translation is wider than the button allows. */
+  white-space: normal;
+  overflow-wrap: break-word;
   text-align: center;
   game-ui-font-fit: shrink;
   game-ui-font-fit-min-size: 0.62rem;
@@ -420,19 +443,26 @@
   text-transform: none;
   letter-spacing: normal;
   color: var(--text-bright);
-  background: transparent;
+  /* The fill is drawn at its own aspect ratio so wide buttons do not smear the paint. */
+  background-color: transparent;
+  background-image: url('/assets/baked/buttons/painted-metal/fill/normal.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
   border-width: 0.077rem;
   border-style: solid;
   border-color: transparent;
   border-image-source: url('/assets/baked/buttons/painted-metal/normal.png');
   /* Proportional slices preserve the corners when the build resizes the PNG. */
-  border-image-slice: 12.5% 8.333333% fill;
+  border-image-slice: 12.5% 8.333333%;
   border-image-width: 0.385rem;
   border-image-outset: 0;
   border-image-repeat: stretch;
   cursor: pointer;
   overflow: hidden;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: center;
   transition: color 0.15s, transform 0.12s ease-out;
 }
 
@@ -442,6 +472,7 @@
 .btn--danger:focus-visible:not(:disabled),
 .btn--outline:hover:not(:disabled),
 .btn--outline:focus-visible:not(:disabled) {
+  background-image: url('/assets/baked/buttons/painted-metal/fill/hover.png');
   border-image-source: url('/assets/baked/buttons/painted-metal/hover.png');
   color: var(--text-bright);
   transform: translateY(-0.0909rem);
@@ -449,12 +480,14 @@
 
 .btn--burgundy[aria-pressed="true"]:not(:disabled),
 .btn--outline[aria-pressed="true"]:not(:disabled) {
+  background-image: url('/assets/baked/buttons/painted-metal/fill/hover.png');
   border-image-source: url('/assets/baked/buttons/painted-metal/hover.png');
 }
 
 .btn--burgundy:active:not(:disabled),
 .btn--danger:active:not(:disabled),
 .btn--outline:active:not(:disabled) {
+  background-image: url('/assets/baked/buttons/painted-metal/fill/pressed.png');
   border-image-source: url('/assets/baked/buttons/painted-metal/pressed.png');
   transform: translateY(0.0909rem) scale(0.97);
   transition: transform 0s;
@@ -463,6 +496,7 @@
 .btn--burgundy:disabled,
 .btn--danger:disabled,
 .btn--outline:disabled {
+  background-image: url('/assets/baked/buttons/painted-metal/fill/disabled.png');
   border-image-source: url('/assets/baked/buttons/painted-metal/disabled.png');
   color: var(--text-muted);
   opacity: 1;
@@ -496,7 +530,9 @@
   border: 0.077rem solid transparent;
   cursor: pointer;
   overflow: hidden;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: center;
   transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.12s ease-out;
 }
 

@@ -1,8 +1,27 @@
-.pagan-scroll { flex: 1; min-height: 0; }
-.pagan-panel { padding: 0.15rem 0.8rem 1.5rem 0; display: flex; flex-direction: column; gap: 0.7rem; }
+.pagan-panel {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 23rem;
+  gap: 0.9rem;
+}
+.pagan-pantheon {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+  min-height: 0;
+}
+.pagan-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+  min-height: 0;
+}
 .pagan-surface {
   background-image: url('/assets/baked/card-charcoal.png');
-  background-size: 100% 100%;
+  background-size: 17.4545rem 8.7273rem;
   border: 0.231rem solid transparent;
   border-image-source: url('/assets/gold-frame.png');
   border-image-slice: 6;
@@ -62,7 +81,6 @@
   flex-shrink: 0;
 }
 .pagan-now .painted-bar-track { flex: 1; min-width: 8rem; }
-.pagan-relic-row { margin-top: 0.4rem; }
 .pagan-relics { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .pagan-relics > .tooltip-wrapper { flex: 1 1 14rem; }
 .pagan-relic { display: flex; align-items: center; padding: 0.55rem; height: 100%; box-sizing: border-box; }
@@ -70,41 +88,60 @@
 .pagan-relic-copy { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.85rem; color: var(--text-muted); }
 .pagan-relic-copy strong { color: var(--text-header); font-family: var(--font-header); font-weight: normal; }
 
+.pagan-pantheon .pagan-relics { flex-shrink: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+.pagan-whole {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.35rem 0.8rem;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  background-image: url('/assets/baked/card-charcoal.png');
+  background-size: 17.4545rem 8.7273rem;
+  border: 0.231rem solid transparent;
+  border-image-source: url('/assets/gold-frame.png');
+  border-image-slice: 6;
+  border-image-repeat: round;
+  cursor: var(--cursor-pointer);
+}
+.pagan-whole:hover { background-image: url('/assets/baked/card-charcoal-hover.png'); }
+.pagan-whole--selected,
+.pagan-whole--selected:hover { background-image: url('/assets/baked/button-burgundy-active.png'); }
+.pagan-whole img { width: 2.6rem; height: 2.6rem; object-fit: contain; }
+.pagan-whole span { font-family: var(--font-header); font-size: 1.05rem; color: var(--text-bright); }
+.pagan-whole--favoured span { color: var(--gold); }
+
 .pagan-god-tree {
+  flex: 1;
+  min-height: 20rem;
   display: grid;
-  grid-template-columns: repeat(5, 12rem);
-  justify-content: center;
-  align-items: start;
-  gap: 0.9rem 0.75rem;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0.6rem;
 }
 .pagan-god-branch {
-  display: grid;
-  width: 12rem;
-  grid-template-rows: auto auto;
-  justify-items: center;
-  justify-content: center;
-}
-.pagan-god-branch > .tooltip-wrapper { display: block; width: 12rem; }
-.pagan-lesser-gods {
-  display: grid;
-  width: 12rem;
-  grid-template-columns: 5.75rem 5.75rem;
-  justify-content: center;
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  margin-top: 0.55rem;
+  min-width: 0;
+  min-height: 0;
 }
-.pagan-lesser-gods > .tooltip-wrapper { display: block; width: 5.75rem; }
-
-.pagan-card-tooltip {
-  width: 22rem;
-  min-width: 22rem;
-  max-width: 22rem;
+.pagan-lesser-gods {
+  flex: 2 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 0.5rem;
 }
 
 .pagan-card {
   position: relative;
-  width: 12rem;
-  height: 20.5rem;
+  flex: 3 1 0;
+  width: 100%;
+  min-height: 0;
   overflow: hidden;
   padding: 0;
   color: inherit;
@@ -120,39 +157,22 @@
     url('/assets/baked/texture-overlay-heavy.png');
   background-repeat: repeat, repeat;
   background-size: auto, 5.538rem 5.538rem;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
 }
-.pagan-card--lesser {
-  width: 5.75rem;
-  height: 11.4rem;
+.pagan-card--lesser { height: 100%; }
+.pagan-card:not(.pagan-card--favoured):not(.pagan-card--selected) {
+  filter: saturate(0.8) brightness(0.72);
 }
-.pagan-card--none {
-  height: 32.45rem;
+.pagan-card--locked:not(.pagan-card--selected) {
+  filter: grayscale(0.7) brightness(0.55);
 }
-.pagan-card-none-mark {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  width: 8.6rem;
-  height: 8.6rem;
-  object-fit: contain;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.pagan-card:not(.pagan-card--favoured):not(.pagan-card--locked) {
-  filter: saturate(0.78) brightness(0.68);
-}
-.pagan-card:hover {
-  transform: translateY(-0.15rem);
-}
-.pagan-card:not(.pagan-card--favoured):not(.pagan-card--locked):hover {
-  filter: saturate(0.92) brightness(0.88);
+.pagan-card:not(.pagan-card--favoured):not(.pagan-card--selected):hover {
+  filter: saturate(0.92) brightness(0.9);
 }
 .pagan-card--favoured {
-  filter: none;
   box-shadow: 0 0 0.7rem rgba(201, 168, 76, 0.42);
 }
-.pagan-card--favoured::after {
+.pagan-card--selected::after {
   content: '';
   position: absolute;
   inset: 0.32rem;
@@ -161,15 +181,10 @@
   pointer-events: none;
   z-index: 4;
 }
-.pagan-card--lesser.pagan-card--favoured::after {
+.pagan-card--lesser.pagan-card--selected::after {
   inset: 0.2rem;
   box-shadow: inset 0 0 0.75rem 0.1rem rgba(201, 168, 76, 0.5);
 }
-.pagan-card--locked {
-  cursor: default;
-  filter: grayscale(0.7) brightness(0.62);
-}
-.pagan-card--locked:hover { transform: none; }
 
 .pagan-card-fg {
   position: absolute;
@@ -184,7 +199,6 @@
   filter: drop-shadow(0 0.3rem 0.55rem rgba(8, 12, 17, 0.65));
 }
 .pagan-card:hover .pagan-card-fg { transform: translateX(-50%) scale(1.02); }
-.pagan-card--locked:hover .pagan-card-fg { transform: translateX(-50%); }
 .pagan-card-vignette {
   position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
@@ -212,7 +226,7 @@
   align-items: center;
   justify-content: center;
   background-image: url('/assets/baked/card-charcoal.png');
-  background-size: 100% 100%;
+  background-size: 17.4545rem 8.7273rem;
   border: 0.154rem solid transparent;
   border-image-source: url('/assets/gold-frame.png');
   border-image-slice: 6;
@@ -252,7 +266,45 @@
   text-align: center;
 }
 .pagan-card--favoured .pagan-card-title { color: var(--gold); }
-.pagan-card--lesser .pagan-card-title { font-size: 0.82rem; }
+.pagan-card--lesser .pagan-card-title { font-size: 0.72rem; letter-spacing: 0; }
+
+.pagan-detail-frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 0.9rem 0.3rem 0.9rem 1rem;
+}
+.pagan-detail-scroll { flex: 1; }
+.pagan-detail-scroll > .styled-scroll-area__viewport { padding-right: 1.9rem; }
+.pagan-detail { display: flex; flex-direction: column; gap: 0.8rem; }
+.pagan-detail-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-bottom: 0.55rem;
+  background: url('/assets/gold-line.png') bottom / 100% 0.15rem no-repeat;
+}
+.pagan-detail-header h2 { margin: 0; color: var(--gold-light); font: 1.45rem var(--font-header); font-weight: normal; }
+.pagan-detail-favoured { color: var(--gold); font-family: var(--font-header); font-size: 0.9rem; }
+.pagan-detail-body { margin: 0; color: var(--text); font-size: 0.92rem; line-height: 1.4; }
+.pagan-detail-body--muted { color: var(--text-muted); }
+.pagan-detail-section { display: flex; flex-direction: column; gap: 0.45rem; }
+.pagan-detail-lines { display: flex; flex-direction: column; gap: 0.25rem; }
+.pagan-detail-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+.pagan-detail-line strong { color: var(--text-bright); font-weight: normal; white-space: nowrap; }
+.pagan-detail-line--stacked { color: var(--text); }
+.pagan-detail-relic { display: flex; align-items: center; gap: 0.6rem; }
+.pagan-detail-relic img { width: 2.8rem; height: 2.8rem; object-fit: contain; }
+.pagan-detail-relic .pagan-relic-copy { flex: 1; min-width: 0; }
+.pagan-relic-held { color: var(--green); font-size: 0.85rem; }
+.pagan-relic-missing { color: var(--text-muted); font-size: 0.85rem; }
 
 .pagan-rite-confirm { display: flex; flex-direction: column; gap: 0.55rem; }
 .pagan-rite-confirm p { margin: 0; }

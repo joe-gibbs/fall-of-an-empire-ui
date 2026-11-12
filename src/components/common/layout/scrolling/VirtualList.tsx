@@ -101,11 +101,15 @@ export default function VirtualList<T>({
   }, []);
 
   useEffect(() => {
-    const id = window.setTimeout(updateViewport, 0);
+    // The viewport can change height without a window resize (layout, panels, fonts),
+    // so observe it directly. The observer also reports the initial size.
+    const viewport = viewportRef.current;
+    const observer = new ResizeObserver(updateViewport);
+    if (viewport) observer.observe(viewport);
     window.addEventListener('resize', updateViewport);
     window.addEventListener('webkiln:runtime-viewport', updateViewport);
     return () => {
-      window.clearTimeout(id);
+      observer.disconnect();
       window.removeEventListener('resize', updateViewport);
       window.removeEventListener('webkiln:runtime-viewport', updateViewport);
     };

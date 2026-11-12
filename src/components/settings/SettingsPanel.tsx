@@ -576,14 +576,17 @@ const ControlsTab: React.FC<{
   const activeInputDevice = useActiveInputDevice(
     initialInputDevice === 'gamepad' ? 'gamepad' : 'keyboard',
   );
-  const [pending, setPending] = useState<PendingRebind | null>(null);
-  const [renderedPending, setRenderedPending] = useState<PendingRebind | null>(null);
+  const [capture, setCapture] = useState<{ phase: 'capturing' | 'closing'; binding: PendingRebind } | null>(null);
+  const pending = capture?.phase === 'capturing' ? capture.binding : null;
+  const closePendingRebind = useCallback(() => {
+    setCapture(current => current?.phase === 'capturing' ? { ...current, phase: 'closing' } : current);
+  }, []);
   const [mods, setMods] = useState({ shift: false, ctrl: false, alt: false });
   const [conflictNotice, setConflictNotice] = useState<string | null>(null);
   const [renderedConflictNotice, setRenderedConflictNotice] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const clearRenderedPending = useCallback(() => {
-    setRenderedPending(null);
+    setCapture(current => current?.phase === 'closing' ? null : current);
     setMods({ shift: false, ctrl: false, alt: false });
   }, []);
   const clearRenderedConflictNotice = useCallback(() => setRenderedConflictNotice(null), []);
@@ -595,7 +598,6 @@ const ControlsTab: React.FC<{
     durationMs: SETTINGS_MODAL_EXIT_MS,
     onClosed: clearRenderedConflictNotice,
   });
-  const closePendingRebind = useCallback(() => setPending(null), []);
   useEscapeStackEntry({
     id: 'settings.rebind',
     active: pendingPresence.mounted,
@@ -603,7 +605,6 @@ const ControlsTab: React.FC<{
     allowFromInput: true,
   });
 
-  if (pending && pending !== renderedPending) setRenderedPending(pending);
   if (conflictNotice && conflictNotice !== renderedConflictNotice) setRenderedConflictNotice(conflictNotice);
 
   useEffect(() => {
@@ -630,7 +631,7 @@ const ControlsTab: React.FC<{
     ) => {
       if (finished) return;
       finished = true;
-      setPending(null);
+      closePendingRebind();
       const cleared = currentPending.isAxis
         ? await rebind(currentPending.index, true, keyName, { shift: false, ctrl: false, alt: false, cmd: false })
         : await rebind(currentPending.index, false, keyName, nextMods);
@@ -645,7 +646,7 @@ const ControlsTab: React.FC<{
 
       if (e.code === 'Escape') {
         finished = true;
-        setPending(null);
+        closePendingRebind();
         return;
       }
 
@@ -663,7 +664,7 @@ const ControlsTab: React.FC<{
       const result = interpretRebindCapture((event as CustomEvent<unknown>).detail);
       if (result.type === 'cancel') {
         finished = true;
-        setPending(null);
+        closePendingRebind();
         return;
       }
       if (result.type === 'mods') {
@@ -722,7 +723,7 @@ const ControlsTab: React.FC<{
           // View/Back cancels, matching the Esc affordance for keyboard users.
           if (i === 8) {
             finished = true;
-            setPending(null);
+            closePendingRebind();
             return;
           }
           // Triggers bind as analog axes when the target is an axis.
@@ -766,7 +767,7 @@ const ControlsTab: React.FC<{
       window.removeEventListener('auxclick', blockMouseMenu, true);
       bridgeEvents.removeEventListener('ui.rebind_key', nativeKeyHandler);
     };
-  }, [pending, rebind]);
+  }, [pending, rebind, closePendingRebind]);
 
   const filteredControls = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -827,7 +828,8 @@ const ControlsTab: React.FC<{
         }`}
         onClick={() => {
           void bridgeCall('game.set_action_rebind_capture', { enabled: true }).catch(() => undefined);
-          setPending({ index: b.index, isAxis: b.isAxis, label: b.label });
+          setMods({ shift: false, ctrl: false, alt: false });
+          setCapture({ phase: 'capturing', binding: { index: b.index, isAxis: b.isAxis, label: b.label } });
         }}
       >
         <KeyGlyph
@@ -901,17 +903,17 @@ const ControlsTab: React.FC<{
           {renderedConflictNotice}
         </div>
       )}
-      {pendingPresence.mounted && renderedPending && (
+      {pendingPresence.mounted && capture && (
         <div
           className={`settings-rebind-overlay${pendingPresence.closing ? ' settings-rebind-overlay--closing' : ''}`}
-          onClick={() => setPending(null)}
+          onClick={closePendingRebind}
           onContextMenu={e => e.preventDefault()}
         >
           <div
             className={`settings-rebind-modal${pendingPresence.closing ? ' settings-rebind-modal--closing' : ''}`}
             onClick={e => e.stopPropagation()}
           >
-            <div className="settings-rebind-title">{renderedPending.label}</div>
+            <div className="settings-rebind-title">{capture.binding.label}</div>
             <div className="settings-rebind-body">
               <div><WebUIText textKey="Auto.ComponentsSettingsSettingsPanel.393.2" /></div>
               {(mods.shift || mods.ctrl || mods.alt) && (
@@ -960,6 +962,7 @@ export const EventModelSelection: React.FC<{
   hardware: { videoMemoryMB: number; systemMemoryMB: number };
   setGameplay: (patch: { llmProvider?: string; localLlmModel?: string; eventFrequency?: number }) => void;
   showEventFrequency?: boolean;
+  showHeading?: boolean;
   recommendedModelFilename?: string;
 }> = ({
   llmProvider,
@@ -969,6 +972,7 @@ export const EventModelSelection: React.FC<{
   hardware,
   setGameplay,
   showEventFrequency = true,
+  showHeading = true,
   recommendedModelFilename,
 }) => {
   const formatMB = (mb: number): string => {
@@ -1028,7 +1032,7 @@ export const EventModelSelection: React.FC<{
 
   return (
     <div className="settings-panel">
-      <SectionHeading title={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.479.4')} variant="ornate" />
+      {showHeading && <SectionHeading title={webUIText('Auto.Attr.ComponentsSettingsSettingsPanel.479.4')} variant="ornate" />}
       <div className="settings-event-cards">
         {providerCards.map(card => (
           <button
@@ -1072,13 +1076,11 @@ export const EventModelSelection: React.FC<{
                 {locked && !canDownload && <img src={eventIconPath('/assets/icons/I_Locked.png')} alt="" className="settings-event-card__lock" draggable={false} />}
               </span>
               <span className="settings-event-card__body">
-                <span className="settings-event-card__title">
-                  {model.title || model.filename}
-                  {model.filename === recommendedModelFilename && (
-                    <span className="settings-event-card__recommended">{webUIText('InitialSetup.Recommended')}</span>
-                  )}
-                </span>
+                <span className="settings-event-card__title">{model.title || model.filename}</span>
                 {model.description && <span className="settings-event-card__desc">{model.description}</span>}
+                {model.filename === recommendedModelFilename && (
+                  <span className="settings-event-card__hint">{webUIText('InitialSetup.Recommended')}</span>
+                )}
                 {(model.vramRequirement || model.vramRequirementMB > 0) && (
                   <span className="settings-event-card__req">
                     <span><WebUIText textKey="Auto.ComponentsSettingsSettingsPanel.493.5" /></span>
@@ -1138,6 +1140,8 @@ const SettingsPanel: React.FC = () => {
   const [renderedDisplayConfirm, setRenderedDisplayConfirm] = useState<DisplayConfirmState | null>(null);
   const livePreviewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingLivePreview = useRef<ApplyPayload | null>(null);
+  // The live preview the game has not yet acknowledged. Settings pushed meanwhile predate it.
+  const [unacknowledgedPreview, setUnacknowledgedPreview] = useState<ApplyPayload | null>(null);
   const clearRenderedDisplayConfirm = useCallback(() => setRenderedDisplayConfirm(null), []);
   const revertDisplaySettings = useCallback((priorSnapshot: ApplyPayload) => {
     clearStoredDisplayConfirm();
@@ -1182,7 +1186,9 @@ const SettingsPanel: React.FC = () => {
     return () => clearTimeout(t);
   }, [displayConfirm, revertDisplaySettings]);
 
-  if (settings && settings !== hydratedFrom) {
+  if (settings && settings !== hydratedFrom && unacknowledgedPreview) {
+    setHydratedFrom(settings);
+  } else if (settings && settings !== hydratedFrom) {
     setHydratedFrom(settings);
     const fresh = snapshotToPayload(settings);
     const hasLocalChanges = working !== null
@@ -1260,6 +1266,7 @@ const SettingsPanel: React.FC = () => {
     setWorking(nextWorking);
     setAppliedSnapshot(nextApplied);
     pendingLivePreview.current = nextApplied;
+    setUnacknowledgedPreview(nextApplied);
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
     livePreviewTimer.current = setTimeout(() => {
       void apply(nextApplied).catch((error) => {
@@ -1267,6 +1274,7 @@ const SettingsPanel: React.FC = () => {
         setAppliedSnapshot(current => (current === nextApplied ? previousApplied : current));
       }).finally(() => {
         if (pendingLivePreview.current === nextApplied) pendingLivePreview.current = null;
+        setUnacknowledgedPreview(current => (current === nextApplied ? null : current));
       });
     }, 150);
   };
@@ -1277,6 +1285,7 @@ const SettingsPanel: React.FC = () => {
     setWorking(nextWorking);
     setAppliedSnapshot(nextApplied);
     pendingLivePreview.current = nextApplied;
+    setUnacknowledgedPreview(nextApplied);
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
     livePreviewTimer.current = setTimeout(() => {
       void apply(nextApplied).catch((error) => {
@@ -1284,6 +1293,7 @@ const SettingsPanel: React.FC = () => {
         setAppliedSnapshot(current => (current === nextApplied ? previousApplied : current));
       }).finally(() => {
         if (pendingLivePreview.current === nextApplied) pendingLivePreview.current = null;
+        setUnacknowledgedPreview(current => (current === nextApplied ? null : current));
       });
     }, 150);
   };
@@ -1295,6 +1305,7 @@ const SettingsPanel: React.FC = () => {
     setWorking(nextWorking);
     setAppliedSnapshot(nextApplied);
     pendingLivePreview.current = nextApplied;
+    setUnacknowledgedPreview(nextApplied);
     if (livePreviewTimer.current) clearTimeout(livePreviewTimer.current);
     livePreviewTimer.current = setTimeout(() => {
       void apply(nextApplied).catch((error) => {
@@ -1303,6 +1314,7 @@ const SettingsPanel: React.FC = () => {
         setAppliedSnapshot(current => (current === nextApplied ? previousApplied : current));
       }).finally(() => {
         if (pendingLivePreview.current === nextApplied) pendingLivePreview.current = null;
+        setUnacknowledgedPreview(current => (current === nextApplied ? null : current));
       });
     }, 150);
   };
@@ -1320,6 +1332,7 @@ const SettingsPanel: React.FC = () => {
       livePreviewTimer.current = null;
     }
     pendingLivePreview.current = null;
+    setUnacknowledgedPreview(null);
     const prior = appliedSnapshot;
     const next = sanitiseApplyPayload(working);
     setWorking(next);
@@ -1348,6 +1361,7 @@ const SettingsPanel: React.FC = () => {
       livePreviewTimer.current = null;
     }
     pendingLivePreview.current = null;
+    setUnacknowledgedPreview(null);
     const previousWorking = working;
     const previousHydratedFrom = hydratedFrom;
     const previousAppliedSnapshot = appliedSnapshot;

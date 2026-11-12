@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  bridgeCall,
   onBridgeEvent,
+  type TutorialSpotlightRequest,
   type TutorialSpotlightResponse,
 } from '../../bridge-types.generated.ts';
-import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
+import { currentBridgeEventRevision } from '../core/bridgeEventCache';
+import { acknowledgeBridgeFailure, callRuntimeBridgeRevisioned } from '../core/runtimeEngine';
 
 const HIDDEN_SPOTLIGHT: TutorialSpotlightResponse = {
   isVisible: false,
@@ -45,8 +46,13 @@ function publishSpotlightTargetRequests(spotlight: TutorialSpotlightResponse): v
 
 export function useTutorialSpotlightBridge() {
   const [spotlight, setSpotlight] = useState<TutorialSpotlightResponse>(HIDDEN_SPOTLIGHT);
+  // Responses and pushes are ordered by when they left the game, so a late response
+  // to an earlier command cannot restore a step the tutorial has already moved past.
+  const appliedRevisionRef = useRef(0);
 
-  const applySpotlight = useCallback((next: TutorialSpotlightResponse | null | undefined) => {
+  const applySpotlight = useCallback((next: TutorialSpotlightResponse | null | undefined, revision: number) => {
+    if (revision < appliedRevisionRef.current) return;
+    appliedRevisionRef.current = revision;
     const normalised = normaliseSpotlight(next);
     setSpotlight((current) => {
       if (
@@ -72,32 +78,30 @@ export function useTutorialSpotlightBridge() {
   }, []);
 
   useEffect(() => onBridgeEvent('game.tutorial_spotlight', (event) => {
-    applySpotlight(event);
+    applySpotlight(event, currentBridgeEventRevision());
   }), [applySpotlight]);
 
-  useEffect(() => {
-    bridgeCall('game.tutorial_spotlight', { command: 'bind', eventId: '', direction: 0 })
-      .then(response => applySpotlight(response))
+  const sendCommand = useCallback((payload: TutorialSpotlightRequest) => {
+    callRuntimeBridgeRevisioned({ action: 'game.tutorial_spotlight', payload })
+      .then(({ value, sentRevision }) => applySpotlight(value as TutorialSpotlightResponse, sentRevision))
       .catch(error => acknowledgeBridgeFailure(error, 'game.tutorial_spotlight'));
   }, [applySpotlight]);
+
+  useEffect(() => {
+    sendCommand({ command: 'bind', eventId: '', direction: 0 });
+  }, [sendCommand]);
 
   const resolve = useCallback((eventId: string) => {
-    bridgeCall('game.tutorial_spotlight', { command: 'resolve', eventId, direction: 0 })
-      .then(response => applySpotlight(response))
-      .catch(error => acknowledgeBridgeFailure(error, 'game.tutorial_spotlight'));
-  }, [applySpotlight]);
+    sendCommand({ command: 'resolve', eventId, direction: 0 });
+  }, [sendCommand]);
 
   const dismiss = useCallback((eventId: string) => {
-    bridgeCall('game.tutorial_spotlight', { command: 'dismiss', eventId, direction: 0 })
-      .then(response => applySpotlight(response))
-      .catch(error => acknowledgeBridgeFailure(error, 'game.tutorial_spotlight'));
-  }, [applySpotlight]);
+    sendCommand({ command: 'dismiss', eventId, direction: 0 });
+  }, [sendCommand]);
 
   const navigate = useCallback((direction: -1 | 1) => {
-    bridgeCall('game.tutorial_spotlight', { command: 'navigate', eventId: spotlight.eventId, direction })
-      .then(response => applySpotlight(response))
-      .catch(error => acknowledgeBridgeFailure(error, 'game.tutorial_spotlight'));
-  }, [applySpotlight, spotlight.eventId]);
+    sendCommand({ command: 'navigate', eventId: spotlight.eventId, direction });
+  }, [sendCommand, spotlight.eventId]);
 
   return { spotlight, resolve, dismiss, navigate };
 }

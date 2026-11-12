@@ -1,8 +1,6 @@
 import React, {
-  forwardRef,
   useCallback,
   useEffect,
-  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -57,6 +55,8 @@ interface FactionSelectionProps {
   onClose: () => void;
   showPurchaseForLocked?: boolean;
   onPurchaseFullGame?: () => void;
+  /** Called when the player picks a faction that needs a DLC they do not own. */
+  onRequireDlc: (dlc: { name: string; storeUrl: string }) => void;
   onConfirm: (faction: { baseName: string; displayName: string }) => void;
 }
 
@@ -640,11 +640,6 @@ function StateView({
   );
 }
 
-export interface FactionMapHoverHandle {
-  setHovered: (baseName: string) => void;
-  clearHovered: () => void;
-}
-
 function requestFactionSelectionTabletop(
   request: Partial<FactionSelectionTabletopRequest> & Pick<FactionSelectionTabletopRequest, 'command'>,
 ) {
@@ -765,8 +760,6 @@ type FactionSelectionMapMode = 'political' | 'culture' | 'religion';
 
 interface FactionSelectionTabletopMapProps {
   dateControl: React.ReactNode;
-  selectedBaseName: string;
-  hoveredFaction: ScenarioMapFactionDto | null;
   scenarioDescriptionParts: string[];
   onSelectBaseName: (baseName: string) => void;
   mapMode: FactionSelectionMapMode;
@@ -775,8 +768,6 @@ interface FactionSelectionTabletopMapProps {
 }
 
 function FactionSelectionTabletopMap({
-  selectedBaseName,
-  hoveredFaction,
   scenarioDescriptionParts,
   onSelectBaseName,
   dateControl,
@@ -967,18 +958,6 @@ function FactionSelectionTabletopMap({
         onAuxClick={(event) => event.preventDefault()}
         onWheel={handleWheel}
       >
-        {hoveredFaction && hoveredFaction.baseName !== selectedBaseName && (
-          <div className="fs-map-hover-label">
-            <span className={roundelClassName(hoveredFaction, 'xs')} style={roundelStyle(hoveredFaction)}>
-              <FactionSelectionRoundelSymbol faction={hoveredFaction} />
-            </span>
-            <span>{hoveredFaction.displayName}</span>
-            {!hoveredFaction.playable && (
-              <span className="badge badge--gold fs-map-hover-tag">{t('MainMenu.Locked')}</span>
-            )}
-          </div>
-        )}
-
         <div
           className="fs-zoom-controls"
           data-focus-group="vertical"
@@ -1033,8 +1012,7 @@ interface FactionSelectionBrowseColumnProps {
   mapLegend: FactionSelectionMapLegendEntry[];
 }
 
-const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSelectionBrowseColumnProps>(
-  function FactionSelectionBrowseColumn(
+function FactionSelectionBrowseColumn(
     {
       mapId,
       data,
@@ -1049,23 +1027,15 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
       mapMode,
       onMapModeChange,
       mapLegend,
-    },
-    ref,
+    }: FactionSelectionBrowseColumnProps,
   ) {
     const t = useWebUIText();
-    const [hoveredBaseName, setHoveredBaseName] = useState('');
-
-    useImperativeHandle(ref, () => ({
-      setHovered: (baseName: string) => setHoveredBaseName(baseName),
-      clearHovered: () => setHoveredBaseName(''),
-    }), []);
 
     const factions = data.factions;
     const factionsByBase = useMemo(
       () => new Map(factions.map((faction) => [faction.baseName, faction])),
       [factions],
     );
-    const hovered = hoveredBaseName ? factionsByBase.get(hoveredBaseName) ?? null : null;
     const searchQuery = search.trim();
 
     const visibleFactions = useMemo(
@@ -1100,8 +1070,6 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
           data-focus-right=".fs-begin-btn"
           onFocus={() => onSelectBaseName(faction.baseName)}
           onClick={() => onSelectBaseName(faction.baseName)}
-          onMouseEnter={() => setHoveredBaseName(faction.baseName)}
-          onMouseLeave={() => setHoveredBaseName('')}
         >
           <span className={roundelClassName(faction, 'xs')} style={roundelStyle(faction)}>
             <FactionSelectionRoundelSymbol faction={faction} />
@@ -1183,15 +1151,12 @@ const FactionSelectionBrowseColumn = forwardRef<FactionMapHoverHandle, FactionSe
           onMapModeChange={onMapModeChange}
           mapLegend={mapLegend}
           dateControl={dateControl}
-          selectedBaseName={selectedBaseName}
-          hoveredFaction={hovered}
           scenarioDescriptionParts={scenarioDescriptionParts}
           onSelectBaseName={onSelectBaseName}
         />
       </>
     );
-  },
-);
+  }
 
 interface FactionSelectionDetailPanelProps {
   selected: ScenarioMapFactionDto;
@@ -1199,12 +1164,13 @@ interface FactionSelectionDetailPanelProps {
   factionsByBase: Map<string, ScenarioMapFactionDto>;
   wars: ScenarioMapWarDto[];
   showPurchaseForSelected: boolean;
+  /** The DLC that makes every locked faction playable, when the player does not own it. */
+  unlockDlc: { name: string; storeUrl: string } | null;
   canConfirm: boolean;
   onSelectBaseName: (baseName: string) => void;
-  onFactionHover: (baseName: string) => void;
-  onFactionHoverEnd: () => void;
   onConfirm: FactionSelectionProps['onConfirm'];
   onPurchaseFullGame?: FactionSelectionProps['onPurchaseFullGame'];
+  onRequireDlc: FactionSelectionProps['onRequireDlc'];
 }
 
 function FactionSelectionDetailPanel({
@@ -1213,15 +1179,16 @@ function FactionSelectionDetailPanel({
   factionsByBase,
   wars,
   showPurchaseForSelected,
+  unlockDlc,
   canConfirm,
   onSelectBaseName,
-  onFactionHover,
-  onFactionHoverEnd,
   onConfirm,
   onPurchaseFullGame,
+  onRequireDlc,
 }: FactionSelectionDetailPanelProps) {
   const t = useWebUIText();
   const selectedLeader = getLeader(selected);
+  const showDlcForSelected = !selected.playable && !showPurchaseForSelected && unlockDlc !== null;
   const selectedSubjects = factions
     .filter((faction) => faction.overlordBaseName === selected.baseName)
     .sort(factionSort);
@@ -1256,8 +1223,6 @@ function FactionSelectionDetailPanel({
             className={`fs-subject-roundel-btn${!subject.playable ? ' fs-subject-roundel-btn--locked' : ''}`}
             aria-label={subject.displayName}
             onClick={() => onSelectBaseName(subject.baseName)}
-            onMouseEnter={() => onFactionHover(subject.baseName)}
-            onMouseLeave={onFactionHoverEnd}
           >
             <span className={roundelClassName(subject, 'sm')} style={roundelStyle(subject)}>
               <FactionSelectionRoundelSymbol faction={subject} />
@@ -1303,8 +1268,6 @@ function FactionSelectionDetailPanel({
         className={`fs-war-side fs-war-side--${tone} fs-war-side--clickable`}
         aria-label={leader.displayName}
         onClick={() => onSelectBaseName(leader.baseName)}
-        onMouseEnter={() => onFactionHover(leader.baseName)}
-        onMouseLeave={onFactionHoverEnd}
       >
         {content}
       </button>
@@ -1352,7 +1315,11 @@ function FactionSelectionDetailPanel({
           <div className="fs-detail-hero-info">
             {!selected.playable && (
               <div className="badge badge--gold fs-detail-hero-status">
-                {showPurchaseForSelected ? t('Demo.BuyFullGame') : t('MainMenu.Locked')}
+                {showPurchaseForSelected
+                  ? t('Demo.BuyFullGame')
+                  : showDlcForSelected
+                    ? t('Dlc.Requires', { Dlc: unlockDlc.name })
+                    : t('MainMenu.Locked')}
               </div>
             )}
             <div className="fs-detail-hero-faction-name">{selected.displayName}</div>
@@ -1572,14 +1539,16 @@ function FactionSelectionDetailPanel({
       <div className="fs-detail-footer">
         <button
           type="button"
-          className={`btn--outline fs-begin-btn${canConfirm && (selected.playable || showPurchaseForSelected) ? '' : ' fs-begin-btn--disabled'}`}
+          className={`btn--outline fs-begin-btn${canConfirm && (selected.playable || showPurchaseForSelected || showDlcForSelected) ? '' : ' fs-begin-btn--disabled'}`}
           data-focus-left=".fs-faction-row--active"
-          disabled={!canConfirm || (!selected.playable && !showPurchaseForSelected)}
+          disabled={!canConfirm || (!selected.playable && !showPurchaseForSelected && !showDlcForSelected)}
           onClick={() => {
             if (selected.playable) {
               onConfirm({ baseName: selected.baseName, displayName: selected.displayName });
             } else if (showPurchaseForSelected) {
               onPurchaseFullGame?.();
+            } else if (showDlcForSelected) {
+              onRequireDlc(unlockDlc);
             }
           }}
         >
@@ -1591,14 +1560,18 @@ function FactionSelectionDetailPanel({
               ? t('MainMenu.BeginCampaign')
               : showPurchaseForSelected
                 ? t('Demo.BuyFullGame')
-                : t('MainMenu.Locked')}</span>
+                : showDlcForSelected
+                  ? t('Dlc.ViewInStore')
+                  : t('MainMenu.Locked')}</span>
           </span>
           <span className="fs-begin-btn-sub">
             {selected.playable
               ? t('MainMenu.AsFaction', { Faction: selected.displayName })
               : showPurchaseForSelected
                 ? t('Demo.PlayFaction', { Faction: selected.displayName })
-                : t('MainMenu.FactionPlayableLater')}
+                : showDlcForSelected
+                  ? t('Dlc.PlayFaction', { Faction: selected.displayName, Dlc: unlockDlc.name })
+                  : t('MainMenu.FactionPlayableLater')}
           </span>
         </button>
       </div>
@@ -1702,6 +1675,7 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
   onClose,
   showPurchaseForLocked = false,
   onPurchaseFullGame,
+  onRequireDlc,
   onConfirm,
 }) => {
   const t = useWebUIText();
@@ -1732,7 +1706,6 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
     }
   }, [data, displayData, loadError, selected]);
 
-  const mapHoverRef = useRef<FactionMapHoverHandle | null>(null);
   const showPurchaseForSelected = Boolean(
     selected && showPurchaseForLocked && selected.fullGamePlayable,
   );
@@ -1742,14 +1715,6 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
     .map((part) => part.trim())
     .filter(Boolean);
   const rootClassName = `fs-root${closing ? ' fs-root--closing' : ''}`;
-
-  const handleFactionHover = useCallback((baseName: string) => {
-    mapHoverRef.current?.setHovered(baseName);
-  }, []);
-
-  const handleFactionHoverEnd = useCallback(() => {
-    mapHoverRef.current?.clearHovered();
-  }, []);
 
   const selectFactionBaseName = useCallback((baseName: string) => {
     const faction = factionsByBase.get(baseName);
@@ -1801,7 +1766,6 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
           mapMode={mapMode}
           onMapModeChange={setMapMode}
           mapLegend={mapLegend}
-          ref={mapHoverRef}
           mapId={mapId}
           data={displayData}
           selectedBaseName={selectedBaseName}
@@ -1817,13 +1781,16 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
                 <GameButton
                   key={date.id}
                   variant="outline"
-                  className="fs-start-date-button"
+                  className={date.isLocked ? 'fs-start-date-button fs-start-date-button--locked' : 'fs-start-date-button'}
                   ariaPressed={date.id === startDateId}
                   onClick={() => onSelectStartDate(date.id)}
                 >
                   <span className="fs-start-date-content">
                     <span className="fs-start-date-date">{date.startingDateLabel}</span>
                     <span className="fs-start-date-name">{date.displayName}</span>
+                    {date.isLocked && (
+                      <img src="/assets/icons/I_Locked.png" alt="" className="fs-start-date-lock" draggable={false} />
+                    )}
                   </span>
                 </GameButton>
               ))}
@@ -1837,12 +1804,14 @@ const FactionSelectionScreen: React.FC<FactionSelectionProps> = ({
           factionsByBase={factionsByBase}
           wars={displayData.wars}
           showPurchaseForSelected={showPurchaseForSelected}
+          unlockDlc={data.factionUnlockDlcName
+            ? { name: data.factionUnlockDlcName, storeUrl: data.factionUnlockDlcStoreUrl }
+            : null}
           canConfirm={data.startDateId === startDateId}
           onSelectBaseName={selectFactionBaseName}
-          onFactionHover={handleFactionHover}
-          onFactionHoverEnd={handleFactionHoverEnd}
           onConfirm={onConfirm}
           onPurchaseFullGame={onPurchaseFullGame}
+          onRequireDlc={onRequireDlc}
         />
       </div>
     </div>

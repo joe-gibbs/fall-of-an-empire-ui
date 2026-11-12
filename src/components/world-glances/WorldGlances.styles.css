@@ -159,8 +159,6 @@
   margin-top: 0.3636rem;
 }
 
-
-
 .glance-expanded > :first-child {
   margin-top: 0;
 }
@@ -205,8 +203,6 @@
   margin-left: 0.2727rem;
 }
 
-
-
 .glance-expanded-chip > :first-child {
   margin-left: 0;
 }
@@ -216,7 +212,6 @@
   height: 1rem;
   opacity: 0.9;
 }
-
 
 /* ─────────────────────────────────────────────────────────────────────────
    Army / Navy banner
@@ -233,8 +228,6 @@
 .glance--army > * {
   margin-left: 0.7273rem;
 }
-
-
 
 .glance--army > :first-child {
   margin-left: 0;
@@ -295,8 +288,6 @@
   margin-top: 0.1818rem;
 }
 
-
-
 .glance-body > :first-child {
   margin-top: 0;
 }
@@ -310,8 +301,6 @@
 .glance-name-row > * {
   margin-left: 0.5455rem;
 }
-
-
 
 .glance-name-row > :first-child {
   margin-left: 0;
@@ -343,8 +332,6 @@
 .glance-bars-row > * {
   margin-top: 0.1818rem;
 }
-
-
 
 .glance-bars-row > :first-child {
   margin-top: 0;
@@ -445,8 +432,6 @@
   margin-left: 0;
   margin-right: 0.3636rem;
 }
-
-
 
 .battle-side-badges--right .battle-side-badge:first-child {
   margin-left: 0;
@@ -618,8 +603,6 @@
   margin-left: 1.0909rem;
 }
 
-
-
 .battle-expanded > :first-child {
   margin-left: 0;
 }
@@ -634,8 +617,6 @@
 .battle-expanded-side > * {
   margin-top: 0.2727rem;
 }
-
-
 
 .battle-expanded-side > :first-child {
   margin-top: 0;
@@ -671,8 +652,6 @@
 .battle-participant > * {
   margin-left: 0.5455rem;
 }
-
-
 
 .battle-participant > :first-child {
   margin-left: 0;
@@ -765,8 +744,6 @@
   margin-left: 0.9091rem;
 }
 
-
-
 .gset-body > :first-child {
   margin-left: 0;
 }
@@ -781,8 +758,6 @@
 .gset-head > * {
   margin-left: 0.4545rem;
 }
-
-
 
 .gset-head > :first-child {
   margin-left: 0;
@@ -824,8 +799,6 @@
 .gset-info > * {
   margin-left: 0.3636rem;
 }
-
-
 
 .gset-info > :first-child {
   margin-left: 0;
@@ -1341,20 +1314,19 @@
 
 .glance--military.is-retreating .glance-military-alert-flash,
 .glance--military-garrison.is-retreating .glance-military-alert-flash {
-  opacity: 0.36;
+  opacity: 0.1;
   animation: military-glance-retreat-flash 2s ease-in-out infinite;
 }
 
 @keyframes military-glance-retreat-flash {
   0%,
-  80%,
+  70%,
   100% {
-    opacity: 0.36;
+    opacity: 0.1;
   }
 
-  25%,
-  50% {
-    opacity: 0.88;
+  30% {
+    opacity: 0.5;
   }
 }
 
@@ -1445,32 +1417,42 @@
   background-color: var(--gold);
 }
 
-.world-glance-node.is-targeted .glance--military::before,
-.glance--military.is-targeted::before {
-  background-color: var(--glance-target-fill);
-}
-
 .world-glance-node.is-targeted .glance--military::after,
 .glance--military.is-targeted::after {
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  border-width: 0.1818rem;
-  border-top-color: var(--glance-target-rim);
-  border-right-color: var(--glance-target-fill);
-  border-bottom-color: #9a220c;
-  border-left-color: var(--glance-target-fill);
+  top: 0.0455rem;
+  right: 0.0455rem;
+  bottom: 0.0455rem;
+  left: 0.0455rem;
+  border-width: 0.1364rem;
+  border-color: var(--glance-attack-ring);
+}
+
+.glance-military-target-indicator {
+  position: absolute;
+  top: -0.4545rem;
+  left: -0.4545rem;
+  z-index: 5;
+  display: block;
+  box-sizing: border-box;
+  width: calc(100% + 0.909rem);
+  height: calc(100% + 0.909rem);
+  border: 0.3182rem solid var(--glance-attack-ring);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0.5rem 0.1364rem var(--glance-attack-glow),
+    inset 0 0 0.4545rem 0.0909rem var(--glance-attack-glow);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.world-glance-node.is-targeted .glance--military .glance-military-target-indicator,
+.glance--military.is-targeted .glance-military-target-indicator {
+  opacity: 1;
 }
 
 .world-glance-node.is-selected .glance--military .glance-military-icon-socket,
 .glance--military.is-selected .glance-military-icon-socket {
   background-color: var(--gold);
-}
-
-.world-glance-node.is-targeted .glance--military .glance-military-icon-socket,
-.glance--military.is-targeted .glance-military-icon-socket {
-  background-color: var(--glance-target-fill);
 }
 
 .glance-military-rings {
@@ -1515,34 +1497,6 @@
   overflow: visible;
   object-fit: contain;
   pointer-events: none;
-}
-
-.glance-military-target-indicator {
-  position: absolute;
-  top: -1.3636rem;
-  left: -1.3636rem;
-  z-index: 0;
-  display: block;
-  width: calc(100% + 2.7272rem);
-  height: calc(100% + 2.7272rem);
-  border-radius: 50%;
-  background-image: radial-gradient(
-    circle at center,
-    rgba(255, 90, 30, 0) 0%,
-    rgba(255, 90, 30, 0) 42%,
-    var(--glance-target-glow-core) 54%,
-    var(--glance-target-glow-mid) 64%,
-    var(--glance-target-glow-edge) 76%,
-    rgba(232, 40, 12, 0) 88%
-  );
-  opacity: 0;
-  pointer-events: none;
-  transform-origin: center center;
-}
-
-.world-glance-node.is-targeted .glance--military .glance-military-target-indicator,
-.glance--military.is-targeted .glance-military-target-indicator {
-  opacity: 1;
 }
 
 .glance-military-core {
@@ -1936,41 +1890,16 @@
 }
 
 .glance-garrison-target {
-  top: -0.7273rem;
-  right: -0.7273rem;
-  bottom: -0.7273rem;
-  left: -0.7273rem;
   z-index: 1;
   background-color: transparent;
-  background-image: radial-gradient(
-    ellipse at center,
-    rgba(255, 90, 30, 0) 0%,
-    rgba(255, 90, 30, 0) 28%,
-    var(--glance-target-glow-core) 48%,
-    var(--glance-target-glow-mid) 64%,
-    var(--glance-target-glow-edge) 78%,
-    rgba(232, 40, 12, 0) 90%
-  );
+  background-image: none;
+  transform: scale(1.1);
+  filter: blur(0.24rem);
 }
 
-.glance-garrison-target::after {
-  content: '';
-  position: absolute;
-  top: 0.6364rem;
-  right: 0.6364rem;
-  bottom: 0.6364rem;
-  left: 0.6364rem;
-  background-color: var(--glance-target-fill);
-  background-image: none;
+.glance-garrison-target .glance-target-silhouette {
   mask-image: url('/assets/glance/glance-chip.png');
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: 100% 100%;
   -webkit-mask-image: url('/assets/glance/glance-chip.png');
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: 100% 100%;
-  opacity: 1;
 }
 
 .world-glance-node:not(.is-selected):hover .glance--military-garrison .glance-garrison-selection,
@@ -3056,48 +2985,46 @@
 .world-glance-node.detail-name .gset-badge-layer--target-frame {
   z-index: 6;
   background-color: var(--glance-target-fill);
-  background-position: 0 0;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  mask-position: 0 0;
+  mask-position: center;
   mask-repeat: no-repeat;
   mask-size: 100% 100%;
-  -webkit-mask-position: 0 0;
+  -webkit-mask-position: center;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-size: 100% 100%;
   opacity: 0;
-  transform: scale(1.08);
+  transform: scale(1.04);
   transform-origin: center center;
 }
 
 .gset-target-glow,
 .world-glance-node.detail-name .gset-target-glow {
   position: absolute;
-  z-index: 1;
-  top: -0.8182rem;
-  left: -0.8182rem;
-  width: 5.9091rem;
-  height: 5.9091rem;
-  background-color: transparent;
-  background-image: radial-gradient(
-    circle at center,
-    rgba(255, 90, 30, 0) 0%,
-    rgba(255, 90, 30, 0) 46%,
-    var(--glance-target-glow-core) 62%,
-    var(--glance-target-glow-mid) 74%,
-    var(--glance-target-glow-edge) 86%,
-    rgba(232, 40, 12, 0) 96%
-  );
+  z-index: 3;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scale(1.24);
+  transform-origin: center;
+  filter: blur(0.24rem);
   opacity: 0;
   pointer-events: none;
-  transform-origin: center center;
 }
 
-.world-glance-node.is-targeted .glance--settlement,
-.glance--settlement.is-targeted,
-.world-glance-node.is-targeted .glance--port,
-.glance--port.is-targeted {
-  --glance-badge-tint: var(--glance-target-fill) !important;
+.glance-target-silhouette {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  background-color: var(--glance-target-glow-colour);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
 }
 
 .world-glance-node.is-targeted .glance--settlement .gset-target-glow,
@@ -3210,14 +3137,15 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: 11.8182rem;
+  width: max-content;
   flex-grow: 0;
   flex-shrink: 0;
-  flex-basis: 11.8182rem;
-  min-width: 0;
+  flex-basis: auto;
+  min-width: 5.4545rem;
+  max-width: 11.8182rem;
   min-height: 2.4545rem;
   margin-left: var(--settlement-badge-overhang);
-  padding: 0.3636rem 0.5rem 0.3182rem 0.4091rem;
+  padding: 0.3636rem 1.5455rem 0.3182rem 0.4091rem;
   transform: translateX(0) scaleX(1);
   transform-origin: left center;
   opacity: 1;
@@ -3279,13 +3207,13 @@
   margin-left: 0;
 }
 
-/* The label brush fades at its right edge. Keep the active building and its
-   percent on the solid left portion instead of pinning the digits to that fade. */
+/* The label brush fades at its right edge. The plate's right padding keeps the
+   active building and its percent on the solid portion of the brush. */
 .gset-build-status {
   display: flex;
   align-items: center;
   width: auto;
-  max-width: calc(100% - 2.1818rem);
+  max-width: 100%;
   min-width: 0;
   margin-left: 0;
   color: #f0e2c0;
@@ -4498,25 +4426,17 @@
 
 .gport-target-indicator {
   position: absolute;
-  top: -0.9091rem;
-  left: -0.9091rem;
+  top: 0;
+  left: 0;
   z-index: 3;
   display: block;
-  width: 6.0909rem;
-  height: 6.0909rem;
-  border-radius: 50%;
-  background-image: radial-gradient(
-    circle at center,
-    rgba(255, 90, 30, 0) 0%,
-    rgba(255, 90, 30, 0) 38%,
-    var(--glance-target-glow-core) 52%,
-    var(--glance-target-glow-mid) 64%,
-    var(--glance-target-glow-edge) 76%,
-    rgba(232, 40, 12, 0) 88%
-  );
+  width: 100%;
+  height: 100%;
+  transform: scale(1.24);
+  transform-origin: center;
+  filter: blur(0.24rem);
   opacity: 0;
   pointer-events: none;
-  transform-origin: center center;
 }
 
 .world-glance-node.is-targeted .glance--port .gport-target-indicator,
@@ -5895,26 +5815,9 @@
 }
 
 /* Queued jobs share the settlement's painted label; only the first queue item advances. */
-.gset-queued-job {
-  display: flex;
-  align-items: center;
-  min-width: 0;
+.gset-build-status-queued {
+  margin-left: 0.2727rem;
   color: var(--text-muted);
-  font-size: 0.6818rem;
-  line-height: 0.9rem;
-}
-
-.gset-queued-job > img {
-  width: 0.7273rem;
-  height: 0.7273rem;
-  margin-right: 0.2727rem;
-  flex-shrink: 0;
-}
-
-.gset-queued-job > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

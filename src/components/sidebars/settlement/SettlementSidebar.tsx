@@ -22,7 +22,7 @@ import { usePinnedItemsBridge, zoomToBridge } from '../../../bridge/app/usePinne
 import { bridgeCall } from '../../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { bridgeEvents } from '../../../bridge/core/bridgeEvents';
-import { consumePendingSidebarTab } from '../../../bridge/core/useBridgeSidebarEvents';
+import { useSidebarTabRequest } from '../../../bridge/core/useBridgeSidebarEvents';
 import {
   navigateSettlementBridge,
   renameSettlementBridge,
@@ -39,7 +39,9 @@ import SidebarToolbar from '../shared/SidebarToolbar';
 import { StatCellGrid, StatCell } from '../shared/StatCellGrid';
 import { MAP_MODE_ICONS } from '../../bottombar/mapModeIcons';
 import SettlementBuildingsPanel from './SettlementBuildingsPanel';
+import FoodReserveBar from './FoodReserveBar';
 import SettlementMilitaryPanel from './SettlementMilitaryPanel';
+import GovernorFocusPanel from './GovernorFocusPanel';
 import UnitTooltip from '../../common/tooltips/UnitTooltip';
 import ResourceLink from '../../common/resources/ResourceLink';
 import ResourcePurchaseButton from '../../common/resources/ResourcePurchaseButton';
@@ -212,7 +214,7 @@ function showHintKey(hintKey: string, force: boolean = true) {
 }
 
 function refreshSettlementData(settlementId: string): void {
-  bridgeCall('game.get_settlement_data', { settlementId })
+  bridgeCall('game.get_settlement_data', { settlementId, subscriptionId: '', subscribe: false })
     .then((fresh) => {
       bridgeEvents.dispatchEvent(new CustomEvent('game.get_settlement_data', { detail: fresh }));
     })
@@ -563,6 +565,15 @@ function buildResourceTooltip(r: Resource, purchase: ReturnType<typeof settlemen
         });
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.456.28'), value: depletion, valueColor: months > 0 && months >= 6 ? 'var(--text-muted)' : 'var(--orange)' });
   }
+  if (r.exportsProduction && r.production > 0.01) {
+    const keepUpTo = r.keepUpTo ?? 0;
+    if (keepUpTo > 0) {
+      lines.push({ label: webUIText('SettlementSidebar.KeptHereUpTo'), value: formatResourceNumber(keepUpTo) });
+    }
+    lines.push(r.amount < keepUpTo
+      ? { label: webUIText('SettlementSidebar.NewProduction'), value: webUIText('SettlementSidebar.ProductionKeptHere'), valueColor: 'var(--green)' }
+      : { label: webUIText('SettlementSidebar.NewProduction'), value: webUIText('SettlementSidebar.ProductionExported'), valueColor: 'var(--text-muted)' });
+  }
 
   if (r.siegeHalted) {
     lines.push({ label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.460.29'), value: '', valueColor: 'var(--red)' });
@@ -802,7 +813,7 @@ function bishopricToAssignment(settlement: Settlement, bishopric: SettlementBish
     landName: settlement.land,
     bishopId: bishopric.bishop?.id ?? null,
     bishopName: bishopric.bishop?.name ?? null,
-    bishopPortrait: null,
+    bishopPortraitLayers: bishopric.bishop?.portraitLayers,
     authority: bishopric.authority,
     followerPercent: bishopric.landReligionShare,
     followers: bishopric.landFollowers,
@@ -1035,6 +1046,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
               fullWidth
               icon="/assets/icons/I_ModConstruction.png"
               className="settle-raise-button"
+              tutorialTarget="RaiseSettlementButton"
               disabled={!canRaise}
               onClick={() => { void startInteraction(raiseSettlement.id); }}
             >
@@ -1050,9 +1062,6 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
           </Tooltip>}
           {raiseSettlement?.inProgress && (
             <PaintedBar percent={100 * (1 - raiseSettlement.remainingDays / raiseSettlement.durationDays)} color="gold" />
-          )}
-          {raiseSettlement && !canRaise && !raiseSettlement.inProgress && (
-            <p className="settle-raise-blocked-reason">{raiseSettlement.reasons.map(reason => reason.reason).join(' ')}</p>
           )}
         </div>
       </div>
@@ -1116,7 +1125,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
 
       {/* Header */}
       <div className="settle-header">
-        <img src={settlementTypeHeaderBg[settlement.type] || "/assets/events/settlement-village.png"} alt="" className="settle-header-bg" />
+        <img src={WebkilnAssetPath(settlementTypeHeaderBg[settlement.type] || "/assets/events/settlement-village.png")} alt="" className="settle-header-bg" />
         <Tooltip
           content={{
             title: formatSettlementType(settlement.type),
@@ -1528,15 +1537,33 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
           {settlement.resources.length > 0 && <>
             <HintSectionHeading title={webUIText('Auto.Attr.ComponentsSidebarsSettlementSidebar.1323.75')} hintKey="TradeAndResourcesHint" />
             <div className="settle-resources">
-              {(resourceCategories.length > 0 ? resourceCategories : [{ id: 'other', get name() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1328.1"); }, stockpile: 0, stockpileCap: 0, production: 0, potentialProduction: 0, consumption: 0, hasShortage: false, isCapitalStockpile: false }]).map(category => {
+              {(resourceCategories.length > 0 ? resourceCategories : [{ id: 'other', supplyFood: undefined, civilianReserve: undefined, get name() { return webUIText("Auto.Prop.componentssidebarsSettlementSidebar.1328.1"); }, stockpile: 0, stockpileCap: 0, production: 0, potentialProduction: 0, consumption: 0, hasShortage: false, isCapitalStockpile: false }]).map(category => {
                 const resources = resourcesByCategory.get(category.id) ?? (category.id === 'other' ? settlement.resources : []);
                 if (resources.length === 0 && category.stockpile <= 0 && category.production <= 0 && category.consumption <= 0) return null;
                 const categoryNet = category.production - category.consumption;
                 const categoryPotential = category.potentialProduction;
+                const supplyFood = category.supplyFood ?? 0;
+                const civilianReserve = category.civilianReserve ?? 0;
+                const showFoodReserve = category.id === 'food' && civilianReserve > 0;
                 const categoryTooltip: TooltipContent = {
                   title: category.name,
-                  get body() { return category.isCapitalStockpile ? webUIText("SettlementSidebar.CapitalStockpileDraws") : undefined; },
+                  get body() {
+                    if (category.isCapitalStockpile) return webUIText("SettlementSidebar.CapitalStockpileDraws");
+                    return showFoodReserve ? webUIText("SettlementSidebar.FoodReserveExplained") : undefined;
+                  },
                   lines: [
+                    ...(showFoodReserve ? [
+                      {
+                        label: webUIText('SettlementSidebar.FoodKeptForPeople'),
+                        value: `${exactResourceAmount(Math.min(supplyFood, civilianReserve))}/${exactResourceAmount(civilianReserve)}`,
+                        valueColor: supplyFood < civilianReserve ? 'var(--red)' : 'var(--gold)',
+                      },
+                      {
+                        label: webUIText('SettlementSidebar.FoodArmiesMayTake'),
+                        value: exactResourceAmount(Math.max(0, supplyFood - civilianReserve)),
+                        valueColor: supplyFood > civilianReserve ? 'var(--green)' : 'var(--text-muted)',
+                      },
+                    ] : []),
                     {
                       label: webUIText('Auto.Prop.ComponentsSidebarsSettlementSidebar.1335.76'),
                       value: category.isCapitalStockpile || category.stockpileCap <= 0
@@ -1568,6 +1595,15 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                         </span>
                       </div>
                     </Tooltip>
+                    {showFoodReserve && (
+                      <Tooltip content={categoryTooltip} position="left" delay={200}>
+                        <FoodReserveBar
+                          food={supplyFood}
+                          reserve={civilianReserve}
+                          cap={category.isCapitalStockpile ? 0 : category.stockpileCap}
+                        />
+                      </Tooltip>
+                    )}
                     <div className="settle-resource-category-rows">
                       {resources.map(r => {
                         const net = r.production - r.consumption;
@@ -1591,6 +1627,8 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
               })}
             </div>
           </>}
+
+          <GovernorFocusPanel settlementId={settlement.id} />
 
           {/* Actions */}
           {interactions.length > 0 && <>
@@ -1769,7 +1807,7 @@ const SettlementSidebar: React.FC<SettlementSidebarProps> = ({
                             )}
                           </span>
                           <span className="settle-garrison-type">
-                            {unit.type}
+                            {unitTypeLabel(unit.type)}
                             {TIER_ICONS[unit.tier] && <img src={TIER_ICONS[unit.tier]} alt={webUIText("Auto.Attr.componentssidebarsSettlementSidebar.1565.1", { Value1: formatNumber(unit.tier) })} className="settle-garrison-tier-icon" />}
                             <span className="settle-garrison-source">{unit.sourceBuilding}</span>
                           </span>
@@ -1834,23 +1872,10 @@ function SettlementSidebarSlot({ sidebarId, onClose }: { sidebarId: string | nul
   // the player back to General.
   const [activeTab, setActiveTab] = React.useState<SettlementSidebarTab>('general');
 
-  React.useEffect(() => {
-    if (!sidebarId) return;
-
-    const pendingTab = settlementTabFromIndex(consumePendingSidebarTab('settlement', sidebarId));
-    if (pendingTab) setActiveTab(pendingTab);
-
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent).detail as { type?: string; id?: string; tabIndex?: number } | undefined;
-      if (!detail || detail.type !== 'settlement' || detail.id !== sidebarId) return;
-
-      const tab = settlementTabFromIndex(detail.tabIndex);
-      if (tab) setActiveTab(tab);
-    };
-
-    bridgeEvents.addEventListener('ui.sidebar_tab_event', handler);
-    return () => bridgeEvents.removeEventListener('ui.sidebar_tab_event', handler);
-  }, [sidebarId]);
+  useSidebarTabRequest('settlement', sidebarId, tabIndex => {
+    const tab = settlementTabFromIndex(tabIndex);
+    if (tab) setActiveTab(tab);
+  });
 
   if (!settlement) return null;
   return (

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
-import { getCachedBridgeEvent } from '../core/bridgeEventCache';
-import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
+import { onBridgeEvent } from '../../bridge-types.generated.ts';
+import type { GetAppModeResponse } from '../../bridge-types.generated.ts';
+import { currentBridgeEventRevision, getCachedBridgeEvent } from '../core/bridgeEventCache';
+import { acknowledgeBridgeFailure, callRuntimeBridgeRevisioned } from '../core/runtimeEngine';
 
 export type AppMode = 'mainmenu' | 'ingame' | 'loading';
 
@@ -25,56 +26,25 @@ export function useAppMode(): AppMode | null {
 
   useEffect(() => {
     let cancelled = false;
-    let pendingMode: AppMode | null = null;
-    let pendingFrame = 0;
-    let pendingTimer = 0;
-
-    const clearPendingCommit = () => {
-      if (pendingFrame !== 0) {
-        window.cancelAnimationFrame(pendingFrame);
-        pendingFrame = 0;
-      }
-      if (pendingTimer !== 0) {
-        window.clearTimeout(pendingTimer);
-        pendingTimer = 0;
-      }
-    };
-
-    const commitPendingMode = () => {
-      pendingFrame = 0;
-      pendingTimer = 0;
-      if (cancelled || pendingMode === null) return;
-      setMode(pendingMode);
-      pendingMode = null;
-    };
-
-    const applyMode = (nextMode: AppMode) => {
-      pendingMode = nextMode;
-      clearPendingCommit();
-      if (typeof window.requestAnimationFrame === 'function') {
-        pendingFrame = window.requestAnimationFrame(commitPendingMode);
-      } else {
-        pendingTimer = window.setTimeout(commitPendingMode, 0);
-      }
-    };
-
-    (async () => {
-      try {
-        const res = await bridgeCall('game.get_app_mode');
-        if (!cancelled) applyMode(normalise(res.mode));
-      } catch (error) {
-        acknowledgeBridgeFailure(error);
-        if (!cancelled) setMode(null);
-      }
-    })();
+    // Only a push newer than the initial request may be overridden by its response.
+    let latestPushRevision = 0;
 
     const unsub = onBridgeEvent('game.get_app_mode', (data) => {
-      applyMode(normalise(data.mode));
+      latestPushRevision = currentBridgeEventRevision();
+      setMode(normalise(data.mode));
     });
+
+    callRuntimeBridgeRevisioned({ action: 'game.get_app_mode' })
+      .then(({ value, sentRevision }) => {
+        if (cancelled || latestPushRevision > sentRevision) return;
+        setMode(normalise((value as GetAppModeResponse).mode));
+      })
+      .catch((error) => {
+        acknowledgeBridgeFailure(error);
+      });
 
     return () => {
       cancelled = true;
-      clearPendingCommit();
       unsub();
     };
   }, []);

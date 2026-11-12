@@ -1,5 +1,5 @@
 /* =============================================
-   BottomBar - Map Mode Selector (behind right sidebar)
+   BottomBar - Map Mode Selector
    ============================================= */
 
 .bottombar {
@@ -16,6 +16,15 @@
 
 .bottombar > * {
   flex-shrink: 0;
+}
+
+.bottombar--sidebar-open {
+  right: var(--sidebar-width);
+  max-width: calc(100vw - var(--sidebar-width));
+}
+
+.bottombar--sidebar-open .operation-bar {
+  max-width: calc(100vw - var(--sidebar-width) - 2rem);
 }
 
 .bottombar > .bottombar-filters {

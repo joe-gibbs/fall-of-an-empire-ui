@@ -772,6 +772,7 @@ const PowerBlocSidebar: React.FC<PowerBlocSidebarProps> = ({ bloc, onClose }) =>
         </div>
       </StyledScrollArea>
       <BlocLoanModal
+        key={loanInteraction?.id ?? 'closed'}
         interaction={loanInteraction}
         blocName={bloc.name}
         onClose={() => setLoanInteraction(null)}

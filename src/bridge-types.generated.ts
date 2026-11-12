@@ -12,6 +12,8 @@ export interface AchievementUnlockedPayload {
 
 export interface AchievementEventStatusResponse {
   steamAvailable: boolean;
+  disabledReasons: string[];
+  tutorialDisabledReason: string;
 }
 
 export interface AllyCallLikelihoodReason {
@@ -2010,6 +2012,7 @@ export interface DioceseEntry {
   landName: string;
   bishopId: string;
   bishopName: string;
+  bishopPortraitLayers: PortraitLayerData;
   authority: number;
   religionShare: number;
   followers: number;
@@ -2101,6 +2104,9 @@ export interface EconomyOverviewResourceRow {
   marketMultiplier: number;
   buyPrice: number;
   sellPrice: number;
+  priceVsNormalPercent: number;
+  priceChangeThisMonthPercent: number;
+  priceReasons: string[];
   tradeQuotes: EconomyTradeQuote[];
   autoSellEnabled: boolean;
   autoSellThreshold: number;
@@ -2983,6 +2989,7 @@ export interface GameDateChangedEvent {
 export interface GetGameVersionResponse {
   version: string;
   isDemo: boolean;
+  isEpicStore: boolean;
 }
 
 export interface GetGeographicSummaryRequest {
@@ -3486,6 +3493,8 @@ export interface GetNewGameMapFactionSelectionResponse {
   factionSelectionDescription: string;
   defaultPlayerFactionBaseName: string;
   startingDateLabel: string;
+  factionUnlockDlcName: string;
+  factionUnlockDlcStoreUrl: string;
   paperMapUrl: string;
   politicalMapUrl: string;
   mapWidth: number;
@@ -4070,6 +4079,11 @@ export interface GetProvinceModeOverviewResponse {
   standingRows: ProvinceModeScoreRowDTO[];
   missions: ProvinceModeMissionDTO[];
   courtOfficeActions: ProvinceModeCourtOfficeActionDTO[];
+  heldCourtOffice: string;
+  tributePledge: number;
+  maxTributePledge: number;
+  standingPerTributePledge: number;
+  tributeRatePercent: number;
 }
 
 export interface ProvinceTooltipFaction {
@@ -4804,6 +4818,8 @@ export interface GetSettlementBuildingsResponse {
 
 export interface GetSettlementDataRequest {
   settlementId: string;
+  subscriptionId: string;
+  subscribe: boolean;
 }
 
 export interface SettlementCultureEntry {
@@ -4980,6 +4996,8 @@ export interface SettlementResourceCategoryEntry {
   consumption: number;
   hasShortage: boolean;
   isCapitalStockpile: boolean;
+  supplyFood: number;
+  civilianReserve: number;
 }
 
 export interface SettlementResourceEntry {
@@ -4999,6 +5017,8 @@ export interface SettlementResourceEntry {
   status: string;
   depleting: boolean;
   monthsUntilDepletion: number;
+  exportsProduction: boolean;
+  keepUpTo: number;
   isNatural: boolean;
   siegeHalted: boolean;
   productionSources: SettlementModifierSource[];
@@ -5138,6 +5158,29 @@ export interface GetSettlementDataResponse {
   defendingMilitaries: SettlementBesiegingArmy[];
   canBuild: boolean;
   cannotBuildReason: string;
+}
+
+export interface GetSettlementGovernorFocusRequest {
+  settlementId: string;
+}
+
+export interface GovernorFocusOptionDTO {
+  id: string;
+  name: string;
+  description: string;
+  effect: string;
+  icon: string;
+  available: boolean;
+}
+
+export interface GetSettlementGovernorFocusResponse {
+  settlementId: string;
+  canChoose: boolean;
+  hasGovernor: boolean;
+  currentFocusId: string;
+  effectivenessPercent: number;
+  daysToFullEffect: number;
+  options: GovernorFocusOptionDTO[];
 }
 
 export interface GetSettlementInteractionsRequest {
@@ -5598,10 +5641,7 @@ export interface WorldSettlementGlance {
   buildItem: WorldGlanceBuildProgress;
   hasActiveAction: boolean;
   activeAction: WorldGlanceActionInfo;
-  queuedConstruction: string;
-  queuedConstructionCount: number;
-  queuedRecruitment: string;
-  queuedRecruitmentCount: number;
+  queuedJobCount: number;
   warWithPlayer: boolean;
   peaceSelection: boolean;
   peaceConcession: boolean;
@@ -5755,10 +5795,16 @@ export interface WorldGlancesCatalogueDelta {
 }
 
 export interface WorldGlanceCatalogueCandidates {
+  layerKey: string;
   settlements: unknown[];
+  ports: unknown[];
   armies: unknown[];
   navies: unknown[];
   battles: unknown[];
+  battleMembership: unknown[];
+  convoyClusterKeys: string[];
+  convoyClusterHandles: unknown[];
+  convoyClusterCounts: number[];
 }
 
 export interface GetWorldGlanceTooltipRequest {
@@ -5955,6 +6001,7 @@ export interface KinshipGroupEntry {
   name: string;
   headId: string;
   headName: string;
+  isRulingClan: boolean;
   governorship: string;
   governorshipHelp: string;
   memberCount: number;
@@ -6009,6 +6056,8 @@ export interface NewGameStartDateDto {
   displayName: string;
   startingDateLabel: string;
   isLocked: boolean;
+  requiredDlcName: string;
+  requiredDlcStoreUrl: string;
 }
 
 export interface NewGameMapDto {
@@ -6022,6 +6071,8 @@ export interface NewGameMapDto {
   menuOrder: number;
   requiresFactionSelection: boolean;
   isLocked: boolean;
+  hasGuidedCampaign: boolean;
+  guidedCampaignType: string;
 }
 
 export interface ListNewGameMapsResponse {
@@ -6097,6 +6148,7 @@ export interface MilitaryOverviewForce {
   factionId: string;
   parentId: string;
   rank: string;
+  hasCommand: boolean;
   commanderName: string;
   commanderId: string;
   commanderDebugShortId: number;
@@ -6271,6 +6323,7 @@ export interface MilitaryAttritionEntry {
   progress: number;
   nearbyStrength: number;
   strengthThreshold: number;
+  detail: string;
 }
 
 export interface GetMilitaryDataResponse {
@@ -6294,6 +6347,7 @@ export interface GetMilitaryDataResponse {
   unitRows: MilitaryUnitEntry[];
   battleGroups: MilitaryBattleGroupEntry[];
   commandRank: string;
+  hasCommand: boolean;
   isNavy: boolean;
   isPersonalGuard: boolean;
   currentOrder: string;
@@ -6330,6 +6384,9 @@ export interface GetMilitaryDataResponse {
   supplyRefillStatus: string;
   supplySettlementName: string;
   supplyMissingResources: string;
+  supplyFoodTaken: number;
+  supplySettlementFood: number;
+  supplyCivilianReserve: number;
   isForcedMarching: boolean;
   canForcedMarch: boolean;
   canMerge: boolean;
@@ -6344,9 +6401,11 @@ export interface GetMilitaryDataResponse {
   raidTargetSettlement: string;
   expectedMonthlyRaidIncome: number;
   monthlyUpkeep: number;
+  ungarrisonedUpkeep: number;
   isReplenishing: boolean;
   replenishCost: number;
   canReplenish: boolean;
+  replenishUnavailableReason: string;
   isFoederatiAuxiliary: boolean;
   foederatiOriginFactionId: string;
   isPlayerControlled: boolean;
@@ -6444,6 +6503,10 @@ export interface DuplicateMilitaryFormationTemplateResponse {
 export interface ToggleFoederatiCallupRequest {
   factionId: string;
   calledUp: boolean;
+}
+
+export interface MilitaryTargetingModeResponse {
+  mode: string;
 }
 
 export interface MusterWarbandsRequest {
@@ -6581,6 +6644,12 @@ export interface SettlementNotificationAnchor {
 
 export interface NotificationAnchorsFramePayload {
   settlements: SettlementNotificationAnchor[];
+}
+
+export interface HudNotificationEntry {
+  payload: unknown;
+  bAnchored: boolean;
+  anchorPayloadJson: string;
 }
 
 export interface OpenExternalLinkRequest {
@@ -7171,6 +7240,7 @@ export interface ReligionConversionStateEntry {
   currentStageRemainingDays: number;
   canAdvance: boolean;
   canComplete: boolean;
+  canCancel: boolean;
   playerGold: number;
 }
 
@@ -7340,6 +7410,11 @@ export interface ResettlementSelectionResponse {
   pops: ResettlementPopOption[];
 }
 
+export interface ResignCourtOfficeResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface ResolveClanFeudRequest {
   feudId: string;
   payBloodPrice: boolean;
@@ -7401,9 +7476,12 @@ export interface RushBureaucraticActionResponse {
 export interface SaveGameRequest {
   displayName: string;
   existingSlotName: string;
+  requestId: number;
 }
 
 export interface SaveGameResponse {
+  pending: boolean;
+  requestId: number;
   saved: boolean;
   failureReason: string;
 }
@@ -7520,6 +7598,14 @@ export interface SetPowerBlocMembershipResponse {
   message: string;
 }
 
+export interface SetProvinceTributePledgeRequest {
+  level: number;
+}
+
+export interface SetProvinceTributePledgeResponse {
+  success: boolean;
+}
+
 export interface SetSettlementCapitalRequest {
   settlementId: string;
 }
@@ -7528,6 +7614,15 @@ export interface SetSettlementCapitalResponse {
   moved: boolean;
   cost: number;
   message: string;
+}
+
+export interface SetSettlementGovernorFocusRequest {
+  settlementId: string;
+  focusId: string;
+}
+
+export interface SetSettlementGovernorFocusResponse {
+  success: boolean;
 }
 
 export interface SetSettlementSidebarAmbientRequest {
@@ -7602,6 +7697,7 @@ export interface FactionInteractionPersonCandidate {
 export interface StartFactionInteractionResponse {
   confirmationRequired: boolean;
   confirmationMessage: string;
+  confirmationEffectLines: WebUIDisplayLine[];
   targetFactionId: string;
   interactionId: string;
   started: boolean;
@@ -7612,6 +7708,7 @@ export interface StartFactionInteractionResponse {
   personSelectionRequired: boolean;
   inputSelectionRequired: boolean;
   rebellionChoiceRequired: boolean;
+  allyChoiceRequired: boolean;
   selectedSettlementCount: number;
   playerGold: number;
   hasSuccessChance: boolean;
@@ -7817,7 +7914,7 @@ export interface UnqueueBuildQueueItemRequest {
 
 export interface UnqueueSettlementBuildingRequest {
   settlementId: string;
-  queueIndex: number;
+  queueItemId: string;
 }
 
 export interface UploadModToWorkshopRequest {
@@ -7854,6 +7951,8 @@ export interface VictoryConditionInfo {
   label: string;
   summaryText: string;
   domainProgress: VictoryConditionDomainProgressInfo[];
+  canonicalAreaNames: string[];
+  displayAreaNames: string[];
   progress: number;
   currentCount: number;
   targetCount: number;
@@ -7908,6 +8007,12 @@ export interface WarningEventPayload {
 
 export interface WarningRemovedPayload {
   id: string;
+}
+
+export interface WatchInteractionListRequest {
+  kind: string;
+  id: string;
+  watching: boolean;
 }
 
 export interface WebUIDisplaySegment {
@@ -8097,6 +8202,7 @@ export interface BridgeActions {
   'game.get_settings': { request: void; response: GetSettingsResponse };
   'game.get_settlement_buildings': { request: GetSettlementBuildingsRequest; response: GetSettlementBuildingsResponse };
   'game.get_settlement_data': { request: GetSettlementDataRequest; response: GetSettlementDataResponse };
+  'game.get_settlement_governor_focus': { request: GetSettlementGovernorFocusRequest; response: GetSettlementGovernorFocusResponse };
   'game.get_settlement_interactions': { request: GetSettlementInteractionsRequest; response: GetSettlementInteractionsResponse };
   'game.get_settlement_siege_data': { request: GetSettlementSiegeDataRequest; response: GetSettlementSiegeDataResponse };
   'game.get_spy_interactions': { request: GetSpyInteractionsRequest; response: GetSpyInteractionsResponse };
@@ -8121,6 +8227,7 @@ export interface BridgeActions {
   'game.loading_screen': { request: void; response: LoadingScreenResponse };
   'game.merge_military_units': { request: MergeMilitaryUnitsRequest; response: void };
   'game.merge_selected_militaries': { request: void; response: void };
+  'game.military_targeting_mode': { request: void; response: MilitaryTargetingModeResponse };
   'game.muster_warbands': { request: MusterWarbandsRequest; response: MusterWarbandsResponse };
   'game.navigate_settlement': { request: NavigateSettlementRequest; response: NavigateSettlementResponse };
   'game.notification_events': { request: NotificationEventsRequest; response: void };
@@ -8156,6 +8263,7 @@ export interface BridgeActions {
   'game.reset_notification_mutes': { request: void; response: void };
   'game.reset_settings': { request: ResetSettingsRequest; response: GetSettingsResponse };
   'game.resettlement_selection': { request: ResettlementSelectionRequest; response: ResettlementSelectionResponse };
+  'game.resign_court_office': { request: void; response: ResignCourtOfficeResponse };
   'game.resolve_clan_feud': { request: ResolveClanFeudRequest; response: ResolveClanFeudResponse };
   'game.respond_to_province_recall': { request: RespondToProvinceRecallRequest; response: RespondToProvinceRecallResponse };
   'game.restart': { request: void; response: void };
@@ -8195,10 +8303,12 @@ export interface BridgeActions {
   'game.set_personal_guard_composition': { request: SetPersonalGuardCompositionRequest; response: SetPersonalGuardCompositionResponse };
   'game.set_power_bloc_membership': { request: SetPowerBlocMembershipRequest; response: SetPowerBlocMembershipResponse };
   'game.set_province_build_focus': { request: SetProvinceBuildFocusRequest; response: void };
+  'game.set_province_tribute_pledge': { request: SetProvinceTributePledgeRequest; response: SetProvinceTributePledgeResponse };
   'game.set_resource_auto_buy': { request: SetResourceAutoBuyRequest; response: void };
   'game.set_resource_auto_sell': { request: SetResourceAutoSellRequest; response: void };
   'game.set_resource_priority': { request: SetResourcePriorityRequest; response: void };
   'game.set_settlement_capital': { request: SetSettlementCapitalRequest; response: SetSettlementCapitalResponse };
+  'game.set_settlement_governor_focus': { request: SetSettlementGovernorFocusRequest; response: SetSettlementGovernorFocusResponse };
   'game.set_settlement_sidebar_ambient': { request: SetSettlementSidebarAmbientRequest; response: void };
   'game.set_speed': { request: SetSpeedRequest; response: SetSpeedResponse };
   'game.set_world_glance_visibility': { request: SetWorldGlanceVisibilityRequest; response: GetWorldGlanceVisibilityResponse };
@@ -8231,6 +8341,7 @@ export interface BridgeActions {
   'game.unsubscribe_steam_workshop_item': { request: SteamWorkshopItemOperationRequest; response: SteamWorkshopItemOperationResponse };
   'game.upload_mod_to_workshop': { request: UploadModToWorkshopRequest; response: UploadModToWorkshopResponse };
   'game.warning_events': { request: WarningEventsRequest; response: void };
+  'game.watch_interaction_list': { request: WatchInteractionListRequest; response: void };
   'game.withdraw_battle_formation': { request: WithdrawBattleFormationRequest; response: WithdrawBattleFormationResponse };
   'game.world_search': { request: WorldSearchRequest; response: WorldSearchResponse };
   'game.zoom_to': { request: ZoomToRequest; response: ZoomToResponse };

@@ -14,6 +14,13 @@
   min-width: 0;
 }
 
+.rel-identity-emblem {
+  flex-shrink: 0;
+  width: 8.4286rem;
+  height: 8.4286rem;
+  object-fit: contain;
+}
+
 .rel-title-icon {
   width: 1.55rem;
   height: 1.55rem;
@@ -82,7 +89,7 @@
   flex-shrink: 0;
   padding: 0.35rem 0.3rem 0.4rem;
   background-image: url('/assets/baked/card-charcoal.png');
-  background-size: 100% 100%;
+  background-size: 17.4545rem 8.7273rem;
   border: 0.231rem solid transparent;
   border-image-source: url('/assets/gold-frame.png');
   border-image-slice: 6;

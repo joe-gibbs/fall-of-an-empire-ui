@@ -185,7 +185,7 @@
   width: 2.8rem;
   height: 2.8rem;
   background-image: url('/assets/baked/card-charcoal.png');
-  background-size: 100% 100%;
+  background-size: 17.4545rem 8.7273rem;
 }
 
 .gfov-province-successor-empty-icon img {
@@ -917,6 +917,17 @@
   display: block;
   width: 1.05rem;
   height: 1.05rem;
+  margin-right: 0.3rem;
+}
+
+/* Resolved missions recede behind active ones; the status label carries the outcome. */
+.gfov-mission-row--succeeded .gfov-mission-icon,
+.gfov-mission-row--failed .gfov-mission-icon {
+  opacity: 0.5;
+}
+
+.gfov-mission-row--failed .gfov-mission-title {
+  color: var(--text-muted);
 }
 
 .gfov-mission-body {

@@ -95,6 +95,24 @@ function mergeWorkshopOperationItem(items: SteamWorkshopItem[], next: SteamWorks
   return copy;
 }
 
+/**
+ * One Workshop query. The game runs a single Steam query at a time and rejects
+ * a second one, so the hook keeps one active query and the latest wanted query
+ * of each kind. Completion pushes are matched against the active query, and
+ * later preview refresh pushes against the query currently on display.
+ */
+type WorkshopQuery =
+  | { kind: 'all'; searchText: string; page: number; category: string }
+  | { kind: 'subscribed' };
+
+function workshopQueryMatches(query: WorkshopQuery | null, event: BrowseSteamWorkshopResponse): boolean {
+  if (!query) return false;
+  if (query.kind === 'subscribed') return Boolean(event.subscribedOnly);
+  return !event.subscribedOnly
+    && (event.searchText ?? '') === query.searchText
+    && (event.page || 1) === query.page;
+}
+
 function enabledModSetKey(mods: ModEntry[]): string {
   return mods
     .filter(mod => mod.enabled)
@@ -121,6 +139,10 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
   const [subscribedWorkshopQueryInProgress, setSubscribedWorkshopQueryInProgress] = useState(false);
   const [workshopChangesRequireRestart, setWorkshopChangesRequireRestart] = useState(false);
   const initialWorkshopFetchRef = useRef(false);
+  const activeWorkshopQueryRef = useRef<WorkshopQuery | null>(null);
+  const queuedAllWorkshopQueryRef = useRef<Extract<WorkshopQuery, { kind: 'all' }> | null>(null);
+  const queuedSubscribedWorkshopQueryRef = useRef(false);
+  const shownAllWorkshopQueryRef = useRef<WorkshopQuery | null>(null);
   const initialEnabledModsKeyRef = useRef<string | null>(null);
 
   const refreshMods = useCallback(async () => {
@@ -185,12 +207,17 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     return onBridgeEvent('game.upload_mod_to_workshop', applyUploadEvent);
   }, [enabled]);
 
-  const applyWorkshopQuery = useCallback((event: BrowseSteamWorkshopResponse) => {
+  const syncWorkshopQueryProgress = useCallback(() => {
+    const active = activeWorkshopQueryRef.current;
+    setWorkshopQueryInProgress(active?.kind === 'all' || queuedAllWorkshopQueryRef.current !== null);
+    setSubscribedWorkshopQueryInProgress(active?.kind === 'subscribed' || queuedSubscribedWorkshopQueryRef.current);
+  }, []);
+
+  const applyWorkshopResult = useCallback((event: BrowseSteamWorkshopResponse) => {
     const items = event.items ?? [];
     if (event.subscribedOnly) {
       setSubscribedWorkshopItems(items);
       setSubscribedWorkshopError(event.error ?? '');
-      setSubscribedWorkshopQueryInProgress(Boolean(event.queryInProgress));
       return;
     }
 
@@ -201,8 +228,82 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     setWorkshopCategories(event.categories ?? []);
     setWorkshopPage(event.page || 1);
     setWorkshopTotalResults(event.totalResults || 0);
-    setWorkshopQueryInProgress(Boolean(event.queryInProgress));
   }, []);
+
+  // Assigned below; lets a finished query start the next queued one.
+  const runNextWorkshopQueryRef = useRef<() => void>(() => undefined);
+
+  const finishWorkshopQuery = useCallback((query: WorkshopQuery, event: BrowseSteamWorkshopResponse | null) => {
+    activeWorkshopQueryRef.current = null;
+    // A newer query of the same kind is waiting, so this result is already out of date.
+    const superseded = query.kind === 'all'
+      ? queuedAllWorkshopQueryRef.current !== null
+      : queuedSubscribedWorkshopQueryRef.current;
+    if (event && !superseded) {
+      applyWorkshopResult(event);
+      if (query.kind === 'all') shownAllWorkshopQueryRef.current = query;
+    }
+    syncWorkshopQueryProgress();
+    runNextWorkshopQueryRef.current();
+  }, [applyWorkshopResult, syncWorkshopQueryProgress]);
+
+  const startWorkshopQuery = useCallback((query: WorkshopQuery) => {
+    activeWorkshopQueryRef.current = query;
+    syncWorkshopQueryProgress();
+    const request = query.kind === 'all'
+      ? { searchText: query.searchText, page: query.page, category: query.category, subscribedOnly: false }
+      : { searchText: '', page: 1, category: '', subscribedOnly: true };
+    bridgeCall('game.browse_steam_workshop', request)
+      .then(res => {
+        if (activeWorkshopQueryRef.current !== query) return;
+        // A started Steam query finishes with a push. Anything else finished here.
+        if (res.queryInProgress) return;
+        finishWorkshopQuery(query, res);
+      })
+      .catch(error => {
+        acknowledgeBridgeFailure(error);
+        if (activeWorkshopQueryRef.current !== query) return;
+        const message = error instanceof Error ? error.message : '';
+        if (query.kind === 'all') setWorkshopError(message);
+        else setSubscribedWorkshopError(message);
+        finishWorkshopQuery(query, null);
+      });
+  }, [finishWorkshopQuery, syncWorkshopQueryProgress]);
+
+  useEffect(() => {
+    runNextWorkshopQueryRef.current = () => {
+      if (activeWorkshopQueryRef.current) return;
+      const queuedAll = queuedAllWorkshopQueryRef.current;
+      if (queuedAll) {
+        queuedAllWorkshopQueryRef.current = null;
+        startWorkshopQuery(queuedAll);
+        return;
+      }
+      if (queuedSubscribedWorkshopQueryRef.current) {
+        queuedSubscribedWorkshopQueryRef.current = false;
+        startWorkshopQuery({ kind: 'subscribed' });
+      }
+    };
+  }, [startWorkshopQuery]);
+
+  const applyWorkshopQuery = useCallback((event: BrowseSteamWorkshopResponse) => {
+    if (event.queryInProgress) return;
+    const active = activeWorkshopQueryRef.current;
+    if (active && workshopQueryMatches(active, event)) {
+      finishWorkshopQuery(active, event);
+      return;
+    }
+    // Preview images arrive later as a refresh of the last finished query.
+    if (event.subscribedOnly) {
+      if (active?.kind !== 'subscribed' && !queuedSubscribedWorkshopQueryRef.current) applyWorkshopResult(event);
+      return;
+    }
+    if (workshopQueryMatches(shownAllWorkshopQueryRef.current, event)
+      && active?.kind !== 'all'
+      && queuedAllWorkshopQueryRef.current === null) {
+      applyWorkshopResult(event);
+    }
+  }, [applyWorkshopResult, finishWorkshopQuery]);
 
   const applyWorkshopOperation = useCallback((event: SteamWorkshopItemOperationResponse) => {
     const publishedFileId = event.publishedFileId || event.item?.publishedFileId;
@@ -234,50 +335,39 @@ export function useModsBridge(enabled: boolean): UseModsBridge {
     }
   }, [refreshMods]);
 
+  // Stays subscribed while the mods view is hidden so a running query still finishes here.
+  useEffect(() => onBridgeEvent('game.browse_steam_workshop', applyWorkshopQuery), [applyWorkshopQuery]);
+
   useEffect(() => {
     if (!enabled) return;
-    const unsubBrowse = onBridgeEvent('game.browse_steam_workshop', applyWorkshopQuery);
     const unsubSubscribe = onBridgeEvent('game.subscribe_steam_workshop_item', applyWorkshopOperation);
     const unsubUnsubscribe = onBridgeEvent('game.unsubscribe_steam_workshop_item', applyWorkshopOperation);
     const unsubDownload = onBridgeEvent('game.download_steam_workshop_item', applyWorkshopOperation);
     return () => {
-      unsubBrowse();
       unsubSubscribe();
       unsubUnsubscribe();
       unsubDownload();
     };
-  }, [applyWorkshopOperation, applyWorkshopQuery, enabled]);
+  }, [applyWorkshopOperation, enabled]);
 
   const browseWorkshop = useCallback(async (searchText: string, page = 1, category = workshopCategory) => {
     if (!steamWorkshopAvailable) return;
     setWorkshopSearchText(searchText);
     setWorkshopCategory(category);
     setWorkshopPage(page);
-    setWorkshopQueryInProgress(true);
     setWorkshopError('');
-    try {
-      const res = await bridgeCall('game.browse_steam_workshop', { searchText, page, category, subscribedOnly: false });
-      applyWorkshopQuery(res);
-    } catch (error) {
-      acknowledgeBridgeFailure(error);
-      setWorkshopQueryInProgress(false);
-      setWorkshopError(error instanceof Error ? error.message : '');
-    }
-  }, [applyWorkshopQuery, steamWorkshopAvailable, workshopCategory]);
+    queuedAllWorkshopQueryRef.current = { kind: 'all', searchText, page, category };
+    syncWorkshopQueryProgress();
+    runNextWorkshopQueryRef.current();
+  }, [steamWorkshopAvailable, syncWorkshopQueryProgress, workshopCategory]);
 
   const refreshSubscribedWorkshop = useCallback(async () => {
     if (!steamWorkshopAvailable) return;
-    setSubscribedWorkshopQueryInProgress(true);
     setSubscribedWorkshopError('');
-    try {
-      const res = await bridgeCall('game.browse_steam_workshop', { searchText: '', page: 1, category: '', subscribedOnly: true });
-      applyWorkshopQuery(res);
-    } catch (error) {
-      acknowledgeBridgeFailure(error);
-      setSubscribedWorkshopQueryInProgress(false);
-      setSubscribedWorkshopError(error instanceof Error ? error.message : '');
-    }
-  }, [applyWorkshopQuery, steamWorkshopAvailable]);
+    queuedSubscribedWorkshopQueryRef.current = true;
+    syncWorkshopQueryProgress();
+    runNextWorkshopQueryRef.current();
+  }, [steamWorkshopAvailable, syncWorkshopQueryProgress]);
 
   useEffect(() => {
     if (!enabled) {

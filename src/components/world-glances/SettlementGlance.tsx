@@ -98,8 +98,8 @@ function useAnimatedProgress(target: number, enabled: boolean, resetKey: string)
 }
 
 function unrestColour(u: number): string {
-  if (u >= 0.5) return 'var(--red)';
-  if (u >= 0.25) return '#c88a3a';
+  if (u >= 50) return 'var(--red)';
+  if (u >= 25) return '#c88a3a';
   return 'var(--green)';
 }
 
@@ -244,7 +244,7 @@ function renderInfo(data: SettlementGlanceData) {
     case 'population':
       return renderInfoRow('/assets/icons/I_ModPopulation.png', formatNumber(data.population), undefined, true);
     case 'unrest':
-      return renderInfoRow('/assets/icons/I_Unrest.png', formatPercent(data.unrest * 100), unrestColour(data.unrest), true);
+      return renderInfoRow('/assets/icons/I_Unrest.png', formatPercent(data.unrest), unrestColour(data.unrest), true);
     case 'loyalty':
       return renderInfoRow(
         data.complianceUsesFactionOpinion ? opinionIcon(data.loyalty) : '/assets/icons/I_Loyalty.png',
@@ -370,8 +370,16 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
       )}
       <div className="gset-body">
         <div className="gset-emblem">
-          <span className="gset-target-glow" aria-hidden="true" />
           <span className="gset-type-core" aria-hidden="true" data-webkiln-anchor-hit>
+            <span className="gset-target-glow">
+              <span
+                className="glance-target-silhouette"
+                style={{
+                  maskImage: `url("${data.settlementType === 'land' ? badgeForeground : badgeHoverOverlay}")`,
+                  WebkitMaskImage: `url("${data.settlementType === 'land' ? badgeForeground : badgeHoverOverlay}")`,
+                }}
+              />
+            </span>
             {data.settlementType === 'land' ? (
               <img className="gset-badge-layer gset-badge-layer--foreground" src={badgeForeground} alt="" />
             ) : <>
@@ -453,6 +461,11 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
             <span className="gset-build-status-label">
               {besieged ? webUIText('Settlement.Siege.Title') : (data.buildItem?.label ?? '')}
             </span>
+            {!besieged && data.buildItem && (data.queuedJobCount ?? 0) > 0 && (
+              <span className="gset-build-status-queued">
+                {webUIText('WorldGlance.QueuedCount', { Count: formatNumber(data.queuedJobCount ?? 0) })}
+              </span>
+            )}
             <span className="gset-build-status-value">
               {besieged
                 ? formatPercent(displayedSiegeProgress * 100)
@@ -486,24 +499,6 @@ export default function SettlementGlance({ data }: SettlementGlanceProps) {
             </div>
           )}
 
-          {data.queuedConstruction && (
-            <div className="gset-queued-job">
-              <img src={WebkilnAssetPath('/assets/icons/I_BuildingsQuickButton.png')} alt="" />
-              <span>{webUIText((data.queuedConstructionCount ?? 0) > 1 ? 'WorldGlance.QueuedJobs' : 'WorldGlance.QueuedJob', {
-                Name: data.queuedConstruction,
-                Count: formatNumber((data.queuedConstructionCount ?? 1) - 1),
-              })}</span>
-            </div>
-          )}
-          {data.queuedRecruitment && (
-            <div className="gset-queued-job">
-              <img src={WebkilnAssetPath('/assets/icons/I_ArmiesQuickButton.png')} alt="" />
-              <span>{webUIText((data.queuedRecruitmentCount ?? 0) > 1 ? 'WorldGlance.QueuedJobs' : 'WorldGlance.QueuedJob', {
-                Name: data.queuedRecruitment,
-                Count: formatNumber((data.queuedRecruitmentCount ?? 1) - 1),
-              })}</span>
-            </div>
-          )}
         </div>
       </div>
     </div>

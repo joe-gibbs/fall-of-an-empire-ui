@@ -341,9 +341,15 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
   const dragCopyRef = useRef<HTMLDivElement | null>(null);
   const [dragVisual, setDragVisual] = useState<DragVisualState>({ sourceId: null, targetId: null, targetValid: false });
 
+  const serverHierarchyKeyRef = useRef(serverHierarchyKey);
+
   useEffect(() => {
     forcesRef.current = selectedForces;
   }, [selectedForces]);
+
+  useEffect(() => {
+    serverHierarchyKeyRef.current = serverHierarchyKey;
+  }, [serverHierarchyKey]);
 
   useEffect(() => {
     assignmentForcesRef.current = assignmentForces;
@@ -385,7 +391,7 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
     const source = currentForces.find(force => force.id === sourceId);
     const previousParentId = source?.parentId ?? null;
     setLocalHierarchy({
-      baseKey: serverHierarchyKey,
+      baseKey: serverHierarchyKeyRef.current,
       forces: currentForces.map(force => {
         if (force.id === sourceId) return { ...force, parentId };
         if (force.id === previousParentId) {
@@ -401,7 +407,7 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
       setLocalHierarchy(null);
       acknowledgeBridgeFailure(error, 'game.set_military_parent');
     });
-  }, [serverHierarchyKey]);
+  }, []);
 
   const applyParentChanges = useCallback((sourceIds: string[], parentId: string) => {
     const currentForces = forcesRef.current;
@@ -413,7 +419,7 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
       previousParentCounts.set(previousParentId, (previousParentCounts.get(previousParentId) ?? 0) + 1);
     }
     setLocalHierarchy({
-      baseKey: serverHierarchyKey,
+      baseKey: serverHierarchyKeyRef.current,
       forces: currentForces.map(force => {
         if (assigned.has(force.id)) return { ...force, parentId };
         if (force.id === parentId) {
@@ -431,7 +437,7 @@ function MilitarySelectionSidebar({ onClose }: { sidebarId: string | null; onClo
         setLocalHierarchy(null);
         acknowledgeBridgeFailure(error, 'game.set_military_parent');
       });
-  }, [serverHierarchyKey]);
+  }, []);
 
   const handleForcePointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>, source: MilitaryForce) => {
     if (event.button !== 0) return;

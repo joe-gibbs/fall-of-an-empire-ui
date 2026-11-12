@@ -133,6 +133,7 @@ export interface MilitaryAction {
   onClick?: () => void;
   isActive?: boolean;
   disabled?: boolean;
+  /** Shown on the control while it is disabled. */
   tone?: 'default' | 'danger';
   stateLabel?: string;
 }
@@ -295,8 +296,14 @@ export function formatSupplyWindow(days: number): string {
   return webUIText("MilitarySidebar.Days", { Value1: formatNumber(days) });
 }
 
-function supplyAdvice(army: Army, status: string, settlement: string, missing: string): string {
+/** Why the force is or is not taking on stores, in one sentence. */
+export function supplyAdvice(army: Army, status: string, settlement: string, missing: string): string {
   switch (status) {
+    case 'civilian_reserve':
+      return webUIText('MilitarySidebar.SupplyCivilianReserve', {
+        Settlement: settlement,
+        Amount: formatNumber(Math.floor(army.supplySettlementFood ?? 0)),
+      });
     case 'missing_resources':
       return settlement
         ? webUIText('MilitarySidebar.SupplyMissingAtSettlement', { Settlement: settlement, Resources: missing })
@@ -324,6 +331,24 @@ function supplyAdvice(army: Army, status: string, settlement: string, missing: s
   }
 }
 
+/**
+ * Lines under the army's food stock: what it took from its supply settlement in the last
+ * daily supply, and why it is not taking more when the settlement holds food back or lacks it.
+ */
+export function foodSupplyNotes(army: Army): string[] {
+  const notes: string[] = [];
+  const settlement = army.supplySettlementName ?? '';
+  const taken = army.supplyFoodTaken ?? 0;
+  if (taken >= 0.05 && settlement) {
+    notes.push(webUIText('MilitarySidebar.SupplyFoodTaken', { Amount: formatResourceNumber(taken), Settlement: settlement }));
+  }
+  const status = army.supplyRefillStatus ?? '';
+  if (status === 'civilian_reserve' || status === 'missing_resources' || status === 'unfriendly') {
+    notes.push(supplyAdvice(army, status, settlement, army.supplyMissingResources ?? ''));
+  }
+  return notes;
+}
+
 export function buildSupplyTooltip(army: Army): TooltipContent {
   const days = army.supplyDays ?? 0;
   const status = army.supplyRefillStatus ?? '';
@@ -344,6 +369,20 @@ export function buildSupplyTooltip(army: Army): TooltipContent {
         || (army.isNavy ? webUIText('MilitarySidebar.SupplyNoPort') : webUIText('MilitarySidebar.SupplyNoSource')),
     },
   ];
+  if ((army.supplyFoodTaken ?? 0) > 0) {
+    lines.push({
+      label: webUIText('MilitarySidebar.SupplyFoodTakenLabel'),
+      value: formatResourceNumber(army.supplyFoodTaken ?? 0),
+      valueColor: 'var(--green)',
+    });
+  }
+  if ((army.supplyCivilianReserve ?? 0) > 0) {
+    lines.push({
+      label: webUIText('MilitarySidebar.SupplyKeptForPeopleLabel'),
+      value: `${formatResourceNumber(Math.min(army.supplySettlementFood ?? 0, army.supplyCivilianReserve ?? 0))}/${formatResourceNumber(army.supplyCivilianReserve ?? 0)}`,
+      valueColor: 'var(--gold)',
+    });
+  }
   if (missing) {
     lines.push({
       label: webUIText('MilitarySidebar.SupplyMissingLabel'),

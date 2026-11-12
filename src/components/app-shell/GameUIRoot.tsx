@@ -46,7 +46,7 @@ import {
   useProvinceEmperorTakeoverBridge,
 } from '../../bridge/provinces/useProvinceEmperorTakeoverBridge';
 import { useProvinceRecallBridge } from '../../bridge/provinces/useProvinceRecallBridge';
-import { isEscapeTextEntryTarget, useEscapeStack, useEscapeStackEntry } from '../../context/EscapeStack';
+import { useEscapeFallback, useEscapeStackEntry } from '../../context/EscapeStack';
 import { bridgeCall } from '../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../bridge/core/runtimeEngine';
 import { GAMEPLAY_CONTEXT_RESET_EVENT } from '../../bridge/core/gameplayCacheReset';
@@ -58,10 +58,24 @@ import { beginUIPerfInteraction, recordUIPerfReactRender } from '../../perf/uiPe
 import { personalGuardRevealScreenId, TUTORIAL_REVEAL_PERSONAL_GUARD, type TutorialHudRevealDetail } from '../../utils/tutorialHudReveal';
 import AnimatedSlot from './AnimatedSlot';
 import EventPopupSlot from './EventPopupSlot';
+
+type CampaignOutcome =
+  | { kind: 'victory'; key: number; summary: CampaignOutcomeSummary | undefined }
+  | { kind: 'gameOver'; key: number; cause: GameOverCause; summary: CampaignOutcomeSummary | undefined };
+
+/** Full-screen layers that block the campaign. Only one can be open at a time. */
+type BlockingOverlay =
+  | { kind: 'none' }
+  | { kind: 'pause' }
+  | { kind: 'outcome'; outcome: CampaignOutcome; loadingSave: boolean };
+
+const NO_OVERLAY: BlockingOverlay = { kind: 'none' };
+const PAUSE_OVERLAY: BlockingOverlay = { kind: 'pause' };
+let nextOutcomeKey = 0;
+
 export default function GameUIRoot() {
   const {
-    leftSidebar, leftSidebarId, rightSidebar, rightSidebarId,
-    activeScreen, activeScreenId,
+    leftSidebar: leftPane, rightSidebar: rightPane, activeScreen: screenPane,
     advisorHint, advisorStep, advisorVisible,
     warnings, notifications,
     gameDay,
@@ -72,6 +86,12 @@ export default function GameUIRoot() {
     showAdvisor, dismissAdvisor, nextAdvisorPage, previousAdvisorPage,
     closeAgentSelect,
   } = useGame();
+  const leftSidebar = leftPane?.type ?? null;
+  const leftSidebarId = leftPane?.id ?? null;
+  const rightSidebar = rightPane?.type ?? null;
+  const rightSidebarId = rightPane?.id ?? null;
+  const activeScreen = screenPane?.type ?? null;
+  const activeScreenId = screenPane?.id ?? null;
   const playerFaction = usePlayerFactionSummary();
   const observerMode = useObserverMode();
   const subjectMode = isProvinceSubjectMode(playerFaction);
@@ -142,14 +162,11 @@ export default function GameUIRoot() {
     return () => document.removeEventListener('mousedown', init);
   }, []);
 
-  const [showPause, setShowPause] = useState(false);
-  const [showVictory, setShowVictory] = useState(false);
-  const [showGameOver, setShowGameOver] = useState(false);
-  const [showOutcomeLoad, setShowOutcomeLoad] = useState(false);
-  const [gameOverCause, setGameOverCause] = useState<GameOverCause>('rebellion');
-  const [victorySummary, setVictorySummary] = useState<CampaignOutcomeSummary | undefined>();
-  const [gameOverSummary, setGameOverSummary] = useState<CampaignOutcomeSummary | undefined>();
-  const { handleEscapeStack, markEscapeHandled } = useEscapeStack();
+  const [overlay, setOverlay] = useState<BlockingOverlay>(NO_OVERLAY);
+  const showPause = overlay.kind === 'pause';
+  const campaignOutcome = overlay.kind === 'outcome' ? overlay.outcome : null;
+  const showOutcomeLoad = overlay.kind === 'outcome' && overlay.loadingSave;
+  const blockingOverlayOpen = overlay.kind !== 'none';
   const {
     state: courtierPromotion,
     close: closeCourtierPromotion,
@@ -174,12 +191,7 @@ export default function GameUIRoot() {
 
   useEffect(() => {
     const handleReset = () => {
-      setShowPause(false);
-      setShowVictory(false);
-      setShowGameOver(false);
-      setShowOutcomeLoad(false);
-      setVictorySummary(undefined);
-      setGameOverSummary(undefined);
+      setOverlay(NO_OVERLAY);
       setShowPinned(false);
       setProvinceEmperorTakeoverDismissed(false);
     };
@@ -216,15 +228,22 @@ export default function GameUIRoot() {
     active: showPinned,
     onClose: closePinned,
   });
-  const handleEscape = useCallback((fromInput = false) => {
-    if (handleEscapeStack({ fromInput })) return true;
-    if (fromInput) return false;
-
-    markEscapeHandled();
+  const openPause = useCallback(() => {
+    if (overlay.kind !== 'none') return;
     beginUIPerfInteraction('screen:pause-menu');
-    setShowPause(true);
+    setOverlay(PAUSE_OVERLAY);
+  }, [overlay.kind]);
+  const closePause = useCallback(() => {
+    setOverlay(current => (current.kind === 'pause' ? NO_OVERLAY : current));
+  }, []);
+
+  // Escape with nothing else open opens the pause menu. While a campaign outcome
+  // is showing, Escape does nothing here.
+  const pauseFromEscape = useCallback(() => {
+    openPause();
     return true;
-  }, [handleEscapeStack, markEscapeHandled]);
+  }, [openPause]);
+  useEscapeFallback(0, pauseFromEscape);
 
   // ESC menu must keep the campaign paused for as long as it is open.
   useEffect(() => {
@@ -236,32 +255,9 @@ export default function GameUIRoot() {
   }, [showPause]);
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.code === 'Escape') {
-        const handled = handleEscape(isEscapeTextEntryTarget(e.target));
-        if (!handled) return;
-        e.preventDefault();
-        e.stopImmediatePropagation();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [handleEscape]);
-
-  useEffect(() => {
-    const handler = () => { handleEscape(false); };
-    bridgeEvents.addEventListener('ui.escape_pressed', handler);
-    return () => bridgeEvents.removeEventListener('ui.escape_pressed', handler);
-  }, [handleEscape]);
-
-  useEffect(() => {
-    const handler = () => {
-      beginUIPerfInteraction('screen:pause-menu');
-      setShowPause(true);
-    };
-    bridgeEvents.addEventListener('ui.gamepad_menu', handler);
-    return () => bridgeEvents.removeEventListener('ui.gamepad_menu', handler);
-  }, []);
+    bridgeEvents.addEventListener('ui.gamepad_menu', openPause);
+    return () => bridgeEvents.removeEventListener('ui.gamepad_menu', openPause);
+  }, [openPause]);
 
   useEffect(() => {
     const handler = () => {
@@ -282,7 +278,13 @@ export default function GameUIRoot() {
   }, []);
 
   const handleCampaignOutcomeLoadSave = useCallback(() => {
-    setShowOutcomeLoad(true);
+    setOverlay(current => (current.kind === 'outcome' ? { ...current, loadingSave: true } : current));
+  }, []);
+  const closeCampaignOutcomeLoad = useCallback(() => {
+    setOverlay(current => (current.kind === 'outcome' && current.loadingSave ? { ...current, loadingSave: false } : current));
+  }, []);
+  const closeCampaignOutcome = useCallback((outcome: CampaignOutcome) => {
+    setOverlay(current => (current.kind === 'outcome' && current.outcome === outcome ? NO_OVERLAY : current));
   }, []);
 
   const handlePurchaseFullGame = useCallback(() => {
@@ -293,22 +295,30 @@ export default function GameUIRoot() {
     const victoryHandler = (event: Event) => {
       beginUIPerfInteraction('screen:victory');
       const data = (event as CustomEvent).detail as CampaignOutcomeSummary | undefined;
-      setVictorySummary(data && typeof data === 'object' ? data : undefined);
-      setShowGameOver(false);
-      setShowVictory(true);
+      nextOutcomeKey += 1;
+      setOverlay({
+        kind: 'outcome',
+        outcome: { kind: 'victory', key: nextOutcomeKey, summary: data && typeof data === 'object' ? data : undefined },
+        loadingSave: false,
+      });
     };
     const gameOverHandler = (event: Event) => {
       beginUIPerfInteraction('screen:game-over');
       const data = (event as CustomEvent).detail as CampaignOutcomeSummary & { cause?: string } | undefined;
       const cause = data?.cause;
-      if (cause === 'extinction' || cause === 'conquest' || cause === 'subjugation' || cause === 'rebellion' || cause === 'governorship' || cause === 'failed_rebellion' || cause === 'demo_expired') {
-        setGameOverCause(cause);
-      } else {
-        setGameOverCause('rebellion');
-      }
-      setGameOverSummary(data && typeof data === 'object' ? data : undefined);
-      setShowVictory(false);
-      setShowGameOver(true);
+      nextOutcomeKey += 1;
+      setOverlay({
+        kind: 'outcome',
+        outcome: {
+          kind: 'gameOver',
+          key: nextOutcomeKey,
+          cause: cause === 'extinction' || cause === 'conquest' || cause === 'subjugation' || cause === 'rebellion' || cause === 'governorship' || cause === 'failed_rebellion' || cause === 'succession' || cause === 'demo_expired'
+            ? cause
+            : 'rebellion',
+          summary: data && typeof data === 'object' ? data : undefined,
+        },
+        loadingSave: false,
+      });
     };
 
     bridgeEvents.addEventListener('ui.show_victory_screen', victoryHandler);
@@ -341,7 +351,11 @@ export default function GameUIRoot() {
 
   // Keep the current hint while an event is open, then resume its normal placement.
   let autoAdvisorTopic: AdvisorTopicId | null = null;
-  if (activeScreenReg?.advisorTopic) autoAdvisorTopic = activeScreenReg.advisorTopic;
+  if (activeScreenReg?.advisorTopic) {
+    autoAdvisorTopic = typeof activeScreenReg.advisorTopic === 'function'
+      ? activeScreenReg.advisorTopic(playerFaction)
+      : activeScreenReg.advisorTopic;
+  }
   else if (rightSidebarReg) autoAdvisorTopic = rightSidebarReg.advisorTopic ?? null;
   else if (leftSidebarReg) autoAdvisorTopic = leftSidebarReg.advisorTopic ?? null;
 
@@ -350,7 +364,7 @@ export default function GameUIRoot() {
   const lastAdvisorTopicRef = useRef<AdvisorTopicId | null | undefined>(undefined);
   useEffect(() => {
     if (presentedEvent) return;
-    if (observerMode || showPause || showVictory || showGameOver || showOutcomeLoad) {
+    if (observerMode || blockingOverlayOpen) {
       lastAdvisorTopicRef.current = undefined;
       return;
     }
@@ -358,7 +372,7 @@ export default function GameUIRoot() {
     lastAdvisorTopicRef.current = autoAdvisorTopic;
     if (autoAdvisorTopic) showAdvisor(autoAdvisorTopic);
     else dismissAdvisor();
-  }, [presentedEvent, observerMode, showPause, showVictory, showGameOver, showOutcomeLoad, autoAdvisorTopic, showAdvisor, dismissAdvisor]);
+  }, [presentedEvent, observerMode, blockingOverlayOpen, autoAdvisorTopic, showAdvisor, dismissAdvisor]);
 
   const advisorPlacement = activeScreen
     ? 'center'
@@ -377,10 +391,7 @@ export default function GameUIRoot() {
     : 'screen-overlay';
   const mapAnchorsObscured = Boolean(
     activeScreen
-    || showPause
-    || showVictory
-    || showGameOver
-    || showOutcomeLoad
+    || blockingOverlayOpen
     || !!presentedEvent
     || agentSelect.open
     || courtierPromotion.open
@@ -393,10 +404,7 @@ export default function GameUIRoot() {
     ? tutorialSpotlight.spotlight.target
     : '';
   const mapGlancesObscured = Boolean(
-    showPause
-    || showVictory
-    || showGameOver
-    || showOutcomeLoad
+    blockingOverlayOpen
     || !!presentedEvent
     || agentSelect.open
     || courtierPromotion.open
@@ -425,7 +433,7 @@ export default function GameUIRoot() {
         />
       )}
 
-      <div className="game-main" data-webkiln-world-input>
+      <div className={`game-main${activeScreen ? ' game-main--screen-open' : ''}${leftSidebar ? ' game-main--left-sidebar-open' : ''}`} data-webkiln-world-input>
         {!observerMode && warnings.length > 0 && (
           <div className="hud-attention-strip">
             <WarningBar warnings={warnings} onDismiss={dismissWarning} />
@@ -442,7 +450,7 @@ export default function GameUIRoot() {
           />
         )}
 
-        <BottomBar />
+        <BottomBar rightSidebarOpen={!!rightSidebar} />
         <WorldGlanceOverlay
           visible={!mapGlancesObscured}
           tutorialTarget={tutorialWorldGlanceTarget}
@@ -482,6 +490,8 @@ export default function GameUIRoot() {
         <TutorialProgress
           progress={tutorialProgress}
           placement={leftSidebar ? 'shifted' : 'left'}
+          screenOpen={!!activeScreen}
+          warningCount={observerMode ? 0 : warnings.length}
           onLinkClick={handleEventLinkClick}
         />
       )}
@@ -514,7 +524,7 @@ export default function GameUIRoot() {
         <AdvisorPanel
           hint={advisorHint}
           step={advisorStep}
-          visible={advisorVisible && !showPause && !showVictory && !showGameOver && !showOutcomeLoad}
+          visible={advisorVisible && !blockingOverlayOpen}
           placement={advisorPlacement}
           onPrevious={previousAdvisorPage}
           onNext={nextAdvisorPage}
@@ -541,21 +551,23 @@ export default function GameUIRoot() {
       )}
 
       <Profiler id="screen:pause-menu" onRender={recordUIPerfReactRender}>
-        <PauseMenu visible={showPause} onClosed={() => setShowPause(false)} />
+        <PauseMenu visible={showPause} onClosed={closePause} />
       </Profiler>
-      {showVictory && (
+      {campaignOutcome?.kind === 'victory' && (
         <VictoryScreen
-          summary={victorySummary}
-          onClose={() => setShowVictory(false)}
+          key={campaignOutcome.key}
+          summary={campaignOutcome.summary}
+          onClose={() => closeCampaignOutcome(campaignOutcome)}
           onContinuePlaying={handleCampaignOutcomeContinue}
           onMainMenu={handleCampaignOutcomeMainMenu}
         />
       )}
-      {showGameOver && (
+      {campaignOutcome?.kind === 'gameOver' && (
         <GameOverScreen
-          cause={gameOverCause}
-          summary={gameOverSummary}
-          onClose={() => setShowGameOver(false)}
+          key={campaignOutcome.key}
+          cause={campaignOutcome.cause}
+          summary={campaignOutcome.summary}
+          onClose={() => closeCampaignOutcome(campaignOutcome)}
           onLoadSave={handleCampaignOutcomeLoadSave}
           onMainMenu={handleCampaignOutcomeMainMenu}
           onPurchaseFullGame={handlePurchaseFullGame}
@@ -563,7 +575,7 @@ export default function GameUIRoot() {
       )}
       <LoadGameModal
         visible={showOutcomeLoad}
-        onClosed={() => setShowOutcomeLoad(false)}
+        onClosed={closeCampaignOutcomeLoad}
       />
       {!observerMode && (
         <AgentSelectModal

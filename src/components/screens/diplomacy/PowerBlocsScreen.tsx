@@ -680,11 +680,15 @@ function ImperialPowerBlocsScreen({ onClose }: PowerBlocsScreenProps) {
     [blocs],
   );
 
-  const handleOpen = useCallback((id: string) => openRightSidebar('powerbloc', id), [openRightSidebar]);
+  const handleOpen = useCallback((id: string) => {
+    // A bloc the player picked must not be replaced by the strongest-bloc default.
+    autoOpenedRef.current = true;
+    openRightSidebar('powerbloc', id);
+  }, [openRightSidebar]);
   const handleRichLinkClick = useEntityLinkClick();
 
   useEffect(() => {
-    if (subjectMode || autoOpenedRef.current || !strongestBlocId || rightSidebar === 'powerbloc') return;
+    if (subjectMode || autoOpenedRef.current || !strongestBlocId || rightSidebar?.type === 'powerbloc') return;
     autoOpenedRef.current = true;
     openRightSidebar('powerbloc', strongestBlocId);
   }, [openRightSidebar, rightSidebar, strongestBlocId, subjectMode]);
@@ -763,7 +767,7 @@ registerScreen({
   id: 'powerBlocs',
   render: ({ onClose, screenId }) => <PowerBlocsScreen onClose={onClose} screenId={screenId} />,
   topbarId: 'powerblocs',
-  advisorTopic: 'powerBlocsScreen',
+  advisorTopic: faction => faction?.usesWarbands ? 'clansScreen' : 'powerBlocsScreen',
   bridgeNames: ['powerblocs'],
   factionMode: 'all',
 });

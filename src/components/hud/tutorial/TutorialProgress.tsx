@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { TutorialProgressState } from '../../../bridge/app/useTutorialProgressBridge';
 import { useAnimatedPresence } from '../../../hooks/useAnimatedPresence';
 import { useKeyActionResolver } from '../../../hooks/useKeyActionResolver';
@@ -11,19 +11,47 @@ import './TutorialProgress.css';
 interface TutorialProgressProps {
   progress: TutorialProgressState | null;
   placement: 'left' | 'shifted';
+  screenOpen: boolean;
+  warningCount: number;
   onLinkClick?: (type: string, id: string) => void;
 }
 
 const EXIT_DURATION_MS = 160;
 const COMPLETE_ICON = '/assets/icons/I_GoalMet.png';
 const IN_PROGRESS_ICON = '/assets/icons/I_GoalPartial.png';
+// Matches the warning medallion strip, which wraps after five medallions.
+const WARNING_STRIP_COLUMNS = 5;
 
-export default function TutorialProgress({ progress, placement, onLinkClick }: TutorialProgressProps) {
+type TutorialProgressStyle = CSSProperties & {
+  '--tutorial-warning-row'?: number;
+  '--tutorial-warning-column'?: number;
+};
+
+export default function TutorialProgress({ progress, placement, screenOpen, warningCount, onLinkClick }: TutorialProgressProps) {
   const visible = Boolean(progress && progress.steps.length > 0);
   const [collapsed, setCollapsed] = useState(false);
   const [renderProgress, setRenderProgress] = useState<TutorialProgressState | null>(progress);
   const { mounted, closing } = useAnimatedPresence(visible, { durationMs: EXIT_DURATION_MS });
   const resolveKeyAction = useKeyActionResolver();
+  const shellRef = useRef<HTMLDivElement | null>(null);
+
+  // Beside an open left sidebar the panel reaches the centred notification stack, which then starts below it.
+  useLayoutEffect(() => {
+    const shell = shellRef.current;
+    const root = document.documentElement;
+    if (!mounted || placement !== 'shifted' || !shell) {
+      root.style.removeProperty('--tutorial-progress-bottom');
+      return undefined;
+    }
+    const publish = () => root.style.setProperty('--tutorial-progress-bottom', `${shell.getBoundingClientRect().bottom}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(shell);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--tutorial-progress-bottom');
+    };
+  }, [mounted, placement]);
 
   let currentRenderProgress = renderProgress;
   if (progress && progress !== renderProgress) {
@@ -37,12 +65,20 @@ export default function TutorialProgress({ progress, placement, onLinkClick }: T
   const outstandingIndex = steps.findLastIndex(step => !step.isComplete);
   const currentIndex = outstandingIndex >= 0 ? outstandingIndex : steps.length - 1;
   const currentStep = steps[currentIndex];
-  const displayedSteps = collapsed ? [currentStep] : steps;
+  const canCollapse = steps.length > 1;
+  const displayedSteps = collapsed && canCollapse ? [currentStep] : steps;
+  const showControls = canCollapse || Boolean(currentStep.deadlineText);
+  const shellStyle: TutorialProgressStyle = {
+    '--tutorial-warning-row': Math.min(warningCount, WARNING_STRIP_COLUMNS),
+    '--tutorial-warning-column': warningCount > 0 ? 1 : 0,
+  };
   const toggleLabel = webUIText(collapsed ? 'TutorialProgress.Expand' : 'TutorialProgress.Minimise');
 
   return (
     <div
-      className={`tutorial-progress-shell tutorial-progress-shell--${placement}${closing ? ' tutorial-progress-shell--closing' : ''}`}
+      ref={shellRef}
+      className={`tutorial-progress-shell tutorial-progress-shell--${placement}${screenOpen ? ' tutorial-progress-shell--screen-open' : ''}${closing ? ' tutorial-progress-shell--closing' : ''}`}
+      style={shellStyle}
       data-tutorial-target="TutorialProgress"
     >
       <div className="tutorial-progress-panel">
@@ -71,23 +107,27 @@ export default function TutorialProgress({ progress, placement, onLinkClick }: T
             </div>
           ))}
         </div>
-        <div className="tutorial-progress-controls">
-          {currentStep.deadlineText && (
-            <Tooltip content={currentStep.deadlineTitle} position="bottom">
-              <span className="tutorial-progress-deadline">{currentStep.deadlineText}</span>
-            </Tooltip>
-          )}
-          <Tooltip content={toggleLabel} position="bottom">
-            <GameButton
-              variant="ghost"
-              className="tutorial-progress-toggle"
-              icon={collapsed ? '/assets/icons/I_Plus.png' : '/assets/icons/I_Minus.png'}
-              ariaLabel={toggleLabel}
-              ariaPressed={collapsed}
-              onClick={() => setCollapsed(value => !value)}
-            />
-          </Tooltip>
-        </div>
+        {showControls && (
+          <div className="tutorial-progress-controls">
+            {currentStep.deadlineText && (
+              <Tooltip content={currentStep.deadlineTitle} position="bottom">
+                <span className="tutorial-progress-deadline">{currentStep.deadlineText}</span>
+              </Tooltip>
+            )}
+            {canCollapse && (
+              <Tooltip content={toggleLabel} position="bottom">
+                <GameButton
+                  variant="ghost"
+                  className="tutorial-progress-toggle"
+                  icon={collapsed ? '/assets/icons/I_Plus.png' : '/assets/icons/I_Minus.png'}
+                  ariaLabel={toggleLabel}
+                  ariaPressed={collapsed}
+                  onClick={() => setCollapsed(value => !value)}
+                />
+              </Tooltip>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

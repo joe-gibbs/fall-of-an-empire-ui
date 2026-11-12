@@ -8,16 +8,33 @@
   pointer-events: none;
 }
 
+/* The warning medallions share this row. Each medallion takes 3.82rem including
+   its margin; the panel starts to the right of however many are showing. */
 .tutorial-progress-shell--shifted {
-  left: calc(var(--sidebar-width) + 1rem);
+  left: calc(var(--sidebar-width) + 1rem + var(--tutorial-warning-row, 0) * 3.82rem);
+}
+
+/* With a screen open, the medallions form a single column. */
+.tutorial-progress-shell--screen-open {
+  left: calc(1rem + var(--tutorial-warning-column, 0) * 3.82rem);
+}
+
+.tutorial-progress-shell--shifted.tutorial-progress-shell--screen-open {
+  left: calc(var(--sidebar-width) + 1rem + var(--tutorial-warning-column, 0) * 3.82rem);
 }
 
 /* Compact: same top as warnings; sit to the right of the warning strip. */
 html.hud-compact .tutorial-progress-shell,
 html.hud-compact .tutorial-progress-shell--shifted {
   top: var(--hud-below-topbar, calc(var(--topbar-height) + 0.55rem));
-  left: 10.75rem;
+  left: max(10.75rem, calc(1.2rem + var(--tutorial-warning-row, 0) * 3.82rem));
   max-width: calc(100vw - 11.5rem);
+}
+
+/* Compact with a screen or left sidebar open: the medallions form a column clear of the panel. */
+html.hud-compact .tutorial-progress-shell--screen-open,
+html.hud-compact .tutorial-progress-shell--shifted {
+  left: 10.75rem;
 }
 
 .tutorial-progress-panel {

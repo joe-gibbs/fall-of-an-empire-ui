@@ -2123,6 +2123,11 @@ function mockProvinceModeOverview(state: MockBridgeState): BridgeResponse<'game.
   const active = state.provinceMode;
   return {
     active,
+    heldCourtOffice: '',
+    tributePledge: 0,
+    maxTributePledge: 2,
+    standingPerTributePledge: 8,
+    tributeRatePercent: 50,
     province: mockProvinceModeFactionSummary(provincePlayerFaction),
     imperialFaction: mockProvinceModeFactionSummary(provinceModeOverlordFaction),
     governor: mockProvinceModePerson(MOCK_IDS.governor),
@@ -2662,7 +2667,7 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
     corruption: isPort ? 0.28 : 0.14,
     usesAdministrativeCorruption: true,
     fortificationLevel: isPort ? 2 : 4,
-    unrest: isPort ? 0.18 : 0.08,
+    unrest: isPort ? 18 : 8,
     unrestLabel: isPort ? 'Restless' : 'Calm',
     region: isPort ? 'Meridian Coast' : 'Heartland',
     land: isPort ? 'Namaris Shore' : 'Aurelion Basin',
@@ -2939,6 +2944,8 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
         consumption: isPort ? 610 : 1210,
         hasShortage: isPort,
         isCapitalStockpile: !isPort,
+        supplyFood: isPort ? 430 : 1200,
+        civilianReserve: isPort ? 1220 : 2420,
       },
       {
         id: 'rawMaterials',
@@ -2950,6 +2957,8 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
         consumption: 4,
         hasShortage: false,
         isCapitalStockpile: !isPort,
+        supplyFood: 0,
+        civilianReserve: 0,
       },
       {
         id: 'strategic',
@@ -2961,6 +2970,8 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
         consumption: 0,
         hasShortage: false,
         isCapitalStockpile: !isPort,
+        supplyFood: 0,
+        civilianReserve: 0,
       },
       {
         id: 'luxury',
@@ -2972,6 +2983,8 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
         consumption: 0,
         hasShortage: false,
         isCapitalStockpile: !isPort,
+        supplyFood: 0,
+        civilianReserve: 0,
       },
     ],
     resources: [
@@ -2992,6 +3005,8 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
         status: isPort ? 'Minor Shortage' : 'Sufficient',
         depleting: true,
         monthsUntilDepletion: isPort ? 6.1 : 5.2,
+        exportsProduction: true,
+        keepUpTo: isPort ? 7300 : 14500,
         isNatural: true,
         siegeHalted: false,
         productionSources: [{ name: 'Farms', value: isPort ? 420 : 740 }, { name: 'Fishing', value: isPort ? 120 : 240 }],
@@ -3015,6 +3030,8 @@ function settlementBase(id: string): BridgeResponse<'game.get_settlement_data'> 
         status: 'Sufficient',
         depleting: false,
         monthsUntilDepletion: 0,
+        exportsProduction: true,
+        keepUpTo: 0,
         isNatural: !isPort,
         siegeHalted: false,
         productionSources: [{ name: 'Quarries', value: isPort ? 8 : 22 }, { name: 'Subject carts', value: 8 }],
@@ -3483,12 +3500,14 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
       },
     ],
     commandRank: profile.commandRank,
+    hasCommand: true,
     isNavy,
     isPersonalGuard: false,
     currentOrder: isEmbarked ? 'Embarked in Classis Meridian' : profile.currentOrder,
     raidTargetSettlement: '',
     expectedMonthlyRaidIncome: 0,
     monthlyUpkeep: 0,
+    ungarrisonedUpkeep: 0,
     formationTemplate: profile.formationTemplate,
     garrisonedAt: isEmbarked ? '' : profile.garrisonedAt,
     garrisonedAtId: isEmbarked ? '' : (isNavy ? MOCK_IDS.portSettlement : MOCK_IDS.settlement),
@@ -3537,6 +3556,9 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     supplyRefillStatus: isEmbarked ? 'embarked' : profile.garrisonedAt ? 'refilling_now' : 'in_field',
     supplySettlementName: isEmbarked ? '' : (profile.garrisonedAt ?? ''),
     supplyMissingResources: '',
+    supplyFoodTaken: 0,
+    supplySettlementFood: 0,
+    supplyCivilianReserve: 0,
     isForcedMarching: false,
     canForcedMarch: !isNavy,
     canMerge: !isEmbarked,
@@ -3550,6 +3572,7 @@ function militaryData(id: string): BridgeResponse<'game.get_military_data'> {
     isReplenishing: false,
     replenishCost: isNavy ? 640 : isDetachment ? 320 : isScouts ? 180 : 820,
     canReplenish: true,
+    replenishUnavailableReason: '',
     isFoederatiAuxiliary: false,
     foederatiOriginFactionId: '',
     isPlayerControlled: true,
@@ -4290,6 +4313,9 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         decayLoss: 0,
         netPerMonth: 18,
         marketMultiplier: 1,
+        priceVsNormalPercent: 0,
+        priceChangeThisMonthPercent: 0,
+        priceReasons: ['The price is normal. Buying raises it and selling lowers it.'],
         buyPrice: 0,
         sellPrice: 0,
         tradeQuotes: [],
@@ -4347,6 +4373,9 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         decayLoss: 0,
         netPerMonth: -26,
         marketMultiplier: 0.85,
+        priceVsNormalPercent: -15,
+        priceChangeThisMonthPercent: 0,
+        priceReasons: ['Each month the price moves a quarter of the way back to normal.'],
         buyPrice: 0.17,
         sellPrice: 0.085,
         tradeQuotes: [
@@ -4404,6 +4433,9 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         decayLoss: 0,
         netPerMonth: 7,
         marketMultiplier: 1.05,
+        priceVsNormalPercent: 5,
+        priceChangeThisMonthPercent: 0,
+        priceReasons: ['Each month the price moves a quarter of the way back to normal.'],
         buyPrice: 0.315,
         sellPrice: 0.1575,
         tradeQuotes: [
@@ -4456,6 +4488,9 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         decayLoss: 0,
         netPerMonth: 10,
         marketMultiplier: 1.2,
+        priceVsNormalPercent: 20,
+        priceChangeThisMonthPercent: 0,
+        priceReasons: ['Each month the price moves a quarter of the way back to normal.'],
         buyPrice: 0.36,
         sellPrice: 0.18,
         tradeQuotes: [
@@ -4507,6 +4542,9 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         decayLoss: 0,
         netPerMonth: -21,
         marketMultiplier: 1.15,
+        priceVsNormalPercent: 15,
+        priceChangeThisMonthPercent: 0,
+        priceReasons: ['Each month the price moves a quarter of the way back to normal.'],
         buyPrice: 0.23,
         sellPrice: 0.115,
         tradeQuotes: [
@@ -4560,6 +4598,9 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         decayLoss: 0,
         netPerMonth: 0,
         marketMultiplier: 1.45,
+        priceVsNormalPercent: 45,
+        priceChangeThisMonthPercent: 0,
+        priceReasons: ['Each month the price moves a quarter of the way back to normal.'],
         buyPrice: 0.87,
         sellPrice: 0.435,
         tradeQuotes: [
@@ -4612,6 +4653,9 @@ function economyOverview(): BridgeResponse<'game.get_economy_overview'> {
         decayLoss: 0,
         netPerMonth: -17,
         marketMultiplier: 0.92,
+        priceVsNormalPercent: -8,
+        priceChangeThisMonthPercent: 0,
+        priceReasons: ['Each month the price moves a quarter of the way back to normal.'],
         buyPrice: 0.184,
         sellPrice: 0.092,
         tradeQuotes: [
@@ -5334,11 +5378,11 @@ function personalGuardStatus(state: MockBridgeState): BridgeResponse<'game.get_p
 function militaryOverview(): BridgeResponse<'game.get_military_overview'> {
   return {
     forces: [
-      { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), name: 'I Field Army', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Dux', commanderName: 'Valen Arcastus', commanderId: MOCK_IDS.character, commanderDebugShortId: mockDebugShortId(MOCK_IDS.character), strength: 6800, maxStrength: 7600, morale: 84, supplyDays: 54, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'concentrate', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Holding Aurelion', delegated: false, autoSquashRebels: true, isPlayerControlled: true, subordinateCount: 2, subordinateCapacity: 5, parentSlotIndex: -1, receivesCommandBenefits: true },
-      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), name: 'Aurelion Detachment', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, morale: 71, supplyDays: 43, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'garrison', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Garrisoning Aurelion', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0, parentSlotIndex: 0, receivesCommandBenefits: true },
-      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), name: 'Western Scouts', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, morale: 68, supplyDays: 0, attrition: true, isNavy: false, isPersonalGuard: false, doctrine: 'screen', template: 'Light Border Screen', location: 'Berginian March', currentOrder: 'Screening the western road', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0, parentSlotIndex: 1, receivesCommandBenefits: true },
-      { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), name: 'Classis Meridian', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Praefectus', commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 1800, maxStrength: 2200, morale: 76, supplyDays: 88, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'Coastal Patrol', location: 'Namaris', currentOrder: 'Patrolling Namaris', delegated: false, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 1, subordinateCapacity: 3, parentSlotIndex: -1, receivesCommandBenefits: true },
-      { id: 'mock-navy-riverwatch', debugShortId: mockDebugShortId('mock-navy-riverwatch'), name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.navy, rank: 'Legatus', commanderName: 'Severus Laco', commanderId: 'mock-person-tribune', commanderDebugShortId: mockDebugShortId('mock-person-tribune'), strength: 900, maxStrength: 1100, morale: 69, supplyDays: 61, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'River Patrol', location: 'Tavarii Ford', currentOrder: 'Watching the ford crossings', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0, parentSlotIndex: 0, receivesCommandBenefits: true },
+      { id: MOCK_IDS.military, debugShortId: mockDebugShortId(MOCK_IDS.military), name: 'I Field Army', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Dux', hasCommand: true, commanderName: 'Valen Arcastus', commanderId: MOCK_IDS.character, commanderDebugShortId: mockDebugShortId(MOCK_IDS.character), strength: 6800, maxStrength: 7600, morale: 84, supplyDays: 54, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'concentrate', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Holding Aurelion', delegated: false, autoSquashRebels: true, isPlayerControlled: true, subordinateCount: 2, subordinateCapacity: 5, parentSlotIndex: -1, receivesCommandBenefits: true },
+      { id: 'mock-military-detachment', debugShortId: mockDebugShortId('mock-military-detachment'), name: 'Aurelion Detachment', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', hasCommand: true, commanderName: 'Cassian Arcastus', commanderId: MOCK_IDS.heir, commanderDebugShortId: mockDebugShortId(MOCK_IDS.heir), strength: 1600, maxStrength: 1800, morale: 71, supplyDays: 43, attrition: false, isNavy: false, isPersonalGuard: false, doctrine: 'garrison', template: 'Balanced Field Army', location: 'Aurelion', currentOrder: 'Garrisoning Aurelion', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0, parentSlotIndex: 0, receivesCommandBenefits: true },
+      { id: 'mock-military-scouts', debugShortId: mockDebugShortId('mock-military-scouts'), name: 'Western Scouts', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.military, rank: 'Legatus', hasCommand: true, commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 420, maxStrength: 520, morale: 68, supplyDays: 0, attrition: true, isNavy: false, isPersonalGuard: false, doctrine: 'screen', template: 'Light Border Screen', location: 'Berginian March', currentOrder: 'Screening the western road', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0, parentSlotIndex: 1, receivesCommandBenefits: true },
+      { id: MOCK_IDS.navy, debugShortId: mockDebugShortId(MOCK_IDS.navy), name: 'Classis Meridian', factionId: MOCK_IDS.playerFaction, parentId: '', rank: 'Praefectus', hasCommand: true, commanderName: 'Marcia Vennor', commanderId: MOCK_IDS.governor, commanderDebugShortId: mockDebugShortId(MOCK_IDS.governor), strength: 1800, maxStrength: 2200, morale: 76, supplyDays: 88, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'Coastal Patrol', location: 'Namaris', currentOrder: 'Patrolling Namaris', delegated: false, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 1, subordinateCapacity: 3, parentSlotIndex: -1, receivesCommandBenefits: true },
+      { id: 'mock-navy-riverwatch', debugShortId: mockDebugShortId('mock-navy-riverwatch'), name: 'Riverwatch Flotilla', factionId: MOCK_IDS.playerFaction, parentId: MOCK_IDS.navy, rank: 'Legatus', hasCommand: true, commanderName: 'Severus Laco', commanderId: 'mock-person-tribune', commanderDebugShortId: mockDebugShortId('mock-person-tribune'), strength: 900, maxStrength: 1100, morale: 69, supplyDays: 61, attrition: false, isNavy: true, isPersonalGuard: false, doctrine: 'screen', template: 'River Patrol', location: 'Tavarii Ford', currentOrder: 'Watching the ford crossings', delegated: true, autoSquashRebels: false, isPlayerControlled: true, subordinateCount: 0, subordinateCapacity: 0, parentSlotIndex: 0, receivesCommandBenefits: true },
     ],
     foederati: [
       { politics: noFoederatiPolitics, id: 'mock-foederati-subject', factionId: MOCK_IDS.subjectFaction, factionName: 'Meridian Prefecture', factionColour: SUBJECT_COLOUR, factionSecondaryColour: SUBJECT_SECONDARY, factionEmblem: 'Rephsian_2', factionCultureGroup: 'Rephsian', factionDiplomaticStatus: 'subject', factionSubjectSubtype: 'province', factionIsPlayer: false, factionIsRebel: false, rulerName: 'Iulia Seran', rulerId: 'mock-person-subject', rulerPortrait: FEMALE_PORTRAIT_1, rulerPortraitLayers: mockPortraitLayers(FEMALE_PORTRAIT_1), strength: 2400, availableStrength: 1800, activeStrength: 600, isCalledUp: true, compliance: 72, canCall: true },
@@ -6217,6 +6261,7 @@ function mockWarbands(mustered: boolean): BridgeResponse<'game.get_warbands'> {
     name: 'House of Ansgar',
     headId: courtier.id,
     headName: courtier.name,
+    isRulingClan: false,
     governorship: "",
     governorshipHelp: "",
     memberCount: 3,
@@ -6267,6 +6312,7 @@ function mockWarbands(mustered: boolean): BridgeResponse<'game.get_warbands'> {
         name: 'House of Aistulf',
         headId: ruler.id,
         headName: ruler.name,
+    isRulingClan: true,
     governorship: "",
     governorshipHelp: "",
         memberCount: 8,
@@ -6305,6 +6351,7 @@ function mockWarbands(mustered: boolean): BridgeResponse<'game.get_warbands'> {
         name: 'House of Hardrad',
         headId: heir.id,
         headName: heir.name,
+    isRulingClan: false,
     governorship: "",
     governorshipHelp: "",
         memberCount: 6,
@@ -6340,6 +6387,7 @@ function mockWarbands(mustered: boolean): BridgeResponse<'game.get_warbands'> {
         name: 'House of Grimald',
         headId: governor.id,
         headName: governor.name,
+    isRulingClan: false,
     governorship: "",
     governorshipHelp: "",
         memberCount: 5,
@@ -6693,6 +6741,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
     const activeStageReady = state.religionConversionActive && activeProgress >= 1;
     const canAdvance = activeStageReady && state.religionConversionStageIndex < MOCK_CONVERSION_STAGES.length - 1;
     const canComplete = activeStageReady && state.religionConversionStageIndex >= MOCK_CONVERSION_STAGES.length - 1;
+    const canCancel = state.religionConversionActive
+      && !MOCK_CONVERSION_STAGES.slice(0, state.religionConversionStageIndex + 1).some(stage => stage.changesReligion);
 
     return {
       state: {
@@ -6713,6 +6763,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         currentStageRemainingDays: activeRemainingDays,
         canAdvance,
         canComplete,
+        canCancel,
         playerGold: state.playerGold,
       },
       options: [
@@ -7032,6 +7083,9 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       data.supplyRefillStatus = '';
       data.supplySettlementName = '';
       data.supplyMissingResources = '';
+      data.supplyFoodTaken = 0;
+      data.supplySettlementFood = 0;
+      data.supplyCivilianReserve = 0;
       data.isForcedMarching = false;
       data.canForcedMarch = false;
       data.canMerge = false;
@@ -7061,7 +7115,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.get_game_state':
         return { day: 17, month: 6, year: 742, gameDay: state.gameDay, dateText: '17/6/742', season: 'Summer', calendarKey: 'fantasy', daysInYear: 336, daysInMonth: 28, isPaused: state.isPaused, speedLevel: state.speedLevel, debugMode: state.debugMode, climateTrend: state.climateTrend, climateDescription: state.climateDescription, saveSerial: state.saveSerial, gameOver: false, hasDemoTimeLimit: false, demoDaysRemaining: 0, demoEndDateText: '', playthroughId: 'mock-playthrough-rephsia' } satisfies BridgeResponse<'game.get_game_state'>;
       case 'game.get_game_version':
-        return { version: 'Mock UI Dev', isDemo: false } satisfies BridgeResponse<'game.get_game_version'>;
+        return { version: 'Mock UI Dev', isDemo: false, isEpicStore: false } satisfies BridgeResponse<'game.get_game_version'>;
       case 'game.get_resources':
         return { gold: state.playerGold, goldDelta: state.provinceMode ? 32 : 7670, population: state.provinceMode ? provincePlayerFaction.population : 272390, populationDelta: state.provinceMode ? 24 : 180 } satisfies BridgeResponse<'game.get_resources'>;
       case 'game.get_bureaucratic_throughput':
@@ -7887,8 +7941,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           viewportHeight: window.innerHeight || 1080,
           snapshotRevision: 0,
           settlements: [
-            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, queuedConstruction: '', queuedConstructionCount: 0, queuedRecruitment: '', queuedRecruitmentCount: 0, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, luxurySlotsRequired: 3, luxurySlotsProvided: 2, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, faithMarkers: [], governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, hasActiveAction: true, activeAction: { label: 'Relocate Population', colour: '#78c058', icon: '/assets/settlement-interactions/icons/RelocatePopulationInteraction.png' }, warWithPlayer: false, peaceSelection: false, peaceConcession: false, warScoreCost: 0 },
-            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, queuedConstruction: '', queuedConstructionCount: 0, queuedRecruitment: '', queuedRecruitmentCount: 0, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, luxurySlotsRequired: 2, luxurySlotsProvided: 1, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, faithMarkers: [], governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, hasActiveAction: true, activeAction: { label: 'Promote Commerce', colour: '#ffd24a', icon: '/assets/settlement-interactions/icons/PromoteCommerceInteraction.png' }, warWithPlayer: false, peaceSelection: false, peaceConcession: false, warScoreCost: 0 },
+            { id: MOCK_IDS.settlement, debugShortId: mockDebugShortId(MOCK_IDS.settlement), screenX: 760, screenY: 410, scale: 1, opacity: 1, zOrder: 10, detailLevel: 'full', selected: false, targeted: false, name: 'Aurelion', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: true, queuedJobCount: 0, isProvincialCapital: true, settlementType: 'metropolis', badgeScale: 1.1475, health: 0.92, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 78, fortificationProgress: 0.78, starving: false, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 122, tradeValue: 31.5, corruption: 0.14, population: 384000, unrest: 0.08, loyalty: 76, luxurySlotsRequired: 3, luxurySlotsProvided: 2, garrison: 720, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 1200 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 260 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, faithMarkers: [], governorName: 'Marcia Vennor', governorDebugShortId: mockDebugShortId(MOCK_IDS.governor), complianceTargetLabel: 'Governor:', complianceTargetName: 'Marcia Vennor', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Aurelion Basin', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: 'Bishop Caldus', hasBuildItem: true, buildItem: { label: 'Aqueduct', icon: '/assets/icons/I_BuildingsQuickButton.png', progress: 0.48 }, hasActiveAction: true, activeAction: { label: 'Relocate Population', colour: '#78c058', icon: '/assets/settlement-interactions/icons/RelocatePopulationInteraction.png' }, warWithPlayer: false, peaceSelection: false, peaceConcession: false, warScoreCost: 0 },
+            { id: MOCK_IDS.portSettlement, debugShortId: mockDebugShortId(MOCK_IDS.portSettlement), screenX: 1120, screenY: 620, scale: 0.94, opacity: 1, zOrder: 9, detailLevel: 'name', selected: false, targeted: false, name: 'Namaris', faction: { ...playerFactionReference(), relation: 'own' }, hasOccupier: false, occupier: { ...playerFactionReference(), relation: 'own' }, isCapital: false, queuedJobCount: 0, isProvincialCapital: false, settlementType: 'port', badgeScale: 1.35, health: 0.84, besieged: false, siegePowerInsufficient: false, siegeProgress: 0, fortification: 36, fortificationProgress: 0.36, starving: true, diseased: false, mode: state.activeMapMode, mapModeId: state.activeMapMode, mapModeLabel: mockMapModeLabel(state.activeMapMode), monthlyIncome: 46, tradeValue: 18.4, corruption: 0.28, population: 142000, unrest: 0.18, loyalty: 58, luxurySlotsRequired: 2, luxurySlotsProvided: 1, garrison: 360, resources: [{ icon: '/assets/resources/Food.png', label: 'Food', stock: 430 }, { icon: '/assets/resources/Stone.png', label: 'Stone', stock: 90 }], culture: { label: 'Rephsian', colour: rephsianCulture.colour }, religion: { label: 'Rephsian Pantheon', colour: rephsianReligion.colour }, faithMarkers: [], governorName: '', governorDebugShortId: 0, complianceTargetLabel: 'Governor:', complianceTargetName: '', complianceTargetIsRuler: false, complianceUsesFactionOpinion: false, complianceLuxuryLabel: 'Luxuries:', complianceLuxuryStatus: '', regionName: 'Namaris Shore', landName: 'Inner Dominion', domainName: 'Heartland', independent: true, overlordName: '', bishopName: '', hasBuildItem: true, buildItem: { label: 'Dromons', icon: '/assets/icons/I_NaviesQuickButton.png', progress: 0.22 }, hasActiveAction: true, activeAction: { label: 'Promote Commerce', colour: '#ffd24a', icon: '/assets/settlement-interactions/icons/PromoteCommerceInteraction.png' }, warWithPlayer: false, peaceSelection: false, peaceConcession: false, warScoreCost: 0 },
           ],
           ports: [
             { id: MOCK_IDS.portSettlement, screenX: 1088, screenY: 650, scale: 0.94, opacity: 1, zOrder: 10, detailLevel: 'name', selected: false, targeted: false, faction: { ...playerFactionReference(), relation: 'own' }, level: 3, blockaded: true },
@@ -8232,10 +8286,12 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           { slotName: 'mock-playthrough-rephsia/mock-manual-save', displayName: 'Before the Western Pass', playerCharacterName: 'Cassian Arcastus', playerFactionName: 'Rephsian Empire', gameDateString: '3 Autumn 742', timestamp: '2026-04-28T18:30:00Z', isAutosave: false, factionId: MOCK_IDS.playerFaction, factionColour: PLAYER_COLOUR, factionSecondaryColour: PLAYER_SECONDARY, factionEmblem: 'Rephsian_1', cultureGroup: 'Rephsian', characterGender: 'male', playthroughId: 'mock-playthrough-rephsia', playthroughDisplayName: 'Rephsian Empire' },
           { slotName: 'mock-playthrough-histria/histria-1', displayName: 'Histria 1', playerCharacterName: 'Marcus Valerius', playerFactionName: 'Histria', gameDateString: '12 Spring 741', timestamp: '2026-04-12T09:15:00Z', isAutosave: false, factionId: MOCK_IDS.playerFaction, factionColour: '#5a2a12', factionSecondaryColour: PLAYER_SECONDARY, factionEmblem: 'Rephsian_1', cultureGroup: 'Rephsian', characterGender: 'male', playthroughId: 'mock-playthrough-histria', playthroughDisplayName: 'Histria' },
         ] } satisfies BridgeResponse<'game.list_saves'>;
+      case 'game.achievement_events':
+        return { steamAvailable: false, disabledReasons: [], tutorialDisabledReason: '' } satisfies BridgeResponse<'game.achievement_events'>;
       case 'game.list_new_game_maps':
         return { maps: [
-          { id: 'Campaign', displayName: 'Grand Campaign', startingDateLabel: '4 September 784', startDates: [{ id: '', displayName: 'Grand Campaign', startingDateLabel: '4 September 784', isLocked: false }, { id: 'AfterTheEmpire', displayName: 'After the Empire', startingDateLabel: '4 September 897', isLocked: false }], menuKicker: 'Year 784 - Fractured Dominion', menuDescription: GRAND_CAMPAIGN_MENU_DESCRIPTION, menuImageUrl: '/assets/events/foreign-invasion.png', menuOrder: 0, requiresFactionSelection: true, isLocked: false },
-          { id: 'Tutorial', displayName: 'Tutorial', startingDateLabel: '4 September 784', startDates: [{ id: '', displayName: 'Tutorial', startingDateLabel: '4 September 784', isLocked: false }], menuKicker: 'Guided Start', menuDescription: TUTORIAL_MENU_DESCRIPTION, menuImageUrl: '/assets/events/military-chain-of-command.png', menuOrder: 10, requiresFactionSelection: false, isLocked: false },
+          { id: 'Campaign', displayName: 'Grand Campaign', startingDateLabel: '4 September 784', startDates: [{ id: '', displayName: 'Grand Campaign', startingDateLabel: '4 September 784', isLocked: false, requiredDlcName: '', requiredDlcStoreUrl: '' }, { id: 'AfterTheEmpire', displayName: 'After the Empire', startingDateLabel: '4 September 897', isLocked: true, requiredDlcName: 'Warpath', requiredDlcStoreUrl: 'https://store.steampowered.com/app/5048850/' }], menuKicker: 'Year 784 - Fractured Dominion', menuDescription: GRAND_CAMPAIGN_MENU_DESCRIPTION, menuImageUrl: '/assets/events/foreign-invasion.png', menuOrder: 0, requiresFactionSelection: true, isLocked: false, hasGuidedCampaign: false, guidedCampaignType: '' },
+          { id: 'Tutorial', displayName: 'Tutorial', startingDateLabel: '4 September 784', startDates: [{ id: '', displayName: 'Tutorial', startingDateLabel: '4 September 784', isLocked: false, requiredDlcName: '', requiredDlcStoreUrl: '' }], menuKicker: 'Guided Start', menuDescription: TUTORIAL_MENU_DESCRIPTION, menuImageUrl: '/assets/events/military-chain-of-command.png', menuOrder: 10, requiresFactionSelection: false, isLocked: false, hasGuidedCampaign: true, guidedCampaignType: 'tutorial' },
         ] } satisfies BridgeResponse<'game.list_new_game_maps'>;
       case 'game.get_new_game_map_faction_selection':
         return {
@@ -8245,6 +8301,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
           factionSelectionDescription: GRAND_CAMPAIGN_FACTION_SELECTION_DESCRIPTION,
           defaultPlayerFactionBaseName: payloadString(payload, 'startDateId') === 'AfterTheEmpire' ? 'Kyrnos' : 'RephsianDominion',
           startingDateLabel: payloadString(payload, 'startDateId') === 'AfterTheEmpire' ? '4 September 897' : '4 September 784',
+          factionUnlockDlcName: '',
+          factionUnlockDlcStoreUrl: '',
           paperMapUrl: '/assets/world-map-painted.jpg',
           politicalMapUrl: '',
           mapWidth: 1200,
@@ -8661,8 +8719,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
         const selectedReligion = mockReligionByKey(selectedReligionKey);
         const canManageReligion = !state.provinceMode && selectedReligion.isOrganised;
         return { religionInfo: selectedReligion, religionKey: selectedReligionKey, religionName: selectedReligion.name, description: selectedReligion.description, clergyTitle: 'High Priest', iconPath: mockReligionIcon(mockReligionByKey(state.playerReligionKey)), colour: mockReligionByKey(state.playerReligionKey).colour, canManage: canManageReligion, leadingFactionName: 'Rephsian Empire', autoAssignClergyEnabled: canManageReligion && state.autoAssignClergyEnabled, dioceses: !selectedReligion.isOrganised ? [] : [
-          { landKey: 'AurelionBasin', landName: 'Aurelion Basin', bishopId: MOCK_IDS.governor, bishopName: 'Marcia Vennor', authority: 72, religionShare: 0.76, followers: 292000, landPopulation: 384000 },
-          { landKey: 'NamarisShore', landName: 'Namaris Shore', bishopId: MOCK_IDS.heir, bishopName: 'Cassian Arcastus', authority: 48, religionShare: 0.59, followers: 84000, landPopulation: 142000 },
+          { landKey: 'AurelionBasin', landName: 'Aurelion Basin', bishopId: MOCK_IDS.governor, bishopName: 'Marcia Vennor', bishopPortraitLayers: mockPortraitLayers(FEMALE_PORTRAIT_1), authority: 72, religionShare: 0.76, followers: 292000, landPopulation: 384000 },
+          { landKey: 'NamarisShore', landName: 'Namaris Shore', bishopId: MOCK_IDS.heir, bishopName: 'Cassian Arcastus', bishopPortraitLayers: mockPortraitLayers(MALE_PORTRAIT_2), authority: 48, religionShare: 0.59, followers: 84000, landPopulation: 142000 },
         ], religions: [
           { info: mockReligionByKey('blodskurr'), key: 'blodskurr', name: 'Blodskurr', clergyTitle: '', iconPath: '/assets/religions/blodskurr.png', colour: '#993333', isPlayerReligion: state.playerReligionKey === 'blodskurr', canManage: false, leadingFactionName: '' },
           { info: rephsianReligion, key: rephsianReligion.id, name: rephsianReligion.name, clergyTitle: 'High Priest', iconPath: mockReligionIcon(rephsianReligion), colour: rephsianReligion.colour, isPlayerReligion: state.playerReligionKey === rephsianReligion.id, canManage: canManageReligion && state.playerReligionKey === rephsianReligion.id, leadingFactionName: state.playerReligionKey === rephsianReligion.id ? 'Rephsian Empire' : 'Aurelian Synod' },
@@ -8851,7 +8909,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.save_game':
         state.saveSerial += 1;
         emitGameState(emit);
-        return { saved: true, failureReason: '' } satisfies BridgeResponse<'game.save_game'>;
+        return { pending: false, requestId: payloadNumber(payload, 'requestId'), saved: true, failureReason: '' } satisfies BridgeResponse<'game.save_game'>;
       case 'game.delete_save':
         return { deleted: true, failureReason: '' } satisfies BridgeResponse<'game.delete_save'>;
       case 'game.rename_playthrough':
@@ -8949,7 +9007,7 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       case 'game.start_bloc_interaction':
         return { started: true, succeeded: true, message: 'Mock bloc interaction started.' } satisfies BridgeResponse<'game.start_bloc_interaction'>;
       case 'game.start_faction_interaction':
-        return { targetFactionId: payloadString(payload, 'targetFactionId', MOCK_IDS.rivalFaction), interactionId: payloadString(payload, 'interactionId', 'mock-interaction'), started: true, completed: true, succeeded: true, selectionStarted: false, selectionActive: false, personSelectionRequired: false, inputSelectionRequired: false, rebellionChoiceRequired: false, confirmationRequired: false, confirmationMessage: '', selectedSettlementCount: 0, playerGold: state.playerGold, hasSuccessChance: false, successChancePercent: 0, selectionImpactText: '', selectionSuccessEffect: '', selectionFailureEffect: '', selectionRiskText: '', interactionName: '', selectionPrompt: '', personSelectionPrompt: '', personCandidates: [], inputSelectionPrompt: '', inputRequirements: [], factionCandidates: [], message: 'Mock interaction succeeded.' } satisfies BridgeResponse<'game.start_faction_interaction'>;
+        return { targetFactionId: payloadString(payload, 'targetFactionId', MOCK_IDS.rivalFaction), interactionId: payloadString(payload, 'interactionId', 'mock-interaction'), started: true, completed: true, succeeded: true, selectionStarted: false, selectionActive: false, personSelectionRequired: false, inputSelectionRequired: false, rebellionChoiceRequired: false, allyChoiceRequired: false, confirmationRequired: false, confirmationMessage: '', confirmationEffectLines: [], selectedSettlementCount: 0, playerGold: state.playerGold, hasSuccessChance: false, successChancePercent: 0, selectionImpactText: '', selectionSuccessEffect: '', selectionFailureEffect: '', selectionRiskText: '', interactionName: '', selectionPrompt: '', personSelectionPrompt: '', personCandidates: [], inputSelectionPrompt: '', inputRequirements: [], factionCandidates: [], message: 'Mock interaction succeeded.' } satisfies BridgeResponse<'game.start_faction_interaction'>;
       case 'game.start_person_interaction':
         return { started: true, completed: true, succeeded: true, message: 'Mock interaction succeeded.' };
       case 'game.start_spy_interaction':
@@ -9424,8 +9482,8 @@ export function createMockBridgeRuntime(searchParams: URLSearchParams) {
       const outcomeLabel = victory ? 'Victory' : 'Defeat';
       const title = battleName;
       const summary = victory
-        ? 'Victory at Aurelion against The Vordic Host. Our line held the ridge while the enemy centre broke. Attacker losses: 2,430. Defender losses: 812. Spoils: 180 grain, 64 weapons.'
-        : 'Defeat at Aurelion against The Vordic Host. Our attack lost momentum below the ridge and the enemy held the field. Attacker losses: 2,430. Defender losses: 812.';
+        ? 'Victory at Aurelion against The Vordic Host. Our line held the ridge while the enemy centre broke. Our losses (defending): 812. Enemy losses: 2,430. Spoils: 180 grain, 64 weapons.'
+        : 'Defeat at Aurelion against The Vordic Host. Our attack lost momentum below the ridge and the enemy held the field. Our losses (attacking): 2,430. Enemy losses: 812.';
       emit('game.notification_shown', {
         id: `mock-battle-aar-notification-${createdOnDay}-${Date.now()}`,
         title,

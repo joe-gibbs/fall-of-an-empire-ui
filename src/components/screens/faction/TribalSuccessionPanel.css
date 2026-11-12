@@ -3,7 +3,7 @@
 .clans-succession-status { margin: 0.35rem 0 0; color: var(--text-muted); font-size: 0.85rem; line-height: 1.35; }
 .clans-succession-status.clans-value--danger { color: var(--red); }
 .clans-succession-claimants { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
-.clans-succession-claimant { display: flex; align-items: center; justify-content: space-between; gap: 0.65rem; padding: 0.6rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; border: 0.231rem solid transparent; border-image: url('/assets/gold-frame.png') 6; }
+.clans-succession-claimant { display: flex; align-items: center; justify-content: space-between; gap: 0.65rem; padding: 0.6rem; background: url('/assets/baked/card-charcoal.png') 0 0 / 17.4545rem 8.7273rem; border: 0.231rem solid transparent; border-image: url('/assets/gold-frame.png') 6; }
 .clans-succession-claimant > .tooltip-wrapper { min-width: 0; }
 .clans-succession-person { display: flex; align-items: center; gap: 0.55rem; min-width: 0; padding: 0; border: 0; background: none; text-align: left; cursor: var(--cursor-pointer); }
 .clans-succession-person .portrait { flex-shrink: 0; }

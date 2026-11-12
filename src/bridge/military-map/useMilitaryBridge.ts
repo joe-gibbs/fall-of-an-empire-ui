@@ -93,6 +93,7 @@ function mapForce(data: MilitaryOverviewForce): MilitaryForce {
     factionId: data.factionId,
     parentId: data.parentId || null,
     rank: data.rank as MilitaryForce['rank'],
+    hasCommand: data.hasCommand,
     commanderName: data.commanderName,
     commanderId: data.commanderId || undefined,
     commanderDebugShortId: data.commanderDebugShortId || undefined,
@@ -294,6 +295,7 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
       unitIds: group.unitIds,
     })),
     commandRank: data.commandRank,
+    hasCommand: data.hasCommand,
     isNavy: data.isNavy,
     isPersonalGuard: data.isPersonalGuard,
     doctrine: data.formationTemplate || data.currentOrder || data.commandRank,
@@ -358,6 +360,9 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     supplyRefillStatus: data.supplyRefillStatus || undefined,
     supplySettlementName: data.supplySettlementName || undefined,
     supplyMissingResources: data.supplyMissingResources || undefined,
+    supplyFoodTaken: data.supplyFoodTaken,
+    supplySettlementFood: data.supplySettlementFood,
+    supplyCivilianReserve: data.supplyCivilianReserve,
     isForcedMarching: data.isForcedMarching,
     canForcedMarch: data.canForcedMarch,
     canMerge: data.canMerge,
@@ -371,9 +376,11 @@ function mapMilitary(data: GetMilitaryDataResponse): Army | null {
     raidTargetSettlement: data.raidTargetSettlement || undefined,
     expectedMonthlyRaidIncome: data.raidTargetSettlement ? data.expectedMonthlyRaidIncome : undefined,
     monthlyUpkeep: data.monthlyUpkeep,
+    ungarrisonedUpkeep: data.ungarrisonedUpkeep,
     isReplenishing: data.isReplenishing,
     replenishCost: data.replenishCost > 0 ? data.replenishCost : undefined,
     canReplenish: data.canReplenish,
+    replenishUnavailableReason: data.replenishUnavailableReason || undefined,
     isFoederatiAuxiliary: data.isFoederatiAuxiliary,
     foederatiOriginFactionId: data.foederatiOriginFactionId || undefined,
     isPlayerControlled: data.isPlayerControlled,
@@ -422,6 +429,9 @@ function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse):
         supplyRefillStatus: undefined,
         supplySettlementName: undefined,
         supplyMissingResources: undefined,
+        supplyFoodTaken: undefined,
+        supplySettlementFood: undefined,
+        supplyCivilianReserve: undefined,
         isForcedMarching: false,
         canForcedMarch: false,
         canMerge: false,
@@ -432,6 +442,7 @@ function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse):
         isReplenishing: false,
         replenishCost: undefined,
         canReplenish: false,
+        replenishUnavailableReason: undefined,
       };
       militaryCache.set(restricted.id, restricted);
       return restricted;
@@ -445,9 +456,13 @@ function mergeMilitaryPush(current: Army | null, data: GetMilitaryDataResponse):
       supplyRefillStatus: data.canViewFullDetails ? data.supplyRefillStatus || undefined : undefined,
       supplySettlementName: data.canViewFullDetails ? data.supplySettlementName || undefined : undefined,
       supplyMissingResources: data.canViewFullDetails ? data.supplyMissingResources || undefined : undefined,
+      supplyFoodTaken: data.canViewFullDetails ? data.supplyFoodTaken : undefined,
+      supplySettlementFood: data.canViewFullDetails ? data.supplySettlementFood : undefined,
+      supplyCivilianReserve: data.canViewFullDetails ? data.supplyCivilianReserve : undefined,
       isReplenishing: data.isReplenishing,
       replenishCost: data.replenishCost > 0 ? data.replenishCost : undefined,
       canReplenish: data.canReplenish,
+      replenishUnavailableReason: data.replenishUnavailableReason || undefined,
     };
     militaryCache.set(updated.id, updated);
     return updated;
@@ -529,6 +544,7 @@ function mapAttritionSource(source: GetMilitaryDataResponse['attritionSources'][
     progress: source.progress,
     nearbyStrength: source.nearbyStrength,
     strengthThreshold: source.strengthThreshold,
+    detail: source.detail,
   };
 }
 
@@ -683,6 +699,16 @@ export function startMilitaryMergeTargetingBridge(militaryId: string): Promise<v
 
 export function startMilitaryDockTargetingBridge(militaryId: string): Promise<void> {
   return bridgeCall('game.start_military_dock_targeting', { militaryId }).then(() => undefined);
+}
+
+export type MilitaryTargetingMode = 'none' | 'embark' | 'dock' | 'merge' | 'attachToParent' | 'attachSubordinate';
+
+/** The game's current military targeting mode, kept in sync by pushes on every change. */
+export function useMilitaryTargetingMode(): MilitaryTargetingMode {
+  return useBridgeQuery({
+    action: 'game.military_targeting_mode',
+    map: response => response.mode as MilitaryTargetingMode,
+  }) ?? 'none';
 }
 
 export function cancelMilitaryDockTargetingBridge(): Promise<void> {

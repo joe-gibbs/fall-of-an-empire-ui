@@ -2,11 +2,24 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { formatWebUIText, setCurrentWebUIText, WebUITextContext, type WebUITextContextValue } from './WebUITextContext';
 import { getModPoCatalogueVersion, loadRegisteredModPoText, subscribeModPoCatalogues } from './modPoText';
 import { WEBUI_TEXT_SOURCE } from './webui-text.generated.ts';
+import { clearBridgeQueryCache } from '../bridge/core/useBridgeQuery';
+
+let bridgeCacheLocale: string | null = null;
+
+// Cached bridge responses carry display text in the language they were fetched in.
+// Drop them before the remounted children read the cache.
+function syncBridgeCacheLocale(locale: string): void {
+  if (bridgeCacheLocale !== null && bridgeCacheLocale !== locale) {
+    clearBridgeQueryCache();
+  }
+  bridgeCacheLocale = locale;
+}
 
 export function WebUITextProvider({ children }: { children: ReactNode }) {
   const [localisationVersion, setLocalisationVersion] = useState(0);
   const localisation = window.webkiln?.localisation;
   const locale = localisation?.locale ?? 'en';
+  syncBridgeCacheLocale(locale);
   const [modTextState, setModTextState] = useState<{ locale: string; texts: Map<string, string> }>(() => ({
     locale: '',
     texts: new Map(),

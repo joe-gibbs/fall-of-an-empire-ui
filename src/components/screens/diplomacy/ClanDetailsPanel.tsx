@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import type { KinshipGroupEntry } from '../../../bridge-types.generated';
 import { usePerson, usePlayerFactionSummary } from '../../../data-source';
 import { useGameActions } from '../../../context/GameContext';
@@ -17,9 +17,11 @@ import ClanWarbandPanel from './ClanWarbandPanel';
 import { kinshipStrengthTooltip } from './kinshipTooltips';
 import './ClanDetailsPanel.css';
 
-export default function ClanDetailsPanel({ group, showStanding = false, onSelectClan }: {
+export default function ClanDetailsPanel({ group, showStanding = false, wide = false, actions, onSelectClan }: {
   group: KinshipGroupEntry;
   showStanding?: boolean;
+  wide?: boolean;
+  actions?: ReactNode;
   onSelectClan: (id: string) => void;
 }) {
   const t = useWebUIText();
@@ -36,50 +38,57 @@ export default function ClanDetailsPanel({ group, showStanding = false, onSelect
     setInspectedId(id);
     unitsRef.current?.scrollIntoView({ block: 'nearest' });
   };
-  return <div className="clan-detail-panel">
+  return <div className={`clan-detail-panel${wide ? ' clan-detail-panel--wide' : ''}`}>
     <header className="clan-detail-title">
       <Tooltip content={kinshipStrengthTooltip(group)}><h2>{group.name}</h2></Tooltip>
-      <Tooltip content={t('Warbands.FamilyTree')}>
-        <IconButton icon="/assets/icons/I_Family.png" label={t('Warbands.FamilyTree')} onClick={() => openScreen('familyTree', `tree:${group.headId}`)} />
-      </Tooltip>
+      <div className="clan-detail-title-actions">
+        {actions}
+        <Tooltip content={t('Warbands.FamilyTree')}>
+          <IconButton icon="/assets/icons/I_Family.png" label={t('Warbands.FamilyTree')} onClick={() => openScreen('familyTree', `tree:${group.headId}`)} />
+        </Tooltip>
+      </div>
     </header>
-    <section className="clan-leadership">
-      <div className="clan-leader-row">
-        <PersonTooltip characterId={group.headId}>
-          <button type="button" className="clan-person-link clan-leader-link" onClick={() => openSidebar('character', group.headId)}>
-            <Portrait personId={group.headId} name={group.headName} size="lg" showBorder showBadge={false} />
-            <span className="clan-person-copy">
-              <strong>{group.headName}</strong>
-            </span>
-          </button>
-        </PersonTooltip>
-        {leader && <div className="clan-member-service">
-          <ClanMemberFame member={leader} />
-          {leader.canHoldWarband && <>
-            <ClanWarriorCount member={leader} onInspect={() => inspect(leader.id)} />
-            {leader.musterState !== 'ready' && <Tooltip content={{ title: leader.musterStatus, body: leader.musterReason }}>
-              <span className={`clan-member-status clan-member-status--${leader.musterState}`}>{leader.musterStatus}</span>
-            </Tooltip>}
-          </>}
-        </div>}
+    <div className="clan-detail-body">
+      <div className="clan-detail-main">
+        <section className="clan-leadership">
+          <div className="clan-leader-row">
+            <PersonTooltip characterId={group.headId}>
+              <button type="button" className="clan-person-link clan-leader-link" onClick={() => openSidebar('character', group.headId)}>
+                <Portrait personId={group.headId} name={group.headName} size={wide ? 'xl' : 'lg'} showBorder showBadge={false} />
+                <span className="clan-person-copy">
+                  <strong>{group.headName}</strong>
+                </span>
+              </button>
+            </PersonTooltip>
+            {leader && <div className="clan-member-service">
+              <ClanMemberFame member={leader} />
+              {leader.canHoldWarband && <>
+                <ClanWarriorCount member={leader} onInspect={() => inspect(leader.id)} />
+                {leader.musterState !== 'ready' && <Tooltip content={{ title: leader.musterStatus, body: leader.musterReason }}>
+                  <span className={`clan-member-status clan-member-status--${leader.musterState}`}>{leader.musterStatus}</span>
+                </Tooltip>}
+              </>}
+            </div>}
+          </div>
+          {group.governorship && <Tooltip content={{ body: group.governorshipHelp }}>
+            <p>{group.governorship}</p>
+          </Tooltip>}
+          {showStanding && !rulingClan && <div className="clan-leader-relations">
+            <ComplianceRow value={group.compliance} character={head} compact additionalHelp={t('Kinship.ComplianceHelp', { Head: group.headName })} />
+          </div>}
+          <div className="clan-leader-actions">
+            <ClanInteractionActions key={group.headId} group={group} />
+          </div>
+        </section>
+        <ClanFeudActions group={group} onSelectClan={onSelectClan} />
+        {group.members.some(member => !member.isHead) && <section className="clan-people">
+          <SectionHeading title={t('KinshipGroups.Members')} />
+          <ClanMembersPanel group={group} selectedMemberId={inspected?.id ?? ''} onInspect={inspect} />
+        </section>}
       </div>
-      {group.governorship && <Tooltip content={{ body: group.governorshipHelp }}>
-        <p>{group.governorship}</p>
-      </Tooltip>}
-      {showStanding && !rulingClan && <div className="clan-leader-relations">
-        <ComplianceRow value={group.compliance} character={head} compact additionalHelp={t('Kinship.ComplianceHelp', { Head: group.headName })} />
-      </div>}
-      <div className="clan-leader-actions">
-        <ClanInteractionActions key={group.headId} group={group} />
+      <div ref={unitsRef} className="clan-detail-units">
+        {inspected && <ClanWarbandPanel key={inspected.id} member={inspected} editable={inspected.id === player?.rulerId} />}
       </div>
-    </section>
-    <ClanFeudActions group={group} onSelectClan={onSelectClan} />
-    {group.members.some(member => !member.isHead) && <section className="clan-people">
-      <SectionHeading title={t('KinshipGroups.Members')} />
-      <ClanMembersPanel group={group} selectedMemberId={inspected?.id ?? ''} onInspect={inspect} />
-    </section>}
-    <div ref={unitsRef}>
-      {inspected && <ClanWarbandPanel key={inspected.id} member={inspected} editable={inspected.id === player?.rulerId} />}
     </div>
   </div>;
 }

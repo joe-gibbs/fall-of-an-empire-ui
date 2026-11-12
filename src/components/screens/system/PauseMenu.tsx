@@ -5,7 +5,7 @@ import LoadGameModal from './LoadGameModal';
 import SettingsModal from './SettingsModal';
 import ConfirmDialog from '../../common/forms/ConfirmDialog';
 import { useGameActions } from '../../../context/GameContext';
-import { bridgeCall } from '../../../bridge-types.generated.ts';
+import { bridgeCall, onBridgeEvent, type SaveGameResponse } from '../../../bridge-types.generated.ts';
 import { useModalPresence } from '../../../hooks/useModalPresence';
 import { UI_MOTION } from '../../../config/motion';
 import './PauseMenu.css';
@@ -24,16 +24,20 @@ interface OverwriteTarget {
 type SaveResult =
   | { saved: true }
   | { saved: false; failureReason: string };
+type ChildDialog =
+  | { kind: 'save'; mode: SaveDialogMode }
+  | { kind: 'overwrite'; mode: SaveDialogMode; target: OverwriteTarget }
+  | { kind: 'load' }
+  | { kind: 'settings' }
+  | { kind: 'resetHints' }
+  | { kind: 'returnToMenu' };
+type ChildDialogKind = ChildDialog['kind'];
+
+let nextSaveRequestId = 1;
 
 const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   const { resetAdvisorHints } = useGameActions();
-  const [showSave, setShowSave] = useState(false);
-  const [saveDialogMode, setSaveDialogMode] = useState<SaveDialogMode>('save');
-  const [showLoad, setShowLoad] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showResetHintsConfirm, setShowResetHintsConfirm] = useState(false);
-  const [showReturnToMenuConfirm, setShowReturnToMenuConfirm] = useState(false);
-  const [overwriteTarget, setOverwriteTarget] = useState<OverwriteTarget | null>(null);
+  const [childDialog, setChildDialog] = useState<ChildDialog | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [statusIsError, setStatusIsError] = useState(false);
   const [suggestedName, setSuggestedName] = useState('');
@@ -41,16 +45,16 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const closeChildModals = useCallback(() => {
-    setShowSave(false);
-    setShowLoad(false);
-    setShowSettings(false);
-    setOverwriteTarget(null);
+    setChildDialog(null);
+  }, []);
+
+  // A child dialog reports its close after its exit animation, by which time another dialog may be open.
+  const closeChildDialog = useCallback((kind: ChildDialogKind) => {
+    setChildDialog(current => (current?.kind === kind ? null : current));
   }, []);
 
   const handleAfterClosed = useCallback(() => {
     closeChildModals();
-    setShowResetHintsConfirm(false);
-    setShowReturnToMenuConfirm(false);
     setGameOver(true);
     onClosed();
   }, [closeChildModals, onClosed]);
@@ -110,8 +114,17 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   }, []);
 
   const saveGame = useCallback(async (displayName: string, existingSlotName = ''): Promise<SaveResult> => {
+    let unsubscribe: (() => void) | undefined;
+    const requestId = nextSaveRequestId++;
     try {
-      const res = await bridgeCall('game.save_game', { displayName, existingSlotName });
+      // The game writes the save on a worker thread and pushes the result when it is on disk.
+      const written = new Promise<SaveGameResponse>(resolve => {
+        unsubscribe = onBridgeEvent('game.save_game', result => {
+          if (result.requestId === requestId) resolve(result);
+        });
+      });
+      const accepted = await bridgeCall('game.save_game', { displayName, existingSlotName, requestId });
+      const res = accepted.pending ? await written : accepted;
       return res.saved
         ? { saved: true }
         : { saved: false, failureReason: res.failureReason };
@@ -121,6 +134,8 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
         saved: false,
         failureReason: err instanceof Error ? err.message : String(err),
       };
+    } finally {
+      unsubscribe?.();
     }
   }, []);
 
@@ -129,12 +144,10 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   }, [showStatus]);
 
   const openSaveDialog = useCallback((mode: SaveDialogMode) => {
-    setSaveDialogMode(mode);
-    setShowSave(true);
+    setChildDialog({ kind: 'save', mode });
   }, []);
 
   const handleSaveConfirm = useCallback(async (name: string, existingSlotName = '') => {
-    setShowSave(false);
     const result = await saveGame(name, existingSlotName);
     if (result.saved) {
       setSuggestedName(name);
@@ -153,7 +166,6 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
   }, []);
 
   const handleSaveAndQuitConfirm = useCallback(async (name: string, existingSlotName = '') => {
-    setShowSave(false);
     const result = await saveGame(name, existingSlotName);
     if (!result.saved) {
       showSaveFailure(result.failureReason);
@@ -162,16 +174,17 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
     await handleReturnToMainMenu();
   }, [handleReturnToMainMenu, saveGame, showSaveFailure]);
 
-  const completeSave = useCallback((name: string, existingSlotName = '') => {
-    if (saveDialogMode === 'saveAndQuit') {
+  const completeSave = useCallback((mode: SaveDialogMode, name: string, existingSlotName = '') => {
+    setChildDialog(null);
+    if (mode === 'saveAndQuit') {
       void handleSaveAndQuitConfirm(name, existingSlotName);
       return;
     }
     void handleSaveConfirm(name, existingSlotName);
-  }, [handleSaveAndQuitConfirm, handleSaveConfirm, saveDialogMode]);
+  }, [handleSaveAndQuitConfirm, handleSaveConfirm]);
 
-  const handleSaveDialogConfirm = useCallback(async (name: string) => {
-    setShowSave(false);
+  const handleSaveDialogConfirm = useCallback(async (mode: SaveDialogMode, name: string) => {
+    setChildDialog(null);
     try {
       const [{ saves }, state] = await Promise.all([
         bridgeCall('game.list_saves'),
@@ -186,20 +199,21 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
         ))
         .sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0];
       if (existing) {
-        setOverwriteTarget({ name, slotName: existing.slotName });
+        setChildDialog({ kind: 'overwrite', mode, target: { name, slotName: existing.slotName } });
         return;
       }
-      completeSave(name);
+      completeSave(mode, name);
     } catch (err) {
       console.error('[PauseMenu] failed to check existing saves', err);
       showSaveFailure(err instanceof Error ? err.message : String(err));
     }
   }, [completeSave, showSaveFailure]);
 
+  const overwriteDialog = childDialog?.kind === 'overwrite' ? childDialog : null;
   const confirmOverwrite = useCallback(() => {
-    if (!overwriteTarget) return;
-    completeSave(overwriteTarget.name, overwriteTarget.slotName);
-  }, [completeSave, overwriteTarget]);
+    if (!overwriteDialog) return;
+    completeSave(overwriteDialog.mode, overwriteDialog.target.name, overwriteDialog.target.slotName);
+  }, [completeSave, overwriteDialog]);
 
   const handleExitToDesktop = useCallback(async () => {
     try {
@@ -217,6 +231,8 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
 
   if (!mounted) return null;
 
+  const saveDialogMode: SaveDialogMode = childDialog?.kind === 'save' || childDialog?.kind === 'overwrite' ? childDialog.mode : 'save';
+
   const cls = closing ? 'pause-overlay pause-overlay--closing' : 'pause-overlay';
 
   return (
@@ -228,14 +244,14 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
         <nav className="pause-overlay__items" onClick={stopPropagation}>
           <button className="pause-overlay__item" onClick={() => { playSound('click'); handleClose(); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.301.2" /></button>
           <button className="pause-overlay__item" disabled={gameOver} onClick={() => { playSound('click'); openSaveDialog('save'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.302.3" /></button>
-          <button className="pause-overlay__item" onClick={() => { playSound('click'); setShowLoad(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.303.4" /></button>
-          <button className="pause-overlay__item" onClick={() => { playSound('click'); setShowResetHintsConfirm(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.304.5" /></button>
-          <button className="pause-overlay__item" onClick={() => { playSound('click'); setShowSettings(true); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.305.6" /></button>
+          <button className="pause-overlay__item" onClick={() => { playSound('click'); setChildDialog({ kind: 'load' }); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.303.4" /></button>
+          <button className="pause-overlay__item" onClick={() => { playSound('click'); setChildDialog({ kind: 'resetHints' }); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.304.5" /></button>
+          <button className="pause-overlay__item" onClick={() => { playSound('click'); setChildDialog({ kind: 'settings' }); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.305.6" /></button>
 
           <div className="pause-overlay__separator" />
 
           <button className="pause-overlay__item" disabled={gameOver} onClick={() => { playSound('click'); openSaveDialog('saveAndQuit'); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.309.7" /></button>
-          <button className="pause-overlay__item" onClick={() => { playSound('click'); setShowReturnToMenuConfirm(true); }}><WebUIText textKey="PauseMenu.ReturnToMenuWithoutSaving" /></button>
+          <button className="pause-overlay__item" onClick={() => { playSound('click'); setChildDialog({ kind: 'returnToMenu' }); }}><WebUIText textKey="PauseMenu.ReturnToMenuWithoutSaving" /></button>
           <button className="pause-overlay__item" onClick={() => { playSound('click'); void handleExitToDesktop(); }}><WebUIText textKey="Auto.ComponentsScreensPauseMenu.310.8" /></button>
         </nav>
 
@@ -252,52 +268,52 @@ const PauseMenu: React.FC<PauseMenuProps> = ({ visible, onClosed }) => {
       </div>
 
       <SaveGameDialog
-        visible={showSave && !gameOver}
+        visible={childDialog?.kind === 'save' && !gameOver}
         mode={saveDialogMode}
         suggestedName={suggestedName}
-        onConfirm={handleSaveDialogConfirm}
-        onClosed={() => setShowSave(false)}
+        onConfirm={name => { void handleSaveDialogConfirm(saveDialogMode, name); }}
+        onClosed={() => closeChildDialog('save')}
       />
 
       <LoadGameModal
-        visible={showLoad}
-        onClosed={() => setShowLoad(false)}
+        visible={childDialog?.kind === 'load'}
+        onClosed={() => closeChildDialog('load')}
         warnBeforeLoad
       />
 
       <SettingsModal
-        visible={showSettings}
-        onClosed={() => setShowSettings(false)}
+        visible={childDialog?.kind === 'settings'}
+        onClosed={() => closeChildDialog('settings')}
       />
 
       <ConfirmDialog
-        visible={overwriteTarget !== null && !gameOver}
+        visible={overwriteDialog !== null && !gameOver}
         title={webUIText('PauseMenu.OverwriteSaveTitle')}
-        message={overwriteTarget ? webUIText('PauseMenu.OverwriteSaveMessage', { SaveName: overwriteTarget.name }) : ''}
+        message={overwriteDialog ? webUIText('PauseMenu.OverwriteSaveMessage', { SaveName: overwriteDialog.target.name }) : ''}
         confirmText={webUIText('PauseMenu.OverwriteSaveConfirm')}
         cancelText={webUIText('Common.Cancel')}
         onConfirm={confirmOverwrite}
-        onClosed={() => setOverwriteTarget(null)}
+        onClosed={() => closeChildDialog('overwrite')}
       />
 
       <ConfirmDialog
-        visible={showResetHintsConfirm}
+        visible={childDialog?.kind === 'resetHints'}
         title={webUIText('Auto.Attr.ComponentsScreensPauseMenu.343.1')}
         message={webUIText('Auto.ExtraAttr.ComponentsScreensPauseMenu.344.1')}
         confirmText={webUIText('Auto.ExtraAttr.ComponentsScreensPauseMenu.345.2')}
         cancelText={webUIText('Auto.ExtraAttr.ComponentsScreensPauseMenu.346.3')}
         onConfirm={resetAdvisorHints}
-        onClosed={() => setShowResetHintsConfirm(false)}
+        onClosed={() => closeChildDialog('resetHints')}
       />
 
       <ConfirmDialog
-        visible={showReturnToMenuConfirm}
+        visible={childDialog?.kind === 'returnToMenu'}
         title={webUIText('PauseMenu.ReturnToMenuTitle')}
         message={webUIText('PauseMenu.ReturnToMenuMessage')}
         confirmText={webUIText('PauseMenu.ReturnToMenuConfirm')}
         cancelText={webUIText('Common.Cancel')}
         onConfirm={() => { void handleReturnToMainMenu(); }}
-        onClosed={() => setShowReturnToMenuConfirm(false)}
+        onClosed={() => closeChildDialog('returnToMenu')}
       />
     </>
   );

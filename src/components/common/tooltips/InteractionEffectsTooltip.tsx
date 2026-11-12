@@ -52,7 +52,11 @@ export default function InteractionEffectsTooltip({ lines = [], compact = false 
         <ul className="interaction-effects-tooltip__list">
           {[...successLines, ...effectLines, ...otherLines].map((line, index) => (
             <li key={index}>
-              <StructuredDisplayText lines={[line]} lineClassName="interaction-effects-tooltip__outcome-line" />
+              <StructuredDisplayText
+                lines={[line]}
+                lineClassName="interaction-effects-tooltip__outcome-line"
+                transformText={text => renderRichText(text)}
+              />
             </li>
           ))}
         </ul>

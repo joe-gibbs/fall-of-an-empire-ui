@@ -15,57 +15,38 @@ interface LoadingScreenOverlayProps {
   pictureReady: boolean;
 }
 
+type OverlayPhase = 'hidden' | 'visible' | 'closing';
+
 const LoadingScreenOverlay: React.FC<LoadingScreenOverlayProps> = ({ state, pictureReady }) => {
-  const [renderedState, setRenderedState] = React.useState(state);
-  const [isClosing, setIsClosing] = React.useState(false);
-  const renderedVisibleRef = React.useRef(renderedState.visible);
-  const closeTimerRef = React.useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const [phase, setPhase] = React.useState<OverlayPhase>(state.visible ? 'visible' : 'hidden');
+  // The last pushed state while visible, kept on screen during the closing animation.
+  const [lastVisibleState, setLastVisibleState] = React.useState(state);
 
   React.useEffect(() => {
-    renderedVisibleRef.current = renderedState.visible;
-  }, [renderedState.visible]);
-
-  React.useEffect(() => {
-    if (closeTimerRef.current !== null) {
-      window.clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-
-    if (state.visible) {
-      setRenderedState(state);
-      setIsClosing(false);
-      return undefined;
-    }
-
-    if (renderedVisibleRef.current) {
-      setIsClosing(true);
-      closeTimerRef.current = window.setTimeout(() => {
-        setRenderedState(state);
-        setIsClosing(false);
-        closeTimerRef.current = null;
-      }, CLOSING_ANIMATION_MS);
-
-      return () => {
-        if (closeTimerRef.current !== null) {
-          window.clearTimeout(closeTimerRef.current);
-          closeTimerRef.current = null;
-        }
-      };
-    }
-
-    setRenderedState(state);
-    setIsClosing(false);
-    return undefined;
+    if (state.visible) setLastVisibleState(state);
   }, [state]);
 
-  if (state.visible && !pictureReady) {
-    return null;
-  }
-  if (!shouldShowLoadingOverlay(state.visible, pictureReady, isClosing) && !renderedState.visible) {
+  // Transitions depend only on visibility, so repeated hidden pushes cannot restart the close.
+  React.useEffect(() => {
+    setPhase(previous => {
+      if (state.visible) return 'visible';
+      return previous === 'visible' ? 'closing' : previous;
+    });
+  }, [state.visible]);
+
+  React.useEffect(() => {
+    if (phase !== 'closing') return undefined;
+    const timer = window.setTimeout(() => setPhase('hidden'), CLOSING_ANIMATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  // A hidden push renders before the phase effect runs; treat that frame as closing too.
+  const isClosing = phase === 'closing' || (phase === 'visible' && !state.visible);
+  if (!shouldShowLoadingOverlay(state.visible, pictureReady, isClosing)) {
     return null;
   }
 
-  const visibleState = state.visible ? state : renderedState;
+  const visibleState = state.visible ? state : lastVisibleState;
   const progress = Math.max(0, Math.min(100, visibleState.progress));
   const backgroundSrc = WebkilnAssetPath(visibleState.background || LOADING_SCREEN_FALLBACK_BACKGROUND);
   const logoSrc = WebkilnAssetPath(LOADING_SCREEN_LOGO);

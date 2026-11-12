@@ -110,7 +110,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
       id: 'authority',
       label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.78.6'),
       sortable: true,
-      width: '7.5rem',
+      width: '9.25rem',
       render: row => row.authority,
       sortValue: row => row.sortAuthority,
     },
@@ -118,7 +118,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
       id: 'followers',
       label: webUIText('Auto.Prop.ComponentsScreensReligionScreen.79.7'),
       sortable: true,
-      width: '7.5rem',
+      width: '9.25rem',
       render: row => row.followers,
       sortValue: row => row.sortFollowers,
     },
@@ -145,7 +145,7 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
         className="rel-cell-character rel-cell-character-button"
         onClick={(event) => handleClergyClick(event, diocese.bishopId)}
       >
-        <Portrait personId={diocese.bishopId ?? undefined} name={diocese.bishopName} size="sm" />
+        <Portrait personId={diocese.bishopId ?? undefined} name={diocese.bishopName} layers={diocese.bishopPortraitLayers} size="sm" />
         <span>{diocese.bishopName}</span>
       </button>
     ) : (
@@ -211,7 +211,10 @@ export default function ReligionScreen({ onClose }: { onClose: () => void }) {
       <div className="rel-wrap">
         {dioceses && (
           <div className="rel-identity">
-            <GrittyPieChart segments={pieSegments} size={118} />
+            {/* A realm of one faith shows that faith's emblem rather than a single-coloured chart. */}
+            {pieSegments.length > 1
+              ? <GrittyPieChart segments={pieSegments} size={118} />
+              : <img className="rel-identity-emblem" src={WebkilnAssetPath(dioceses.iconPath || RELIGION_FALLBACK_ICON)} alt="" draggable={false} />}
             {faithHall && pagan && (
               <Tooltip
                 content={{

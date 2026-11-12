@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
+import { onBridgeEvent } from '../../bridge-types.generated.ts';
 import type { GetGameStateResponse, GetResourcesResponse } from '../../bridge-types.generated.ts';
-import { acknowledgeBridgeFailure } from './runtimeEngine';
+import { acknowledgeBridgeFailure, callRuntimeBridgeRevisioned } from './runtimeEngine';
+import { currentBridgeEventRevision, nextBridgeCacheRevision } from './bridgeEventCache';
 import { GAMEPLAY_CONTEXT_RESET_EVENT } from './gameplayCacheReset';
 
 export interface BridgeGameState {
@@ -118,6 +119,12 @@ export function useBridgeState(): BridgeGameState | null {
 
   useEffect(() => {
     let cancelled = false;
+    // Revision of the newest value applied for each part of the state. A response is
+    // ordered by when its request was sent, so it never undoes a newer push.
+    let gameStateRevision = 0;
+    let dateRevision = 0;
+    let resourcesRevision = 0;
+    let awaitingGameplay = false;
 
     const applyState = (nextState: Partial<BridgeGameState>) => {
       if (cancelled) return;
@@ -128,44 +135,84 @@ export function useBridgeState(): BridgeGameState | null {
       });
     };
 
-    const resetState = () => {
-      if (cancelled) return;
-      setState(null);
+    const applyGameState = (gs: GetGameStateResponse, revision: number) => {
+      if (revision < gameStateRevision) return;
+      gameStateRevision = revision;
+      const mapped = mapGameState(gs);
+      if (revision < dateRevision) {
+        delete mapped.date;
+        delete mapped.dateText;
+        delete mapped.season;
+        delete mapped.gameDay;
+        delete mapped.calendarKey;
+        delete mapped.daysInYear;
+        delete mapped.daysInMonth;
+        delete mapped.demoDaysRemaining;
+      } else {
+        dateRevision = revision;
+      }
+      applyState(mapped);
     };
 
-    async function initGameState() {
-      try {
-        const gs = await bridgeCall('game.get_game_state');
-        applyState(mapGameState(gs));
-      } catch (error) {
-        acknowledgeBridgeFailure(error);
-      }
-    }
+    const applyResources = (res: GetResourcesResponse, revision: number) => {
+      if (revision < resourcesRevision) return;
+      resourcesRevision = revision;
+      applyState(mapResources(res));
+    };
 
-    async function initResources() {
-      try {
-        const res = await bridgeCall('game.get_resources');
-        applyState(mapResources(res));
-      } catch (error) {
-        acknowledgeBridgeFailure(error);
-      }
-    }
+    const fetchGameState = () => {
+      callRuntimeBridgeRevisioned({ action: 'game.get_game_state' })
+        .then(({ value, sentRevision }) => {
+          if (!cancelled) applyGameState(value as GetGameStateResponse, sentRevision);
+        })
+        .catch(acknowledgeBridgeFailure);
+    };
+
+    const fetchResources = () => {
+      callRuntimeBridgeRevisioned({ action: 'game.get_resources' })
+        .then(({ value, sentRevision }) => {
+          if (!cancelled) applyResources(value as GetResourcesResponse, sentRevision);
+        })
+        .catch(acknowledgeBridgeFailure);
+    };
+
+    // The reset fires when the game leaves gameplay. The state is fetched again once
+    // the game re-enters gameplay.
+    const resetState = () => {
+      if (cancelled) return;
+      // Responses to requests sent before the reset belong to the previous session.
+      const resetRevision = nextBridgeCacheRevision();
+      gameStateRevision = resetRevision;
+      dateRevision = resetRevision;
+      resourcesRevision = resetRevision;
+      awaitingGameplay = true;
+      setState(null);
+    };
 
     // Subscribe before the initial requests so startup pushes cannot be missed.
     bridgeEvents.addEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, resetState);
     const unsubs = [
       () => bridgeEvents.removeEventListener(GAMEPLAY_CONTEXT_RESET_EVENT, resetState),
+      onBridgeEvent('game.get_app_mode', (data) => {
+        if (!awaitingGameplay || data.mode !== 'ingame') return;
+        awaitingGameplay = false;
+        fetchGameState();
+        fetchResources();
+      }),
       onBridgeEvent('game.get_game_state', (data) => {
-        applyState(mapGameState(data));
+        applyGameState(data, currentBridgeEventRevision());
       }),
       onBridgeEvent('game.get_resources', (data) => {
-        applyState(mapResources(data));
+        applyResources(data, currentBridgeEventRevision());
       }),
     ];
 
     const handleDateChanged = (event: Event) => {
       const detail = (event as CustomEvent<unknown>).detail;
       if (!isGameDateChangedEvent(detail)) return;
+      const revision = currentBridgeEventRevision();
+      if (revision < dateRevision) return;
+      dateRevision = revision;
       applyState({
         date: { day: detail.day, month: detail.month, year: detail.year },
         dateText: detail.dateText,
@@ -179,8 +226,8 @@ export function useBridgeState(): BridgeGameState | null {
     };
     bridgeEvents.addEventListener('game.game_date_changed', handleDateChanged as EventListener);
 
-    initGameState();
-    initResources();
+    fetchGameState();
+    fetchResources();
 
     return () => {
       cancelled = true;

@@ -158,9 +158,16 @@ function isFoederati(row: InternalFaction): boolean {
   return row.subjectSubtype === 'foederati';
 }
 
-function isProvince(row: InternalFaction): boolean {
+// Foederati have their own tab. Every other subject, including hereditary duchies and
+// protectorates, is a dependent territory listed with the provinces.
+const DEPENDENT_TERRITORY_SUBTYPES = new Set(['province', 'hereditary_vassal', 'protectorate', 'subject']);
+
+function isDependentTerritory(row: InternalFaction): boolean {
   const text = `${row.subjectSubtype} ${row.subjectType}`.toLowerCase();
-  return row.isRebel || text.indexOf('province') >= 0 || text.indexOf('prefecture') >= 0;
+  return row.isRebel
+    || DEPENDENT_TERRITORY_SUBTYPES.has(row.subjectSubtype)
+    || text.indexOf('province') >= 0
+    || text.indexOf('prefecture') >= 0;
 }
 
 function blocForPerson(personId: string | undefined, blocs: PowerBloc[]): PowerBloc | undefined {
@@ -896,7 +903,7 @@ function InternalPoliticsScreen({ onClose }: { onClose: () => void }) {
   const openCharacter = useCallback((id: string) => openSidebar('character', id), [openSidebar]);
   const sortedProvinceLeaderCandidates = useMemo(() => provinceLeaderCandidates(characters), [characters]);
   const commanderRows = useMemo(() => commandHeads(military?.forces), [military?.forces]);
-  const provinceFactions = useMemo(() => internalFactions.filter(isProvince), [internalFactions]);
+  const provinceFactions = useMemo(() => internalFactions.filter(isDependentTerritory), [internalFactions]);
   const internalFactionsById = useMemo(() => internalFactionMap(internalFactions), [internalFactions]);
   const economyByFactionId = useMemo(() => economyMap(economy?.vassals), [economy?.vassals]);
   const taxByFactionId = useMemo(() => taxMap(economy?.taxRows), [economy?.taxRows]);

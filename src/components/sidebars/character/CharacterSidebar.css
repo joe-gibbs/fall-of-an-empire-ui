@@ -904,6 +904,20 @@
   flex-direction: column;
 }
 
+/* Let long translated interaction titles wrap instead of ellipsising. The
+   shared font-fit still shrinks a single unbreakable word that overflows. */
+.char-actions-category__cards .interaction-card-title {
+  white-space: normal;
+  text-overflow: clip;
+  line-height: 1.15;
+}
+
+/* Descriptions are already capped to ~96 characters in InteractionCard, so
+   let the card grow rather than clipping the text at two lines. */
+.char-actions-category__cards .interaction-card-desc {
+  max-height: none;
+}
+
 /* --- Relationships --- */
 .char-relationships-block {
   display: flex;

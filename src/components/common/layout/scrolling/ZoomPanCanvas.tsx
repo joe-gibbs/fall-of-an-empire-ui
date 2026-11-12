@@ -85,6 +85,11 @@ interface ZoomPanCanvasProps {
   onContentMouseLeave?: () => void;
   onPanDragStart?: () => void;
   onViewChange?: (view: ZoomPanView) => void;
+  /**
+   * Called in the same task that applies each content transform, so content can redraw in step. `settled` is
+   * false for the intermediate frames of a smooth-wheel zoom and true for every committed view.
+   */
+  onViewFrame?: (view: ZoomPanView, settled: boolean) => void;
   controls?: (api: ZoomPanCanvasApi) => ReactNode;
   leftDragMode?: 'pan' | 'select';
   ignoreLeftDragFrom?: (target: HTMLElement) => boolean;
@@ -105,6 +110,8 @@ const NOMINAL_WHEEL_FRAME_MS = 1000 / 60;
 const SMOOTH_WHEEL_ZOOM_EPSILON = 0.00001;
 const SMOOTH_WHEEL_EPSILON = 0.02;
 const INITIAL_VIEW: ZoomPanView = { zoom: 1, panX: 0, panY: 0 };
+/** `MouseEvent.buttons` bit for each `MouseEvent.button` the canvas drags with. */
+const MOUSE_BUTTON_MASKS: Record<number, number> = { 0: 1, 1: 4, 2: 2 };
 const WHEEL_ZOOMING_CLASS = 'zoom-pan-canvas--wheel-zooming';
 
 function clamp(value: number, min: number, max: number): number {
@@ -198,6 +205,7 @@ export default function ZoomPanCanvas({
   onContentMouseLeave,
   onPanDragStart,
   onViewChange,
+  onViewFrame,
   controls,
   leftDragMode = 'pan',
   ignoreLeftDragFrom = defaultIgnoreLeftDragFrom,
@@ -206,9 +214,7 @@ export default function ZoomPanCanvas({
   viewportRef,
 }: ZoomPanCanvasProps) {
   const [view, setView] = useState<ZoomPanView>(INITIAL_VIEW);
-  const [isPanning, setIsPanning] = useState(false);
-  const [isRightDragging, setIsRightDragging] = useState(false);
-  const [isLeftSelecting, setIsLeftSelecting] = useState(false);
+  const [dragPhase, setDragPhase] = useState<'idle' | 'panning' | 'right-dragging' | 'left-selecting'>('idle');
 
   const internalViewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -234,6 +240,11 @@ export default function ZoomPanCanvas({
     lastSampleY: 0,
   });
 
+  const onViewFrameRef = useRef(onViewFrame);
+  useLayoutEffect(() => {
+    onViewFrameRef.current = onViewFrame;
+  }, [onViewFrame]);
+
   useLayoutEffect(() => {
     viewRef.current = view;
     if (deferWheelViewState) {
@@ -242,6 +253,7 @@ export default function ZoomPanCanvas({
         content.style.transform = viewTransform(view);
       }
     }
+    onViewFrameRef.current?.(view, true);
   }, [deferWheelViewState, view]);
 
   useEffect(() => {
@@ -315,6 +327,7 @@ export default function ZoomPanCanvas({
         content.style.transformOrigin = '0 0';
         content.style.transform = viewTransform(nextView);
       }
+      onViewFrameRef.current?.(nextView, false);
       return;
     }
     setView(nextView);
@@ -514,6 +527,23 @@ export default function ZoomPanCanvas({
     };
   }, [handleResize]);
 
+  const resetDrag = useCallback(() => {
+    dragRef.current = {
+      mode: null,
+      button: -1,
+      startTarget: null,
+      startX: 0,
+      startY: 0,
+      basePanX: 0,
+      basePanY: 0,
+      moved: false,
+      path: [],
+      lastSampleX: 0,
+      lastSampleY: 0,
+    };
+    setDragPhase('idle');
+  }, []);
+
   const endDrag = useCallback((event: MouseEvent) => {
     const drag = dragRef.current;
     if (!drag.mode) return;
@@ -543,28 +573,18 @@ export default function ZoomPanCanvas({
       }
     }
 
-    dragRef.current = {
-      mode: null,
-      button: -1,
-      startTarget: null,
-      startX: 0,
-      startY: 0,
-      basePanX: 0,
-      basePanY: 0,
-      moved: false,
-      path: [],
-      lastSampleX: 0,
-      lastSampleY: 0,
-    };
-    setIsPanning(false);
-    setIsRightDragging(false);
-    setIsLeftSelecting(false);
-  }, [onContentLeftClick, onContentLeftDragEnd, onContentRightClick, onContentRightDrag]);
+    resetDrag();
+  }, [onContentLeftClick, onContentLeftDragEnd, onContentRightClick, onContentRightDrag, resetDrag]);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
       const drag = dragRef.current;
       if (!drag.mode) return;
+      // The drag button was released outside the window, so the mouseup never arrived.
+      if ((event.buttons & MOUSE_BUTTON_MASKS[drag.button]) === 0) {
+        resetDrag();
+        return;
+      }
 
       const deltaX = event.clientX - drag.startX;
       const deltaY = event.clientY - drag.startY;
@@ -586,7 +606,7 @@ export default function ZoomPanCanvas({
       if (drag.mode === 'left-select') {
         if (!drag.moved && (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3)) {
           drag.moved = true;
-          setIsLeftSelecting(true);
+          setDragPhase('left-selecting');
         }
 
         if (drag.moved) {
@@ -622,11 +642,13 @@ export default function ZoomPanCanvas({
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', endDrag);
+    window.addEventListener('blur', resetDrag);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', endDrag);
+      window.removeEventListener('blur', resetDrag);
     };
-  }, [endDrag, onContentLeftDragUpdate, onContentRightDragUpdate, onPanDragStart, rightDragSamplePx, rightDragThresholdPx, setClampedView]);
+  }, [endDrag, resetDrag, onContentLeftDragUpdate, onContentRightDragUpdate, onPanDragStart, rightDragSamplePx, rightDragThresholdPx, setClampedView]);
 
   const handleMouseDown = useCallback((event: ReactMouseEvent<HTMLDivElement>) => {
     if (event.button !== 0 && event.button !== 1 && event.button !== 2) return;
@@ -662,7 +684,7 @@ export default function ZoomPanCanvas({
           lastSampleX: event.clientX,
           lastSampleY: event.clientY,
         };
-        setIsLeftSelecting(false);
+        setDragPhase('idle');
         return;
       }
 
@@ -679,7 +701,7 @@ export default function ZoomPanCanvas({
         lastSampleX: event.clientX,
         lastSampleY: event.clientY,
       };
-      setIsPanning(true);
+      setDragPhase('panning');
       return;
     }
 
@@ -697,7 +719,7 @@ export default function ZoomPanCanvas({
         lastSampleX: event.clientX,
         lastSampleY: event.clientY,
       };
-      setIsPanning(true);
+      setDragPhase('panning');
       return;
     }
 
@@ -717,7 +739,7 @@ export default function ZoomPanCanvas({
       lastSampleX: event.clientX,
       lastSampleY: event.clientY,
     };
-    setIsRightDragging(true);
+    setDragPhase('right-dragging');
   }, [cancelSmoothWheel, ignoreLeftDragFrom, leftDragMode, onContentLeftDragEnd, onContentRightClick, onContentRightDrag, onContentRightDragUpdate]);
 
   const handleWheel = useCallback((event: ReactWheelEvent<HTMLDivElement>) => {
@@ -747,7 +769,7 @@ export default function ZoomPanCanvas({
   return (
     <div
       ref={bindViewportRef}
-      className={`zoom-pan-canvas${isPanning ? ' zoom-pan-canvas--panning' : ''}${isRightDragging ? ' zoom-pan-canvas--right-dragging' : ''}${isLeftSelecting ? ' zoom-pan-canvas--left-selecting' : ''}${className ? ` ${className}` : ''}`}
+      className={`zoom-pan-canvas${dragPhase === 'idle' ? '' : ` zoom-pan-canvas--${dragPhase}`}${className ? ` ${className}` : ''}`}
       style={style}
     >
       <div

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { bridgeCall, type KinshipGroupEntry } from '../../../bridge-types.generated';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { useCharacterListBridge, type CharacterListEntry } from '../../../bridge/characters/useCharactersBridge';
@@ -9,6 +10,8 @@ import {
 } from '../../../bridge/diplomacy/useDiplomacyOverviewBridge';
 import { usePowerBlocsBridge } from '../../../bridge/diplomacy/usePowerBlocsBridge';
 import { useWarbandsBridge } from '../../../bridge/military-map/useWarbandsBridge';
+import { selectMilitaryBridge } from '../../../bridge/military-map/useMilitaryBridge';
+import { zoomToBridge } from '../../../bridge/app/usePinnedItemsBridge';
 import { useGameActions } from '../../../context/GameContext';
 import { usePerson, usePlayerFactionId, usePlayerFactionSummary } from '../../../data-source/index';
 import { useWebUIText } from '../../../localization/WebUITextContext';
@@ -20,11 +23,11 @@ import GameButton from '../../common/buttons/GameButton';
 import Tooltip from '../../common/tooltips/Tooltip';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import SidebarTabBar from '../../sidebars/shared/SidebarTabBar';
-import { kinshipMusterTooltip, kinshipStrengthTooltip } from './kinshipTooltips';
+import { kinshipMusterTooltip } from './kinshipTooltips';
 import ClanDetailsPanel from './ClanDetailsPanel';
 import Portrait from '../../common/portraits/Portrait';
-import PersonTooltip from '../../common/tooltips/PersonTooltip';
 import DropdownSelect from '../../common/forms/DropdownSelect';
+import ConfirmDialog from '../../common/forms/ConfirmDialog';
 import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
 import RegionalGovernorsTable, { type RegionalGovernor } from '../characters/RegionalGovernorsTable';
 import { clansTabFromScreenId, type ClansScreenTab } from './clansScreenTokens';
@@ -33,49 +36,53 @@ import './ClansScreen.css';
 const EMPTY_CHARACTERS: CharacterListEntry[] = [];
 const EMPTY_GOVERNORS: RegionalGovernor[] = [];
 const EMPTY_BLOCS: PowerBloc[] = [];
+const EMPTY_GROUPS: KinshipGroupEntry[] = [];
 
-function ClanRosterRow({ group, selected, onSelect, onMuster }: {
+// The ruling clan leads; the rest keep a fixed alphabetical order as strengths change.
+function compareClans(a: KinshipGroupEntry, b: KinshipGroupEntry): number {
+  if (a.isRulingClan !== b.isRulingClan) return a.isRulingClan ? -1 : 1;
+  return a.name.localeCompare(b.name) || a.id.localeCompare(b.id);
+}
+
+function ClanSeat({ group, selected, onSelect }: {
   group: KinshipGroupEntry;
   selected: boolean;
   onSelect: () => void;
-  onMuster: () => void;
 }) {
   const t = useWebUIText();
   const head = usePerson(group.headId);
+  const feuding = group.feuds.length > 0;
   return (
-    <article className={`clans-clan${selected ? ' clans-clan--selected' : ''}`}>
-      <button type="button" className="clans-clan-select" onClick={onSelect} aria-pressed={selected} aria-controls="clans-details">
-        <PersonTooltip characterId={group.headId}>
-          <Portrait personId={group.headId} name={group.headName} size="md" showBorder showBadge={false} />
-        </PersonTooltip>
-        <span className="clans-clan-copy">
-          <strong className="clans-clan-name">{group.name}</strong>
-          <ComplianceRow value={group.compliance} character={head} compact showLabel={false} additionalHelp={t('Kinship.ComplianceHelp', { Head: group.headName })} />
-          {group.governorship && <Tooltip content={{ body: group.governorshipHelp }}>
-            <span className="clans-political-strength">{group.governorship}</span>
-          </Tooltip>}
-          <Tooltip content={kinshipStrengthTooltip(group)}>
-            <span className="clans-political-strength">{t('KinshipGroups.Strength')} <strong>{formatNumber(group.strength)}</strong></span>
-          </Tooltip>
-          {group.feuds.map(feud => <Tooltip key={feud.id} content={{title: t('ClanFeud.Enemy', {Clan: group.id === feud.firstClanId ? feud.secondClanName : feud.firstClanName}), body: [feud.cause, t('ClanFeud.Effects')].join('\n\n')}}>
-            <span className="clans-clan-feud">{t('ClanFeud.Enemy', {Clan: group.id === feud.firstClanId ? feud.secondClanName : feud.firstClanName})}</span>
-          </Tooltip>)}
+    <button
+      type="button"
+      className={`clans-seat${selected ? ' clans-seat--selected' : ''}`}
+      onClick={onSelect}
+      aria-pressed={selected}
+      aria-controls="clans-details"
+    >
+      <Portrait personId={group.headId} name={group.headName} size="lg" showBorder showBadge={false} />
+      <strong className="clans-seat-name">{group.name}</strong>
+      {group.isRulingClan
+        ? <span className="clans-seat-ruling">{t('Kinship.RulingFamily')}</span>
+        : <ComplianceRow value={group.compliance} character={head} compact showLabel={false} additionalHelp={t('Kinship.ComplianceHelp', { Head: group.headName })} />}
+      <Tooltip content={kinshipMusterTooltip(group)}>
+        <span className={`clans-seat-warriors${feuding ? ' clans-seat-warriors--feuding' : ''}`}>
+          <img src="/assets/icons/I_Swords.png" alt="" />
+          {formatNumber(group.warriors)}
         </span>
-      </button>
-      <div className="clans-clan-muster">
-        <Tooltip content={kinshipMusterTooltip(group)}>
-          <span className="clans-clan-strength">
-            <img src="/assets/icons/I_Swords.png" alt="" />
-            <strong>{formatNumber(group.warriors)}</strong>
-          </span>
-        </Tooltip>
-        <Tooltip content={{ title: t('Warbands.CallUp'), body: group.callUpReason || t('Warbands.MusterClanHelp'), lines: [{ label: t('Warbands.MonthlyUpkeep'), value: formatNumber(group.monthlyUpkeep), valueIcon: '/assets/icons/I_Coins.png', subTooltip: { title: t('Warbands.MonthlyUpkeep'), body: t('Warbands.MonthlyUpkeepHelp') } }] }}>
-          <GameButton variant="burgundy" disabled={!group.canMuster} onClick={onMuster}>
-            {t('Warbands.CallUp')}
-          </GameButton>
-        </Tooltip>
-      </div>
-    </article>
+      </Tooltip>
+    </button>
+  );
+}
+
+function ClanCallUp({ group, onMuster }: { group: KinshipGroupEntry; onMuster: () => void }) {
+  const t = useWebUIText();
+  return (
+    <Tooltip content={{ title: t('Warbands.CallUp'), body: group.callUpReason || t('Warbands.MusterClanHelp'), lines: [{ label: t('Warbands.MonthlyUpkeep'), value: formatNumber(group.monthlyUpkeep), valueIcon: '/assets/icons/I_Coins.png', subTooltip: { title: t('Warbands.MonthlyUpkeep'), body: t('Warbands.MonthlyUpkeepHelp') } }] }}>
+      <GameButton variant="burgundy" disabled={!group.canMuster} tutorialTarget="CallUpClanButton" onClick={onMuster}>
+        {t('Warbands.CallUp')}
+      </GameButton>
+    </Tooltip>
   );
 }
 
@@ -129,92 +136,115 @@ function ClansRoster({ selectedClanId, onClose }: { selectedClanId?: string | nu
   const data = useWarbandsBridge(musterSiteId);
   const { openSidebar } = useGameActions();
   const [selectedId, setSelectedId] = useState(selectedClanId ?? '');
-  const groups = data?.groups ?? [];
+  const [confirmingDismiss, setConfirmingDismiss] = useState(false);
+  const rawGroups = data?.groups ?? EMPTY_GROUPS;
+  const groups = useMemo(() => [...rawGroups].sort(compareClans), [rawGroups]);
   const selectedGroup = groups.find(group => group.id === selectedId) ?? groups[0];
   const hostRaised = Boolean(data?.hostId || data?.navyHostId);
   const effectiveMusterSiteId = musterSiteId || data?.selectedMusterSiteId || '';
   const muster = (dismiss: boolean, groupId = '') => {
     void bridgeCall('game.muster_warbands', { dismiss, groupId, musterSiteId: effectiveMusterSiteId }).catch(acknowledgeBridgeFailure);
   };
+  const viewForce = (militaryId: string) => {
+    selectMilitaryBridge(militaryId).catch(error => acknowledgeBridgeFailure(error, 'game.select_military'));
+    openSidebar('military', militaryId);
+    zoomToBridge('military', militaryId);
+    onClose();
+  };
 
   return (
-    <div className="clans-columns">
-      <div className="clans-roster">
-      <StyledScrollArea className="clans-roster-scroll">
-        <div className="clans-list">
+    <div className="clans-hall">
+      <StyledScrollArea className="clans-seats-scroll" variant="inline">
+        <div className="clans-seats" data-tutorial-target="ClanSeats">
           {groups.map(group => (
-            <ClanRosterRow
+            <ClanSeat
               key={group.id}
               group={group}
               selected={group.id === selectedGroup?.id}
               onSelect={() => setSelectedId(group.id)}
-              onMuster={() => muster(false, group.id)}
             />
           ))}
           {data && groups.length === 0 && <p className="clans-empty">{t('KinshipGroups.Empty')}</p>}
         </div>
       </StyledScrollArea>
-        {data && <section className="clans-commands" aria-label={t('Kinship.Muster')}>
-          <div className="clans-muster-summary">
-            <Tooltip content={{
-              title: t('Warbands.Ready'),
-              lines: groups.map(group => ({ label: group.name, value: formatNumber(group.availableStrength), subTooltip: kinshipMusterTooltip(group) })),
-            }}>
-              <span className="clans-total">
-                <strong><img src="/assets/icons/I_Swords.png" alt="" />{formatNumber(data.availableStrength)}</strong>
-              </span>
-            </Tooltip>
-            <Tooltip content={{ title: t('Warbands.CallUpAll'), body: data.callUpReason || t('Warbands.CallUpHelp') }}>
-              <GameButton variant="burgundy" disabled={!data.canCallUp} onClick={() => muster(false)}>
-                {t('Warbands.CallUpAll')}
-              </GameButton>
-            </Tooltip>
-            {hostRaised && <Tooltip content={{ title: t('Warbands.Dismiss'), body: data.dismissReason || t('Warbands.DismissHelp') }}>
-              <GameButton variant="outline" disabled={!data.canDismiss} onClick={() => muster(true)}>
-                {t('Warbands.Dismiss')}
-              </GameButton>
-            </Tooltip>}
-          </div>
-          {!data.hostId && data.musterSites.length > 0 && (
-            <DropdownSelect
-              id="warband-muster-site"
-              portal
-              closeOnScroll
-              position="below-left"
-              label={t('Warbands.MusterAt')}
-              value={effectiveMusterSiteId}
-              options={data.musterSites.map(site => ({
-                value: site.id,
-                label: site.name,
-                meta: site.isCapital ? t('Warbands.Capital') : undefined,
-              }))}
-              placeholder={t('Warbands.ChooseMusterSite')}
-              onChange={setMusterSiteId}
-            />
-          )}
-          {data?.hostId && (
-            <GameButton variant="outline" onClick={() => { openSidebar('military', data.hostId); onClose(); }}>
+      <StyledScrollArea key={selectedGroup?.id} className="clans-details">
+        <div id="clans-details">
+          {selectedGroup && <ClanDetailsPanel
+            group={selectedGroup}
+            wide
+            actions={<ClanCallUp group={selectedGroup} onMuster={() => muster(false, selectedGroup.id)} />}
+            onSelectClan={setSelectedId}
+          />}
+        </div>
+      </StyledScrollArea>
+      {data && <section className="clans-commands" aria-label={t('Kinship.Muster')}>
+        <Tooltip content={{
+          title: t('Warbands.Ready'),
+          lines: groups.map(group => ({ label: group.name, value: formatNumber(group.availableStrength), subTooltip: kinshipMusterTooltip(group) })),
+        }}>
+          <span className="clans-total">
+            <img src="/assets/icons/I_Swords.png" alt="" />{formatNumber(data.availableStrength)}
+          </span>
+        </Tooltip>
+        <Tooltip content={{ title: t('Warbands.MonthlyUpkeep'), body: t('Warbands.FullMonthlyUpkeepHelp') }}>
+          <span className="clans-upkeep-total">
+            <img src="/assets/icons/I_Coins.png" alt="" />
+            {formatNumber(data.monthlyUpkeep)} {t('Warbands.PerMonth')}
+          </span>
+        </Tooltip>
+        {!data.hostId && data.musterSites.length > 0 && (
+          <DropdownSelect
+            id="warband-muster-site"
+            triggerClassName="clans-muster-site-trigger"
+            portal
+            closeOnScroll
+            position="below-left"
+            label={t('Warbands.MusterAt')}
+            value={effectiveMusterSiteId}
+            options={data.musterSites.map(site => ({
+              value: site.id,
+              label: site.name,
+              meta: site.isCapital ? t('Warbands.Capital') : undefined,
+            }))}
+            placeholder={t('Warbands.ChooseMusterSite')}
+            onChange={setMusterSiteId}
+          />
+        )}
+        <div className="clans-command-buttons">
+          {data.hostId && (
+            <GameButton variant="outline" onClick={() => viewForce(data.hostId)}>
               {t('Warbands.ViewHost')}
             </GameButton>
           )}
-          {data?.navyHostId && (
-            <GameButton variant="outline" onClick={() => { openSidebar('military', data.navyHostId); onClose(); }}>
+          {data.navyHostId && (
+            <GameButton variant="outline" onClick={() => viewForce(data.navyHostId)}>
               {t('Warbands.ViewFleet')}
             </GameButton>
           )}
-          <Tooltip content={{ title: t('Warbands.MonthlyUpkeep'), body: t('Warbands.FullMonthlyUpkeepHelp') }}>
-              <span className="clans-upkeep-total">
-                <img src="/assets/icons/I_Coins.png" alt="" />
-                {formatNumber(data.monthlyUpkeep)} {t('Warbands.PerMonth')}
-              </span>
+          {hostRaised && <Tooltip content={{ title: t('Warbands.Dismiss'), body: data.dismissReason || t('Warbands.DismissHelp') }}>
+            <GameButton variant="outline" disabled={!data.canDismiss} onClick={() => setConfirmingDismiss(true)}>
+              {t('Warbands.Dismiss')}
+            </GameButton>
+          </Tooltip>}
+          <Tooltip content={{ title: t('Warbands.CallUpAll'), body: data.callUpReason || t('Warbands.CallUpHelp') }}>
+            <GameButton variant="burgundy" disabled={!data.canCallUp} tutorialTarget="CallUpAllButton" onClick={() => muster(false)}>
+              {t('Warbands.CallUpAll')}
+            </GameButton>
           </Tooltip>
-        </section>}
-      </div>
-      <StyledScrollArea key={selectedGroup?.id} className="clans-details">
-        <div id="clans-details">
-          {selectedGroup && <ClanDetailsPanel group={selectedGroup} onSelectClan={setSelectedId} />}
         </div>
-      </StyledScrollArea>
+      </section>}
+      {createPortal(
+        <ConfirmDialog
+          visible={confirmingDismiss}
+          title={t('Warbands.Dismiss')}
+          message={t('Warbands.MusteredBody')}
+          confirmText={t('Warbands.Dismiss')}
+          variant="danger"
+          onConfirm={() => muster(true)}
+          onClosed={() => setConfirmingDismiss(false)}
+        />,
+        document.body,
+      )}
     </div>
   );
 }
@@ -237,6 +267,7 @@ export default function ClansScreen({ onClose, screenId, selectedClanId }: {
     <ScreenShell
       title={t('KinshipGroups.Title')}
       onClose={onClose}
+      advisorTopic="clansScreen"
       className={`screen--clans${activeTab === 'governors' ? ' screen--clans-governors' : ''}`}
       contentClassName={`clans-content${activeTab === 'governors' ? ' clans-content--governors' : ''}`}
       tabs={<SidebarTabBar tabs={tabs} activeTab={activeTab} onTabChange={(id) => setActiveTab(id as ClansScreenTab)} />}

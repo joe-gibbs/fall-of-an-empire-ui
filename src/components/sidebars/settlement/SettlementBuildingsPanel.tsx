@@ -396,8 +396,12 @@ function displayQueueItem(summary?: BuildingQueueSummary): ConstructionQueueItem
   return summary.activeItem ?? summary.leadItem;
 }
 
-function cancellationQueueIndex(summary?: BuildingQueueSummary): number | undefined {
-  return summary?.lastItem.queueIndex ?? displayQueueItem(summary)?.queueIndex;
+function unqueueTarget(item?: ConstructionQueueItem): string | undefined {
+  return item?.queueIndex !== undefined ? item.id : undefined;
+}
+
+function cancellationTarget(summary?: BuildingQueueSummary): string | undefined {
+  return unqueueTarget(summary?.lastItem) ?? unqueueTarget(displayQueueItem(summary));
 }
 
 interface QueueBuildingSource {
@@ -541,7 +545,7 @@ function buildChainTrees(nodes: TreeNode[]): ChainTree[] {
 // Tooltip builders
 // ---------------------------------------------------------------------------
 
-function queueItemStatusLines(item?: ConstructionQueueItem): TooltipLine[] {
+function queueItemStatusLines(item?: ConstructionQueueItem, includeMissingResources = true): TooltipLine[] {
   if (!item) return [];
 
   const lines: TooltipLine[] = [];
@@ -555,7 +559,7 @@ function queueItemStatusLines(item?: ConstructionQueueItem): TooltipLine[] {
     lines.push({ label: item.statusReason });
   }
 
-  for (const missing of item.missingResources ?? []) {
+  for (const missing of includeMissingResources ? item.missingResources ?? [] : []) {
     lines.push({
       label: (
         <ResourceLink resourceId={missing.name}>
@@ -576,7 +580,7 @@ function queueTooltipLines(summary?: BuildingQueueSummary): TooltipLine[] {
 }
 
 function queueItemTooltip(item: ConstructionQueueItem): TooltipContent {
-  const statusLines = queueItemStatusLines(item);
+  const statusLines = queueItemStatusLines(item, false);
   return {
     title: item.name,
     body: buildingTooltipBody(item.description, item.effectsText),
@@ -867,6 +871,8 @@ function ResourceRow({
   const purchase = React.useContext(ResourcePurchaseDestinationContext);
   if (items.length === 0) return null;
 
+  // Shortfalls are fractional for repairs; show the whole amount the player has to buy.
+  const displayAmount = (amount: number) => (mode === 'missing' ? Math.ceil(amount) : amount);
   const amountTooltipKey = mode === 'missing'
     ? 'SettlementBuildings.ResourceMissingAmount'
     : 'SettlementBuildings.ResourceRequiredAmount';
@@ -878,7 +884,7 @@ function ResourceRow({
           key={r.name}
           content={{
             title: r.displayName || r.name,
-            get body() { return webUIText(amountTooltipKey, { Amount: n(r.amount) }); },
+            get body() { return webUIText(amountTooltipKey, { Amount: n(displayAmount(r.amount)) }); },
             afterLines: <ResourcePurchaseButton resourceId={r.name} {...purchase} />,
           }}
           position="bottom"
@@ -889,7 +895,7 @@ function ResourceRow({
             className={`bld-res${mode === 'missing' ? ' bld-res--missing' : ''}`}
           >
             <img src={r.icon} alt="" className="bld-res-icon" />
-            <span className="bld-res-amt">{n(r.amount)}</span>
+            <span className="bld-res-amt">{n(displayAmount(r.amount))}</span>
           </ResourceLink>
         </Tooltip>
       ))}
@@ -1165,7 +1171,7 @@ function BuiltCard({
 }: {
   b: Building;
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
-  onUnqueue?: (queueIndex: number) => void;
+  onUnqueue?: (queueItemId: string) => void;
   onPlace?: (buildingId: string) => void;
   onDemolish?: (buildingId: string) => Promise<void>;
   onDowngrade?: (buildingId: string) => Promise<void>;
@@ -1188,8 +1194,8 @@ function BuiltCard({
     : panelLockReason || (intrinsicLocked ? b.nextBuildState?.reason : undefined);
   const actionable = !!onQueue && !panelLockReason && !maxed && b.nextBuildState?.state === 'visible';
   const queuedToLevel = queueSummary?.highestToLevel;
-  const cancelQueueIndex = cancellationQueueIndex(queueSummary);
-  const cancellable = !!onUnqueue && cancelQueueIndex !== undefined;
+  const cancelTarget = cancellationTarget(queueSummary);
+  const cancellable = !!onUnqueue && cancelTarget !== undefined;
   const conditionColor: 'green' | 'red' | 'gold' =
     b.condition === undefined ? 'gold'
       : b.condition >= 80 ? 'green'
@@ -1213,8 +1219,8 @@ function BuiltCard({
   const handleContextMenu = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!cancellable) return;
     event.preventDefault();
-    onUnqueue?.(cancelQueueIndex);
-  }, [cancelQueueIndex, cancellable, onUnqueue]);
+    onUnqueue?.(cancelTarget);
+  }, [cancelTarget, cancellable, onUnqueue]);
   const runManagementAction = React.useCallback((action: BuildingManagementAction) => {
     if (pendingAction !== null) return;
 
@@ -1429,7 +1435,7 @@ function AvailCard({
 }: {
   a: AvailableBuilding;
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
-  onUnqueue?: (queueIndex: number) => void;
+  onUnqueue?: (queueItemId: string) => void;
   onPlace?: (buildingId: string) => void;
   queueSummary?: BuildingQueueSummary;
   queueing?: boolean;
@@ -1447,8 +1453,8 @@ function AvailCard({
     : panelLockReason || (intrinsicLocked ? a.buildState.reason : undefined);
   const actionable = !!onQueue && !locked;
   const queuedToLevel = queueSummary?.highestToLevel;
-  const cancelQueueIndex = cancellationQueueIndex(queueSummary);
-  const cancellable = !!onUnqueue && cancelQueueIndex !== undefined;
+  const cancelTarget = cancellationTarget(queueSummary);
+  const cancellable = !!onUnqueue && cancelTarget !== undefined;
   const rawRequirementTargets = buildingNavigation?.findRequirementTargets(
     rawLockReason,
     a.developedFrom,
@@ -1464,8 +1470,8 @@ function AvailCard({
   const handleContextMenu = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!cancellable) return;
     event.preventDefault();
-    onUnqueue?.(cancelQueueIndex);
-  }, [cancelQueueIndex, cancellable, onUnqueue]);
+    onUnqueue?.(cancelTarget);
+  }, [cancelTarget, cancellable, onUnqueue]);
 
   return (
     <Tooltip
@@ -1638,7 +1644,7 @@ function ChainBranch({
   childrenByParent: Map<string, TreeNode[]>;
   depth: number;
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
-  onUnqueue?: (queueIndex: number) => void;
+  onUnqueue?: (queueItemId: string) => void;
   onPlace?: (buildingId: string) => void;
   onDemolish?: (buildingId: string) => Promise<void>;
   onDowngrade?: (buildingId: string) => Promise<void>;
@@ -1771,7 +1777,7 @@ function QueueItemCard({
 }: {
   group: QueueGroup;
   order: number;
-  onUnqueue?: (queueIndex: number) => void;
+  onUnqueue?: (queueItemId: string) => void;
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
   onPlace?: (buildingId: string) => void;
   buildingSource?: QueueBuildingSource;
@@ -1788,11 +1794,11 @@ function QueueItemCard({
   const awaitingItem = group.items.find(entry => entry.state === 'awaiting_resources');
   const levelText = queueGroupLevelText(group);
   const buildProgressPercent = queueBuildProgressPercent(item);
-  const showResourceCost = !!awaitingItem && awaitingItem.resourceCost.length > 0;
+  const missingResources = awaitingItem?.missingResources ?? [];
   const showBuildProgress = item.state !== 'awaiting_resources' && buildProgressPercent !== undefined;
   const showStatus = !isRoutineQueueState(item.state);
-  const cancelQueueIndex = lastItem.queueIndex;
-  const canUnqueue = !!onUnqueue && cancelQueueIndex !== undefined && !pendingRemoval;
+  const cancelTarget = unqueueTarget(lastItem);
+  const canUnqueue = !!onUnqueue && cancelTarget !== undefined && !pendingRemoval;
   const showPlusOne = !!onQueue && canShowQueuePlusOne(lastItem, buildingSource);
   const plusOneDisabledReason = showPlusOne && buildingSource
     ? queuePlusOneDisabledReason(lastItem, buildingSource, panelLockReason)
@@ -1802,14 +1808,11 @@ function QueueItemCard({
   const showPlace = group.lead.kind !== 'repair' && !!onPlace && !!buildingSource;
   const showActions = showPlace || showPlusOne || canUnqueue || pendingRemoval;
 
+  // The missing goods sit outside the card tooltip so the pointer can travel from a
+  // resource to its purchase button without the card tooltip taking over.
+  const cardTooltip = queueItemTooltip(item);
+
   return (
-    <Tooltip
-      content={queueItemTooltip(item)}
-      position="left"
-      delay={200}
-      disabled={dragging}
-      wrapperClassName="bld-queue-card-tooltip"
-    >
       <div
         className={
           `bld-queue-card${group.state ? ` bld-queue-card--${group.state}` : ''}`
@@ -1826,14 +1829,29 @@ function QueueItemCard({
           onMouseDown={event => onHandleMouseDown?.(event, group.lead)}
         />
       )}
-      <div className="bld-queue-card-art">
-        <img src={item.icon ?? GENERIC_ICON} alt="" className="bld-queue-card-icon" draggable={false} />
-        <span className="bld-queue-card-order">{n(order)}</span>
-        {levelText && (
-          <span className="bld-queue-card-level">{levelText}</span>
-        )}
-      </div>
+      <Tooltip
+        content={cardTooltip}
+        position="left"
+        delay={200}
+        disabled={dragging}
+        wrapperClassName="bld-queue-card-art-tooltip"
+      >
+        <div className="bld-queue-card-art">
+          <img src={item.icon ?? GENERIC_ICON} alt="" className="bld-queue-card-icon" draggable={false} />
+          <span className="bld-queue-card-order">{n(order)}</span>
+          {levelText && (
+            <span className="bld-queue-card-level">{levelText}</span>
+          )}
+        </div>
+      </Tooltip>
       <div className="bld-queue-card-body">
+        <Tooltip
+          content={cardTooltip}
+          position="left"
+          delay={200}
+          disabled={dragging}
+          wrapperClassName="bld-queue-card-summary"
+        >
         <div className="bld-queue-card-header">
           <div className="bld-queue-card-title-wrap">
             <span className="bld-queue-card-title">{item.name}</span>
@@ -1900,8 +1918,8 @@ function QueueItemCard({
                     type="button"
                     className={`bld-queue-card-action${pendingRemoval ? ' bld-queue-card-action--pending' : ''}`}
                     onClick={() => {
-                      if (!canUnqueue || cancelQueueIndex === undefined) return;
-                      onUnqueue?.(cancelQueueIndex);
+                      if (!canUnqueue || cancelTarget === undefined) return;
+                      onUnqueue?.(cancelTarget);
                     }}
                     disabled={pendingRemoval}
                     aria-label={webUIText("Auto.Attr.componentssidebarsSettlementBuildingsPanel.679.1", { Name: item.name })}
@@ -1943,15 +1961,15 @@ function QueueItemCard({
             <PaintedBar percent={Math.round(buildProgressPercent)} color="green" />
           </div>
         )}
+        </Tooltip>
 
-        {showResourceCost && awaitingItem && (
+        {missingResources.length > 0 && (
           <div className="bld-queue-card-resources">
-            <ResourceRow items={awaitingItem.resourceCost} />
+            <ResourceRow items={missingResources} mode="missing" />
           </div>
         )}
       </div>
       </div>
-    </Tooltip>
   );
 }
 
@@ -1965,11 +1983,11 @@ function ConstructionSection({
   availableBuildings,
   panelLockReason = '',
   queueingBuildingIds,
-  pendingUnqueueIndices,
+  pendingUnqueueIds,
   reordering = false,
 }: {
   items: ConstructionQueueItem[];
-  onUnqueue?: (queueIndex: number) => void;
+  onUnqueue?: (queueItemId: string) => void;
   onQueue?: (buildingId: string, element?: HTMLElement | null) => void;
   onPlace?: (buildingId: string) => void;
   onReorder?: (sourceQueueIndex: number, targetQueueIndex: number) => void;
@@ -1977,7 +1995,7 @@ function ConstructionSection({
   availableBuildings: AvailableBuilding[];
   panelLockReason?: string;
   queueingBuildingIds: Set<string>;
-  pendingUnqueueIndices: Set<number>;
+  pendingUnqueueIds: Set<string>;
   reordering?: boolean;
 }) {
   const groups = React.useMemo(() => groupConsecutiveQueueItems(items), [items]);
@@ -2123,7 +2141,7 @@ function ConstructionSection({
 
   if (items.length === 0) return null;
 
-  const canReorder = !!onReorder && groups.length > 1 && pendingUnqueueIndices.size === 0 && !reordering;
+  const canReorder = !!onReorder && groups.length > 1 && pendingUnqueueIds.size === 0 && !reordering;
 
   return (
     <div className="bld-construction">
@@ -2144,9 +2162,7 @@ function ConstructionSection({
               onPlace={onPlace}
               buildingSource={buildingSource}
               panelLockReason={panelLockReason}
-              pendingRemoval={group.items.some(item => (
-                item.queueIndex !== undefined && pendingUnqueueIndices.has(item.queueIndex)
-              ))}
+              pendingRemoval={group.items.some(item => pendingUnqueueIds.has(item.id))}
               queueing={!!buildingSource && queueingBuildingIds.has(buildingSource.id)}
               canReorder={canReorder && group.count === 1}
               dragging={draggedItemId === group.id}
@@ -2271,8 +2287,9 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   }, [settlement]);
 
   const data = liveData ?? inlineData;
+  const constructionSettlementId = data ? settlement.id : null;
   const canQueueViaBridge = liveData !== null;
-  const [pendingUnqueueIndices, setPendingUnqueueIndices] = React.useState<number[]>([]);
+  const [pendingUnqueueIds, setPendingUnqueueIds] = React.useState<string[]>([]);
   const [queueingBuildingIds, setQueueingBuildingIds] = React.useState<string[]>([]);
   const [reorderingQueue, setReorderingQueue] = React.useState(false);
   const queueingAnimationTimerRef = React.useRef<number | null>(null);
@@ -2283,8 +2300,8 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const queueAnchorDisposeRef = React.useRef<(() => void) | null>(null);
   const constructionSlotRef = React.useRef<HTMLDivElement>(null);
   const pendingUnqueueSet = React.useMemo(
-    () => new Set(pendingUnqueueIndices),
-    [pendingUnqueueIndices],
+    () => new Set(pendingUnqueueIds),
+    [pendingUnqueueIds],
   );
   const queueingBuildingSet = React.useMemo(
     () => new Set(queueingBuildingIds),
@@ -2360,12 +2377,12 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   const handlePlaceBuilding = React.useCallback((buildingId: string) => {
     startBuildingPlacementBridge(buildingId).catch(acknowledgeBridgeFailure);
   }, []);
-  const handleUnqueueBuilding = React.useCallback((queueIndex: number) => {
-    setPendingUnqueueIndices(prev => (prev.includes(queueIndex) ? prev : [...prev, queueIndex]));
-    unqueueSettlementBuilding(settlement.id, queueIndex)
+  const handleUnqueueBuilding = React.useCallback((queueItemId: string) => {
+    setPendingUnqueueIds(prev => (prev.includes(queueItemId) ? prev : [...prev, queueItemId]));
+    unqueueSettlementBuilding(settlement.id, queueItemId)
       .catch(acknowledgeBridgeFailure)
       .finally(() => {
-        setPendingUnqueueIndices(prev => prev.filter(index => index !== queueIndex));
+        setPendingUnqueueIds(prev => prev.filter(pendingId => pendingId !== queueItemId));
       });
   }, [settlement.id]);
   const handleReorderBuilding = React.useCallback((sourceQueueIndex: number, targetQueueIndex: number) => {
@@ -2487,8 +2504,8 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
   React.useLayoutEffect(() => {
     const slot = constructionSlotRef.current;
     if (!slot) return;
-    return watchConstructionSlotScrollCompensation(slot);
-  }, [data ? settlement.id : null]);
+    return watchConstructionSlotScrollCompensation(slot, () => queueAnchorRef.current === null);
+  }, [constructionSettlementId]);
 
   React.useLayoutEffect(() => {
     const anchor = queueAnchorRef.current;
@@ -2801,7 +2818,7 @@ const SettlementBuildingsPanel: React.FC<Props> = ({ settlement }) => {
                 panelLockReason={panelLockReason}
                 queueingBuildingIds={queueingBuildingSet}
                 onReorder={canQueueViaBridge ? handleReorderBuilding : undefined}
-                pendingUnqueueIndices={pendingUnqueueSet}
+                pendingUnqueueIds={pendingUnqueueSet}
                 reordering={reorderingQueue}
               />
             </div>

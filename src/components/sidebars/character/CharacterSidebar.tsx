@@ -550,6 +550,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                 <StatCell
                   icon={stat.icon}
                   value={stat.value}
+                  label={stat.label}
                   valueColor={getStatColor(stat.value)}
                   delta={Math.abs(temporaryTotal) >= 0.05 ? formatSignedNumber(temporaryTotal, { maximumFractionDigits: 1 }) : undefined}
                   deltaColor={modifierValueColor(temporaryTotal)}
@@ -564,7 +565,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
           body: character.usesWarbands ? undefined : webUIText('Auto.Prop.ComponentsSidebarsCharacterSidebar.1217.41'),
           lines: character.usesWarbands ? warbandFameLines() : undefined,
         }} position="bottom" delay={150}>
-          <div className="char-fame-row">
+          <div className="char-fame-row" data-tutorial-target="CharacterFame">
             <img src="/assets/icons/I_Fame.png" alt="" className="char-fame-icon" />
             <span className="char-fame-label"><WebUIText textKey="Auto.ComponentsSidebarsCharacterSidebar.1219.3" /></span>
             <span className="char-fame-val">{formatNumber(character.fame)}</span>

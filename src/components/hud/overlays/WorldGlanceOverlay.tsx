@@ -1216,13 +1216,39 @@ function NativeWorldGlanceInputOverlay() {
       }
     };
 
+    // A press outside the tooltip, or Escape, dismisses it even when the engine still reports the
+    // glance as hovered. Presses on glances themselves go to the anchor view, not this document.
+    const dismiss = () => {
+      if (!hoveredRef.current) {
+        return;
+      }
+      clearReleaseTimer();
+      engineHoveredRef.current = false;
+      tooltipHeldRef.current = false;
+      hoveredRef.current = null;
+      setHovered(null);
+      setAnchor(null);
+    };
+
+    const onPointerDown = (event: Event) => {
+      const overTooltip = event.target instanceof Element
+        && Boolean(event.target.closest('[data-tooltip-surface]'));
+      if (!overTooltip) {
+        dismiss();
+      }
+    };
+
     window.addEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
     bridgeEvents.addEventListener('game.handle_world_glance_hover', onBridgeHover);
+    bridgeEvents.addEventListener('ui.escape_pressed', dismiss);
     document.addEventListener('pointerover', onPointerOver, true);
+    document.addEventListener('pointerdown', onPointerDown, true);
     return () => {
       window.removeEventListener(NATIVE_BRIDGE_PROTOCOL.events.worldGlanceHover, onHover);
       bridgeEvents.removeEventListener('game.handle_world_glance_hover', onBridgeHover);
+      bridgeEvents.removeEventListener('ui.escape_pressed', dismiss);
       document.removeEventListener('pointerover', onPointerOver, true);
+      document.removeEventListener('pointerdown', onPointerDown, true);
       clearReleaseTimer();
     };
   }, [clearReleaseTimer, scheduleRelease, updateAnchor]);

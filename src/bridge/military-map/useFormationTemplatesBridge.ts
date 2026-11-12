@@ -9,10 +9,14 @@ import type {
   SaveFormationTemplateResponse,
   SaveFormationTemplateUnitRequest,
 } from '../../bridge-types.generated.ts';
-import { clearBridgeQueryCache, useBridgeQuery } from '../core/useBridgeQuery';
+import { clearBridgeQueryCache, onBridgeQueryCacheCleared, useBridgeQuery } from '../core/useBridgeQuery';
 
 let formationTemplatesCache: GetFormationTemplatesResponse | null = null;
 let formationTemplateCatalogueCache: GetFormationTemplateCatalogueResponse | null = null;
+onBridgeQueryCacheCleared(() => {
+  formationTemplatesCache = null;
+  formationTemplateCatalogueCache = null;
+});
 let goldPatchListenerInstalled = false;
 let dynamicPatchListenerInstalled = false;
 

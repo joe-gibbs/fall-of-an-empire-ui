@@ -18,6 +18,7 @@ const COMMON_ASSETS = [
   '/assets/baked/screen-content-charcoal.png',
   '/assets/baked/card-charcoal.png',
   '/assets/baked/card-charcoal-hover.png',
+  '/assets/baked/card-burgundy-active.png',
   '/assets/baked/button-burgundy.png',
   '/assets/baked/button-burgundy-hover.png',
   '/assets/baked/button-burgundy-active.png',

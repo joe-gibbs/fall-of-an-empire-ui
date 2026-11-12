@@ -165,6 +165,8 @@ DIR_SIZES: dict[str, tuple[int, int] | None] = {
     'baked':                            None,
     # Nine-slice button frames; CSS uses percentage slices at every output size.
     'baked/buttons/painted-metal':       (384, 256),
+    # Button paint drawn with background-size: cover behind the frame.
+    'baked/buttons/painted-metal/fill':  (1024, 640),
     'ui':                               None,
     'ui-shadowed':                      None,
     'ui-shadowed/ArmySidebar':          None,

@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import CloseButton from '../../common/buttons/CloseButton';
 import SettingsPanel from '../../settings/SettingsPanel';
-import { useEscapeStackEntry } from '../../../context/EscapeStack';
+import { useModalPresence } from '../../../hooks/useModalPresence';
+import { UI_MOTION } from '../../../config/motion';
 import './SettingsModal.css';
 
 import { WebUIText } from '../../../localization/WebUITextContext';
@@ -14,32 +15,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   visible,
   onClosed,
 }) => {
-  const [mounted, setMounted] = useState(visible);
-  const [closeRequested, setCloseRequested] = useState(false);
   const overlayPointerDown = useRef(false);
-  const closing = mounted && (!visible || closeRequested);
-
-  if (visible && !mounted) {
-    setMounted(true);
-  }
-
-  const animatedClose = useCallback(() => {
-    if (closing) return;
-    setCloseRequested(true);
-  }, [closing]);
-  useEscapeStackEntry({
-    id: 'modal.settings',
-    active: mounted,
-    onClose: animatedClose,
+  // The close finishes on a timer matching the 220ms exit animation in SettingsModal.css.
+  const {
+    mounted,
+    closing,
+    close: animatedClose,
+    stopPropagation,
+  } = useModalPresence({
+    open: visible,
+    onClose: onClosed,
+    escapeId: 'modal.settings',
+    durationMs: UI_MOTION.panelCloseMs,
     allowFromInput: true,
+    closeStrategy: 'request',
   });
-
-  const handleAnimationEnd = useCallback((e: React.AnimationEvent<HTMLDivElement>) => {
-    if (!closing || e.animationName !== 'settings-modal-overlay-out') return;
-    setMounted(false);
-    setCloseRequested(false);
-    onClosed();
-  }, [closing, onClosed]);
 
   const handleOverlayMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     overlayPointerDown.current = e.target === e.currentTarget;
@@ -73,9 +63,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         className={overlayCls}
         onMouseDown={handleOverlayMouseDown}
         onClick={handleOverlayClick}
-        onAnimationEnd={handleAnimationEnd}
       >
-        <div className={modalCls} onClick={e => e.stopPropagation()}>
+        <div className={modalCls} onClick={stopPropagation}>
           <div className="settings-modal__header">
             <span className="settings-modal__title"><WebUIText textKey="Auto.ComponentsScreensSettingsModal.145.1" /></span>
             <CloseButton size="sm" onClick={animatedClose} />

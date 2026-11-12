@@ -53,6 +53,13 @@
   padding: var(--settlement-atlas-bleed, 0);
 }
 
+/* Include the enlarged harbour outline and its blurred edge in the sampled cell.
+   Symmetrical padding preserves the port's centre anchor and original hit area. */
+.glance-atlas-plate.world-glance-node--port {
+  box-sizing: content-box;
+  padding: 1.3636rem;
+}
+
 /* Military status sockets and the strength label deliberately extend beyond the circular
    marker. Include that overflow in the sampled atlas cell while keeping its anchor centred. */
 .glance-atlas-plate.world-glance-node--army,

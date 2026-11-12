@@ -1,5 +1,5 @@
-import { getRuntimeEngine, type runtimeEngine } from './runtimeEngine';
-import { cacheBridgeEvent } from './bridgeEventCache';
+import { bridgeResponseRevision, getRuntimeEngine, noteGameplayReadinessEvent, type runtimeEngine } from './runtimeEngine';
+import { cacheBridgeEvent, nextBridgeCacheRevision, withBridgeEventRevision } from './bridgeEventCache';
 import { applyAppModeCacheReset } from '../../runtime/appModeCacheReset';
 import { bridgeEventPayload } from '../../runtime/bridgePayloads';
 import { recordUIPerfBridgeEvent } from '../../perf/uiPerfProfiler';
@@ -11,10 +11,13 @@ const nativeSubscriptions = new Map<string, (() => void) | null>();
 const eventListenerSubscriptions = new Map<string, Map<EventListenerOrEventListenerObject, () => void>>();
 let boundEngine: runtimeEngine | null = null;
 
-function notifyBridgeEvent(eventName: string, data: unknown): void {
+function notifyBridgeEvent(eventName: string, data: unknown, revision: number): void {
   applyAppModeCacheReset(eventName, data);
-  cacheBridgeEvent(eventName, data);
-  listeners.get(eventName)?.forEach(callback => callback(data));
+  noteGameplayReadinessEvent(eventName, data);
+  cacheBridgeEvent(eventName, data, revision);
+  withBridgeEventRevision(revision, () => {
+    listeners.get(eventName)?.forEach(callback => callback(data));
+  });
 }
 
 function bindNativeEvent(eventName: string): void {
@@ -23,7 +26,7 @@ function bindNativeEvent(eventName: string): void {
 
   const unsubscribe = engine.on(eventName, (payload) => {
     const startedAtMs = Date.now();
-    notifyBridgeEvent(eventName, bridgeEventPayload(eventName, payload));
+    notifyBridgeEvent(eventName, bridgeEventPayload(eventName, payload), nextBridgeCacheRevision());
     recordUIPerfBridgeEvent(eventName, startedAtMs, Date.now());
   });
   nativeSubscriptions.set(eventName, unsubscribe ?? null);
@@ -53,9 +56,13 @@ export function subscribeBridgeEvent(
   };
 }
 
-/** Publishes decoded packed events and local cache refreshes to bridge subscribers. */
+/**
+ * Publishes decoded packed events and local cache refreshes to bridge subscribers.
+ * A re-published bridge response keeps the revision from when its request was sent,
+ * so a push that arrived after that request still wins.
+ */
 export function publishBridgeEvent(eventName: string, data: unknown): void {
-  notifyBridgeEvent(eventName, data);
+  notifyBridgeEvent(eventName, data, bridgeResponseRevision(data) ?? nextBridgeCacheRevision());
 }
 
 export interface BridgeEventTarget {

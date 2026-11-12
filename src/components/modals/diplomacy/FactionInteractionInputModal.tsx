@@ -128,6 +128,8 @@ export default function FactionInteractionInputModal({
     setClosing(true);
     closeTimerRef.current = setTimeout(() => {
       closeTimerRef.current = null;
+      // The close has finished, so a later selection with the same key opens fresh.
+      setClosing(false);
       onClose();
     }, UI_MOTION.modalCloseMs);
   }, [closing, onClose, setClosing]);
@@ -206,9 +208,12 @@ export default function FactionInteractionInputModal({
     allowFromInput: true,
   });
 
+  // The close timer belongs to the selection that started it. A new selection
+  // (or unmount) cancels it so it cannot close the replacement.
   useEffect(() => () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-  }, []);
+    closeTimerRef.current = null;
+  }, [currentSelectionKey]);
 
   if (!selection) return null;
   if (typeof document === 'undefined') return null;

@@ -36,14 +36,12 @@ export interface GovernorAssignmentCandidateView {
 }
 
 export interface GovernorAssignmentOperation {
-  active: boolean;
   selectedPersonId: string;
   message: string;
   candidates: GovernorAssignmentCandidateView[];
 }
 
 export interface BuildingPlacementOperation {
-  active: boolean;
   buildingId: string;
   buildingName: string;
   assetKey: string;
@@ -57,7 +55,6 @@ export interface BuildingPlacementOperation {
 }
 
 export interface FormationSelectionOperation {
-  active: boolean;
   templateId: string;
   templateName: string;
   templateType: 'land' | 'naval';
@@ -81,7 +78,6 @@ export interface ResettlementPopOptionView {
 }
 
 export interface ResettlementSelectionOperation {
-  active: boolean;
   needsPopSelection: boolean;
   sourceSettlementId: string;
   sourceSettlementName: string;
@@ -115,18 +111,18 @@ function mapGovernorCandidate(candidate: GovernorAssignmentCandidate): GovernorA
   };
 }
 
-function mapGovernorAssignment(data: GovernorAssignmentResponse): GovernorAssignmentOperation {
+function mapGovernorAssignment(data: GovernorAssignmentResponse): GovernorAssignmentOperation | null {
+  if (!data.active) return null;
   return {
-    active: data.active,
     selectedPersonId: data.selectedPersonId,
     message: data.message,
     candidates: data.candidates.map(mapGovernorCandidate),
   };
 }
 
-function mapBuildingPlacement(data: BuildingPlacementResponse): BuildingPlacementOperation {
+function mapBuildingPlacement(data: BuildingPlacementResponse): BuildingPlacementOperation | null {
+  if (!data.active) return null;
   return {
-    active: data.active,
     buildingId: data.buildingId,
     buildingName: data.buildingName,
     assetKey: data.assetKey,
@@ -143,7 +139,6 @@ function mapBuildingPlacement(data: BuildingPlacementResponse): BuildingPlacemen
 function mapFormationSelection(data: ApplyFormationTemplateResponse): FormationSelectionOperation | null {
   if (!data.selectionActive) return null;
   return {
-    active: data.selectionActive,
     templateId: data.templateId,
     templateName: data.templateName,
     templateType: data.templateType === 'naval' ? 'naval' : 'land',
@@ -172,7 +167,6 @@ function mapResettlementPopOption(pop: ResettlementPopOption): ResettlementPopOp
 function mapResettlementSelection(data: ResettlementSelectionResponse): ResettlementSelectionOperation | null {
   if (!data.active) return null;
   return {
-    active: data.active,
     needsPopSelection: data.needsPopSelection,
     sourceSettlementId: data.sourceSettlementId,
     sourceSettlementName: data.sourceSettlementName,
@@ -203,27 +197,23 @@ async function callBuildingPlacement(command: string, buildingId = ''): Promise<
   return response;
 }
 
-export function useGovernorAssignmentOperation(): GovernorAssignmentOperation | null {
-  const state = useBridgeQuery({
+function useGovernorAssignmentOperation(): GovernorAssignmentOperation | null {
+  return useBridgeQuery({
     action: 'game.governor_assignment',
     payload: { command: 'state', personId: '' },
     map: mapGovernorAssignment,
-  });
-
-  return state?.active ? state : null;
+  }) ?? null;
 }
 
-export function useBuildingPlacementOperation(): BuildingPlacementOperation | null {
-  const state = useBridgeQuery({
+function useBuildingPlacementOperation(): BuildingPlacementOperation | null {
+  return useBridgeQuery({
     action: 'game.building_placement',
     payload: { command: 'state', buildingId: '' },
     map: mapBuildingPlacement,
-  });
-
-  return state?.active ? state : null;
+  }) ?? null;
 }
 
-export function useFormationSelectionOperation(): FormationSelectionOperation | null {
+function useFormationSelectionOperation(): FormationSelectionOperation | null {
   const [state, setState] = useState<FormationSelectionOperation | null>(null);
 
   useEffect(() => onBridgeEvent('game.apply_formation_template', data => {
@@ -233,14 +223,38 @@ export function useFormationSelectionOperation(): FormationSelectionOperation | 
   return state;
 }
 
-export function useResettlementSelectionOperation(): ResettlementSelectionOperation | null {
-  const state = useBridgeQuery({
+function useResettlementSelectionOperation(): ResettlementSelectionOperation | null {
+  return useBridgeQuery({
     action: 'game.resettlement_selection',
     payload: { command: 'state', cultureId: '', religionId: '' },
     map: mapResettlementSelection,
-  });
+  }) ?? null;
+}
 
-  return state;
+/** The single map operation the bottom bar presents. */
+export type BottomBarOperation =
+  | { kind: 'none' }
+  | { kind: 'buildingPlacement'; operation: BuildingPlacementOperation }
+  | { kind: 'governorAssignment'; operation: GovernorAssignmentOperation }
+  | { kind: 'formationSelection'; operation: FormationSelectionOperation }
+  | { kind: 'resettlementSelection'; operation: ResettlementSelectionOperation };
+
+/**
+ * Each operation is owned by a separate game-side selection, so the game can
+ * report more than one as active. The bar presents one of them, chosen here in
+ * a single place.
+ */
+export function useBottomBarOperation(): BottomBarOperation {
+  const buildingPlacement = useBuildingPlacementOperation();
+  const governorAssignment = useGovernorAssignmentOperation();
+  const formationSelection = useFormationSelectionOperation();
+  const resettlementSelection = useResettlementSelectionOperation();
+
+  if (buildingPlacement) return { kind: 'buildingPlacement', operation: buildingPlacement };
+  if (governorAssignment) return { kind: 'governorAssignment', operation: governorAssignment };
+  if (formationSelection) return { kind: 'formationSelection', operation: formationSelection };
+  if (resettlementSelection) return { kind: 'resettlementSelection', operation: resettlementSelection };
+  return { kind: 'none' };
 }
 
 async function callResettlementSelection(

@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import type { Event, EventChoiceInputs, EventFactionEmblemInput, EventFactionNameInput, EventPersonNameInput, EventRegnalNameInput } from '../../data/types';
+import { useAnimatedPresence } from '../../hooks/useAnimatedPresence';
 import { playSound } from '../../hooks/useSound';
 import { useDraggableOffset } from '../../hooks/useDraggableOffset';
 import { renderEventTextChunk } from '../../utils/eventTextFlow';
@@ -171,8 +172,12 @@ const EventPopup: React.FC<EventPopupProps> = ({
   onOptionSelect,
   onLinkClick,
 }) => {
-  const [closing, setClosing] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const { mounted, closing, requestClose } = useAnimatedPresence(visible, { durationMs: EVENT_POPUP_EXIT_MS, onClosed: onClose });
+  // A pending choice belongs to one event. It is dropped when the popup hides before the
+  // choice is sent, so a briefly hidden event can still be answered when it returns.
+  const [selection, setSelection] = useState<{ eventId: string; index: number } | null>(null);
+  if (!visible && selection !== null) setSelection(null);
+  const selectedIndex = selection?.eventId === event.id ? selection.index : null;
   const [regnalName, setRegnalName] = useState(event.regnalNameInput?.value || '');
   const [personName, setPersonName] = useState(event.personNameInput?.value || '');
   const [factionName, setFactionName] = useState(event.factionNameInput?.value || '');
@@ -199,7 +204,6 @@ const EventPopup: React.FC<EventPopupProps> = ({
   const personNameCycleIndexRef = useRef(0);
   const factionNameCycleIndexRef = useRef(0);
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previousVisibleRef = useRef(false);
   const openedSoundEventIdRef = useRef<string | undefined>(undefined);
   const onCloseRef = useRef(onClose);
@@ -208,19 +212,11 @@ const EventPopup: React.FC<EventPopupProps> = ({
     onCloseRef.current = onClose;
   }, [onClose]);
 
-  const requestClose = useCallback((afterClose?: () => void, shouldPlayCloseSound = true) => {
-    if (closeTimerRef.current) return;
-    if (shouldPlayCloseSound) playSound('eventClose');
-    setClosing(true);
-    closeTimerRef.current = setTimeout(() => {
-      closeTimerRef.current = undefined;
-      afterClose?.();
-      onCloseRef.current();
-    }, EVENT_POPUP_EXIT_MS);
-  }, []);
-
   useEffect(() => {
     if (!visible) {
+      if (previousVisibleRef.current) playSound('eventClose');
+      clearTimeout(flashTimerRef.current);
+      flashTimerRef.current = undefined;
       previousVisibleRef.current = false;
       return;
     }
@@ -234,25 +230,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
     playSound('eventOpen', event.presentationStyle === 'important' ? 0.85 : undefined);
   }, [event.id, event.presentationStyle, visible]);
 
-  useEffect(() => {
-    const visibilityTimer = setTimeout(() => {
-      if (!visible) {
-        requestClose(undefined, openedSoundEventIdRef.current !== undefined);
-        return;
-      }
-
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = undefined;
-      setClosing(false);
-    }, 0);
-
-    return () => clearTimeout(visibilityTimer);
-  }, [visible, requestClose]);
-
-  useEffect(() => () => {
-    clearTimeout(flashTimerRef.current);
-    clearTimeout(closeTimerRef.current);
-  }, []);
+  useEffect(() => () => clearTimeout(flashTimerRef.current), []);
 
   const handleRandomRegnalName = useCallback((mouseEvent: React.MouseEvent<HTMLButtonElement>) => {
     if (mouseEvent.button !== 0) return;
@@ -320,11 +298,12 @@ const EventPopup: React.FC<EventPopupProps> = ({
     if (event.personNameInput && submittedPersonName.length === 0) return;
     if (event.factionNameInput && submittedFactionName.length === 0) return;
     playSound('confirm');
-    setSelectedIndex(index);
+    setSelection({ eventId: event.id, index });
     // Flash the selected option, then play close animation, then fire callback
     clearTimeout(flashTimerRef.current);
     flashTimerRef.current = setTimeout(() => {
       flashTimerRef.current = undefined;
+      playSound('eventClose');
       requestClose(() => {
         onOptionSelect(index, {
           regnalName: event.regnalNameInput ? submittedRegnalName : undefined,
@@ -332,9 +311,10 @@ const EventPopup: React.FC<EventPopupProps> = ({
           factionName: event.factionNameInput ? submittedFactionName : undefined,
           factionEmblem: event.factionEmblemInput ? factionEmblem : undefined,
         });
+        onCloseRef.current();
       });
     }, OPTION_SELECT_FLASH_MS);
-  }, [selectedIndex, closing, regnalName, personName, factionName, factionEmblem, event.regnalNameInput, event.personNameInput, event.factionNameInput, event.factionEmblemInput, onOptionSelect, requestClose]);
+  }, [selectedIndex, closing, event.id, regnalName, personName, factionName, factionEmblem, event.regnalNameInput, event.personNameInput, event.factionNameInput, event.factionEmblemInput, onOptionSelect, requestClose]);
 
   const renderBodyParagraph = useCallback((text: string, paragraphIndex: number) => {
     return renderRichText(text, {
@@ -344,6 +324,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
     });
   }, [onLinkClick]);
 
+  if (!mounted) return null;
   const isCurrentEvent = chainIndex === event.previousEvents.length;
   const historyEntry = isCurrentEvent ? null : event.previousEvents[chainIndex];
   const displayedEvent = historyEntry || event;
@@ -384,10 +365,13 @@ const EventPopup: React.FC<EventPopupProps> = ({
                     <img src="/assets/icons/I_NavPrevious.png" alt="" draggable={false} />
                   </button>
                 </Tooltip>
-                <span className="event-chain-position">
-                  {String(chainIndex + 1)} / {String(event.previousEvents.length + 1)}
-                </span>
-                <Tooltip content={webUIText('MainMenu.WorkshopNext')} position="bottom" inline>
+                {/* On the newest event, only the way back is shown; the position appears while reading earlier ones. */}
+                {!isCurrentEvent && (
+                  <span className="event-chain-position">
+                    {String(chainIndex + 1)} / {String(event.previousEvents.length + 1)}
+                  </span>
+                )}
+                {!isCurrentEvent && <Tooltip content={webUIText('MainMenu.WorkshopNext')} position="bottom" inline>
                   <button
                     type="button"
                     className="event-chain-nav"
@@ -403,7 +387,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
                   >
                     <img src="/assets/icons/I_NavNext.png" alt="" draggable={false} />
                   </button>
-                </Tooltip>
+                </Tooltip>}
               </>
             )}
           </div>
@@ -569,7 +553,7 @@ const EventPopup: React.FC<EventPopupProps> = ({
                 const tooltipContent = (
                   <div className="event-option-tooltip">
                     <div className="event-option-tooltip-title">{option.text}</div>
-                    {option.tooltip && <div className="event-option-tooltip-body">{option.tooltip}</div>}
+                    {option.tooltip && <div className="event-option-tooltip-body">{renderRichText(option.tooltip, { onLinkClick, linkClassPrefix: 'event-link' })}</div>}
                     {option.effects && option.effects.length > 0 && <EventEffectList effects={option.effects} />}
                   </div>
                 );

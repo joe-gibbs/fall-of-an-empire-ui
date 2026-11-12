@@ -10,7 +10,7 @@
 
 .culture-development-scroll { flex: 1; min-height: 0; }
 .culture-development-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 0.65rem; padding: 0.8rem; }
-.culture-development-body section { padding: 0.85rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; }
+.culture-development-body section { padding: 0.85rem; background: url('/assets/baked/card-charcoal.png') 0 0 / 17.4545rem 8.7273rem; }
 .culture-development-body h2 { margin: 0 0 0.75rem; color: var(--gold-light); font: 1.05rem var(--font-header); }
 .culture-development-body p { line-height: 1.5; font-size: 0.9rem; margin: 0 0 0.8rem; }
 .culture-development-population { margin: 0 0 0.8rem; }
@@ -20,7 +20,7 @@
 .culture-development-trend--rising { color: var(--green); }
 .culture-development-trend--falling { color: var(--red); }
 .culture-development-sources { margin: 0 0 0.35rem; }
-.culture-development-sources > div { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.55rem 0.6rem; margin-top: 0.35rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; font-size: 0.85rem; }
+.culture-development-sources > div { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.55rem 0.6rem; margin-top: 0.35rem; background: url('/assets/baked/card-charcoal.png') 0 0 / 17.4545rem 8.7273rem; font-size: 0.85rem; }
 .culture-development-sources dt { display: flex; align-items: center; gap: 0.45rem; }
 .culture-development-sources dt > div { display: flex; align-items: center; gap: 0.45rem; }
 .culture-development-sources dt img { width: 1.25rem; height: 1.25rem; object-fit: contain; }
@@ -61,14 +61,14 @@
 .culture-development-unlock--next .culture-development-unlock-value { color: var(--gold-light); }
 .culture-development-unlock--locked { opacity: 0.42; }
 .culture-facts { margin: 0; }
-.culture-facts > div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; padding: 0.6rem; margin-top: 0.35rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; font-size: 0.85rem; }
+.culture-facts > div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; padding: 0.6rem; margin-top: 0.35rem; background: url('/assets/baked/card-charcoal.png') 0 0 / 17.4545rem 8.7273rem; font-size: 0.85rem; }
 .culture-facts dt { flex-shrink: 0; }
 .culture-facts dd { margin: 0; min-width: 0; color: var(--gold-light); text-align: right; }
 .culture-facts-stacked { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
 .culture-facts-stacked dd { text-align: left; overflow-wrap: break-word; }
 .culture-development-related { grid-column: 1 / -1; }
 .culture-development-related > div { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-.culture-development-related .culture-link { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: url('/assets/baked/card-charcoal.png') center / 100% 100%; }
+.culture-development-related .culture-link { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: url('/assets/baked/card-charcoal.png') 0 0 / 17.4545rem 8.7273rem; }
 .culture-development-related img { width: 2rem; height: 2rem; object-fit: contain; }
 
 @media (max-height: 900px) {

@@ -9,7 +9,7 @@ import { glanceBadgeBackgroundColour, readableFactionTextColour, relationDisplay
 import { webUIText } from '../../localization/WebUITextContext';
 import type { GetWorldGlanceTooltipResponse } from '../../bridge-types.generated';
 import { useWorldGlanceTooltip } from '../../bridge/app/useWorldGlanceTooltip';
-type PortBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'foreground';
+type PortBadgeLayer = 'shadow' | 'background' | 'enamel-mask' | 'foreground' | 'hover-overlay';
 
 function portBadgeLayerPath(layer: PortBadgeLayer): string {
   return `/assets/glance/settlement-types-v3/layers/settlement-badge-port-${layer}.png`;
@@ -129,6 +129,7 @@ export default function PortGlance({ data }: PortGlanceProps) {
   const badgeBackground = WebkilnAssetPath(portBadgeLayerPath('background'));
   const badgeMask = WebkilnAssetPath(portBadgeLayerPath('enamel-mask'));
   const badgeForeground = WebkilnAssetPath(portBadgeLayerPath('foreground'));
+  const badgeFrame = WebkilnAssetPath(portBadgeLayerPath('hover-overlay'));
 
   return (
     <Tooltip
@@ -148,8 +149,13 @@ export default function PortGlance({ data }: PortGlanceProps) {
       >
         {levelLabel && <div className="gport-level-label" aria-hidden="true">{levelLabel}</div>}
         <div className="gport-badge" aria-hidden="true">
-          <span className="gport-target-indicator" />
           <span className="gport-badge-core">
+            <span className="gport-target-indicator">
+              <span
+                className="glance-target-silhouette"
+                style={{ maskImage: `url("${badgeFrame}")`, WebkitMaskImage: `url("${badgeFrame}")` }}
+              />
+            </span>
             <img className="gport-badge-layer gport-badge-layer--shadow" src={badgeShadow} alt="" />
             <img className="gport-badge-layer gport-badge-layer--background" src={badgeBackground} alt="" />
             <span

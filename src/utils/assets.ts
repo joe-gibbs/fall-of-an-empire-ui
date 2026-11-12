@@ -194,6 +194,11 @@ export function interactionAssetPath(key: string | undefined | null, basePath: s
   return WebkilnAssetPath(`${basePath}${key}.png`);
 }
 
+/** Event image keys name a base image in /assets/events, or give a content pack's own image as a full URL. */
+export function eventImagePath(imageId: string | undefined | null): string | null {
+  return interactionAssetPath(imageId, '/assets/events/') ?? null;
+}
+
 export function WebkilnSizedAssetPath(path: string, sizePx: number): string;
 export function WebkilnSizedAssetPath(path?: string | null, sizePx?: number): string | undefined;
 export function WebkilnSizedAssetPath(path?: string | null, sizePx?: number): string | undefined {

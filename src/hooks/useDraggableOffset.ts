@@ -147,6 +147,11 @@ export function useDraggableOffset(options: UseDraggableOffsetOptions = {}): Use
     const handleMove = (event: MouseEvent) => {
       const drag = dragRef.current;
       if (!drag) return;
+      // The left button was released outside the window, so the mouseup never arrived.
+      if ((event.buttons & 1) === 0) {
+        dragRef.current = null;
+        return;
+      }
       setOffsetState(previous => ({
         key: previous.key,
         x: drag.originX + event.clientX - drag.startX,
@@ -160,9 +165,11 @@ export function useDraggableOffset(options: UseDraggableOffsetOptions = {}): Use
 
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', endDrag);
+    window.addEventListener('blur', endDrag);
     return () => {
       document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', endDrag);
+      window.removeEventListener('blur', endDrag);
     };
   }, []);
 

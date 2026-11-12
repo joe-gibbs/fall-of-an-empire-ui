@@ -1324,6 +1324,7 @@ export interface MilitaryAttritionSource {
   progress: number;
   nearbyStrength: number;
   strengthThreshold: number;
+  detail: string;
 }
 
 export type MilitaryRank = 'Dux' | 'Praefectus' | 'Legatus';
@@ -1349,6 +1350,7 @@ export interface Army {
   unitRows: ArmyUnitRow[];
   battleGroups: ArmyBattleGroup[];
   commandRank: string;
+  hasCommand: boolean;
   isNavy: boolean;
   isPersonalGuard?: boolean;
   doctrine: string;
@@ -1405,6 +1407,11 @@ export interface Army {
   supplyRefillStatus?: string;
   supplySettlementName?: string;
   supplyMissingResources?: string;
+  /** Food taken from the supply settlement in the most recent daily supply. */
+  supplyFoodTaken?: number;
+  /** Food the supply settlement holds and the part it keeps for its own people. */
+  supplySettlementFood?: number;
+  supplyCivilianReserve?: number;
   isForcedMarching?: boolean;
   canForcedMarch: boolean;
   canMerge: boolean;
@@ -1418,9 +1425,12 @@ export interface Army {
   raidTargetSettlement?: string;
   expectedMonthlyRaidIncome?: number;
   monthlyUpkeep: number;
+  /** Monthly upkeep once the army leaves its garrison. */
+  ungarrisonedUpkeep?: number;
   isReplenishing?: boolean;
   replenishCost?: number;
   canReplenish?: boolean;
+  replenishUnavailableReason?: string;
   isFoederatiAuxiliary?: boolean;
   foederatiOriginFactionId?: string;
   isPlayerControlled: boolean;
@@ -1433,6 +1443,7 @@ export interface MilitaryForce {
   factionId: string;
   parentId: string | null;
   rank: MilitaryRank;
+  hasCommand: boolean;
   commanderName: string;
   commanderId?: string;
   commanderDebugShortId?: number;
@@ -1784,6 +1795,9 @@ export interface Resource {
   status?: string;
   depleting?: boolean;
   monthsUntilDepletion?: number;
+  /** True when production above keepUpTo is exported from this settlement. */
+  exportsProduction?: boolean;
+  keepUpTo?: number;
   icon?: string;
   /** True if the settlement's region naturally yields this resource. */
   isNatural?: boolean;
@@ -1811,4 +1825,8 @@ export interface ResourceCategory {
   consumption: number;
   hasShortage: boolean;
   isCapitalStockpile: boolean;
+  /** Food only: the pool armies draw from, in food value. */
+  supplyFood?: number;
+  /** Food only: the part of supplyFood the settlement keeps for its own people. */
+  civilianReserve?: number;
 }

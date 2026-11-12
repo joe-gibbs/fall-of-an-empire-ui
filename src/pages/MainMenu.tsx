@@ -16,13 +16,13 @@ import CreditsRoll from './main-menu/CreditsRoll';
 import CharacterCreatorDebug from './main-menu/CharacterCreatorDebug';
 import './main-menu/MainMenu.css';
 import { bridgeCall, onBridgeEvent } from '../bridge-types.generated.ts';
-import { getCachedBridgeEvent } from '../bridge/core/bridgeEventCache';
+import { getCachedBridgeEvent, getCachedBridgeEventRevision } from '../bridge/core/bridgeEventCache';
 import {
   LOADING_SCREEN_FALLBACK_BACKGROUND,
 } from '../components/loading/loadingScreenPresentation';
 import { whenImageAssetReady } from '../preload/assets';
-import type { GetNewGameMapFactionSelectionResponse, NewGameMapDto } from '../bridge-types.generated.ts';
-import { acknowledgeBridgeFailure } from '../bridge/core/runtimeEngine';
+import type { FactionSelectionTabletopRequest, GetNewGameMapFactionSelectionResponse, LoadingScreenResponse, NewGameMapDto } from '../bridge-types.generated.ts';
+import { acknowledgeBridgeFailure, callRuntimeBridgeRevisioned } from '../bridge/core/runtimeEngine';
 import type { SaveEntry } from '../bridge/app/useSavesBridge';
 import { useModsBridge } from '../bridge/app/useModsBridge';
 import type { ModEntry, SteamWorkshopItem } from '../bridge/app/useModsBridge';
@@ -56,6 +56,7 @@ interface MainMenuIllustratedButtonData {
   description?: string;
   img?: string;
   locked?: boolean;
+  achievementBlockers?: string[];
   onClick: () => void;
 }
 
@@ -90,32 +91,70 @@ function waitForAnimationFrames(count: number): Promise<void> {
   });
 }
 
-async function waitForLoadingScreenPaint(): Promise<void> {
+// The prepare command always shows the loading screen, but its push and the command's
+// response travel separately. Wait for a visible push that arrived after the command was sent.
+function waitForVisibleLoadingScreen(sentRevision: number): Promise<LoadingScreenResponse> {
   const cached = getCachedBridgeEvent('game.loading_screen');
-  if (cached?.visible) {
-    await whenImageAssetReady(cached.background || LOADING_SCREEN_FALLBACK_BACKGROUND);
+  if (cached?.visible && getCachedBridgeEventRevision('game.loading_screen') > sentRevision) {
+    return Promise.resolve(cached);
   }
+  return new Promise((resolve) => {
+    const unsubscribe = onBridgeEvent('game.loading_screen', (data) => {
+      if (!data.visible) return;
+      unsubscribe();
+      resolve(data);
+    });
+  });
+}
+
+async function prepareFactionSelectionTabletop(mapId: string, startDateId: string): Promise<void> {
+  const { sentRevision } = await callRuntimeBridgeRevisioned({
+    action: 'game.faction_selection_tabletop',
+    payload: {
+      command: 'prepare',
+      mapId,
+      startDateId,
+      baseName: '',
+      mapMode: '',
+      screenX: 0,
+      screenY: 0,
+      deltaX: 0,
+      deltaY: 0,
+      zoomDelta: 0,
+    } satisfies FactionSelectionTabletopRequest,
+  });
+  const loadingScreen = await waitForVisibleLoadingScreen(sentRevision);
+  await whenImageAssetReady(loadingScreen.background || LOADING_SCREEN_FALLBACK_BACKGROUND);
   await waitForAnimationFrames(2);
 }
 
 const MainMenu: React.FC = () => {
   const locale = useWebUILocale();
   const use3DPortraits = use3DPortraitsEnabled();
-  const [view, setView] = useState<MenuView>('menu');
+  const [navigation, setNavigation] = useState<{
+    view: MenuView;
+    phase: 'open' | 'preparingScenario' | 'preparingReturn' | 'closing';
+    map?: NewGameMapEntry;
+    request?: symbol;
+  }>({ view: 'menu', phase: 'open' });
+  const { view } = navigation;
+  const closing = navigation.phase === 'closing';
 
   const [skipMenuIntro, setSkipMenuIntro] = useState(false);
-  const [closing, setClosing] = useState(false);
   const [latestSave, setLatestSave] = useState<SaveEntry | null>(null);
   const [version, setVersion] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState<boolean | null>(null);
+  const [isEpicStore, setIsEpicStore] = useState(false);
   const [steamAchievementsAvailable, setSteamAchievementsAvailable] = useState<boolean | null>(null);
+  const [achievementBlockers, setAchievementBlockers] = useState<{ general: string[]; tutorial: string } | null>(null);
   const [showLoad, setShowLoad] = useState(false);
   const [showFullGamePrompt, setShowFullGamePrompt] = useState(false);
+  const [dlcPrompt, setDlcPrompt] = useState<{ name: string; storeUrl: string } | null>(null);
   const [showModRecovery, setShowModRecovery] = useState(false);
   const pendingModRecoveryRef = useRef(false);
   const [newGameMaps, setNewGameMaps] = useState<NewGameMapEntry[]>([]);
   const [selectedNewGameStartDateId, setSelectedNewGameStartDateId] = useState('');
-  const [selectedNewGameMap, setSelectedNewGameMap] = useState<NewGameMapEntry | null>(null);
+  const selectedNewGameMap = navigation.map;
   const [menuError, setMenuError] = useState<string | null>(null);
   const [compatibilityWarning, setCompatibilityWarning] = useState<{ slotName: string; warnings: string[] } | null>(null);
   const [modsPanelView, setModsPanelView] = useState<ModsPanelView>('installed');
@@ -124,7 +163,6 @@ const MainMenu: React.FC = () => {
   const closeTimerRef = useRef<number | null>(null);
   const factionSelectionCacheRef = useRef(new Map<string, GetNewGameMapFactionSelectionResponse>());
   const factionSelectionRequestRef = useRef(new Map<string, Promise<GetNewGameMapFactionSelectionResponse>>());
-  const factionSelectionClosePendingRef = useRef(false);
 
   const {
     mods,
@@ -232,6 +270,7 @@ const MainMenu: React.FC = () => {
         if (!cancelled) {
           setVersion(res.version ?? null);
           setIsDemo(res.isDemo);
+          setIsEpicStore(res.isEpicStore);
         }
       } catch {
         if (!cancelled) {
@@ -290,6 +329,22 @@ const MainMenu: React.FC = () => {
       unsubscribe();
     };
   }, []);
+
+  // Mods and the console can be toggled from sub-views, so refresh the reasons on returning to the menu.
+  useEffect(() => {
+    if (view !== 'menu') return;
+    let cancelled = false;
+    bridgeCall('game.achievement_events')
+      .then((response) => {
+        if (!cancelled) {
+          setAchievementBlockers({ general: response.disabledReasons, tutorial: response.tutorialDisabledReason });
+        }
+      })
+      .catch(acknowledgeBridgeFailure);
+    return () => {
+      cancelled = true;
+    };
+  }, [view]);
 
   useEffect(() => {
     let cancelled = false;
@@ -354,27 +409,20 @@ const MainMenu: React.FC = () => {
     }
 
     if (map.requiresFactionSelection) {
+      const request = Symbol();
+      setNavigation({ view: 'menu', phase: 'preparingScenario', map, request });
+      setSelectedNewGameStartDateId('');
       try {
-        await bridgeCall('game.faction_selection_tabletop', {
-          command: 'prepare',
-          mapId: map.id,
-          startDateId: '',
-          baseName: '',
-          mapMode: '',
-          screenX: 0,
-          screenY: 0,
-          deltaX: 0,
-          deltaY: 0,
-          zoomDelta: 0,
-        });
-        await waitForLoadingScreenPaint();
-        setSelectedNewGameMap(map);
-        setSelectedNewGameStartDateId('');
+        await prepareFactionSelectionTabletop(map.id, '');
+        setNavigation(current => current.request === request
+          ? { view: 'newgame', phase: 'open', map }
+          : current);
         void preloadFactionSelection(map.id).catch((error) => {
           console.error('[MainMenu] preloading faction selection failed', error);
         });
-        openSubView('newgame');
+        setSkipMenuIntro(true);
       } catch (error) {
+        setNavigation(current => current.request === request ? { view: 'menu', phase: 'open' } : current);
         console.error('[MainMenu] preparing faction selection failed', error);
       }
       return;
@@ -465,10 +513,7 @@ const MainMenu: React.FC = () => {
   useEffect(() => {
     if (!closing) return;
     closeTimerRef.current = window.setTimeout(() => {
-      setView('menu');
-      setClosing(false);
-      setSelectedNewGameMap(null);
-      factionSelectionClosePendingRef.current = false;
+      setNavigation({ view: 'menu', phase: 'open' });
       closeTimerRef.current = null;
     }, UI_MOTION.subviewCloseMs);
     return () => {
@@ -480,49 +525,38 @@ const MainMenu: React.FC = () => {
   }, [closing]);
 
   const goBack = () => {
-    if (closing || view === 'menu') return;
+    if (navigation.phase !== 'open' || view === 'menu') return;
 
     if (view === 'newgame') {
-      if (factionSelectionClosePendingRef.current) return;
-      factionSelectionClosePendingRef.current = true;
+      const request = Symbol();
+      setNavigation({ ...navigation, phase: 'preparingReturn', request });
       void (async () => {
         try {
-          await bridgeCall('game.faction_selection_tabletop', {
-            command: 'prepare',
-            mapId: selectedNewGameMap?.id ?? '',
-            startDateId: selectedNewGameStartDateId,
-            baseName: '',
-            mapMode: '',
-            screenX: 0,
-            screenY: 0,
-            deltaX: 0,
-            deltaY: 0,
-            zoomDelta: 0,
-          });
-          await waitForLoadingScreenPaint();
+          await prepareFactionSelectionTabletop(selectedNewGameMap?.id ?? '', selectedNewGameStartDateId);
         } catch (error) {
           console.error('[MainMenu] preparing faction selection close failed', error);
         }
-        setClosing(true);
+        setNavigation(current => current.request === request
+          ? { ...current, phase: 'closing', request: undefined }
+          : current);
       })();
       return;
     }
 
-    setClosing(true);
+    setNavigation({ view, phase: 'closing' });
   };
 
   useEscapeStackEntry({
     id: 'main-menu.sub-view',
-    active: view !== 'menu' && !showLoad && !closing,
+    active: view !== 'menu' && !showLoad && navigation.phase === 'open',
     orderKey: `main-menu.${view}`,
     onClose: goBack,
   });
 
   const openSubView = (nextView: Exclude<MenuView, 'menu'>) => {
     dismissSharedTooltips();
-    setClosing(false);
     setSkipMenuIntro(true);
-    setView(nextView);
+    setNavigation({ view: nextView, phase: 'open' });
   };
 
   const subViewClass = `mm-sub-view${closing ? ' mm-sub-view--closing' : ''}`;
@@ -949,6 +983,11 @@ const MainMenu: React.FC = () => {
       description: map.menuDescription,
       img: map.menuImageUrl,
       locked: map.isLocked,
+      achievementBlockers: achievementBlockers
+        ? (map.guidedCampaignType === 'tutorial'
+          ? [...achievementBlockers.general, achievementBlockers.tutorial]
+          : achievementBlockers.general)
+        : undefined,
       onClick: () => { void handleSelectScenarioMap(map); },
     }));
   const menuSlots: MainMenuSlotData[] = [];
@@ -1022,7 +1061,19 @@ const MainMenu: React.FC = () => {
         key={key}
         content={{
           title: btn.label,
-          body: btn.locked ? webUIText('Demo.CampaignLocked') : btn.description,
+          body: btn.locked
+            ? webUIText('Demo.CampaignLocked')
+            : btn.description,
+          lines: !btn.locked && btn.achievementBlockers && btn.achievementBlockers.length > 0
+            ? [
+                {
+                  label: webUIText('Achievements.DisabledShort'),
+                  labelIcon: '/assets/icons/I_Achievements.png',
+                  isHeader: true,
+                },
+                ...btn.achievementBlockers.map(reason => ({ label: reason, labelColor: 'var(--red)' })),
+              ]
+            : undefined,
         }}
         position="right"
         delay={450}
@@ -1200,6 +1251,22 @@ const MainMenu: React.FC = () => {
         onClosed={() => setShowFullGamePrompt(false)}
       />
       <ConfirmDialog
+        visible={dlcPrompt !== null}
+        title={webUIText('Dlc.RequiredTitle', { Dlc: dlcPrompt?.name ?? '' })}
+        message={webUIText(isEpicStore ? 'Dlc.EpicDescription' : 'Dlc.RequiredDescription', { Dlc: dlcPrompt?.name ?? '' })}
+        confirmText={webUIText(isEpicStore ? 'Dlc.EmailUs' : 'Dlc.ViewInStore')}
+        cancelText={webUIText('Demo.NotNow')}
+        onConfirm={() => {
+          if (!dlcPrompt) return;
+          if (isEpicStore) {
+            void bridgeCall('ui.open_external_link', { linkId: 'contact_email' }).catch(acknowledgeBridgeFailure);
+          } else {
+            void bridgeCall('ui.open_external_url', { url: dlcPrompt.storeUrl }).catch(acknowledgeBridgeFailure);
+          }
+        }}
+        onClosed={() => setDlcPrompt(null)}
+      />
+      <ConfirmDialog
         visible={showModRecovery}
         title={webUIText('MainMenu.ModsNotLoadedTitle')}
         message={webUIText('MainMenu.ModsNotLoadedBody')}
@@ -1214,7 +1281,10 @@ const MainMenu: React.FC = () => {
           startDateId={selectedNewGameStartDateId}
           startDates={activeSelectedNewGameMap.startDates}
           onSelectStartDate={(id) => {
-            if (activeSelectedNewGameMap.startDates.find(date => date.id === id)!.isLocked) {
+            const date = activeSelectedNewGameMap.startDates.find(entry => entry.id === id)!;
+            if (date.isLocked && date.requiredDlcName) {
+              setDlcPrompt({ name: date.requiredDlcName, storeUrl: date.requiredDlcStoreUrl });
+            } else if (date.isLocked) {
               setShowFullGamePrompt(true);
             } else {
               setSelectedNewGameStartDateId(id);
@@ -1229,6 +1299,13 @@ const MainMenu: React.FC = () => {
           onClose={goBack}
           showPurchaseForLocked={isDemo === true}
           onPurchaseFullGame={() => setShowFullGamePrompt(true)}
+          onRequireDlc={(dlc) => {
+            if (isEpicStore) {
+              setDlcPrompt(dlc);
+            } else {
+              void bridgeCall('ui.open_external_url', { url: dlc.storeUrl }).catch(acknowledgeBridgeFailure);
+            }
+          }}
           onConfirm={(faction) => { void handleStartScenarioMap(activeSelectedNewGameMap.id, faction.baseName, selectedNewGameStartDateId); }}
         />
       )}

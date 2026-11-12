@@ -60,6 +60,9 @@ function truncateDescription(value?: React.ReactNode): React.ReactNode {
 
   const singleLine = value.replace(/\s+/g, ' ').trim();
   if (singleLine.length <= DESCRIPTION_MAX_CHARS) return singleLine;
+  // A whole first sentence reads better than a cut-off one; the tooltip carries the rest.
+  const firstSentenceEnd = singleLine.search(/[.!?](\s|$)/);
+  if (firstSentenceEnd > 0 && firstSentenceEnd < DESCRIPTION_MAX_CHARS) return singleLine.slice(0, firstSentenceEnd + 1);
 
   const clipped = singleLine.slice(0, DESCRIPTION_MAX_CHARS + 1);
   const lastSpace = clipped.lastIndexOf(' ');

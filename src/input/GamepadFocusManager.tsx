@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 import { bridgeEvents } from '../bridge/core/bridgeEvents';
-import { useEscapeStack } from '../context/EscapeStack';
+import { useEscapeFallback, useEscapeStack } from '../context/EscapeStack';
 import { GamepadFocusContext, type ControllerAppMode } from './GamepadFocusContext';
 import { useInputMode } from './InputModeContext';
 import { GAMEPAD_FOCUS_REFRESH_EVENT } from './gamepadFocusEvents';
@@ -256,7 +256,7 @@ export default function GamepadFocusProvider({
   children: ReactNode;
 }) {
   const device = useInputMode();
-  const { handleEscapeStack } = useEscapeStack();
+  const { dispatchEscape } = useEscapeStack();
   const [ownsUIInput, setOwnsUIInput] = useState(false);
   const [activeRoot, setActiveRoot] = useState<HTMLElement | null>(null);
   const rootRef = useRef<HTMLElement | null>(null);
@@ -383,19 +383,21 @@ export default function GamepadFocusProvider({
     dispatchActivation(focused);
   }, [focusElement]);
 
-  const handleBack = useCallback(() => {
-    if (handleEscapeStack({ fromInput: false })) return;
+  // With nothing on the escape stack, Back activates the focused root's own back
+  // control. A focused root without one keeps Back, so it cannot open the pause menu.
+  const backFromFocusRoot = useCallback(() => {
+    if (device !== 'gamepad') return false;
     const root = rootRef.current;
-    const back = root?.querySelector<HTMLElement>('[data-gamepad-back], .close-btn, .mm-back-btn, .mm-credits-back-btn, .fs-back-btn');
-    if (back && isVisible(back)) {
-      dispatchActivation(back);
-      return;
-    }
-    if (root) return;
-    if (appMode === 'ingame') {
-      bridgeEvents.dispatchEvent(new CustomEvent('ui.escape_pressed', { detail: {} }));
-    }
-  }, [appMode, handleEscapeStack]);
+    if (!root) return false;
+    const back = root.querySelector<HTMLElement>('[data-gamepad-back], .close-btn, .mm-back-btn, .mm-credits-back-btn, .fs-back-btn');
+    if (back && isVisible(back)) dispatchActivation(back);
+    return true;
+  }, [device]);
+  useEscapeFallback(10, backFromFocusRoot);
+
+  const handleBack = useCallback(() => {
+    dispatchEscape({ fromInput: false });
+  }, [dispatchEscape]);
 
   const handleSecondary = useCallback(() => {
     const root = rootRef.current;
@@ -496,14 +498,11 @@ export default function GamepadFocusProvider({
       } else if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         handleConfirm();
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        handleBack();
       }
     };
     window.addEventListener('keydown', handleKeyboard);
     return () => window.removeEventListener('keydown', handleKeyboard);
-  }, [device, handleBack, handleConfirm, handleMove]);
+  }, [device, handleConfirm, handleMove]);
 
   return (
     <GamepadFocusContext.Provider value={{ ownsUIInput, activeRoot }}>

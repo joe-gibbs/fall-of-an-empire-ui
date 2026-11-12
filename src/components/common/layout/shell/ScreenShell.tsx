@@ -16,6 +16,8 @@ interface ScreenShellProps {
   className?: string;
   contentClassName?: string;
   styledScrollContent?: boolean;
+  /** Size the screen to its content, up to the full height, instead of always filling the viewport. */
+  fitContent?: boolean;
   children: ReactNode;
 }
 
@@ -29,19 +31,20 @@ const ScreenShell: React.FC<ScreenShellProps> = ({
   className,
   contentClassName,
   styledScrollContent = false,
+  fitContent = false,
   children,
 }) => {
   const gameActions = useOptionalGameActions();
   const contentClass = `screen-content${contentClassName ? ` ${contentClassName}` : ''}`;
   const content = styledScrollContent ? (
-    <StyledScrollArea className={contentClass} tutorialTarget="ScreenContent">{children}</StyledScrollArea>
+    <StyledScrollArea className={contentClass} tutorialTarget="ScreenContent" variant={fitContent ? 'inline' : 'fill'}>{children}</StyledScrollArea>
   ) : (
     <div className={contentClass} data-tutorial-target="ScreenContent">{children}</div>
   );
 
   return (
     <div
-      className={`screen${className ? ` ${className}` : ''}`}
+      className={`screen${fitContent ? ' screen--fit-content' : ''}${className ? ` ${className}` : ''}`}
       data-tutorial-target="Screen ScreenShell"
       data-focus-root="screen"
       data-focus-priority="400"

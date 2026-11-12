@@ -74,7 +74,7 @@
   margin-left: 0.35rem;
 }
 
-.battle-surrender {
+.battle-retreat {
   height: 1.8rem;
   min-width: 6.2rem;
   padding: 0.18rem 0.55rem !important;
@@ -83,7 +83,7 @@
   line-height: 1;
 }
 
-.battle-surrender .btn-icon {
+.battle-retreat .btn-icon {
   width: 0.95rem;
   height: 0.95rem;
 }

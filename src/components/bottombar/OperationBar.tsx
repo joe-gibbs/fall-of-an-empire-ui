@@ -23,10 +23,7 @@ import {
   finishGovernorAssignmentBridge,
   selectGovernorCandidateBridge,
   undoBuildingPlacementBridge,
-  useBuildingPlacementOperation,
-  useFormationSelectionOperation,
-  useGovernorAssignmentOperation,
-  useResettlementSelectionOperation,
+  useBottomBarOperation,
 } from '../../bridge/military-map/useBottomBarOperationsBridge';
 import type {
   BuildingPlacementOperation,
@@ -384,7 +381,6 @@ function BuildingPlacementPanel({ operation }: { operation: BuildingPlacementOpe
           icon={ICONS.confirm}
           label={t('Common.Confirm')}
           variant="confirm"
-          tutorialTarget="FormationSelectionConfirmButton"
           disabled={!operation.canConfirm}
           onPress={() => { confirmBuildingPlacementBridge().catch(acknowledgeBridgeFailure); }}
         />
@@ -469,6 +465,7 @@ function FormationSelectionPanel({ operation }: { operation: FormationSelectionO
           icon={ICONS.confirm}
           label={t('Common.Confirm')}
           variant="confirm"
+          tutorialTarget="FormationSelectionConfirmButton"
           disabled={!operation.canConfirm}
           onPress={() => { confirmFormationSelectionBridge(operation.templateId).catch(acknowledgeBridgeFailure); }}
         />
@@ -484,10 +481,7 @@ function FormationSelectionPanel({ operation }: { operation: FormationSelectionO
 }
 
 const OperationBar: React.FC = () => {
-  const buildingPlacement = useBuildingPlacementOperation();
-  const governorAssignment = useGovernorAssignmentOperation();
-  const formationSelection = useFormationSelectionOperation();
-  const resettlementSelection = useResettlementSelectionOperation();
+  const active = useBottomBarOperation();
   const [governorPickerRequested, setGovernorPickerRequested] = React.useState(false);
 
   React.useEffect(() => {
@@ -500,43 +494,38 @@ const OperationBar: React.FC = () => {
     setGovernorPickerRequested(false);
   }, []);
 
-  if (buildingPlacement) {
-    return <BuildingPlacementPanel operation={buildingPlacement} />;
-  }
-
-  if (governorAssignment) {
-    return (
-      <GovernorAssignmentPanel
-        operation={governorAssignment}
-        pickerRequested={governorPickerRequested}
-        onPickerRequestConsumed={consumeGovernorPickerRequest}
-      />
-    );
-  }
-
-  if (formationSelection) {
-    return <FormationSelectionPanel operation={formationSelection} />;
-  }
-
-  if (resettlementSelection) {
-    return (
-      <>
-        <ResettlementPopPickerModal
-          open={resettlementSelection.needsPopSelection}
-          operation={resettlementSelection}
-          onConfirm={(cultureId, religionId) => {
-            confirmResettlementPopBridge(cultureId, religionId).catch(acknowledgeBridgeFailure);
-          }}
-          onCancel={() => { cancelResettlementSelectionBridge().catch(acknowledgeBridgeFailure); }}
+  switch (active.kind) {
+    case 'buildingPlacement':
+      return <BuildingPlacementPanel operation={active.operation} />;
+    case 'governorAssignment':
+      return (
+        <GovernorAssignmentPanel
+          operation={active.operation}
+          pickerRequested={governorPickerRequested}
+          onPickerRequestConsumed={consumeGovernorPickerRequest}
         />
-        {!resettlementSelection.needsPopSelection && (
-          <ResettlementSelectionPanel operation={resettlementSelection} />
-        )}
-      </>
-    );
+      );
+    case 'formationSelection':
+      return <FormationSelectionPanel operation={active.operation} />;
+    case 'resettlementSelection':
+      return (
+        <>
+          <ResettlementPopPickerModal
+            open={active.operation.needsPopSelection}
+            operation={active.operation}
+            onConfirm={(cultureId, religionId) => {
+              confirmResettlementPopBridge(cultureId, religionId).catch(acknowledgeBridgeFailure);
+            }}
+            onCancel={() => { cancelResettlementSelectionBridge().catch(acknowledgeBridgeFailure); }}
+          />
+          {!active.operation.needsPopSelection && (
+            <ResettlementSelectionPanel operation={active.operation} />
+          )}
+        </>
+      );
+    case 'none':
+      return null;
   }
-
-  return null;
 };
 
 export default React.memo(OperationBar);

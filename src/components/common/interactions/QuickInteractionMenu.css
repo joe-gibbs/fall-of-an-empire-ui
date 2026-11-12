@@ -30,9 +30,11 @@
   line-height: 1;
 }
 
-.quick-interaction-menu__button {
+/* Compound selector so this reliably beats the shared .btn--outline rule
+   regardless of stylesheet order; long translations wrap onto extra lines. */
+.quick-interaction-menu__button.btn--outline {
   justify-content: flex-start;
-  white-space: normal;
+  height: auto;
   width: 100%;
   min-height: 2.46rem;
   padding: 0.462rem 0.615rem;

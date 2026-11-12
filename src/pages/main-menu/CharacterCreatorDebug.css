@@ -166,9 +166,8 @@
   font-size: 0.76rem;
   background-color: #11171c;
   background-image: url('/assets/baked/card-charcoal.png');
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-repeat: repeat;
+  background-size: 17.4545rem 8.7273rem;
   border-width: 0.09rem;
   border-style: solid;
   border-color: transparent;

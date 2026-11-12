@@ -1,7 +1,12 @@
 import type { ComponentType, ReactNode } from 'react';
 import type { AdvisorTopicId } from '../data/advisorTopics';
+import type { PlayerFactionSummary } from '../bridge/app/usePlayerFactionBridge';
 
 export type FactionModeVisibility = 'all' | 'independent' | 'subject';
+
+/** A fixed advisor topic, or one chosen from the player's realm when a screen
+ *  shows different content to different kinds of realm. */
+export type ScreenAdvisorTopic = AdvisorTopicId | ((faction: PlayerFactionSummary | null) => AdvisorTopicId);
 
 /**
  * Describes a full-window screen (military, economy, family tree, etc).
@@ -16,7 +21,7 @@ export interface ScreenRegistration {
   render: (props: { screenId: string | null; onClose: () => void }) => ReactNode;
 
   /** Advisor topic to open automatically when this screen is active. */
-  advisorTopic?: AdvisorTopicId;
+  advisorTopic?: ScreenAdvisorTopic;
 
   /** Topbar button to highlight while this screen is active. */
   topbarId?: string;

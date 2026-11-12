@@ -16,7 +16,7 @@ import { useLoadingScreenBridge } from './bridge/app/useLoadingScreenBridge';
 import { useUIScale } from './bridge/core/useUIScale';
 import { EscapeStackProvider } from './context/EscapeStackProvider';
 import { preloadWebUIAssets } from './preload/assets';
-import { acknowledgeBridgeFailure, getRuntimeEngine } from './bridge/core/runtimeEngine';
+import { acknowledgeBridgeFailure, waitForruntimeEngine } from './bridge/core/runtimeEngine';
 import GameUIRoot from './components/app-shell/GameUIRoot';
 import ResourceDetailsProvider from './context/ResourceDetailsProvider';
 import CultureDetailsProvider from './context/CultureDetailsProvider';
@@ -61,11 +61,16 @@ function App() {
     let secondFrame = 0;
     let timer = 0;
 
+    // Two animation frames put the presented mode on screen before the game is told.
+    // The engine binding can attach after that, so wait for it rather than skipping.
     const notifyRendered = () => {
       if (cancelled || presentedAppMode == null) return;
-      const engine = getRuntimeEngine();
-      if (!engine) return;
-      void Promise.resolve(engine.call('UIRendered', { mode: presentedAppMode }))
+      const mode = presentedAppMode;
+      void waitForruntimeEngine()
+        .then(engine => {
+          if (cancelled) return;
+          return engine.call('UIRendered', { mode });
+        })
         .catch(error => acknowledgeBridgeFailure(error, 'UIRendered'));
     };
 

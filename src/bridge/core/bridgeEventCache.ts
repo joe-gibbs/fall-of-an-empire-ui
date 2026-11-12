@@ -12,9 +12,33 @@ export function getCachedBridgeEventRevision(eventName: string): number {
   return bridgeEventRevisions.get(eventName) ?? 0;
 }
 
-export function cacheBridgeEvent(eventName: string, data: unknown): void {
+/** Caches an event unless a newer value for it is already cached. Returns whether it was cached. */
+export function cacheBridgeEvent(eventName: string, data: unknown, revision: number): boolean {
+  if ((bridgeEventRevisions.get(eventName) ?? 0) > revision) return false;
   bridgeEventCache.set(eventName, data);
-  bridgeEventRevisions.set(eventName, nextBridgeCacheRevision());
+  bridgeEventRevisions.set(eventName, revision);
+  return true;
+}
+
+let dispatchingRevision = 0;
+
+/** Runs subscriber callbacks for an event whose value was produced at `revision`. */
+export function withBridgeEventRevision(revision: number, dispatch: () => void): void {
+  const previous = dispatchingRevision;
+  dispatchingRevision = revision;
+  try {
+    dispatch();
+  } finally {
+    dispatchingRevision = previous;
+  }
+}
+
+/**
+ * The revision of the event currently being delivered to subscribers. A push gets its
+ * revision on arrival; a re-published response keeps the revision from when it was sent.
+ */
+export function currentBridgeEventRevision(): number {
+  return dispatchingRevision;
 }
 
 export function clearGameplayBridgeEventCache(): void {

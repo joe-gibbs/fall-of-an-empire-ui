@@ -8,7 +8,7 @@ import type {
   BishopCandidate,
   ReligionInfo,
 } from '../../bridge-types.generated.ts';
-import type { Character, PersonActivity } from '../../data/types';
+import type { Character, PersonActivity, PortraitLayerData } from '../../data/types';
 import { WebkilnAssetPath } from '../../utils/assets';
 
 export interface DioceseView {
@@ -17,7 +17,7 @@ export interface DioceseView {
   landName: string;
   bishopId: string | null;
   bishopName: string | null;
-  bishopPortrait: string | null;
+  bishopPortraitLayers?: PortraitLayerData;
   authority: number;
   /** 0..1 fraction of the land's population following this religion. */
   followerPercent: number;
@@ -94,7 +94,7 @@ function mapResponse(data: GetDiocesesResponse): DiocesesResult {
       landName: d.landName,
       bishopId: d.bishopId || null,
       bishopName: d.bishopName || null,
-      bishopPortrait: null,
+      bishopPortraitLayers: mapPortraitLayers(d.bishopPortraitLayers),
       authority: d.authority,
       followerPercent: d.religionShare,
       followers: d.followers,

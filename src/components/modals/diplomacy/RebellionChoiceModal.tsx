@@ -57,8 +57,14 @@ export default function RebellionChoiceModal({
     allowFromInput: true,
   });
 
+  // A close that was still animating when the modal was reopened must not close the new one.
   useEffect(() => {
-    if (open) setClosing(false);
+    if (!open) return;
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setClosing(false);
   }, [open]);
 
   useEffect(() => () => {

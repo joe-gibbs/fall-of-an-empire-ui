@@ -28,7 +28,7 @@ export function captureBuildingQueueScrollAnchor(
     buildingId,
     element,
     viewport,
-    top: element.getBoundingClientRect().top,
+    top: element.getBoundingClientRect().top - viewport.getBoundingClientRect().top,
   };
 }
 
@@ -43,7 +43,7 @@ export function restoreBuildingQueueScrollAnchor(
     : (resolveElement?.(anchor.buildingId) ?? null);
   if (!element) return;
 
-  const delta = element.getBoundingClientRect().top - anchor.top;
+  const delta = element.getBoundingClientRect().top - anchor.viewport.getBoundingClientRect().top - anchor.top;
   if (Math.abs(delta) > 0.5) {
     anchor.viewport.scrollTop += delta;
   }
@@ -64,7 +64,10 @@ export function compensateScrollForConstructionSlotGrowth(
   return next;
 }
 
-export function watchConstructionSlotScrollCompensation(slot: HTMLElement): () => void {
+export function watchConstructionSlotScrollCompensation(
+  slot: HTMLElement,
+  shouldCompensate: () => boolean,
+): () => void {
   const viewport = findBuildingQueueScrollViewport(slot);
   if (!viewport) return () => undefined;
 
@@ -77,7 +80,11 @@ export function watchConstructionSlotScrollCompensation(slot: HTMLElement): () =
       height = next;
       return;
     }
-    height = compensateScrollForConstructionSlotGrowth(slot, height);
+    // A queued building's anchor already compensates for the same layout change.
+    // Applying both offsets moves the viewport twice, then reverses it next tick.
+    height = shouldCompensate()
+      ? compensateScrollForConstructionSlotGrowth(slot, height)
+      : next;
   });
   observer.observe(slot);
   return () => observer.disconnect();

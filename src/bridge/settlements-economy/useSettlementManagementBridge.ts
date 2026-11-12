@@ -21,7 +21,7 @@ function dispatchBridgeResponse(action: string, detail: unknown): void {
 }
 
 export async function refreshSettlementBridge(settlementId: string): Promise<void> {
-  const fresh = await bridgeCall('game.get_settlement_data', { settlementId });
+  const fresh = await bridgeCall('game.get_settlement_data', { settlementId, subscriptionId: '', subscribe: false });
   dispatchBridgeResponse('game.get_settlement_data', fresh);
 }
 

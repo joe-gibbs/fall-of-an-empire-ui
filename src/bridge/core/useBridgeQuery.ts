@@ -1,14 +1,14 @@
 import { startTransition, use, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
+import { onBridgeEvent } from '../../bridge-types.generated.ts';
 import type { BridgeActions } from '../../bridge-types.generated.ts';
-import { getCachedBridgeEvent, getCachedBridgeEventRevision, nextBridgeCacheRevision } from './bridgeEventCache';
-import { acknowledgeBridgeFailure } from './runtimeEngine';
+import { currentBridgeEventRevision, getCachedBridgeEvent, getCachedBridgeEventRevision } from './bridgeEventCache';
+import { acknowledgeBridgeFailure, callRuntimeBridgeRevisioned, type RevisionedBridgeResult } from './runtimeEngine';
 
 type BridgeActionName = keyof BridgeActions;
 type RequestOf<A extends BridgeActionName> = BridgeActions[A]['request'];
 type ResponseOf<A extends BridgeActionName> = BridgeActions[A]['response'];
 
-const inFlightQueries = new Map<string, Promise<unknown>>();
+const inFlightQueries = new Map<string, Promise<RevisionedBridgeResult>>();
 // A suspended render has not mounted yet, so its request must survive retries.
 interface RenderingBridgeQuery {
   promise: Promise<unknown>;
@@ -28,11 +28,18 @@ interface CompletedBridgeQuery {
 }
 
 const completedQueries = new Map<string, CompletedBridgeQuery>();
+const fullCacheClearListeners = new Set<() => void>();
+
+/** Register a module-level cache that must be dropped whenever every bridge query is cleared. */
+export function onBridgeQueryCacheCleared(listener: () => void): void {
+  fullCacheClearListeners.add(listener);
+}
 
 export function clearBridgeQueryCache(action?: BridgeActionName): void {
   if (!action) {
     completedQueries.clear();
     renderingQueries.clear();
+    for (const listener of fullCacheClearListeners) listener();
     return;
   }
 
@@ -65,7 +72,11 @@ function readCompletedQuery(requestKey: string): CompletedBridgeQuery | undefine
   return completed;
 }
 
-function writeCompletedQuery(requestKey: string, value: unknown, ttlMs: number | null, revision = nextBridgeCacheRevision()): void {
+// Revisions order every value by when it left the game: a push gets its revision on arrival,
+// a request gets its revision when it is sent. An older value never replaces a newer one.
+function writeCompletedQuery(requestKey: string, value: unknown, ttlMs: number | null, revision: number): void {
+  const existing = completedQueries.get(requestKey);
+  if (existing && existing.revision > revision) return;
   completedQueries.set(requestKey, {
     value,
     storedAtMs: nowMs(),
@@ -150,8 +161,8 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
         revision: completed?.revision ?? 0,
       };
       if (!completed) {
-        record.promise = requestBridge(action, payload, requestKey).then(raw => {
-          record.revision = nextBridgeCacheRevision();
+        record.promise = requestBridge(action, payload, requestKey, false).then(({ value: raw, sentRevision }) => {
+          record.revision = sentRevision;
           if (shouldCacheResponse && renderingQueries.get(requestKey) === record) {
             writeCompletedQuery(requestKey, raw, completedTtlMs, record.revision);
           }
@@ -180,27 +191,40 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
     let cancelled = false;
     renderingQueries.delete(requestKey);
 
+    // Pushes seen while a request is in flight are replayed over its response when it
+    // lands. A partial push that had nothing to merge into is then not lost, and a full
+    // push that is newer than the request still wins.
+    interface LoggedPush { revision: number; raw: ResponseOf<A> }
+    let pushLog: LoggedPush[] = [];
+    let outstandingRequests = 0;
+    let latestResponseRevision = 0;
+
+    const applyPush = (raw: ResponseOf<A>, revision: number) => {
+      const mapPush = mapRef.current;
+      const merge = mergePushRef.current;
+      commitData((current) => {
+        const ownCurrent = current?.requestKey === requestKey ? current : null;
+        if (ownCurrent && ownCurrent.revision > revision) return current;
+        const currentValue = ownCurrent?.value ?? null;
+        const value = merge ? merge(currentValue, raw) : mapPush(raw);
+        // A partial push with nothing to merge into produces no value; the pending
+        // response picks it up from the push log instead.
+        if (merge && value === null && currentValue === null) return current;
+        return { requestKey, revision, value };
+      });
+    };
+
     // Subscribe to push events up-front so hooks that mount before the first
     // response still receive later game-side updates.
     const unsub = onBridgeEvent(action, ((raw: ResponseOf<A>) => {
       if (cancelled) return;
       if (matchRef.current && !matchRef.current(raw)) return;
+      const revision = currentBridgeEventRevision();
       if (shouldCacheResponse) {
-        writeCompletedQuery(requestKey, raw, completedTtlMs);
+        writeCompletedQuery(requestKey, raw, completedTtlMs, revision);
       }
-      const revision = nextBridgeCacheRevision();
-      const mapPush = mapRef.current;
-      const merge = mergePushRef.current;
-      commitData((current) => {
-        const currentValue = current?.requestKey === requestKey ? current.value : null;
-        return {
-          requestKey,
-          revision,
-          value: merge
-            ? merge(currentValue, raw)
-            : mapPush(raw),
-        };
-      });
+      if (outstandingRequests > 0) pushLog.push({ revision, raw });
+      applyPush(raw, revision);
     }) as never);
 
     const completed = shouldCacheResponse ? readCompletedQuery(requestKey) : undefined;
@@ -219,42 +243,64 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
       && (!matchRef.current || matchRef.current(cached as ResponseOf<A>))) {
       const cachedResponse = cached as ResponseOf<A>;
       const revision = getCachedBridgeEventRevision(action);
-      const mapCached = mapRef.current;
-      const mergeCached = mergePushRef.current;
-      commitData(current => ({
-        requestKey,
-        revision,
-        value: mergeCached
-          ? mergeCached(current?.requestKey === requestKey ? current.value : null, cachedResponse)
-          : mapCached(cachedResponse),
-      }));
+      // A shared in-flight request may have been sent before this push arrived.
+      pushLog.push({ revision, raw: cachedResponse });
+      applyPush(cachedResponse, revision);
     }
 
-    const requestFresh = () => {
-      requestBridge(action, payload, requestKey)
-        .then((raw) => {
+    const applyResponse = (raw: ResponseOf<A>, sentRevision: number) => {
+      if (sentRevision < latestResponseRevision) return;
+      latestResponseRevision = sentRevision;
+      const mapResponse = mapRef.current;
+      const merge = mergePushRef.current;
+      const laterPushes = pushLog
+        .filter(entry => entry.revision > sentRevision)
+        .sort((a, b) => a.revision - b.revision);
+      let value = mapResponse(raw);
+      let revision = sentRevision;
+      for (const entry of laterPushes) {
+        value = merge ? merge(value, entry.raw) : mapResponse(entry.raw);
+        revision = entry.revision;
+      }
+      commitData(current => (current?.requestKey === requestKey && current.revision > revision
+        ? current
+        : { requestKey, value, revision }));
+    };
+
+    const finishRequest = () => {
+      outstandingRequests -= 1;
+      if (outstandingRequests === 0) pushLog = [];
+    };
+
+    // A mutation refresh must not share a request sent before the mutation finished.
+    const requestFresh = (afterMutation: boolean) => {
+      outstandingRequests += 1;
+      requestBridge(action, payload, requestKey, afterMutation)
+        .then(({ value: raw, sentRevision }) => {
           if (cancelled) return;
           if (shouldCacheResponse) {
-            writeCompletedQuery(requestKey, raw, completedTtlMs);
+            writeCompletedQuery(requestKey, raw, completedTtlMs, sentRevision);
           }
-          commitData({ requestKey, value: mapRef.current(raw as ResponseOf<A>), revision: nextBridgeCacheRevision() });
+          applyResponse(raw as ResponseOf<A>, sentRevision);
+          finishRequest();
         })
         .catch((error) => {
           if (cancelled) return;
+          finishRequest();
           acknowledgeBridgeFailure(error);
         });
     };
 
     if (fetch && completed === undefined && !(suspend && resolvedData?.requestKey === requestKey)) {
-      requestFresh();
+      requestFresh(false);
     }
 
     const mutationUnsubscribers = (JSON.parse(refreshOnKey) as BridgeActionName[])
-      .map(event => onBridgeEvent(event, requestFresh));
+      .map(event => onBridgeEvent(event, () => requestFresh(true)));
 
     let refreshTimer: number | undefined;
     if (fetch && refreshMs > 0) {
-      refreshTimer = window.setInterval(requestFresh, refreshMs);
+      refreshTimer = window.setInterval(() => requestFresh(false), refreshMs);
     }
 
     return () => {
@@ -274,11 +320,10 @@ export function useBridgeQueryState<A extends BridgeActionName, T>(
   };
 }
 
-function requestBridge(action: BridgeActionName, payload: unknown, requestKey: string): Promise<unknown> {
-  let request = inFlightQueries.get(requestKey);
+function requestBridge(action: BridgeActionName, payload: unknown, requestKey: string, forceNew: boolean): Promise<RevisionedBridgeResult> {
+  let request = forceNew ? undefined : inFlightQueries.get(requestKey);
   if (!request) {
-    const call = bridgeCall as unknown as (a: BridgeActionName, p?: unknown) => Promise<unknown>;
-    request = call(action, payload).finally(() => {
+    request = callRuntimeBridgeRevisioned({ action, payload }).finally(() => {
       if (inFlightQueries.get(requestKey) === request) inFlightQueries.delete(requestKey);
     });
     inFlightQueries.set(requestKey, request);

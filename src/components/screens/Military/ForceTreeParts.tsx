@@ -178,7 +178,8 @@ export function NodeCard({
     kind: 'military',
     targetId: force.id,
     militaryType: force.isNavy ? 'fleet' : 'army',
-    actions: force.isPlayerControlled
+    // The personal guard keeps its own rank, so it has no command actions (matches MilitarySidebar).
+    actions: force.isPlayerControlled && force.hasCommand && !force.isPersonalGuard
       ? [
         ...(force.parentId ? [{
           label: webUIText('QuickInteraction.DetachCommand'),
@@ -200,7 +201,7 @@ export function NodeCard({
     <>
       <Tooltip content={buildCardTooltip(force, allForces, showDetailedStats)} position="right" delay={250} variant="sidebar">
         <div
-          data-tutorial-target={force.isPlayerControlled && force.rank === 'Legatus' ? 'PromotableMilitaryCommand' : undefined}
+          data-tutorial-target={force.isPlayerControlled && force.hasCommand && !force.isPersonalGuard && force.rank === 'Legatus' ? 'PromotableMilitaryCommand' : undefined}
           className={[
             'chart-node',
             `chart-node--${force.rank.toLowerCase()}`,

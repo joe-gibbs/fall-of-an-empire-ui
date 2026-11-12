@@ -739,6 +739,6 @@ registerScreen({
   id: 'military',
   render: ({ screenId, onClose }) => <MilitaryScreen key={screenId ?? 'default'} screenId={screenId} onClose={onClose} />,
   topbarId: 'military',
-  advisorTopic: 'militaryScreen',
+  advisorTopic: faction => faction?.usesWarbands ? 'clansScreen' : 'militaryScreen',
   bridgeNames: ['militaryscreen', 'militaryoverview', 'militaryoverviewscreen', 'formations', 'formationtemplates', 'formation_templates', 'personalguard', 'personalguard', 'guard'],
 });

@@ -90,31 +90,52 @@ function mapResponse(data: GetBuildQueueResponse): BuildQueueState {
   };
 }
 
+// Every mounted consumer shares one game-side subscription. The game is told to start
+// pushing when the first consumer becomes active and to stop when the last one goes.
+type BuildQueueListener = (state: BuildQueueState) => void;
+
+const buildQueueListeners = new Set<BuildQueueListener>();
+let stopBuildQueueEvents: (() => void) | null = null;
+
+function applyBuildQueueResponse(data: GetBuildQueueResponse): void {
+  if (!stopBuildQueueEvents) return;
+  buildQueueCache = mapResponse(data);
+  const state = buildQueueCache;
+  buildQueueListeners.forEach((listener) => listener(state));
+}
+
+function addBuildQueueListener(listener: BuildQueueListener): () => void {
+  buildQueueListeners.add(listener);
+
+  if (!stopBuildQueueEvents) {
+    stopBuildQueueEvents = onBridgeEvent('game.get_build_queue', applyBuildQueueResponse);
+    bridgeCall('game.get_build_queue', { subscribe: true })
+      .then(applyBuildQueueResponse)
+      .catch(acknowledgeBridgeFailure);
+  } else if (buildQueueCache) {
+    // A later consumer joins an existing subscription and starts from the latest push.
+    const state = buildQueueCache;
+    queueMicrotask(() => {
+      if (buildQueueListeners.has(listener)) listener(state);
+    });
+  }
+
+  return () => {
+    buildQueueListeners.delete(listener);
+    if (buildQueueListeners.size > 0 || !stopBuildQueueEvents) return;
+
+    stopBuildQueueEvents();
+    stopBuildQueueEvents = null;
+    bridgeCall('game.get_build_queue', { subscribe: false }).catch(() => undefined);
+  };
+}
+
 export function useBuildQueueBridge(active = true): BuildQueueState | null {
   const [live, setLive] = useState<BuildQueueState | null>(() => buildQueueCache);
 
   useEffect(() => {
     if (!active) return undefined;
-
-    let cancelled = false;
-
-    const applyResponse = (data: GetBuildQueueResponse) => {
-      if (cancelled) return;
-      buildQueueCache = mapResponse(data);
-      setLive(buildQueueCache);
-    };
-
-    const unsubscribe = onBridgeEvent('game.get_build_queue', applyResponse);
-
-    bridgeCall('game.get_build_queue', { subscribe: true })
-      .then(applyResponse)
-      .catch(acknowledgeBridgeFailure);
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-      bridgeCall('game.get_build_queue', { subscribe: false }).catch(() => undefined);
-    };
+    return addBuildQueueListener(setLive);
   }, [active]);
 
   return live;

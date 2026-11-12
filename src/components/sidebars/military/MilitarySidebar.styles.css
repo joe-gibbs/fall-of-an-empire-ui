@@ -5032,41 +5032,21 @@
   padding: 0.28rem 0.4rem;
 }
 
-.mil-command-top-spacer {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-width: 0;
-}
-
-.mil-command-actions--compact {
-  flex-grow: 0;
-  flex-shrink: 0;
-  margin: 0 0 0 0.28rem;
-}
-
-.mil-command-actions--compact > .tooltip-wrapper {
-  flex: 0 0 auto;
-  width: 2.2rem;
-  height: 2.2rem;
-}
-
-.mil-command-actions--compact .mil-action-chip {
+.mil-command-actions .mil-action-chip {
   width: 100%;
-  height: 100%;
-  min-height: 0;
   justify-content: center;
-  padding: 0;
 }
 
-.mil-command-actions--compact .mil-action-chip-label {
-  display: none;
+.mil-command-actions .mil-action-chip-icon {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
-.mil-command-actions--compact .mil-action-chip-icon {
-  width: 1.12rem;
-  height: 1.12rem;
-  margin-right: 0;
+.mil-command-actions .mil-action-chip-label {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mil-formation-panel--embedded {
@@ -5316,6 +5296,16 @@
   margin-top: 0.04rem;
 }
 
+/* What the force took from its supply settlement, or why it cannot take more. */
+.mil-resource-note {
+  display: block;
+  margin-top: 0.12rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.2;
+  white-space: normal;
+}
+
 /* ===== Military header ===== */
 
 .military-sidebar .mil-header {
@@ -5342,9 +5332,20 @@
   min-width: 0;
 }
 
-.mil-lead > .tooltip-wrapper:first-child {
+.mil-lead-portrait-slot {
+  position: relative;
   width: 5.5rem;
+  height: 5.5rem;
   flex-shrink: 0;
+}
+
+.mil-lead-commander-assign-wrap {
+  position: absolute;
+  left: -0.15rem;
+  bottom: -0.15rem;
+  z-index: 1;
+  width: 2rem;
+  height: 2rem;
 }
 
 .mil-lead > .tooltip-wrapper:last-child {
@@ -5461,14 +5462,6 @@
   text-transform: uppercase;
 }
 
-.mil-lead-commander > .tooltip-wrapper {
-  width: 1.7rem;
-  height: 1.7rem;
-  flex-grow: 0;
-  flex-shrink: 0;
-  margin-left: 0.28rem;
-}
-
 .mil-lead-commander-assign {
   width: 100%;
   height: 100%;
@@ -5486,8 +5479,8 @@
 }
 
 .mil-lead-commander-assign img {
-  width: 0.95rem;
-  height: 0.95rem;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .mil-lead-stats {

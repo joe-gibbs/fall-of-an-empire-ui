@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import type { GetSettlementDataResponse, GetSettlementSiegeDataResponse } from '../../bridge-types.generated.ts';
 import { bridgeCall, onBridgeEvent } from '../../bridge-types.generated.ts';
 import { useBridgeQuery } from '../core/useBridgeQuery';
+import { acknowledgeBridgeFailure } from '../core/runtimeEngine';
 import type { ArmyUnitType, Character, Settlement } from '../../data/types';
 import { WebkilnAssetPath } from '../../utils/assets';
 
@@ -116,7 +117,7 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
     culturePercent: data.culturePercent,
     religion: data.religion,
     religionPercent: data.religionPercent,
-    unrest: data.unrest * 100,
+    unrest: data.unrest,
     unrestLabel: data.unrestLabel,
     buildings: data.buildings.map((b, i) => ({ id: `bld-${i}`, name: b.name, level: b.level })),
     hasPort: data.hasPort,
@@ -169,6 +170,8 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       consumption: c.consumption,
       hasShortage: c.hasShortage,
       isCapitalStockpile: c.isCapitalStockpile,
+      supplyFood: c.id === 'food' ? c.supplyFood : undefined,
+      civilianReserve: c.id === 'food' ? c.civilianReserve : undefined,
     })),
     resources: data.resources.map(r => ({
       id: r.id,
@@ -187,6 +190,8 @@ function mapSettlement(data: GetSettlementDataResponse): Settlement {
       status: r.status,
       depleting: r.depleting,
       monthsUntilDepletion: r.monthsUntilDepletion,
+      exportsProduction: r.exportsProduction,
+      keepUpTo: r.keepUpTo,
       icon: r.id ? WebkilnAssetPath(`/assets/resources/${r.id}.png`) : undefined,
       isNatural: r.isNatural,
       siegeHalted: r.siegeHalted,
@@ -486,7 +491,7 @@ export function dispatchSettlementData(data: GetSettlementDataResponse): void {
 }
 
 export async function refreshSettlementData(settlementId: string): Promise<void> {
-  const fresh = await bridgeCall('game.get_settlement_data', { settlementId });
+  const fresh = await bridgeCall('game.get_settlement_data', { settlementId, subscriptionId: '', subscribe: false });
   dispatchSettlementData(fresh);
 }
 
@@ -526,7 +531,7 @@ export async function performSiegeCommandBridge(
 export function useSettlementBridge(settlementId: string | null): Settlement | null {
   const settlement = useBridgeQuery({
     action: 'game.get_settlement_data',
-    payload: settlementId ? { settlementId } : null,
+    payload: settlementId ? { settlementId, subscriptionId: '', subscribe: false } : null,
     map: mapSettlement,
     matchPush: (data) => data.id === settlementId,
     // Keep the current settlement visible while the next one loads so sidebar
@@ -534,6 +539,20 @@ export function useSettlementBridge(settlementId: string | null): Settlement | n
     keepPreviousData: true,
   });
   const [siegePatch, setSiegePatch] = useState<GetSettlementSiegeDataResponse | null>(null);
+  const subscriptionId = useId();
+
+  // The game pushes settlement updates only while a view holds a subscription.
+  useEffect(() => {
+    if (!settlementId) return undefined;
+
+    void bridgeCall('game.get_settlement_data', { settlementId, subscriptionId, subscribe: true })
+      .catch(acknowledgeBridgeFailure);
+
+    return () => {
+      void bridgeCall('game.get_settlement_data', { settlementId, subscriptionId, subscribe: false })
+        .catch(acknowledgeBridgeFailure);
+    };
+  }, [settlementId, subscriptionId]);
 
   useEffect(() => {
     if (!settlementId) return undefined;

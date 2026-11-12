@@ -125,6 +125,20 @@ function visibleElementBounds(element: Element): SpotlightRect {
   return { left, top, right, bottom, width: right - left, height: bottom - top };
 }
 
+// Scrolls only the target's own scrolling list. Element.scrollIntoView also scrolls clipped
+// layout ancestors, which shifts the whole HUD sideways while a sidebar is still sliding in.
+function revealInScrollContainer(element: HTMLElement): void {
+  for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+    const style = window.getComputedStyle(parent);
+    if (!/(auto|scroll)/.test(style.overflowY) || parent.scrollHeight <= parent.clientHeight) continue;
+    const parentRect = parent.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    const offset = (elementRect.top + elementRect.height / 2) - (parentRect.top + parentRect.height / 2);
+    parent.scrollTop += offset;
+    return;
+  }
+}
+
 function isVisibleElement(element: Element): boolean {
   const rect = visibleElementBounds(element);
   return rect.width > 1 && rect.height > 1;
@@ -199,6 +213,17 @@ function findSpotlightTarget(spotlight: TutorialSpotlightResponse): HTMLElement 
     requestTutorialHudReveal(tokens);
   }
   return found;
+}
+
+// Steps that wait for the player to click one widget block the rest of the UI while that widget
+// is on screen. Map orders, building and unit choices and occupation commands rely on controls
+// outside the highlight, such as the map, resource purchases or unit counts, so they stay open.
+function blocksOtherInput(spotlight: TutorialSpotlightResponse): boolean {
+  return !spotlight.canGoForward
+    && !spotlight.isBuildingTarget
+    && !spotlight.isUnitTarget
+    && !spotlight.target.startsWith('OrderTarget:')
+    && spotlight.target !== 'SiegeOccupationCommands';
 }
 
 function elementUnitCount(element: HTMLElement | null): number {
@@ -342,7 +367,9 @@ export default function TutorialSpotlightOverlay({
   const [cardSize, setCardSize] = useState<CardSize>(DEFAULT_CARD_SIZE);
   const targetElementRef = useRef<HTMLElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const satisfiedResolveRef = useRef<string | null>(null);
+  // The step this overlay has already resolved. Every completion path goes
+  // through resolveStep, so one step is never resolved twice.
+  const resolvedEventIdRef = useRef<string | null>(null);
   const eventId = spotlight.eventId;
   const pageTotal = Math.max(0, spotlight.totalPages);
   const pageText = pageTotal > 1 ? `${spotlight.currentPage + 1}/${pageTotal}` : '';
@@ -355,7 +382,16 @@ export default function TutorialSpotlightOverlay({
   useEffect(() => {
     spotlightRef.current = spotlight;
     onResolveRef.current = onResolve;
+    // A different step is showing, so a later return to the resolved one can resolve it again.
+    if (resolvedEventIdRef.current !== spotlight.eventId) resolvedEventIdRef.current = null;
   }, [onResolve, spotlight]);
+
+  const resolveStepRef = useRef((stepEventId: string) => {
+    if (spotlightRef.current.eventId !== stepEventId) return;
+    if (resolvedEventIdRef.current === stepEventId) return;
+    resolvedEventIdRef.current = stepEventId;
+    onResolveRef.current(stepEventId);
+  });
 
   useEffect(() => {
     if (!spotlight.isVisible) {
@@ -380,18 +416,16 @@ export default function TutorialSpotlightOverlay({
         && !current.target.startsWith('OrderTarget:')
         && current.target !== 'SiegeOccupationCommands'
         && element?.getAttribute('data-tutorial-satisfied') === 'true'
-        && satisfiedResolveRef.current !== current.eventId
       ) {
-        satisfiedResolveRef.current = current.eventId;
-        onResolveRef.current(current.eventId);
+        resolveStepRef.current(current.eventId);
       }
 
       if (!revealedTarget && !current.isBuildingTarget && !current.isUnitTarget && element) {
-        element.scrollIntoView({ block: 'center', inline: 'nearest' });
+        revealInScrollContainer(element);
         revealedTarget = true;
       }
       if (!revealedTarget && current.isUnitTarget && element) {
-        element.scrollIntoView({ block: 'center', inline: 'nearest' });
+        revealInScrollContainer(element);
         revealedTarget = true;
       }
       targetElementRef.current = element;
@@ -427,15 +461,36 @@ export default function TutorialSpotlightOverlay({
     if (!spotlight.isVisible || !eventId || spotlight.canGoForward) return undefined;
 
     if (spotlight.target.toLowerCase() === 'formationnameinput') {
+      // The target is the name row. Typing a name, confirming the suggested name with the tick,
+      // or pressing Enter all complete the step.
+      const nameInput = (): HTMLInputElement | null => {
+        const row = targetElementRef.current;
+        const input = row?.querySelector('input');
+        return input instanceof HTMLInputElement && input.value.trim().length > 0 ? input : null;
+      };
       const inputHandler = (event: Event) => {
-        const target = targetElementRef.current;
-        if (!(target instanceof HTMLInputElement) || event.target !== target) return;
-        if (target.value.trim().length === 0) return;
-        onResolveRef.current(eventId);
+        const input = nameInput();
+        if (input && event.target === input) resolveStepRef.current(eventId);
+      };
+      const confirmHandler = (event: MouseEvent) => {
+        const row = targetElementRef.current;
+        if (!row || !(event.target instanceof Element)) return;
+        const confirm = event.target.closest('[data-tutorial-confirm-name]');
+        if (confirm && row.contains(confirm) && nameInput()) resolveStepRef.current(eventId);
+      };
+      const keyHandler = (event: KeyboardEvent) => {
+        const input = nameInput();
+        if (event.key === 'Enter' && input && event.target === input) resolveStepRef.current(eventId);
       };
 
       document.addEventListener('input', inputHandler, true);
-      return () => document.removeEventListener('input', inputHandler, true);
+      document.addEventListener('click', confirmHandler, true);
+      document.addEventListener('keydown', keyHandler, true);
+      return () => {
+        document.removeEventListener('input', inputHandler, true);
+        document.removeEventListener('click', confirmHandler, true);
+        document.removeEventListener('keydown', keyHandler, true);
+      };
     }
 
     const handler = (event: MouseEvent) => {
@@ -462,7 +517,7 @@ export default function TutorialSpotlightOverlay({
           const latest = spotlightRef.current;
           const latestTarget = findSpotlightTarget(latest) ?? unitHost;
           if (elementUnitCount(latestTarget) < latest.requiredUnitCount) return;
-          onResolveRef.current(eventId);
+          resolveStepRef.current(eventId);
         }, 0);
         return;
       }
@@ -471,7 +526,7 @@ export default function TutorialSpotlightOverlay({
       if (!target || !target.contains(event.target)) return;
 
       window.setTimeout(() => {
-        onResolveRef.current(eventId);
+        resolveStepRef.current(eventId);
       }, 0);
     };
 
@@ -488,6 +543,8 @@ export default function TutorialSpotlightOverlay({
   ]);
 
   const panels = useMemo<PanelSide[]>(() => (targetRect ? ['top', 'bottom', 'left', 'right'] : ['full']), [targetRect]);
+  // Only block once the target is on screen, so the player can always reach it.
+  const blockInput = Boolean(targetRect) && blocksOtherInput(spotlight);
 
   if (!spotlight.isVisible) return null;
 
@@ -496,7 +553,7 @@ export default function TutorialSpotlightOverlay({
     event.stopPropagation();
     if (direction < 0 && !spotlight.canGoBack) return;
     if (direction > 0 && !spotlight.canGoForward) {
-      onResolve(eventId);
+      resolveStepRef.current(eventId);
       return;
     }
     onNavigate(direction);
@@ -507,7 +564,7 @@ export default function TutorialSpotlightOverlay({
       {panels.map(side => (
         <div
           key={side}
-          className={`tutorial-spotlight-panel tutorial-spotlight-panel--${side}`}
+          className={`tutorial-spotlight-panel tutorial-spotlight-panel--${side}${blockInput ? ' tutorial-spotlight-panel--blocking' : ''}`}
           style={panelStyle(side, targetRect)}
         />
       ))}

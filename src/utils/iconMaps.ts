@@ -99,6 +99,7 @@ export const TREATY_ICONS: Record<string, string> = {
   TradeAgreement: '/assets/icons/Treaties/I_TradeAgreement.png',
   TradeOneOff: '/assets/icons/Treaties/I_TradeOneOff.png',
   MerchantRights: '/assets/icons/Treaties/I_TradeAgreement.png',
+  ProvincialTrade: '/assets/icons/Treaties/I_TradeAgreement.png',
   MilitaryAlliance: '/assets/icons/Treaties/I_MilitaryAlliance.png',
   DefensiveAlliance: '/assets/icons/Treaties/I_DefensiveAlliance.png',
   Subject: '/assets/icons/Treaties/I_Vassalage.png',

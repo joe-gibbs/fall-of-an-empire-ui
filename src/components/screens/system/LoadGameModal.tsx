@@ -17,6 +17,14 @@ const FADE_MS = 160;
 const SLIDE_MS = 220;
 const LOAD_DEPARTURE_MS = 220;
 
+type RemovalTarget =
+  | { kind: 'save'; slotName: string }
+  | { kind: 'group'; playthroughId: string };
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 function cleanName(value: string | undefined | null): string | undefined {
   if (!value) return undefined;
   if (value === 'None') return undefined;
@@ -220,25 +228,30 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
   const [deleteTarget, setDeleteTarget] = useState<SaveEntry | null>(null);
   const [deleteGroupTarget, setDeleteGroupTarget] = useState<SaveGroup | null>(null);
   const [renameGroupTarget, setRenameGroupTarget] = useState<SaveGroup | null>(null);
-  const [loadTarget, setLoadTarget] = useState<SaveEntry | null>(null);
-  const [compatibilityWarning, setCompatibilityWarning] = useState<{ slotName: string; warnings: string[] } | null>(null);
-  const [removingSlot, setRemovingSlot] = useState<string | null>(null);
-  const [removingGroupId, setRemovingGroupId] = useState<string | null>(null);
-  const [loadingSlot, setLoadingSlot] = useState<string | null>(null);
-  const [departingForLoad, setDepartingForLoad] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [load, setLoad] = useState<
+    | { phase: 'idle' }
+    | { phase: 'confirming'; save: SaveEntry }
+    | { phase: 'departing'; slot: string }
+    | { phase: 'compatibility'; slotName: string; warnings: string[] }
+    | { phase: 'failed'; message: string }
+  >({ phase: 'idle' });
+  const loadGeneration = useRef(0);
+  const departingForLoad = load.phase === 'departing';
+  const compatibilityWarning = load.phase === 'compatibility' ? load : null;
+  const loadTarget = load.phase === 'confirming' ? load.save : null;
+  const loadError = load.phase === 'failed' ? load.message : null;
+  // One removal runs at a time: the row fades, then the bridge deletes it.
+  const [removal, setRemoval] = useState<RemovalTarget | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [userExpandedIds, setUserExpandedIds] = useState<Set<string> | null>(null);
-  const removeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const removeFadeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const removeSlideTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const loadTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const handleClosed = useCallback(() => {
     clearTimeout(loadTimerRef.current);
-    setLoadTarget(null);
-    setCompatibilityWarning(null);
-    setLoadingSlot(null);
-    setDepartingForLoad(false);
-    setLoadError(null);
+    ++loadGeneration.current;
+    setLoad({ phase: 'idle' });
     setDeleteError(null);
     setDeleteGroupTarget(null);
     setRenameGroupTarget(null);
@@ -304,37 +317,36 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
   }, []);
 
   useEffect(() => () => {
-    clearTimeout(removeTimerRef.current);
+    ++loadGeneration.current;
+    clearTimeout(removeFadeTimerRef.current);
+    clearTimeout(removeSlideTimerRef.current);
     clearTimeout(loadTimerRef.current);
   }, []);
 
   const beginLoad = useCallback((slotName: string, acknowledgeWarnings = false) => {
-    setLoadError(null);
-    setLoadingSlot(slotName);
-    setDepartingForLoad(true);
+    const generation = ++loadGeneration.current;
+    setLoad({ phase: 'departing', slot: slotName });
     clearTimeout(loadTimerRef.current);
     loadTimerRef.current = setTimeout(() => {
       void loadSave(slotName, acknowledgeWarnings)
         .then((result) => {
+          if (generation !== loadGeneration.current) return;
           if (result.started) {
             animatedClose();
           } else {
-            setDepartingForLoad(false);
-            setLoadingSlot(null);
-            setCompatibilityWarning({ slotName, warnings: result.warnings });
+            setLoad({ phase: 'compatibility', slotName, warnings: result.warnings });
           }
         })
         .catch((error) => {
-          setDepartingForLoad(false);
-          setLoadingSlot(null);
-          setLoadError(error instanceof Error ? error.message : webUIText('MainMenu.LoadSaveFailed'));
+          if (generation !== loadGeneration.current) return;
+          setLoad({ phase: 'failed', message: error instanceof Error ? error.message : webUIText('MainMenu.LoadSaveFailed') });
         });
     }, LOAD_DEPARTURE_MS);
   }, [loadSave, animatedClose]);
 
   const handleLoad = useCallback((save: SaveEntry) => {
     if (warnBeforeLoad) {
-      setLoadTarget(save);
+      setLoad({ phase: 'confirming', save });
       return;
     }
     beginLoad(save.slotName);
@@ -355,19 +367,19 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
   }, [groups]);
 
   const confirmDelete = () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || removal) return;
     const targetSlot = deleteTarget.slotName;
     setDeleteError(null);
-    setRemovingSlot(targetSlot);
+    setRemoval({ kind: 'save', slotName: targetSlot });
 
-    removeTimerRef.current = setTimeout(() => {
+    removeFadeTimerRef.current = setTimeout(() => {
       const positions = new Map<string, number>();
       rowRefs.current.forEach((el, slot) => {
         positions.set(slot, el.getBoundingClientRect().top);
       });
 
       void removeSave(targetSlot).then((result) => {
-        setRemovingSlot(null);
+        setRemoval(null);
         if (!result.deleted) {
           setDeleteError(result.failureReason);
           return;
@@ -391,7 +403,8 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
             el.style.transitionTimingFunction = 'var(--ease-snap)';
             el.style.transform = '';
           });
-          setTimeout(() => {
+          clearTimeout(removeSlideTimerRef.current);
+          removeSlideTimerRef.current = setTimeout(() => {
             rowRefs.current.forEach((el) => {
               el.style.transitionProperty = '';
               el.style.transitionDuration = '';
@@ -400,21 +413,27 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
             });
           }, SLIDE_MS + 20);
         });
+      }).catch((error) => {
+        setRemoval(null);
+        setDeleteError(errorMessage(error));
       });
     }, FADE_MS);
   };
 
   const confirmDeleteGroup = () => {
-    if (!deleteGroupTarget) return;
+    if (!deleteGroupTarget || removal) return;
     const targetId = deleteGroupTarget.playthroughId;
     setDeleteError(null);
-    setRemovingGroupId(targetId);
-    removeTimerRef.current = setTimeout(() => {
+    setRemoval({ kind: 'group', playthroughId: targetId });
+    removeFadeTimerRef.current = setTimeout(() => {
       void removePlaythrough(targetId).then((result) => {
-        setRemovingGroupId(null);
+        setRemoval(null);
         if (!result.deleted) {
           setDeleteError(result.failureReason);
         }
+      }).catch((error) => {
+        setRemoval(null);
+        setDeleteError(errorMessage(error));
       });
     }, FADE_MS);
   };
@@ -427,11 +446,14 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
       if (!result.renamed) {
         setDeleteError(result.failureReason);
       }
+    }).catch((error) => {
+      setDeleteError(errorMessage(error));
     });
   }, [renameGroupTarget, renamePlaythrough]);
 
   if (!mounted) return null;
 
+  const rowActionsLocked = departingForLoad || removal !== null;
   const overlayCls = closing || departingForLoad
     ? 'load-game-overlay load-game-overlay--closing'
     : 'load-game-overlay';
@@ -484,8 +506,8 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
                 <SaveGroupHeader
                   group={row.group}
                   expanded={expandedIds.has(row.group.playthroughId)}
-                  removing={removingGroupId === row.group.playthroughId}
-                  loading={loadingSlot !== null}
+                  removing={removal?.kind === 'group' && removal.playthroughId === row.group.playthroughId}
+                  loading={rowActionsLocked}
                   onToggle={() => toggleGroup(row.group.playthroughId)}
                   onRename={() => setRenameGroupTarget(row.group)}
                   onDelete={() => setDeleteGroupTarget(row.group)}
@@ -494,8 +516,11 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
                 <SaveEntryRow
                   save={row.save}
                   index={i}
-                  removing={removingSlot === row.save.slotName || removingGroupId === row.group.playthroughId}
-                  loading={loadingSlot !== null}
+                  removing={
+                    (removal?.kind === 'save' && removal.slotName === row.save.slotName)
+                    || (removal?.kind === 'group' && removal.playthroughId === row.group.playthroughId)
+                  }
+                  loading={rowActionsLocked}
                   registerRef={registerRow(row.save.slotName)}
                   onLoad={() => handleLoad(row.save)}
                   onDelete={() => setDeleteTarget(row.save)}
@@ -561,7 +586,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
         confirmText={webUIText('LoadGame.ConfirmLoad')}
         cancelText={webUIText('Common.Cancel')}
         onConfirm={confirmLoad}
-        onClosed={() => setLoadTarget(null)}
+        onClosed={() => setLoad(current => current.phase === 'confirming' ? { phase: 'idle' } : current)}
       />
       <ConfirmDialog
         visible={compatibilityWarning !== null}
@@ -571,7 +596,7 @@ const LoadGameModal: React.FC<LoadGameModalProps> = ({ visible, onClosed, warnBe
         onConfirm={() => {
           if (compatibilityWarning) beginLoad(compatibilityWarning.slotName, true);
         }}
-        onClosed={() => setCompatibilityWarning(null)}
+        onClosed={() => setLoad(current => current.phase === 'compatibility' ? { phase: 'idle' } : current)}
       />
     </>
   );

@@ -61,8 +61,9 @@ test('victory screen frames all targets, focuses requirements and preserves pan 
     const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
     const errors = [];
     page.on('pageerror', error => errors.push(String(error)));
-    await page.goto(server.resolvedUrls.local[0]);
-    await page.getByRole('heading', { name: 'Victory Conditions', exact: true }).waitFor();
+    // A cold Vite transform of the whole UI can take well over the default timeout.
+    await page.goto(server.resolvedUrls.local[0], { waitUntil: 'commit' });
+    await page.getByRole('heading', { name: 'Victory Conditions', exact: true }).waitFor({ timeout: 180000 });
     await page.evaluate(async () => {
       await document.fonts.ready;
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -72,9 +73,49 @@ test('victory screen frames all targets, focuses requirements and preserves pan 
     await page.waitForFunction(() => new DOMMatrix(getComputedStyle(document.querySelector('.zoom-pan-canvas__content')).transform).a !== 1);
     const allTargetsTransform = await transform();
     assert.equal(await page.getByRole('button', { name: 'All targets', exact: true }).count(), 0);
-    const heldScreenWidth = () => page.locator('[data-border-layer="held"]').evaluate(path =>
-      Number(path.getAttribute('stroke-width')) * new DOMMatrix(getComputedStyle(document.querySelector('.zoom-pan-canvas__content')).transform).a);
-    assert.ok(Math.abs(await heldScreenWidth() - 4.5) < 0.01, 'held borders stay legible at the initial fitted scale');
+    // The overlay canvas draws fills and borders; sample it at map positions, offset by screen pixels.
+    const settled = () => page.waitForFunction(() => {
+      const canvas = document.querySelector('.victory-map-overlay');
+      return canvas.width > 1 && canvas.style.transform === '';
+    });
+    const pixel = (x, y, dx = 0) => page.evaluate(([x, y, dx]) => {
+      const image = document.querySelector('.victory-map-image');
+      const canvas = document.querySelector('.victory-map-overlay');
+      const imageRect = image.getBoundingClientRect(), canvasRect = canvas.getBoundingClientRect();
+      const scale = imageRect.width / Number(image.getAttribute('width'));
+      const px = Math.round((imageRect.left - canvasRect.left + x * scale + dx) * canvas.width / canvasRect.width);
+      const py = Math.round((imageRect.top - canvasRect.top + y * scale) * canvas.height / canvasRect.height);
+      return Array.from(canvas.getContext('2d').getImageData(px, py, 1, 1).data);
+    }, [x, y, dx]);
+    const colourMatches = (rgba, hex, alpha) => {
+      const expected = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+      return expected.every((value, i) => Math.abs(rgba[i] - value) <= 10) && Math.abs(rgba[3] - alpha * 255) <= 12;
+    };
+    const expectColour = async (x, y, hex, alpha, message) => {
+      const deadline = Date.now() + 3000;
+      let rgba;
+      do {
+        await settled();
+        rgba = await pixel(x, y);
+        if (colourMatches(rgba, hex, alpha)) return;
+        await page.waitForTimeout(50);
+      } while (Date.now() < deadline);
+      assert.fail(`${message}: got rgba(${rgba.join(',')}), expected ${hex} at ${alpha}`);
+    };
+    const centre = index => [210 + index * 230, 325];
+    // Province 3 is held; its left edge is a held border, drawn 4.5 screen pixels wide at every zoom.
+    const expectHeldBorderWidth = async message => {
+      await settled();
+      // The canvas scales with the map content, so allow for its pixels not lining up with screen pixels.
+      for (const dx of [-1, 1]) {
+        const rgba = await pixel(840, 325, dx);
+        assert.ok(colourMatches(rgba, '#79ad83', 1), `${message}: rgba(${rgba.join(',')}) at ${dx}px`);
+      }
+      for (const dx of [-4, 4]) {
+        assert.ok(!colourMatches(await pixel(840, 325, dx), '#79ad83', 1), `${message}: held border is no wider than 4.5px`);
+      }
+    };
+    await expectHeldBorderWidth('held borders stay legible at the initial fitted scale');
     assert.equal(await page.locator('.victory-tier').count(), 3);
     assert.equal(await page.locator('.victory-requirement-description').count(), 3, 'every territorial objective shows its motivation');
     assert.equal(await page.getByText('0 of 2 settlements controlled', { exact: true }).count(), 0,
@@ -84,31 +125,46 @@ test('victory screen frames all targets, focuses requirements and preserves pan 
     for (const selector of ['.victory-tier-focus > .btn-content', '.victory-requirement-focus > .btn-content', '.victory-place > .btn-content']) {
       assert.equal(await page.locator(selector).first().evaluate(element => getComputedStyle(element).textAlign), 'left');
     }
-    assert.equal(await page.locator('[data-border-layer="goals"]').count(), 3, 'all future tiers have their own outer border');
-    for (const kind of ['regions','lands','domains','held']) {
-      assert.ok(await page.locator('[data-border-layer="'+kind+'"]').getAttribute('d'), kind+' border is rendered');
-    }
-    assert.equal(await page.locator('[data-province-index="3"]').getAttribute('data-controlled'), 'true');
-    for (const province of await page.locator('[data-province-index]').all()) {
-      const area = await province.boundingBox();
+    await expectColour(...centre(0), '#cf895b', 0.55, 'a target shared by several tiers shows its earliest tier');
+    await expectColour(...centre(2), '#edcc69', 0.55, 'each future tier has its own colour');
+    await expectColour(...centre(3), '#79ad83', 0.72, 'held provinces are drawn as held');
+    const provinceAreas = await page.evaluate(() => {
+      const image = document.querySelector('.victory-map-image').getBoundingClientRect();
+      const scale = image.width / 1200;
+      return Array.from({ length: 4 }, (_, i) => ({ x: image.left + (150 + i * 230) * scale, y: image.top + 250 * scale,
+        width: 120 * scale, height: 150 * scale }));
+    });
+    for (const area of provinceAreas) {
       const viewport = await page.locator('.victory-map').boundingBox();
       assert.ok(area.x >= viewport.x && area.x + area.width <= viewport.x + viewport.width + 1, 'all targets and holdings fit horizontally');
       assert.ok(area.y >= viewport.y && area.y + area.height <= viewport.y + viewport.height + 1, 'all targets and holdings fit vertically');
     }
+    await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+    await page.waitForFunction(old => getComputedStyle(document.querySelector('.zoom-pan-canvas__content')).transform !== old, allTargetsTransform);
+    await expectHeldBorderWidth('zoom buttons preserve the visible border width');
+    await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
     await page.evaluate(() => {
-      window.victoryMapElement = document.querySelector('.victory-map > .zoom-pan-canvas__interaction-surface svg');
+      window.victoryMapElement = document.querySelector('.victory-map-overlay');
     });
     await page.getByRole('button', { name: 'Take the heartland', exact: true }).click();
-    assert.equal(await page.evaluate(() => window.victoryMapElement === document.querySelector('.victory-map > .zoom-pan-canvas__interaction-surface svg')), true,
-      'focusing a requirement retains the parsed map geometry');
-    assert.equal(await page.locator('[data-province-index="0"] > path').first().getAttribute('fill'), '#9ebdd8',
-      'selecting silver makes its shared targets readable in silver');
+    assert.equal(await page.evaluate(() => window.victoryMapElement === document.querySelector('.victory-map-overlay')), true,
+      'focusing a requirement keeps the same map canvas');
+    await expectColour(...centre(0), '#9ebdd8', 0.55, 'selecting silver makes its shared targets readable in silver');
     await page.waitForFunction(old => new DOMMatrix(getComputedStyle(document.querySelector('.zoom-pan-canvas__content')).transform).a > new DOMMatrix(old).a, allTargetsTransform);
     const viewport = await page.locator('.victory-map').boundingBox();
     await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
-    await page.waitForFunction(() => Math.abs(Number(document.querySelector('[data-border-layer="held"]').getAttribute('stroke-width'))
-      * new DOMMatrix(getComputedStyle(document.querySelector('.zoom-pan-canvas__content')).transform).a - 4.5) < 0.01);
-    assert.ok(Math.abs(await heldScreenWidth() - 4.5) < 0.01, 'zoom buttons preserve the visible border width');
+    await page.mouse.move(viewport.x + 2, viewport.y + 2);
+    await page.mouse.move(...await page.evaluate(([x, y]) => {
+      const image = document.querySelector('.victory-map-image').getBoundingClientRect();
+      const scale = image.width / 1200;
+      return [image.left + x * scale, image.top + y * scale];
+    }, centre(1)));
+    await page.locator('.victory-map-place').getByText('Settlement 1', { exact: true }).waitFor();
+    const toolbarHeight = await page.locator('.victory-map-toolbar').evaluate(element => element.offsetHeight);
+    await page.mouse.move(viewport.x + 2, viewport.y + 2);
+    await page.waitForFunction(() => document.querySelector('.victory-map-place').textContent === '');
+    assert.equal(await page.locator('.victory-map-toolbar').evaluate(element => element.offsetHeight), toolbarHeight,
+      'naming the hovered place never resizes the map');
     const beforePanTransform = await transform();
     await page.mouse.move(viewport.x + viewport.width / 2, viewport.y + viewport.height / 2);
     await page.mouse.down();
@@ -117,8 +173,7 @@ test('victory screen frames all targets, focuses requirements and preserves pan 
     const pannedTransform = await transform();
     assert.notEqual(pannedTransform, beforePanTransform);
     await page.evaluate(() => window.renderVictory(true));
-    await page.waitForFunction(() => document.querySelector('[data-province-index="0"]').dataset.controlled === 'true');
-    await page.waitForTimeout(100);
+    await expectColour(...centre(0), '#79ad83', 0.72, 'a captured target is redrawn as held');
     assert.equal(await transform(), pannedTransform, 'ownership updates must preserve the playerâ€™s chosen map view');
     const zoomBefore = await transform();
     await page.mouse.move(viewport.x + viewport.width / 2, viewport.y + viewport.height / 2);
@@ -155,10 +210,9 @@ test('victory screen frames all targets, focuses requirements and preserves pan 
     await page.locator('.victory-tier').first().getByText('Complete', { exact:true }).waitFor();
     assert.equal(await page.locator('.victory-tier').first().getByText('0 of 1 settlements controlled', { exact:true }).count(), 0,
       'earned stages retain completion without displaying a contradictory unmet requirement');
-    assert.equal(await page.locator('[data-province-index="0"]').getAttribute('data-controlled'), 'false',
-      'historical completion does not invent current control');
-    assert.equal(await page.locator('[data-border-layer="goals"][data-tier-index="1"]').getAttribute('stroke-opacity'), '1',
-      'earning the focused tier clears its dimming of future goals');
+    // Province 0 remains a silver target: drawn undimmed, since earning the focused tier clears the focus,
+    // and not as held, since historical completion does not invent current control.
+    await expectColour(...centre(0), '#9ebdd8', 0.55, 'earned stages clear focus dimming without inventing control');
     await page.getByRole('button', { name: 'Close', exact: true }).click();
     assert.equal(await page.evaluate(() => window.victoryClosedCount), 1);
     assert.deepEqual(errors, []);

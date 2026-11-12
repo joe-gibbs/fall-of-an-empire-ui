@@ -246,6 +246,9 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
     updateMetrics();
   }, [updateMetrics, viewportRef]);
 
+  // The thumb drag follows window-level pointer events for the whole press. The Webkiln host
+  // holds Slate mouse capture while the button is down, so moves keep arriving anywhere on
+  // the page without element pointer capture.
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
       const drag = dragRef.current;
@@ -263,30 +266,15 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
       if (!drag || drag.pointerId !== event.pointerId) return;
       clearDrag();
     };
-    const handleMouseMove = (event: MouseEvent) => {
-      if (!dragRef.current) return;
-      if ((event.buttons & 1) === 0) {
-        clearDrag();
-        return;
-      }
-
-      event.preventDefault();
-      updateDragPosition(event.clientY);
-    };
-    const handleMouseUp = () => clearDrag();
 
     window.addEventListener('pointermove', handlePointerMove, true);
     window.addEventListener('pointerup', handlePointerEnd, true);
     window.addEventListener('pointercancel', handlePointerEnd, true);
-    window.addEventListener('mousemove', handleMouseMove, true);
-    window.addEventListener('mouseup', handleMouseUp, true);
     window.addEventListener('blur', clearDrag);
     return () => {
       window.removeEventListener('pointermove', handlePointerMove, true);
       window.removeEventListener('pointerup', handlePointerEnd, true);
       window.removeEventListener('pointercancel', handlePointerEnd, true);
-      window.removeEventListener('mousemove', handleMouseMove, true);
-      window.removeEventListener('mouseup', handleMouseUp, true);
       window.removeEventListener('blur', clearDrag);
     };
   }, [clearDrag, updateDragPosition]);
@@ -320,7 +308,6 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
     event.preventDefault();
     event.stopPropagation();
     cancelSmoothScroll();
-    event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = {
       pointerId: event.pointerId,
       startY: event.clientY,
@@ -329,34 +316,6 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
       maxScroll: Math.max(0, viewport.scrollHeight - viewport.clientHeight),
     };
   }, [cancelSmoothScroll, metrics.thumbHeight, metrics.thumbTop, viewportRef]);
-
-  const handleThumbPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-
-    if ((event.buttons & 1) === 0) {
-      clearDrag();
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-    updateDragPosition(event.clientY);
-  }, [clearDrag, updateDragPosition]);
-
-  const handleThumbPointerEnd = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (drag && drag.pointerId === event.pointerId) {
-      clearDrag();
-    }
-  }, [clearDrag]);
-
-  const handleThumbLostPointerCapture = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (drag && drag.pointerId === event.pointerId) {
-      dragRef.current = null;
-    }
-  }, []);
 
   return (
     <div
@@ -368,10 +327,6 @@ export const StyledScrollbar = React.memo(function StyledScrollbar({
         ref={thumbRef}
         className="styled-scroll-area__thumb"
         onPointerDown={handleThumbPointerDown}
-        onPointerMove={handleThumbPointerMove}
-        onPointerUp={handleThumbPointerEnd}
-        onPointerCancel={handleThumbPointerEnd}
-        onLostPointerCapture={handleThumbLostPointerCapture}
         style={{
           height: `${metrics.thumbHeight}px`,
           transform: `translateY(${metrics.thumbTop}px)`,

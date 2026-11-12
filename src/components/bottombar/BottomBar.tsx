@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import Tooltip from '../common/tooltips/Tooltip';
 import IconButton from '../common/buttons/IconButton';
 import { useMapModeBridge } from '../../bridge/military-map/useMapModeBridge';
@@ -37,12 +37,43 @@ function mapModeTooltipContent(id: string, label: string, entry?: MapModeEntry):
   return mapModeTooltipForMode(id, label, entry);
 }
 
-const BottomBar: React.FC = () => {
+// Publishes how far the map-mode controls reach in from the right edge, so
+// bottom-docked panels can stop short of them.
+function usePublishedRightInset(
+  barRef: React.RefObject<HTMLDivElement | null>,
+  rightSidebarOpen: boolean,
+  compact: boolean,
+) {
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return undefined;
+    const root = document.documentElement;
+    const publish = () => {
+      const controls = bar.lastElementChild;
+      const left = controls ? controls.getBoundingClientRect().left : root.clientWidth;
+      root.style.setProperty('--bottombar-inset-right', `${Math.max(0, root.clientWidth - left)}px`);
+    };
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(bar);
+    if (bar.lastElementChild) observer.observe(bar.lastElementChild);
+    window.addEventListener('resize', publish);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', publish);
+      root.style.removeProperty('--bottombar-inset-right');
+    };
+  }, [barRef, compact, rightSidebarOpen]);
+}
+
+const BottomBar: React.FC<{ rightSidebarOpen: boolean }> = ({ rightSidebarOpen }) => {
   const compact = useCompactHud();
   const observerMode = useObserverMode();
   const { state, setMapMode } = useMapModeBridge();
   const active = state?.activeMode ?? '';
+  const barRef = useRef<HTMLDivElement>(null);
   const trayRef = useRef<HTMLDivElement>(null);
+  usePublishedRightInset(barRef, rightSidebarOpen, compact);
   const customModeIds = state?.modes
     .filter((mode) => !BASE_MODE_IDS.has(mode.id))
     .map((mode) => mode.id) ?? [];
@@ -51,7 +82,7 @@ const BottomBar: React.FC = () => {
     : ROWS;
 
   return (
-    <div className={`bottombar${compact ? ' bottombar--compact' : ''}`}>
+    <div ref={barRef} className={`bottombar${compact ? ' bottombar--compact' : ''}${rightSidebarOpen ? ' bottombar--sidebar-open' : ''}`}>
       {!observerMode && <OperationBar />}
       <StyledScrollArea className="bottombar-filters" viewportClassName="bottombar-filters__viewport" variant="inline">
         <MapModeFilterPanel />

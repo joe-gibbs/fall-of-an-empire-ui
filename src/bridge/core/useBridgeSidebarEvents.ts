@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 import type { ScreenType, SidebarType } from '../../context/GameContext';
 import { getScreenByBridgeName } from '../../registry/index';
 import { clearFactionCache } from '../diplomacy/useFactionBridge';
@@ -19,30 +19,38 @@ interface ShowScreenEvent {
   id?: string;
 }
 
-const pendingSidebarTabs = new Map<string, SidebarEvent>();
+// One tab request per sidebar entity. Whichever slot for that entity is mounted
+// (or mounts next) consumes it once, so a request is applied exactly once.
+const pendingSidebarTabs = new Map<string, number>();
+const sidebarTabListeners = new Set<() => void>();
 
 function sidebarTabKey(type: string, id: string): string {
   return `${type}:${id}`;
 }
 
-function dispatchSidebarTabEvent(data: SidebarEvent) {
-  if (typeof data.tabIndex !== 'number' || data.tabIndex < 0) return;
-  if (data.type && data.id) {
-    pendingSidebarTabs.set(sidebarTabKey(data.type, data.id), data);
-  }
-
-  const event = new CustomEvent('ui.sidebar_tab_event', { detail: data });
-  bridgeEvents.dispatchEvent(event);
-  window.setTimeout(() => bridgeEvents.dispatchEvent(event), 0);
+function requestSidebarTab(data: SidebarEvent) {
+  if (typeof data.tabIndex !== 'number' || data.tabIndex < 0 || !data.id) return;
+  pendingSidebarTabs.set(sidebarTabKey(data.type, data.id), data.tabIndex);
+  sidebarTabListeners.forEach(listener => listener());
 }
 
-export function consumePendingSidebarTab(type: string, id: string): number | undefined {
-  const key = sidebarTabKey(type, id);
-  const pending = pendingSidebarTabs.get(key);
-  if (!pending || typeof pending.tabIndex !== 'number' || pending.tabIndex < 0) return undefined;
+/** Applies the game's requested tab for this sidebar entity, now or when it arrives. */
+export function useSidebarTabRequest(type: string, id: string | null, apply: (tabIndex: number) => void) {
+  const applyTab = useEffectEvent(apply);
 
-  pendingSidebarTabs.delete(key);
-  return pending.tabIndex;
+  useEffect(() => {
+    if (!id) return undefined;
+    const key = sidebarTabKey(type, id);
+    const consume = () => {
+      const tabIndex = pendingSidebarTabs.get(key);
+      if (tabIndex === undefined) return;
+      pendingSidebarTabs.delete(key);
+      applyTab(tabIndex);
+    };
+    consume();
+    sidebarTabListeners.add(consume);
+    return () => { sidebarTabListeners.delete(consume); };
+  }, [type, id]);
 }
 
 /**
@@ -85,7 +93,7 @@ export function useBridgeSidebarEvents(
           closeSidebarEntityFromBridge(data.entityType as SidebarType, data.id);
         } else {
           openSidebar(data.type as SidebarType, data.id);
-          dispatchSidebarTabEvent(data);
+          requestSidebarTab(data);
         }
       } finally {
         recordUIPerfSpan('bridge-event', 'ui.sidebar_event.handler', startedAtMs, Date.now(), `${data.type}:${data.id ?? ''}`);

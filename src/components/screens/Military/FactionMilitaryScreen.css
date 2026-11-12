@@ -24,7 +24,7 @@
 .faction-military-empty-message {
   min-width: 18rem;
   padding: 1.2rem 1.8rem;
-  background: url('/assets/baked/panel-charcoal.png') center / 100% 100% no-repeat;
+  background: url('/assets/baked/panel-charcoal.png') 0 0 / 93.0909rem 93.0909rem;
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: 0.9rem;

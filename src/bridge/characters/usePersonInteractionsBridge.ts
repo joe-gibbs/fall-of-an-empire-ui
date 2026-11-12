@@ -300,6 +300,7 @@ export function usePersonInteractionsBridge(personId: string | null): PersonInte
     };
 
     bridgeEvents.addEventListener('game.person_interactions_daily', handleDailyPatch as EventListener);
+    bridgeCall('game.watch_interaction_list', { kind: 'person', id: personId, watching: true }).catch(acknowledgeBridgeFailure);
 
     void bridgeCall('game.get_person_interactions', { personId })
       .then((data) => {
@@ -315,6 +316,7 @@ export function usePersonInteractionsBridge(personId: string | null): PersonInte
       cancelled = true;
       unsubscribeFull();
       bridgeEvents.removeEventListener('game.person_interactions_daily', handleDailyPatch as EventListener);
+      bridgeCall('game.watch_interaction_list', { kind: 'person', id: personId, watching: false }).catch(acknowledgeBridgeFailure);
     };
   }, [personId]);
 

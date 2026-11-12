@@ -194,6 +194,8 @@ function militaryTooltip(
   const strength = detail?.found ? detail.strength : data.strength;
   const maxStrength = detail?.found ? detail.maxStrength : 0;
   const moralePercent = detail?.found ? detail.morale : clampUnitFraction(data.morale) * 100;
+  // Morale is withheld for militaries the player cannot inspect; the bridge reports it as 0.
+  const moraleHidden = Boolean(detail?.found && detail.canViewFullDetails === false);
   const statuses: string[] = [];
   if (isRaiding) statuses.push(webUIText('WorldGlances.Military.Raiding'));
   if (data.attrition) statuses.push(webUIText('WorldGlances.Military.Attrition'));
@@ -234,6 +236,21 @@ function militaryTooltip(
     });
   }
 
+  if (data.retreating && detail?.found && detail.currentOrderTargetType === 'settlement' && detail.currentOrderTargetName) {
+    lines.push({
+      label: webUIText('WorldGlances.Military.RetreatingTo'),
+      value: (
+        <GlanceEntityValue
+          type="settlement"
+          id={detail.currentOrderTargetId || undefined}
+          name={detail.currentOrderTargetName}
+          interactive={interactive}
+        />
+      ),
+      valueIcon: '/assets/icons/I_Retreat.png',
+    });
+  }
+
   lines.push(
     {
       get label() { return isNavy ? webUIText("ArmyGlance.Ships") : webUIText("ArmyGlance.Soldiers"); },
@@ -243,8 +260,8 @@ function militaryTooltip(
     },
     {
       label: webUIText('Auto.Prop.ComponentsWorldGlancesArmyGlance.168.2'),
-      value: formatPercent(moralePercent),
-      valueColor: moraleColour(moralePercent / 100),
+      value: moraleHidden ? '?' : formatPercent(moralePercent),
+      valueColor: moraleHidden ? undefined : moraleColour(moralePercent / 100),
       valueIcon: '/assets/icons/I_Loyalty.png',
     },
     {
@@ -425,10 +442,12 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
     >
       {atWar && <span className="glance-war-glow" aria-hidden="true" />}
       <span className="glance-military-garrison-hit-target" data-webkiln-anchor-hit aria-hidden="true" />
-      <span className="glance-military-alert-flash" aria-hidden="true" />
+      <span className="glance-military-alert-flash" data-webkiln-native-opacity aria-hidden="true" />
       <CasualtyNumbers casualties={data.casualties ?? 0} alignment="military" />
       <span className="glance-garrison-selection" aria-hidden="true" />
-      <span className="glance-garrison-target" aria-hidden="true" />
+      <span className="glance-garrison-target" aria-hidden="true">
+        <span className="glance-target-silhouette" />
+      </span>
       <span className="glance-garrison-kind" aria-hidden="true">
         <GlanceFactionMark faction={data.faction} className="glance-garrison-faction-roundel" size="xs" />
       </span>
@@ -455,13 +474,13 @@ export default function ArmyGlance({ data, isNavy = false, enableHoverTooltip = 
     >
       {atWar && <span className="glance-war-glow" aria-hidden="true" />}
       <span className="glance-military-hit-target" data-webkiln-anchor-hit aria-hidden="true" />
-      <span className="glance-military-alert-flash" aria-hidden="true" />
+      <span className="glance-military-alert-flash" data-webkiln-native-opacity aria-hidden="true" />
       <CasualtyNumbers casualties={data.casualties ?? 0} alignment="military" />
+      <span className="glance-military-target-indicator" aria-hidden="true" />
       <div className="glance-military-rings" aria-hidden="true">
         <div className="glance-ring-sprite glance-military-ring-stack" style={militaryRingStackStyle(data.faction.relation, strengthPct, moralePct)} />
         <GlanceRelationFrame relation={data.faction.relation} />
       </div>
-      <span className="glance-military-target-indicator" aria-hidden="true" />
 
       <div className="glance-military-core">
         <GlanceFactionMark faction={data.faction} className="glance-military-faction-roundel" size="md" />

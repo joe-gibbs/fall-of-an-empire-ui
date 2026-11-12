@@ -128,10 +128,7 @@ export interface SettlementGlanceData {
   bishopName?: string;
   buildItem?: { label: string; icon: string; progress: number };
   activeAction?: { label: string; colour: string; icon?: string };
-  queuedConstruction?: string;
-  queuedConstructionCount?: number;
-  queuedRecruitment?: string;
-  queuedRecruitmentCount?: number;
+  queuedJobCount?: number;
   warWithPlayer?: boolean;
   peaceSelection?: boolean;
   peaceConcession?: boolean;

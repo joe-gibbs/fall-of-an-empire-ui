@@ -37,7 +37,7 @@ html.input-gamepad [data-gamepad-focused="true"] {
   padding: 0.34rem 0.8rem;
   border: 0.18rem solid transparent;
   border-image: url('/assets/gold-frame.png') 6 / 0.18rem / 0 round;
-  background: url('/assets/baked/panel-warm-dark.png') center / 100% 100% no-repeat;
+  background: url('/assets/baked/panel-warm-dark.png') 0 0 / 93.0909rem 93.0909rem;
   filter: var(--filter-shadow-panel);
   pointer-events: none;
 }

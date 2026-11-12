@@ -230,6 +230,27 @@
   color: var(--gold-light);
 }
 
+.fs-start-date-button--locked.btn--outline,
+.fs-start-date-button--locked.btn--outline:hover:not(:disabled),
+.fs-start-date-button--locked.btn--outline:focus-visible:not(:disabled),
+.fs-start-date-button--locked.btn--outline:active:not(:disabled) {
+  background-image: url('/assets/baked/main-menu-button.png');
+  filter: grayscale(1);
+}
+
+.fs-start-date-button--locked .fs-start-date-date,
+.fs-start-date-button--locked .fs-start-date-name {
+  opacity: 0.45;
+}
+
+.fs-start-date-lock {
+  align-self: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.4rem;
+  opacity: 0.7;
+}
+
 .fs-back-btn,
 .fs-begin-btn,
 .fs-faction-row,
@@ -899,7 +920,9 @@
 
 .fs-map-mode-button.btn--outline:hover:not(:disabled),
 .fs-map-mode-button.btn--outline:focus-visible:not(:disabled),
-.fs-map-mode-button.btn--outline[aria-pressed="true"] {
+.fs-map-mode-button.btn--outline[aria-pressed="true"],
+.fs-map-mode-button.btn--outline:active:not(:disabled) {
+  border-image-source: url('/assets/gold-frame.png');
   background-image: url('/assets/baked/main-menu-button-hover.png');
   color: var(--gold-light);
 }
@@ -951,49 +974,9 @@
   cursor: grabbing;
 }
 
-.fs-map-hover-label,
 .fs-zoom-controls {
   position: absolute;
   z-index: 4;
-}
-
-.fs-map-hover-label {
-  top: 0.85rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  padding: 0.48rem 0.75rem;
-  border: 0.231rem solid transparent;
-  border-image-source: url('/assets/gold-frame.png');
-  border-image-slice: 6;
-  border-image-width: 0.231rem;
-  border-image-outset: 0;
-  border-image-repeat: round;
-  background-color: rgba(16, 21, 27, 0.9);
-  background-image:
-    linear-gradient(180deg, rgba(36, 42, 48, 0.35) 0%, rgba(13, 18, 24, 0.55) 100%),
-    url('/assets/baked/texture-overlay-heavy.png');
-  background-position: 0 0;
-  background-repeat: repeat, repeat;
-  background-size: auto, 7.385rem 7.385rem;
-  font-family: var(--font-header);
-  font-size: 0.95rem;
-  letter-spacing: 0.04em;
-  color: var(--text-bright);
-  box-shadow: 0 0.45rem 1.2rem rgba(8, 12, 17, 0.55);
-  pointer-events: none;
-}
-
-.fs-map-hover-label > * + * {
-  margin-left: 0.55rem;
-}
-
-.fs-map-hover-tag {
-  flex-shrink: 0;
-}
-
-.fs-zoom-controls {
   right: calc(24rem + 1.7rem);
   bottom: 1rem;
   display: flex;

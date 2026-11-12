@@ -116,7 +116,10 @@ function getOpinionIcon(opinion: number): string {
 }
 
 function mapFaction(faction: Faction): Partial<FactionTooltipData> {
-  const status = diplomaticStatusMeta[faction.diplomaticStatus];
+  // The player's own realm has no diplomatic stance towards itself.
+  const status = faction.isPlayer && faction.diplomaticStatus !== 'subject'
+    ? undefined
+    : diplomaticStatusMeta[faction.diplomaticStatus];
 
   return {
     id: faction.id,
@@ -131,8 +134,8 @@ function mapFaction(faction: Faction): Partial<FactionTooltipData> {
     religionId: faction.religionId,
     religionInfo: faction.religionInfo,
     capital: faction.capital,
-    statusLabel: status.label,
-    statusColor: status.color,
+    statusLabel: status?.label,
+    statusColor: status?.color,
     opinion: faction.opinion,
     population: faction.population,
     settlements: faction.settlements,

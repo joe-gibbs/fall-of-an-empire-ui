@@ -8,8 +8,8 @@
   position: fixed;
   top: calc(var(--topbar-height) + 0.45rem);
   left: calc(var(--sidebar-width) + 0.55rem);
-  /* Above screens (70) so action results stay visible; below topbar chrome (100). */
-  z-index: 80;
+  /* Screens (70) cover map warnings; topbar chrome remains above both. */
+  z-index: 45;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -28,14 +28,36 @@
 
 /*
   Compact: same below-topbar inset as the tutorial panel.
-  Sit above screens so action-result and warning medallions stay visible.
-  Close buttons are top-right; this strip stays top-left.
+  Keep the map's warning row below the topbar.
 */
 html.hud-compact .hud-attention-strip {
   left: 0.75rem;
   top: var(--hud-below-topbar, calc(var(--topbar-height) + 0.55rem));
   max-width: calc(100vw - 1.5rem);
-  z-index: 80;
+  z-index: 45;
+}
+
+/*
+  With a screen open, the map row would sit under the screen header. The strip
+  becomes a single column in the left gutter beside the centred screen panel;
+  TutorialProgress offsets itself by one column to match.
+*/
+.game-main--screen-open > .hud-attention-strip {
+  left: 0.55rem;
+  max-width: none;
+}
+
+.game-main--screen-open.game-main--left-sidebar-open > .hud-attention-strip {
+  left: calc(var(--sidebar-width) + 0.55rem);
+}
+
+html.hud-compact .game-main--screen-open > .hud-attention-strip {
+  left: 0.75rem;
+}
+
+.game-main--screen-open > .hud-attention-strip > .warning-icon-strip {
+  flex-direction: column;
+  max-height: calc(100vh - var(--topbar-height) - 1rem);
 }
 
 .warning-icon-strip--hidden {
@@ -46,7 +68,7 @@ html.hud-compact .hud-attention-strip {
 
 .warning-icon-strip--controller-open {
   padding: 0.28rem;
-  background: url('/assets/baked/panel-warm-dark.png') center / 100% 100% no-repeat;
+  background: url('/assets/baked/panel-warm-dark.png') 0 0 / 93.0909rem 93.0909rem;
   filter: var(--filter-shadow-panel);
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type AnimationEvent } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import ScreenShell from '../../common/layout/shell/ScreenShell';
 import Panel from '../../common/layout/shell/Panel';
 import FactionRoundel from '../../common/entities/FactionRoundel';
@@ -6,9 +6,11 @@ import FactionTooltip from '../../common/tooltips/FactionTooltip';
 import Tooltip, { type TooltipContent } from '../../common/tooltips/Tooltip';
 import DropdownSelect, { type DropdownSelectOption } from '../../common/forms/DropdownSelect';
 import NumberStepper from '../../common/forms/NumberStepper';
+import { magnitudeStep } from '../../../utils/stepModifiers';
 import ResourceLabel from '../../common/data-display/stats/ResourceLabel';
 import StyledScrollArea from '../../common/layout/scrolling/StyledScrollArea';
 import { useGameActions } from '../../../context/GameContext';
+import { useEscapeStackEntry } from '../../../context/EscapeStack';
 import { useDiplomaticNegotiationBridge, type DiplomaticNegotiationState, type DiplomaticProposalDraft } from '../../../bridge/diplomacy/useDiplomaticNegotiationBridge';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { formatTreatyType } from '../../../utils/displayLabels';
@@ -16,6 +18,7 @@ import { WebkilnAssetPath } from '../../../utils/assets';
 import { registerScreen } from '../../../registry/index';
 import { renderAcceptabilityBreakdown } from './acceptabilityBreakdown';
 import { webUIText, WebUIText } from '../../../localization/WebUITextContext';
+import { UI_MOTION } from '../../../config/motion';
 import './PeaceNegotiationScreen.css';
 import './DiplomaticNegotiationScreen.css';
 
@@ -299,7 +302,7 @@ function ProposalChip({
               <span className="pns-term-control-label"><WebUIText textKey="TreatyNegotiation.Gold" /></span>
               <NumberStepper
                 value={amount}
-                step={amountStep}
+                step={magnitudeStep(amount, tributeMax, amountStep)}
                 min={0}
                 max={tributeMax}
                 className="pns-amount-control"
@@ -331,7 +334,7 @@ function ProposalChip({
             <div className="pns-term-field pns-term-field--resource-amount">
               <NumberStepper
                 value={resourceAmount}
-                step={amountStep}
+                step={magnitudeStep(resourceAmount, selectedResource?.amount, amountStep)}
                 min={0}
                 max={selectedResource ? Math.round(selectedResource.amount) : undefined}
                 className="pns-amount-control"
@@ -513,25 +516,12 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
   const canSubmit = Boolean(preview?.canSubmit);
   const screenTitle = state?.found ? webUIText('TreatyNegotiation.TitleWithFaction', { Faction: state.targetFaction.name }) : webUIText('TreatyNegotiation.Title');
 
-  useEffect(() => {
-    const closeFromEscape = (event: Event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      onClose();
-    };
-
-    const keyHandler = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' && event.code !== 'Escape') return;
-      closeFromEscape(event);
-    };
-
-    window.addEventListener('keydown', keyHandler, true);
-    bridgeEvents.addEventListener('ui.escape_pressed', closeFromEscape);
-    return () => {
-      window.removeEventListener('keydown', keyHandler, true);
-      bridgeEvents.removeEventListener('ui.escape_pressed', closeFromEscape);
-    };
-  }, [onClose]);
+  useEscapeStackEntry({
+    id: 'screen.diplomatic-negotiation',
+    active: true,
+    onClose,
+    allowFromInput: true,
+  });
 
   useEffect(() => () => {
     if (acceptedHoldTimerRef.current !== null) window.clearTimeout(acceptedHoldTimerRef.current);
@@ -552,10 +542,12 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
     }, ACCEPTED_HOLD_MS);
   };
 
-  const handleAcceptedCloseAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
-    if (!acceptedClosing || event.target !== event.currentTarget || event.animationName !== 'treaty-negotiation-close') return;
-    onClose();
-  };
+  const closeAfterAcceptance = useEffectEvent(() => onClose());
+  useEffect(() => {
+    if (!acceptedClosing) return;
+    const acceptedCloseTimer = window.setTimeout(closeAfterAcceptance, UI_MOTION.treatyNegotiationCloseMs);
+    return () => window.clearTimeout(acceptedCloseTimer);
+  }, [acceptedClosing]);
 
   const acceptabilityBreakdown: TooltipContent = useMemo(() => ({
     title: webUIText('TreatyNegotiation.Acceptance'),
@@ -745,7 +737,7 @@ function DiplomaticNegotiationScreenContent({ targetFactionId, onClose }: Diplom
   );
 
   return (
-    <div className={`pns-stage pns-stage--treaty${acceptedClosing ? ' tns-stage--closing' : ''}`} onAnimationEnd={handleAcceptedCloseAnimationEnd}>
+    <div className={`pns-stage pns-stage--treaty${acceptedClosing ? ' tns-stage--closing' : ''}`}>
       <ScreenShell
         title={screenTitle}
         onClose={onClose}

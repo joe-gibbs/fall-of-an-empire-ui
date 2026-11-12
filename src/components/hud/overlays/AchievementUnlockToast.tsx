@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { bridgeCall } from '../../../bridge-types.generated.ts';
 import { acknowledgeBridgeFailure } from '../../../bridge/core/runtimeEngine';
 import { useWebUIText } from '../../../localization/WebUITextContext';
@@ -14,38 +14,27 @@ interface AchievementUnlockedPayload {
 const DISPLAY_DURATION_MS = 5000;
 const EXIT_DURATION_MS = 240;
 
-interface ActiveAchievement {
-  payload: AchievementUnlockedPayload;
+/** Unlocks waiting to show. The first entry is on screen, and `closing` is its exit phase. */
+interface AchievementToastQueue {
+  queue: AchievementUnlockedPayload[];
   closing: boolean;
 }
 
 export default function AchievementUnlockToast() {
   const t = useWebUIText();
-  const [achievement, setAchievement] = useState<ActiveAchievement | null>(null);
-  const dismissTimer = useRef<number | undefined>(undefined);
-  const closeTimer = useRef<number | undefined>(undefined);
+  const [toasts, setToasts] = useState<AchievementToastQueue>({ queue: [], closing: false });
+  const achievement = toasts.queue[0] ?? null;
+  const closing = toasts.closing;
 
   useEffect(() => {
     const onAchievementUnlocked = (event: Event) => {
       const payload = (event as CustomEvent<AchievementUnlockedPayload>).detail;
       if (!payload?.id) return;
-
-      if (dismissTimer.current !== undefined) {
-        window.clearTimeout(dismissTimer.current);
-      }
-      if (closeTimer.current !== undefined) {
-        window.clearTimeout(closeTimer.current);
-      }
-
-      setAchievement({ payload, closing: false });
-      dismissTimer.current = window.setTimeout(() => {
-        setAchievement(current => current ? { ...current, closing: true } : null);
-        dismissTimer.current = undefined;
-        closeTimer.current = window.setTimeout(() => {
-          setAchievement(null);
-          closeTimer.current = undefined;
-        }, EXIT_DURATION_MS);
-      }, DISPLAY_DURATION_MS);
+      setToasts(current => (
+        current.queue.some(entry => entry.id === payload.id)
+          ? current
+          : { ...current, queue: [...current.queue, payload] }
+      ));
     };
 
     bridgeEvents.addEventListener('game.achievement_unlocked', onAchievementUnlocked);
@@ -53,24 +42,31 @@ export default function AchievementUnlockToast() {
 
     return () => {
       bridgeEvents.removeEventListener('game.achievement_unlocked', onAchievementUnlocked);
-      if (dismissTimer.current !== undefined) {
-        window.clearTimeout(dismissTimer.current);
-      }
-      if (closeTimer.current !== undefined) {
-        window.clearTimeout(closeTimer.current);
-      }
     };
   }, []);
+
+  // Each toast shows, then plays its exit, then hands over to the next unlock.
+  useEffect(() => {
+    if (!achievement) return undefined;
+    const timer = window.setTimeout(() => {
+      setToasts(current => (
+        current.closing
+          ? { queue: current.queue.slice(1), closing: false }
+          : { ...current, closing: true }
+      ));
+    }, closing ? EXIT_DURATION_MS : DISPLAY_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [achievement, closing]);
 
   if (!achievement) return null;
 
   return (
-    <aside className={`achievement-unlock-toast${achievement.closing ? ' achievement-unlock-toast--closing' : ''}`} role="status" aria-live="polite">
-      {achievement.payload.iconUrl && <img src={achievement.payload.iconUrl} alt="" className="achievement-unlock-toast-icon" draggable={false} />}
+    <aside key={achievement.id} className={`achievement-unlock-toast${closing ? ' achievement-unlock-toast--closing' : ''}`} role="status" aria-live="polite">
+      {achievement.iconUrl && <img src={achievement.iconUrl} alt="" className="achievement-unlock-toast-icon" draggable={false} />}
       <div className="achievement-unlock-toast-copy">
         <div className="achievement-unlock-toast-label">{t('Achievements.UnlockNotificationTitle')}</div>
-        <div className="achievement-unlock-toast-title">{achievement.payload.displayName}</div>
-        <div className="achievement-unlock-toast-description">{achievement.payload.description}</div>
+        <div className="achievement-unlock-toast-title">{achievement.displayName}</div>
+        <div className="achievement-unlock-toast-description">{achievement.description}</div>
       </div>
     </aside>
   );

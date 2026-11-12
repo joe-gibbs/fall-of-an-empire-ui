@@ -27,6 +27,7 @@ const TREATY_LABEL_KEYS: Record<string, string> = {
   KnowledgeSharing: 'Display.Treaty.KnowledgeSharing',
   Marriage: 'Display.Treaty.Marriage',
   MerchantRights: 'Display.Treaty.MerchantRights',
+  ProvincialTrade: 'Display.Treaty.ProvincialTrade',
 };
 
 const RELATIONSHIP_LABEL_KEYS: Record<string, string> = {

@@ -9,6 +9,7 @@ export interface Force {
   name: string;
   parentId: string | null;
   rank: Rank;
+  hasCommand: boolean;
   commanderName: string;
   strength: number;
   maxStrength: number;

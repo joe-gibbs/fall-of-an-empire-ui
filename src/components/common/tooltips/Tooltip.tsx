@@ -242,6 +242,11 @@ function isNodeInTooltipTree(
   return node instanceof Element && Boolean(node.closest(`[data-tooltip-surface="${id}"]`));
 }
 
+function isNavigationFocus(target: EventTarget): boolean {
+  return target instanceof HTMLElement
+    && (target.dataset.gamepadFocused === 'true' || target.matches(':focus-visible'));
+}
+
 function isPointerOverTooltipSurface(id: number): boolean {
   return lastPointerNode instanceof Element
     && Boolean(lastPointerNode.closest(`[data-tooltip-surface="${id}"]`));
@@ -803,11 +808,18 @@ interface ActiveTooltip {
 type TooltipListener = (active: ActiveTooltip | null) => void;
 
 let activeTooltip: ActiveTooltip | null = null;
-let tooltipHideTimer: ReturnType<typeof setTimeout> | null = null;
+// The pending grace-period hide, tied to the tooltip it will close.
+let pendingTooltipHide: { id: number; timer: ReturnType<typeof setTimeout> } | null = null;
 // After a tooltip has opened, later triggers skip the open delay until the
 // pointer leaves for a non-tooltip area and the current tooltip closes.
 let skipOpenDelay = false;
 const tooltipListeners = new Set<TooltipListener>();
+
+function clearPendingTooltipHide() {
+  if (!pendingTooltipHide) return;
+  clearTimeout(pendingTooltipHide.timer);
+  pendingTooltipHide = null;
+}
 
 function emitTooltipState() {
   tooltipListeners.forEach(listener => listener(activeTooltip));
@@ -824,10 +836,7 @@ function showSharedTooltip(next: ActiveTooltip) {
     hideSharedTooltip(next.id);
     return;
   }
-  if (tooltipHideTimer) {
-    clearTimeout(tooltipHideTimer);
-    tooltipHideTimer = null;
-  }
+  clearPendingTooltipHide();
   skipOpenDelay = true;
   activeTooltip = next;
   emitTooltipState();
@@ -872,10 +881,7 @@ function isPointerOverTooltipTree(id: number): boolean {
 }
 
 function dismissOpenTooltips() {
-  if (tooltipHideTimer) {
-    clearTimeout(tooltipHideTimer);
-    tooltipHideTimer = null;
-  }
+  clearPendingTooltipHide();
   skipOpenDelay = false;
   if (activeTooltip) {
     activeTooltip = null;
@@ -892,9 +898,10 @@ function scheduleSharedTooltipHide(id: number, delayMs: number) {
     hideSharedTooltip(id);
     return;
   }
-  if (tooltipHideTimer) return;
-  tooltipHideTimer = setTimeout(() => {
-    tooltipHideTimer = null;
+  if (pendingTooltipHide?.id === id) return;
+  clearPendingTooltipHide();
+  const timer = setTimeout(() => {
+    pendingTooltipHide = null;
     if (activeTooltip?.id !== id) return;
     // Nested rows live on the bubble. If the pointer made it onto a tooltip
     // surface, keep the tree open even if Webkiln's last world-input bit flickered.
@@ -911,13 +918,11 @@ function scheduleSharedTooltipHide(id: number, delayMs: number) {
     // hide A and then never open B.
     hideSharedTooltip(id);
   }, delayMs);
+  pendingTooltipHide = { id, timer };
 }
 
 function hideSharedTooltip(id: number) {
-  if (tooltipHideTimer) {
-    clearTimeout(tooltipHideTimer);
-    tooltipHideTimer = null;
-  }
+  if (pendingTooltipHide?.id === id) clearPendingTooltipHide();
   if (activeTooltip?.id === id) {
     activeTooltip = null;
     if (!isPointerOverTooltipInteraction()) {
@@ -928,11 +933,10 @@ function hideSharedTooltip(id: number) {
 }
 
 function cancelSharedTooltipHide(id: number) {
-  if (activeTooltip?.id !== id || !tooltipHideTimer) {
+  if (pendingTooltipHide?.id !== id) {
     return;
   }
-  clearTimeout(tooltipHideTimer);
-  tooltipHideTimer = null;
+  clearPendingTooltipHide();
 }
 
 function TooltipHostContent({ active }: { active: ActiveTooltip }) {
@@ -1114,7 +1118,7 @@ function TooltipHostContent({ active }: { active: ActiveTooltip }) {
 
 function handleTooltipPointerEvent(event: Event) {
   lastPointerNode = event.target;
-  if (!activeTooltip && !tooltipHideTimer && !isPointerOverTooltipInteraction()) {
+  if (!activeTooltip && !pendingTooltipHide && !isPointerOverTooltipInteraction()) {
     skipOpenDelay = false;
   }
   const active = activeTooltip;
@@ -1341,8 +1345,11 @@ const SharedTooltip: React.FC<TooltipProps> = ({
     if (!controlled) beginShow('hover');
   }, [beginShow, controlled]);
 
-  const showFromFocus = useCallback(() => {
+  const showFromFocus = useCallback((event: React.FocusEvent<HTMLElement>) => {
     if (pointerDismissedRef.current) return;
+    // A pointer click leaves the clicked control focused. Only keyboard and
+    // gamepad focus open the tooltip, so pointer users close it by moving away.
+    if (!isNavigationFocus(event.target)) return;
     if (!controlled) beginShow('focus');
   }, [beginShow, controlled]);
 

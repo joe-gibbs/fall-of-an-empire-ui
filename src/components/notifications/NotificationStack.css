@@ -4,7 +4,7 @@
 
 .notification-stack {
   position: fixed;
-  top: calc(var(--topbar-height) + 1.25rem);
+  top: max(calc(var(--topbar-height) + 1.25rem), calc(var(--tutorial-progress-bottom, 0px) + 0.5rem));
   left: 50%;
   z-index: 49;
   display: flex;

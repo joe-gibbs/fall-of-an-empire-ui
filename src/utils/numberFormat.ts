@@ -45,6 +45,9 @@ export function formatNumber(value: number | undefined | null, options: FormatNu
 
 export function formatSignedNumber(value: number | undefined | null, options: FormatNumberOptions = {}): string {
   const formatted = formatNumber(value, options);
+  const zero = formatNumber(0, options);
+  // A value that rounds to zero is shown as zero, without a sign either way.
+  if (formatted === zero || formatted === `-${zero}`) return zero;
   const numericValue = Number(value ?? 0);
   return numericValue > 0 ? `+${formatted}` : formatted;
 }

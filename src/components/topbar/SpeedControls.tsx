@@ -27,6 +27,12 @@ const speedIcons: Record<number, string> = {
   4: WebkilnAssetPath('/assets/ui-shadowed/T_Speedx4_Active.png') ?? '/assets/ui-shadowed/T_Speedx4_Active.png',
 };
 
+// Debug and harness speeds can run faster than the fastest player speed; they share the x4 icon.
+function speedIconFor(speed: number, isPaused: boolean): string {
+  if (isPaused) return speedIcons[0];
+  return speedIcons[Math.min(Math.max(Math.round(speed), 1), 4)];
+}
+
 const SpeedControls: React.FC<SpeedControlsProps> = ({
   speed,
   isPaused,
@@ -88,7 +94,12 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
         <button
           className="speed-btn speed-btn--pause"
           data-tutorial-target="PausePlayButton"
-          onClick={() => { playSound('click'); onTogglePause(); }}
+          onClick={() => {
+            playSound('click');
+            // Resume at the selected speed; onTogglePause only ever pauses.
+            if (isPaused) onSpeedChange?.(speed);
+            else onTogglePause();
+          }}
         >
           <img
             src={WebkilnAssetPath(isPaused ? '/assets/ui-shadowed/T_Paused_Active.png' : '/assets/ui-shadowed/T_Play_Active.png')
@@ -106,7 +117,7 @@ const SpeedControls: React.FC<SpeedControlsProps> = ({
           onClick={() => { playSound('click'); handleSpeedCycle(); }}
         >
           <img
-            src={speedIcons[isPaused ? 0 : speed]}
+            src={speedIconFor(speed, isPaused)}
             alt={isPaused ? webUIText("TopbarSpeed.Speed") : webUIText("TopbarSpeed.SpeedMultiplier", { Speed: speed })}
             className="speed-btn-img speed-btn-img--wide"
           />

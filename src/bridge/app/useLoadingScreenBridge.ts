@@ -28,20 +28,23 @@ export function useLoadingScreenBridge(): LoadingScreenResponse {
 
   useEffect(() => {
     let cancelled = false;
+    // A push is newer than the initial fetch, so the fetch result is dropped once one arrives.
+    let receivedPush = false;
+
+    const unsub = onBridgeEvent('game.loading_screen', (data) => {
+      receivedPush = true;
+      setState(normaliseState(data));
+    });
 
     (async () => {
       try {
         const res = await bridgeCall('game.loading_screen');
-        if (!cancelled) setState(normaliseState(res));
+        if (!cancelled && !receivedPush) setState(normaliseState(res));
       } catch (error) {
         acknowledgeBridgeFailure(error);
-        if (!cancelled) setState(EMPTY_LOADING_SCREEN);
+        if (!cancelled && !receivedPush) setState(EMPTY_LOADING_SCREEN);
       }
     })();
-
-    const unsub = onBridgeEvent('game.loading_screen', (data) => {
-      setState(normaliseState(data));
-    });
 
     return () => {
       cancelled = true;

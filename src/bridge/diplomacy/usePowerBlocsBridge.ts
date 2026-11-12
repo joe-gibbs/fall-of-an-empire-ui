@@ -248,8 +248,9 @@ function mergeBlocDetail(overview: PowerBloc | null | undefined, detail: PowerBl
 }
 
 export function usePowerBlocBridge(blocId: string | null | undefined): PowerBloc | null {
-  const blocs = usePowerBlocsBridge(false);
-  const overview = blocId ? blocs?.find(bloc => bloc.id === blocId) : blocs?.[0];
+  // Fetch on mount: the last pushed snapshot can be older than the list the screen shows.
+  const blocs = usePowerBlocsBridge(true);
+  const overview = blocId ? blocs?.find(bloc => bloc.id === blocId) : null;
   const detail = usePowerBlocDetailBridge(blocId);
   return mergeBlocDetail(overview, detail);
 }

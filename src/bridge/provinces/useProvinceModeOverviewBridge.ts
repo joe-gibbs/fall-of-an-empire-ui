@@ -121,6 +121,11 @@ export interface ProvinceModeOverview {
   standingRows: ProvinceModeScoreRow[];
   missions: ProvinceModeMission[];
   courtOfficeActions: ProvinceModeCourtOfficeAction[];
+  heldCourtOffice: string;
+  tributePledge: number;
+  maxTributePledge: number;
+  standingPerTributePledge: number;
+  tributeRatePercent: number;
 }
 
 function tone<T extends string>(value: string, allowed: readonly T[], fallback: T): T {
@@ -247,6 +252,24 @@ export async function runCourtOfficeAction(actionId: string): Promise<boolean> {
   return response.success;
 }
 
+export async function setProvinceTributePledge(level: number): Promise<boolean> {
+  const response = await bridgeCall('game.set_province_tribute_pledge', { level });
+  if (response.success) {
+    const fresh = await bridgeCall('game.get_province_mode_overview');
+    dispatchProvinceModeOverview(fresh);
+  }
+  return response.success;
+}
+
+export async function resignCourtOffice(): Promise<boolean> {
+  const response = await bridgeCall('game.resign_court_office');
+  if (response.success) {
+    const fresh = await bridgeCall('game.get_province_mode_overview');
+    dispatchProvinceModeOverview(fresh);
+  }
+  return response.success;
+}
+
 function mapResponse(data: GetProvinceModeOverviewResponse): ProvinceModeOverview {
   return {
     active: data.active,
@@ -268,6 +291,11 @@ function mapResponse(data: GetProvinceModeOverviewResponse): ProvinceModeOvervie
     standingRows: data.standingRows.map(mapScoreRow),
     missions: data.missions.map(mapMission),
     courtOfficeActions: data.courtOfficeActions.map(mapCourtOfficeAction),
+    heldCourtOffice: data.heldCourtOffice,
+    tributePledge: data.tributePledge,
+    maxTributePledge: data.maxTributePledge,
+    standingPerTributePledge: data.standingPerTributePledge,
+    tributeRatePercent: data.tributeRatePercent,
   };
 }
 

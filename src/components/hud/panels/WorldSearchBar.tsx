@@ -14,6 +14,12 @@ import './WorldSearchBar.css';
 
 type WorldSearchItemType = 'faction' | 'settlement' | 'military' | 'character';
 
+/** Results for the most recent query the game has answered. */
+interface WorldSearchAnswer {
+  query: string;
+  results: WorldSearchResult[];
+}
+
 interface WorldSearchResult {
   itemType: WorldSearchItemType;
   itemId: string;
@@ -25,6 +31,7 @@ interface WorldSearchResult {
 }
 
 const DEBOUNCE_MS = 160;
+const FOCUS_RETRY_DELAYS_MS = [0, 16, 32, 64, 120, 200, 350, 500];
 const MAX_RESULTS = 24;
 const EXIT_DURATION_MS = 120;
 
@@ -55,23 +62,43 @@ export default function WorldSearchBar() {
   const { openSidebar } = useGameActions();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<WorldSearchResult[]>([]);
+  const [answer, setAnswer] = useState<WorldSearchAnswer>({ query: '', results: [] });
   const [activeIndex, setActiveIndex] = useState(0);
-  const [searching, setSearching] = useState(false);
+  const results = answer.results;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const requestIdRef = useRef(0);
-  const focusAttemptsRef = useRef(0);
+  const searchTimerRef = useRef<number | null>(null);
+  const focusTimersRef = useRef<number[]>([]);
   const presence = useAnimatedPresence(open, { durationMs: EXIT_DURATION_MS });
 
+  const clearFocusRetries = useCallback(() => {
+    focusTimersRef.current.forEach(timer => window.clearTimeout(timer));
+    focusTimersRef.current = [];
+  }, []);
+
+  // Drops the debounced request and any response still in flight.
+  const cancelSearch = useCallback(() => {
+    if (searchTimerRef.current !== null) {
+      window.clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+    requestIdRef.current += 1;
+  }, []);
+
   const close = useCallback(() => {
+    cancelSearch();
+    clearFocusRetries();
     setOpen(false);
     setQuery('');
-    setResults([]);
+    setAnswer({ query: '', results: [] });
     setActiveIndex(0);
-    setSearching(false);
-    focusAttemptsRef.current = 0;
-  }, []);
+  }, [cancelSearch, clearFocusRetries]);
+
+  useEffect(() => () => {
+    cancelSearch();
+    clearFocusRetries();
+  }, [cancelSearch, clearFocusRetries]);
 
   const focusInput = useCallback(() => {
     const input = inputRef.current;
@@ -85,17 +112,13 @@ export default function WorldSearchBar() {
   }, []);
 
   const scheduleFocusRetries = useCallback(() => {
-    focusAttemptsRef.current = 0;
-    const delays = [0, 16, 32, 64, 120, 200, 350, 500];
-    delays.forEach((delay) => {
-      window.setTimeout(() => {
-        if (!inputRef.current) return;
-        if (document.activeElement === inputRef.current) return;
-        focusAttemptsRef.current += 1;
-        focusInput();
-      }, delay);
-    });
-  }, [focusInput]);
+    clearFocusRetries();
+    focusTimersRef.current = FOCUS_RETRY_DELAYS_MS.map(delay => window.setTimeout(() => {
+      if (!inputRef.current) return;
+      if (document.activeElement === inputRef.current) return;
+      focusInput();
+    }, delay));
+  }, [clearFocusRetries, focusInput]);
 
   const setInputRef = useCallback((node: HTMLInputElement | null) => {
     inputRef.current = node;
@@ -139,45 +162,43 @@ export default function WorldSearchBar() {
     scheduleFocusRetries();
   }, [open, presence.mounted, presence.closing, scheduleFocusRetries]);
 
-  useEffect(() => {
-    if (!open) return;
+  const changeQuery = useCallback((nextQuery: string) => {
+    setQuery(nextQuery);
+    cancelSearch();
 
-    const trimmed = query.trim();
+    const trimmed = nextQuery.trim();
     if (!trimmed) {
-      setResults([]);
+      setAnswer({ query: '', results: [] });
       setActiveIndex(0);
-      setSearching(false);
       return;
     }
 
-    setSearching(true);
-    const requestId = ++requestIdRef.current;
-    const timer = window.setTimeout(() => {
+    const requestId = requestIdRef.current;
+    searchTimerRef.current = window.setTimeout(() => {
+      searchTimerRef.current = null;
       bridgeCall('game.world_search', { query: trimmed, maxResults: MAX_RESULTS })
         .then((response) => {
           if (requestId !== requestIdRef.current) return;
-          const next = (response.results ?? []).map((entry) => ({
-            itemType: normaliseType(entry.itemType),
-            itemId: entry.itemId,
-            name: entry.name,
-            detail: entry.detail ?? '',
-            factionId: entry.factionId ?? '',
-            kind: entry.kind ?? '',
-            score: entry.score ?? 0,
-          }));
-          setResults(next);
+          setAnswer({
+            query: trimmed,
+            results: (response.results ?? []).map((entry) => ({
+              itemType: normaliseType(entry.itemType),
+              itemId: entry.itemId,
+              name: entry.name,
+              detail: entry.detail ?? '',
+              factionId: entry.factionId ?? '',
+              kind: entry.kind ?? '',
+              score: entry.score ?? 0,
+            })),
+          });
           setActiveIndex(0);
-          setSearching(false);
         })
         .catch((error) => {
           if (requestId !== requestIdRef.current) return;
-          setSearching(false);
           acknowledgeBridgeFailure(error);
         });
     }, DEBOUNCE_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [open, query]);
+  }, [cancelSearch]);
 
   useEffect(() => {
     if (!listRef.current) return;
@@ -243,10 +264,10 @@ export default function WorldSearchBar() {
   }, [activeIndex, close, results, selectResult]);
 
   const emptyLabel = useMemo(() => {
-    if (!query.trim()) return '';
-    if (searching) return webUIText('WorldSearch.Searching');
+    const trimmed = query.trim();
+    if (!trimmed || answer.query !== trimmed) return '';
     return webUIText('WorldSearch.NoResults');
-  }, [query, searching]);
+  }, [answer.query, query]);
 
   if (!presence.mounted) return null;
 
@@ -271,7 +292,7 @@ export default function WorldSearchBar() {
               className="search-field__input world-search-input"
               value={query}
               placeholder={webUIText('WorldSearch.Placeholder')}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => changeQuery(event.target.value)}
               onKeyDown={handleKeyDown}
               autoComplete="off"
               spellCheck={false}

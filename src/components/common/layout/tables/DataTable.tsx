@@ -308,13 +308,12 @@ function DataTable<T, TKey extends string = string>({
     const body = bodyRef.current;
     if (!body) return;
 
+    // The body can change height without a window resize, so observe it directly.
+    // The observer also reports the initial size.
     const updateViewport = () => setViewportHeight(boundedViewportHeight(body));
-    const id = window.setTimeout(updateViewport, 0);
-    window.addEventListener('resize', updateViewport);
-    return () => {
-      window.clearTimeout(id);
-      window.removeEventListener('resize', updateViewport);
-    };
+    const observer = new ResizeObserver(updateViewport);
+    observer.observe(body);
+    return () => observer.disconnect();
   }, [displayedRows.length, useVirtualRows]);
 
   useEffect(() => {

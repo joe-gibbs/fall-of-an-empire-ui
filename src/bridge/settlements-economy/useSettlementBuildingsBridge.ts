@@ -356,8 +356,8 @@ export function queueSettlementBuilding(settlementId: string, buildingId: string
   return bridgeCall('game.queue_settlement_building', { settlementId, buildingId });
 }
 
-export function unqueueSettlementBuilding(settlementId: string, queueIndex: number): Promise<void> {
-  return bridgeCall('game.unqueue_settlement_building', { settlementId, queueIndex });
+export function unqueueSettlementBuilding(settlementId: string, queueItemId: string): Promise<void> {
+  return bridgeCall('game.unqueue_settlement_building', { settlementId, queueItemId });
 }
 
 export function reorderSettlementBuilding(

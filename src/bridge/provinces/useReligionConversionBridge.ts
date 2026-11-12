@@ -61,6 +61,7 @@ export interface ReligionConversionStateView {
   currentStageRemainingDays: number;
   canAdvance: boolean;
   canComplete: boolean;
+  canCancel: boolean;
   playerGold: number;
 }
 
@@ -125,6 +126,7 @@ function mapState(state: ReligionConversionStateEntry): ReligionConversionStateV
     currentStageRemainingDays: state.currentStageRemainingDays,
     canAdvance: state.canAdvance,
     canComplete: state.canComplete,
+    canCancel: state.canCancel,
     playerGold: state.playerGold,
   };
 }

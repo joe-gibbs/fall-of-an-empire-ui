@@ -142,6 +142,18 @@
   align-items: center;
 }
 
+.fov-faction-name {
+  margin: 0;
+  overflow: hidden;
+  color: var(--gold-light);
+  font-family: var(--font-header);
+  font-size: 1.45rem;
+  font-weight: 400;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .fov-current-ruler-name {
   font-family: var(--font-header);
   font-size: 1.08rem;
@@ -1797,7 +1809,7 @@
   justify-content: space-between;
   gap: 0.6rem;
   padding: 0.32rem 0.45rem;
-  background: url('/assets/baked/card-charcoal.png') center / 100% 100%;
+  background: url('/assets/baked/card-charcoal.png') 0 0 / 17.4545rem 8.7273rem;
   cursor: pointer;
 }
 

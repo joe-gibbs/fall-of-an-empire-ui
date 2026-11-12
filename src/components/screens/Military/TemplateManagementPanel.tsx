@@ -1494,11 +1494,10 @@ function TemplateEditor({
                 )}
               </div>
               {renamingTitle ? (
-                <div className="chart-template-rename-row">
+                <div className="chart-template-rename-row" data-tutorial-target="FormationNameInput">
                   <input
                     ref={titleInputRef}
                     className="chart-template-title-input"
-                    data-tutorial-target="FormationNameInput"
                     value={renameDraft}
                     onChange={event => {
                       renameFieldDirtyRef.current = true;
@@ -1519,6 +1518,7 @@ function TemplateEditor({
                     <button
                       type="button"
                       className="chart-template-rename-action"
+                      data-tutorial-confirm-name
                       onClick={confirmRename}
                     >
                       <img src={CONFIRM_ICON} alt="" className="chart-template-rename-action-icon" draggable={false} />
@@ -1701,6 +1701,7 @@ function TemplateEditor({
 
       {catalogueGroup && (
         <TemplateUnitSelectorModal
+          key={catalogueGroup.id}
           units={catalogueUnits}
           currentCounts={catalogueGroup.counts}
           onAdd={(unitId, amount) => adjustBattleGroupUnitCount(catalogueGroup.id, unitId, amount)}

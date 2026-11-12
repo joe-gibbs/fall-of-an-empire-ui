@@ -18,10 +18,11 @@
   to { opacity: 0; transform: scale(0.98) translateY(0.5rem); }
 }
 
+/* Blocking first-launch modal: sits above the tutorial spotlight's click shield (8600). */
 .initial-setup-overlay {
   position: fixed;
   inset: 0;
-  z-index: 820;
+  z-index: 9000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,24 +121,14 @@
   margin: 0.3rem;
 }
 
-.settings-event-card__recommended {
-  display: inline-block;
-  margin-left: 0.55rem;
-  padding: 0.12rem 0.38rem;
-  font-family: var(--font-body);
-  font-size: 0.62rem;
-  font-weight: 700;
-  color: var(--gold-light);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background-image: url('/assets/baked/button-burgundy.png');
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  border-width: 0.077rem;
-  border-style: solid;
-  border-color: var(--gold-dark);
-  vertical-align: 0.1rem;
+.initial-setup__section-title {
+  margin: 0;
+  padding: 1rem 1rem 0;
+  font-family: var(--font-header);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-header);
+  letter-spacing: 0.025em;
 }
 
 .initial-setup__side {
@@ -211,7 +202,7 @@
 }
 
 .initial-setup__autosave-popup {
-  z-index: 900;
+  z-index: 9100;
 }
 
 .initial-setup__footer {

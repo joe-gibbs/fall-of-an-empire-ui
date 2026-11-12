@@ -16,7 +16,7 @@ import type { CourtPositionView } from '../../../bridge/characters/useCourtPosit
 import type { Faction, FactionTreaty } from '../../../data/types';
 import { formatTreatyType } from '../../../utils/displayLabels';
 import { treatyIconPath } from '../../../utils/iconMaps';
-import { canNegotiateDiplomacyWith } from '../../../utils/diplomacyAuthority';
+import { canNegotiateDiplomacyWith, diplomacyAuthorityBlockedReason } from '../../../utils/diplomacyAuthority';
 import { formatNumber, formatSignedNumber } from '../../../utils/numberFormat';
 import { compareSortValuesWithDirection, toggleSortState, type SortDirection, type SortState, type SortValue } from '../../common/layout/tables/sortUtils';
 import { registerScreen, registerTopbarButton } from '../../../registry/index';
@@ -58,7 +58,7 @@ const FOREIGN_COLUMNS: Array<DiplomacyTableColumn<ForeignSortKey | 'actions'>> =
   { id: 'status', get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.40.5'); }, className: 'dps-table-col--short' },
   { id: 'opinion', get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.41.6'); }, className: 'dps-table-col--short' },
   { id: 'strength', get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.42.7'); }, className: 'dps-table-col--short' },
-  { id: 'settlements', get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.43.8'); }, className: 'dps-table-col--short' },
+  { id: 'settlements', get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.43.8'); }, className: 'dps-table-col--settlements' },
   { id: 'treaties', get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.44.9'); }, className: 'dps-table-col--short' },
   { id: 'actions', get label() { return webUIText('Auto.TopProp.ComponentsScreensDiplomacyScreen.45.10'); }, className: 'dps-table-col--actions', sortable: false },
 ];
@@ -350,10 +350,12 @@ function RowActionButton({
 function RowActions({
   factionId,
   canNegotiateTreaty = false,
+  negotiateBlockedReason = null,
   showView = true,
 }: {
   factionId: string;
   canNegotiateTreaty?: boolean;
+  negotiateBlockedReason?: string | null;
   showView?: boolean;
 }) {
   const { openSidebar, openScreen } = useGameActions();
@@ -365,6 +367,15 @@ function RowActions({
           label={webUIText('Diplomacy.NegotiateTreaty')}
           onClick={() => openScreen('treaty', factionId)}
         />
+      ) : negotiateBlockedReason ? (
+        <Tooltip content={{ title: webUIText('Diplomacy.NegotiateTreaty'), body: negotiateBlockedReason }} position="left" delay={150}>
+          <RowActionButton
+            icon="/assets/icons/I_Diplomacy.png"
+            label={webUIText('Diplomacy.NegotiateTreaty')}
+            onClick={() => undefined}
+            disabled
+          />
+        </Tooltip>
       ) : null}
       {showView ? (
         <RowActionButton
@@ -556,12 +567,13 @@ function ForeignPowers({ rows, playerFaction }: { rows: FactionRow[]; playerFact
             {fmtSigned(row.opinion)}
           </TableCell>
           <TableCell className="dps-table-col--short">{fmt(row.strength)}</TableCell>
-          <TableCell className="dps-table-col--short">{fmt(row.settlements)}</TableCell>
+          <TableCell className="dps-table-col--settlements">{fmt(row.settlements)}</TableCell>
           <TableCell className="dps-table-col--short">{fmt(row.treaties)}</TableCell>
           <TableCell className="dps-table-col--actions">
             <RowActions
               factionId={row.id}
               canNegotiateTreaty={canNegotiateTreatyWithRow(row, playerFaction)}
+              negotiateBlockedReason={row.isAtWar ? null : diplomacyAuthorityBlockedReason(playerFaction, row)}
               showView={false}
             />
           </TableCell>

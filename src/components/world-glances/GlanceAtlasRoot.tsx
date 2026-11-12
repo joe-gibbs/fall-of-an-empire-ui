@@ -47,6 +47,8 @@ import './GlanceAtlas.css';
 
 const SETTLEMENT_BADGE_HALF_SIZE_REM = 2.1364;
 const SETTLEMENT_ATLAS_EDGE_BLEED_REM = 0.0909;
+// Match the 1.24-scale target silhouette and include three 0.24rem blur radii.
+const SETTLEMENT_TARGET_GLOW_OVERHANG_REM = SETTLEMENT_BADGE_HALF_SIZE_REM * 0.24 + 0.24 * 3;
 // The siege progress track and capital socket sit above the settlement plate's layout box.
 // Reserve that transparent space for every settlement so a state change cannot be clipped by
 // the already-packed atlas cell.
@@ -233,9 +235,9 @@ const GlanceAtlasPlate = memo(function GlanceAtlasPlate({ section, id, entry, de
   const settlementBleedRem = section === 'settlement'
     ? Math.max(
       SETTLEMENT_STATUS_TOP_BLEED_REM,
-      ((entry as GetWorldGlancesResponse['settlements'][number]).badgeScale > 1
-        ? (((entry as GetWorldGlancesResponse['settlements'][number]).badgeScale - 1) * SETTLEMENT_BADGE_HALF_SIZE_REM) + SETTLEMENT_ATLAS_EDGE_BLEED_REM
-        : 0),
+      (((entry as GetWorldGlancesResponse['settlements'][number]).badgeScale - 1) * SETTLEMENT_BADGE_HALF_SIZE_REM)
+        + (entry as GetWorldGlancesResponse['settlements'][number]).badgeScale * SETTLEMENT_TARGET_GLOW_OVERHANG_REM
+        + SETTLEMENT_ATLAS_EDGE_BLEED_REM,
     )
     : 0;
   const militaryEntry = section === 'army' || section === 'navy'

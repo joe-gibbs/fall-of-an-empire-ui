@@ -12,6 +12,7 @@
 }
 
 .loading-screen--closing {
+  pointer-events: none;
   animation: loading-screen-out 0.45s ease both;
 }
 

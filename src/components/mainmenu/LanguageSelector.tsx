@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguageBridge } from '../../bridge/app/useLanguageBridge';
 import StyledScrollArea from '../common/layout/scrolling/StyledScrollArea';
 import { useEscapeStackEntry } from '../../context/EscapeStack';
+import { useAnimatedPresence } from '../../hooks/useAnimatedPresence';
 import { UI_MOTION } from '../../config/motion';
 import { webUIText, useWebUIText } from '../../localization/WebUITextContext';
 import './LanguageSelector.css';
@@ -38,31 +39,20 @@ const flagSrc = (code: string) => `/assets/icons/Flags/I_Flag_${code}.png`;
 const LanguageSelector: React.FC = () => {
   const t = useWebUIText();
   const { state, setLanguage } = useLanguageBridge();
-  const [mounted, setMounted] = useState(false);
-  const [closing, setClosing] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const { mounted, closing } = useAnimatedPresence(isOpen, { durationMs: UI_MOTION.subviewCloseMs });
 
   const languages = state?.languages ?? FALLBACK_LANGUAGES;
   const currentCode = state?.currentLocale ?? 'en';
   const current = languages.find(l => l.code === currentCode) ?? languages[0];
 
-  useEffect(() => {
-    if (!closing) return;
-    const t = setTimeout(() => {
-      setMounted(false);
-      setClosing(false);
-    }, UI_MOTION.subviewCloseMs);
-    return () => clearTimeout(t);
-  }, [closing]);
-
   const open = useCallback(() => {
-    setClosing(false);
-    setMounted(true);
+    setIsOpen(true);
   }, []);
 
   const close = useCallback(() => {
-    if (!mounted || closing) return;
-    setClosing(true);
-  }, [mounted, closing]);
+    setIsOpen(false);
+  }, []);
   useEscapeStackEntry({
     id: 'modal.language-selector',
     active: mounted,

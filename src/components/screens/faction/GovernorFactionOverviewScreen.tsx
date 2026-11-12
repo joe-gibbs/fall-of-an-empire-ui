@@ -27,7 +27,7 @@ import { useEntityLinkClick } from '../../../hooks/useEntityLinkClick';
 import { renderRichText } from '../../../utils/richText';
 import type { PortraitLayerData } from '../../../data/types';
 import type { AppointmentContestView } from '../../../bridge/characters/useCourtAppointmentContestsBridge';
-import { runCourtOfficeAction, runGovernorMissionAction, type ProvinceModeCourtOfficeAction, type ProvinceModeMissionStatus, type ProvinceModeOverview, type ProvinceModeScorePart } from '../../../bridge/provinces/useProvinceModeOverviewBridge';
+import { resignCourtOffice, runCourtOfficeAction, setProvinceTributePledge, runGovernorMissionAction, type ProvinceModeCourtOfficeAction, type ProvinceModeMissionStatus, type ProvinceModeOverview, type ProvinceModeScorePart } from '../../../bridge/provinces/useProvinceModeOverviewBridge';
 import RegionGovernorAppointmentModal from '../../modals/characters/RegionGovernorAppointmentModal';
 import HeirAssignmentModal from '../../modals/characters/HeirAssignmentModal';
 import Tooltip, { type TooltipContent, type TooltipLine } from '../../common/tooltips/Tooltip';
@@ -876,6 +876,7 @@ function AppointmentRoleCard({
     <button
       type="button"
       className={roleClassName}
+      data-tutorial-target={role.positionKey ? `AppointmentRole:${role.positionKey}` : undefined}
       onClick={onSelect}
     >
       <img className="gfov-appointment-role-icon" src={role.icon} alt="" draggable={false} />
@@ -1084,7 +1085,10 @@ function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceMode
     .map(displayRole)
     .sort(compareAppointmentRoles)
     .slice(0, 5);
-  const activeRole = roles.find(role => role.id === activeRoleId) ?? roles[0];
+  // Open on the first contest the player can still enter, so the entry action is in view.
+  const activeRole = roles.find(role => role.id === activeRoleId)
+    ?? roles.find(role => role.isOpen && !role.playerSubmitted && role.canPlayerEnter !== false)
+    ?? roles[0];
 
   if (!activeRole) {
     return (
@@ -1253,7 +1257,7 @@ function AppointmentsTab({ overview, onOpenCharacter }: { overview: ProvinceMode
               remainingDays={activeRole.remainingDays}
               inProgress={playerEntered}
               onClick={canSubmitPlayer ? submitPlayer : undefined}
-              tutorialTarget={canSubmitPlayer ? 'EnterImperialCouncilContestButton' : undefined}
+              tutorialTarget={canSubmitPlayer && activeRole.positionKey ? `EnterAppointmentContest:${activeRole.positionKey}` : undefined}
             />
           </div>
 
@@ -1472,6 +1476,7 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
 
         <div className="gfov-province-aside">
           <EmperorPanel overview={overview} onOpenCharacter={onOpenCharacter} />
+          {overview && <TributePledgePanel overview={overview} />}
           <div className="gfov-panel gfov-province-standing">
             <div className="gfov-panel-header">
               <img className="gfov-panel-icon" src="/assets/icons/I_Compliance.png" alt="" draggable={false} />
@@ -1501,6 +1506,34 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TributePledgePanel({ overview }: { overview: ProvinceModeOverview }) {
+  const t = useWebUIText();
+  const levels = Array.from({ length: overview.maxTributePledge + 1 }, (_, level) => level);
+  return (
+    <div className="gfov-panel gfov-court-actions-panel">
+      <div className="gfov-panel-header">
+        <img className="gfov-panel-icon" src="/assets/icons/I_OfferTribute.png" alt="" draggable={false} />
+        <SectionHeading title={t('ProvinceMode.TributePledgeTitle')} variant="ornate" />
+      </div>
+      <p className="gfov-court-action-body">
+        {t('ProvinceMode.TributePledgeBody', { Rate: formatNumber(overview.tributeRatePercent), Standing: formatNumber(overview.standingPerTributePledge) })}
+      </p>
+      <div className="gfov-court-action-footer">
+        {levels.map(level => (
+          <GameButton
+            key={level}
+            variant={level === overview.tributePledge ? 'outline' : 'burgundy'}
+            disabled={level === overview.tributePledge}
+            onClick={() => { void setProvinceTributePledge(level).catch(acknowledgeBridgeFailure); }}
+          >
+            {level === 0 ? t('ProvinceMode.TributePledgeNone') : t('ProvinceMode.TributePledgeLevel', { Percent: formatNumber(level * 10) })}
+          </GameButton>
+        ))}
       </div>
     </div>
   );
@@ -1585,15 +1618,14 @@ function MissionsTab({ overview }: { overview: ProvinceModeOverview | null }) {
                   ? '/assets/ui/I_TickIcon.png'
                   : (mission.status === 'failed' ? '/assets/ui/I_CloseIcon.png' : '');
                 return (
-                  <div className="gfov-mission-row" key={mission.id}>
+                  <div className={`gfov-mission-row gfov-mission-row--${mission.status}`} key={mission.id}>
                     <img className="gfov-mission-icon" src={mission.icon} alt="" draggable={false} />
                     <div className="gfov-mission-copy">
                       <div className="gfov-mission-title-row">
                         <span className="gfov-mission-title">{mission.title ?? keyedText(t, mission.titleKey)}</span>
                         <span className={`gfov-mission-status gfov-mission-status--${mission.status}`}>
-                          {statusIcon
-                            ? <img className="gfov-mission-status-icon" src={statusIcon} alt={t(missionStatusKey(mission.status))} draggable={false} />
-                            : t(missionStatusKey(mission.status))}
+                          {statusIcon && <img className="gfov-mission-status-icon" src={statusIcon} alt="" draggable={false} />}
+                          {t(missionStatusKey(mission.status))}
                         </span>
                       </div>
                       <p className="gfov-mission-body">{renderMissionRichText(mission.body ?? keyedText(t, mission.bodyKey))}</p>
@@ -1603,9 +1635,9 @@ function MissionsTab({ overview }: { overview: ProvinceModeOverview | null }) {
                             ? t('ProvinceMode.Mission.Deadline', { Days: String(days) })
                             : t('ProvinceMode.Mission.Ongoing')}
                         </span>}
-                        <span className="gfov-mission-reward">
+                        {mission.status !== 'failed' && <span className="gfov-mission-reward">
                           {t('ProvinceMode.Mission.RewardLabel')}: {mission.reward ?? keyedText(t, mission.rewardKey)}
-                        </span>
+                        </span>}
                       </div>
                       {hasOpenDeadline && (
                         <div className="gfov-mission-progress">
@@ -1691,12 +1723,38 @@ function CourtOfficeActionsPanel({ actions }: { actions: ProvinceModeCourtOffice
   );
 }
 
+function ResignCourtOfficeRow({ office }: { office: string }) {
+  const t = useWebUIText();
+  const handleResign = useCallback(() => {
+    void resignCourtOffice().catch(acknowledgeBridgeFailure);
+  }, []);
+
+  return (
+    <div className="gfov-panel gfov-court-actions-panel">
+      <div className="gfov-court-action-row">
+        <img className="gfov-court-action-icon" src="/assets/icons/I_VacantCourt.png" alt="" draggable={false} />
+        <div className="gfov-court-action-copy">
+          <div className="gfov-court-action-title-row">
+            <span className="gfov-court-action-title">{t('ProvinceMode.ResignCourtOfficeTitle', { Office: office })}</span>
+          </div>
+          <p className="gfov-court-action-body">{t('ProvinceMode.ResignCourtOfficeBody')}</p>
+        </div>
+        <GameButton variant="burgundy" className="gfov-court-action-button" onClick={handleResign}>
+          {t('ProvinceMode.ResignCourtOfficeButton')}
+        </GameButton>
+      </div>
+    </div>
+  );
+}
+
 function CourtTab({ overview, onOpenCharacter }: { overview: ProvinceModeOverview | null; onOpenCharacter: (id: string) => void }) {
   const actions = overview?.courtOfficeActions ?? [];
+  const heldOffice = overview?.heldCourtOffice ?? '';
 
   return (
     <div className="gfov-court-tab">
       <CourtOfficeActionsPanel actions={actions} />
+      {heldOffice !== '' && <ResignCourtOfficeRow office={heldOffice} />}
       <CourtPositionsPanel
         suspend
         enabled
