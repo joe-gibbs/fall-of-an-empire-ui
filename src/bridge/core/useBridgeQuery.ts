@@ -28,18 +28,11 @@ interface CompletedBridgeQuery {
 }
 
 const completedQueries = new Map<string, CompletedBridgeQuery>();
-const fullCacheClearListeners = new Set<() => void>();
-
-/** Register a module-level cache that must be dropped whenever every bridge query is cleared. */
-export function onBridgeQueryCacheCleared(listener: () => void): void {
-  fullCacheClearListeners.add(listener);
-}
 
 export function clearBridgeQueryCache(action?: BridgeActionName): void {
   if (!action) {
     completedQueries.clear();
     renderingQueries.clear();
-    for (const listener of fullCacheClearListeners) listener();
     return;
   }
 

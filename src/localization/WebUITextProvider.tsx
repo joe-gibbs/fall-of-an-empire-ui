@@ -3,6 +3,7 @@ import { formatWebUIText, setCurrentWebUIText, WebUITextContext, type WebUITextC
 import { getModPoCatalogueVersion, loadRegisteredModPoText, subscribeModPoCatalogues } from './modPoText';
 import { WEBUI_TEXT_SOURCE } from './webui-text.generated.ts';
 import { clearBridgeQueryCache } from '../bridge/core/useBridgeQuery';
+import { clearFormationTemplateCaches, clearFormationTemplateCatalogueCache } from '../bridge/military-map/useFormationTemplatesBridge';
 
 let bridgeCacheLocale: string | null = null;
 
@@ -11,6 +12,8 @@ let bridgeCacheLocale: string | null = null;
 function syncBridgeCacheLocale(locale: string): void {
   if (bridgeCacheLocale !== null && bridgeCacheLocale !== locale) {
     clearBridgeQueryCache();
+    clearFormationTemplateCaches();
+    clearFormationTemplateCatalogueCache();
   }
   bridgeCacheLocale = locale;
 }
