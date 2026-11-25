@@ -297,26 +297,6 @@
   font-size: 0.88rem;
 }
 
-.gfov-meter-trend-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-top: 0.32rem;
-  gap: 0.4rem;
-}
-
-.gfov-meter-trend-label {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.gfov-meter-trend {
-  font-size: 0.88rem;
-  line-height: 1;
-  white-space: nowrap;
-}
-
 .gfov-meter-review-row {
   display: flex;
   align-items: flex-end;

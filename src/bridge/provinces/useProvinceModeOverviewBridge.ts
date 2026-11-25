@@ -110,9 +110,6 @@ export interface ProvinceModeOverview {
   imperialSuccessor: ProvinceModePerson;
   provinceSuccessor: ProvinceModePerson;
   standingScore: number;
-  standingTrend: number;
-  standingTrendParts: ProvinceModeScorePart[];
-  standingTrendReason: string;
   threatScore: number;
   recallStage: number;
   nextReviewDays: number;
@@ -280,9 +277,6 @@ function mapResponse(data: GetProvinceModeOverviewResponse): ProvinceModeOvervie
     imperialSuccessor: mapPerson(data.imperialSuccessor),
     provinceSuccessor: mapPerson(data.provinceSuccessor),
     standingScore: data.standingScore,
-    standingTrend: data.standingTrend,
-    standingTrendParts: data.standingTrendParts.map(mapScorePart),
-    standingTrendReason: data.standingTrendReason,
     threatScore: data.threatScore,
     recallStage: data.recallStage,
     nextReviewDays: data.nextReviewDays,

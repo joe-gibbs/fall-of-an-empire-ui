@@ -4068,9 +4068,6 @@ export interface GetProvinceModeOverviewResponse {
   imperialSuccessor: ProvinceModePersonDTO;
   provinceSuccessor: ProvinceModePersonDTO;
   standingScore: number;
-  standingTrend: number;
-  standingTrendParts: ProvinceModeScorePartDTO[];
-  standingTrendReason: string;
   threatScore: number;
   recallStage: number;
   nextReviewDays: number;

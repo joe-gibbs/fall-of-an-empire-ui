@@ -145,7 +145,10 @@ function recallStatus(overview: ProvinceModeOverview): { label: string; colour: 
 
 function buildTooltip(playerFaction: PlayerFactionSummary, overview: ProvinceModeOverview): TooltipContent {
   const status = recallStatus(overview);
-  const standingRows = overview.standingRows.slice(0, 5);
+  const standingRows = overview.standingRows
+    .slice()
+    .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+    .slice(0, 5);
   const threatRows = overview.threatRows
     .slice()
     .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
@@ -166,24 +169,6 @@ function buildTooltip(playerFaction: PlayerFactionSummary, overview: ProvinceMod
       value: webUIText('ImperialStanding.ScoreOutOf100', { Score: formatNumber(overview.threatScore) }),
       valueColor: threatScoreColour(overview.threatScore),
     },
-    {
-      label: webUIText('ImperialStanding.Trend'),
-      value: webUIText('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(overview.standingTrend) }),
-      valueColor: valueColour(overview.standingTrend),
-    },
-    ...(overview.standingTrendParts.length > 0 || overview.standingTrendReason
-      ? [
-          { label: webUIText('ProvinceMode.StandingTrendWhy'), isHeader: true },
-          ...overview.standingTrendParts.map(part => ({
-            label: part.label,
-            value: webUIText('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(part.value) }),
-            valueColor: valueColour(part.value),
-          })),
-          ...(overview.standingTrendParts.length === 0
-            ? [{ label: overview.standingTrendReason, stacked: true }]
-            : []),
-        ]
-      : []),
     {
       label: webUIText('ImperialStanding.RecallPressure'),
       value: status.label,

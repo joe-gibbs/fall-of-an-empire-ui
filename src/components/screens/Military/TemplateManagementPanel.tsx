@@ -1268,7 +1268,10 @@ function TemplateEditor({
     if (nextName !== draft.name) {
       automaticNameRequestRef.current += 1;
       setNameEdited(true);
-      setDraft(current => ({ ...current, name: nextName }));
+      const renamedDraft = { ...draft, name: nextName };
+      setDraft(renamedDraft);
+      // Renaming a saved template takes effect at once; a new template is named when it is first saved.
+      if (template) saveDraft(renamedDraft);
     }
   };
 
@@ -1426,7 +1429,7 @@ function TemplateEditor({
         const savedDraft: TemplateDraft = {
           ...draftToSave,
           templateId: response.templateId,
-          name,
+          name: response.templateName,
           iconId: resolvedIconId,
           battleGroups: draftToSave.battleGroups.map(group => ({
             ...group,

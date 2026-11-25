@@ -160,12 +160,6 @@ function scoreColour(score: number): string {
   return 'var(--orange)';
 }
 
-function trendColour(trend: number): string {
-  if (trend > 0) return 'var(--green)';
-  if (trend < 0) return 'var(--red)';
-  return 'var(--text-muted)';
-}
-
 function threatColour(score: number): string {
   if (score >= 60) return 'var(--red)';
   if (score >= 35) return 'var(--orange)';
@@ -200,47 +194,12 @@ function scorePartColour(kind: 'threat' | 'standing', value: number): string {
   return value > 0 ? 'var(--green)' : 'var(--red)';
 }
 
-function standingTrendWhyLines(
-  standingTrendParts: ProvinceModeScorePart[],
-  standingTrendReason: string,
-  t: ReturnType<typeof useWebUIText>,
-): TooltipLine[] {
-  if (standingTrendParts.length === 0 && !standingTrendReason) return [];
-
-  const lines: TooltipLine[] = [
-    { label: t('ProvinceMode.StandingTrendWhy'), isHeader: true },
-  ];
-  for (const part of standingTrendParts) {
-    lines.push({
-      label: part.label,
-      value: t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(part.value) }),
-      valueColor: trendColour(part.value),
-    });
-  }
-  if (standingTrendParts.length === 0) {
-    lines.push({ label: standingTrendReason, stacked: true });
-  }
-  return lines;
-}
-
 function standingMeterTooltip(
-  standingTrend: number,
-  standingTrendColour: string,
-  standingTrendParts: ProvinceModeScorePart[],
-  standingTrendReason: string,
   t: ReturnType<typeof useWebUIText>,
 ): TooltipContent {
   return {
     title: t('ProvinceMode.StandingTitle'),
     body: t('ProvinceMode.StandingTooltip'),
-    lines: [
-      {
-        label: t('ImperialStanding.Trend'),
-        value: t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(standingTrend) }),
-        valueColor: standingTrendColour,
-      },
-      ...standingTrendWhyLines(standingTrendParts, standingTrendReason, t),
-    ],
   };
 }
 
@@ -532,7 +491,14 @@ function appointmentEntryBlockReason(role: AppointmentRole, t: ReturnType<typeof
   return '';
 }
 
+function isPlayerActionableRole(role: AppointmentRole): boolean {
+  return role.playerSubmitted || (role.isOpen && role.canPlayerEnter === true);
+}
+
+// Contests the player has entered or can enter come first, matching the bridge's ordering.
 function compareAppointmentRoles(left: AppointmentRole, right: AppointmentRole): number {
+  const actionableDiff = Number(isPlayerActionableRole(right)) - Number(isPlayerActionableRole(left));
+  if (actionableDiff !== 0) return actionableDiff;
   const availableDiff = left.availableInDays - right.availableInDays;
   if (availableDiff !== 0) return availableDiff;
   return left.remainingDays - right.remainingDays;
@@ -1288,12 +1254,8 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
   const t = useWebUIText();
   const [showSuccessorPicker, setShowSuccessorPicker] = useState(false);
   const standingScore = overview?.standingScore ?? 0;
-  const standingTrend = overview?.standingTrend ?? 0;
-  const standingTrendParts = overview?.standingTrendParts ?? [];
-  const standingTrendReason = overview?.standingTrendReason ?? '';
   const threatScore = overview?.threatScore ?? 0;
   const standingColour = scoreColour(standingScore);
-  const standingTrendColour = trendColour(standingTrend);
   const threatColourValue = threatColour(threatScore);
   const reviewDays = overview?.nextReviewDays ?? 0;
   const reviewIntervalDays = overview?.reviewIntervalDays ?? 0;
@@ -1368,7 +1330,7 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
         </div>
         <div className="gfov-header-meters">
           <Tooltip
-            content={standingMeterTooltip(standingTrend, standingTrendColour, standingTrendParts, standingTrendReason, t)}
+            content={standingMeterTooltip(t)}
             position="bottom"
             delay={150}
             wrapperClassName="gfov-meter-tooltip"
@@ -1383,12 +1345,6 @@ function ProvinceTab({ overview, onOpenCharacter }: { overview: ProvinceModeOver
                 <span className="gfov-meter-max">/ 100</span>
               </div>
               <GameBar value={standingScore} max={100} colour={standingColour} size="sm" />
-              <div className="gfov-meter-trend-row">
-                <span className="gfov-meter-trend-label">{t('ImperialStanding.Trend')}</span>
-                <span className="gfov-meter-trend" style={{ color: standingTrendColour }}>
-                  {t('ImperialStanding.TrendPerMonth', { Value: formatSignedNumber(standingTrend) })}
-                </span>
-              </div>
             </div>
           </Tooltip>
           <Tooltip
